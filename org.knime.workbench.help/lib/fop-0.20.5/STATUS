@@ -1,0 +1,46 @@
+**** COMMITTERS **** 
+
+(in strict alphabetic order)
+
+Active committers
+
+Arved Sandstrom
+Bertrand Delacretaz
+Christian Geisert (release coordinator)
+Jeremias Maerki
+Joerg Pietschmann
+Karen Lease
+Keiron Liddle
+Oleg Tkachenko
+Peter B. West
+Victor Mote
+
+Emeritus committers
+(They have not committed anything for six months, and so are considered
+to have retired from active duty. We wish them well and hope to see 
+them return.)
+
+Kelly Campbell
+Steven Coffman
+Tore Engvig
+Stanislav Gorkhover
+Fotis Jannidis 
+Jordan Naftolin
+Eric Schaeffer 
+Jon Smirl 
+James Tauber (who started it all)
+Art Welch
+
+
+**** THINGS WORKED ON ***** 
+
+This is the FOP maintenance branch. We currently build releases from 
+here but only bugfixing is done. FOP is currently being redesigned and 
+all new functionality should go into the main branch.
+
+- Bugfixing
+
+**** THINGS TO DO ****
+
+- Bugfixing
+- Improving documentation

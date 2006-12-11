@@ -1,0 +1,121 @@
+/* 
+ * Set up general font colours, sizes, etc.  Some of these will override
+ * settings from the shared CSS 
+ */
+.intro-header H1 {
+	font-size : 15pt;
+}
+
+#page-links a .link-label, #action-links a .link-label {
+	font-size : 10pt;
+	font-weight : 600;
+	color : #E5E5E5;
+}
+
+#page-links a p .text, #action-links a p .text {
+	font-size : 10pt;
+	font-weight : 500;
+	color : #E5E5E5;
+}
+
+/*
+ * Set up the content for the standby page.
+ */
+body {
+	min-width : 230px;
+	/* since IE doesn't support min-width, use expression */
+	width:expression(document.body.clientWidth < 230? "230px": "auto" );
+	background-image : url(graphics/rootpage/background.jpg);
+	background-repeat : no-repeat;
+	background-position : top left;
+	background-color : #7169D1;
+}
+
+.page { 
+	background-image : url(graphics/rootpage/brandmark.gif);
+	background-repeat : no-repeat;
+	background-position : bottom left;
+	min-width : 230px;
+	/* since IE doesn't support min-width, use expression */
+	width:expression(document.body.clientWidth < 230? "230px": "auto" );
+ 	min-height : 610px;
+	height : 100%;
+	height : expression(document.body.clientHeight < 450? "450px": "100%" );
+}
+
+/* 
+ * Set up the navigation bar.  It should be centered in the middle
+ * of the page
+ */
+
+#links-background { 
+	width : 100%; 
+ 	margin-top : 10%; 
+	margin-bottom : auto;
+	text-align : center;
+}
+
+#page-links a {
+	display : block;
+	width : 220px;
+	text-align : left; 
+	margin-left : auto;
+	margin-right : auto;
+	margin-top : 0px;
+	vertical-align : top;
+}
+#page-links a span, #page-links a p {
+	display : block;
+	width : 160px;
+	margin : 0px;
+	padding : 0px;
+}
+
+#page-links a .link-label {
+	position : relative;
+	left : 60px;
+	top : -50px;
+}
+
+#page-links a p .text {
+	position : relative;
+	left : 60px;
+	top : -50px;
+
+}
+
+#page-links a img {
+	height : 52px;
+	width : 52px;
+	vertical-align : middle;
+}
+
+#page-links a:hover,
+#page-links a:focus,
+#page-links a:active  { border : 0px; }
+
+#page-links a:hover p,
+#page-links a:focus p,
+#page-links a:active p  { margin : 0px; padding : 0px; }
+
+/* properties for each of the page-links  */
+a#overview img { background-image : url(graphics/icons/etool/overview48.gif); }
+a#overview:hover img,
+a#overview:focus img,
+a#overview:active img { background-image : url(graphics/icons/ctool/overview48.gif); }
+
+a#tutorials img { background-image : url(graphics/icons/etool/tutorials48.gif); }
+a#tutorials:hover img,
+a#tutorials:focus img,
+a#tutorials:active img { background-image : url(graphics/icons/ctool/tutorials48.gif); }
+
+a#samples img { background-image : url(graphics/icons/etool/samples48.gif); }
+a#samples:hover img,
+a#samples:focus img,
+a#samples:active img { background-image : url(graphics/icons/ctool/samples48.gif); }
+
+a#news img { background-image : url(graphics/icons/etool/whatsnew48.gif); }
+a#news:hover img,
+a#news:focus img,
+a#news:active img { background-image : url(graphics/icons/ctool/whatsnew48.gif); }
+

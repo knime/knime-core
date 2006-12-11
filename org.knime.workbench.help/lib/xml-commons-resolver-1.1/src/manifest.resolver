@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Main-Class: org.apache.xml.resolver.apps.resolver
+
+Name: org/apache/xml/resolver
+Comment: xml-commons Resolver code
+Implementation-Title: org.apache.xml.resolver.Catalog
+Implementation-Version: @impl.version@
+Implementation-Vendor: Apache Software Foundation
+Implementation-URL: http://xml.apache.org/commons/
+

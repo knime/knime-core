@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<fo:root font-family="Times Roman" font-size="12pt" text-align="center" xmlns:fo="http://www.w3.org/1999/XSL/Format">
+
+<fo:layout-master-set>
+<fo:simple-page-master master-name="simple"
+	margin-top="75pt" margin-bottom="25pt" margin-left="100pt" margin-right="50pt">
+	<fo:region-body margin-bottom="50pt"
+              background-image="file:../graphics/xml_feather_transparent.gif"/>
+	<fo:region-after extent="25pt"/>
+</fo:simple-page-master>
+
+</fo:layout-master-set>
+
+<fo:page-sequence master-reference="simple">
+
+<fo:static-content flow-name="xsl-region-after">
+	<fo:block text-align-last="center" font-size="10pt">
+		<fo:page-number/>
+	</fo:block>
+</fo:static-content>
+
+<fo:flow flow-name="xsl-region-body">
+<fo:block font-size="18pt" font-weight="bold" background-color="#dddddd">
+Simple example for background-image</fo:block>
+<fo:block font-size="14pt" space-before="1.6cm"
+      text-align="end" white-space-collapse="false"
+      background-repeat="no-repeat"
+      background-image="file:../graphics/linux.bmp">
+background-image in a block
+1 &#13;
+2 &#13;
+3 &#13;
+4 &#13;
+5 &#13;
+</fo:block>
+</fo:flow>
+
+</fo:page-sequence>
+
+</fo:root>
+	  
+
+
+
+

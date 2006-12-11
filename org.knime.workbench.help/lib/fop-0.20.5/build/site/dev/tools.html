@@ -1,0 +1,425 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Developer Tools</title>
+<link type="text/css" href="../skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="../skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="../skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="../images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="../images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="../skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="../skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="../skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="../skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="../skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="../index.html"><font face="Arial, Helvetica, Sans-serif">Home</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="../skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="../skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="../skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Development</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="../skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="../skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Introduction</font>
+<ul>
+      
+<li>
+<a href="index.html">Basics</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Design</font>
+<ul>
+      
+      
+<li>
+<a href="http://xml.apache.org/fop/design/index.html">Resolved</a>
+</li>      
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/wiki/apachewiki.cgi?FOPProjectPages">Unresolved (Wiki)</a>
+</li>
+      
+<li>
+<a href="svg.html">SVG</a>
+</li>
+      
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+      
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Develop</font>
+<ul>
+      
+<li>
+<a href="api-doc.html">API Doc</a>
+</li>
+      
+<li>
+<a href="implement.html">Walk-Thru</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/bugzilla/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=&emailtype1=substring&emailassigned_to1=1&email2=&emailtype2=substring&emailreporter2=1&bugidtype=include&bug_id=&changedin=&votes=&chfieldfrom=&chfieldto=Now&chfieldvalue=&product=Fop&short_desc=%5BPATCH%5D&short_desc_type=allwordssubstr&long_desc=&long_desc_type=allwordssubstr&bug_file_loc=&bug_file_loc_type=allwordssubstr&keywords=&keywords_type=anywords&field0-0-0=noop&type0-0-0=noop&value0-0-0=&namedcmd=Fop+all&newqueryname=fop+patch+queue&tofooter=1&order=Reuse+same+sort+as+last+time">Patch queue</a>
+</li>
+      
+<li>
+<a href="conventions.html">Conventions</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Test</font>
+<ul>
+      
+<li>
+<a href="testing.html">Testing</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Deploy</font>
+<ul>
+      
+<li>
+<a href="doc.html">Doc Mgmt</a>
+</li>
+      
+<li>
+<a href="release.html">Release</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/bugzilla/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=&emailtype1=substring&emailassigned_to1=1&email2=&emailtype2=substring&emailreporter2=1&bugidtype=include&bug_id=&changedin=&votes=&chfieldfrom=&chfieldto=Now&chfieldvalue=&product=Fop&short_desc=&short_desc_type=allwordssubstr&long_desc=&long_desc_type=allwordssubstr&bug_file_loc=&bug_file_loc_type=allwordssubstr&keywords=&keywords_type=anywords&field0-0-0=noop&type0-0-0=noop&value0-0-0=&order=bugs.component">Bugs</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+      
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+      
+<li>
+<span class="sel"><font color="#ffcc00">Tools</font></span>
+</li>
+      
+<li>
+<a target="_blank" href="http://cvs.apache.org/viewcvs.cgi/xml-fop">ViewCVS</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">SubPackages</font>
+<ul>
+      
+<li>
+<a href="rtflib.html">RTFlib</a>
+</li>
+    
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="../skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="../skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="../skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>Developer Tools</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="tools.pdf"><img alt="printer" src="../skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<ul class="minitoc">
+<li>
+<a href="#general">General Developer Information</a>
+</li>
+<li>
+<a href="#cvs">Concurrent Versions System (CVS)</a>
+<ul class="minitoc">
+<li>
+<a href="#cvs_general">General</a>
+</li>
+<li>
+<a href="#wincvs_download">Step-by-step instructions for downloading FOP using WinCVS</a>
+</li>
+<li>
+<a href="#cvs_patch">Creating Patches</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#ide">Integrated Development Environments (IDEs)</a>
+</li>
+</ul>
+    
+<p>This page documents items that may be helpful to other developers, especially to those who are new to FOP. Exhaustive treatment of these topics is better suited to other fora, but the information presented here is intended to deal with FOP-specific issues related to these tools, especially "gotchas", and to help developers get jump-started.</p>
+    
+<a name="N101C1"></a><a name="general"></a>
+<h3>General Developer Information</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>See <a href="http://www.apache.org/dev/contributors.html">the Apache Contributors Tech Guide</a> for useful information and links for Apache developers, including help with tools and procedures.</p>
+</div>
+    
+<a name="N101CF"></a><a name="cvs"></a>
+<h3>Concurrent Versions System (CVS)</h3>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N101D5"></a><a name="cvs_general"></a>
+<h4>General</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>Visit <a href="http://xml.apache.org/cvs.html">Apache XML CVS Repositories</a> for useful information.</p>
+<p>You will need a CVS client to be able to gain access to the FOP repository. For general CVS information, visit <a href="http://www.cvshome.org">CVS Home</a>. Nice GUI clients for Windows, Mac, and X(??) can be found at <a href="http://www.wincvs.org">WinCVS</a>.</p>
+<p>Regardless of what platform you develop on, please be sure to submit patches that use Unix line endings. If you are using WinCVS, check code out this way by going to the Admin / Preferences menu item, clicking on the "Globals" tab, then select the "Checkout text files with the Unix LF (0xa)" option. You will also need to use an editor that supports opening and saving files using Unix line endings.</p>
+</div>
+<a name="N101F1"></a><a name="wincvs_download"></a>
+<h4>Step-by-step instructions for downloading FOP using WinCVS</h4>
+<div style="margin-left: 0 ; border: 2px">
+<ul>
+          
+<li>Select "Create / Checkout Module" menu item.</li>
+          
+<li>&ldquo;Checkout Settings&rdquo; Tab:
+            <ul>
+              
+<li>&ldquo;Enter the module name and path on the server:&rdquo;<br>
+                
+<span class="codefrag">xml-fop</span>
+              
+</li>
+              
+<li>&ldquo;Local folder to checkout to:&rdquo;<br>Enter your local directory</li>
+            
+</ul>
+          
+</li>
+          
+<li>&ldquo;Checkout Options&rdquo; Tab:
+          <ul>
+              
+<li>If you are checking out the trunk, unset all options.</li>
+              
+<li>If you are checking out the maintenance branch (currently distributed code), check &ldquo;By revision/tag/branch:&rdquo; and enter <span class="codefrag">fop-0_20_2-maintain</span>.</li>
+            
+</ul>
+          
+</li>
+          
+<li>&ldquo;General&rdquo; Tab:
+          <ul>
+              
+<li>&ldquo;Enter the CVSROOT:&rdquo;<br>
+                
+<span class="codefrag">:pserver:anoncvs@cvs.apache.org:/home/cvspublic</span>
+              
+</li>
+              
+<li>&ldquo;Authentication:&rdquo;<br>
+                
+<span class="codefrag">&ldquo;passwd&rdquo; file on the cvs server</span>
+              
+</li>
+            
+</ul>
+          
+</li>
+          
+<li>&ldquo;Globals&rdquo; Tab:
+          <ul>
+              
+<li>check &ldquo;Checkout text files with the Unix LF (Oxa)&rdquo;</li>
+            
+</ul>
+          
+</li>
+          
+<li>Click "OK" and the download should begin.</li>
+        
+</ul>
+</div>
+<a name="N10242"></a><a name="cvs_patch"></a>
+<h4>Creating Patches</h4>
+<div style="margin-left: 0 ; border: 2px">
+<ul>
+          
+<li>
+            
+<span class="codefrag">cd</span> to a directory that contains all of the changes that you wish to include in the patch. To comprehend the entire distribution, <span class="codefrag">cd</span> to the directory above the "xml-fop" directory that was created when you checked out the code.</li>
+          
+<li>Run: <span class="codefrag">cvs -q diff -wu &lt;list of items to diff&gt;</span>
+            
+<br>The &lt;list of items to diff&gt; is a space-separated list of files and directories relative to the current directory that you wish to include in the diff. For example, to include the entire distribution, assuming that you are in the directory, above xml-fop, simply enter "xml-fop". This will recursively go through the directories beneath xml-fop to diff each file.</li>
+          
+<li>If you are running WinCVS, select "Admin/Command Line" for a console in which to key the above command.</li>
+          
+<li>On a Linux/Unix machine, you will want to redirect the output from the above command into a file. If you are using GNU WinCVS, you can cut the output from the console window and paste it into a file. The "-w" ignores whitespace differences. The "-u" puts the diff in "universal" format. You may wish to use the "-N" option as well, which is supposed to treat new files as if there were an old 0 byte file -- in other words, it is supposed to include the new file in the patch. However, it only operates on files that have been "add"ed to the CVS repository, which cannot be done without commit access.</li>
+        
+</ul>
+</div>
+</div>
+    
+<a name="N10264"></a><a name="ide"></a>
+<h3>Integrated Development Environments (IDEs)</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>An IDE is not required, but will generally be found to be helpful, especially for serious debugging and refactoring.</p>
+<p>See <a href="http://jakarta.apache.org/site/idedevelopers.html">the Apache Jakarta IDE Developer's Guide</a> for useful information on Java IDEs.</p>
+<p>Borland's JBuilder 7/8 does not support Ant builds unless you have the Enterprise Edition (which is quite expensive). This causes problems with any code that is generated by the Ant build. First, you must run the Ant build before you can use the IDE. Second, when you are editing in the IDE, you must be editing the generated files, which means that you must make any changes to the source files in another editor. This is less serious for development on the trunk, but in the maintenance branch, all source files were "generated".</p>
+<p>Sun ONE Studio Four does support Ant, but seems to use a built-in version, and as of this writing chokes on the FOP build file, saying that it is not valid. There is awkward because there is no official DTD for Ant, and it may be merely an Ant version issue.</p>
+</div>
+  
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="../skin/images/spacer.gif"><a href="../skin/images/label.gif"></a><a href="../skin/images/page.gif"></a><a href="../skin/images/chapter.gif"></a><a href="../skin/images/chapter_open.gif"></a><a href="../skin/images/current.gif"></a><a href="..//favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

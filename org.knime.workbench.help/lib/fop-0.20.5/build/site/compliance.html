@@ -1,0 +1,1697 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>FOP 0.20.4 Standards Compliance</title>
+<link type="text/css" href="skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Home</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="dev/index.html"><font face="Arial, Helvetica, Sans-serif">Development</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Home</font>
+<ul>
+          
+<li>
+<a href="index.html">Introduction</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Using FOP</font>
+<ul>
+          
+<li>
+<a href="relnotes.html">Release Notes</a>
+</li>
+          
+<li>
+<a href="download.html">Download</a>
+</li>
+          
+<li>
+<a href="compiling.html">Build</a>
+</li>
+          
+<li>
+<a href="configuration.html">Configure</a>
+</li>
+          
+<li>
+<a href="running.html">Run</a>
+</li>
+          
+<li>
+<a href="embedding.html">Embed</a>
+</li>
+          
+<li>
+<a href="servlets.html">Servlets</a>
+</li>
+          
+<li>
+<a href="anttask.html">Ant task</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Features</font>
+<ul>
+          
+<li>
+<span class="sel"><font color="#ffcc00">Compliance</font></span>
+</li>
+          
+<li>
+<a href="output.html">Output Targets</a>
+</li>
+          
+<li>
+<a href="pdfencryption.html">PDF encryption</a>
+</li>
+          
+<li>
+<a href="graphics.html">Graphics</a>
+</li>
+          
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+          
+<li>
+<a href="hyphenation.html">Hyphenation</a>
+</li>
+          
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+          
+<li>
+<a href="gethelp.html">Getting Help</a>
+</li>
+          
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+          
+<li>
+<a href="fo.html">XSL-FO</a>
+</li>
+          
+<li>
+<a href="examples.html">Examples</a>
+</li>
+          
+<li>
+<a href="maillist.html">Mailing Lists</a>
+</li>
+          
+<li>
+<a href="bugs.html">Bugs</a>
+</li>
+          
+<li>
+<a href="license.html">License</a>
+</li>
+          
+<li>
+<a href="resources.html">Other</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Project</font>
+<ul>
+          
+<li>
+<a href="news.html">News</a>
+</li>
+          
+<li>
+<a href="logocontest.html">Logo contest</a>
+</li>
+          
+<li>
+<a href="status.html">Status</a>
+</li>
+          
+          
+<li>
+<a href="team.html">Team</a>
+</li>
+        
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<meta content="en-us" http-equiv="Content-Language">
+<meta content="text/html; charset=windows-1252" http-equiv="Content-Type">
+<link rel="stylesheet" href="skin/page.css" type="text/css">
+<style>
+      <!--
+      .yes         { background-color: #99CCFF }
+      .no          { background-color: #FF99CC }
+      .partial     { background-color: #C0C0C0 }
+      .category    { background-color: #FFCC66;
+                     font-size: 1.2em }
+      -->
+      </style>
+</head>
+<table summary="" class="title">
+<tr>
+<td valign="middle">
+<h1>FOP 0.20.4 Standards Compliance</h1>
+</td><td align="center" width="40" nowrap="nowrap"><a href="compliance.pdf" class="dida"><img border="0" src="skin/images/printer.gif" alt="PDF"><br>PDF</a></td>
+</tr>
+</table>
+<ul class="minitoc">
+<a href="#fo">
+<li>W3C XSL-FO 1.0 Standard</li>
+</a>
+</ul>
+<h2>
+<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl" name="fo">W3C XSL-FO 1.0 Standard</a>
+</h2>
+<p>One of FOP's design goals is conformance to the W3C XSL-FO 1.0 standard, which specifies three levels of "conformance": basic, extended, and complete.
+Although FOP does not currently conform to any of these levels, it is nevertheless a useful work-in-progress for many applications.
+The information presented here demonstrates FOP's progress toward the goal of conformance, which progress consists of implementation of specific objects and properties in the standard.
+The information presented is useful not only to the developers as a sort of "to do" list, but also for setting proper expectations for users and potential users.</p>
+<p>In the tables below, blue indicates support at the specified level of conformance, and red indicates a lack of support.</p>
+<ul class="minitoc">
+<li>
+<a href="#fo-object">XSL-FO Object Support</a>
+</li>
+<ul>
+<li>
+<strong><a href="#fo-object-decl">Declarations and Pagination and Layout Formatting Objects</a>: </strong><a href="#fo-object-root">root</a>, <a href="#fo-object-declarations">declarations</a>, <a href="#fo-object-color-profile">color-profile</a>, <a href="#fo-object-page-sequence">page-sequence</a>, <a href="#fo-object-layout-master-set">layout-master-set</a>, <a href="#fo-object-page-sequence-master">page-sequence-master</a>, <a href="#fo-object-single-page-master-reference">single-page-master-reference</a>, <a href="#fo-object-repeatable-page-master-reference">repeatable-page-master-reference</a>, <a href="#fo-object-repeatable-page-master-alternatives">repeatable-page-master-alternatives</a>, <a href="#fo-object-conditional-page-master-reference">conditional-page-master-reference</a>, <a href="#fo-object-simple-page-master">simple-page-master</a>, <a href="#fo-object-region-body">region-body</a>, <a href="#fo-object-region-before">region-before</a>, <a href="#fo-object-region-after">region-after</a>, <a href="#fo-object-region-start">region-start</a>, <a href="#fo-object-region-end">region-end</a>, <a href="#fo-object-flow">flow</a>, <a href="#fo-object-static-content">static-content</a>, <a href="#fo-object-title">title</a>
+</li>
+<li>
+<strong><a href="#fo-object-block">Block Formatting Objects</a>: </strong><a href="#fo-object-block">block</a>, <a href="#fo-object-block-container">block-container</a>
+</li>
+<li>
+<strong><a href="#fo-object-inline">Inline Formatting Objects</a>: </strong><a href="#fo-object-bidi-override">bidi-override</a>, <a href="#fo-object-character">character</a>, <a href="#fo-object-initial-property-set">initial-property-set</a>, <a href="#fo-object-external-graphic">external-graphic</a>, <a href="#fo-object-instream-foreign-object">instream-foreign-object</a>, <a href="#fo-object-inline">inline</a>, <a href="#fo-object-inline-container">inline-container</a>, <a href="#fo-object-leader">leader</a>, <a href="#fo-object-page-number">page-number</a>, <a href="#fo-object-page-number-citation">page-number-citation</a>
+</li>
+<li>
+<strong><a href="#fo-object-table">Table Formatting Objects</a>: </strong><a href="#fo-object-table-and-caption">table-and-caption</a>, <a href="#fo-object-table">table</a>, <a href="#fo-object-table-column">table-column</a>, <a href="#fo-object-table-caption">table-caption</a>, <a href="#fo-object-table-header">table-header</a>, <a href="#fo-object-table-footer">table-footer</a>, <a href="#fo-object-table-body">table-body</a>, <a href="#fo-object-table-row">table-row</a>, <a href="#fo-object-table-cell">table-cell</a>
+</li>
+<li>
+<strong><a href="#fo-object-list">List Formatting Objects</a>: </strong><a href="#fo-object-list-block">list-block</a>, <a href="#fo-object-list-item">list-item</a>, <a href="#fo-object-list-item-body">list-item-body</a>, <a href="#fo-object-list-item-label">list-item-label</a>
+</li>
+<li>
+<strong><a href="#fo-object-link">Link and Multi Formatting Objects</a>: </strong><a href="#fo-object-basic-link">basic-link</a>, <a href="#fo-object-multi-switch">multi-switch</a>, <a href="#fo-object-multi-case">multi-case</a>, <a href="#fo-object-multi-toggle">multi-toggle</a>, <a href="#fo-object-multi-properties">multi-properties</a>, <a href="#fo-object-multi-property-set">multi-property-set</a>
+</li>
+<li>
+<strong><a href="#fo-object-outofline">Out-of-line Formatting Objects</a>: </strong><a href="#fo-object-float">float</a>, <a href="#fo-object-footnote">footnote</a>, <a href="#fo-object-footnote-body">footnote-body</a>
+</li>
+<li>
+<strong><a href="#fo-object-other">Other Formatting Objects</a>: </strong><a href="#fo-object-wrapper">wrapper</a>, <a href="#fo-object-marker">marker</a>, <a href="#fo-object-retrieve-marker">retrieve-marker</a>
+</li>
+</ul>
+<li>
+<a href="#fo-property">XSL-FO Property Support</a>
+</li>
+<ul>
+<li>
+<strong><a href="#fo-property-commonaccess">Common Accessibility Properties</a>: </strong><a href="#fo-property-source-document">source-document</a>, <a href="#fo-property-role">role</a>
+</li>
+<li>
+<strong><a href="#fo-property-commonabspos">Common Absolute Position Properties</a>: </strong><a href="#fo-property-absolute-position">absolute-position</a>, <a href="#fo-property-top">top</a>, <a href="#fo-property-right">right</a>, <a href="#fo-property-bottom">bottom</a>, <a href="#fo-property-left">left</a>
+</li>
+<li>
+<strong><a href="#fo-property-commonaural">Common Aural Properties</a>: </strong><a href="#fo-property-azimuth">azimuth</a>, <a href="#fo-property-cue-after">cue-after</a>, <a href="#fo-property-cue-before">cue-before</a>, <a href="#fo-property-elevation">elevation</a>, <a href="#fo-property-pause-after">pause-after</a>, <a href="#fo-property-pause-before">pause-before</a>, <a href="#fo-property-pitch">pitch</a>, <a href="#fo-property-pitch-range">pitch-range</a>, <a href="#fo-property-play-during">play-during</a>, <a href="#fo-property-richness">richness</a>, <a href="#fo-property-speak">speak</a>, <a href="#fo-property-speak-header">speak-header</a>, <a href="#fo-property-speak-numeral">speak-numeral</a>, <a href="#fo-property-speak-punctuation">speak-punctuation</a>, <a href="#fo-property-speech-rate">speech-rate</a>, <a href="#fo-property-stress">stress</a>, <a href="#fo-property-voice-family">voice-family</a>, <a href="#fo-property-volume">volume</a>
+</li>
+<li>
+<strong><a href="#fo-property-commonenv">Common Border, Padding, and Background Properties</a>: </strong><a href="#fo-property-background-attachment">background-attachment</a>, <a href="#fo-property-background-color">background-color</a>, <a href="#fo-property-background-image">background-image</a>, <a href="#fo-property-background-repeat">background-repeat</a>, <a href="#fo-property-background-position-horizontal">background-position-horizontal</a>, <a href="#fo-property-background-position-vertical">background-position-vertical</a>, <a href="#fo-property-border-before-color">border-before-color</a>, <a href="#fo-property-border-before-style">border-before-style</a>, <a href="#fo-property-border-before-width">border-before-width</a>, <a href="#fo-property-border-after-color">border-after-color</a>, <a href="#fo-property-border-after-style">border-after-style</a>, <a href="#fo-property-border-after-width">border-after-width</a>, <a href="#fo-property-border-start-color">border-start-color</a>, <a href="#fo-property-border-start-style">border-start-style</a>, <a href="#fo-property-border-start-width">border-start-width</a>, <a href="#fo-property-border-end-color">border-end-color</a>, <a href="#fo-property-border-end-style">border-end-style</a>, <a href="#fo-property-border-end-width">border-end-width</a>, <a href="#fo-property-border-top-color">border-top-color</a>, <a href="#fo-property-border-top-style">border-top-style</a>, <a href="#fo-property-border-top-width">border-top-width</a>, <a href="#fo-property-border-bottom-color">border-bottom-color</a>, <a href="#fo-property-border-bottom-style">border-bottom-style</a>, <a href="#fo-property-border-bottom-width">border-bottom-width</a>, <a href="#fo-property-border-left-color">border-left-color</a>, <a href="#fo-property-border-left-style">border-left-style</a>, <a href="#fo-property-border-left-width">border-left-width</a>, <a href="#fo-property-border-right-color">border-right-color</a>, <a href="#fo-property-border-right-style">border-right-style</a>, <a href="#fo-property-border-right-width">border-right-width</a>, <a href="#fo-property-padding-before">padding-before</a>, <a href="#fo-property-padding-after">padding-after</a>, <a href="#fo-property-padding-start">padding-start</a>, <a href="#fo-property-padding-end">padding-end</a>, <a href="#fo-property-padding-top">padding-top</a>, <a href="#fo-property-padding-bottom">padding-bottom</a>, <a href="#fo-property-padding-left">padding-left</a>, <a href="#fo-property-padding-right">padding-right</a>
+</li>
+<li>
+<strong><a href="#fo-property-commonfont">Common Font Properties</a>: </strong><a href="#fo-property-font-family">font-family</a>, <a href="#fo-property-font-selection-strategy">font-selection-strategy</a>, <a href="#fo-property-font-size">font-size</a>, <a href="#fo-property-font-stretch">font-stretch</a>, <a href="#fo-property-font-size-adjust">font-size-adjust</a>, <a href="#fo-property-font-style">font-style</a>, <a href="#fo-property-font-variant">font-variant</a>, <a href="#fo-property-font-weight">font-weight</a>
+</li>
+<li>
+<strong><a href="#fo-property-commonhyphen">Common Hyphenation Properties</a>: </strong><a href="#fo-property-country">country</a>, <a href="#fo-property-language">language</a>, <a href="#fo-property-script">script</a>, <a href="#fo-property-hyphenate">hyphenate</a>, <a href="#fo-property-hyphenation-character">hyphenation-character</a>, <a href="#fo-property-hyphenation-push-character-count">hyphenation-push-character-count</a>, <a href="#fo-property-hyphenation-remain-character-count">hyphenation-remain-character-count</a>
+</li>
+<li>
+<strong><a href="#fo-property-commonmarginblock">Common Margin Properties - Block</a>: </strong><a href="#fo-property-margin-top">margin-top</a>, <a href="#fo-property-margin-bottom">margin-bottom</a>, <a href="#fo-property-margin-left">margin-left</a>, <a href="#fo-property-margin-right">margin-right</a>, <a href="#fo-property-space-before">space-before</a>, <a href="#fo-property-space-after">space-after</a>, <a href="#fo-property-start-indent">start-indent</a>, <a href="#fo-property-end-indent">end-indent</a>
+</li>
+<li>
+<strong><a href="#fo-property-commonmargininline">Common Margin Properties - Inline</a>: </strong><a href="#fo-property-space-end">space-end</a>, <a href="#fo-property-space-start">space-start</a>
+</li>
+<li>
+<strong><a href="#fo-property-commonrelpos">Common Relative Position Properties</a>: </strong><a href="#fo-property-relative-position">relative-position</a>
+</li>
+<li>
+<strong><a href="#fo-property-areaalign">Area Alignment Properties</a>: </strong><a href="#fo-property-alignment-adjust">alignment-adjust</a>, <a href="#fo-property-alignment-baseline">alignment-baseline</a>, <a href="#fo-property-baseline-shift">baseline-shift</a>, <a href="#fo-property-display-align">display-align</a>, <a href="#fo-property-dominant-baseline">dominant-baseline</a>, <a href="#fo-property-relative-align">relative-align</a>
+</li>
+<li>
+<strong><a href="#fo-property-areadim">Area Dimension Properties</a>: </strong><a href="#fo-property-block-progression-dimension">block-progression-dimension</a>, <a href="#fo-property-content-height">content-height</a>, <a href="#fo-property-content-width">content-width</a>, <a href="#fo-property-height">height</a>, <a href="#fo-property-inline-progression-dimension">inline-progression-dimension</a>, <a href="#fo-property-max-height">max-height</a>, <a href="#fo-property-max-width">max-width</a>, <a href="#fo-property-min-height">min-height</a>, <a href="#fo-property-min-width">min-width</a>, <a href="#fo-property-scaling">scaling</a>, <a href="#fo-property-scaling-method">scaling-method</a>, <a href="#fo-property-width">width</a>
+</li>
+<li>
+<strong><a href="#fo-property-blockandline">Block and Line-related Properties</a>: </strong><a href="#fo-property-hyphenation-keep">hyphenation-keep</a>, <a href="#fo-property-hyphenation-ladder-count">hyphenation-ladder-count</a>, <a href="#fo-property-last-line-end-indent">last-line-end-indent</a>, <a href="#fo-property-line-height">line-height</a>, <a href="#fo-property-line-height-shift-adjustment">line-height-shift-adjustment</a>, <a href="#fo-property-line-stacking-strategy">line-stacking-strategy</a>, <a href="#fo-property-linefeed-treatment">linefeed-treatment</a>, <a href="#fo-property-white-space-treatment">white-space-treatment</a>, <a href="#fo-property-text-align">text-align</a>, <a href="#fo-property-text-align-last">text-align-last</a>, <a href="#fo-property-text-indent">text-indent</a>, <a href="#fo-property-white-space-collapse">white-space-collapse</a>, <a href="#fo-property-wrap-option">wrap-option</a>
+</li>
+<li>
+<strong><a href="#fo-property-char">Character Properties</a>: </strong><a href="#fo-property-character">character</a>, <a href="#fo-property-letter-spacing">letter-spacing</a>, <a href="#fo-property-suppress-at-line-break">suppress-at-line-break</a>, <a href="#fo-property-text-decoration">text-decoration</a>, <a href="#fo-property-text-shadow">text-shadow</a>, <a href="#fo-property-text-transform">text-transform</a>, <a href="#fo-property-treat-as-word-space">treat-as-word-space</a>, <a href="#fo-property-word-spacing">word-spacing</a>
+</li>
+<li>
+<strong><a href="#fo-property-color">Color-related Properties</a>: </strong><a href="#fo-property-color">color</a>, <a href="#fo-property-color-profile-name">color-profile-name</a>, <a href="#fo-property-rendering-intent">rendering-intent</a>
+</li>
+<li>
+<strong><a href="#fo-property-float">Float-related Properties</a>: </strong><a href="#fo-property-clear">clear</a>, <a href="#fo-property-float">float</a>, <a href="#fo-property-intrusion-displace">intrusion-displace</a>
+</li>
+<li>
+<strong><a href="#fo-property-keepsbreaks">Keeps and Breaks Properties</a>: </strong><a href="#fo-property-break-after">break-after</a>, <a href="#fo-property-break-before">break-before</a>, <a href="#fo-property-keep-together">keep-together</a>, <a href="#fo-property-keep-with-next">keep-with-next</a>, <a href="#fo-property-keep-with-previous">keep-with-previous</a>, <a href="#fo-property-orphans">orphans</a>, <a href="#fo-property-widows">widows</a>
+</li>
+<li>
+<strong><a href="#fo-property-layout">Layout-related Properties</a>: </strong><a href="#fo-property-clip">clip</a>, <a href="#fo-property-overflow">overflow</a>, <a href="#fo-property-reference-orientation">reference-orientation</a>, <a href="#fo-property-span">span</a>
+</li>
+<li>
+<strong><a href="#fo-property-leader">Leader and Rule Properties</a>: </strong><a href="#fo-property-leader-alignment">leader-alignment</a>, <a href="#fo-property-leader-pattern">leader-pattern</a>, <a href="#fo-property-leader-pattern-width">leader-pattern-width</a>, <a href="#fo-property-leader-length">leader-length</a>, <a href="#fo-property-rule-style">rule-style</a>, <a href="#fo-property-rule-thickness">rule-thickness</a>
+</li>
+<li>
+<strong><a href="#fo-property-dynamiceffects">Properties for Dynamic Effects Formatting Objects</a>: </strong><a href="#fo-property-active-state">active-state</a>, <a href="#fo-property-auto-restore">auto-restore</a>, <a href="#fo-property-case-name">case-name</a>, <a href="#fo-property-case-title">case-title</a>, <a href="#fo-property-destination-placement-offset">destination-placement-offset</a>, <a href="#fo-property-external-destination">external-destination</a>, <a href="#fo-property-indicate-destination">indicate-destination</a>, <a href="#fo-property-internal-destination">internal-destination</a>, <a href="#fo-property-show-destination">show-destination</a>, <a href="#fo-property-starting-state">starting-state</a>, <a href="#fo-property-switch-to">switch-to</a>, <a href="#fo-property-target-presentation-context">target-presentation-context</a>, <a href="#fo-property-target-processing-context">target-processing-context</a>, <a href="#fo-property-target-stylesheet">target-stylesheet</a>
+</li>
+<li>
+<strong><a href="#fo-property-markers">Properties for Markers</a>: </strong><a href="#fo-property-marker-class-name">marker-class-name</a>, <a href="#fo-property-retrieve-class-name">retrieve-class-name</a>, <a href="#fo-property-retrieve-position">retrieve-position</a>, <a href="#fo-property-retrieve-boundary">retrieve-boundary</a>
+</li>
+<li>
+<strong><a href="#fo-property-numberstring">Properties for Number to String Conversion</a>: </strong><a href="#fo-property-format">format</a>, <a href="#fo-property-grouping-separator">grouping-separator</a>, <a href="#fo-property-grouping-size">grouping-size</a>, <a href="#fo-property-letter-value">letter-value</a>
+</li>
+<li>
+<strong><a href="#fo-property-pagination">Pagination and Layout Properties</a>: </strong><a href="#fo-property-blank-or-not-blank">blank-or-not-blank</a>, <a href="#fo-property-column-count">column-count</a>, <a href="#fo-property-column-gap">column-gap</a>, <a href="#fo-property-extent">extent</a>, <a href="#fo-property-flow-name">flow-name</a>, <a href="#fo-property-force-page-count">force-page-count</a>, <a href="#fo-property-initial-page-number">initial-page-number</a>, <a href="#fo-property-master-name">master-name</a>, <a href="#fo-property-master-reference">master-reference</a>, <a href="#fo-property-maximum-repeats">maximum-repeats</a>, <a href="#fo-property-media-usage">media-usage</a>, <a href="#fo-property-odd-or-even">odd-or-even</a>, <a href="#fo-property-page-height">page-height</a>, <a href="#fo-property-page-position">page-position</a>, <a href="#fo-property-page-width">page-width</a>, <a href="#fo-property-precedence">precedence</a>, <a href="#fo-property-region-name">region-name</a>
+</li>
+<li>
+<strong><a href="#fo-property-table">Table Properties</a>: </strong><a href="#fo-property-border-after-precedence">border-after-precedence</a>, <a href="#fo-property-border-before-precedence">border-before-precedence</a>, <a href="#fo-property-border-collapse">border-collapse</a>, <a href="#fo-property-border-end-precedence">border-end-precedence</a>, <a href="#fo-property-border-separation">border-separation</a>, <a href="#fo-property-border-start-precedence">border-start-precedence</a>, <a href="#fo-property-caption-side">caption-side</a>, <a href="#fo-property-column-number">column-number</a>, <a href="#fo-property-column-width">column-width</a>, <a href="#fo-property-empty-cells">empty-cells</a>, <a href="#fo-property-ends-row">ends-row</a>, <a href="#fo-property-number-columns-repeated">number-columns-repeated</a>, <a href="#fo-property-number-columns-spanned">number-columns-spanned</a>, <a href="#fo-property-number-rows-spanned">number-rows-spanned</a>, <a href="#fo-property-starts-row">starts-row</a>, <a href="#fo-property-table-layout">table-layout</a>, <a href="#fo-property-table-omit-footer-at-break">table-omit-footer-at-break</a>, <a href="#fo-property-table-omit-header-at-break">table-omit-header-at-break</a>
+</li>
+<li>
+<strong><a href="#fo-property-writingmode">Writing-mode-related Properties</a>: </strong><a href="#fo-property-direction">direction</a>, <a href="#fo-property-glyph-orientation-horizontal">glyph-orientation-horizontal</a>, <a href="#fo-property-glyph-orientation-vertical">glyph-orientation-vertical</a>, <a href="#fo-property-text-altitude">text-altitude</a>, <a href="#fo-property-text-depth">text-depth</a>, <a href="#fo-property-unicode-bidi">unicode-bidi</a>, <a href="#fo-property-writing-mode">writing-mode</a>
+</li>
+<li>
+<strong><a href="#fo-property-misc">Miscellaneous Properties</a>: </strong><a href="#fo-property-content-type">content-type</a>, <a href="#fo-property-id">id</a>, <a href="#fo-property-provisional-label-separation">provisional-label-separation</a>, <a href="#fo-property-provisional-distance-between-starts">provisional-distance-between-starts</a>, <a href="#fo-property-ref-id">ref-id</a>, <a href="#fo-property-score-spaces">score-spaces</a>, <a href="#fo-property-src">src</a>, <a href="#fo-property-visibility">visibility</a>, <a href="#fo-property-z-index">z-index</a>
+</li>
+<li>
+<strong><a href="#fo-property-shorthand">Shorthand Properties</a>: </strong><a href="#fo-property-background">background</a>, <a href="#fo-property-background-position">background-position</a>, <a href="#fo-property-border">border</a>, <a href="#fo-property-border-bottom">border-bottom</a>, <a href="#fo-property-border-color">border-color</a>, <a href="#fo-property-border-left">border-left</a>, <a href="#fo-property-border-right">border-right</a>, <a href="#fo-property-border-style">border-style</a>, <a href="#fo-property-border-spacing">border-spacing</a>, <a href="#fo-property-border-top">border-top</a>, <a href="#fo-property-border-width">border-width</a>, <a href="#fo-property-cue">cue</a>, <a href="#fo-property-font">font</a>, <a href="#fo-property-margin">margin</a>, <a href="#fo-property-padding">padding</a>, <a href="#fo-property-page-break-after">page-break-after</a>, <a href="#fo-property-page-break-before">page-break-before</a>, <a href="#fo-property-page-break-inside">page-break-inside</a>, <a href="#fo-property-pause">pause</a>, <a href="#fo-property-position">position</a>, <a href="#fo-property-size">size</a>, <a href="#fo-property-vertical-align">vertical-align</a>, <a href="#fo-property-white-space">white-space</a>, <a href="#fo-property-xml:lang">xml:lang</a>
+</li>
+</ul>
+</ul>
+<h3>
+<a name="#fo-object">XSL-FO Object Support</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo-section">&sect;6</a>)</h3>
+<p>The following is a summary of FOP's current support for the standard XSL-FO objects.</p>
+<table border="1">
+<tr>
+<th rowspan="2">
+<p>Object Name</p>
+</th><th rowspan="2" align="center">
+      Citation
+    </th><th colspan="3" align="center">
+      Support
+    </th><th rowspan="2">
+      Comments
+    </th>
+</tr>
+<tr>
+<th align="center">Basic</th><th align="center">Extended</th><th align="center">Complete</th>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-object-decl">Declarations and Pagination and Layout Formatting Objects</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#section-N10029-Declarations-and-Pagination-and-Layout-Formatting-Objects">&sect;6.4</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-object-root">root</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_root">&sect;6.4.2</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-declarations">declarations</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_declarations">&sect;6.4.3</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-color-profile">color-profile</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_color-profile">&sect;6.4.4</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-page-sequence">page-sequence</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_page-sequence">&sect;6.4.5</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-layout-master-set">layout-master-set</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_layout-master-set">&sect;6.4.6</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-page-sequence-master">page-sequence-master</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_page-sequence-master">&sect;6.4.7</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-single-page-master-reference">single-page-master-reference</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_single-page-master-reference">&sect;6.4.8</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-repeatable-page-master-reference">repeatable-page-master-reference</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_repeatable-page-master-reference">&sect;6.4.9</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-repeatable-page-master-alternatives">repeatable-page-master-alternatives</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_repeatable-page-master-alternatives">&sect;6.4.10</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-conditional-page-master-reference">conditional-page-master-reference</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_conditional-page-master-reference">&sect;6.4.11</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-simple-page-master">simple-page-master</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_simple-page-master">&sect;6.4.12</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-region-body">region-body</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_region-body">&sect;6.4.13</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-region-before">region-before</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_region-before">&sect;6.4.14</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-region-after">region-after</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_region-after">&sect;6.4.15</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-region-start">region-start</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_region-start">&sect;6.4.16</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-region-end">region-end</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_region-end">&sect;6.4.17</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-flow">flow</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_flow">&sect;6.4.18</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-static-content">static-content</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_static-content">&sect;6.4.19</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-title">title</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_title">&sect;6.4.20</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-object-block">Block Formatting Objects</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#section-N12764-Block-level-Formatting-Objects">&sect;6.5</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-object-block">block</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_block">&sect;6.5.2</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-block-container">block-container</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_block-container">&sect;6.5.3</a></td><td align="center" class="yes">.</td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-object-inline">Inline Formatting Objects</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#section-N13277-Inline-level-Formatting-Objects">&sect;6.6</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-object-bidi-override">bidi-override</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_bidi-override">&sect;6.6.2</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-character">character</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_character">&sect;6.6.3</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-initial-property-set">initial-property-set</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_initial-property-set">&sect;6.6.4</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-external-graphic">external-graphic</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_external-graphic">&sect;6.6.5</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-instream-foreign-object">instream-foreign-object</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_instream-foreign-object">&sect;6.6.6</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-inline">inline</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_inline">&sect;6.6.7</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-inline-container">inline-container</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_inline-container">&sect;6.6.8</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-leader">leader</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_leader">&sect;6.6.9</a></td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="center" class="partial">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-page-number">page-number</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_page-number">&sect;6.6.10</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-page-number-citation">page-number-citation</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_page-number-citation">&sect;6.6.11</a></td><td align="center" class="yes">.</td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>Only works for table of contents without any problems. The case
+where the page number doesn't fit on a line isn't handled, and any text on
+the same line and after the page-number might not appear exactly where you
+want it to.</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-object-table">Table Formatting Objects</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#section-N15442-Formatting-Objects-for-Tables">&sect;6.7</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-object-table-and-caption">table-and-caption</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_table-and-caption">&sect;6.7.2</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-table">table</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_table">&sect;6.7.3</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-table-column">table-column</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_table-column">&sect;6.7.4</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>you must explicitly specify column widths</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-object-table-caption">table-caption</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_table-caption">&sect;6.7.5</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-table-header">table-header</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_table-header">&sect;6.7.6</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-table-footer">table-footer</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_table-footer">&sect;6.7.7</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-table-body">table-body</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_table-body">&sect;6.7.8</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-table-row">table-row</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_table-row">&sect;6.7.9</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-table-cell">table-cell</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_table-cell">&sect;6.7.10</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>must contain block-level FOs (cannot contain straight character data)</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-object-list">List Formatting Objects</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#section-N17076-Formatting-Objects-for-Lists">&sect;6.8</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-object-list-block">list-block</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_list-block">&sect;6.8.2</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-list-item">list-item</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_list-item">&sect;6.8.3</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-list-item-body">list-item-body</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_list-item-body">&sect;6.8.4</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-list-item-label">list-item-label</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_list-item-label">&sect;6.8.5</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-object-link">Link and Multi Formatting Objects</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#section-N17805-Dynamic-Effects:-Link-and-Multi-Formatting-Objects">&sect;6.9</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-object-basic-link">basic-link</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_basic-link">&sect;6.9.2</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>both internal and external supported</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-object-multi-switch">multi-switch</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_multi-switch">&sect;6.9.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-multi-case">multi-case</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_multi-case">&sect;6.9.4</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-multi-toggle">multi-toggle</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_multi-toggle">&sect;6.9.5</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-multi-properties">multi-properties</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_multi-properties">&sect;6.9.6</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-multi-property-set">multi-property-set</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_multi-property-set">&sect;6.9.7</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-object-outofline">Out-of-line Formatting Objects</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#section-N18509-Out-of-Line-Formatting-Objects">&sect;6.10</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-object-float">float</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_float">&sect;6.10.2</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-footnote">footnote</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_footnote">&sect;6.10.3</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-footnote-body">footnote-body</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_footnote-body">&sect;6.10.4</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-object-other">Other Formatting Objects</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#section-N19019-Other-Formatting-Objects">&sect;6.11</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-object-wrapper">wrapper</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_wrapper">&sect;6.11.2</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-marker">marker</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_marker">&sect;6.11.3</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-object-retrieve-marker">retrieve-marker</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice6.html#fo_retrieve-marker">&sect;6.11.4</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+</table>
+<h3>
+<a name="#fo-property">XSL-FO Property Support</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#pr-section">&sect;7</a>)</h3>
+<p>The following is a summary of FOP's current support for the standard XSL-FO properties. Please note that a number of properties and categories of properties are not supported because they do not apply to documents in visual formats.</p>
+<table border="1">
+<tr>
+<th rowspan="2">
+<p>Property Name</p>
+</th><th rowspan="2" align="center">
+      Citation
+    </th><th colspan="3" align="center">
+      Support
+    </th><th rowspan="2">
+      Comments
+    </th>
+</tr>
+<tr>
+<th align="center">Basic</th><th align="center">Extended</th><th align="center">Complete</th>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-commonaccess">Common Accessibility Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#common-accessibility-properties">&sect;7.4</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-source-document">source-document</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#source-document">&sect;7.4.1</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-role">role</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#role">&sect;7.4.2</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-commonabspos">Common Absolute Position Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#common-absolute-position-properties">&sect;7.5</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-absolute-position">absolute-position</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#absolute-position">&sect;7.5.1</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-top">top</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#top">&sect;7.5.2</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-right">right</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#right">&sect;7.5.3</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-bottom">bottom</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#bottom">&sect;7.5.4</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-left">left</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#left">&sect;7.5.5</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-commonaural">Common Aural Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#common-aural-properties">&sect;7.6</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-azimuth">azimuth</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#azimuth">&sect;7.6.1</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-cue-after">cue-after</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#cue-after">&sect;7.6.2</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-cue-before">cue-before</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#cue-before">&sect;7.6.3</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-elevation">elevation</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#elevation">&sect;7.6.4</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-pause-after">pause-after</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#pause-after">&sect;7.6.5</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-pause-before">pause-before</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#pause-before">&sect;7.6.6</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-pitch">pitch</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#pitch">&sect;7.6.7</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-pitch-range">pitch-range</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#pitch-range">&sect;7.6.8</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-play-during">play-during</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#play-during">&sect;7.6.9</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-richness">richness</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#richness">&sect;7.6.10</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-speak">speak</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#speak">&sect;7.6.11</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-speak-header">speak-header</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#speak-header">&sect;7.6.12</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-speak-numeral">speak-numeral</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#speak-numeral">&sect;7.6.13</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-speak-punctuation">speak-punctuation</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#speak-punctuation">&sect;7.6.14</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-speech-rate">speech-rate</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#speech-rate">&sect;7.6.15</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-stress">stress</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#stress">&sect;7.6.16</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-voice-family">voice-family</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#voice-family">&sect;7.6.17</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-volume">volume</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#volume">&sect;7.6.18</a></td><td align="center" class="">na</td><td align="center" class="">.</td><td align="center" class="">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-commonenv">Common Border, Padding, and Background Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#common-border-padding-and-background-properties">&sect;7.7</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-background-attachment">background-attachment</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#background-attachment">&sect;7.7.1</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-background-color">background-color</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#background-color">&sect;7.7.2</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-background-image">background-image</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#background-image">&sect;7.7.3</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-background-repeat">background-repeat</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#background-repeat">&sect;7.7.4</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-background-position-horizontal">background-position-horizontal</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#background-position-horizontal">&sect;7.7.5</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-background-position-vertical">background-position-vertical</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#background-position-vertical">&sect;7.7.6</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-before-color">border-before-color</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-before-color">&sect;7.7.7</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-before-style">border-before-style</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-before-style">&sect;7.7.8</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>only "solid" works</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-before-width">border-before-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-before-width">&sect;7.7.9</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-after-color">border-after-color</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-after-color">&sect;7.7.10</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-after-style">border-after-style</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-after-style">&sect;7.7.11</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>only "solid" works</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-after-width">border-after-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-after-width">&sect;7.7.12</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-start-color">border-start-color</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-start-color">&sect;7.7.13</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-start-style">border-start-style</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-start-style">&sect;7.7.14</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>only "solid" works</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-start-width">border-start-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-start-width">&sect;7.7.15</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-end-color">border-end-color</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-end-color">&sect;7.7.16</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-end-style">border-end-style</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-end-style">&sect;7.7.17</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>only "solid" works</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-end-width">border-end-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-end-width">&sect;7.7.18</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-top-color">border-top-color</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-top-color">&sect;7.7.19</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-top-style">border-top-style</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-top-style">&sect;7.7.20</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>only "solid" works</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-top-width">border-top-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-top-width">&sect;7.7.21</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-bottom-color">border-bottom-color</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-bottom-color">&sect;7.7.22</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-bottom-style">border-bottom-style</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-bottom-style">&sect;7.7.23</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>only "solid" works</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-bottom-width">border-bottom-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-bottom-width">&sect;7.7.24</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-left-color">border-left-color</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-left-color">&sect;7.7.25</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-left-style">border-left-style</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-left-style">&sect;7.7.26</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>only "solid" works</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-left-width">border-left-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-left-width">&sect;7.7.27</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-right-color">border-right-color</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-right-color">&sect;7.7.28</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-right-style">border-right-style</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-right-style">&sect;7.7.29</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>only "solid" works</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-right-width">border-right-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-right-width">&sect;7.7.30</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-padding-before">padding-before</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#padding-before">&sect;7.7.31</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>only one value allowed</li>
+<li>only implemented for blocks</li>
+<li>can't be used to make extra space (use indents + spaces instead)</li>
+<li>can be used to control how much the background-color extends beyond the content rectangle</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-padding-after">padding-after</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#padding-after">&sect;7.7.32</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>same limitations as padding-before</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-padding-start">padding-start</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#padding-start">&sect;7.7.33</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>same limitations as padding-before</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-padding-end">padding-end</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#padding-end">&sect;7.7.34</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>same limitations as padding-before</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-padding-top">padding-top</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#padding-top">&sect;7.7.35</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>same limitations as padding-before</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-padding-bottom">padding-bottom</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#padding-bottom">&sect;7.7.36</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>same limitations as padding-before</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-padding-left">padding-left</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#padding-left">&sect;7.7.37</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>same limitations as padding-before</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-padding-right">padding-right</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#padding-right">&sect;7.7.38</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>same limitations as padding-before</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-commonfont">Common Font Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#common-font-properties">&sect;7.8</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-font-family">font-family</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#font-family">&sect;7.8.2</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>font-family lists are not supported, use a single font-family name</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-font-selection-strategy">font-selection-strategy</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#font-selection-strategy">&sect;7.8.3</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-font-size">font-size</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#font-size">&sect;7.8.4</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-font-stretch">font-stretch</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#font-stretch">&sect;7.8.5</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-font-size-adjust">font-size-adjust</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#font-size-adjust">&sect;7.8.6</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-font-style">font-style</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#font-style">&sect;7.8.7</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-font-variant">font-variant</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#font-variant">&sect;7.8.8</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-font-weight">font-weight</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#font-weight">&sect;7.8.9</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-commonhyphen">Common Hyphenation Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#common-hyphenation-properties">&sect;7.9</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-country">country</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#country">&sect;7.9.1</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-language">language</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#language">&sect;7.9.2</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-script">script</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#script">&sect;7.9.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-hyphenate">hyphenate</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#hyphenate">&sect;7.9.4</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-hyphenation-character">hyphenation-character</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#hyphenation-character">&sect;7.9.5</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-hyphenation-push-character-count">hyphenation-push-character-count</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#hyphenation-push-character-count">&sect;7.9.6</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-hyphenation-remain-character-count">hyphenation-remain-character-count</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#hyphenation-remain-character-count">&sect;7.9.7</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-commonmarginblock">Common Margin Properties - Block</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#common-margin-properties-block">&sect;7.10</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-margin-top">margin-top</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#margin-top">&sect;7.10.1</a></td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>only on pages and regions</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-margin-bottom">margin-bottom</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#margin-bottom">&sect;7.10.2</a></td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>only on pages and regions</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-margin-left">margin-left</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#margin-left">&sect;7.10.3</a></td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>only on pages and regions</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-margin-right">margin-right</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#margin-right">&sect;7.10.4</a></td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>only on pages and regions</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-space-before">space-before</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#space-before">&sect;7.10.5</a></td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>space-before.optimum supported</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-space-after">space-after</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#space-after">&sect;7.10.6</a></td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>space-after.optimum supported</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-start-indent">start-indent</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#start-indent">&sect;7.10.7</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-end-indent">end-indent</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#end-indent">&sect;7.10.8</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-commonmargininline">Common Margin Properties - Inline</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#common-margin-properties-inline">&sect;7.11</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-space-end">space-end</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#space-end">&sect;7.11.1</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-space-start">space-start</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#space-start">&sect;7.11.2</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-commonrelpos">Common Relative Position Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#common-relative-position-properties">&sect;7.12</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-relative-position">relative-position</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#relative-position">&sect;7.12.1</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-areaalign">Area Alignment Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#area-alignment">&sect;7.13</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-alignment-adjust">alignment-adjust</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#alignment-adjust">&sect;7.13.1</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-alignment-baseline">alignment-baseline</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#alignment-baseline">&sect;7.13.2</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-baseline-shift">baseline-shift</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#baseline-shift">&sect;7.13.3</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-display-align">display-align</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#display-align">&sect;7.13.4</a></td><td align="center" class="yes">.</td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>Implemented only for table-cell and block-container.</li>
+<li>For table-cell, the "height" attribute must be set for the parent table-row; setting the height of the table or the table-cell results in vertical centering having no effect.
+</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-dominant-baseline">dominant-baseline</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#dominant-baseline">&sect;7.13.5</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-relative-align">relative-align</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#relative-align">&sect;7.13.6</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-areadim">Area Dimension Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N36094-Area-Dimension-Properties">&sect;7.14</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-block-progression-dimension">block-progression-dimension</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#block-progression-dimension">&sect;7.14.1</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-content-height">content-height</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#content-height">&sect;7.14.2</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-content-width">content-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#content-width">&sect;7.14.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-height">height</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#height">&sect;7.14.4</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-inline-progression-dimension">inline-progression-dimension</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#inline-progression-dimension">&sect;7.14.5</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-max-height">max-height</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#max-height">&sect;7.14.6</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-max-width">max-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#max-width">&sect;7.14.7</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-min-height">min-height</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#min-height">&sect;7.14.8</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-min-width">min-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#min-width">&sect;7.14.9</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-scaling">scaling</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#scaling">&sect;7.14.10</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-scaling-method">scaling-method</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#scaling-method">&sect;7.14.11</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-width">width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#width">&sect;7.14.12</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-blockandline">Block and Line-related Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N38191-Block-and-Line-related-Properties">&sect;7.15</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-hyphenation-keep">hyphenation-keep</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#hyphenation-keep">&sect;7.15.1</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-hyphenation-ladder-count">hyphenation-ladder-count</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#hyphenation-ladder-count">&sect;7.15.2</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-last-line-end-indent">last-line-end-indent</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#last-line-end-indent">&sect;7.15.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-line-height">line-height</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#line-height">&sect;7.15.4</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-line-height-shift-adjustment">line-height-shift-adjustment</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#line-height-shift-adjustment">&sect;7.15.5</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-line-stacking-strategy">line-stacking-strategy</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#line-stacking-strategy">&sect;7.15.6</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-linefeed-treatment">linefeed-treatment</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#linefeed-treatment">&sect;7.15.7</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-white-space-treatment">white-space-treatment</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#white-space-treatment">&sect;7.15.8</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-text-align">text-align</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#text-align">&sect;7.15.9</a></td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>Only start, end, center and justify are supported</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-text-align-last">text-align-last</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#text-align-last">&sect;7.15.10</a></td><td align="center" class="yes">.</td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>Only start, end, center and justify are supported</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-text-indent">text-indent</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#text-indent">&sect;7.15.11</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-white-space-collapse">white-space-collapse</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#white-space-collapse">&sect;7.15.12</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-wrap-option">wrap-option</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#wrap-option">&sect;7.15.13</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-char">Character Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N40545-Character-Properties">&sect;7.16</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-character">character</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#character">&sect;7.16.1</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-letter-spacing">letter-spacing</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#letter-spacing">&sect;7.16.2</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-suppress-at-line-break">suppress-at-line-break</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#suppress-at-line-break">&sect;7.16.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-text-decoration">text-decoration</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#text-decoration">&sect;7.16.4</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-text-shadow">text-shadow</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#text-shadow">&sect;7.16.5</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-text-transform">text-transform</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#text-transform">&sect;7.16.6</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-treat-as-word-space">treat-as-word-space</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#treat-as-word-space">&sect;7.16.7</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-word-spacing">word-spacing</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#word-spacing">&sect;7.16.8</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-color">Color-related Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N42081-Color-related-Properties">&sect;7.17</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-color">color</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#color">&sect;7.17.1</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-color-profile-name">color-profile-name</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#color-profile-name">&sect;7.17.2</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-rendering-intent">rendering-intent</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#rendering-intent">&sect;7.17.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-float">Float-related Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N42546-Float-related-Properties">&sect;7.18</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-clear">clear</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#clear">&sect;7.18.1</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-float">float</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#float">&sect;7.18.2</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-intrusion-displace">intrusion-displace</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#intrusion-displace">&sect;7.18.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-keepsbreaks">Keeps and Breaks Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N43268-Keeps-and-Breaks-Properties">&sect;7.19</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-break-after">break-after</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#break-after">&sect;7.19.1</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-break-before">break-before</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#break-before">&sect;7.19.2</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-keep-together">keep-together</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#keep-together">&sect;7.19.3</a></td><td align="center" class="yes">.</td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>works only in table rows</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-keep-with-next">keep-with-next</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#keep-with-next">&sect;7.19.4</a></td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>works only in table rows</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-keep-with-previous">keep-with-previous</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#keep-with-previous">&sect;7.19.5</a></td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>works only in table rows</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-orphans">orphans</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#orphans">&sect;7.19.6</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-widows">widows</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#widows">&sect;7.19.7</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-layout">Layout-related Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N44408-Layout-related-Properties">&sect;7.20</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-clip">clip</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#clip">&sect;7.20.1</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-overflow">overflow</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#overflow">&sect;7.20.2</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-reference-orientation">reference-orientation</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#reference-orientation">&sect;7.20.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="left">
+<ul>
+<li>Workaround for page-orientation (portrait vs. landscape) is to swap the page-width and page-height properties.</li>
+<li>Workaround for block-container is to use SVG.</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-span">span</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#span">&sect;7.20.4</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-leader">Leader and Rule Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N45132-Leader-and-Rule-Properties">&sect;7.21</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-leader-alignment">leader-alignment</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#leader-alignment">&sect;7.21.1</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>not value "page"</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-leader-pattern">leader-pattern</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#leader-pattern">&sect;7.21.2</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>not value "use-content"</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-leader-pattern-width">leader-pattern-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#leader-pattern-width">&sect;7.21.3</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-leader-length">leader-length</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#leader-length">&sect;7.21.4</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="left">
+<ul>
+<li>leader-length.minimum is not used at all</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-rule-style">rule-style</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#rule-style">&sect;7.21.5</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-rule-thickness">rule-thickness</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#rule-thickness">&sect;7.21.6</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-dynamiceffects">Properties for Dynamic Effects Formatting Objects</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N46115-Properties-for-Dynamic-Effects-Formatting-Objects">&sect;7.22</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-active-state">active-state</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#active-state">&sect;7.22.1</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-auto-restore">auto-restore</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#auto-restore">&sect;7.22.2</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-case-name">case-name</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#case-name">&sect;7.22.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-case-title">case-title</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#case-title">&sect;7.22.4</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-destination-placement-offset">destination-placement-offset</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#destination-placement-offset">&sect;7.22.5</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-external-destination">external-destination</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#external-destination">&sect;7.22.6</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-indicate-destination">indicate-destination</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#indicate-destination">&sect;7.22.7</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-internal-destination">internal-destination</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#internal-destination">&sect;7.22.8</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-show-destination">show-destination</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#show-destination">&sect;7.22.9</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-starting-state">starting-state</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#starting-state">&sect;7.22.10</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-switch-to">switch-to</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#switch-to">&sect;7.22.11</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-target-presentation-context">target-presentation-context</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#target-presentation-context">&sect;7.22.12</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-target-processing-context">target-processing-context</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#target-processing-context">&sect;7.22.13</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-target-stylesheet">target-stylesheet</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#target-stylesheet">&sect;7.22.14</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-markers">Properties for Markers</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N48193-Properties-for-Markers">&sect;7.23</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-marker-class-name">marker-class-name</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#marker-class-name">&sect;7.23.1</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-retrieve-class-name">retrieve-class-name</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#retrieve-class-name">&sect;7.23.2</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-retrieve-position">retrieve-position</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#retrieve-position">&sect;7.23.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-retrieve-boundary">retrieve-boundary</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#retrieve-boundary">&sect;7.23.4</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-numberstring">Properties for Number to String Conversion</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N48804-Properties-for-Number-to-String-Conversion">&sect;7.24</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-format">format</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#format">&sect;7.24.1</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-grouping-separator">grouping-separator</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#grouping-separator">&sect;7.24.2</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-grouping-size">grouping-size</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#grouping-size">&sect;7.24.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-letter-value">letter-value</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#letter-value">&sect;7.24.4</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-pagination">Pagination and Layout Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N49321-Pagination-and-Layout-Properties">&sect;7.25</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-blank-or-not-blank">blank-or-not-blank</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#blank-or-not-blank">&sect;7.25.1</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-column-count">column-count</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#column-count">&sect;7.25.2</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-column-gap">column-gap</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#column-gap">&sect;7.25.3</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-extent">extent</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#extent">&sect;7.25.4</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-flow-name">flow-name</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#flow-name">&sect;7.25.5</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-force-page-count">force-page-count</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#force-page-count">&sect;7.25.6</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-initial-page-number">initial-page-number</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#initial-page-number">&sect;7.25.7</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-master-name">master-name</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#master-name">&sect;7.25.8</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-master-reference">master-reference</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#master-reference">&sect;7.25.9</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-maximum-repeats">maximum-repeats</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#maximum-repeats">&sect;7.25.10</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-media-usage">media-usage</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#media-usage">&sect;7.25.11</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-odd-or-even">odd-or-even</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#odd-or-even">&sect;7.25.12</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-page-height">page-height</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#page-height">&sect;7.25.13</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-page-position">page-position</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#page-position">&sect;7.25.14</a></td><td align="center" class="yes">.</td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>"last" isn't implemented!</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-page-width">page-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#page-width">&sect;7.25.15</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-precedence">precedence</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#precedence">&sect;7.25.16</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-region-name">region-name</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#region-name">&sect;7.25.17</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-table">Table Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N52000-Table-Properties">&sect;7.26</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-after-precedence">border-after-precedence</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-after-precedence">&sect;7.26.1</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-before-precedence">border-before-precedence</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-before-precedence">&sect;7.26.2</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-collapse">border-collapse</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-collapse">&sect;7.26.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-end-precedence">border-end-precedence</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-end-precedence">&sect;7.26.4</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-separation">border-separation</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-separation">&sect;7.26.5</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-start-precedence">border-start-precedence</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-start-precedence">&sect;7.26.6</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-caption-side">caption-side</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#caption-side">&sect;7.26.7</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-column-number">column-number</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#column-number">&sect;7.26.8</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-column-width">column-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#column-width">&sect;7.26.9</a></td><td align="center" class="partial">partial</td><td align="center" class="partial">.</td><td align="center" class="partial">.</td><td align="left">
+<ul>
+<li>"percentage" not implemented. Workaround is to use the XSL-FO "proportional-column-width" function.</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-empty-cells">empty-cells</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#empty-cells">&sect;7.26.10</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-ends-row">ends-row</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#ends-row">&sect;7.26.11</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-number-columns-repeated">number-columns-repeated</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#number-columns-repeated">&sect;7.26.12</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-number-columns-spanned">number-columns-spanned</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#number-columns-spanned">&sect;7.26.13</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-number-rows-spanned">number-rows-spanned</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#number-rows-spanned">&sect;7.26.14</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-starts-row">starts-row</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#starts-row">&sect;7.26.15</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-table-layout">table-layout</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#table-layout">&sect;7.26.16</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-table-omit-footer-at-break">table-omit-footer-at-break</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#table-omit-footer-at-break">&sect;7.26.17</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-table-omit-header-at-break">table-omit-header-at-break</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#table-omit-header-at-break">&sect;7.26.18</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-writingmode">Writing-mode-related Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#writing-mode-related">&sect;7.27</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-direction">direction</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#direction">&sect;7.27.1</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-glyph-orientation-horizontal">glyph-orientation-horizontal</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#glyph-orientation-horizontal">&sect;7.27.2</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-glyph-orientation-vertical">glyph-orientation-vertical</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#glyph-orientation-vertical">&sect;7.27.3</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-text-altitude">text-altitude</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#text-altitude">&sect;7.27.4</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-text-depth">text-depth</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#text-depth">&sect;7.27.5</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-unicode-bidi">unicode-bidi</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#unicode-bidi">&sect;7.27.6</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-writing-mode">writing-mode</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#writing-mode">&sect;7.27.7</a></td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-misc">Miscellaneous Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N56509-Miscellaneous-Properties">&sect;7.28</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-content-type">content-type</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#content-type">&sect;7.28.1</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-id">id</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#id">&sect;7.28.2</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-provisional-label-separation">provisional-label-separation</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#provisional-label-separation">&sect;7.28.3</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-provisional-distance-between-starts">provisional-distance-between-starts</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#provisional-distance-between-starts">&sect;7.28.4</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-ref-id">ref-id</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#ref-id">&sect;7.28.5</a></td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-score-spaces">score-spaces</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#score-spaces">&sect;7.28.6</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-src">src</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#src">&sect;7.28.7</a></td><td align="center" class="yes">yes</td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-visibility">visibility</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#visibility">&sect;7.28.8</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-z-index">z-index</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#z-index">&sect;7.28.9</a></td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center" class="no">.</td><td align="center">.</td>
+</tr>
+<tr>
+<td class="category" colspan="6"><a name="#fo-property-shorthand">Shorthand Properties</a> (<a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#section-N57854-Shorthand-Properties">&sect;7.29</a>)</td>
+</tr>
+<tr>
+<td><a name="#fo-property-background">background</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#background">&sect;7.29.1</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-background-position">background-position</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#background-position">&sect;7.29.2</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border">border</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border">&sect;7.29.3</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-bottom">border-bottom</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-bottom">&sect;7.29.4</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-color">border-color</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-color">&sect;7.29.5</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="left">
+<ul>
+<li>only one value allowed</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-left">border-left</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-left">&sect;7.29.6</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-right">border-right</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-right">&sect;7.29.7</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-style">border-style</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-style">&sect;7.29.8</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="left">
+<ul>
+<li>only "solid" works</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-spacing">border-spacing</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-spacing">&sect;7.29.9</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-top">border-top</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-top">&sect;7.29.10</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-border-width">border-width</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#border-width">&sect;7.29.11</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="yes">yes</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-cue">cue</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#cue">&sect;7.29.12</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-font">font</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#font">&sect;7.29.13</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-margin">margin</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#margin">&sect;7.29.14</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="partial">partial</td><td align="left">
+<ul>
+<li>only on pages and regions</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-padding">padding</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#padding">&sect;7.29.15</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="partial">partial</td><td align="left">
+<ul>
+<li>only one value allowed</li>
+<li>only implemented for blocks</li>
+<li>can't be used to make extra space (use indents + spaces instead)</li>
+<li>can be used to control how much the background-color extends beyond the content rectangle</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-page-break-after">page-break-after</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#page-break-after">&sect;7.29.16</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-page-break-before">page-break-before</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#page-break-before">&sect;7.29.17</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-page-break-inside">page-break-inside</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#page-break-inside">&sect;7.29.18</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-pause">pause</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#pause">&sect;7.29.19</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-position">position</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#position">&sect;7.29.20</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="partial">partial</td><td align="left">
+<ul>
+<li>"inherit" not handled</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td><a name="#fo-property-size">size</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#size">&sect;7.29.21</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-vertical-align">vertical-align</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#vertical-align">&sect;7.29.22</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-white-space">white-space</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#white-space">&sect;7.29.23</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+<tr>
+<td><a name="#fo-property-xml:lang">xml:lang</a></td><td align="center"><a target="http://www.w3.org/TR/xsl" href="http://www.w3.org/TR/xsl/slice7.html#xml:lang">&sect;7.29.24</a></td><td align="center" class="yes">.</td><td align="center" class="yes">.</td><td align="center" class="no">no</td><td align="center">.</td>
+</tr>
+</table>
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="skin/images/spacer.gif"><a href="skin/images/label.gif"></a><a href="skin/images/page.gif"></a><a href="skin/images/chapter.gif"></a><a href="skin/images/chapter_open.gif"></a><a href="skin/images/current.gif"></a><a href="/favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

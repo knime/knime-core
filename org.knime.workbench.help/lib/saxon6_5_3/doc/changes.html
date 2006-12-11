@@ -1,0 +1,2241 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<HTML><HEAD><TITLE label="&nbsp;Changes&nbsp;">SAXON: Change History</TITLE>
+
+<META content="text/html; charset=windows-1252" http-equiv=Content-Type>
+</HEAD>
+<BODY bgColor=#ddeeff leftMargin=150><FONT face="Arial, Helvetica, sans-serif">
+<div align=right><a href="index.html">SAXON home page</a></div>
+<H1><BIG><FONT color=#ff0080>SAXON: Change History</FONT></BIG></H1>
+
+<p>This file describes changes for versions 6.0 and later.
+For changes prior to version 6.0,
+see <a href="changes5.html"/>changes5.html</a>. 
+For changes prior to version 5.0, see <a href="history.html">history.html</a></p>
+
+<H2>Changes in version 6.5.3 (2003-08-10)</H2>
+
+<p>Support is added for the EXSLT math functions: abs, acos, asin, atan, atan2, constant, 
+cos, exp, log, power, random, sin, sqrt, tan. 
+Thanks to Simon St. Laurent for these.</p>
+
+<p>Integration with the Apache FOP processor has been dropped.</p>
+
+<p>JDOM support moves forward to JDOM Beta 9.</p>
+
+<p>The following defects are cleared:</p>
+
+<ul>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=546200&group_id=29872&atid=397617">546200</a>
+Conversion of a result-tree-fragment to a node-set is sometimes allowed when it should not be.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=549813&group_id=29872&atid=397617">549813</a>
+Unicode surrogate pairs are handled incorrectly by the text output method.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=558696&group_id=29872&atid=397617">558696</a>
+It is not possible to include or import a simplified stylesheet.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=561695&group_id=29872&atid=397617">561695</a>
+Overloaded Java methods are not selected correctly when used as extension functions.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=580605&group_id=29872&atid=397617">580605</a>
+Filename to URI conversion does not handle '#' characters correctly.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=580989&group_id=29872&atid=397617">580989</a>
+A NullPointerException occurs when using tracing (-T) if xsl:for-each is used while evaluating a global variable.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=581515&group_id=29872&atid=397617">581515</a>
+Duplicate DOCTYPE declarations can be generated when performing an identity transformation from JAXP.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=601804&group_id=29872&atid=397617">601804</a>
+The message "cannot create intensional node-set" occurs when evaluating certain complex XPath expressions.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=603928&group_id=29872&atid=397617">603928</a>
+Patterns using predicates such as <code>[position()!=last()]</code> match the wrong nodes.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=608416&group_id=29872&atid=397617">608416</a>
+System.exit(0) is called on successful completion of a transformation.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=616543&group_id=29872&atid=397617">616543</a>
+Saxon does not enforce the rule that <code>xsl:param</code> must appear before any other instructions
+in a template.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=616548&group_id=29872&atid=397617">616548</a>
+It isn't safe to run two transformations concurrently from the
+same Templates object if preview mode is used.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=626277&group_id=29872&atid=397617">626277</a>
+The EXSLT set:leading() function produces the wrong results when one argument is an empty node-set.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=635433&group_id=29872&atid=397617">635433</a>
+The <code>sql:insert</code> extension element fails when the database service has autocommit switched on.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=636661&group_id=29872&atid=397617">636661</a>
+The disable-output-escaping option is ignored when cdata-section-elements is specified.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=637292&group_id=29872&atid=397617">637292</a>
+The xsl:for-each instruction does not clear the current template.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=655730&group_id=29872&atid=397617">655730</a>
+HTML elements in a non-null namespace are output as HTML, not as XML.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=680755&group_id=29872&atid=397617">680755</a>
+Adding the attribute <code>xml:space="preserve"</code> to an element in the result tree should suppress indentation.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=684487&group_id=29872&atid=397617">684487</a>
+Small numbers may be formatted with a trailing zero (e.g. 0.00040).</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=708896&group_id=29872&atid=397617">708896</a>
+When error recovery excludes an element from the output but not its content, the attributes should be excluded.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=708973&group_id=29872&atid=397617">708893</a>
+A call to <code>id()</code> in a match pattern may not select multiple elements, e.g. <code>id("a b c")</code>.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=709011&group_id=29872&atid=397617">709011</a>
+Saxon treats <code>&lt;xsl:attribute name="xmlns:a"&gt;</code> as an error.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=709382&group_id=29872&atid=397617">709382</a>
+Wrong output from <code>xsl:number</code> when the <code>count</code> pattern matches no nodes.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=709635&group_id=29872&atid=397617">709635</a>
+The descendant axis, starting an at attribute with the "standard tree" implementation (-ds) selects
+the wrong nodes.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=710100&group_id=29872&atid=397617">710100</a>
+Eliminate of duplicate nodes works incorrectly with the JDOM interface.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=711106&group_id=29872&atid=397617">711106</a>
+When starting at an attribute node in a JDOM tree, the <code>following</code> axis returns the wrong nodes.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=784696&group_id=29872&atid=397617">784696</a>
+Spurious error message when the <code>name</code> attribute of <code>xsl:element</code> or <code>xsl:attribute</code>
+is an AVT (with curly braces) that can be evaluated at compile-time.</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=786470&group_id=29872&atid=397617">786470</a>
+The NamePool imposes a limit of 256 different prefixes for a namespace URI; this limit is not properly
+checked and reported. </li>
+</ul>
+
+<p>Some limitations originally reported as bugs have now been documented as 
+<a href="conformance.html#limitations">limitations</a>.</p>
+
+
+
+<H2>Changes in version 6.5.2 (2002-04-11) </H2>
+
+<p>The mechanism for keeping stylesheet signatures in the namepool has been removed. It caused
+a creeping "memory leak" in continuously running services, and is not really needed. It was invented
+to allow namepools to be copied, but this facility has never been properly documented or tested.
+Instead, there is now a simple check that the source document and stylesheet are using the same
+namepool.</p>
+
+<p>The following bugs have been cleared:</p>
+
+<ul>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=445881&group_id=29872&atid=397617">445881</a>:
+AElfred - use of relative URIs in entity declarations</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=488115&group_id=29872&atid=397617">488115</a>:
+User-written URIResolver cannot return null</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=483850&group_id=29872&atid=397617">483850</a>:
+AElfred - attributes with duplicate expanded names</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=520552&group_id=29872&atid=397617">520552</a>:
+current() not set when evaluating a key definition</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=521424&group_id=29872&atid=397617">521424</a>:
+JDOM wrapper needs a NamePool</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=521428&group_id=29872&atid=397617">521428</a>:
+Processing Instructions in the DTD are not ignored</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=521444&group_id=29872&atid=397617">521444</a>:
+Processing Instruction name cannot contain a colon</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=528975&group_id=29872&atid=397617">528975</a>:
+xsl:strip-space should not use the default namespace</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=529362&group_id=29872&atid=397617">529362</a>:
+Copying an attribute can create a bad namespace declaration of the form xmlns:.0="" </li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=529388&group_id=29872&atid=397617">529388</a>:
+Array bound failure in tinytree when the tree exactly fits in the allocated buffer</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=531406&group_id=29872&atid=397617">531406</a>:
+The path expression namespace::xml finds no nodes</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=532599&group_id=29872&atid=397617">532599</a>:
+AElfred: "%" sign not allowed in a default attribute value in the DTD</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=542525&group_id=29872&atid=397617">542525</a>:
+CR should be serialized as &amp;#x0D;</li>
+
+</ul>
+
+<p>The JDOM interface has been upgraded to work with JDOM beta 8. It still works with JDOM beta 7 as well; but
+Saxon 6.5.1 will not work with JDOM beta 8.</p>
+ 
+
+<H2>Changes in version 6.5.1 (2002-02-08) </H2>
+
+<p>Added extension functions saxon:pause-tracing() and saxon:resume-tracing()</p>
+
+<p>Suppress lazy evaluation of assignable variables. (This was designed to prevent
+a stack overflow, it didn't succeed, but it seems a good idea anyway).</p>
+
+<p>The following bugs were cleared:</p>
+
+<ul>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=482111&group_id=29872&atid=397617">482111</a>:
+Poor diagnostics when document() function fails</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=491741&group_id=29872&atid=397617">491741</a>:
+Multiple key definitions with the same name and overlapping scopes</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=495457&group_id=29872&atid=397617">495457</a>:
+Preceding axis gives wrong results using tinytree</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=500499&group_id=29872&atid=397617">500499</a>:
+Missing namespace declarations when using a DOMSource</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=506218&group_id=29872&atid=397617">506218</a>:
+Duplicate global parameters can cause corruption of global variables</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=506214&group_id=29872&atid=397617">506214</a>:
+Template rule conflicts can be resolved wrongly</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=509821&group_id=29872&atid=397617">509821</a>:
+Duplicate namespace nodes if xml namespace is explicitly declared</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=510670&group_id=29872&atid=397617">510670</a>:
+xsl:attribute puts the attribute in the wrong namespace</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=510716&group_id=29872&atid=397617">510716</a>:
+The exslt:date-time() functions sets the wrong time-zone</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=513678&group_id=29872&atid=397617">513678</a>:
+Memory leakage when the document() function is used with fragment identifiers in the URI reference</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=513682&group_id=29872&atid=397617">513682</a>:
+Certain XPath expressions (e.g. unions) crash when executed outside the context of a stylesheet</li>
+
+</ul>
+
+
+<H2>Changes in version 6.5 (2001-11-15) </H2>
+
+<p>This is primarily a maintenance release for error clearance, however, it introduces
+an important incompatible change for XSLT conformance reasons.</p>
+
+<h3>XSLT 1.0 conformance</h3>
+
+<p><b>To use XSLT version 1.1 features, the stylesheet should now specify version="1.1".</b>
+The W3C XSL Working Group has announced that XSLT 1.1 will not
+be progressed beyond the working draft stage. Therefore, in the interests of
+standards conformance and stylesheet portability, Saxon 6.5 allows version 1.1
+features to be used only if the stylesheet specifically indicates that it intends
+to use them. Specifically, this affects three features:</p>
+
+<ul>
+<li>The <code>xsl:document</code> element (but not <code>saxon:output</code>, which is a synonym)</li>
+<li>The <code>xsl:script</code> element (but not <code>saxon:script</code>, which is a synonym)</li>
+<li>The ability to use a result tree fragment (also known as a temporary tree) in a context
+where a node-set is required, typically a path expression or filter expression.</li>
+</ul>
+
+<p>To use these features, the stylesheet must invoke <i>forwards-compatible mode</i>.
+This is done by specifying any value other than "1.0" as the value of the <code>version</code>
+attribute of the <code>xsl:stylesheet</code> element, or as the value of the <code>xsl:version</code>
+attribute on a containing literal result element. For clarity, I recommend setting
+<code>version="1.1"</code>.</p>
+
+<p>Note that for the third feature, the ability to use a result tree fragment as a node-set,
+it is the <code>xsl:variable</code> element that creates the result tree fragment that
+must be executed in forwards-compatible mode, not the expression where it is used.</p>
+
+<p>When the stylesheet specifies <code>version="1.0"</code>, the saxon:node-set() or
+exslt:node-set() function can be used to convert a result tree fragment to a node-set.</p>
+
+<h3>Security advice: disabling extension functions</h3>
+
+<p>A new switch has been added to disable use of extension functions, other than
+the system-supplied Saxon and EXSLT extension functions. The switch can be set from
+the command line (<code>-noext</code> option) or by calling:</p>
+ 
+<p><code>setAttribute(FeatureKeys.ALLOW_EXTERNAL_FUNCTIONS, new Boolean(false))</code></p>
+
+<p>on the TransformerFactory object. This switch is useful when running Saxon as part
+of a servlet environment, if the stylesheets to be executed are untrusted. It prevents
+the security risk of an untrusted stylesheet invoking arbitrary Java methods on the
+ server machine that use, modify, or delete privileged system resources.</p>
+ 
+<H3>JAXP 1.1 Support</H3>
+
+<p>The reference implementation of JAXP 1.1 available from Sun has not changed for some
+time, and has one or two annoying bugs. A much more recent version, in which these bugs
+are cleared, is available from Apache as part of the Xalan product. I have therefore
+updated the JAXP library in Saxon using the implementation included with Xalan-j_2_2_D11.
+An additional benefit is that the Apache distribution includes source code, which is
+not available from Sun. I have made no changes to this source code (not even to change 
+the default parser and XSLT processor).</p>
+
+<H3>Miscellaneous</H3>
+
+<ul>
+<li>Added support for utf-16 output encoding</li>
+<li>Added support for CP852 output encoding, used in Czech and Slovak. Thanks to
+Zdenek Wagner [wagner@cesnet.cz] for supplying these. Other extensions for these
+languages (for example, collating sequences) can be found at 
+<a href="http://icebearsoft.euweb.cz/xml/index-en.html">icebearsoft</a>.</li>
+<li>The <code>saxon.jar</code> file is now built with a manifest that identifies
+its main class, so you can invoke Saxon with the command line:<br />
+<code><b>java -jar saxon.jar source.xml style.xsl</b></code>
+</ul> 
+
+<H3>Defects cleared</H3>
+
+<ul>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=474923&group_id=29872&atid=397617">474923</a>:
+Failure to reset parameters when using a Transformer for more than one transformation.</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=472844&group_id=29872&atid=397617">472844</a>:
+AElfred fails to handle byte-order-mark at start of UTF-8 files.
+Also fixed some problems with AElfred diagnostics: reporting
+of byte position for a bad UTF-8 byte, and reporting of failures to resolve a URL for
+a DTD or other external entity.</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=441078&group_id=29872&atid=397617">441078</a>:
+The original fix for this in Saxon 6.4.3 had the unfortunate side-effect that result tree fragments
+were referenced in the document pool for the duration of a transformation, meaning that
+they could never be cleared from memory by the garbage collector. This is now
+fixed, by rewriting the DocumentPool class. Note that it remains true that the DocumentPool
+is not reset automatically after doing a transform() - this caching can be useful when
+several transformations use the same lookup documents. To clear the pool, either create
+a new Transformer for each transformation, or call the new clearDocumentPool() method.</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=481258&group_id=29872&atid=397617">481258</a>:
+id() function in complex predicates (an expression reduction bug)</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=463578&group_id=29872&atid=397617">463578</a>:
+sum() function in complex predicates (another expression reduction bug)</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=481381&group_id=29872&atid=397617">481381</a>:
+When a Writer is supplied to accept Saxon output, with encoding "UTF-8", Saxon writes an
+XML declaration saying encoding="UTF8".</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=472842&group_id=29872&atid=397617">472842</a>:
+AElfred reports that PE reference isn't allowed in the internal DTD subset, in certain situations
+where it should be allowed.</li>
+
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=445881&group_id=29872&atid=397617">445881</a>:
+AElfred incorrectly resolves a relative URI for an external entity. It resolves it relative
+to the resource containing the entity reference, not the resource containing the entity
+declaration.</li>
+
+</ul>
+
+
+<H2>Changes in version 6.4.4 (2001-09-18) </H2>
+
+<p>This is primarily a maintenance release for error clearance.</p>
+
+<p>Defects fixed (details at <a href="http://saxon.sourceforge.net/">SourceForge</a>):</p>
+
+<ul>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=443487&group_id=29872&atid=397617">443487</a>
+- No document number generated for a document supplied using a TransformerHandler</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=444070&group_id=29872&atid=397617">444070</a> 
+- Command line -a option fails if PI contains "title"</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=444173&group_id=29872&atid=397617">444173</a>
+- NullPointer exception when stylesheet supplied as DOMSource with no SystemID</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=444075&group_id=29872&atid=397617">444075</a>
+- Multiple namespace nodes when processing a DOMSource</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=444530&group_id=29872&atid=397617">444530</a>
+- ArrayIndexOutOfBoundsException while evaluating distinct() function</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=445161&group_id=29872&atid=397617">445161</a>
+- Overriding a global parameter using xsl:import</li> 
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=448377&group_id=29872&atid=397617">448377</a>
+- dayInWeek() gives wrong answer</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=448711&group_id=29872&atid=397617">448711</a>
+- NullPointerException with misspelled attribute name in xsl:strip-space</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=449219&group_id=29872&atid=397617">449219</a>
+- week-in-year() misnamed as week-number()</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=457166&group_id=29872&atid=397617">457166</a>
+- AbstractNode doesn't implement DOMLocator</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=457176&group_id=29872&atid=397617">457176</a>
+- Identity Transformer loses comments</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=459543&group_id=29872&atid=397617">459543</a>
+- Intensional node-set dependency problem involving an AxisExpression</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=462241&group_id=29872&atid=397617">462241</a>
+- Identity transformer loses element names when using Crimson XML parser</li>
+
+</ul>
+
+<p>Preview mode (the &lt;saxon:preview&gt; extension) was never designed to work when using
+a TransformerHandler in the JAXP interface, only when using the transform() method.
+This is now documented as a restriction.</p>
+
+<p>FOP integration has been upgraded to work with FOP 0.20.1. It no longer works with
+previous FOP releases. However, if you need to use Saxon 6.4.4 with FOP 0.19.0, you
+should be able to do so by using the saxon-fop.jar issued with 6.4.3, along
+with the 6.4.4 version of saxon.jar.</p>
+
+<p>JDOM integration has been upgraded to work with JDOM 0.7. It no longer works with
+previous JDOM releases. However, if you need to use Saxon 6.4.4 with JDOM 0.6, you
+should be able to do so by using the saxon-jdom.jar issued with 6.4.3, along with the
+6.4.4 version of saxon.jar. Saxon's JDOM integration now relies on the JDOM tree being
+built with entities expanded (which is the default). Saxon does not yet support the new
+JDOMSource and JDOMResult classes included in JDOM 0.7.</p>
+
+<p>Writing an attribute node when there is no open element start tag is now a
+recoverable error: the action depends on the recovery policy (by default, a warning
+is output and processing continues).</p>
+
+<p>Writing a text node with disable-output-escaping when it includes a character
+outside the character set supported by the output encoding was previously treated
+as an unrecoverable error; this has changed so the processor recovers silently
+(by not disabling output escaping).</p>
+
+<p>This means that all errors for which the XSLT specification describes a recovery
+action are now either (a) handled according to the recovery policy selected by the
+user, or (b) recovered silently, using the recovery action described in the XSLT
+Recommendation. None of these errors are signalled unconditionally.</p>
+
+<p>The <b>DTDGenerator</b>, previously issued as a sample Saxon application, has
+been rewritten as a pure SAX application. Since it no longer makes use of Saxon,
+but works with any JAXP 1.1 compliant XML parser,
+it is now issued as a free-standing package under the
+ <a href="http://saxon.sourceforge.net/">Saxon project at SourceForge</a>,
+ with its own version number (initially 7.0).</p>
+ 
+<p>The handling of <b>xsl:message terminate="yes"</b> has changed. Previously the
+transform() method output a message to System.err, and then returned normally. Now
+the transform() method outputs no message (other than the message output by xsl:message
+itself) but throws a <code>com.icl.saxon.style.TerminationException</code>, 
+which is a subclass of <code>jaxp.xml.transform.TransformerException</code>.
+The command-line driver com.icl.saxon.Stylesheet now handles this exception, so the
+only change in the behavior of the command line is that a result code
+(1) is now returned. When using the Java API, the application can now detect the condition
+by catching the TerminationException.</p>
+
+<p>There are a couple of new optimisations, prompted by an example submitted by Evan Lenz:</p>
+
+<ul>
+<li>The document() function, if it has constant arguments, is now evaluated when the 
+expression is reduced - this typically means that it is evaluated only once if it is used
+in a predicate or a sort key. I still avoid evaluating the document function at compile
+time, in the way that all other constant expressions are pre-evaluated, on the grounds that
+the contents of the referenced document may change.</li>
+<li>Any path expression whose first component is a constant node-set (typically, a path
+expression starting with document() or current() or with a variable reference) is now
+converted to a "node-set intent" when it is reduced. This means that if such an expression
+is used in a predicate, the node-set will be evaluated the first three times it is used,
+but if it is used more than thrice, memory will be allocated for it so that it doesn't need
+to be evaluated again. This behaves the same way as if the node-set is assigned to a
+variable and the variable is used within the predicate.</li>
+<li>Certain path expressions and filter expressions are now statically recognized as 
+always returning nodes from the same document as the context node. These include most
+path and filter expressions, with exceptions such as those beginning with document() or with a variable
+reference. Within such an expression, any absolute path expression (beginning with "/", id(),
+or key()) within a predicate is now evaluated once only, since it will have the same value
+for all the nodes being filtered.</li>
+</ul>
+
+<p>A new extension function has been added for parsing the content of processing
+instructions: <a href="extensions.html#getpseudoattribute">getPseudoAttribute()</a>.</p>
+
+<H2>Changes in version 6.4.3 (2001-07-13)</H2>
+
+<p>This is a maintenance release for error clearance.</p>
+
+<h3>Defects cleared</h3>
+
+<p>The following defects are cleared in this release. Full details of all Saxon bugs
+are now placed on the SourceForge register as soon as the problem is acknowledged to be
+a bug.</p>
+
+<ul>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=440384&group_id=29872&atid=397617">440384</a>
+Overriding an imported variable causes an exception</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=440452&group_id=29872&atid=397617">440452</a>
+The number() function accepts strings containing '+' and 'e'</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=440992&group_id=29872&atid=397617">440992</a>
+Identity transform fails</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=441000&group_id=29872&atid=397617">441000</a>
+date:dayOfWeekInMonth() gives wrong answer</li>
+<li><a href="http://sourceforge.net/tracker/index.php?func=detail&aid=441078&group_id=29872&atid=397617">441078</a>
+Union on nodes in temporary trees eliminates nodes that aren't duplicates</li>
+</ul>
+
+<h3>EXSLT extension library</h3>
+
+<p>The <b>exslt:function</b> element now implicitly declares the namespace
+<code>http://exslt.org/functions</code> to be an extension namespace, so that
+<bold>exslt:result</bold> is recognized. Similarly, <b>saxon:function</b>
+implicitly declares <code>http://icl.com/saxon</code> to be an extension namespace.</p>
+
+
+<H2>Changes in version 6.4.2 (2001-07-07)</H2>
+
+<h3>Defects cleared</h3>
+
+<p>For details of defects cleared in this release, see the project page
+at SourceForge (<a href="http://www.sourceforge.net/projects/saxon">http://www.sourceforge.net/projects/saxon</a>).</p>
+
+<h3>The document() function</h3>
+
+<p>A failure to retrieve the identified URI, or a failure to parse the XML, is now treated
+as a recoverable error. By default, the error is reported to System.err, and an empty
+node-set is returned. As with other recoverable errors, you can change this by setting
+the recovery policy (e.g. -w2 on the command line makes the error fatal), or by supplying
+your own ErrorListener.</p>
+
+<p>It is now possible for a user-defined URI Resolver to return a DocumentInfo object
+directly. This is illustrated by the sample URI Resolver included in the TraxExamples
+sample application, which is used to resolve URIs referring to simple text files.
+(This applies only to the document() function; when used by xsl:include or xsl:import,
+the URIResolver should return a SAXSource, StreamSource, or DOMSource).</p>
+
+<h3>Error reporting</h3>
+
+<p>XSLT 1.0 says that is an error to output a node other than a text node while evaluating xsl:comment,
+xsl:attribute, or xsl:processing-instruction; the processor is allowed to recover by
+ignoring the offending nodes and their descendants. Saxon previously recovered silently
+from this error. At this release, this error is handled in the same way as other recoverable
+errors: by default, it results in a warning message.</p>
+
+<p>XML parsing failures detected in the source document or stylesheet are now directed
+to the JAXP ErrorListener, unless a SAX errorHandler has been nominated.</p>
+
+<p>A PrintStream can now be supplied to the standard error listener to define the
+destination for error messages (the default is System.err).
+
+<p>There has been some tidying-up of error messages, to prevent the same message being
+output several times.</p> 
+
+<h3>EXSLT Support</h3>
+
+<p>The core extension functions defined in the EXSLT dates-and-times module are now
+available: specifically date-time(), date(), time(), year(), leap-year(), month-in-year(),
+month-name(), month-abbreviation(), week-number(), week-in-month(), day-in-year(),
+day-in-month(), day-of-week-in-month(), day-in-week(), day-abbreviation(), 
+hour-in-day(), minute-in-hour(), second-in-minute(). For details see
+ <a href="http://www.exslt.org/">http://www.exslt.org/</a></p>
+
+<H2>Changes in version 6.4.1 (2001-07-03)</H2>
+
+<p>This was an emergency patch release of Instant Saxon only. It fixed a problem whereby
+Instant Saxon would not run unless certain other JAXP software (for example,
+ the Crimson parser) was present on the classpath.</p>
+
+<H2>Changes in version 6.4 (2001-07-03)</H2>
+
+<h3>Documentation</h3>
+
+<p>I have given the <a href="api-guide.html">API Guide</a> a much needed overhaul,
+including improved descriptions of the APIs for invoking XPath expressions from Java
+code.</p>
+
+<H3>Defects cleared</H3>
+
+<p>The following errors were found version 6.3, and have been cleared.</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>6.3/001</TD>
+    <TD>If the match pattern in an <b>xsl:key</b> definition matches both element and
+    attribute nodes, only the attributes will actually be indexed. (Present in all
+    previous releases.)</p>
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.3/002</TD>
+    <TD>If a Writer is supplied to receive the output of a transformation (when using the
+    JAXP 1.1 API), Saxon has no control over the output encoding. It is therefore possible
+    that the value of the encoding attribute written to the XML declaration will bear
+    no relation to the actual encoding of the output file. As a partial fix to this, 
+    Saxon now determines the encoding used by the Writer if it can (namely, if it is
+    an OutputStreamWriter) and writes this encoding name to the XML declaration, ignoring
+    any encoding that was requested in xsl:output or via the setOutputProperty() method.
+    On my Windows configuration, this will generally result in the XML declaration saying
+    encoding="Cp1252". The recommended circumvention to this problem is to supply an
+    OutputStream for the output, rather than a Writer. (Present in all
+    previous releases.)</p>
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.3/003</TD>
+    <TD>It is not possible to call an external function that expects an argument of class
+    com.icl.saxon.expr.FragmentValue (or any other subclass of NodeSetValue), even if the
+    supplied argument is the correct class. [Fixed but not tested]. (Present in 6.3 only)</p>
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.3/004</TD>
+    <TD>The <b>following</b> axis, starting at an attribute or namespace node, should include the descendants
+    of the element that is the parent of the attribute or namespace node. It currently returns only the
+    nodes that are on the following axis from the parent node. (Present in all previous
+    releases.)</p>
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.3/005</TD>
+    <TD>A NullPointerException occurs if a StreamSource is supplied without calling
+    setSystemId(). (Present in 6.3 only)</p>
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.3/006</TD>
+    <TD>A bug in the AElfred XML parser: if the DTD declares an element type as having
+    element content, but an element of that type wrongly contains non-whitespace text,
+    then AElfred simply ignores the offending text; it reports no error, and it doesn't
+    report the text to the application. As a non-validating parser, AElfred should
+    report the text content exactly as if the DTD declared the element as having mixed
+    content. (Present in all previous releases.)</p>
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.3/007</TD>
+    <TD>AElfred fails to detect and report a well-formedness error: specifically,
+    when the source text contains the disallowed sequence ']]&gt;' immediately
+    after an entity reference such as '&amp;lt;'. (Present in all previous releases.)</p>
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.3/008</TD>
+    <TD>A keyword used as an operator (div, mod, and, or) cannot be used as a
+    variable name within an XPath expression. (Present in all previous releases.)</p>
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.3/009</TD>
+    <TD>When a Saxon tree is supplied as input to a transformation (as a DOMSource),
+    and needs to be rebuilt in order to strip whitespace nodes, and when the target format
+    is a standard tree rather than a tinytree, then a NullPointerException may occur when
+    reading the children of the root node (after processing the children that exist).
+    (Present in Saxon 6.3 only.)</p>
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.3/010</TD>
+    <TD>The &AElig;lfred parser, after reading an external entity, does not close
+    the input file. It has been reported that on the Microsoft platform this can
+    result in the operating system keeping the file locked indefinitely, preventing
+    other processes updating it. The fix for this problem closes the input stream
+    or reader even if this was supplied by a user-supplied entity resolver.
+    (Present in all previous releases.)</p>
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.3/011</TD>
+    <TD>The TemplatesHandler (which allows a stylesheet to be built using SAX events)
+    does not work. (Present since JAXP support was introduced.)</p>
+  <TR>
+    <TD vAlign=top>6.3/012</TD>
+    <TD>The &AElig;lfred XML parser, when invoked with 
+    http://xml.org/sax/features/namespace-prefixes set to true, does not
+    report namespace declarations to the application as attributes on the
+    startElement() call. This doesn't affect Saxon, because Saxon always sets
+    this feature to false, but it may affect other applications using &AElig;lfred.
+    (Present since Saxon 6.3: a side effect of the fix for bug 6.2.2/011.)</p>
+  <TR>
+    <TD vAlign=top>6.3/013</TD>
+    <TD>Namespace aliasing (xsl:namespace-alias) on attribute names 
+    does not work. The new attribute name that is generated will have the local part
+    of the attribute name overwritten with the local part of the containing element
+    name. (Present in all previous releases.)</p>
+  <TR>
+    <TD vAlign=top>6.3/014</TD>
+    <TD>When calling an extension function that expects an argument declared
+    as being of type java.lang.Object, a supplied string, number, or boolean is
+    passed as an instance of an internal Saxon class, rather than being converted
+    to a String, Double, or Boolean.</p>
+</TABLE>
+
+<h3>JAXP 1.1 support</h3>
+
+<p>Saxon no longer sets itself as the default DocumentBuilderFactory for use when
+building a DOM. This is because the Saxon DOM implementation, being read-only, is
+suitable only for specialized use.</p>
+
+<p>Saxon still sets itself as both the default XSLT transformer and the default SAX2
+ParserFactory.</p>
+
+<h3>FOP integration</h3>
+
+<p>Saxon's FOP integration has been updated to use FOP 0.19.0</p>
+
+<p>Two new attributes are available on the <b>xsl:output</b> and <b>xsl:document</b>
+elements, for use when <code>method="saxon:fop"</code>:</p>
+
+<ul>
+<li><b>fop:renderer</b> specifies the name of a FOP Renderer class, for example
+<code>fop:renderer="org.apache.fop.render.pdf.PDFRenderer"</code>.</li>
+<li><b>fop:configuration</b> specifies the name of a FOP user configuration file, for
+example <code>fop:configuration="c:\config\fop.xml"</code></li>
+</ul>
+
+<p>Here <b>fop:</b> is the prefix of a namespace whose URI must be
+ <code>http://icl.com/saxon/fop</code></p>
+ 
+<p>These two attributes have not been fully tested.</p>
+
+<H3>Internal API changes and code reorganisation</H3>
+
+<p>These changes are made partly to improve maintainability of the code, partly
+to reduce its size, and partly to enable the future support of a wider variety of
+data structures that the XPath implementation can access (for example, non-SAXON DOM
+structures, databases, etc). Some of the changes will affect Java applications, 
+especially those that make intimate use of internal Saxon implementation classes.</p>
+
+<h4>The NodeInfo interface</h4>
+
+<p>The main change is a major simplification of the <b>NodeInfo</b> interface,
+greatly reducing the number of methods and subclasses that need to be implemented
+to support a new kind of tree structure,
+but hopefully without reducing the usability of the interface or the performance
+of its implementations.</p>
+
+<p>The interface classes that are subclasses of NodeInfo have been eliminated,
+(for example the old favorite <b>ElementInfo</b>).
+The only exception is <b>DocumentInfo</b> (representing the root node or the document as a whole).
+This reflects the fact that in the XPath data
+model, all methods are available on any kind of node.
+Tests that were previously
+written <code>if (node instanceof TextInfo)</code> should now be written
+ <code>if (node.getNodeType()==NodeInfo.TEXT)</code>. In other cases,
+ simply replace the specific interface (for example ElementInfo) by the general
+ class NodeInfo.</p>
+
+<p>The <b>NodeInfo</b> interface, which is the main interface to Saxon's tree model,
+no longer extends the DOM <b>Node</b> interface. This means that methods such as
+getNextSibling() are no longer available on this interface. Navigation from a node 
+should be done instead by
+creating an enumeration using one of the XPath axes, using the <b>getEnumeration()</b> method.</p>
+
+<p>However, the two implementations of the NodeInfo interface, that
+is the standard tree and the tiny tree, continue to implement the DOM Node interface. 
+To achieve this, the two implementation types (NodeImpl and TinyNodeImpl) both inherit
+from a new abstract class called <b>AbstractNode</b>. This class implements both the Saxon NodeInfo
+interface and the DOM Node interface; it also includes methods needed only for element, text, comment,
+or root nodes. (This is done to make these methods shared between the two tree implementations:
+it is not possible in Java for a class such as TextImpl to inherit both from
+NodeImpl containing the Saxon methods and from a generic AbstractTextImpl containing the
+DOM methods.)</p>
+
+<p>The NodeInfo class now implements the JAXP <b>Source</b> interface, which means that any
+NodeInfo can be used directly to define the source of a transformation, with no need to wrap it
+in a DOMSource object. Note that if you supply the source tree in this way, it is your own
+responsibility to strip any unwanted whitespace nodes before XSLT processing begins. The xsl:strip-space
+and xsl:preserve-space instructions in the stylesheet will be ignored.</p>
+
+<p>Saxon still uses DOM methods such as getNextSibling() to navigate the stylesheet tree,
+which is always implemented using the standard tree model. However, Saxon no longer relies on
+ the source document providing DOM interfaces.</p>
+
+<p>As well as the DOM methods, a number of other methods on the NodeInfo interface
+ have been removed. Many of these were "shortcut" methods that weren't really needed, and 
+ which were the same in all implementations. In all cases there are alternatives available.</p> 
+ 
+<p>The <b>getValue()</b> method in the NodeInfo class has been renamed <b>getStringValue()</b>,
+to better reflect its meaning, and to avoid clashing with the getValue() method of the
+org.w3c.dom.Attr class.</p>
+
+<p>The <b>AxisEnumeration</b> classes are now logically part of the tree implementation,
+so they are implemented differently for each tree structure. This allows
+the implementation to use the navigation mechanisms that are most efficient in each
+data structure.</p>
+
+<p>The subclasses of <b>Axis</b>, which existed essentially to provide information about each
+axis, have been removed. Instead the Axis class itself provides this information in the
+form of a number of arrays, indexed by axis number. The Axis class has been moved to
+the com.icl.saxon.om package.</p>
+
+<p>The unused utility methods in class com.icl.saxon.om.Navigator, for example
+isFirstInGroup() and getAncestor(), have been deleted. If you need these methods in your
+application, I suggest reconstructing them within your application code, based on the
+Saxon 6.3 source code.</p>
+
+<p>The interface <b>com.icl.saxon.om.ExtendedAttributes</b> has been removed from the
+object model, as the preferred way of accessing all the attributes of an element is now
+to enumerate the attribute axis.</b>
+
+<h4>Multiple documents</h4>
+
+<p>In previous releases, certain information held within a document was required to be
+unique across all documents used within a single transformation: in particular, the
+document number, and the node sequence numbers. This potentially causes problems
+when the same source document is used in multiple transformations, perhaps running in 
+parallel. The problems were previously avoided by rebuilding the document for each
+transformation, which is inefficient.</p>
+
+<p>In Saxon 6.4, a document no longer contains a unique document number. The methods
+generateId() and getSequenceNumber() now generate numbers which are required to be
+unique only within a single document; making them globally unique is done by the
+calling code, with the aid of the document pool maintained by the Controller.</p>
+
+<p>A tree implementation is no longer required to provide sequence numbers for the nodes.
+Instead, it is required to implement a compareOrder() method that determines the relative
+ordering of two nodes within the same tree. Comparison of nodes in separate trees is
+now done at a different level of the software.</p>
+
+<p>The only extra data that a source document now contains to support Saxon transformations
+is:</p>
+
+<ul>
+<li>A reference to the NamePool used to translate between the string representations of 
+node names and their numeric representations;</li>
+<li>A reference to the indexes that implement key structures. These are indexed by an
+internal identifier for the key definition within the stylesheet. Key definitions in 
+different stylesheets will always have different internal identifiers, but if the same
+source document is transformed repeatedly using the same stylesheet (typically with
+different parameters), the indexes can now be re-used.</li>
+</ul>
+
+
+<h4>The NodeHandler interface</h4>
+
+<p><b>NodeHandler</b> was previously an abstract class in package com.icl.saxon.handlers;
+it is now an interface in package com.icl.saxon. This may affect user-written node handlers,
+used either in a Java (non-XSLT) application, or via the <b>saxon:handler</b> extension element.</p>
+
+<p>There is an extra method <b>requiresStackFrame()</b> whose value is a boolean. You can generally
+return false. Return true only if the node handler maintains variables or parameters that can be
+ accessed from XPath expressions - something that is not especially easy to do.</p>
+
+<p>This change also means that any user-written <b>TraceListener</b> will need to be recompiled.</p>
+
+<h4>Sorting</h4>
+
+<p>I have made internal changes to the sorting routines to reduce the memory used,
+especially when the sort involves only a single sort key. The changes are unlikely to affect
+many users. However, some of the methods in internal classes such as <b>SortedSelection</b> have changed.</p>
+
+<h3>JDOM support</h3>
+
+<p>To illustrate the way that the new NodeInfo interface can be used to create
+adapters for other document formats, I have built an adapter for JDOM (see
+<a href="http://www.jdom.org/">http://www.jdom.org/</a>). Although the code for this is included in the
+main source tree, it is issued in a separate Jar file, saxon-jdom.jar. The code
+is still at beta quality. A sample
+application showing how to use Saxon with JDOM is provided. The JDOM interface
+requires JDK 1.2.</p>
+
+<p>This facility allows a JDOM tree to be used as the input to an XSLT transformation,
+or as the target for XPath expressions issued from your Java code. You can direct the
+output to a JDOM tree by using JDOM's SAX driver as the SAXResult destination object
+for the transformation.</p>
+
+<p>Saxon currently makes no attempt to merge adjacent text nodes in the JDOM tree:
+these can arise if the two text nodes are separated by an entity boundary or by a CDATA
+section boundary.</p>
+
+<p>Using SAXON with JDOM is not likely to be especially efficient; it requires extra 
+memory for the wrapper data structures, and some XPath navigation routes are quite
+inefficent because they are not supported directly in JDOM
+(for example, JDOM provides no direct way of getting
+from a node to its siblings). It is provided partly as an illustration of how to 
+interface other data sources, and partly for users who already have data in JDOM 
+format. It is particularly useful to enable XPath access to JDOM from Java applications.</p>
+
+<H3>&AElig;lfred XML parser</H3>
+
+<p>I have reviewed the changes made by David Brownell in his version of the 
+&AElig;lfred XML parser (available as project xmlconf in www.sourceforge.net),
+and have incorporated those that are relevant into the Saxon version. This is
+basically all changes except those required to report validation errors. Most
+of the changes are very minor, but there are some enhancements in the handling
+of character encoding: if an input file is in an encoding that &AElig;lfred itself
+does not understand, it now attempts to get the Java VM to decode it. The set of
+character encodings available in the Java VM is platform-dependent.</p>
+
+<h3>SQL extension functions</h3>
+
+<p>Following a suggestion from Ren&eacute; Jansen, I have changed the <code>xsl:insert</code>
+code so it now prepares the SQL statement only the first time it is executed, and reuses
+the prepared statement thereafter. Also, it can now handle columns that are not strings.</p>
+
+<h3>xsl:attribute and friends</h3>
+
+<p>The three instructions xsl:attribute, xsl:comment, and xsl:processing-instruction
+have been speeded up. Where the content of the instruction is a single text node, or
+an xsl:value-of instruction, Saxon now avoids the overead of setting up a new output
+destination; instead of processing the content as a general template body, it evaluates
+it directly as an expression. Where this is not the case, a streamlined output method
+is used that avoids many of the overheads previously incurred.</p>
+
+<h3>Variables and parameters</h3>
+
+<p>Global variables and parameters are no longer evaluated if there is another variable
+or parameter with the same name and higher import precedence.</p>
+
+<p>An xsl:variable element containing a single text node is now treated specially, bringing
+the performance close to that of a String variable.</p>
+
+<H2>Changes in version 6.3 (2001-05-03)</H2>
+
+<H3>JAXP 1.1</H3>
+
+<p>Saxon now implements the <b>javax.xml.parsers</b> package in JAXP 1.1 as well as the
+javax.xml.transform package.</p>
+
+<p>If you have the system property <b>javax.xml.parsers.SAXParserFactory</b> set to the value
+<b>com.icl.saxon.aelfred.SAXParserFactoryImpl</b>, then any call on JAXP 1.1 interfaces to get
+an XMLReader will select AElfred. Moreover, Saxon itself uses the JAXP 1.1 interfaces
+to get an XMLReader if none has been explicitly requested, so you can now determine the
+parser to be used by setting this system property. The default for this property, defined
+by a services file in saxon.jar, selects the AElfred parser.</p>
+
+<p>Similarly, if you have the system property <b>javax.xml.parsers.DocumentBuilderFactory</b> set to the value
+<b>com.icl.saxon.om.DocumentBuilderFactoryImpl</b>, then any call on JAXP 1.1 interfaces to get
+a DOM Document builder will select the Saxon tinytree implementation. However, Saxon
+does not call JAXP interfaces to get a Document builder: it will always choose its own.
+Note that Saxon's DOM implementation is an immutable DOM: you can construct the DOM by
+parsing a source document, but you cannot build it or modify it through the DOM API 
+methods.</p>
+
+<p>Saxon's <b>Builder</b> and <b>Stripper</b> classes have been moved to the package
+ com.icl.saxon.om.</p>
+ 
+<p>When a Saxon document is supplied as input to the <b>transform()</b> method (using a
+DOMSource object), in previous releases the tree was rebuilt. At this release the tree
+is used <i>as is</i>, provided that either (a) the stylesheet does not require
+whitespace nodes to be stripped, or (b) whitespace stripping has been disabled by
+calling the new <b>Controller.disableWhitespaceStripping()</b> method. In the cases where the
+tree does need to be rebuilt, a "fast path" routine has been introduced to do this:
+previously the same code was used as for a third-party DOM, which incurred unnecessary
+costs because there are so many different ways namespaces can be represented in a DOM.</p>
+
+<p> When performing multiple
+transformations on a single source document, it is best to do the whitespace stripping
+once as a separate operation: 
+this is made possible by a new method <b>PreparedStyleSheet.stripWhitespace()</b>, which
+uses the xsl:strip-space directives in a stylesheet to remove whitespace from a document
+(in fact, it returns a new document that is a copy of the original, with relevant
+whitespace nodes removed; if no whitespace stripping needs to be done, it returns
+the original document unchanged).</p>
+
+<p>It is now possible to supply a Saxon document as the output of a transformation.
+(This didn't work at previous releases, though the restriction was undocumented.) The
+document must be empty, and the node supplied in the DOMResult object must be the
+document (ie. root) node.</p>
+
+<p>It is now possible to start a transformation at a node other than the root node,
+if the input is supplied in the form of a DOM (in a DOMSource object).
+Global variables are still evaluated with the root node as context node, and the entire
+tree is available to the transformation, but the first template rule applied is not,
+as is usual, the <b>match="/"</b> rule, but the rule that matches the supplied node. The DOM
+supplied as input must not contain CDATA or entity reference nodes that are parents
+or preceding siblings of the start node.</p> 
+
+ 
+<H3>Extension Functions</H3>
+
+<p>Saxon's support for Java extension functions has been brought into line with
+the working draft XSLT 1.1 specification.</p>
+
+<p><b>Polymorphic methods</b> are now fully supported. If the relevant class has
+ several methods (or constructors) with the same name, the one that is chosen
+ is the one that gives a "best match" to the types of the supplied arguments,
+ following the rules in the XSLT 1.1 draft. If there is no unique method that
+ provides a best match according to these rules, an error is reported.</p>
+ 
+<p>Methods that return void, null, char, or byte are now handled as described
+in the XSLT 1.1 working draft.</p>
+
+<p>There is still a restriction that extension functions cannot construct
+a new DOM tree and return nodes from this tree by using DOM methods.
+They can only return existing nodes that were constructed by Saxon itself.</p>
+
+<p>Methods that expect a node-set as input can now declare the argument type
+as com.icl.saxon.expr.NodeEnumeration, as an alternative to com.icl.saxon.expr.NodeSetValue.
+This is likely to be a bit more efficient. The enumeration will always be positioned
+at the start when the function is called, and its position on exit can be anywhere.
+It is also possible to return a NodeEnumeration as the result of a function. Again,
+the enumeration must be positioned at the start. Returning a NodeEnumeration is
+especially efficient if the result is then converted to a String or a Boolean.</p>
+
+<p>The rules for spelling of external function names have been brought into line with
+XSLT 1.1. <b>This may require stylesheet changes.</b> For example, the function
+has-same-nodes() must now be spelt as "has-same-nodes()" or "hasSameNodes()", it
+can no longer be spelt as "hassamenodes()" or as "HAS-SAME-NODES()". For
+backwards compatibility, the node-set() function may be spelt with or without
+the hyphen (or as "nodeSet()").
+
+<H3>EXSLT</H3>
+
+<p><a href="http://www.exslt.org/">EXSLT</a> is
+ an initiative to define a standardized set of extension functions 
+and extension elements that can be used across different XSLT processors.</p>
+
+<p>Saxon now supports the EXSLT modules Common, Math, Sets, an Functions. 
+The full list of extension functions is:</p>
+
+<ul>
+<li>exslt:node-set()</li>
+<li>exslt:object-type()</li>
+<li>math:min()</li>
+<li>math:max()</li>
+<li>math:highest()</li>
+<li>math:lowest()</li>
+<li>set:difference()</li>
+<li>set:intersection()</li>
+<li>set:distinct()</li>
+<li>set:leading()</li>
+<li>set:trailing()</li>
+<li>set:has-same-node()</li>
+</ul>
+
+<p>plus the following new elements:
+
+<ul>
+<li>func:function</li>
+<li>func:result</li>
+</ul>
+
+
+<p>These have considerable overlap with functions that have previously been
+provided in the Saxon namespace. The Saxon versions of the functions remain available,
+for the time being, but the EXSLT versions are preferred.</p>
+
+<p>The saxon:function and saxon:return elements have been changed slightly to conform to the EXSLT
+rules. Specifically: saxon:return can now appear inside xsl:for-each, provided the xsl:for-each iterates
+at most once. There is now a check that saxon:return is not used inside the definition of
+a variable or inside another saxon:return. It is an error to instantiate more that one
+saxon:return within a function.</p>
+
+<h3>saxon:closure</h3>
+
+<p>Following a suggestion from Christian Nentwich, I have implemented a new extension
+function saxon:closure(), which forms a node-set by taking the transitive closure of
+a node-set expression. The function does NOT detect cycles.</p>
+
+<H3>Defects cleared</H3>
+
+<p>The following errors were found version 6.2.2, and have been cleared.
+Many of these relate to incorrect handling of error cases, and reflect the fact
+that I have greatly increased the test coverage of error handling.</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>6.2.2/001</TD>
+    <TD>If the first argument of the key() function is not the name of a key defined in the
+    stylesheet, a diagnostic dump is produced in place of a meaningful error message.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/002</TD>
+    <TD>If the name attribute of the xsl:call-template instruction is not the name of a template defined in the
+    stylesheet, a diagnostic dump is produced in place of a meaningful error message.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/003</TD>
+    <TD>No error is reported when the use-attribute-sets attribute of xsl:attribute 
+    contains a circular reference. (Instead, the stack overflows). Note: the fix for
+    this only detects the error at run-time if the attribute-set is actually used. Technically, the
+    error should be detected at compile time, and reported even if the attribute set is never used.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/004</TD>
+    <TD>No error is reported when the xsl:include or xsl:import element is non-empty.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/005</TD>
+    <TD>A null pointer exception occurs if the href attribute of xsl:import or xsl:include
+    is omitted.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/006</TD>
+    <TD>No error is reported if a template name, variable name, or mode name does not
+    conform to the lexical rules for a QName.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/007</TD>
+    <TD>No error is reported if the xsl:key element is non-empty.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/008</TD>
+    <TD>No error is reported if the xsl:attribute-set element has content other than
+    xsl:attribute elements.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/009</TD>
+    <TD>An ArrayIndexOutOfBounds exception occurs when attempting to get the children
+    of the last node in the document, if the number of nodes in the document is 4000
+    times a power of two. Applies to the TinyTree model only. The problem occurred when
+    using preview mode.
+    </TD></TR>
+  <TR>  
+    <TD vAlign=top>6.2.2/010</TD>
+    <TD>When the AElfred parser attempts to read a file using the http protocol, the 
+    encoding specified in the HTTP header should take precedence over the encoding
+    specified in the XML document declaration. However, the parsing of the HTTP header
+    is incorrect, so the encoding is typically identified as "=UTF-8" rather than "UTF-8".
+    This results in an UnsupportedEncodingException.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/011</TD>
+    <TD>There is an error in namespace handling in the AElfred parser. When a "real"
+    attribute precedes a namespace declaration in an element start tag, and the QName
+    of the element or of an attribute is the same as the QName of the parent element
+    or one of its attributes, then the namespace URI assigned to the name may be based
+    on the namespace declarations in force for the parent element rather than those for the
+    child element.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/012</TD>
+    <TD>There is a bug in the current version of JAXP 1.1: when a StreamSource is
+    constructed from a File object, and the filename is of the form "/usr/file.xml",
+    the resulting URL is "file:////usr/file.xml" rather than "file:///usr/file.xml".
+    I have added code to Saxon's TransformerFactoryImpl to circumvent this problem
+    by detecting the incorrect URL and patching it.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/013</TD>
+    <TD>User-written message emitters don't work.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/014</TD>
+    <TD>The integer value returned by getNodeType() on a root node is not consistent
+    with the DOM specifications. <b>Applications that call this method should be recompiled</b>.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/015</TD>
+    <TD>With xsl:output method="html" indent="yes", indentation should be suppressed for
+    output elements that are nested within a &lt;pre&gt; element. It isn't.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/016</TD>
+    <TD>When an invalid property is passed to the Transformer methods setOutputProperty()
+    or setOutputProperties(), an IllegalArgumentException should be thrown. Instead, the
+    value is silently ignored.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/017</TD>
+    <TD>When getOutputProperties() is called on the Transformer interface, subsequent changes
+    to the returned properties should have no effect. This isn't currently the case, as the
+    method returns a reference to the internal property set, rather than making a copy.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/018</TD>
+    <TD>When processing a document containing attributes with undeclared namespace prefixes,
+    Saxon may crash with a NullPointerException after reporting the error.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.2/019</TD>
+    <TD>On return from a call of xsl:apply-imports, the current template is not reset. This
+    means that a second call on xsl:apply-imports will invoke the wrong template.
+    </TD></TR>
+</TABLE>
+
+<H2>Changes in version 6.2.2 (2001-03-15)</H2>
+
+<p>Upgraded to the latest JAXP ("version 1.1 final release") dated 6 Feb 2001. Saxon now
+uses the JAXP binaries exactly as issued by SUN. Unfortunately the TransformerFactory
+issued by Sun invokes Xalan as the "platform default" XSLT processor. The saxon.jar
+file includes a META-INF file to override this, so there should be no problems unless
+you have other things on the classpath that conflict. If you want to be absolutely
+sure of loading Saxon rather than any other XSLT processor, set the system property
+javax.xml.transform.TransformerFactory to the value "com.icl.saxon.TransformerFactoryImpl",
+either from your application (by calling System.setProperty()), or from the command line
+(java -Djavax.xml.transform.TransformerFactory=com.icl.saxon.TransformerFactoryImpl classname)</p>
+
+<p>Make sure you remove any older versions of jaxp.jar from your classpath to prevent any
+incompatibilities.</p>
+
+<p>I have changed the packaging of the FOP integration, to reduce the problems this
+causes for people who want to rebuild Saxon or load it into a development environment
+such as IBM's Visual Age for Java. The FOP integration module, FOPEmitter, is now part
+of a separate package, com.icl.saxon.fop, and is not included in saxon.jar, but is in
+a separate JAR file, saxon-fop.jar. This must be on the class path if you want to use
+Saxon with FOP, but you can ignore it otherwise. There are no longer any compile-time
+references to FOPEmitter from the rest of the Saxon code, so you can recompile the
+product without first installing FOP, provided that you remove FOPEmitter from the
+source library first.</p>
+
+<p>I have reinstated the ability to call Java extension functions using the namespace
+xmlns:ext="full.class.Name" as an alternative to xmlns:ext="java:full.class.Name".
+However, the "java:" form is preferred.</p>
+
+<p>I added extension functions saxon:before() and saxon:after(), based on the BEFORE and
+AFTER operators defined in XQuery. These take two node-sets as arguments and return
+all the nodes in the first node-set that are before/after at least one node in the second
+node-set, in document order. This provides an alternative to saxon:leading(), e.g.
+saxon:before(*, s[1]) gets all the child elements that precede the first child &lt;s&gt;
+element.</p>
+
+<p>A further refinement to class loading: if the loader returned by getContextClassLoader()
+fails to load a class, we now try to load the class using Class.forName(). This is all
+something of a black art: different things appear to work in different environments.</p>
+
+<p>I have re-instated <b>saxon:output</b> as a synonym of <b>xsl:document</b>. The reason
+for this is that some XSLT processors object to finding an xsl:document element in
+the stylesheet, even when running in forwards compatible mode. Using saxon:output is
+therefore more portable. Note, however, that the new saxon:output is not completely
+compatible with the old: attribute names have changed, especially "file" to "href".</p>
+
+<H3>Defects cleared</H3>
+
+<p>The following errors were reported for version 6.2.1, and have been cleared:</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>6.2.1/001</TD>
+    <TD>An error is reported if, in an XPath expression, one of the symbols "*",
+    "div", "mod", "and", or "or" is used immediately after a comma (that is, as
+    an argument in a function call after the first). The symbol is wrongly interpreted
+    as a binary operator rather than a location path. (Present in all previous
+    releases).
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.1/002</TD>
+    <TD>The expression select="@prefix:*", which should return all attributes in the
+    given namespace, actually returns all attributes regardless of namespace.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.1/003</TD>
+    <TD>When a user-specified trace listener is specified using the -TL option on the
+    command line, line numbering should automatically be switched on; but the attempt to do 
+    so fails.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.1/004</TD>
+    <TD>If the stylesheet contains more than one xsl:script element, Saxon may attempt
+    to load the wrong Java class. This will usually result in no appropriate method
+    being found.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.1/005</TD>
+    <TD>In the message reporting an ambiguous template rule match, a pattern that is a
+    union pattern with three or more components is displayed incorrectly as "null". 
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.1/006</TD>
+    <TD>A null pointer exception occurs when the name of a system function is misspelt.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.1/007</TD>
+    <TD>In setting up the SAX2 parser, Saxon fails to state that it requires both the
+    "features/namespaces" and "features/namespace-prefixes" features to be on. A SAX2 XMLReader
+    may therefore fail to supply Saxon with information about namespaces, causing the
+    transformation to produce incorrect results.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.1/008</TD>
+    <TD>A null pointer exception occurs when the -a option is used and the source document
+    contains no suitable &lt;?xml-stylesheet?&gt; processing instruction.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.1/009</TD>
+    <TD>The get/set OutputProperties() methods on the Templates and Transformer objects
+    do not work as described in the TrAX interface. On the Templates object, getOutputProperties()
+    returns only those values explicitly set in the stylesheet, not the XSLT-defined defaults.
+    On the Transformer object, getOutputProperties() only returns properties that have been
+    explicitly set using setOutputProperties(). 
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.1/010</TD>
+    <TD>In an XPath expression, Saxon reports no error when whitespace is used between a "$"
+    sign and the following variable name. No space is allowed in this position.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2.1/011</TD>
+    <TD>In an XPath expression, Saxon reports no error when a colon is used between a
+    function name or node-type name and the following left parenthesis,
+    if it is separated from the function name by whitespace. 
+    For example, no error is reported for "true :()" or "node :()".
+    </TD></TR>
+
+</TABLE>
+    
+<H2>Changes in version 6.2.1 (2001-02-20)</H2>
+
+<p>Support for <a href="using-xsl.html#Applet">Running Saxon in an Applet</a>: I have shamelessly copied the
+XSLTProcessorApplet module from Xalan, which was written to run any TrAX processor
+from a Java applet, and have adapted it to work with Saxon. The only changes were to
+remove a call on a Xalan error-handling routine, and to change the package name.
+I have also copied and adapted the Xalan sample application which shows how to
+incorporate this applet into an HTML page. To run a transformation using Saxon
+requires saxon.jar to be downloaded to the client. At 550Kb this is fairly substantial.</p>
+
+<p>There are some <a href="samples.html#applet">sample applications</a> using Saxon as an applet in 
+the samples/applet folder.</p> 
+
+<p>It is now possible to specify the CharacterSet class to be used for a named output
+encoding by setting the system property, e.g. -D"encoding.EUC-JP"="EUC_JP"; the value
+of the property should be the name of a class that implements the
+PluggableCharacterSet interface.</p>
+
+<p>Saxon has been modified to work with FOP 0_17_0; it no longer works with earlier versions
+of FOP. This has required some extensions to the Emitter interface, to cater for the fact that
+FOP now requires an OutputStream rather than a Writer as its output destination. Note also
+that FOP attempts to load Xerces as its default XML parser; if you want to use Saxon's AElfred
+parser istead, set the system property -Dorg.xml.sax.parser=com.icl.saxon.aelfred.SAXDriver.
+To run FOP, include the supplied JAR files fop.jar and w3c.jar on your classpath (FOP uses
+the DOM SVG package which is not included in saxon.jar).</p>  
+
+<H3>Defects cleared</H3>
+
+<p>The following errors were reported for version 6.2, and have been cleared:</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>6.2/001</TD>
+    <TD>When no implementation of an extension element is available, a compile-time
+    error is reported, whether or not the element is actually instantiated. (Circumvention:
+    add the attribute xsl:version="99" to the extension element).
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.2/002</TD>
+    <TD>When no implementation of an extension function is available, a compile-time
+    error is reported, whether or not the function is actually instantiated. (Circumvention:
+    add the attribute xsl:version="99" to a literal result element enclosing the call
+    on the offending function).
+    </TD></TR>    
+  <TR>
+    <TD vAlign=top>6.2/003</TD>
+    <TD>The sample extension for SQL provides no way of closing the database connection.
+    With some configurations, this leads to updates being lost. I have therefore added
+    another extension element, <b>sql:close</b>.
+    </TD></TR>    
+  <TR>
+    <TD vAlign=top>6.2/004</TD>
+    <TD>If a user-supplied URIResolver is registered with the TransformerFactory, it is
+    not used when resolving the URI contained in the href pseudo-attribute of the xml-stylesheet
+    processing instruction.
+    </TD></TR>   
+  <TR>
+    <TD vAlign=top>6.2/005</TD>
+    <TD>When the namespace attribute of xsl:element or xsl:attribute evaluates to an
+    empty string, the specification states that the namespace of the resulting element
+    or attribute should be null. Saxon wrongly generates a namespace declaration of the
+    form xmlns:prefix="".
+    </TD></TR>   
+  <TR>
+    <TD vAlign=top>6.2/006</TD>
+    <TD>Under some circumstances using a local variable in an expression constructed using
+    saxon:evaluate() or saxon:expression() fails, saying the variable has not been declared.
+    The failure only occurs when the xsl:variable element declaring the variable is a
+    sibling of the element containing the attribute containing the call on saxon:evaluate
+    or saxon:expression. You can therefore circumvent the problem by wrapping the relevant
+    element inside &lt;xsl:if test="true()"&gt;.
+    </TD></TR>  
+  <TR>
+    <TD vAlign=top>6.2/007</TD>
+    <TD>If the context node is an attribute node or namespace node, the preceding
+    and following axes (like preceding-sibling and following-sibling)
+    are empty.
+    </TD></TR>      
+  <TR>
+    <TD vAlign=top>6.2/008</TD>
+    <TD>The output properties set using xsl:output in the stylesheet are not accessible
+    using the getOutputProperty() method of the Transformer. (Circumvention: they are
+    available from the getOutputProperty() of the Templates object).
+    </TD></TR>     
+  <TR>
+    <TD vAlign=top>6.2/009</TD>
+    <TD>Calling an external function that declares an argument of type org.w3c.dom.NodeList
+    may fail with an exception, if the node-set supplied in the function call has not been
+    fully evaluated (specifically, if it is a NodeSetIntent).
+    </TD></TR>    
+  <TR>
+    <TD vAlign=top>6.2/010</TD>
+    <TD>Saxon does not report an error when the stylesheet contains two conflicting 
+    definitions of the default decimal format; it simply uses the one that comes last.
+    </TD></TR>    
+  <TR>
+    <TD vAlign=top>6.2/011</TD>
+    <TD>Saxon reports inadequate diagnostics when an XML parsing failure occurs while
+    looking for an xml-stylesheet processing instruction: specifically, if the failure
+    is a "file not found" error that arises while resolving references to external entities
+    or to the document's external DTD. The only output is the message 
+    "TrAX Transform Exception".
+    </TD></TR>   
+</TABLE>    
+
+
+<H2>Changes in version 6.2 (2001-02-06)</H2>
+
+<H3>Towards XSLT 1.1</H3>
+
+<p>The <b>xsl:script</b> element is now available. It is ignored unless the language is "java".
+This element can be used to identify the Java class
+implementing an extension function as defined in the XSLT 1.1 specification. The 
+<b>archive</b> attribute can be used to specify a list of URLs to be searched,
+but only with a JVM that supports JDK 1.2 interfaces (i.e. not with the Microsoft JVM, and therefore
+not with Instant Saxon).
+ NOTE: the rules
+for selecting a method within this class are unchanged. In particular, where there are several
+methods with the same name and number of arguments, it is not predictable which will be chosen.
+The native Saxon techniques for identifying a Java class will continue to be used if there
+is no xsl:script element for the relevant prefix, with one exception: the form 
+<code>xmlns:prefix="fully.qualified.ClassName"</code> is no longer supported; use
+<code>xmlns:prefix="java:fully.qualified.ClassName"</code> instead.</p>
+
+<p>The element name <b>saxon:script</b> can be used as a synonym of <b>xsl:script</b>. The
+advantage of using saxon;script is that other processors will ignore it. This allows you to
+define the way Saxon will implement an extension function which may be different from the
+way other processors implement it. This is epecially useful if your stylesheet uses functions
+such as xx:intersection() which are now offered by several different XSLT processors.
+Note that the built-in Saxon extension functions are all implemented in the same way as
+user extension functions, in class com.icl.saxon.functions.Extensions; so you can use
+<b>src="java:com.icl.saxon.functions.Extensions"</b> to locate the Saxon implementation
+of these functions.</p>
+
+<p>The Saxon class com.icl.saxon.Context now implements the <b>org.w3c.xsl.XSLTContext</b>
+interface, as defined in the XSLT 1.1 working draft. This can now be used as the first
+argument of a method that implements an
+extension function (but you can continue to use com.icl.saxon.Context if you prefer).
+A consequence of this change is that getContextNode() and getCurrentNode() now return a
+org.w3c.dom.Node rather than a com.icl.saxon.om.NodeInfo; if you want to use Saxon methods
+on the returned node, you will have to cast it to a NodeInfo. Note that although the
+getOwnerDocument() method of XSLTContext is implemented, the resulting document will
+not be updateable.</p>
+
+<p>The <b>xsl:apply-imports</b> element may now take parameters, that is, it may have
+child <b>xsl:with-param</b> elements.</p>
+
+<p>The <b>xml:base</b> attribute is implemented. This can be used to change the base URI of
+an element (in either the source document or the stylesheet) for the purposes of the
+document() function. A new extension function is provided (largely for diagnostic purposes):
+saxon:base-uri() returns the base URI of the context node. Note that the terms "base URI"
+and "system ID" have in the past been used synonymously. This has been tidied up. The
+System ID refers to the entity (ie. file) in which an element was found, and is useful
+for diagnostics in conjunction with the line number. The Base URI defaults to the System ID,
+but may be changed using xml:base, and is used for resolving relative URIs appearing in
+calls to document() or to xsl:include and xsl:import.</p>
+
+<p>If you supply your own URIResolver, you can use the base URI any way you like. For example,
+if the relative URI is the key of a record in a database, you could use the base URI to
+hold information identifying the database, e.g. the JDBC connection details.</p>
+
+
+<H3>Performance</H3>
+
+<p>I have changed the algorithm used for <b>generate-id()</b>. The existing algorithm was very 
+inefficient, which was proving a problem with Muenchian grouping algorithms that rely on
+this function. It performed particularly badly when using the tinytree data structure with
+a large source document. The new algorithm is much faster, especially with the tinytree structure.
+It produces different results from the old algorithm, and is different for the two tree
+implementations.</p>
+
+
+<H3>Defects cleared</H3>
+
+<p>The following errors were reported for version 6.1, and have been cleared:</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>6.1/001</TD>
+    <TD>Tail recursion is invoked when it should not be, for example if an xsl:call-template
+    instruction is issued from within a literal result element. Present since Saxon 5.3.
+    </TD></TR>
+   <TR>
+    <TD vAlign=top>6.1/002</TD>
+    <TD>A null pointer exception occurs after reporting the absence of the select attribute
+    on the xsl:value-of instruction. The same error occurs in a number of other cases
+    where absent attributes are reported. Present since Saxon 6.1.
+    </TD></TR>   
+   <TR>
+    <TD vAlign=top>6.1/003</TD>
+    <TD>An ArrayIndexOutOfBounds exception occurs in method outputNamespaceNodes when processing
+    a large source document using the tinytree model. Present since Saxon 6.0.
+    </TD></TR>   
+   <TR>
+    <TD vAlign=top>6.1/004</TD>
+    <TD>When running in forwards compatibility mode (i.e. when the version attribute on xsl:stylesheet
+    is not 1.0 or 1.1), unknown XSL elements appearing as top-level elements should be ignored.
+    Instead, an error is reported.
+    </TD></TR>   
+   <TR>
+    <TD vAlign=top>6.1/005</TD>
+    <TD>When the outermost element of the stylesheet does not declare the XSLT namespace
+    (for example, because it declares the Microsoft WD-xsl namespace instead), no specific diagnostics
+    are output, just the message "Transformation failed". Present since Saxon 6.1.
+    </TD></TR>   
+   <TR>
+    <TD vAlign=top>6.1/006</TD>
+    <TD>The first namespace node for an element (typically the XML namespace) has the same
+    internal identifier as it parent element, which means that when a node-set containing a
+    mixture of element and namespace nodes is constructed, one of these will be wrongly
+    eliminated as a duplicate. The problem applies only to the tinytree model. Present since
+    Saxon 6.0.
+    </TD></TR>   
+   <TR>
+    <TD vAlign=top>6.1/007</TD>
+    <TD>When loading secondary input documents using the StandardURIResolver, the AElfred
+    parser may be used rather than the one nominated to the TransformerFactory. Present since
+    Saxon 6.1.
+    </TD></TR>   
+   <TR>
+    <TD vAlign=top>6.1/008</TD>
+    <TD>The logic for using the current directory as the fallback for resolving relative
+    URIs when no other base URI is available fails on UNIX systems where the current directory
+    is returned with a trailing "/". Present since Saxon 6.1.
+    </TD></TR>   
+   <TR>
+    <TD vAlign=top>6.1/009</TD>
+    <TD>With the TrAX API, when the result of a transformation is a DOMResult,
+    if no user-created DOM was specified using setNode(), the processor is supposed to
+    create the DOM document itself. No attempt is made to do so, instead Saxon fails with
+    a null pointer exception. Present since Saxon 6.1.
+    </TD></TR>   
+   <TR>
+    <TD vAlign=top>6.1/010</TD>
+    <TD>The XPath expression //abc:xyz returns no nodes. This happens with the tinytree model
+    only, when there is a non-null namespace URI. Present since Saxon 6.0.
+    </TD></TR>   
+   <TR>
+    <TD vAlign=top>6.1/011</TD>
+    <TD>The call TransformerFactory#getTransformerHandler() (with no arguments),
+    which should return an identity
+    transformer packaged as a SAX ContentHandler, returns an object that is not useable.
+    Present since Saxon 6.1.
+    </TD></TR>  
+   <TR>
+    <TD vAlign=top>6.1/012</TD>
+    <TD>Errors occur when several Transformers derived from the same Templates object
+    are run concurrently in multiple threads. (The problem is that they share the same
+    Stripper, and this is used to hold information specific to the transformation).
+    </TD></TR>  
+   <TR>
+    <TD vAlign=top>6.1/013</TD>
+    <TD>The SAX2 driver for the AElfred parser always reports the first two arguments
+    of the endElement() call (the namespace URI and prefix) as empty strings. When the
+    parser is used within Saxon this has surprisingly few ill-effects; the only ones
+    I am aware of are (a) when the an element with a non-null namespace is named in
+    <b>saxon:preview</b>, and (b) when doing an identity transformation using the JAXP 1.1
+    interface. Present since Saxon 5.3
+    </TD></TR>  
+   <TR>
+    <TD vAlign=top>6.1/014</TD>
+    <TD>No error is reported when <b>xsl:copy-of</b> is used as a top-level element.
+    (At 6.1 the instruction is executed "successfully", placing its output at the start 
+    of the output file. At previous releases a NullPointerException occurs).
+    </TD></TR>  
+   <TR>
+    <TD vAlign=top>6.1/015</TD>
+    <TD>When <b>xsl:copy-of</b> is used to copy a result tree fragment, and a top-level
+    element in the result tree fragment uses the default namespace (xmlns=""), but the
+    result tree at that point uses the default namespace with a non-null URI (xmlns="xxx"),
+    then no namespace undeclaration (xmlns="") is written to the result tree, causing the
+    top-level element to be in the wrong namespace.
+    </TD></TR>  
+   <TR>
+    <TD vAlign=top>6.1/016</TD>
+    <TD>When <b>xsl:document</b> attempts to create not only the output file but the
+    directory it is in, using a Java VM earlier than JDK 1.2 (but not the Microsoft
+    Java VM), it crashes with the message "java.lang.NoSuchMethodError: java.io.File: 
+    method createNewFile()Z not found".
+    </TD></TR>  
+   <TR>
+    <TD vAlign=top>6.1/017</TD>
+    <TD>If a call is made within an XPath predicate to an extension function that
+    uses context information, in particular the saxon:evaluate() extension function,
+    the call may fail with a null pointer exception.
+    </TD></TR>  
+   <TR>
+    <TD vAlign=top>6.1/018</TD>
+    <TD>Errors in the [xsl:]exclude-result-prefixes and [xsl:]extension-element-prefixes
+    attributes (for example, use of an undeclared namespace prefix) are poorly reported.
+    In some cases the error triggers a null pointer exception, in others it is reported
+    with an unhelpful message, and in some cases it is not reported at all.
+    </TD></TR>  
+   <TR>
+    <TD vAlign=top>6.1/019</TD>
+    <TD>With output method HTML, if elements are output as children of a script or style
+    element, output escaping is switched on for that part of the script or style text
+    that follows such an element. It should remain off for all the contents of the 
+    script or style element.
+    </TD></TR>  
+   <TR>
+    <TD vAlign=top>6.1/020</TD>
+    <TD>A null pointer exception occurs when reporting an ambiguous template rule match,
+    when one of the matching patterns is a simple node test such as "node()".
+    </TD></TR>  
+   <TR>
+    <TD vAlign=top>6.1/021</TD>
+    <TD>If an unsupported encoding is requested, Saxon correctly reverts to UTF-8, but
+    the encoding specified in the XML declaration (or the HTML META element) of the output
+    file is the one that was requested, not UTF-8 as actually used.
+    </TD></TR>  
+</TABLE>    
+
+
+<H2>Changes in version 6.1 (2001-01-09)</H2>
+
+<h3>Towards XSLT 1.1</h3>
+
+<p>The <b>saxon:output</b> element is renamed <b>xsl:document</b>, and its <b>file</b>
+attribute is renamed <b>href</b>. (At this stage, though, it still takes a filename
+rather than a URI). The next-in-chain attribute is renamed saxon:next-in-chain and is
+now available on both xsl:output and xsl:document. The href attribute is mandatory:
+if saxon:next-in-chain is also present, ot determines the destination of the output
+of the chained stylesheet. The indent attribute must now be
+either "yes" or "no"; the previous option to specify the level of indentation is now
+replaced by saxon:indent-spaces="<i>integer</i>", on both xsl:output and xsl:document.
+The omit-meta-tag and character-representation attributes, similarly, are
+prefixed "saxon:" and are available on both elements.</p>
+
+<p>The xsl:output element (like xsl:document) now allows all its attributes to be
+ specified as attribute value templates.</p>
+ 
+<p>A side-effect of this change is that xsl:output properties are now ignored when running
+in preview mode, because the properties cannot be evaluated until the source document
+is available.</p>
+ 
+<p>The saxon:user-data attribute of saxon:output is removed. Instead, any number of
+user-defined attributes may be defined on both xsl:output and xsl:document. These 
+attributes must have names in a non-null namespace, which must not be either the XSLT
+or the Saxon namespace. These attributes are interpreted as attribute value templates.
+The value of the attribute is inserted into the Properties object made available to 
+the Emitter handling the output; they will be ignored by the standard output methods,
+but can supply arbitrary information to a user-defined output method. The name of the
+property will be the expanded name of the attribute in JAXP format, for example
+"{http://my-namespace/uri}local-name", and the value will be the value as given,
+after evaluation as an attribute value template.</p>
+ 
+<p>The special provisions in XSLT 1.1 for defining what happens when you use xsl:document
+ while the current output destination is a temporary tree are not yet implemented.</p>
+
+<h3>URI handling</h3>
+
+<p>The standard URI resolver now accepts URIs containing a fragment identifier. The
+fragment identifier must be the value of an ID attribute within the referenced XML
+document. The effect is to return a tree containing the subtree rooted at the element
+with that id. This facility works for URIs contained in the document() function and
+in xsl:include and xsl:import. If there is no element with the required ID, an empty
+tree is returned (i.e. a root node with no children).</p>
+
+<p>As a result, embedded stylesheets are now working again. In fact, there is no
+special code to handle embedded stylesheets: anywhere a stylesheet module can be
+referenced by URI (including the command line, the xml-stylesheet processing
+instruction, and the href attribute of xsl:include and xsl:import), a URI containing
+a fragment identifier can be used, and this will select the relevant subtree
+in the same way as for any other XML document</p>
+
+<p>In response to complaints about Saxon incompatibility with Xalan, and in order to
+get the JAXP 1.1 example programs working, I have changed the behaviour of both the
+AElfred SAX2 driver, and the SAXON standard URI resolver, so that if no systemId is
+specified for a document, then relative URIs are interpreted relative to the user's
+current directory. Equally, if the base systemId specified for the document is
+a relative URI, this is expanded using the current directory as the base. Arguably
+this behaviour is non-compliant with the SAX2 specification,
+which states that the systemId must be an absolute URI, but it seems to be a useful
+convenience.</p>
+
+<p>This means that every document, and every node, now has a base URI: it can never
+be null. A minor side-effect is that I have withdrawn the ability for saxon:node-set()
+to take a string (or number, or boolean) as an argument: it must now be a result tree
+fragment or an existing node-set. The reason is that there is no obvious way of
+constructing a base URI.</p>
+
+<h3>JAXP 1.1</h3>
+
+<p>Saxon 6.1 implements the new TrAX interface, now defined as part of JAXP 1.1: see
+<a href="http://java.sun.com/aboutJava/communityprocess/review/jsr063/index.html">JSR-63</a>.
+Saxon implements the javax.xml.transform interfaces.  Saxon does not implement (or use)
+the javax.xml.parsers interfaces.</p> 
+
+<p>This has involved fairly extensive changes to the Java API for invoking Saxon. Some of the
+main implications are:</p>
+
+<ul>
+<li><p>Error handling is now via an ErrorListener object which may be user-supplied. The
+standard error listener will now report any number of compile-time errors, but will stop
+at the first run-time error (XSLT recoverable errors are reported as warnings).</p></li>
+
+<li><p>The package names for classes such as Templates and Transformer have changed.</p></li>
+
+<li><p>The exceptions that are thrown have changed: in general, internal routines now
+throw javax.xml.transform.TransformerException or one of its subclasses, where 
+previously they threw a SAXException. However, I have removed the exceptions from many
+internal methods entirely, where they were not needed. In some cases this is achieved
+by throwing an Error instead, which simplifies exception handling in calling routines.</p></li>
+
+<li><p>The Transformer (and hence Saxon's Controller class) is no longer a SAX XMLFilter;
+instead it is possible to get an XMLFilter that performs the transformation using the
+SAXTransformerFactory class.</p></li>
+
+<li><p>The com.icl.saxon.StyleSheet class no longer acts as the TrAX factory; its only
+responsibility now is to implement the command line interface on top of the TrAX Java API.
+It now does this almost entirely using TrAX-defined interfaces rather than Saxon internal
+interfaces, so the class provides a good demonstration of how the TrAX API can be used.</p></li>
+
+<li><p>The classes OutputDetails and OutputFormat have disappeared; output properties are
+now represented throughout the system using a java.util.Properties object as defined in
+the TrAX API. Unlike the old OutputDetails class, the Properties object only describes the
+format of the required output, not its location. The location is represented by a Result
+object.</p></li>
+
+<li><p>The class OutputManager has disappeared: its functions have been merged into the
+Outputter class. Code that switches output to a new destination should now call
+Controller.changeOutputDestination() to get a new Outputter, and should remember
+the previous Outputter so that it can be reinstated when calling 
+resetOutputDestination().</p></li>
+
+<li><p>The Emitter class is now an abstract class rather than an interface; this enables null
+implementations of many of its methods to be provided. It also enables Emitter to 
+implement the TrAX Result interface, which means that wherever the TrAX API allows a Result
+object to be supplied defining the destination of a transformation, Saxon allows you to supply
+an Emitter as the destination. (A side-effect of this is that FragmentValue, which implements
+result tree fragments, is no longer an Emitter, as it cannot be both an Emitter and a
+SingularNodeSet; instead, it is possible to call FragmentValue.getEmitter() which provides an emitter
+front-end for building the tree).</p></li>
+
+<li><p>If a user-specified ContentHandler is used as the output destination, it will now be
+notified of requests to disable or re-enable output escaping using special processing
+instructions inserted into the event stream (the names of these are defined as constants
+in the class javax.xml.transform.Result). Saxon also now uses a processing instruction to
+notify the ContentHandler if output has been suppressed because the result tree is not
+well-formed; if the ContentHandler is prepared to accept ill-formed output, it can reject
+this notification by throwing a SAXException with the message text "continue".</p></li>
+
+<li><p>Setting of configuration parameters (such as supplying a TraceListener or MessageEmitter)
+ is now generally done through the setAttribute() method of the TransformerFactory.
+The names of the relevant attributes are defined in com.icl.saxon.FeatureKeys. Methods
+such as setXMLReader() on the Controller and PreparedStyleSheet classes have therefore
+disappeared.</p></li>
+
+<li><p>For the same reasons, the ParserManager.properties file has disappeared.</p></li>
+</ul>
+
+<h3>Effect on Java-only applications</h3>
+
+<p>I have tried to minimize the impact of the TrAX changes on Java-only applications,
+but inevitably some incompatible changes have crept in. The main ones are:</p>
+
+<ul>
+<li>Many methods now throw TransformerException instead of SAXException.</li>
+<li>The Builder.build() method now expects a SAXSource rather than a SAX InputSource.
+The SAXSource object contains information about both the input source itself, and the
+SAX2 parser (XMLReader) used to process it.</li>
+<li>The old OutputDetails object is replaced by a Properties object to define the output
+properties and a Result object to define the output destination; the methods setOutputDetails()
+and resetOutputDetails() are replaced by changeOutputDestination() and resetOutputDestination().</li>
+</ul>
+
+<p>In future I want to align the Java-only processing model more closely with TrAX, so 
+that the set of processing rules defining the transformation becomes another kind of Templates
+object.</p>
+
+
+<H3>Defects cleared</H3>
+
+<p>The following errors were reported for version 6.0.2, and have been cleared:</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>6.0.2/001</TD>
+    <TD>For the TinyTree tree model, the method getDocumentElement() always returns null.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>6.0.2/002</TD>
+    <TD>A recurrence of 6.0.1/014: the same code was present in three different places,
+    and only one of them was corrected.
+    </TD></TR>    
+  <TR>
+    <TD vAlign=top>6.0.2/003</TD>
+    <TD>When Saxon input is supplied as a DOM, CDATA section nodes and entity reference
+    nodes are ignored: their contents are simply omitted from the input.
+    </TD></TR>    
+  <TR>
+    <TD vAlign=top>6.0.2/004</TD>
+    <TD>A null pointer exception is reported if the stylesheet contains a template rule
+    whose match pattern is of the form id('abc'), and the source document contains no
+    node with identifier "abc".</td>
+    </TD></TR>    
+  <TR>
+    <TD vAlign=top>6.0.2/005</TD>
+    <TD>The method com.icl.saxon.tree.AttributeCollection#getLocalName returns the QName
+    of the attribute, not the local part of the name. This causes the local-name() function
+    when applied to a namespace-qualified attribute node to return the wrong result.</td>
+    </TD></TR>
+  <TR>    
+    <TD vAlign=top>6.0.2/006</TD>
+    <TD>An attempt to access the last comment in the source document using xsl:value-of,
+    xsl:copy, etc, will fail if the data part of the processing instruction is zero length. The
+    failure occurs with the Microsoft JVM but not with JDK 1.3. Fails with the tinytree
+    model only. (Present since 6.0; see also 6.0.1/008)
+    </TD></TR>
+</TABLE>
+
+<H2>Changes in version 6.0.2 (2000-12-08)</h2>
+
+<H3>Defects cleared</H3>
+
+<p>The following errors were reported for version 6.0.1, and have been cleared
+except where otherwise noted:</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>6.0.1/001</TD>
+    <TD>When a template is called recursively to obtain a default value for one
+    of its own parameters (i.e. within &lt;xsl:param&gt;), the wrong result may
+    be returned. This is because tail recursion is invoked when it should not be.
+    (Bug also present in 5.5 and earlier releases).
+    </TD></TR>
+    
+    <TD vAlign=top>6.0.1/002</TD>
+    <TD>An array bound exception will occur when processing a document with a stylesheet
+    that uses more than 100 namespace URIs or namespace prefixes. Present since 6.0</TD></TR>
+
+    <TD vAlign=top>6.0.1/003</TD>
+    <TD>When a key is defined with match="@*", nothing will be retrieved. The problem
+    also applies to some other patterns that can match attributes, for example 
+    match=" name | @name ".
+    (Possibly present in 5.5 and earlier releases - unconfirmed)</TD></TR>
+
+    <TD vAlign=top>6.0.1/004</TD>
+    <TD>The extension functions saxon:set-user-data() and get-user-data() do not 
+    work correctly with the TinyTree model. They may also fail with the standard tree
+    model if the context node is an attribute or namespace. This is because the code relies
+    on a one-to-one mapping of XPath nodes to Java objects. (Present since 6.0)
+    </TD></TR>
+    
+    <TD vAlign=top>6.0.1/005</TD>
+    <TD>Not a bug.
+    </TD></TR>
+
+    <TD vAlign=top>6.0.1/006</TD>
+    <TD>When attribute value templates are used in the attributes of xsl:sort, for
+    example ascending="{$asc}", then the values used are those that apply the first time
+    the sort occurs; if subsequent sorts have different values for the parameters, these
+    are ignored. This is true even if the subsequent sort takes place in a later
+    transformation using the same PreparedStyleSheet.
+    (Also applies to 5.5 and earlier releases).
+    </TD></TR>
+
+    <TD vAlign=top>6.0.1/007</TD>
+    <TD>saxon:output and other Saxon extension elements do not allow the xsl:extension-element-prefixes
+    attribute to appear on the extension element itself. (Present since 6.0)
+    </TD></TR>
+
+    <TD vAlign=top>6.0.1/008</TD>
+    <TD>An attempt to access the last processing instruction in the source document using xsl:value-of,
+    xsl:copy, etc, will fail if the data part of the processing instruction is zero length. The
+    failure occurs with the Microsoft JVM but not with JDK 1.3. (Present since 6.0)
+    </TD></TR>
+
+    <TD vAlign=top>6.0.1/009 </TD>
+    <TD>Running a transformation using the Transformer.getInputContentHandler() method fails
+    saying that the same NamePool must be used for the StyleSheet and the source document.
+    (Present since 6.0)
+    </TD></TR>
+
+    <TD vAlign=top>6.0.1/010 </TD>
+    <TD>The code that searches for an xml-stylesheet processing instruction displays unintended
+    trace information on System.err.
+    </TD></TR>
+    
+    <TD vAlign=top>6.0.1/011</TD>
+    <TD>When xsl:apply-imports is called and there is no explicit imported template rule
+    to invoke, Saxon does a no-op; the correct action is to invoke the built-in template
+    rule for the current node. (Bug present in all previous releases).
+    </TD></TR>
+
+    <TD vAlign=top>6.0.1/012</TD>
+    <TD>If the value attribute to xsl:number is not an integer, Saxon truncates it towards
+    zero rather than rounding it as specified. (Bug present in all previous releases). 
+    </TD></TR>
+
+    <TD vAlign=top>6.0.1/013</TD>
+    <TD>With the TinyTree model, selecting a namespace node using //e/namespace::n doesn't
+    work. Selecting all namespace nodes using namespace::* is OK. (Present since 6.0)
+    </TD></TR>
+    
+    <TD vAlign=top>6.0.1/014</TD>
+    <TD>An array bound check failure may occur in routine 
+    com.icl.saxon.tinytree.TinyElementImpl.makeAttributeNodeFS() when searching for
+    the last attribute node in the document. (Present since 6.0)
+    </TD></TR>    
+</TABLE>
+
+<p>Integration with FOP has been restored. Saxon now works with FOP version 0_15_0.</p>
+
+<p>NamePools: I have changed the approach, so that instead of making a copy of the stylesheet
+name pool for each transformation, the name pool is now shared (which means its updating methods
+are now synchronized, to ensure thread-safety). This shouldn't affect most users, unless you
+are manipulating NamePools explicitly. It is still possible to have multiple name pools, but
+you now need to organise any copying yourself if this is what you want to do. For 99% of users,
+it should be possible to ignore NamePools entirely and just leave the system to use the single
+default name pool all the time.</p>
+
+<p>The following changes are for conformance with the (imminent) XSLT 1.0 errata:</p>
+
+<ul>
+<li>Copying a namespace node using xsl:copy or xsl:copy-of now works as specified.</li>
+
+<li>When xsl:number level="any" finds no nodes that match the count pattern, the generated
+sequence number is now an empty list rather than the number zero.</li>
+
+<li>When the second argument to document() is an empty node-set, this is now signalled as an
+error. Previously it was handled as if the second argument was omitted.</li>
+
+<li>It is now an error to use the key() function within the match or use attributes of
+xsl:key. Previously this was only an error if the reference was circular, and if the key
+was actually referenced within the stylesheet.</li>
+
+<li>When xsl:number is called using the value attribute, the behavior for negative,
+    infinite, and NaN values is now as specified.</li>
+    
+<li>In a numeric sort, NaN is now sorted before all other values. Previously it was sorted
+last.</li>
+
+</ul>
+
+<H2>Changes in version 6.0.1 (2000-11-28)</h2>
+
+<H3>Defects cleared</H3>
+
+<p>The following errors were reported for version 6.0, and have been cleared
+except where otherwise noted:</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>6.0/001</TD>
+    <TD>When xsl:copy-of is used to copy attributes with no namespace prefix, and the
+    owning element has a default namespace declaration (xmlns="xyz"), then an
+    invalid prefix is generated for the attributes.</TD></TR>
+    
+    <TD vAlign=top>6.0/002</TD>
+    <TD>The PreparedStyleSheet object is not serially reusable. A new NamePool
+    needs to be allocated each time it is used.</TD></TR>
+
+    <TD vAlign=top>6.0/003</TD>
+    <TD>A performance bug: in the match pattern row[id=1234] the predicate is not
+    recognized as a boolean predicate, therefore the pattern matching code determines
+    the position of the row relative to its siblings on the assumption that it needs
+    this information. If there are a large number of &lt;row&gt; siblings this gives
+    a severe performance hit.</TD></TR>
+
+    <TD vAlign=top>6.0/004</TD>
+    <TD>The function-available() function returns false for a method that exists but
+    that requires one or more arguments.</TD></TR>
+
+    <TD vAlign=top>6.0/005</TD>
+    <TD>The element-available() function crashes (with a diagnostic print of the name pool
+    contents) if the supplied name is one that is not used in the stylesheet and is not
+    a known XSL or Saxon instruction.</TD></TR>
+
+    <TD vAlign=top>6.0/006</TD>
+    <TD>With the TinyTree tree model, finding the descendants of a node that has neither
+    descendants nor following-siblings produces incorrect results.</TD></TR>
+
+    <TD vAlign=top>6.0/007</TD>
+    <TD>DTDGenerator won't compile: no name pool is supplied to RuleManager</TD></TR>
+
+    <TD vAlign=top>6.0/008</TD>
+    <TD>In the SQL sample application, the last row is not written to database. (This
+    reported bug has not yet been investigated)</TD></TR>
+        
+</TABLE>
+
+<H3>Other changes</H3>
+
+<p>Warning messages (issued typically when a node matches more than one template rule)
+are now limited in number: only the first 25 are displayed.</p>
+    
+
+
+<H2>Changes in version 6.0 (2000-11-17)</H2>
+
+<p>In Saxon 5.5, I introduced a change that allows a result-tree-fragment to be implicitly
+converted to a node-set. I did this in anticipation of changes in XSLT 1.1, and to allow
+interoperability with MSXML3. However, Microsoft have now withdrawn this facility and conform
+fully to the XSLT 1.0 rules, so in order to protect Saxon's reputation for 100% conformance,
+I have decided to withdraw the facility too. It can still be used, however, if the stylesheet
+specifies version="1.1". For more details, see <a href="conformance.html">Conformance</a></p>
+
+<H3>Defects in version 5.5.1</H3>
+
+<p>The following errors are cleared in version 6.0:</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>5.5.1/001</TD>
+    <TD>When xsl:copy-of is used to make a copy of an element node that has no attributes or
+    namespace declarations of its own, the namespace nodes inherited from its ancestor elements
+    are not copied to the result tree. (Present since 5.5)</TD></TR>
+    
+    <TD vAlign=top>5.5.1/002</TD>
+    <TD>In some Java environments (ServletExec) the current method for dynamic loading of classes fails.
+    The fix to this detects this failure and reverts to the simple pre-JDK 1.2 method.</TD></TR>
+
+    <TD vAlign=top>5.5.1/003</TD>
+    <TD>When &lt;xsl:namespace-alias&gt; is used, Saxon uses the new (result-prefix) prefix
+    and the new URI in the output. A careful reading of the spec suggests that it should
+    use the old (stylesheet-prefix) prefix with the new URI. (The term "result-prefix" is thus
+    a misnomer).</TD></TR>
+
+    <TD vAlign=top>5.5.1/004</TD>
+    <TD>An ArrayIndexOutOfBounds exception occurs if the match pattern "@comment()" (or "@text()"
+    or "@processing-instruction()") is used in an xsl:template rule. 
+    Such a pattern is meaningless (it will never match any nodes) but entirely legal.</TD></TR>
+
+    <TD vAlign=top>5.5.1/005</TD>
+    <TD>Saxon does not report an error if two sibling &lt;xsl:with-param&gt; elements
+    specify the same parameter name.</TD></TR>
+
+    <TD vAlign=top>5.5.1/006</TD>
+    <TD>Where conflicting &lt;xsl:strip-space&gt; and &lt;xsl:preserve-space&gt; elements occur in the
+    stylesheet, Saxon gives greater weight to the priority of the pattern than to its import
+    precedence. So &lt;xsl:strip-space elements="ns:item"&gt; in an imported stylesheet will
+    incorrectly override &lt;xsl:preserve-space elements="ns:*"&gt; in the importing stylesheet.
+    </TD></TR>
+
+    <TD vAlign=top>5.5.1/007</TD>
+    <TD>A null pointer exception can occur in the AElfred parser when attempting to access an XML file
+    using a URL, if the resource accessed by the URL is found but its encoding is unknown.</TD></TR>
+
+    <TD vAlign=top>5.5.1/008</TD>
+    <TD>A null pointer exception can occur when evaluating a variable reference within the arguments
+    to an extension function that is called within the predicate of a filter expression.</TD></TR>
+
+    <TD vAlign=top>5.5.1/009</TD>
+    <TD>When running in fowards-compatible mode, Saxon incorrectly rejects XSL elements that contain
+    an attribute other than those defined in XSLT 1.0.</TD></TR>
+
+    <TD vAlign=top>5.5.1/010</TD>
+    <TD>When xsl:copy is applied to an attribute, text node, comment, or processing instruction,
+    the content of the xsl:copy element should be ignored. It isn't.</TD></TR>
+
+    <TD vAlign=top>5.5.1/011</TD>
+    <TD>When output to a DOM Node is requested in the TrAX API, this is ignored if an output
+    method is specified in an xsl:output element of the stylesheet. The output is sent to the
+    standard output stream instead. The xsl:output element should be ignored.</TD></TR>
+
+    <TD vAlign=top>5.5.1/012</TD>
+    <TD>When a top-level element such as xsl:output is used within a template, it is reported
+    as an error. This happens even when processing in forwards-compatible mode (e.g. when
+    version="1.1"). In this case fallback processing (xsl:fallback) should be invoked.</TD></TR>
+
+    <TD vAlign=top>5.5.1/013 <p>not yet fixed</p></TD>
+    <TD>When the first argument to the document() function is a result tree fragment, Saxon
+    takes the Base URI (for resolving the URI if it is relative) as if the argument were a
+    string. The intention of the specification, though not clearly stated, is that the Base URI
+    should be calculated as if the argument were a node-set. That is, if the argument is $tree
+    and $tree is defined by &lt;xsl:variable name="tree"&gt;doc.xml&lt;/xsl:variable&gt;, then
+    the Base URI should be that of the xsl:variable element, not that of the element containing
+    the call on the document() function.</TD></TR>
+    
+</TABLE>
+
+<H3>New XSLT facilities at version 6.0</H3>
+
+<p>Added support for two new output encodings on xsl:output: iso-8859-2 and cp1250.</p>
+
+<p>Added two attributes to xsl:output (not yet available in saxon:output):
+<ul>
+<li>
+<b>saxon:omit-meta-declaration="yes" or "no"</b> controls, for HTML output, whether a META tag
+is added after the HEAD start tag. The default is to include it, setting this attribute
+to "yes" causes it to be omitted, which is useful if you prefer to generate it yourself.</li>
+<li>
+<b>saxon:character-representation</b> gives the preferred representation for special characters.
+For method="xml" the values are "hex" or "decimal" controlling whether character references
+should be in decimal or hexadecimal notation: this aplies only to characters outside the
+selected encoding. For method="html" two values may be given,
+separated by a semicolon. The first gives the representation for non-ASCII characters
+that are present in the target character set: the values are "native", "entity",
+"decimal", or "hex". The second gives the representation for characters outside the
+selected encoding: the same values can be used, except for "native". For example if
+encoding="iso-8859-1", then saxon:character-representation="native;hex" causes characters
+in the range 0-255 to be written as themselves (except less-than, ampersand, etc which
+are always written as entity references, as is non-breaking-space), and causes characters outside this range to be
+written as hexadecimal character references. By contrast "entity;decimal" causes
+characters in the range 160-255 to be written using HTML-defined symbolic entities,
+and characters above 255 to be written in decimal. The default is "entity;decimal".
+</li></ul>
+
+<p>Added a new extension function saxon:showNodeSet(). It takes a single argument that is
+a node-set, produces a diagnostic print of the node-set on System.err, and returns an
+empty string.</p>
+
+<p>Added an extension function saxon:getContext() to get the context object. 
+Only really intended for diagnostic use.</p>
+
+<h3>Command line changes</h3>
+
+<p>Added an option to choose the tree implementation (see below): -ds for the standard
+tree, as used in previous releases, -dt for the "tinytree" which is new to this release.
+The tinytree is the default: it takes up less memory, is faster to build, and generally
+appears to perform better in most circumstances.</p>
+
+<p>The -a option on the stylesheet, which causes the source document to be processed using the
+stylesheet identified from its xml-stylesheet processing instruction, now uses the same logic
+as the getAssociatiedStylesheets() method in the TrAX interface. This means multiple (cascading)
+stylesheets are now supported. However, embedded stylesheets (identified by href="#id" in the
+xml-stylesheet processing instruction) are not supported at this release.</p>
+
+
+<h3>Java API changes</h3>
+
+<p>There have been a great many internal changes, but relatively few that impact directly
+on the high-level transformation API. In particular, if you only use TrAX interfaces, there
+are no changes. Otherwise, the main points to note are:</p>
+
+<ul>
+<li>If you use the Builder to build a document tree, there are several changes. Firstly, Builder
+itself is now an abstract class, it has concrete classes for the two kinds of tree. Secondly,
+the Builder must now be supplied with a NamePool for holding all XML names. All documents used
+in a transformation must use the same NamePool. Thirdly, the Builder is no longer a SAX2 
+ContentHandler, instead it implements Saxon's own Emitter interface. You can front-end it
+with a ContentEmitter if you want to drive it via SAX2 events. Finally, it is no longer
+possible to strip whitespace nodes from the completed tree, this has to be done using the
+Stripper while the tree is being constructed. This has implications if you want to use the
+same tree in memory as input to different transformations controlled by different stylesheets.
+</li>
+
+<li>If you have a user-written Emitter to handle output, you will have to change it, as the
+interface has changed. In particular, names are now passed as integer references to the NamePool,
+see the XMLEmitter for an example of how these names are handled.</li>
+
+<li>If you set up parameters to the transformation using a ParameterSet, this has also changed
+to use integer namecode rather than Name objects. The TrAX interface, which adds one parameter
+at a time, is unaffected.</li>
+
+<li>If you use extension functions that access the Saxon tree structure as a DOM, you need
+to be aware that the representation of namespace nodes has changed. 
+Namespace nodes are
+no longer presented as attribute nodes in the DOM: in fact they are not presented at
+all. This simplifies the model, and is consistent with the DOM specifications.
+You can still access namespace nodes, but only by casting the DOM objects to Saxon's
+own classes.</p>
+
+<p>This release adds support for pluggable character sets: if you specify xsl:output encoding="class-name",
+class-name should be a class that implements com.icl.saxon.output.PluggableCharacterSet.
+The class must provide two methods, one that determines whether a given character is 
+present in the character set, and one that gives the name of the encoding to be used
+by the Java VM for translating Unicode characters into a file with this encoding.</p>
+
+<p>To use free-standing XPath expressions and patterns from a Java application, you now
+need to supply a StaticContext object when parsing the expression. This object handles the
+resolution of variable names, namespace prefixes, and function names occurring within
+the expression. For convenience the StandaloneContext object is provided for this purpose.
+This class allows namespace prefixes to be declared so they can be used in an expression.
+It also allows external functions to be called (but not functions defined in your XSLT
+ stylesheet). It does not allow the expression or pattern to contain references to
+ variables.</p>
+</ul>
+
+<h3>Internal Changes</h3>
+
+<p>These details should only affect you if you access intimate internal interfaces or use the Saxon
+source code.</p>
+
+<p>There are two big changes to the internals of Saxon at this release: a new
+implementation of the tree structure, and a new system for handling names.</p>
+
+<h4>The tinytree implementation</h4>
+
+<p>I have introduced an alternative tree implementation (called "tinytree").
+ This is designed to
+reduce the number of Java objects created: the tree is sliced vertically rather than
+horizontally, so instead of having one Java object per node, there is one Java array for
+each property of the nodes, with an entry in the array for each node.
+The effect is to greatly reduce the Java memory management overheads. 
+The existing tree structure remains available,
+and is always used for the stylesheet tree. It is also currently always used for
+the intermediate result tree created when saxon:output next-in-chain is used.</p>
+
+<p>To select the standard tree structure, use -ds on the command line. To select
+the "tinytree" structure, use -dt. The default is -dt. You can also select the tree
+structure using a method on the Controller class.</p>
+
+<p>The tinytree is smaller than the standard tree, as the name suggests, and it is
+also faster to build. However, it may be slower to navigate. So if you have a small
+document that is built once in memory and used repeatedly, the standard tree
+implementation is probably better. In other cases, however, the tinytree usually
+wins.</p>
+
+<h4>Name pools</h4>
+
+<p>I have made radical changes to the way names are managed. Previously, the NamePool object
+contained a pool of names, but its only real purpose was to avoid the memory overhead
+of storing each name many times. Now, Saxon takes advantage of the NamePool to avoid
+storing references to Name objects on the tree at all: instead it stores a "namecode":
+an integer which can be used to identify the name within the NamePool.</p>
+
+<p>A <b>namecode</b> has 4 bits unused, 8 bits representing the prefix, and 20 bits acting as
+a pointer to an entry in the namepool containing the local name and namespace URI. Two
+names are therefore equal if the namecodes are the same in the bottom 20 bits. The
+value in these 20 bits is also referred to as the <b>fingerprint</b> of the name.</p>
+
+<p>All searching for objects by name is now done by comparing fingerprints; no
+string comparisons are involved.
+Fingerprints are used not only for matching names used in XPath expressions to
+refer to the source document, they are also used for all matching of names within
+a stylesheet, for example variable names, template names, mode names, key names,
+and decimal format names.</p>
+
+<p>The name pool is also used for storing namespace declarations: each prefix/URI pair
+is allocated a namespace code, and all manipulation of namespace nodes in the tree is
+done using these integer codes.</p>
+
+<p>A consequence of this is that all documents used in a transform must use the same
+NamePool. This has some implications on the Java API. With simple use of the API, 
+you needn't worry about name pools, they will be taken care of automatically. However,
+if you are operating a continuously running service in which both source documents and
+stylesheets are cached in memory, you may need to exercise some care to specify the
+right NamePool when each document is built.</p>
+
+<p>The model is further complicated by multi-threading. Rather than have synchronization
+problems with multiple threads updating the same NamePool, the NamePool used to build the
+stylesheet is copied (imported) into the NamePool used to build the source document, before
+parsing of the source document starts. When you use the transform() method to parse and 
+transform an InputSource, this happens automatically. However, if you want to build the
+document yourself, and transform it using transformDocument() (which allows you to run
+more than one transformation on the same document), then you must manage the NamePool
+merging yourself. The system does include checks that the NamePools for the stylesheet
+and source document are compatible, though these are not completely foolproof.</p>
+
+<p>The use of namecodes rather than String names has affected many internal interfaces,
+and some of these are interfaces that are also exposed externally. For example, the
+ParameterSet object which is used to pass parameters from a calling template to a called
+template can also be used to supply global parameters to the Transformer. The parameters
+in a parameter set are now identified by an integer fingerprint rather than a string name.
+You can get the integer namecode from the NamePool using the getFingerprint() method; 
+alternatively use the TrAX method addParameter(), which still takes the name as a
+String.</p>
+
+<p>The Emitter interface has also changed to use name codes; if you have written your
+own Emitter, the code will have to be modified.</p>
+
+<h4>Other changes</h4>
+
+<p>The classes and interfaces used in Saxon for manipulating collections of attributes
+now implement the SAX2 Attributes interface.</b></p>
+
+<p>The standard XPath functions have been extensively revised. The main change, apart
+ from tidying up the
+code, is that the functions are now responsible for evaluating their own arguments, which
+enables some optimisation, especially when the arguments are node-sets: they can now be
+evaluated using knowledge of the data type required. For example, the not() function
+now stops as soon as the first node in the argument node-set is found.</p>
+
+<p>Some of the little-used methods on the NodeInfo interface have been moved as static
+methods to a separate helper class, com.icl.saxon.om.Navigator. This enables the
+code of these methods to be independent of the particular tree implementation.</p>
+
+
+<p>The delayed evaluation of path expressions now works as follows: on the first two
+occasions that a path expression is evaluated, it navigates the source tree. On the
+third occasion, it saves the resulting node-set in memory. On subsequent uses, the
+result is retrieved from memory. This approach is designed
+to balance time against memory usage.</p>
+
+<p>The optimisation of "//name" as "/descendant::name" (which is possible when there
+are no predicates) wasn't working in 5.5 (or for
+a while before that), causing an unnecessary sort. This has been corrected. In addition,
+the first time "//name" is used for a particular document, the results are now saved, and
+all subsequent uses of "//name" for the same document retrieve the results from memory.
+This means that the traditional assumption that "//name" is inefficient may no longer
+always be true.</p>
+
+<p>A Sequencer class has been introduced for allocating globally-unique sequence numbers.
+There are two such sequences, one for document numbers, and one for node numbers. By
+default, two sequencers are created when Saxon is loaded, and remain in use until it
+is unloaded. However, it is now possible to reset the sequence numbering if required,
+either to prevent running out of numbers in a long-running server, or to ensure repeatability
+of the value of generate-id(). The result of generate-id() depends on the document
+number, and you can restart the sequence of document numbers by calling 
+controller.setDocumentSequencer(new com.icl.saxon.om.Sequencer()). It is the caller's responsibility to
+ensure that this does not cause two documents that are in use at the same time 
+to have the same number. The node sequence number is used when sorting nodes into
+document order, and when eliminating duplicates in a union operation. You can similarly
+allocate a new sequence using controller.setNodeSequencer().</p>
+
+
+<p>Added an optimization for recursive processing of a node-set: the predicate
+"[position() > 1]" is now recognized and handled specially, allowing pipelined
+execution and reducing memory requirements.</p>
+
+<p>Removed getAttributeValue(Name), replaced it with getAttributeValue(String uri,
+String localName). This is more efficient: in many cases it removes the need to
+construct the Name object and then take it apart. Attributes can also be found
+using the integer fingerprint of the name.</p>
+
+<p>The Name class is no longer used for holding expanded names, it now serves merely
+as a container for a couple of static methods for name validation.
+</p>
+
+<p>NameTest and its subclasses have been reorganised. There is a new class NodeTest which is a
+subclass of Pattern; it performs the test on node-type and node-name supporting a
+node-test in XPath. This test is context-free. As well as replacing the NameTest class,
+it also replaces NodeTypePattern and NamedNodePattern. The NodeTest is now used on
+a Step, and on an Axis, replacing the previous combination of a NameTest and a node type.
+These tests are also used in testing which nodes are candidates for whitespace stripping.
+</p>
+
+<p>The interface between the Step and Axis classes and the expression parser has been
+much simplified.</p>
+
+
+
+
+<P align=center>Michael H. Kay<BR>11 April 2002</P>
+</FONT></BODY></HTML>

@@ -1,0 +1,990 @@
+==============================================================================
+Done since 0.20.4 release
+- PS Renderer: Improved DSC-conformance in %%Page comments.
+- Fix for bug #20879 (PS Renderer: leader broken, cursor positioning) (JM)
+  Submitted by: Larry Moore <lmoore@providerlink.com>
+- Fix for bug #5674 (PS Renderer: High memory usage in PS interpreter, FOP 
+  procs were started for every page but not ended after the page) (JM)
+- Fix for bug: Wrong length value for embedded Type1 font stream (JM)
+- Fix for bug #20506 (grayscale images in PS renderer) (JM)
+  Submitted by: Zhong(George) Yi <yidaomao@yahoo.com>
+- Fix for bad font encodings in the PS renderer (Fonts get reencoded as
+  WinAnsiEncoding, Symbol and ZapfDingbats show correctly now) (JM)
+  Financed by: CTB/McGraw-Hill
+- Fix for bug #20239 (Failure while generating XML metrics files from TT
+  collections when names are in Unicode (JM)
+- Fix for bug #19797 (image elements in SVG may produce blank output) (JM)
+  Submitted by: Zhong(George) Yi <yidaomao@yahoo.com>
+- Teach FOP under NT/2000/XP to start when the user is in any directory,
+  maybe not FOP's home, like ANT does it. (#19466, JM)
+  Submitted by: Anton Tagunov <tagunov@motor.ru>
+- Fixed bug: PFBParser reports "Could not load the whole segment".
+  (#19764, JM)
+  Submitted by: Matthias Germann <germannm@post.ch>
+- Fixed bug in ASCII85OutputStream where EOF marker got split over two lines
+  resulting in an illegal stream. (JM)
+  Submitted by: Larry Moore <lmoore@providerlink.com>
+- PS renderer got a configurable setting to do auto-landscape rotation. (JM)
+  Inspired by: Henrik Olsson <henrik.olsson@intentia.se>
+- Use Locator to make system id, line and column number available to
+  FOs. Use it when throwing FOPExceptions. TBD: Use it in mesages, also
+  catch RuntimeExceptions and wrap them.
+- Added PDF encryption. Available options: no printing, no copy, no
+  edit, no annotations.
+  Submitted by Patrick C. Lankswert <PLankswert@InsightBB.COM>
+- Fixed text alingment for lines containing forward pointing page number
+  citations. This should greatly improve TOC layout. (J.Pietschmann)
+- Fixed repeatedly laid out small caps text (for example in static
+  content or due ot keeps). (J.Pietschmann)
+- Fixed marker handling thouroughly. All retrieving boundaries and
+  retrieve-position first-starting-within-page and last-starting-within-page
+  should work now, as well as multiline/multiblock marker contents.
+  Retrieve-position first-including-carryover and last-ending-within-page
+  do not yet work. Also fixed marker handling in case layout was undone
+  due to keeps (#16999). (J.Pietschmann, based on material submitted
+  by Marc C. Allman)
+- Fixed some sources of "wrong operand type" error in Acrobat Reader. They
+  were caused by rounding bugs, mostly experienced with SVG files coming from
+  OpenOffice. (Jeremias Maerki)
+- FOP Ant task: Fix for logging behaviour, fix for directory structure
+  preservation for nested filesets and additional attribute "logFiles".
+  Submitted by: Stefan Wachter <Stefan.Wachter@gmx.de>
+- Fixed TrueType embedding bug when the font doesn't contain the fpgm table
+  which is optional. (Jeremias Maerki)
+- Added support for url()-syntax to the fo:basic-link-Element
+  Submitted by: Stefan Wachter <Stefan.Wachter@gmx.de>
+- Added new extension element for defining named destinations (PDF)
+  Submitted by: Lloyd McKenzie <lmckenzi@ca.ibm.com> and Stefan Wachter
+- Added support for linking to a specific page and a named destinations
+  of an external PDF file
+  Submitted by: Bernd Brandstetter <bbrand@freenet.de>
+- Added Turkish messages for AWT Viewer
+  Submitted by: Togan Muftuoglu <toganm@users.sourceforge.net>
+- Fixed leader expansion and leader alignment to reference area to some
+  extent(#7490 and #15936). (J.Pietschmann)
+- Temporary fix for wrong mapping of the hyphen character in the PostScript
+  renderer. Needs to be done in a clean way later.
+  Submitted by: Arnd Beissner <arnd.beissner@cappelino.de>
+- Fix for bug 16257: Get ascender/descender from OS/2 table if the ones in
+  hhea are zero (Jeremias Maerki)
+- Reduced the size of the PSRenderer output (removed redundant movetos)
+  Submitted by: Arnd Beißner <arnd.beissner@cappelino.de> (see bug #16130)
+- Fixed many (not all) problems with link hotspot positioning and made
+  the default behavior to create a single hotspot over all words in each
+  line (Karen Lease)
+- Added continued-label extension which works in table-header or table-footer
+  to add text in non-first occurences of those areas (Karen Lease)
+- Fixed a bug in the TTF font inclusion which was showing up when using
+  non-stroked text in SVG (Karen Lease)
+- Improved table behavior in some cases where keeps properties are used on
+  rows (Karen Lease)
+- Fixed NullPointerException in Label.java experienced by certain DocBook
+  users.
+  Submitted by: Stephan Wiesner <stephan@stephan-wiesner.de>
+- Fixed bug #15877: ArrayIndexOutOfBoundException with certain TrueType fonts.
+  Reserved name indexes were not ignored. (Jeremias Maerki)
+- Fixed resolution of relative URLs in FopImageFactory with IBM JDK
+  Submitted by: Manuel Mall <mm@arcus.com.au> (see bug #14948)
+- Fixed infinite loop when page-height="auto" (Oleg Tkachenko)
+- Fix embedding of Adobe Type 1 fonts. PFB file encoded in PC format were
+  not decoded prior to embedding. This may explain error messages with
+  certain RIP engines. (Jeremias Maerki)
+- Added infinite loop detection (just halts processing, see bug #8878)
+  Submitted by: Rhett Aultman (raultman@fcci-group.com)
+- Added autoselecting  portrait/landscape on PCL Renderer (see bug #6638)
+  Submitted by: vicentesalvador@netscape.net (Vicente Salvador)
+- Improved AWT Font-measuring/rendering (see bug #14657)
+  Submitted by: Ralph LaChance <Ralph_LaChance@compuserve.com>
+- Updated examples/fo files to remove all errors and warnings during build
+  Submitted by: Manuel Mall <mm@arcus.com.au> (see bug #13867)
+- Performance tuning (reduced object creation etc.) (see bug #14013)
+  Submitted by: Henrik Olsson <henrik.olsson@intentia.se>
+- Update to Xerces 2.2.1 (Jeremias Maerki)
+- Fixed EOFException in TTFReader (Bug #14576)
+  Submitted by: Bernard D'Have <bdhaveos@wanadoo.be>
+- Added support for CCITT Group 4 encoded TIFF files
+  Made JAI support dynamic (no recompile needed anymore)
+  Submitted by: Manuel Mall <mm@arcus.com.au> (see bug #13866)
+- Fixed problem with jpegs with icc profile and acrobat reader 5 (Bug #11301)
+  Submitted by: Stephan Neuhaus <stephan.neuhaus@myview.de>
+- Fix bug in LinkSet.mergeLinks() (ArrayOutOfBoundsException when number of
+  rects is zero) (Jeremias Maerki)
+- Removed the necessity for a buildtools.jar (Jeremias Maerki)
+- Updated several JARs: Ant 1.5.1, Xerces 2.2.0, Xalan 2.4.1 (Jeremias Maerki)
+- Fixed some multi-threading issues (NPEs)
+  Submitted by: Joachim Unger <joachim.unger@softwareag.com>
+- Improved registration of ImageReader implementations (Jeremias Maerki)
+- Refactored baseDir stuff. Internally most code has been changed to work on
+  URLs instead of filenames. The baseDir property is evaluated to a baseURL
+  which can be accessed through Configuration.getBaseURL() (Jeremias Maerki)
+- Added a fontBaseDir property (similar to baseDir) which represents a base
+  dir/URL for fonts. If this property isn't set, a fallback is made to
+  baseDir. (Jeremias Maerki)
+- Fixed some javadoc warnings
+  Submitted by: Victor Mote <vic@outfitr.com>
+- Added translation for GoToPageDialog and update for czech translations
+  Submitted by: Michal Buchtik <BuchtikM@dlsystem.cz>
+- background properties for all regions + regions precedence support
+  (Oleg Tkachenko)
+- TXTRenderer output encoding (Oleg Tkachenko)
+- border-spacing support (Oleg Tkachenko)
+- New Avalon Framework JAR with Log4J support (Bug 11274) (Jeremias Maerki)
+- Added a RunLengthEncode filter for the PostScript renderer
+  Submitted by: Stephen Wolke <smwolke@geistig.com>
+- Added a property on the PostScript renderer for switching between PostScript
+  Level 2 and 3. Default is Level 3. (Jeremias Maerki)
+- Improved standard conformance for forced page counts (J.Pietschmann)
+- Better error reporting for common problems (invalid page master references,
+  missing table-body elements) (J.Pietschmann)
+- Improved handling of text containing entity references. (J.Pietschmann)
+- Made marker references work for markers not from the current page,
+  with some caveats (J.Pietschmann)
+- Simplification of ASCII85 computation, work around for a JVM bug on Linux
+  (J.Pietschmann)
+- Fixed width calculation for spaces (J.Pietschmann)
+- Fixed problems with setting text decorations on fo:wrapper. (J.Pietschmann)
+- Automatic compilation on Java1.4 (J.Pietschmann)
+- More possiblities to pass data to FOP (J.Pietschmann)
+- Fixed missing Ids for table rows (#12876) (J.Pietschmann)
+- Page number citations are now correctly formatted (#13691) (J.Pietschmann)
+- Text decoration and links now work with hyphenated words. (#4511)
+  (J.Pietschmann)
+- Fixed problems with scrambled and lost related to hyphenation (#6042
+  and a few others). (J.Pietschmann)
+- Fixed wrong space generation related to hyphenation. (J.Pietschmann)
+
+==============================================================================
+Done since 0.20.3 release
+
+- Moved from org.apache.log.Logger to org.apache.avalon.framework.logger.Logger
+  (this removes dependency from logkit)
+  Submitted by: Michael Gratton <mjg@recalldesign.com>
+- Made FOP running with any JAXP1.1 compliant parser/transformer
+  Submitted by: Joerg Pietschmann <joerg.pietschmann@zkb.ch>
+- Updated old servlet code, moved to contrib
+  Submitted By: Jeremias Maerki <jeremias.maerki@outline.ch>
+- Added russian messages for AWTViewer
+  fallback to english messages if resources are not found
+  Submitted by: Alex V. Alishevskikh <alex@openmechanics.net>
+- AWT renderer exit for closing window is only called when started from
+  command line and not on the window (Keiron Liddle)
+- Updated ant to version 1.4.1 (Christian Geisert)
+  (ant-optional.jar is no longer needed)
+- Changed build.sh to work under cygwin
+  Submitted by: Andriy Palamarchuk <APalamar@wyeth.com>
+- Added turkish hyphenation patterns
+  Submitted by: Togan Muftuoglu <toganm@users.sourceforge.net>
+- Added portuguese hyphenation patterns
+  Submitted by: Paulo Soares <psoares@consiste.pt>
+- Added czech translation for AWT viewer
+  Submitted by: Michal Buchtik <BuchtikM@dlsystem.cz>
+- removed xalan1 support (Christian Geisert)
+- Added czech hyphenation patterns
+  Submitted by: Michal Buchtik <BuchtikM@dlsystem.cz>
+- Added support for background-image
+  Submitted by: Michael Gratton <mjg@recalldesign.com>
+- Updated Batik to 1.5beta2 and improved the useragent usage
+  (Keiron Liddle)
+- Fixed a problem when EPS files have Bounding Boxes containing
+  negative integers.
+  Submitted by:	Claes Bergsten <claes.bergsten@tjgroup.com>
+- Workaround for a bug in JDK 1.3.0.* and 1.4 to improve text output.
+  Submitted by: Ralph LaChance <Ralph_LaChance@compuserve.com>
+- Added support for overline, line-through and text-decoration on
+  inline spaces for AWT renderer (Jeremias Maerki)
+- Added patch to prevent the same image being inserted multiple times
+  into pdf graphics
+  Submitted by:	Paul Reavis <preavis@partnersoft.com>
+- Fixed PDF-Renderer to work on EBCDIC systems
+  (Actually on systems where file.encoding != ASCII/ISO-8859)
+  Submitted by: Jason West <Jason.West@mail.state.ky.us>
+- Updated xerces to version 2.0.1 and xalan to version 2.3.1
+  (Christian Geisert)
+- Fixed svg links to external url (Keiron)
+- Fixed problem with Win98/ME commandline (Christian Geisert)
+- Removed Tc that were inserted in [...] TJ commands. (Bug 9054)
+- Fixed letter-spacing (Jeremias Maerki)
+- BaseDir property is now used for loading custom fonts (Bug #7608)
+  (thanks to Arnd Beissner and Brian O'Kelley)
+- Added support for comma-separated values for the font-family property
+  Submitted by: Oleg Tkachenko <olegt@multiconn.com>
+- Fixed support for fractional font sizes
+  Submitted by: Björn Lütkemeier
+- Added exit codes/file deletion in case of an error (Joerg Pietschmann)
+- Implemented margin shorthand
+  Submitted by: Peter Kullmann <p.kullmann@arenae.ch>
+- Added reload functionality in AWT preview window
+  Submitted by: Oleg Tkachenko <olegt@multiconn.com>
+
+==============================================================================
+Done since 0.20.2 release
+*** General
+- Added correct metrics for euro sign in standard fonts
+  (bug 2105 and bug 4654)
+  Submitted by: Rainer Garus <rainer.garus@nexgo.de>
+- Fixed problem with computing remaining with in LineArea where start-indent <> 0
+  (bug 4839)
+  Submitted by: Rainer Garus <rainer.garus@nexgo.de>
+- Support for CMYK and embedded ICC profiles in jpeg images (Tore Engvig)
+- Support for jpeg images in PS Renderer (Tore Engvig)
+- Add support for EPS images in PostScript renderer and limited EPS support in
+  PDF Renderer (Tore Engvig)
+- fixed bug in TTFReader (unsigned lsb changed to signed)
+  Submitted by: Cristi Ruja, c_ruja@yahoo.com
+- fixed threading problem (Keiron Liddle)
+- Formatting results patch to enable embedders to obtain info from render doc
+  Submitted by:	Jeremias Maerki <jeremias.maerki@outline.ch>
+- Better handling of missing markers (Keiron Liddle)
+- jimi.jar removed for removed for license reasons
+- Added "Printing from a servlet" example
+  Submitted by:	Ralph LaChance <Ralph_LaChance@compuserve.com>
+- Proper use of font encodings for "native" fonts
+  Submitted by: Peter S. Housel (housel@acm.org) and Rainer Garus (rainer.garus@arcor.de)
+- fixed Marker (Christian Geisert)
+- updated logkit from 1.0b4 to to 1.0 (Christian Geisert)
+
+*** Tables
+- Implement the proportional-column-width() function in table-column and
+make it possible to specify table width (or inline-progression-dimension)
+using percentage values. (Karen Lease)
+- Fix a bug causing strange layout when a cell containing a nested table
+was laid out again because another cell in the same row was split (David
+Dixon's example). (Karen Lease)
+- Fix for infinite loops with table keeps (Christian Geisert)
+
+*** Datatypes
+- Rearrange the Length class hierarchy as part of the table-column proportional
+width work. (Karen Lease)
+
+*** Functions
+- make sure label-end() value gets calculated
+  (fix for bug #6094, endless loop while processing list-item-label))
+
+*** Areas
+- Fix BlockArea to account for padding and border when calculating space
+remaining for content. (Karen Lease)
+- Improved line breaking for japanese
+  Submitted by:	Satoshi Ishigami <ishigami@victokai.co.jp>
+
+*** Properties
+- Changed "master-name" to "master-reference" on fo:page-sequence,
+  fo:single-page-master-reference, fo:repeatable-page-master-reference and
+  fo:conditional-page-master-reference to comply with the latest XSL recommendation.
+  Also changed the unimplemented property space-treatment to white-space-treatment and
+  updated examples and tests to use the new syntax.
+  Submitted by: Christian Geisert [Christian.Geisert@isu-gmbh.de]
+- Add support for inline-progression-dimension and table-layout. (Karen)
+- Add support for letter-spacing.
+  Submitted by: Raymond Penners <raymond@duologix.nl>
+- text-decoration support for blocks (Christian Geisert)
+- Added inheritance for the text-decoration property from parent inline or
+  block elements (Christian Geisert)
+
+*** SVG
+- updated to cvs batik 3/12/2001 for api changes
+- fixed problem where width of scaled lines was not correct
+
+*** Images
+- fixed problem where streams where opened for cached images
+
+*** Messages
+- Improved for some common errors
+
+*** FOTreeBuilder
+- fixed npe problem when text outside root element
+- handles document errors and unknown namespace better
+
+*** AWTRenderer
+- Fixed small border problem
+  Submitted by:	Ralph LaChance <Ralph_LaChance@compuserve.com>
+- Improved i18n support for AWT viewer (Japanese dialogs)
+  Submitted by: Satoshi Ishigami (ishigami@victokai.co.jp)
+
+*** TXTRenderer
+- Generated text is written in UTF-8 encoding instead of ISO-8859-1
+
+*** MIFRenderer
+- MIF output strings escaping (see bug #1332)
+  Submitted by: Vicente Salvador (vicentesalvador@netscape.net)
+- Fixed NoSuchElementException in MIF renderer (Christian Geisert)
+
+*** Hyphenation
+- Added Polish Hyphenation based on TeX hypenation
+  Submitted by: Marcin Kuthan [M.Kuthan@elka.pw.edu.pl]
+- Fixed infinite loop with hyphenation
+  Submitted by:	Enrico Schnepel <enrico.schnepel@gmx.de>
+- Added greek Hyphenation
+  Submitted by:	Dimitris Kamenopoulos <el97146@mail.ntua.gr>
+- Added hungarian Hyphenation
+  Submitted by:	Simon Geza <simon@mail.drotposta.hu>
+
+==============================================================================
+Done since 0.20 release
+
+*** General
+- immediate fix to PDFRenderer and LazyFont, leading up to 0.20.1
+- build.xml improvements (Weiqi Gao)
+
+==============================================================================
+Done since 0.19 release
+
+*** General
+(Lots and lots of stuff by Keiron Liddle)
+- all properties are read, a message will indicate if it is not supported
+- all elements now handled, with a message for unsupported elements
+- uses Unknown element if namespace+element not found, rather than using
+FObjMixed
+- support for only loading user fonts for pdf when needed
+- fo:wrapper should support inheriting properties better
+- table row span, bunch of other significant table improvements by Karen Lease
+- support for drawing text into PDFGraphics2D
+- marker support (ASandstrom)
+- streaming pdf
+- changed rendering of alpha images for svg in pdf, now uses white
+background
+- proper device information for PDFGraphics2D rendering
+- code formatted (Tore Engvig)
+- element and property list mappings now added through single interface
+
+Mark Lillywhite's performance and memory patch added.
+Unfortunately breaks marker support.
+XSL-FO with markers is not a good idea until it is fixed.
+
+*** Building
+- (build.bat, build.sh) now uses only the local set class path (KLiddle)
+- (build.xml) added support for easily using w3c testsuite for build target
+test (KLiddle)
+
+*** Examples
+- (extensive.fo) sets style so that it looks better (KLiddle)
+- (images.fo) images are relative to where the doc is rather than an arbitrary
+location (KLiddle)
+- (glossary.xml, glossary.xsl) fo:marker examples (ASandstrom)
+- (embedding.fo, external.fo) added some more info, examples (KLiddle)
+- (headfoot.fo) Fix spanning row example so it works (KLease)
+
+*** Documentation
+- (embedding.xml) added info about using xslt input handler (KLiddle)
+- (examples.xml) some slightly more info about svg -> pdf (KLiddle)
+- (svg.xml) some slightly more info about svg -> pdf (KLiddle)
+- (testing.xml) added support for easily using w3c testsuite for build
+target test (KLiddle)
+
+*** Hyphenation
+- (sk.xml) added slovak hyphenation patterns; Obtained from: skhyphen.tex
+Submitted by: KRUMPOLEC Martin <krumpolec@asset.sk>
+
+*** FOP libraries
+- (buildtools.jar) added support for easily using w3c testsuite for build
+target test (KLiddle)
+
+*** XSL Code Generation
+- (elements.xsl) some independance improvements (KLiddle)
+- (foproperties.xml) setup a couple of props (KLiddle); activated
+space-start/space-end (ASandstrom)
+- (foproperties.xml) added all remaining properties, currently just with
+type String (KLiddle)
+- Support 'format' property on fo:page-sequence (ASandstrom)
+- (propmaker.xsl) put import at start; puts the right property family name
+in resulting prop file (KLiddle)
+
+*** Package org.apache.fop.apps:
+- (AWTStarter.java, CommandLineStarter.java, Driver.java) Adds Mark
+Lillywhite's performance
+and memory patch in all it's glory. Unfortunately breaks marker support.
+(AreaTree getNextPage and getPreviousPage return the current page)
+XSL-FO with markers is not a good idea until it is fixed.
+- (CommandLineOptions.java) command line support for new ps renderer
+Submitted by:  Jeremias Maerki <jeremias.maerki@outline.ch>
+- (Driver.java) combined property list setting into element setting
+also always get parser class name from one place; allows adding mappings from
+user config (KLiddle)
+- (Driver.java) command line support for new ps renderer
+Submitted by:  Jeremias Maerki <jeremias.maerki@outline.ch>
+- (Options.java) fixed error where configfile was not being set (KLiddle)
+- (Options.java) Added patch for loading config via Thread ContextClassLoader
+Submitted by:   Davanum Srinivas
+- (StreamRenderer.java) This just moves the marker supporting code from before
+Mark's patch into StreamRenderer. Not tested. (SCoffman)
+
+*** Package org.apache.fop.configuration:
+- (Configuration.java) combined property list setting into element setting
+also always get parser class name from one place (KLiddle)
+- (ConfigurationReader.java) combined property list setting into element
+setting; also always get parser class name from one place (KLiddle)
+
+*** Package org.apache.fop.datatypes:
+- (ToBeImplemented.java) indicates to be implemented status for
+properties not implemented (KLiddle)
+- (ToBeImplementedProperty.java) indicates to be implemented status for
+properties no implemented (KLiddle)
+
+*** Package org.apache.fop.extensions:
+- (ExtensionElementMapping.java) combined property list setting into element
+setting; also always get parser class name from one place (KLiddle)
+
+*** Package org.apache.fop.fo:
+started support to read all relevant properties, mostly commented; added all
+remaining elements, currently are indicated as not implemented; removed old
+elements (KLiddle)
+- (ElementMapping.java) combined property list setting into element setting
+also always get parser class name from one place (KLiddle)
+- (FONode.java) initial marker support (ASandstrom)
+- (FOTreeBuilder.java) gets all properties specified on each element; adds
+"Unknown" element for unknown elements or other namespaces; need to get a
+consistent and easy way to use the property values (KLiddle)
+- (FOTreeBuilder.java) Added patch to allow FOTreeBuilder to be reused easier
+Submitted by: Christopher Burkey
+- (FObj.java) initial marker support (ASandstrom)
+- (PropertyManager.java) handles page break for nested blocks now (KLiddle);
+addressing break boundary conditions (ASandstrom)
+
+*** Package org.apache.fop.fo.flow:
+Table border placement and border-drawing improvements (PDF only)
+Added support for the "height" property on table-row and for display-align
+(except "auto") on table-cell.
+Partial support for the "collapse" style of cell-borders was contributed
+by Ivan Demakov (Jun 14, maybe that was already in 0.19?). The support
+for "height" on table-cell was also contributed by Ivan.
+- (Block.java) changed Area methods slightly (ASandstrom); initial marker
+support, addressing break boundary conditions (ASandstrom)
+- (ListBlock.java, ListItem.java, ListItemBody.java, ListItemLabel.java)
+added support for 'returned-by' (ASandstrom)
+- (Marker.java) initial marker support (ASandstrom)
+- (PageNumber.java) Supports page-number formatting (ASandstrom)
+- (RetrieveMarker.java) initial marker support (ASandstrom)
+- (RowSpanMgr.java) Helper class for spanning rows (KLease)
+- (Table.java) Fix some bugs in table and cell border drawing and cell
+width calculations (KLease)
+- (TableBody.java) Implements spanning table rows (KLease)
+- (TableCell.java) Use a copy of BorderAndPadding to fix alignment bugs
+in header/footer cells (KLease); Fix some bugs in table and cell border drawing
+and cell width calculations (KLease); Make display-align work on table-cell
+(KLease) Implements spanning table rows (KLease)
+- (TableColumn.java) Fix some bugs in table and cell border drawing and
+cell width calculations (KLease)
+- (TableRow.java) Make display-align work on table-cell (KLease);
+checkBreakBefore signature (Weiqi Gao); Fix spanning bug; use height property
+(KLease) Implements spanning table rows (KLease)
+
+*** Package org.apache.fop.fo.pagination:
+- (PageNumberGenerator.java) helper class for page-number formatting
+(ASandstrom)
+- (PageSequence.java) initial marker support; support 'force-page-count';
+Supports page-number formatting (ASandstrom); should handle page number
+properly, with threads and multiple page sequences
+Submitted by: Jeremias Maerki <jeremias.maerki@outline.ch>
+- (RepeatablePageMasterAlternatives.java) restore ability to do blank pages
+(ASandstrom)
+- (Root.java) initial marker support; support 'force-page-count' (ASandstrom)
+; should handle page number properly, with threads and multiple page sequences
+Submitted by: Jeremias Maerki <jeremias.maerki@outline.ch>
+
+*** Package org.apache.fop.fonts:
+- (Glyphs.java) Fixes for unicode escapes that were removed during code
+formatting (Sasaki Suguru [s-sasaki@hkg.odn.ne.jp])
+- (TTFFile.java) Some glyphs are missed when more then one glyph maps to the
+same data, now fixed. (SASAKI Suguru [s-sasaki@hkg.odn.ne.jp])
+
+*** Package org.apache.fop.image:
+- (FopImageFactory.java) changed to correct mime type
+catch error if batik not available (KLiddle); compiles on jdk1.1;
+fixes possible npe when no protocol specified; tries to get the reference from
+baseDir + ref path (KLiddle)
+- (SVGReader.java) changed to correct mime type; catch error if batik not
+available (KLiddle)
+
+*** Package org.apache.fop.layout:
+- (AbsolutePositionProps.java, AccessibilityProps.java) adds the remaining
+property groups (KLiddle)
+- (Area.java) changed Area methods slightly; improving area information; initial
+marker support; addressing break boundary conditions (ASandstrom)
+- (AreaContainer.java) improving area information (ASandstrom)
+- (AuralProps.java, BackgroundProps.java) adds the remaining property groups
+(KLiddle)
+- (BlockArea.java) Fix a bug which caused FOP to overestimate the space
+available for the first line of a Block (KLease)
+- (BorderAndPadding.java) Add clone method (KLease); Make display-align work
+on table-cell (KLease)
+- (FontInfo.java) updates to pdf text painter (KLiddle)
+- (LineArea.java) Fixes bug that causes character - glyph mapping to occur
+twice in getWordWidth method causing overlapping areas.
+(Struan Judd [struan@sjudd.com])
+- (LineArea.java) Fixes for unicode escapes that were removed during code
+formatting (Sasaki Suguru [s-sasaki@hkg.odn.ne.jp])
+- (LineArea.java) Added support for various spaces, inluding non-breaking space
+  (fixes bug no 2297) (TEngvig)
+Added support for line breaking in the middle of words for CJK languages
+Fixes for bug 2243 based on a patch from rainer.garus@nexgo.de
+- (LineArea.java) This fixes bug 2556 by changing the leader with pattern
+"space" to use an InlineSpace instead of adding actually spaces. (TEngvig)
+- (MarginInlineProps.java) adds the remaining property groups (KLiddle)
+- (Page.java) initial marker support; page-number formatting (ASandstrom)
+- (RelativePositionProps.java) adds the remaining property groups (KLiddle)
+
+*** Package org.apache.fop.layout.hyphenation:
+- (Hyphenator.java) Added patch for loading config via Thread ContextClassLoader
+(Davanum Srinivas)
+- (TernaryTree.java) Fixes for unicode escapes that were removed during code
+formatting (Sasaki Suguru [s-sasaki@hkg.odn.ne.jp])
+
+*** Package org.apache.fop.layout.inline:
+- (InlineSpace.java) Added support for various spaces, including non-breaking
+space (fixes bug no 2297); Added support for line breaking in the middle of
+words for CJK languages (TEngvig)
+Fixes for bug 2243 based on a patch from rainer.garus@nexgo.de
+
+*** Package org.apache.fop.pdf:
+- (PDFColor.java) changed PDFNumber to use static methods (Liddle)
+- (PDFDocument.java) adds support for lazy loading of fonts; saves some cpu,
+memory (SASAKI Suguru <s-sasaki@hkg.odn.ne.jp>)
+- (PDFOutline.java) Adds support for unicode characters in bookmarks.
+(SASAKI Suguru [s-sasaki@hkg.odn.ne.jp])
+
+*** Package org.apache.fop.render:
+- (PrintRenderer.java) Add new addFilledRect method to make it possible to
+draw filled rectangles without any stroke in PDF; in doFrame, use rectangles
+instead of lines for borders to eliminate pixel errors (KLease)
+- (awt.AWTRenderer.java) updated to new batik interface (KLiddle)
+improvements to AWTRenderer (borders,backgrounds...)
+(Ralph LaChance/Andy Langowitz):
+[ AWTRenderers  (-awt and -print options)
+         - eliminated 3D-effect in rendering background color
+         - borders now draw wider than 1 pixel if appropriate
+         - fixed a roundoff error in background and border dimension/location
+         - fixed a positioning error on Top and Right borders ]
+- (pdf.FontSetup.java) adds support for lazy loading of fonts
+saves some cpu, memory (SASAKI Suguru <s-sasaki@hkg.odn.ne.jp>)
+- (pdf/PDFRenderer.java) adds support for lazy loading of fonts
+saves some cpu, memory (SASAKI Suguru <s-sasaki@hkg.odn.ne.jp>)
+- (pdf/PDFRenderer.java) updated to new batik interface (KLiddle)
+- (pdf/PDFRenderer.java) added the start of svg linking; also improved a few
+text things (KLiddle)
+- (pdf/PDFRenderer.java) Add new addFilledRect method to make it possible to
+draw filled rectangles without any stroke in PDF; in doFrame, use rectangles
+instead of lines for borders to eliminate pixel errors (KLease)
+- (pdf/PDFRenderer.java) added initial impl of text painter that uses pdf fonts
+rather than stroking (KLiddle)
+- (pdf/PDFRenderer.java) workaround for a bug in Acrobat Reader where text
+may disappear or be placed in the wrong position (KLiddle)
+- (pdf.fonts.LazyFont.java) adds support for lazy loading of fonts
+saves some cpu, memory (SASAKI Suguru <s-sasaki@hkg.odn.ne.jp>)
+
+*** Package org.apache.fop.render.ps:
+New addition: postscript renderer
+Submitted by: Jeremias Maerki <jeremias.maerki@outline.ch>
+- (PSGraphics2D.java, PSRenderer.java) added support for rendering SVG
+graphics to ps, not fully functional (KLiddle)
+
+*** Package org.apache.fop.svg:
+- (PDFDocumentGraphics2D.java) fixes PDFDoc to work with changed interface;
+added the start of svg linking; should handle colour space a bit better;
+writes fonts to resources in PDFDocument; sets up the font state if not using
+strokes for text (KLiddle)
+- (PDFGraphics2D.java) Handles the graphics device better. (Kliddle)
+Also handles the alpha transparency better, at least for white backgrounds
+it works properly (Thomas E Deweese <thomas.deweese@kodak.com>)
+- (PDFGraphics2D.java) should handle colour space a bit better;
+writes fonts to resources in PDFDocument; added initial impl of text painter
+that uses pdf fonts rather than stroking (KLiddle)
+- (PDFTextPainter.java) should handle colour space a bit better; writes fonts
+to resources in PDFDocument; added initial impl of text painter that uses pdf
+fonts rather than stroking (KLiddle)
+- (PDFTranscoder.java) updated to new batik interface (KLiddle); added the
+start of svg linking; gets the xml parser class name properly (KLiddle)
+- (SVGElement.java) sets the context url properly (with baseDir)
+- (SVGObj.java, XMLObj.java) allows better for other xml data (KLiddle)
+- (SVGUtilities.java) a utility file for creating some svg things (Kliddle)
+
+*** Testing and Support
+- (tools.anttasks.Fop.java) handles baseDir (with a capital D) properly as
+suggested by Anthony Tagunov <atagunov@nnt.ru> (KLiddle)
+- (tools.anttasks.RunTest.java) added support for easily using w3c testsuite
+for build target test (KLiddle)
+
+==============================================================================
+Done since 0.18 release
+
+*** Building
+- improvements and fixes to build.xml (ASandstrom,KCampbell)
+
+*** General
+- Changes to support Batik (KLiddle)
+{ FOP now uses Batik to render svg
+This is handled for awt - using batik to render to a graphic
+and pdf.
+Pdf still requires better image support.
+The elements and properties are generated from the svgelements.xml
+document.
+The version of batik is 17/05/2001 cvs. }
+- memory buffering (Seshadri G.K.)
+
+*** Examples
+- Added Norwegian hyphenation based on Rune Kleveland's original
+nohyphb.tex TeX patterns from the ispell-norsk-2.0 package (TEngvig)
+adds Danish text (Lars Michael Johnsen)
+- fixed up fills and borders for better appearance (KLiddle)
+- Fixed basic-link horizontal position with justification turned on. (KCampbell)
+- add border-collapse property (KLease)
+- Added CID Font example (KCampbell)
+
+*** Hyphenation
+- corrected danish hyphenation (Carlos Villegas)
+- adds Danish hyphenation file (Carlos Villegas)
+- Added Norwegian hyphenation based on Rune Kleveland's original
+nohyphb.tex TeX patterns from the ispell-norsk-2.0 package (TEngvig)
+- Hyphenation patterns for russian (TEngvig)
+
+*** codegen
+- The elements and properties are generated from the svgelements.xml
+document. (KLiddle)
+
+*** Package org.apache.fop.apps:
+- support for XMLRenderer (ASandstrom)
+- Removed uses of System.out where throwing a FOPException should suffice.
+Refactored code to throw FOPExceptions so embedding FOP wont' cause app
+server JVMs to exit. (KCampbell)
+- adding -text and -pcl options to help text (FJannidis)
+- sets baseDir to a URL string rather than a file path string (KLiddle)
+
+*** Package org.apache.fop.datatypes:
+- New datatype to represent the property border-separation (KLease)
+
+*** Package org.apache.fop.fo:
+- fixed a couple of problems when placing foreign objects near
+page break (KLiddle)
+- Support for LengthPair property type (KLease)
+- restored support for external svg images (KLiddle)
+
+*** Package org.apache.fop.fo.flow:
+- inlining of images (ASandstrom, Seshadri G.K.)
+- footnote height problem fix (KLiddle)
+- fixed a couple of problems when placing foreign objects near
+page break (KLiddle)
+- added support for 'number-columns-repeated' (G. Pretterhofer)
+- fixes a null pointer ex if area is removed before creating area (KLiddle)
+- footnote height/id reference problem fixes (KLiddle)
+- Fix body positioning; remove widow and orphan handling for rows (KLease)
+- Make borders closer to CR spec (KLease)
+- Improves cell borders when border-collapse=collapse (the default). Note that
+this doesn't implement the full CR, but it's a big improvement and will handle
+many common cases. (KLease)
+- Stop tables from breaking too early, but make sure that all cells are
+composed with the same maxHeight and that absolute Height is set correctly.
+In TableRow.java, remove old commented out stuff and put back space-before
+(for now) and fix a potential bug involving space-before. (KLease)
+- Overflows may cause a row to be re-laid out, need to skip cell content
+that has already been processed. (AWelch)
+- Put back background on table-column and table-cell (KLease)
+- increasing padding problem fix (KLiddle)
+- Each column in the row should start with the same height available. (AWelch)
+- For borders to be drawn properly on overflowed rows must process all
+children. (AWelch)
+- Use Constants values. (KLease)
+
+*** Package org.apache.fop.fo.pagination:
+- running page num ctr now instance variable for servlet use (KLiddle)
+- Made logging go to the same stream (out) for pages and the newline
+after a page sequence. The newline was previously going to the err stream.
+(KCampbell)
+
+*** Package org.apache.fop.fonts:
+- Patch from westbay@seaple.icc.ne.jp to use unicode escape char instead of
+pound sign because it was interpreted as an invalid double byte char in
+Japanese locale (ja_JP.EUC) and wouldn't compile. (TEngvig)
+- Fixes a signedness bug in handling cmaps that caused some fonts to be
+invalid. (TEngvig)
+- Some fonts contains malformed composite glyphs which used to make fop crash.
+This adds an errormessage and tries to embed the font without the composite
+glyph. (TEngvig)
+- Made some tables in the TTF embedding optional to be compatible with more
+fonts. This adheres to the TrueType spec, and makes the MS OpenType
+extras optional. (KCampbell)
+- Bugfix for font headers with long datatype (KCampbell)
+
+*** Package org.apache.fop.fonts.apps:
+- Fixes NumberFormatExceptions when reading .pfm files with kerning values.
+(TEngvig)
+
+*** Package org.apache.fop.image[.analyser]:
+- now passes in url string to the analyser; some readers may need the url
+eg. svg document creator (KLiddle)
+- inlining of images (ASandstrom, Seshadri G.K.)
+- restored support for external svg images (KLiddle)
+- gives SVGReader the correct size (KLiddle)
+
+*** Package org.apache.fop.layout:
+- Fix table breaking bug (KLease)
+- (AreaContainer) Remove offset of X and Y position by border and
+padding (KLease)
+- (FontInfo, FontState) Refactored FontState so it doesn't do excessive font
+lookups per character. (KCampbell)
+- (LineArea) Moved mapping from character to cid from LineArea to PDFRenderer.
+This fixes bug no 1681 and other issues with wrong characters being displayed
+when using CID fonts. (TEngvig)
+- (LineArea) vertical align amount modified (KLiddle)
+- (LineArea) Fixes hyphenation for CID fonts (TEngvig)
+- (basic-link) Fixed basic-link horizontal position with justification
+turned on. (KCampbell)
+
+*** Package org.apache.fop.layout.hyphenation:
+- Fixed an array out of bounds that caused some combinations of word/pattern
+to crash (TEngvig)
+
+*** Package org.apache.fop.layout.inline:
+- Fixed basic-link horizontal position with justification turned on. (Campbell)
+
+*** Package org.apache.fop.pdf:
+- Changed encoding of CID fonts from customized CMap to predefined Identity-H
+encoding. (TEngvig)
+- Fixed some bugs in PDF rendering when font embedding fails.
+FontDescriptor is now written out anyway to produce a valid PDF
+and acrobat reports that the font can't be displayed. (KCampbell)
+- Added default producer to fix a bug where the PDF producer is
+set to null in the default commandline usage. (KCampbell)
+- (PrintRenderer) Correct border positions on absolutely positioned
+AreaContainers (fo:block-container) (KLease)
+
+*** Package org.apache.fop.render[.*]:
+- ps renderer (JMaerki)
+- improved support for XMLRenderer (ASandstrom)
+- fixes for -print option (DBradby)
+- restored support for external svg images (KLiddle)
+- Moved mapping from character to cid from LineArea to PDFRenderer. This
+fixes bug no 1681 and other issues with wrong characters being displayed when
+using CID fonts. (TEngvig)
+- Fix for color carrying over page breaks (ASandstrom)
+- Cleaned up renderWordArea. removed unused code. optimized object creation
+a little. (KCampbell)
+- Fix disappearing text when using text-anchor != start (KLease)
+- Fix for using embedded TrueType fonts in SVG. This fix adds the use of
+FontState.mapChar to ensure that glyphs used in the SVG document are included
+in the embedded font. (TEngvig)
+- Fixed some bugs in PDF rendering when font embedding fails.
+FontDescriptor is now written out anyway to produce a valid PDF
+and acrobat reports that the font can't be displayed. (KCampbell)
+
+*** Package src.org.apache.fop.svg:
+- svg handled with batik, supported in pdf, awt and ps
+- svg->pdf transcoder, PDFGraphics2D for drawing into pdf
+- (PDFDocumentGraphics2D) now supports size setting properly (KLiddle)
+- (PDFGraphics2D) fixes a line colouring problem (Liddle)
+- (PDFGraphics2D) better svg rendering; stroke style for lines (KLiddle)
+- (PDFGraphics2D) now supports size setting properly (KLiddle)
+- (SVG) Add viewBox support to svg element. (KLease)
+
+*** Package src.org.apache.fop.tools:
+- (TestConverter.java) fixes a problem relating to rendering options for xml
+renderer (KLiddle)
+
+test/Testing:
+- testing system, for use with the w3c defined testsuite.dtd including our
+tests (KLiddle)
+- added some simple test files with blocks (KLiddle)
+- also a script to create pdf from test suites (KLiddle)
+
+==============================================================================
+Done since 0.17 release
+
+- added: improved Fop task for Ant, added basedir attribute [Will Holcomb]
+- added: Driver can be reset now [Art Welch]
+- added: CID Font support to svg text [Claud Yu]
+- added: renders svg to the awt viewer using batik [Keiron Liddle]
+- added: start on the PDFGraphics2D for rendering the batik svg to pdf [Keiron Liddle]
+- added: a text renderer [Art Welch]
+- added: PCL renderer [Art Welch]
+- added: a bunch more properties on svg elements [Keiron Liddle]
+- added: subset fonts embedding [Tore Engvig]
+- added: Dutch hyphenation file [Reinout Verkerk]
+- added: Fop is now self-contained (all necessary jar files included) and
+         a runnable jar (can be started with java -jar fop.jar) [Kelly Campbell]
+- added: support for border and padding shorthand properties [Karen Lease]
+- added: use of property manager, new properties handling [Karen Lease]
+- added: support for region-start, region-end [Arved Sandstrom]
+- added: to migrate FOP to use the svg facilities from Batik in a special cvs branch [Keiron Liddle]
+- added: enabling CID keyed truetype fonts; this gives support
+         for other encodings besides WinAnsiEncoding (eg japanese, chinese, arabic,
+         iso-whatever, etc). Also makes font inclusion easier [Tore Engvig]
+- added: new font configuration [Fotis Jannidis]
+- added: support for body-start and label-end in lists [Peter S. Housel]
+- added: support for non-rotated arcs in svg [Keiron Liddle]
+- added: break before and break after for table rows [Keiron Liddle]
+- added: error is reported if the number of columns the cells are using is
+         different to the number of columns in the table [Keiron Liddle]
+- updated: better handling of svg properties using xsl conversion to svgproperties [Keiron Liddle]
+- updated: the FOP build to fix the problems of the output location for the
+           property code generation. updated ant.jar to version 1.3,
+           added all needed jar files [Kelly Campbell]
+- changed: cleaned up renderWordArea. removed unused code.
+           optimized object creation a   little. [Kelly Campbell]
+- changed: refactored FontState so it doesn't do excessive font lookups per character [Kelly Campbell]
+- changed: Driver to make embedding Fop easier [Kelly Campbell]
+- changed: apps package and commandline usage of Fop [Fotis Jannidis]
+- changed: adding a PrintRenderer for all print oriented renderers [Art Welch]
+- fixed: problems if calculated leader-length < 0 [Fotis Jannidis]
+- fixed: fixes problem with page break after last row of table body [Keiron Liddle]
+- fixed: fixed svg placement bug, now puts the image at the correct offset [Keiron Liddle]
+- fixed: broken support of jdk 1.1 [Art Welch]
+- fixed: xalan 1 support works again, was broken after changes in apps [Kelly Campbell]
+- fixed: properly adjusts the max height of table parts, when a footnote is added
+         table will not overlap with the footnote [Keiron Liddle]
+- fixed: hexadecimal escape sequences in dutch hyphenation file converted
+         to iso-latin-1 [Carlos Villegas]
+- fixed: the typos in the fonts example in the userconfig.xml
+         and optimized conversions to String in TTFReader and use of StringBuffer [Alain Fagot]
+- fixed: added border style to relevant border so that borders show up [Keiron Liddle]
+- fixed:  put text-anchor in the correct place [Keiron Liddle]
+- fixed: InstreamForeignObject checks for no more room in block area [Keiron Liddle]
+- fixed: false border rendering for PCL renderer [Art Welch]
+- fixed: added default producer to fix a bug where the PDF producer is set to null in the default
+         commandline usage. [Kelly Campbell]
+- fixed: Made logging go to the same stream (out) for pages and the newline after a page
+         sequence. The newline was previously going to the err stream. [Kelly Campbell]
+
+
+
+Done since 0.16 release
+
+- added: a branch for a Fop version which supports Japanese text
+        (not yet part of the main branch) [Satoshi Ishigami]
+- added support for text-anchor in svg:text, viewBox in svg:svg [Aaron Optimizer Digulla]
+- added: MIF Renderer [G. Seshadri]
+- added: vertical-align to text [Keiron Liddle]
+- added: support for PDF outlines (aka bookmarks). See the example in
+         docs/examples/fo/pdfoutline.fo [Kelly Campbell]
+- added: some text rendering optimizations for PDF [Kelly Campbell]
+- added: limited support for fo:wrapper [Kelly Campbell]
+- added: support in pdfrenderer for using TrueType fonts, and embedding of TrueType
+         and Type1 fonts, and support for kerning [Tore Engvig]
+- added: further support for complete font handling in pdf renderer [Alain Fagot]
+- added: support for fo:footnote, fo:footnote-body [Keiron Liddle]
+- added: support for  values of property textdecoration ('overline','linethrough') [Christian Geisert]
+- added: support for font-variant="small-caps" [Eric Schaeffer]
+- added/changed: organization of build tools / classes  + support for xalan 2 [Kelly Campbell]
+- added: italian hyphenation file [Stephane Bline)]
+- added: uml diagrams to online docs [Stuart Zakon]
+- added: a new faq for fop at http://www.owal.co.uk:8090/ [Alex McLintock]
+- refactoring org.apache.fop.layout  [Keiron Liddle]
+- changed:  XObject to use the stream default filter list [Kelly Campbell]
+- changed: placed svg inline first, part in moving towards proper inline areas [Keiron Liddle]
+- fixed: a problem with spaces before and after a body in table
+         also properly sets the width of the table to the sum of the columns [Keiron Liddle]
+- fixed: handling of orphans, keep problem [Keiron Liddle]
+- fixed: handling of column heights properly [Keiron Liddle]
+- fixed: bails out if no rows in table body  [Keiron Liddle]
+- fixed: list-block spanning a page problem [Keiron Liddle]
+- fixed: an off by one error in the end of stream encoding part of ASCII85Filter
+         as reported by Alex Cherepanov [Kelly Campbell]
+- fixed: Clarified error reported for order of static-content, flow within a
+         page-sequence to meet section 6.4.5 of the spec [Kelly Campbell]
+- fixed: leader didn't fill rest of line in table of contents [Fotis Jannidis]
+- fixed: throws a more useful error if non-row inside table body [Keiron Liddle]
+- fixed: duplicate ID bug for tables that flow over a page [Keiron Liddle]
+- fixed: empty flow bug [Kai Strackbein]
+- fixed: broken support of jdk 1.1 [Peter Housel]
+
+Done since 0.15 release
+
+- added: support for  background color property, column breaks [Arved Sandstrom]
+- added: support for xalan 2 in xslt task [Kelly Campbell]
+- added: support for the properties table-omit-header-at-break,
+         table-omit-footer-at-break, number-columns-spanned (partly), orphans, widows (only for tables) [Keiron Liddle]
+- added: support for multi-column and column spanning (column-count, column-gap, span)[Arved Sandstrom]
+- added: compression for pdf files, changed output format to OutputStream [Kelly Campbell]
+- added: improved handling of compound properties [Karen Lease]
+- added: fo:character and property 'character' [Fotis Jannidis]
+         (limitation: not included into hyphenation, no Common Margin and Padding support)
+- added: vertical alignment for table cell contents [Keiron Liddle]
+- added: Finnish hyphenation patterns [Jarno Elovirta]
+- added: hyphenation package [Carlos Villegas], integration into Fop [Fotis Jannidis]
+- added: interim configuration package [Fotis Jannidis]
+- added: FopImage class that uses JAI [Eric Schaeffer] and JAI compile target [Kelly Campbell]
+- added: support for rule-style [Fotis Jannidis]
+- added: support for fo:table-header, fo:table-footer, and for the following properties
+         in tables: keep-with-next, keep-with-previous  [Keiron Liddle]
+- updated: svg stuff for the latest java bindings [Keiron Liddle]
+- fixed: enhanced error messages for page layout (region names, master) [Norm Walsh]
+- fixed: infinite looping bug when TableCell or TableRow is larger than a page [Hani Elabed]
+- fixed: corrected the size of the "-" char [Keiron Liddle]
+- fixed: check for unnecessary whitespace at end of line [Marcus Crafter]
+- fixed: moves table completely to next page if first row doesn't fit into last page [Keiron Liddle]
+- fixed: problem where id's where being setup twice for
+         table row going over the page  [Kelly Campbell]
+- fixed colspanning so that the cell state keeps track of the
+        width so far properly [Keiron Liddle]
+- fix to allow JDK 1.1 users to compile and use FOP [Mikko Honkala, Art Welch]
+- fix: removing duplicate character mappings [Dharamveer Salecha]
+- fix: NullPointerException in FopImageFactory [Kelly Campbell]
+- fixed: space after's where not being removed if table row was being removed [Keiron Liddle]
+- fixed problem with keep-with not storing the correct rows [Keiron Liddle]
+- fixed: extra space after was left behind for rows going over a page [Keiron Liddle]
+
+Done since 0.14 release
+- added region-name support, refactoring of region, PageSequence,
+        PageMasterReference, flow/static [Kelly Campbell, Arved Sandstrom]
+- added CommandLine/Driver -d option to output stack traces [Kelly Campbell, Arved Sandstrom]
+- added: a new package for image support and analysis [Pankaj Narula]
+- added better svg support (linear gradients, radial gradients, css style selectors,
+        css colour names, patterns, path curves (except arcs), text tspan and tref, text whitespace
+        handling, text outline and fill, switch, images (including external svg images)
+        references in external svg documents, svg elements (below top element), symbol element) [Keiron Liddle]
+- added large test suite for svg [Keiron Liddle]
+- added support for property textdecoration (only value 'underline') [Christian Geisert]
+- added support for type 1 fonts [Jeremias Maerki,Alan Fagot]
+- added support for compile target jdk 1.1 only [Art Welch]
+- added support for  partial borders in block, block-container,
+                     table-row, table-column and table-cell [Corinna Hischke]
+- redesign of properties handling, support for computed, compound and shorthand properties,
+                     supporting docs [Karen Lease]
+- redesign of font handling for AWTRenderer [Dorothea Wiarda]
+- added: support for leader-alignment, leader-pattern-width, leader-pattern (dots,space) [Fotis Jannidis]
+- fixed: unnecessary dependence on jdk 1.2 features [Christian Geisert]
+- fixed: unicode problem in UserMessage [Ross Golder]
+- fixed: broken buildFOTree [Marcus Holmberg]
+- fixed: problems with borders and padding in tables [Corinna Hischke]
+- fixed: XMLRenderer, unbalanced " in the produced output [Dorothea Wiarda]
+- fixed: renamed: inline-sequence -> inline, simple-link -> basic-link,
+                  white-space-treatment -> white-space-collapse [Fotis Jannidis]
+- fixed: images were rendered only half size (Mikko Honkala)
+- fixed: pdf file in XalanCommandFile explicitly closed [Dharamveer Salecha]
+- fixed: lists containing list do not keep their indentation correctly
+         over a page boundary [Dorothea Wiarda]
+
+Done since 0.13 release
+- pagination updated to 03/27/2000 XSL WD [Arved Sandstrom]
+- added support for fo page-number-citation [Mike Crowe, Jordan Naftolin]
+- added support for 06/29/2000 SVG WD + W3C Java DOM bindings [Keiron Liddle]
+- added image support using Jimi [Eric Schaeffer]
+- added support for external and internal simple-links [Jordan Naftolin]
+- added support for the fonts Symbol and ZapfDingbats [Fotis Jannidis]
+- added a MessageHandler  [Fotis Jannidis]
+- fixed table overflow bug [Jordan Naftolin]
+- finally fixed postscript printing of generated PDF [Domagoj Cosic]
+- removed XTCommandLine from build.xml
+- removed PDFOutputHandler from build.xml
+- added XalanCommandLine  [Fotis Jannidis]
+- added: fo:instream-foreign-object [Keiron Liddle]
+- added: goto button in AWT viewer [Stanislav Gorkhover]
+- updated: AWT viewer now works again and supports - with some restrictions - the new SVG support [Stanislav Gorkhover]
+
+Done since 0.12.1 release
+- using Ant to build Fop instead of make [Giacomo Pati]
+- borders, padding and absolute positioning [Jon Smirl]
+
+0.12.1 release
+to make the bug fix on XTCommandLine available to non developers
+basic support for padding-{top,left,bottom,right} on blocks.
+implemented simple-link (don't think it works, though)
+XTCommandLine now works again
+background color works on list-block
+list-blocks can now be in table-cell
+
+Done for 0.12.0 release:
+
+Make sure Makefiles work
+Switch to using Status object as return from layout()
+Incorporate Eric Schaeffer's fix to tables in static-content
+Incorporate Kelly Campell's fixes to GifJpegImage
+Incorporate Eric Schaeffer's background colour implementation
+  (actually used different approach with background colour as trait)
+

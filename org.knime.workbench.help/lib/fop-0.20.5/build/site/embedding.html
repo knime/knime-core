@@ -1,0 +1,892 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Embedding FOP</title>
+<link type="text/css" href="skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Home</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="dev/index.html"><font face="Arial, Helvetica, Sans-serif">Development</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Home</font>
+<ul>
+          
+<li>
+<a href="index.html">Introduction</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Using FOP</font>
+<ul>
+          
+<li>
+<a href="relnotes.html">Release Notes</a>
+</li>
+          
+<li>
+<a href="download.html">Download</a>
+</li>
+          
+<li>
+<a href="compiling.html">Build</a>
+</li>
+          
+<li>
+<a href="configuration.html">Configure</a>
+</li>
+          
+<li>
+<a href="running.html">Run</a>
+</li>
+          
+<li>
+<span class="sel"><font color="#ffcc00">Embed</font></span>
+</li>
+          
+<li>
+<a href="servlets.html">Servlets</a>
+</li>
+          
+<li>
+<a href="anttask.html">Ant task</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Features</font>
+<ul>
+          
+<li>
+<a href="compliance.html">Compliance</a>
+</li>
+          
+<li>
+<a href="output.html">Output Targets</a>
+</li>
+          
+<li>
+<a href="pdfencryption.html">PDF encryption</a>
+</li>
+          
+<li>
+<a href="graphics.html">Graphics</a>
+</li>
+          
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+          
+<li>
+<a href="hyphenation.html">Hyphenation</a>
+</li>
+          
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+          
+<li>
+<a href="gethelp.html">Getting Help</a>
+</li>
+          
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+          
+<li>
+<a href="fo.html">XSL-FO</a>
+</li>
+          
+<li>
+<a href="examples.html">Examples</a>
+</li>
+          
+<li>
+<a href="maillist.html">Mailing Lists</a>
+</li>
+          
+<li>
+<a href="bugs.html">Bugs</a>
+</li>
+          
+<li>
+<a href="license.html">License</a>
+</li>
+          
+<li>
+<a href="resources.html">Other</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Project</font>
+<ul>
+          
+<li>
+<a href="news.html">News</a>
+</li>
+          
+<li>
+<a href="logocontest.html">Logo contest</a>
+</li>
+          
+<li>
+<a href="status.html">Status</a>
+</li>
+          
+          
+<li>
+<a href="team.html">Team</a>
+</li>
+        
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>Embedding FOP</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="embedding.pdf"><img alt="printer" src="skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<h3>How to Embed FOP in a Java application</h3>
+<ul class="minitoc">
+<li>
+<a href="#overview">Overview</a>
+</li>
+<li>
+<a href="#basics">Basics</a>
+<ul class="minitoc">
+<li>
+<a href="#basic-logging">Logging</a>
+</li>
+<li>
+<a href="#render">Processing XSL-FO</a>
+</li>
+<li>
+<a href="#render-with-xslt">Processing XSL-FO generated from XML+XSLT</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#logging">Controlling logging</a>
+</li>
+<li>
+<a href="#input">Input Sources</a>
+</li>
+<li>
+<a href="#config-external">Using a Configuration File</a>
+</li>
+<li>
+<a href="#config-internal">Setting the Configuration Programmatically</a>
+</li>
+<li>
+<a href="#hints">Hints</a>
+<ul class="minitoc">
+<li>
+<a href="#object-reuse">Object reuse</a>
+</li>
+<li>
+<a href="#awt">AWT issues</a>
+</li>
+<li>
+<a href="#render-info">Getting information on the rendering process</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#performance">Improving performance</a>
+</li>
+<li>
+<a href="#multithreading">Multithreading FOP</a>
+</li>
+<li>
+<a href="#examples">Examples</a>
+<ul class="minitoc">
+<li>
+<a href="#ExampleFO2PDF">ExampleFO2PDF.java</a>
+</li>
+<li>
+<a href="#ExampleXML2FO">ExampleXML2FO.java</a>
+</li>
+<li>
+<a href="#ExampleXML2PDF">ExampleXML2PDF.java</a>
+</li>
+<li>
+<a href="#ExampleObj2XML">ExampleObj2XML.java</a>
+</li>
+<li>
+<a href="#ExampleObj2PDF">ExampleObj2PDF.java</a>
+</li>
+<li>
+<a href="#example-notes">Final notes</a>
+</li>
+</ul>
+</li>
+</ul>
+  
+<a name="N101C2"></a><a name="overview"></a>
+<h3>Overview</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>Review <a href="running.html">Running FOP</a> for important information that applies to embedded applications as well as command-line use, such as options and performance.
+    </p>
+<p>To embed FOP in your application, instantiate org.apache.fop.apps.Driver.
+     Once this class is
+     instantiated, methods are called to set the
+     Renderer to use
+     and the OutputStream to use to output the results of the
+     rendering (where applicable). In the case of the Renderer and
+     ElementMapping(s), the Driver may be supplied either with the
+     object itself, or the name of the class, in which case Driver will
+     instantiate the class itself. The advantage of the latter is it
+     enables runtime determination of Renderer and ElementMapping(s).
+  </p>
+</div>
+  
+<a name="N101D3"></a><a name="basics"></a>
+<h3>Basics</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>The simplest way to use Driver is to instantiate it with the
+     InputSource and OutputStream, then set the renderer desired and
+     call the run method.
+  </p>
+<p>Here is an example use of Driver which outputs PDF:
+  </p>
+<pre class="code">
+import org.apache.fop.apps.Driver;
+
+/*..*/
+
+Driver driver = new Driver(new InputSource(args[0]),
+                           new FileOutputStream(args[1]));
+driver.setRenderer(Driver.RENDER_PDF);
+driver.run();</pre>
+<p>
+In the example above, args[0] contains the path to an XSL-FO file, while 
+args[1] contains a path for the target PDF file.
+  </p>
+<a name="N101E6"></a><a name="basic-logging"></a>
+<h4>Logging</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+      You also need to set up logging. Global logging for all FOP
+      processes is managed by MessageHandler. Per-instance logging
+      is handled by Driver. You want to set both using an implementation
+      of org.apache.avalon.framework.logger.Logger. See 
+      <a target="_top" href="#logging">below</a> for more information.
+    </p>
+<p>
+      Call <span class="codefrag">setLogger(Logger)</span> always immediately after 
+      instantiating the Driver object. See here:
+    </p>
+<pre class="code">
+import org.apache.avalon.framework.logger.Logger; 
+import org.apache.avalon.framework.logger.ConsoleLogger; 
+
+/*..*/
+
+Driver driver = new Driver();
+Logger logger = new ConsoleLogger(ConsoleLogger.LEVEL_INFO);
+MessageHandler.setScreenLogger(logger);
+driver.setLogger(logger);</pre>
+</div>
+<a name="N101FE"></a><a name="render"></a>
+<h4>Processing XSL-FO</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+      Once the Driver is set up, one of the <span class="codefrag">render()</span> methods
+      is called. Depending on whether DOM or an InputSource is being used, the
+      invocation of the method is either <span class="codefrag">render(Document)</span> or
+      <span class="codefrag">render(Parser, InputSource)</span> respectively.
+    </p>
+<p>
+      
+<strong>Another possibility may be used to build the FO Tree: You can
+      call <span class="codefrag">getContentHandler()</span> and fire the SAX events yourself.
+      </strong>
+      You don't have to call <span class="codefrag">run()</span> or <span class="codefrag">render()</span> on the 
+      Driver object if you use <span class="codefrag">getContentHandler()</span>.
+    </p>
+<p>Here is an example use of Driver:</p>
+<pre class="code">
+Driver driver = new Driver();
+//Setup logging here: driver.setLogger(...
+driver.setRenderer(Driver.RENDER_PDF);
+driver.setInputSource(new FileInputSource(args[0]));
+driver.setOutputStream(new FileOutputStream(args[1]));
+driver.run();</pre>
+</div>
+<a name="N1022A"></a><a name="render-with-xslt"></a>
+<h4>Processing XSL-FO generated from XML+XSLT</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+      If you want to process XSL-FO generated from XML using XSLT we recommend 
+      using standard JAXP to do the XSLT part and piping the generated SAX 
+      events directly through to FOP. Here's how this would look like:
+    </p>
+<pre class="code">
+Driver driver = new Driver();
+//Setup logging here: driver.setLogger(...
+driver.setRenderer(Driver.RENDER_PDF);
+
+//Setup the OutputStream for FOP
+driver.setOutputStream(new java.io.FileOutputStream(outFile));
+
+//Make sure the XSL transformation's result is piped through to FOP
+Result res = new SAXResult(driver.getContentHandler());
+
+//Setup XML input
+Source src = new StreamSource(xmlFile);
+
+//Setup Transformer
+Source xsltSrc = new StreamSource(xslFile);
+TransformerFactory transformerFactory = TransformerFactory.newInstance();
+Transformer transformer = transformerFactory.newTransformer(xsltSrc);
+
+//Start the transformation and rendering process
+transformer.transform(src, res);</pre>
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">There's no need to call <span class="codefrag">run()</span> or <span class="codefrag">render()</span>.</div>
+</div>
+<p>
+      This may look complicated at first, but it's really just the combination of an 
+      XSL transformation and a FOP run. It's also easy to comment out the FOP part
+      for debugging purposes, for example when you're tracking down a bug in your 
+      stylesheet. You can easily write the XSL-FO output from the XSL transformation
+      to a file to check if that part generates the expected output.
+    </p>
+<p>
+      For fully working examples of the above and hints to some interesting 
+      possibilities, see the <a href="#examples">examples section</a> below.
+    </p>
+</div>
+</div>
+  
+<a name="N1024C"></a><a name="logging"></a>
+<h3>Controlling logging</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+      FOP uses the
+      <a target="_blank" href="http://avalon.apache.org/framework/api/org/apache/avalon/framework/logger/package-summary.html">Logger package</a>
+      from Apache Avalon Framework to do logging. See the 
+      <a target="_blank" href="http://avalon.apache.org/framework/">Apache Avalon Framework</a>
+      for more information.
+    </p>
+<p>
+      Per default FOP uses the ConsoleLogger which logs to System.out. If you want to do logging using a
+      logging framework (such as LogKit, Log4J or JDK 1.4 Logging) you can set a
+      different Logger implementation on the Driver object. Here's an example how you would use LogKit:
+    </p>
+<pre class="code">
+Hierarchy hierarchy = Hierarchy.getDefaultHierarchy();
+PatternFormatter formatter = new PatternFormatter(
+    "[%{priority}]: %{message}\n%{throwable}" );
+
+LogTarget target = null;
+target = new StreamTarget(System.out, formatter);
+
+hierarchy.setDefaultLogTarget(target);
+log = hierarchy.getLoggerFor("fop");
+log.setPriority(Priority.INFO);
+
+driver.setLogger(new org.apache.avalon.framework.logger.LogKitLogger(log));</pre>
+<p>
+      The LogKitLogger class implements the Logger interface so all logging calls are being redirected to LogKit.
+      More information on Jakarta LogKit can be found <a target="_blank" href="http://jakarta.apache.org/avalon/logkit/index.html">here</a>.
+    </p>
+<p>
+      Similar implementations exist for Log4J (org.apache.avalon.framework.logger.Log4JLogger) and
+      JDK 1.4 logging (org.apache.avalon.framework.logger.Jdk14Logger).
+    </p>
+<p>
+      If you want FOP to be totally silent you can also set an org.apache.avalon.framework.logger.NullLogger instance.
+    </p>
+<p>
+      If you want to use yet another logging facility you simply have to create a class that 
+      implements org.apache.avalon.framework.logging.Logger and set it on the Driver object. 
+      See the existing implementations in Avalon Framework for examples.
+    </p>
+</div>
+  
+<a name="N10275"></a><a name="input"></a>
+<h3>Input Sources</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+      The input XSL-FO document is always handled internally as SAX (see the 
+      <a href="http://xml.apache.org/fop/design/parsing.html">Parsing Design Document</a> for the rationale).
+      However, the input itself can be provided in a variety of ways to FOP, 
+      which normalizes the input (if necessary) into SAX events:
+    </p>
+<ul>
+      
+<li>
+<strong>SAX Events through SAX Handler</strong>: <span class="codefrag">FOTreeBuilder</span> is the SAX Handler which is obtained through <span class="codefrag">getContentHandler</span> on <span class="codefrag">Driver</span>.</li>
+      
+<li>
+<strong>DOM (which is converted into SAX Events)</strong>: The conversion of a DOM tree is done via the <span class="codefrag">render(Document)</span> method on <span class="codefrag">Driver</span>.</li>
+      
+<li>
+<strong>Data Source (which is parsed and converted into SAX Events)</strong>: The <span class="codefrag">Driver</span> can take an <span class="codefrag">InputSource</span> as input.
+This can use a <span class="codefrag">Stream</span>, <span class="codefrag">String</span> etc.</li>
+      
+<li>
+<strong>XML+XSLT Transformation</strong> (which is transformed using an XSLT Processor and the result is fired as SAX Events: <span class="codefrag">XSLTInputHandler</span> is used as an <span class="codefrag">InputSource</span> in the render(<span class="codefrag">XMLReader</span>, <span class="codefrag">InputSource</span>) method on <span class="codefrag">Driver</span>.</li>
+    
+</ul>
+<p>
+      There are a variety of upstream data manipulations possible.
+      For example, you may have a DOM and an XSL stylesheet; or you may want to
+      set variables in the stylesheet. Interface documentation and some cookbook 
+      solutions to these situations are provided in 
+      <a target="_blank" href="http://xml.apache.org/xalan-j/usagepatterns.html">Xalan Basic Usage Patterns</a>.
+    </p>
+<p>
+      See the <a href="#examples">Examples</a> for some variations on input. 
+    </p>
+</div>
+  
+<a name="N102D2"></a><a name="config-external"></a>
+<h3>Using a Configuration File</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+      To access an external configuration:
+    </p>
+<pre class="code">
+import org.apache.fop.apps.Options;
+
+/*..*/
+
+userConfigFile = new File(userConfig);
+options = new Options(userConfigFile);</pre>
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">
+        This is all you need to do, it sets up a static configuration class.
+    </div>
+</div>
+<p>
+      No further reference to the <span class="codefrag">options</span> variable is necessary.
+      The "options = " is actually not even necessary.
+    </p>
+<p>
+      See <a href="#multithreading">Multithreading FOP</a> for issues related to changing configuration in a multithreaded environment.
+    </p>
+</div>
+  
+<a name="N102F0"></a><a name="config-internal"></a>
+<h3>Setting the Configuration Programmatically</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+      If you wish to set configuration options from within your embedded application, use the <span class="codefrag">Configuration.put</span> method. Here is an example that sets the "baseDir" configuration in a Unix environment:
+    </p>
+<pre class="code">org.apache.fop.configuration.Configuration.put("baseDir","/my/base/dir");</pre>
+<p>
+      Here is another that sets baseDir in a Windows environment:
+    </p>
+<pre class="code">org.apache.fop.configuration.Configuration.put("baseDir","C:\my\base\dir");</pre>
+<p>
+      See <a href="#multithreading">Multithreading FOP</a> for issues related to changing configuration in a multithreaded environment.
+    </p>
+</div>
+  
+<a name="N1030F"></a><a name="hints"></a>
+<h3>Hints</h3>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N10315"></a><a name="object-reuse"></a>
+<h4>Object reuse</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+If FOP is going to be used multiple times within your application
+it may be useful to reuse certain objects to save time.
+     </p>
+<p>
+The renderers and the driver can both be reused. A renderer is reusable
+once the previous render has been completed. The driver is reuseable
+after the rendering is complete and the <span class="codefrag">reset()</span> method is called.
+You will need to setup the driver again with a new OutputStream,
+IntputStream and renderer.
+     </p>
+</div>
+<a name="N10325"></a><a name="awt"></a>
+<h4>AWT issues</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+        If your XSL-FO files contain SVG then Batik will be used. When Batik is
+        initialised it uses certain classes in <span class="codefrag">java.awt</span> that
+        intialises the java AWT classes. This means that a daemon thread
+        is created by the JVM and on Unix it will need to connect to a
+        DISPLAY.
+      </p>
+<p>
+        The thread means that the Java application may not automatically quit
+        when finished, you will need to call <span class="codefrag">System.exit()</span>. These
+        issues should be fixed in the upcoming JDK 1.4.
+      </p>
+<p>
+        If you run into trouble running FOP on a head-less server, please see the
+        <a href="graphics.html#batik">notes on Batik</a>.
+      </p>
+</div>
+<a name="N1033F"></a><a name="render-info"></a>
+<h4>Getting information on the rendering process</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+To get the number of pages that were rendered by FOP you can call 
+<span class="codefrag">Driver.getResults()</span>. This returns a FormattingResults object 
+where you can lookup the number of pages produced. It also gives you the 
+page-sequences that were produced along with their id attribute and their 
+number of pages. This is particularly useful if you render multiple 
+documents (each enclosed by a page-sequence) and have to know the number of 
+pages of each document.
+      </p>
+</div>
+</div>
+  
+<a name="N1034D"></a><a name="performance"></a>
+<h3>Improving performance</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+      There are several options to consider:
+    </p>
+<ul>
+      
+<li>
+        Whenever possible, try to use SAX to couple the individual components involved 
+        (parser, XSL transformer, SQL datasource etc.).
+      </li>
+      
+<li>
+        Depending on the target OutputStream (in case of an FileOutputStream, but not 
+        for a ByteArrayOutputStream, for example) it may improve performance considerably 
+        if you buffer the OutputStream using a BufferedOutputStream: 
+        <span class="codefrag">driver.setOutputStream(new java.io.BufferedOutputStream(out));</span>
+        
+<br>
+        Make sure you properly close the OutputStream when FOP is finished.
+      </li>
+      
+<li>
+        Cache the stylesheet. If you use the same stylesheet multiple times 
+        you can setup a JAXP <span class="codefrag">Templates</span> object and reuse it each time you do
+        the XSL transformation.
+      </li>
+      
+<li>
+        Use an XSLT compiler like XSLTC that comes with Xalan-J.
+      </li>
+    
+</ul>
+</div>
+  
+<a name="N1036E"></a><a name="multithreading"></a>
+<h3>Multithreading FOP</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+      FOP is not currently completely thread safe.
+Although the relevant methods of the Driver object are synchronized, FOP uses static
+variables for configuration data and loading images.
+Here are some tips to mitigate these problems:
+    </p>
+<ul>
+      
+<li>
+        To avoid having your threads blocked, create a Driver object for each thread.
+      </li>
+      
+<li>
+        If possible, do not change the configuration data while there is a Driver object rendering.
+        Setup the configuration only once, preferably in the <span class="codefrag">init()</span> method of the servlet.
+      </li>
+      
+<li>
+        If you must change the configuration data more often, or if you have multiple 
+        servlets within the same webapp using FOP, consider implementing a singleton 
+        class to encapsulate the configuration settings and to run FOP in synchronized methods.
+      </li>
+    
+</ul>
+<p>There is also a known issue with fonts being jumbled between threads when using the AWT renderer (which is used by the -awt and -print output options).
+In general, you cannot safely run multiple threads through the AWT renderer.</p>
+</div>
+
+<a name="N1038A"></a><a name="examples"></a>
+<h3>Examples</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+The directory "{fop-fir}/examples/embedding" contains several working examples. 
+In contrast of the examples above the examples here primarily use JAXP for 
+XML access. This may be easier to understand for people familiar with JAXP.
+  </p>
+<a name="N10393"></a><a name="ExampleFO2PDF"></a>
+<h4>ExampleFO2PDF.java</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+This example demonstrates the basic usage pattern to transform an XSL-FO
+file to PDF using FOP.
+    </p>
+<div align="center">
+<img class="figure" alt="Example XSL-FO to PDF" src="images/EmbeddingExampleFO2PDF.png"></div>
+</div>
+<a name="N103A1"></a><a name="ExampleXML2FO"></a>
+<h4>ExampleXML2FO.java</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+This example has nothing to do with FOP. It is there to show you how an XML 
+file can be converted to XSL-FO using XSLT. The JAXP API is used to do the
+transformation. Make sure you've got a JAXP-compliant XSLT processor in your 
+classpath (ex. <a target="_blank" href="http://xml.apache.org/xalan-j">Xalan</a>).
+    </p>
+<div align="center">
+<img class="figure" alt="Example XML to XSL-FO" src="images/EmbeddingExampleXML2FO.png"></div>
+</div>
+<a name="N103B3"></a><a name="ExampleXML2PDF"></a>
+<h4>ExampleXML2PDF.java</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+This example demonstrates how you can convert an arbitrary XML file to PDF 
+using XSLT and XSL-FO/FOP. It is a combination of the first two examples 
+above. The example uses JAXP to transform the XML file to XSL-FO and FOP to 
+transform the XSL-FO to PDF.
+    </p>
+<div align="center">
+<img class="figure" alt="Example XML to PDF (via XSL-FO)" src="images/EmbeddingExampleXML2PDF.png"></div>
+<p>
+The output (XSL-FO) from the XSL transformation is piped through to FOP using 
+SAX events. This is the most efficient way to do this because the 
+intermediate result doesn't have to be saved somewhere. Often, novice users 
+save the intermediate result in a file, a byte array or a DOM tree. We 
+strongly discourage you to do this if it isn't absolutely necessary. The 
+performance is significantly higher with SAX.
+    </p>
+</div>
+<a name="N103C4"></a><a name="ExampleObj2XML"></a>
+<h4>ExampleObj2XML.java</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+This example is a preparatory example for the next one. It's an example that 
+shows how an arbitrary Java object can be converted to XML. It's an often 
+needed task to do this. Often people create a DOM tree from a Java object and 
+use that. This is pretty straightforward. The example here however shows how
+to do this using SAX which will probably be faster and not even more 
+complicated once you know how this works.
+    </p>
+<div align="center">
+<img class="figure" alt="Example Java object to XML" src="images/EmbeddingExampleObj2XML.png"></div>
+<p>
+For this example we've created two classes: ProjectTeam and ProjectMember 
+(found in xml-fop/examples/embedding/java/embedding/model). They represent 
+the same data structure found in 
+xml-fop/examples/embedding/xml/xml/projectteam.xml. We want to serialize a 
+project team with several members which exist as Java objects to XML. 
+Therefore we created the two classes: ProjectTeamInputSource and 
+ProjectTeamXMLReader (in the same place as ProjectTeam above).
+    </p>
+<p>
+The XMLReader implementation (regard it as a special kind of XML parser)is 
+responsible for creating SAX events from the Java object. The InputSource 
+class is only used to hold the ProjectTeam object to be used.
+    </p>
+<p>
+Have a look at the source of ExampleObj2XML.java to find out how this is 
+used. For more detailed information see other resources on JAXP (ex. 
+<a target="_blank" href="http://java.sun.com/xml/jaxp/dist/1.1/docs/tutorial/xslt/3_generate.html">An older JAXP tutorial</a>).
+    </p>
+</div>
+<a name="N103DF"></a><a name="ExampleObj2PDF"></a>
+<h4>ExampleObj2PDF.java</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+The last example here combines the previous and the third to demonstrate 
+how you can transform a Java object to a PDF directly in one smooth run
+by generating SAX events from the Java object that get fed to an XSL 
+transformation. The result of the transformation is then converted to PDF 
+using FOP as before.
+    </p>
+<div align="center">
+<img class="figure" alt="Example Java object to PDF (via XML and XSL-FO)" src="images/EmbeddingExampleObj2PDF.png"></div>
+</div>
+<a name="N103ED"></a><a name="example-notes"></a>
+<h4>Final notes</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+These examples should give you an idea of what's possible. It should be easy 
+to adjust these examples to your needs. For examples, you can use a DOMSource
+instead of a StreamSource to feed a DOM tree as input for an XSL 
+transformation.
+    </p>
+<p>
+If you think you have a decent example that should be here, contact us via 
+one of the mailing lists and we'll see to it that it gets added. Also, if
+you can't find the solution to your particular problem drop us a message on 
+the fop-user mailing list.
+    </p>
+</div>
+</div>
+    
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="skin/images/spacer.gif"><a href="skin/images/label.gif"></a><a href="skin/images/page.gif"></a><a href="skin/images/chapter.gif"></a><a href="skin/images/chapter_open.gif"></a><a href="skin/images/current.gif"></a><a href="/favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Managing FOP Documentation</title>
+<link type="text/css" href="../skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="../skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="../skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="../images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="../images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="../skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="../skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="../skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="../skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="../skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="../skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="../index.html"><font face="Arial, Helvetica, Sans-serif">Home</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="../skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="../skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="../skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Development</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="../skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="../skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Introduction</font>
+<ul>
+      
+<li>
+<a href="index.html">Basics</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Design</font>
+<ul>
+      
+      
+<li>
+<a href="http://xml.apache.org/fop/design/index.html">Resolved</a>
+</li>      
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/wiki/apachewiki.cgi?FOPProjectPages">Unresolved (Wiki)</a>
+</li>
+      
+<li>
+<a href="svg.html">SVG</a>
+</li>
+      
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+      
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Develop</font>
+<ul>
+      
+<li>
+<a href="api-doc.html">API Doc</a>
+</li>
+      
+<li>
+<a href="implement.html">Walk-Thru</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/bugzilla/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=&emailtype1=substring&emailassigned_to1=1&email2=&emailtype2=substring&emailreporter2=1&bugidtype=include&bug_id=&changedin=&votes=&chfieldfrom=&chfieldto=Now&chfieldvalue=&product=Fop&short_desc=%5BPATCH%5D&short_desc_type=allwordssubstr&long_desc=&long_desc_type=allwordssubstr&bug_file_loc=&bug_file_loc_type=allwordssubstr&keywords=&keywords_type=anywords&field0-0-0=noop&type0-0-0=noop&value0-0-0=&namedcmd=Fop+all&newqueryname=fop+patch+queue&tofooter=1&order=Reuse+same+sort+as+last+time">Patch queue</a>
+</li>
+      
+<li>
+<a href="conventions.html">Conventions</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Test</font>
+<ul>
+      
+<li>
+<a href="testing.html">Testing</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Deploy</font>
+<ul>
+      
+<li>
+<span class="sel"><font color="#ffcc00">Doc Mgmt</font></span>
+</li>
+      
+<li>
+<a href="release.html">Release</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://nagoya.apache.org/bugzilla/buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&email1=&emailtype1=substring&emailassigned_to1=1&email2=&emailtype2=substring&emailreporter2=1&bugidtype=include&bug_id=&changedin=&votes=&chfieldfrom=&chfieldto=Now&chfieldvalue=&product=Fop&short_desc=&short_desc_type=allwordssubstr&long_desc=&long_desc_type=allwordssubstr&bug_file_loc=&bug_file_loc_type=allwordssubstr&keywords=&keywords_type=anywords&field0-0-0=noop&type0-0-0=noop&value0-0-0=&order=bugs.component">Bugs</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+      
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+      
+<li>
+<a href="tools.html">Tools</a>
+</li>
+      
+<li>
+<a target="_blank" href="http://cvs.apache.org/viewcvs.cgi/xml-fop">ViewCVS</a>
+</li>
+    
+</ul>
+</li>
+<li>
+<font color="#CFDCED">SubPackages</font>
+<ul>
+      
+<li>
+<a href="rtflib.html">RTFlib</a>
+</li>
+    
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="../skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="../skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="../skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="../skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>Managing FOP Documentation</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="doc.pdf"><img alt="printer" src="../skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<ul class="minitoc">
+<li>
+<a href="#general">General Information</a>
+</li>
+<li>
+<a href="#design">Design Principles</a>
+<ul class="minitoc">
+<li>
+<a href="#where">Where</a>
+</li>
+<li>
+<a href="#design-when">When</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#web">Website</a>
+<ul class="minitoc">
+<li>
+<a href="#web-background">Background</a>
+</li>
+<li>
+<a href="#web-forrestbot-refresh">Forrestbot "refresh" Step-by-Step</a>
+</li>
+<li>
+<a href="#web-forrestbot-publish">Forrestbot "publish" Step-by-Step</a>
+</li>
+<li>
+<a href="#web-live-update">Live Site Update</a>
+</li>
+<li>
+<a href="#web-local-forrest">Using a Local Forrest</a>
+</li>
+<li>
+<a href="#web-manual">Updating the FOP Web Repository Manually (Deprecated)</a>
+</li>
+<li>
+<a href="#delete">Deleting Documentation Files</a>
+</li>
+</ul>
+</li>
+</ul>
+    
+<a name="N101BE"></a><a name="general"></a>
+<h3>General Information</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>All raw documentation content is managed in the FOP CVS repository.
+Updates should be committed to the repository, then the repository files are used to generate usable output.
+The remaining discussions on this page assume that the CVS repository is the starting place for processing.
+The path to the documentation is xml-fop/src/documentation/content/xdocs.</p>
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">All documentation is maintained on the trunk.
+Although we are currently maintaining two sets of code (trunk and maintenance), there is only one set of documentation.
+Most of the user and developer doc is common to the two environments, and differences are highlighted where necessary.
+The major exception to this rule is the design doc, which currently exclusively pertains to the trunk (redesign).
+Maintenance branch releases either copy the trunk content to the maintenance branch or use the trunk content directly for doc builds.</div>
+</div>
+<p>Basic documents are stored in XML files, and use DTDs provided by Apache Forrest.</p>
+</div>
+    
+<a name="N101CE"></a><a name="design"></a>
+<h3>Design Principles</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>These principles are not written in stone, but reflect the current philosophy, and are documented here primarily to help achieve consistency. These principles should be changed if better or more practical ones are found, but they should probably be discussed and changed by common consent.</p>
+<a name="N101D7"></a><a name="where"></a>
+<h4>Where</h4>
+<div style="margin-left: 0 ; border: 2px">
+<ul>
+          
+<li>To the extent possible, keep user content separate from developer content, primarily so the user doesn't have to filter out technical information.</li>
+          
+<li>To the extent possible, try to document a topic exactly once, in the place the user is most likely to look for it, then link to that from other locations as appropriate. This is somewhat contrary to the principle above, which should be applied as a higher priority.</li>
+        
+</ul>
+</div>
+<a name="N101E7"></a><a name="design-when"></a>
+<h4>When</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>The documentation and the product are in a constant state of change, and there is some difficulty in deciding what product state the website content should reflect. The current thinking is that the website should reflect the current state of the repository code branch from which releases are made. Features or other documentation that applies to unreleased code should be marked in such a way within the content that the user can determine whether and how it applies to the version they are using. For example, "Feature xyz is first available in Release n.nn.n".</p>
+<p>Other approaches were considered, but all seemed to have significantly higher costs both to the users and the developers. From the user's standpoint, the choice is either that they potentially have to look multiple places to get the information they need (which was rejected), or they have to filter out an occasional feature that is in code available subsequent to their release (which was accepted).</p>
+</div>
+</div>
+    
+<a name="N101F5"></a><a name="web"></a>
+<h3>Website</h3>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N101FB"></a><a name="web-background"></a>
+<h4>Background</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>The FOP web site and documentation are generated using <a href="http://xml.apache.org/forrest">Apache Forrest</a>.</p>
+<p>The following table summarizes the flow of data to the FOP website in chronological order:</p>
+<table class="ForrestTable" cellspacing="1" cellpadding="4">
+          
+<tr>
+            
+<th colspan="1" rowspan="1">Process</th>
+            <th colspan="1" rowspan="1">Output</th>
+            <th colspan="1" rowspan="1">State</th>
+            <th colspan="1" rowspan="1">View(s)</th>
+          
+</tr>
+          
+<tr>
+            
+<td colspan="1" rowspan="1">Developer commits code to FOP repository.</td>
+            <td colspan="1" rowspan="1">FOP source repository (cvs) at icarus.apache.org/home/cvs/xml-fop</td>
+            <td colspan="1" rowspan="1">Raw XML and other content</td>
+            <td colspan="1" rowspan="1"><a href="http://cvs.apache.org/viewcvs.cgi/xml-fop/src/documentation/content/xdocs/">ViewCVS</a></td>
+          
+</tr>
+          
+<tr>
+            
+<td colspan="1" rowspan="1">
+              <a href="#forrestbot-refresh">Forrestbot "refresh"</a>. Automatically done every six hours. Can be manually refreshed by authorized users at <a href="http://forrestbot.cocoondev.org">the Forrestbot Web Interface</a>.
+          </td>
+            <td colspan="1" rowspan="1">Physical location unknown and unimportant to us</td>
+            <td colspan="1" rowspan="1">web-ready</td>
+            <td colspan="1" rowspan="1">Content can be viewed <a href="http://forrestbot.cocoondev.org/sites/xml-fop">here</a>.</td>
+          
+</tr>
+          
+<tr>
+            
+<td colspan="1" rowspan="1"><a href="#forrestbot-publish">Forrestbot "publish"</a>. Always done manually at <a href="http://forrestbot.cocoondev.org">the Forrestbot Web Interface</a>.</td>
+            <td colspan="1" rowspan="1">FOP web repository (cvs) at icarus.apache.org/home/cvs/xml-site/targets/fop</td>
+            <td colspan="1" rowspan="1">web-ready</td>
+            <td colspan="1" rowspan="1"><a href="http://cvs.apache.org/viewcvs.cgi/xml-site/targets/fop/">ViewCVS</a></td>
+          
+</tr>
+          
+<tr>
+            
+<td colspan="1" rowspan="1">Automatic Live Site Update every six hours (midnight, 6am, noon, 6pm Pacific time).</td>
+            <td colspan="1" rowspan="1">FOP live web site, somewhere on daedalus.apache.org</td>
+            <td colspan="1" rowspan="1">web-ready</td>
+            <td colspan="1" rowspan="1"><a href="http://xml.apache.org/fop">FOP Web Site</a></td>
+          
+</tr>
+        
+</table>
+</div>
+<a name="N1029B"></a><a name="web-forrestbot-refresh"></a>
+<h4>Forrestbot "refresh" Step-by-Step</h4>
+<div style="margin-left: 0 ; border: 2px">
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">The Forrestbot "refresh" is automatically run on the server every six hours. Only follow the steps below if you need to check the results more promptly than that allows, or if you need to "refresh" in preparation for a "publish".</div>
+</div>
+<p>To manually use the Forrestbot "refresh", simply follow these steps:</p>
+<ul>
+          
+<li>Make sure your changes are committed to the FOP source repository.</li>
+          
+<li>Open http://forrestbot.cocoondev.org in your browser.</li>
+          
+<li>Login.</li>
+          
+<li>In the "Select a module" box, select "xml-fop".</li>
+          
+<li>Click the "refresh" button to have the interim site built.
+On-screen instructions tell you how to view the log as the build progresses.</li>
+        
+</ul>
+</div>
+<a name="N102BA"></a><a name="web-forrestbot-publish"></a>
+<h4>Forrestbot "publish" Step-by-Step</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>To "publish" the Forrestbot output to the FOP Web repository:</p>
+<ul>
+          
+<li>Make sure you are satisfied with the "refreshed" site.</li>
+          
+<li>Open http://forrestbot.cocoondev.org in your browser.</li>
+          
+<li>Login.</li>
+          
+<li>In the "Select a module" box, select "xml-fop".</li>
+          
+<li>Click the "publish" button.
+On-screen instructions tell you how to view the log as the build progresses.</li>
+          
+<li>Wait for the next 6-hour live-site update cycle and check your changes.</li>
+        
+</ul>
+</div>
+<a name="N102D9"></a><a name="web-live-update"></a>
+<h4>Live Site Update</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>If there are problems with the live site update (the process of copying the web site contents from the FOP web repository to the live site:</p>
+<ul>
+          
+<li>The CVS update logs can be viewed at http://www.apache.org/~rubys/updatesite.logx, where "x" is a number from 1-4, these four files being the updates done over the past 24 hours.
+Review the most recent log file for clues.</li>
+          
+<li>The script is maintained by Sam Ruby (rubys@apache.org).
+Contact him for further help.</li>
+        
+</ul>
+</div>
+<a name="N102EC"></a><a name="web-local-forrest"></a>
+<h4>Using a Local Forrest</h4>
+<div style="margin-left: 0 ; border: 2px">
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">Most documentation content changes do not require a local copy of Forrest.
+In general, use the Forrestbot instead. Forrestbot is easy to use, always uses the "approved" methodology, and has fewer error-prone manual steps.</div>
+</div>
+<p>There are some situations where you may want to have a local Forrest installation. For example, you do not want to tie up server resources testing major changes, such as sitemap building, that may require many edit/build/test/debug cycles. After you are done testing, use the forrestbot to "refresh" and "publish" the site.</p>
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">Forrest needs to be run on a machine with a graphical environment.
+It will fail in a headless environment when it tries to use FOP to generate the PDF files.</div>
+</div>
+<p>To use a local Forrest:</p>
+<ul>
+          
+<li>checkout the xml-forrest module (same repository as xml-fop)</li>
+          
+<li>checkout the xml-site/targets/fop module (same repository as xml-fop)</li>
+          
+<li>you will also need access to a current xml-fop sandbox (you probably already
+    have one)</li>
+          
+<li>cd to xml-forrest</li>
+          
+<li>run: build.sh(bat) dist to build forrest</li>
+          
+<li>set environment variable FORREST_HOME=~/xml-forrest/build/dist/shbat where ~ is the directory in which xml-forrest is installed (see http://xml.apache.org/forrest/your-project.html for details)</li>
+          
+<li>set environment variable PATH=$PATH:$FORREST_HOME/bin</li>
+          
+<li>cd to xml-fop directory</li>
+          
+<li>run forrest(.bat), which will build the web-site documents in xml-fop/build/site.</li>
+        
+</ul>
+</div>
+<a name="N1031D"></a><a name="web-manual"></a>
+<h4>Updating the FOP Web Repository Manually (Deprecated)</h4>
+<div style="margin-left: 0 ; border: 2px">
+<div class="frame warning">
+<div class="label">Warning</div>
+<div class="content">The steps in this section should not ordinarily be used. They are documented here for historical reasons, and for emergencies.
+See <a href="#delete">manually deleting retired files</a> for an exception to this rule.</div>
+</div>
+<ul>
+          
+<li>Copy (or sym-link) the documents generated by Forrest (in xml-fop/build/site) to xml-site/targets/fop on your local machine.</li>
+          
+<li>Commit xml-site/targets/fop.</li>
+        
+</ul>
+</div>
+<a name="N10334"></a><a name="delete"></a>
+<h4>Deleting Documentation Files</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>The one place where manual updates of the web cvs repository are required is when a document is retired. At this point, it will no longer be generated. However, it will still exist in the web cvs repository. You will need to use a cvs client to remove the files, then commit the changes to keep them from continuing to exist on the live site.</p>
+</div>
+</div>
+  
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="../skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="../skin/images/spacer.gif"><a href="../skin/images/label.gif"></a><a href="../skin/images/page.gif"></a><a href="../skin/images/chapter.gif"></a><a href="../skin/images/chapter_open.gif"></a><a href="../skin/images/current.gif"></a><a href="..//favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

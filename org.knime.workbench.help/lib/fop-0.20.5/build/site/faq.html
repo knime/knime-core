@@ -1,0 +1,1696 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>FOP FAQ</title>
+<link type="text/css" href="skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Home</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="dev/index.html"><font face="Arial, Helvetica, Sans-serif">Development</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Home</font>
+<ul>
+          
+<li>
+<a href="index.html">Introduction</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Using FOP</font>
+<ul>
+          
+<li>
+<a href="relnotes.html">Release Notes</a>
+</li>
+          
+<li>
+<a href="download.html">Download</a>
+</li>
+          
+<li>
+<a href="compiling.html">Build</a>
+</li>
+          
+<li>
+<a href="configuration.html">Configure</a>
+</li>
+          
+<li>
+<a href="running.html">Run</a>
+</li>
+          
+<li>
+<a href="embedding.html">Embed</a>
+</li>
+          
+<li>
+<a href="servlets.html">Servlets</a>
+</li>
+          
+<li>
+<a href="anttask.html">Ant task</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Features</font>
+<ul>
+          
+<li>
+<a href="compliance.html">Compliance</a>
+</li>
+          
+<li>
+<a href="output.html">Output Targets</a>
+</li>
+          
+<li>
+<a href="pdfencryption.html">PDF encryption</a>
+</li>
+          
+<li>
+<a href="graphics.html">Graphics</a>
+</li>
+          
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+          
+<li>
+<a href="hyphenation.html">Hyphenation</a>
+</li>
+          
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+          
+<li>
+<a href="gethelp.html">Getting Help</a>
+</li>
+          
+<li>
+<span class="sel"><font color="#ffcc00">FAQs</font></span>
+</li>
+          
+<li>
+<a href="fo.html">XSL-FO</a>
+</li>
+          
+<li>
+<a href="examples.html">Examples</a>
+</li>
+          
+<li>
+<a href="maillist.html">Mailing Lists</a>
+</li>
+          
+<li>
+<a href="bugs.html">Bugs</a>
+</li>
+          
+<li>
+<a href="license.html">License</a>
+</li>
+          
+<li>
+<a href="resources.html">Other</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Project</font>
+<ul>
+          
+<li>
+<a href="news.html">News</a>
+</li>
+          
+<li>
+<a href="logocontest.html">Logo contest</a>
+</li>
+          
+<li>
+<a href="status.html">Status</a>
+</li>
+          
+          
+<li>
+<a href="team.html">Team</a>
+</li>
+        
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>FOP FAQ</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="faq.pdf"><img alt="printer" src="skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<a name="N10007"></a>
+<h3>Questions</h3>
+<div style="margin-left: 0 ; border: 2px">
+<ul>
+<li>
+<a name="part-general-menu"></a><a href="#part-general">1. General questions</a>
+<ul>
+<li>
+<a name="fop-general-menu"></a><a href="#fop-general">What is FOP?</a>
+</li>
+<li>
+<a name="fop-functions-menu"></a><a href="#fop-functions">What can I do with FOP?</a>
+</li>
+<li>
+<a name="fop-acronym-menu"></a><a href="#fop-acronym">What does "FOP" stand for?</a>
+</li>
+<li>
+<a name="fop-other-apache-menu"></a><a href="#fop-other-apache">How does FOP interact with other Apache Projects?</a>
+</li>
+<li>
+<a name="xsl-def-menu"></a><a href="#xsl-def">What is XSL?</a>
+</li>
+<li>
+<a name="xslfo-menu"></a><a href="#xslfo">What is XSL-FO?</a>
+</li>
+<li>
+<a name="XSLT-menu"></a><a href="#XSLT">What is XSLT?</a>
+</li>
+<li>
+<a name="contribute-menu"></a><a href="#contribute">How can I contribute?</a>
+</li>
+</ul>
+</li>
+<li>
+<a name="part-running-menu"></a><a href="#part-running">2. Problems running FOP</a>
+<ul>
+<li>
+<a name="no-page-master-menu"></a><a href="#no-page-master">I get the error: [ERROR]: 'master-reference' for
+      'fo:page-sequence'matches no 'simple-page-master' or
+      'page-sequence-master'</a>
+</li>
+<li>
+<a name="NoClassDefFound-menu"></a><a href="#NoClassDefFound">I get a NoClassDefFound exception.</a>
+</li>
+<li>
+<a name="NoSuchMethodException-menu"></a><a href="#NoSuchMethodException">I get a NoSuchMethodException or a NoSuchFieldException
+      exception.</a>
+</li>
+<li>
+<a name="OutOfMemoryException-menu"></a><a href="#OutOfMemoryException">I get an OutOfMemoryException.</a>
+</li>
+<li>
+<a name="MalformedURLException-menu"></a><a href="#MalformedURLException">I get a MalformedURLException.</a>
+</li>
+<li>
+<a name="NullPointerException-menu"></a><a href="#NullPointerException">I get an "[ERROR]: null", or a NullPointerException.</a>
+</li>
+<li>
+<a name="not-implemented-menu"></a><a href="#not-implemented">FOP returns the message "[ERROR] <em>object|property - 'x'</em> is not implemented yet." When will it be implemented?</a>
+</li>
+<li>
+<a name="fop-hangs-menu"></a><a href="#fop-hangs">FOP hangs. FOP does not exit.</a>
+</li>
+<li>
+<a name="boxoverflow-menu"></a><a href="#boxoverflow">FOP runs forever, writing lots of "&gt;" to the log.</a>
+</li>
+<li>
+<a name="cannot-find-external-graphics-menu"></a><a href="#cannot-find-external-graphics">FOP cannot find a file for fo:external-graphics.</a>
+</li>
+<li>
+<a name="fonts-not-found-menu"></a><a href="#fonts-not-found">FOP does not find my fonts.</a>
+</li>
+</ul>
+</li>
+<li>
+<a name="part-output-menu"></a><a href="#part-output">3. Problems with FOP output</a>
+<ul>
+<li>
+<a name="leader-expansion-menu"></a><a href="#leader-expansion">Leaders don't work anymore in 0.20.5. Instead of
+      filling the line, only three dots or a short ruler is
+      output.</a>
+</li>
+<li>
+<a name="blank-page-between-page-sequences-menu"></a><a href="#blank-page-between-page-sequences">Why does FOP insert a blank page between my page sequences?</a>
+</li>
+<li>
+<a name="graphic-not-displayed-menu"></a><a href="#graphic-not-displayed">Why is my graphic not rendered?</a>
+</li>
+<li>
+<a name="png-fails-menu"></a><a href="#png-fails">My graphical images do not work properly.</a>
+</li>
+<li>
+<a name="graphic-resolution-menu"></a><a href="#graphic-resolution">Why is my graphic rendered at a different resolution than it was created?</a>
+</li>
+<li>
+<a name="keep-with-menu"></a><a href="#keep-with">Keep-with-next, keep-with-previous, keep-together
+      don't work.</a>
+</li>
+<li>
+<a name="table-missing-menu"></a><a href="#table-missing">My tables are missing, or missing their content.</a>
+</li>
+<li>
+<a name="cells-overflow-menu"></a><a href="#cells-overflow">Text overflowing table cells and the like is not clipped. Long
+        text flows into adjacent cells/block, obscuring stuff there.</a>
+</li>
+<li>
+<a name="page-number-align-menu"></a><a href="#page-number-align">Page numbers are not properly right aligned.</a>
+</li>
+<li>
+<a name="hyphenation-fails-menu"></a><a href="#hyphenation-fails">Hyphenation does not work.</a>
+</li>
+</ul>
+</li>
+<li>
+<a name="part-embedding-menu"></a><a href="#part-embedding">4. Embedding FOP. Using FOP in a servlet.</a>
+<ul>
+<li>
+<a name="servlet-menu"></a><a href="#servlet">How do I use FOP in a servlet?</a>
+</li>
+<li>
+<a name="servlet-with-xslt-menu"></a><a href="#servlet-with-xslt">How do I use FOP in a servlet with an XSLT
+      transformation?</a>
+</li>
+<li>
+<a name="servlet-xslt-params-menu"></a><a href="#servlet-xslt-params">How do I pass parameters to the XSLT transformation?</a>
+</li>
+<li>
+<a name="servlet-nonstd-fonts-menu"></a><a href="#servlet-nonstd-fonts">How do I use my own fonts when running FOP from a
+      servlet?</a>
+</li>
+<li>
+<a name="servlet-baseDir-menu"></a><a href="#servlet-baseDir">How do I set the baseDir property in a servlet environment?</a>
+</li>
+<li>
+<a name="usercfg-menu"></a><a href="#usercfg">How do I use a user configuration file from a servlet?</a>
+</li>
+<li>
+<a name="servlet-NoClassDefFound-menu"></a><a href="#servlet-NoClassDefFound">I keep getting NoClassDefFound and other exceptions. How do I
+        get FOP working for various servlet engines?</a>
+</li>
+<li>
+<a name="multithreaded-menu"></a><a href="#multithreaded">Can FOP be used in multithreaded environments?</a>
+</li>
+</ul>
+</li>
+<li>
+<a name="part-svg-menu"></a><a href="#part-svg">5. SVG specific questions</a>
+<ul>
+<li>
+<a name="svg-text-menu"></a><a href="#svg-text">The rendering of SVG text in my PDF is of poor quality.
+Can I control this?</a>
+</li>
+<li>
+<a name="svg-headless-menu"></a><a href="#svg-headless">How do I use FOP with SVG on headless servers?</a>
+</li>
+<li>
+<a name="svghangs-menu"></a><a href="#svghangs">FOP does not exit if a SVG is included.</a>
+</li>
+<li>
+<a name="svg-url-menu"></a><a href="#svg-url">I have problems with SVG referring to gradients etc. using
+        "uri(#stuff)". I get a MalformedURLException.</a>
+</li>
+<li>
+<a name="svg-scaling-menu"></a><a href="#svg-scaling">Why is my SVG rendered at a size different from that specified in my fo:external-graphic element?</a>
+</li>
+</ul>
+</li>
+<li>
+<a name="part-pdf-menu"></a><a href="#part-pdf">6. PDF specific (includes Acrobat peculiarities)</a>
+<ul>
+<li>
+<a name="pdf-embed-font-menu"></a><a href="#pdf-embed-font">How do I embed fonts in PDF?</a>
+</li>
+<li>
+<a name="pdf-characters-menu"></a><a href="#pdf-characters">Some characters are not displayed, or displayed incorrectly, or
+      displayed as &ldquo;#&rdquo;.</a>
+</li>
+<li>
+<a name="pdf-postprocess-menu"></a><a href="#pdf-postprocess">What tools are available for post-processing my PDF document?</a>
+</li>
+<li>
+<a name="pdf-security-menu"></a><a href="#pdf-security">How do I add security features (encryption, disable printing)
+      to my PDF document?</a>
+</li>
+<li>
+<a name="pdf-doc-properties-menu"></a><a href="#pdf-doc-properties">How do I add document properties (title, author, etc.) to my
+      PDF document?</a>
+</li>
+<li>
+<a name="pdf-watermark-menu"></a><a href="#pdf-watermark">How do I add watermarks to my PDF document?</a>
+</li>
+<li>
+<a name="pdf-print-contortion-menu"></a><a href="#pdf-print-contortion">The PDF is printed contorted!</a>
+</li>
+<li>
+<a name="pdf-bookmark-display-menu"></a><a href="#pdf-bookmark-display">How do I control the Acrobat bookmark display?</a>
+</li>
+</ul>
+</li>
+<li>
+<a name="part-iex-menu"></a><a href="#part-iex">7. IEx specific stuff</a>
+<ul>
+<li>
+<a name="iex-servlet-multiple-menu"></a><a href="#iex-servlet-multiple">The FOP servlet is called multiple times!</a>
+</li>
+<li>
+<a name="iex-pdf-print-from-browser-menu"></a><a href="#iex-pdf-print-from-browser">How do I print PDF directly from the browser?</a>
+</li>
+</ul>
+</li>
+<li>
+<a name="part-input-menu"></a><a href="#part-input">8. General questions regarding XSLT, XSLFO, and basic XML</a>
+<ul>
+<li>
+<a name="fo-center-menu"></a><a href="#fo-center">(FO) How do I vertically center an image or a table (or
+      whatever)?</a>
+</li>
+<li>
+<a name="fo-center-table-horizon-menu"></a><a href="#fo-center-table-horizon">(FO) How do I center a table horizontally?</a>
+</li>
+<li>
+<a name="fo-page-outer-menu"></a><a href="#fo-page-outer">(FO) How to get page numbers printed on the "outer side" of the
+        page (for books, for example)?</a>
+</li>
+<li>
+<a name="oddeven-menu"></a><a href="#oddeven">(FO) How do I use different static content for odd and even
+      pages?</a>
+</li>
+<li>
+<a name="fo-first-page-header-menu"></a><a href="#fo-first-page-header">(FO) How do I get a special header on the first page?</a>
+</li>
+<li>
+<a name="fo-omit-headers-menu"></a><a href="#fo-omit-headers">(FO) How do I omit my headers on a blank page? How do I write
+      "This page is left blank" on an intentionally blank page?</a>
+</li>
+<li>
+<a name="fo-special-symbols-menu"></a><a href="#fo-special-symbols">(FO) How do I print an Euro sign, a checkbox or other some other
+      special symbols?</a>
+</li>
+<li>
+<a name="fo-preformat-menu"></a><a href="#fo-preformat">(FO) How do I keep linebreaks and hard spaces? How do I get
+        preformatted text displayed as expected?</a>
+</li>
+<li>
+<a name="fo-total-pages-menu"></a><a href="#fo-total-pages">(FO) How do I print the total number of pages, for example "page 1
+      of 12"</a>
+</li>
+<li>
+<a name="fo-region-overlap-menu"></a><a href="#fo-region-overlap">(FO) The header overlaps body content. The body extends into
+      the footer.</a>
+</li>
+<li>
+<a name="fo-lines-menu"></a><a href="#fo-lines">(FO) How do I get lines in the document, as separators, side
+      bars or folding marks?</a>
+</li>
+<li>
+<a name="fo-validate-menu"></a><a href="#fo-validate">(FO) How do I validate my FO document?</a>
+</li>
+<li>
+<a name="xml-non-breaking-space-menu"></a><a href="#xml-non-breaking-space">(XML) How do I get a non-breaking space in FO? There are complaints about <span class="codefrag">&amp;nbsp;</span>.</a>
+</li>
+<li>
+<a name="xml-undefined-entities-menu"></a><a href="#xml-undefined-entities">(XML) How do I enter special characters in XML? There are complaints about undefined entities, such as <span class="codefrag">&amp;uuml;</span>, which work in HTML. </a>
+</li>
+<li>
+<a name="xml-illegal-entities-menu"></a><a href="#xml-illegal-entities">(XML) There are complaints about illegal characters and entities
+      in the input.</a>
+</li>
+<li>
+<a name="xml-illegal-chars-menu"></a><a href="#xml-illegal-chars">(XML) There are complaints about illegal bytes or characters in
+      the input. There are odd characters in the result.</a>
+</li>
+</ul>
+</li>
+<li>
+<a name="part-help-menu"></a><a href="#part-help">9. General suggestions. How to solve problems.</a>
+<ul>
+<li>
+<a name="bugs-menu"></a><a href="#bugs">I think I have found a bug in FOP. What should I do?</a>
+</li>
+<li>
+<a name="postquestions-menu"></a><a href="#postquestions">I have questions that are not addressed in this FAQ. Where
+      should I post them?</a>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<a name="N101A8"></a>
+<h3>Answers</h3>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N101AB"></a><a name="part-general"></a>
+<h4>1. General questions</h4>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N101AF"></a><a name="fop-general"></a>
+<h5>1.1. What is FOP?<span style="float: right"><a href="#fop-general-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+        FOP is a print formatter for <a href="#XSLFO">XSL formatting
+        objects</a>.
+      </p>
+<p>
+        It can be used to render an XML file containing XSL formatting objects
+        into a page layout. The main target is PDF but other rendering targets
+        are supported, such as AWT, PCL, text and direct printing.
+      </p>
+</div>
+<a name="N101BE"></a><a name="fop-functions"></a>
+<h5>1.2. What can I do with FOP?<span style="float: right"><a href="#fop-functions-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          FOP provides both an application and a library that converts an XSL FO
+          document into paginated output.
+        </p>
+<p>
+          The FOP command line application can be directly used to transform XML
+          into PDF, PostScript, PCL and other formats, there is also an AWT
+          based viewer integrated.
+        </p>
+<p>
+          The library can be used in servlets and other Java applications.
+        </p>
+</div>
+<a name="N101CC"></a><a name="fop-acronym"></a>
+<h5>1.3. What does "FOP" stand for?<span style="float: right"><a href="#fop-acronym-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          It's an acronym for <strong>F</strong>ormatting
+          <strong>O</strong>bject <strong>P</strong>rocessor
+        </p>
+</div>
+<a name="N101DD"></a><a name="fop-other-apache"></a>
+<h5>1.4. How does FOP interact with other Apache Projects?<span style="float: right"><a href="#fop-other-apache-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          FOP is distributed with <a href="http://xml.apache.org/cocoon">Cocoon</a> as a PDF serializer
+          for XSL (FO) documents.
+        </p>
+<p>
+          
+<a href="http://xml.apache.org/batik">Batik</a> can be used with
+          FOP to <a href="http://xml.apache.org/batik/svgrasterizer.html">transcode an SVG
+          image</a> into a PDF document.
+        </p>
+</div>
+<a name="N101F4"></a><a name="xsl-def"></a>
+<h5>1.5. What is XSL?<span style="float: right"><a href="#xsl-def-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          XSL is a W3C standard concerned with publishing XML documents. It
+          consists of two parts: <a href="#XSLT">XSLT</a> and <a href="#XSLFO">XSLFO</a>. The acronym expands to
+          e<strong>X</strong>tensible <strong>S</strong>tylesheet
+          <strong>L</strong>anguage.
+        </p>
+</div>
+<a name="N1020D"></a><a name="xslfo"></a>
+<h5>1.6. What is XSL-FO?<span style="float: right"><a href="#xslfo-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          XSLFO is an XML vocabulary that is used to specify a pagination and
+          other styling for page layout output. The acronym &ldquo;FO&rdquo;
+          stands for
+          <strong>F</strong>ormatting <strong>O</strong>bjects. XSLFO can be
+          used in conjunction with <a href="#XSLT">XSLT</a> to convert
+          from any XML format into a paginated layout ready for printing or
+          displaying.
+        </p>
+<p>
+          XSLFO defines a set of elements in XML that describes the way pages
+          are set up. The contents of the pages are filled from flows. There can
+          be static flows that appear on every page (for headers and footers)
+          and the main flow which fills the body of the page.
+        </p>
+<p>
+          Synonyms: XSL FO, XSL (FO), XSL:FO, XSL-FO, Formatting Objects
+        </p>
+</div>
+<a name="N10225"></a><a name="XSLT"></a>
+<h5>1.7. What is XSLT?<span style="float: right"><a href="#XSLT-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          XSLT describes the transformation of arbitrary XML input into other
+          XML (like XSLFO), HTML or plain text. The &ldquo;T&rdquo; comes from
+          <strong>T</strong>ransformation. For historical reasons, a
+          transformation is often also called a &ldquo;style sheet&rdquo;.
+        </p>
+<p>
+          Synonyms: XSL transformation, XSL:T, XSL style sheet.
+        </p>
+</div>
+<a name="N10233"></a><a name="contribute"></a>
+<h5>1.8. How can I contribute?<span style="float: right"><a href="#contribute-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          There are numerous ways that you can help. They are outlined in the <a href="dev/index.html">Developer's Introduction</a>.
+        </p>
+</div>
+</div>
+<a name="N1023F"></a><a name="part-running"></a>
+<h4>2. Problems running FOP</h4>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N10243"></a><a name="no-page-master"></a>
+<h5>2.1. I get the error: [ERROR]: 'master-reference' for
+      'fo:page-sequence'matches no 'simple-page-master' or
+      'page-sequence-master'<span style="float: right"><a href="#no-page-master-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          FOP was changed to be in accordance with the latest standard (see
+          <a href="resources.html#w3-xsl">XSL standard</a>).The page
+          master for a fo:page-sequence is now refereced by the
+          master-reference attribute. Replace the master-name attributes of
+          your fo:page-sequence elements by master-reference attributes. You
+          have to do this also for fo:single-page-master-reference,
+          fo:repeatable-page-master-reference and
+          fo:conditional-page-master-reference elements in you page master
+          definitions.
+        </p>
+<p>
+          Update your FO documents and style sheets.
+        </p>
+</div>
+<a name="N10252"></a><a name="NoClassDefFound"></a>
+<h5>2.2. I get a NoClassDefFound exception.<span style="float: right"><a href="#NoClassDefFound-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>This is typically a problem with your classpath.</p>
+<p>If you are running FOP from the command line:</p>
+<ul>
+          
+<li>
+            Use the fop.bat or fop.sh command file from the FOP
+            distribution. If you have a FOP version older than 0.20.5,
+            ensure the directory where FOP and these files have been
+            installed is the current working directory.
+          </li>
+          
+<li>
+            If this doesn't help, check whether still all the jar files
+            mentioned in the classpath in the fop.bat file are in their
+            respective places.
+          </li>
+        
+</ul>
+<p>
+          If you run FOP embedded in your servlet, web application or
+          other Java application, check the classpath of the
+          application. Check the also the information pertaining <a href="servlets.html#servlet-engine">servlet engines</a>
+          for further hints.
+        </p>
+</div>
+<a name="N1026D"></a><a name="NoSuchMethodException"></a>
+<h5>2.3. I get a NoSuchMethodException or a NoSuchFieldException
+      exception.<span style="float: right"><a href="#NoSuchMethodException-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          This is usually caused by an older version of one of the FOP jars or
+          old XML tools in the classpath. Check in particular for parser.jar,
+          jaxp.jar, xml4j.jar or lotusxsl.jar.
+        </p>
+<p>
+          Incompatible versions of Batik may also cause this problem. Use the
+          version of Batik that comes with FOP. It is not always possible to
+          use a more recent version of Batik.
+        </p>
+</div>
+<a name="N10278"></a><a name="OutOfMemoryException"></a>
+<h5>2.4. I get an OutOfMemoryException.<span style="float: right"><a href="#OutOfMemoryException-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="running.html#memory">FOP Memory</a>.
+        </p>
+</div>
+<a name="N10284"></a><a name="MalformedURLException"></a>
+<h5>2.5. I get a MalformedURLException.<span style="float: right"><a href="#MalformedURLException-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<a name="MalformedURL"></a>
+<p>
+          What you probably think of as "file names" are usually URLs, in
+          particular the src attribute of fo:external-graphic.
+        </p>
+<p>
+          Because usage of URLs is growing, you should make yourself familiar
+          with it. The relevant specification is <a href="http://www.rfc-editor.org/rfc/rfc2396.txt">RFC 2396</a>.
+        </p>
+<p>
+          In a nutshell, the correct syntax for an absolute file URL is
+          <span class="codefrag">file:///some/path/file.ext</span> on Unix and
+          <span class="codefrag">file:///z:/some/path/file.ext</span> on Windows systems. Note
+          the triple slash, and also that only forward slashes are used, even on
+          windows.
+        </p>
+<p>
+          A relative file URL starts with anything but a slash, and doesn't have
+          the <span class="codefrag">file:</span> prefix, for example <span class="codefrag">file.ext</span>,
+          <span class="codefrag">path/file.ext</span> or <span class="codefrag">../file.ext</span>. The string
+          <span class="codefrag">file:path/file.ext</span> is <em>not</em> a relative URL,
+          in fact, it isn't a valid URL at all. A relative URL is subject to a
+          resolving process, which transforms it into an absolute
+          URL.
+        </p>
+</div>
+<a name="N102B4"></a><a name="NullPointerException"></a>
+<h5>2.6. I get an "[ERROR]: null", or a NullPointerException.<span style="float: right"><a href="#NullPointerException-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          This is often caused by an invalid FO document. Currently only very
+          common errors are intercepted and produce a comprehensible error
+          message. If you forgot container elements like fo:page-sequence or
+          fo:flow and put blocks and inline elements directly as children of
+          fo:root or fo:page-sequence, you'll only get a
+          NullPointerException. Check whether your FO file has a proper
+          structure. In some cases there are mandatory properties, like the
+          master-reference in fo:conditional-page-master-reference, check also
+          whether you got them right.
+        </p>
+<p>
+          You may find it helpful to use the <a href="#FO-validate">validation tools</a> to validate your
+          FO document. This will catch most problems, but should not be
+          relied upon to catch all.
+        </p>
+<p>
+          If you use XSLT, problems in your style sheet and in your source XML
+          also can produce a NullPointerException. Run the transformation
+          separately to check for this, usually you'll get a detailed error
+          message from the XSLT processor.
+        </p>
+<p>
+          If you turn on debugging with the "-d" option you may be able to
+          see more detailed information.
+        </p>
+</div>
+<a name="N102C9"></a><a name="not-implemented"></a>
+<h5>2.7. FOP returns the message "[ERROR] object|property - 'x' is not implemented yet." When will it be implemented?<span style="float: right"><a href="#not-implemented-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>See the article "<a href="gethelp.html#compliance">Review FOP's Standards Compliance</a>".</p>
+</div>
+<a name="N102D8"></a><a name="fop-hangs"></a>
+<h5>2.8. FOP hangs. FOP does not exit.<span style="float: right"><a href="#fop-hangs-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          The most likely reason is a known problem with the Java run time
+          environment which is triggered by rendering SVGs. Suns JDK 1.4 does
+          not have this problem. See also <a href="#svghangs">FOP does not
+          exit if a SVG is included</a>.
+        </p>
+<p>
+          Another possibility is that FOP went into a non terminating
+          loop. Usually this is indicated by lots of log messages of the form
+          "[INFO]: [NNNN]" which indicate a new page has been started or <a href="#boxoverflow">box overflows</a>. After some time, FOP will
+          crash with an OutOfMemoryException.
+        </p>
+<p>
+          If you called the FOP command line application from some other
+          programm, for example from Java using Runtime.exec(), it may hang
+          while trying to write log entries to the output pipe. You have to read
+          the FOP output regularly to empty the pipe buffer. It is best to avoid
+          exec'ing FOP, use the library interface instead.
+        </p>
+</div>
+<a name="N102EE"></a><a name="boxoverflow"></a>
+<h5>2.9. FOP runs forever, writing lots of "&gt;" to the log.<span style="float: right"><a href="#boxoverflow-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          There is something too large to fit into the intended place, usually a
+          large image, a table whose rows are kept together or a block with a
+          space-before or space-after larger than the page size. Catch the first
+          page showing this phenomenon and check it. If it is not obvious which
+          element causes the trouble, remove stuff until the problem goes
+          away. Decrease the dimensions of the offending element or property, or
+          increase the dimension of the enclosing element or container, or
+          remove keep-with-* properties.
+        </p>
+</div>
+<a name="N102F6"></a><a name="cannot-find-external-graphics"></a>
+<h5>2.10. FOP cannot find a file for fo:external-graphics.<span style="float: right"><a href="#cannot-find-external-graphics-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>The src attribute of the fo:external-graphics element requires a URI, not a file name. See <a href="fo.html#external-resources">External Resources</a> for more information about specifying URIs.</p>
+</div>
+<a name="N10302"></a><a name="fonts-not-found"></a>
+<h5>2.11. FOP does not find my fonts.<span style="float: right"><a href="#fonts-not-found-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          Did you get: &laquo;Failed to read font metrics file C:\foo\arial.xml
+          : File "C:\foo\arial.xml" not found&raquo;? The value for the
+          metrics-file attribute in the user config file is actually an URL, not
+          a file name. Use "file:///C:/foo/arial.xml" instead.
+        </p>
+<p>
+          If you used a relative URL, make sure your application has the working
+          directory you expect. Currently FOP does not use the baseDir for
+          resolving relative URLs pointing to font metric files.
+        </p>
+<p>
+          Try also setting the fontBaseDir configuration. (FIXME: add
+          link to congfiguration page)
+        </p>
+</div>
+</div>
+<a name="N10310"></a><a name="part-output"></a>
+<h4>3. Problems with FOP output</h4>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N10314"></a><a name="leader-expansion"></a>
+<h5>3.1. Leaders don't work anymore in 0.20.5. Instead of
+      filling the line, only three dots or a short ruler is
+      output.<span style="float: right"><a href="#leader-expansion-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          Leaders still work, in fact they work better than ever
+          before. You'll just have to add text-align="justify" and/or
+          text-align-last="justify" to the block with the leader. Be
+          sure you haven't accidentally overridden the
+          leader-length.maximum="100%" default value.
+        </p>
+<p>
+          Earlier versions of FOP used to expand a leader to fill the
+          rest of the line unconditionally, anything following it,
+          like page numbers in a TOC, was actually shifted beyong the
+          right margin.
+        </p>
+<p>
+          The new implementation uses leader-length.optimum to
+          determine where to break the line, and expands the leader
+          only further if the line should be filled, as indicated by
+          the text-aling and text-align-last properties.
+        </p>
+<p>
+          Actually due to the fuzzyness of the specification both the
+          old and the new method are conformant (although adding text
+          after the expanded leader in the old variant never was).
+        </p>
+<p>
+          If you want to have a longer ruler or space in a
+          non-justified line, you have to increase the
+          leader-length.optimum property.
+        </p>
+</div>
+<a name="N10328"></a><a name="blank-page-between-page-sequences"></a>
+<h5>3.2. Why does FOP insert a blank page between my page sequences?<span style="float: right"><a href="#blank-page-between-page-sequences-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          This is because spec conformance has been improved.
+        </p>
+<p>
+          The <a href="http://www.w3.org/TR/xsl/slice7.html#force-page-count">force-page-count
+          property</a> controls how a FO processor pads page sequences in
+          order to get certain page counts or last page numbers. The default is
+          "<span class="codefrag">auto</span>". With this setting, if the next page sequence
+          begins with an odd page number because you set the
+          initial-page-number, and the current page sequence also ends with an
+          odd page number, the processor inserts a blank page to keep odd and
+          even page numbers alternating (similar for the case the current page
+          sequence ends with an even page number and the next page sequence
+          starts with an even page number.
+        </p>
+<p>
+          If you don't want to have this blank page, use
+          <span class="codefrag">force-page-count="no-force"</span>.
+        </p>
+</div>
+<a name="N10340"></a><a name="graphic-not-displayed"></a>
+<h5>3.3. Why is my graphic not rendered?<span style="float: right"><a href="#graphic-not-displayed-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>Most commonly, the external file is not being found by FOP.
+Check the following:</p>
+<ul>
+          
+<li>Empty or wrong baseDir setting.</li>
+          
+<li>Spelling errors in the file name (including using the wrong case).</li>
+          
+<li>Security Problems (i.e. image was not delivered because FOP is not allowed to read the file).
+This is especially a problem if the external file is retrieved over HTTP.
+Possible issues include security settings on the server, server configuration, and missing cookies or other authorization information.
+Any easy way to check this is to cut&amp;paste the source URL from the fo:external-graphic into the Location field of a browser <strong>on the machine where the FOP process will be running</strong>.</li>
+        
+</ul>
+<p>Other possibilities:</p>
+<ul>
+          
+<li>The image format is not supported or not supported completely. See <a href="graphics.html">FOP Graphics Formats</a> for a list of supported formats and related issues.</li>
+          
+<li>The graphic may be too large to fit into the intended space.</li>
+          
+<li>There may be something (static content) that is obscuring the graphic. (This is very rare).
+          </li>
+        
+</ul>
+</div>
+<a name="N1036A"></a><a name="png-fails"></a>
+<h5>3.4. My graphical images do not work properly.<span style="float: right"><a href="#png-fails-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>See <a href="graphics.html">FOP Graphics Formats</a> for a list of supported formats and related issues.</p>
+</div>
+<a name="N10376"></a><a name="graphic-resolution"></a>
+<h5>3.5. Why is my graphic rendered at a different resolution than it was created?<span style="float: right"><a href="#graphic-resolution-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>See <a href="graphics.html#resolution">Graphics Resolution</a>.</p>
+</div>
+<a name="N10382"></a><a name="keep-with"></a>
+<h5>3.6. Keep-with-next, keep-with-previous, keep-together
+      don't work.<span style="float: right"><a href="#keep-with-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          These properties are not implemented, except on table rows. In
+          order to take advantage of them, you have to nest stuff to be
+          kept together in a table.
+        </p>
+<p>
+          The concept is called &ldquo;blind table&rdquo;. The table is used for
+          pure layout reasons and not obvious in the output.
+        </p>
+<p>
+          An example of an image and the image caption to be kept together:
+        </p>
+<pre class="code">&lt;fo:table table-layout="fixed" width="100%"&gt;
+  &lt;fo:table-column column-width="proportional-column-width(1)"/&gt;
+  &lt;fo:table-body&gt;
+    &lt;fo:table-row keep-with-next="always"&gt;
+      &lt;fo:table-cell&gt;
+        &lt;fo:block&gt;
+          &lt;fo:external-graphic src="foo.jpg"/&gt;
+        &lt;/fo:block&gt;
+      &lt;/fo:table-cell&gt;
+    &lt;/fo:table-row&gt;
+    &lt;fo:table-row&gt;
+      &lt;fo:table-cell&gt;
+        &lt;fo:block&gt;Image Caption&lt;/fo:block&gt;
+      &lt;/fo:table-cell&gt;
+    &lt;/fo:table-row&gt;
+  &lt;/fo:table-body&gt;
+&lt;/fo:table&gt;</pre>
+</div>
+<a name="N10394"></a><a name="table-missing"></a>
+<h5>3.7. My tables are missing, or missing their content.<span style="float: right"><a href="#table-missing-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          Check for fo:table-body around the rows. FOP up to 0.20.4 doesn't
+          raise an error if it is omitted, it just drops the content. More
+          recent releases will catch this problem.
+        </p>
+<p>
+          Also, the fo:table-with-caption element is not implemented, tables
+          within such an element are dropped too. FOP generates an error
+          message for this problem. The DocBook style sheets generate
+          fo:table-with-caption elements, so watch out.
+        </p>
+</div>
+<a name="N1039F"></a><a name="cells-overflow"></a>
+<h5>3.8. Text overflowing table cells and the like is not clipped. Long
+        text flows into adjacent cells/block, obscuring stuff there.<span style="float: right"><a href="#cells-overflow-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          Clipping as specified by the <span class="codefrag">overflow="hidden"</span> is not yet
+          implemented.  If you have long words overflowing table cells, try to
+          get them hyphenated. Artificial names like product identifications or
+          long numbers usually aren't hyphenated. You can try special processing
+          at XSLT level, like
+        </p>
+<ul>
+          
+<li>
+            clip long text,
+          </li>
+          
+<li>
+            explicit wrapping+clipping,
+          </li>
+          
+<li>
+            insert zero width spaces (U+200B or &amp;#x200B;) to allow FOP to
+            wrap.
+          </li>
+        
+</ul>
+<p>
+          Check the <a href="http://dpawson.co.uk/xsl">XSL FAQ</a> and the
+          <a href="http://www.mulberrytech.com/xsl/xsl-list/">XSL list
+          archive</a> for how to perform these tasks.
+        </p>
+</div>
+<a name="N103C1"></a><a name="page-number-align"></a>
+<h5>3.9. Page numbers are not properly right aligned.<span style="float: right"><a href="#page-number-align-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          This happens for fo:page-number-citation elements if the
+          citation occurs before FOP formatted the requested page,
+          usually in TOC or index pages. It is caused by the problem
+          that FOP has to guess how much space the yet unknown page
+          number will occupy, and usually the guesses are somewhat
+          off.
+        </p>
+<p>
+          The most recent FOP releases should have this problem
+          fixed. Check whether you can upgrade.
+        </p>
+</div>
+<a name="N103CC"></a><a name="hyphenation-fails"></a>
+<h5>3.10. Hyphenation does not work.<span style="float: right"><a href="#hyphenation-fails-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          Set the language attribute somewhere and explicitly enable hyphenation. 
+          Check whether you use a language for which hyphenation is supported. 
+          Supported languages can be deduced from the files in the {fop-dir}/src/hyph
+          directory of the FOP source distribution. If you want to use a language
+          FOP currently doesn't hyphenate, please see the 
+          <a href="configuration.html#hyphenation">Configuration page</a>.
+        </p>
+<p>
+          Set the language (on fo:page-sequence, fo:block or fo:character):
+        </p>
+<pre class="code">&lt;fo:page-sequence language="fi"&gt;</pre>
+<p>
+          Enable hyphenation on a block:
+        </p>
+<pre class="code">&lt;fo:block hyphenate="true"&gt;</pre>
+</div>
+</div>
+<a name="N103E6"></a><a name="part-embedding"></a>
+<h4>4. Embedding FOP. Using FOP in a servlet.</h4>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N103EA"></a><a name="servlet"></a>
+<h5>4.1. How do I use FOP in a servlet?<span style="float: right"><a href="#servlet-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="embedding.html#servlet">Using FOP in a Servlet</a>.
+        </p>
+</div>
+<a name="N103F6"></a><a name="servlet-with-xslt"></a>
+<h5>4.2. How do I use FOP in a servlet with an XSLT
+      transformation?<span style="float: right"><a href="#servlet-with-xslt-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="embedding.html#servlet-transform">Using FOP in a Servlet with XSLT Transformation</a>.
+        </p>
+</div>
+<a name="N10402"></a><a name="servlet-xslt-params"></a>
+<h5>4.3. How do I pass parameters to the XSLT transformation?<span style="float: right"><a href="#servlet-xslt-params-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="embedding.html#servlet-transform">Using FOP in a Servlet with XSLT Transformation</a>.
+        </p>
+</div>
+<a name="N1040E"></a><a name="servlet-nonstd-fonts"></a>
+<h5>4.4. How do I use my own fonts when running FOP from a
+      servlet?<span style="float: right"><a href="#servlet-nonstd-fonts-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          Declare the fonts in the <span class="codefrag">userconfig.xml</span> file as usual.
+See <a href="#usercfg">loading the user configuration file</a> for further details.
+        </p>
+</div>
+<a name="N1041D"></a><a name="servlet-baseDir"></a>
+<h5>4.5. How do I set the baseDir property in a servlet environment?<span style="float: right"><a href="#servlet-baseDir-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="embedding.html#config-internal">Setting the Configuration Programmatically</a>.
+        </p>
+</div>
+<a name="N10429"></a><a name="usercfg"></a>
+<h5>4.6. How do I use a user configuration file from a servlet?<span style="float: right"><a href="#usercfg-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="embedding.html#config-external">Using a Configuration File in an Embedded App</a>.
+        </p>
+</div>
+<a name="N10435"></a><a name="servlet-NoClassDefFound"></a>
+<h5>4.7. I keep getting NoClassDefFound and other exceptions. How do I
+        get FOP working for various servlet engines?<span style="float: right"><a href="#servlet-NoClassDefFound-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="embedding.html#servlet-engine">Servlet Engines</a>.
+        </p>
+</div>
+<a name="N10441"></a><a name="multithreaded"></a>
+<h5>4.8. Can FOP be used in multithreaded environments?<span style="float: right"><a href="#multithreaded-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="embedding.html#multithreading">Multithreading FOP</a>.
+        </p>
+</div>
+</div>
+<a name="N1044D"></a><a name="part-svg"></a>
+<h4>5. SVG specific questions</h4>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N10451"></a><a name="svg-text"></a>
+<h5>5.1. The rendering of SVG text in my PDF is of poor quality.
+Can I control this?<span style="float: right"><a href="#svg-text-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>See <a href="graphics.html#svg-pdf-text">Placing SVG Text into PDF</a>.</p>
+</div>
+<a name="N1045D"></a><a name="svg-headless"></a>
+<h5>5.2. How do I use FOP with SVG on headless servers?<span style="float: right"><a href="#svg-headless-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>See <a href="graphics.html#batik">FOP: Graphics (Batik)</a>.</p>
+</div>
+<a name="N10469"></a><a name="svghangs"></a>
+<h5>5.3. FOP does not exit if a SVG is included.<span style="float: right"><a href="#svghangs-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          Applies to older FOP versions and JDK 1.3 and older. That's because
+          there is an AWT thread hanging around. The solution is to put a
+          System.exit(0) somewhere.
+        </p>
+</div>
+<a name="N10471"></a><a name="svg-url"></a>
+<h5>5.4. I have problems with SVG referring to gradients etc. using
+        "uri(#stuff)". I get a MalformedURLException.<span style="float: right"><a href="#svg-url-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          This is really a "resolving relative URI" problem with some
+          twists. The problem is that the <span class="codefrag">#stuff</span> URL fragment
+          identifier is resolved within the current SVG document. So the
+          reference must be valid within the XML subset and it cannot
+          reference other SVG documents in the same XML file. Some options
+          to try:
+        </p>
+<ul>
+          
+<li>
+            Put the SVG into a separate file and use it with
+            fo:external-graphics.
+          </li>
+          
+<li>
+            Use a separate SVG file which contains only the gradient (and
+            perhaps other SVG stuff you want to reference) and point an absolute
+            URL to it:
+            <span class="codefrag">fill="url(file:///c:/refstuff/grad.svg#PurpleToWhite)"</span>.
+          </li>
+          
+<li>
+            Same as above but use a relative URL:
+            <span class="codefrag">fill="url(grad.svg#PurpleToWhite)"</span>. This may be easier
+            to deploy.
+          </li>
+          
+<li>
+            Make sure that the reference is valid in the current SVG document.
+          </li>
+        
+</ul>
+<p>
+          In any case, the referenced stuff has to be pointed to by an URL. It
+          doesn't necessarily have to be a file URL, HTTP should also
+          work. Also, expect a performance hit in all cases, because another XML
+          file has to be retrieved and parsed.
+        </p>
+<p>
+          Ultimately, both FOP and especially Batik should be fixed to make
+          your code work as expected, but this will not only take some time
+          but also some effort by a standard committee in order to make the
+          semantics of this kind of references in embedded SVG clearer.
+        </p>
+<p>See also <a href="#MalformedURL">MalformedURLException</a>
+</p>
+</div>
+<a name="N1049D"></a><a name="svg-scaling"></a>
+<h5>5.5. Why is my SVG rendered at a size different from that specified in my fo:external-graphic element?<span style="float: right"><a href="#svg-scaling-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>See <a href="graphics.html#svg-scaling">SVG Scaling</a>.</p>
+</div>
+</div>
+<a name="N104A9"></a><a name="part-pdf"></a>
+<h4>6. PDF specific (includes Acrobat peculiarities)</h4>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N104AD"></a><a name="pdf-embed-font"></a>
+<h5>6.1. How do I embed fonts in PDF?<span style="float: right"><a href="#pdf-embed-font-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See the <a href="fonts.html">Fonts</a> page for information
+          about embedding fonts.
+        </p>
+</div>
+<a name="N104B9"></a><a name="pdf-characters"></a>
+<h5>6.2. Some characters are not displayed, or displayed incorrectly, or
+      displayed as &ldquo;#&rdquo;.<span style="float: right"><a href="#pdf-characters-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          This usually means the selected font doesn't have a glyph
+          for the character.
+        </p>
+<p>
+          The standard text fonts supplied with Acrobat Reader have
+          mostly glyphs for characters from the ISO Latin 1 character
+          set. For a variety of reasons, even those are not completely
+          guaranteed to work, for example you can't use the fi
+          ligature from the standard serif font. Check the <a href="output.html#pdf-fonts">overview</a> for the default
+          PDF fonts.
+        </p>
+<p>
+          If you use your own fonts, the font must have a glyph for
+          the desired character. Furthermore the font must be
+          available on the machine where the PDF is viewed or it must
+          have been embedded in the PDF file. See <a href="fonts.html">embedding fonts</a>.
+        </p>
+<p>
+          For most symbols, it is better to select the symbol font
+          explicitely, for example in order to get the symbol for the
+          mathematical empty set, write:
+        </p>
+<pre class="code">&lt;fo:inline font-family="Symbol"&gt;&amp;#x2205;&lt;/fo:inline&gt;</pre>
+<p>
+          The "#" shows up if the selected font does not define a glyph for the
+          required character, for example if you try:
+        </p>
+<pre class="code">&lt;fo:inline font-family="Helvetica"&gt;&amp;#x2205;&lt;/fo:inline&gt;</pre>
+</div>
+<a name="N104DD"></a><a name="pdf-postprocess"></a>
+<h5>6.3. What tools are available for post-processing my PDF document?<span style="float: right"><a href="#pdf-postprocess-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>See <a href="output.html#pdf-postprocess">PDF Post-processing</a>.</p>
+</div>
+<a name="N104E9"></a><a name="pdf-security"></a>
+<h5>6.4. How do I add security features (encryption, disable printing)
+      to my PDF document?<span style="float: right"><a href="#pdf-security-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="pdfencryption.html">PDF Encryption</a>.
+          See also <a href="output.html#pdf-postprocess">PDF Post-processing</a>.
+        </p>
+</div>
+<a name="N104F9"></a><a name="pdf-doc-properties"></a>
+<h5>6.5. How do I add document properties (title, author, etc.) to my
+      PDF document?<span style="float: right"><a href="#pdf-doc-properties-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>See <a href="output.html#pdf-postprocess">PDF Post-processing</a>.</p>
+</div>
+<a name="N10505"></a><a name="pdf-watermark"></a>
+<h5>6.6. How do I add watermarks to my PDF document?<span style="float: right"><a href="#pdf-watermark-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>See <a href="output.html#pdf-watermark">PDF Watermarks</a>.</p>
+</div>
+<a name="N10511"></a><a name="pdf-print-contortion"></a>
+<h5>6.7. The PDF is printed contorted!<span style="float: right"><a href="#pdf-print-contortion-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          Check the paper size in Acrobat settings and the "fit to page" print
+          setting. Contorted printing is often caused by a mismatched paper
+          format, for example if the setting is "US Letter" but the PDF was
+          made for A4. Sometimes also the printer driver interferes, check its
+          settings too.
+        </p>
+</div>
+<a name="N10519"></a><a name="pdf-bookmark-display"></a>
+<h5>6.8. How do I control the Acrobat bookmark display?<span style="float: right"><a href="#pdf-bookmark-display-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          FOP does not currently support this feature. Possible workarounds
+          include those mentioned in the <a href="#PDF-postprocess">PDF
+            Post-Processing FAQ</a>.
+        </p>
+</div>
+</div>
+<a name="N10525"></a><a name="part-iex"></a>
+<h4>7. IEx specific stuff</h4>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N10529"></a><a name="iex-servlet-multiple"></a>
+<h5>7.1. The FOP servlet is called multiple times!<span style="float: right"><a href="#iex-servlet-multiple-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          This is a problem of Internet Explorer requesting the content several
+          times. Please see the <a href="servlets.html#ie">notes on Internet Explorer</a>
+          for more information.
+        </p>
+</div>
+<a name="N10535"></a><a name="iex-pdf-print-from-browser"></a>
+<h5>7.2. How do I print PDF directly from the browser?<span style="float: right"><a href="#iex-pdf-print-from-browser-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          It depends whether you mean "printing to a printer under control of
+          the server" or "printing on the client's printer".
+        </p>
+<p>
+          For the first problem, look at the print servlet in the FOP
+          examples. You'll have to gather any printer settings in a HTML form
+          and send it to the server.
+        </p>
+<p>
+          For the second task, you can use some client side script to start
+          Acrobat Reader in print mode, or use a Java applet based on the FOP
+          print servlet. This depends heavily on the client installation and
+          should not relied on except in tightly controlled environments.
+        </p>
+<p>
+          See also http://marc.theaimsgroup.com/?l=fop-dev&amp;m=101065988325115&amp;w=2
+        </p>
+</div>
+</div>
+<a name="N10546"></a><a name="part-input"></a>
+<h4>8. General questions regarding XSLT, XSLFO, and basic XML</h4>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N1054A"></a><a name="fo-center"></a>
+<h5>8.1. (FO) How do I vertically center an image or a table (or
+      whatever)?<span style="float: right"><a href="#fo-center-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#fo-center-vertical">XSL-FO Vertical Centering</a>.
+        </p>
+</div>
+<a name="N10556"></a><a name="fo-center-table-horizon"></a>
+<h5>8.2. (FO) How do I center a table horizontally?<span style="float: right"><a href="#fo-center-table-horizon-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#fo-center-table-horizon">XSL-FO Horizontal Centering (Tables)</a>.
+        </p>
+</div>
+<a name="N10562"></a><a name="fo-page-outer"></a>
+<h5>8.3. (FO) How to get page numbers printed on the "outer side" of the
+        page (for books, for example)?<span style="float: right"><a href="#fo-page-outer-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#fo-oddeven">Recto/Verso Static Content Differences</a>.
+        </p>
+</div>
+<a name="N1056E"></a><a name="oddeven"></a>
+<h5>8.4. (FO) How do I use different static content for odd and even
+      pages?<span style="float: right"><a href="#oddeven-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#fo-oddeven">Recto/Verso Static Content Differences</a>.
+        </p>
+</div>
+<a name="N1057A"></a><a name="fo-first-page-header"></a>
+<h5>8.5. (FO) How do I get a special header on the first page?<span style="float: right"><a href="#fo-first-page-header-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#fo-first-page">Making the First Page Special</a>.
+        </p>
+</div>
+<a name="N10586"></a><a name="fo-omit-headers"></a>
+<h5>8.6. (FO) How do I omit my headers on a blank page? How do I write
+      "This page is left blank" on an intentionally blank page?<span style="float: right"><a href="#fo-omit-headers-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#fo-blank-pages">Blank Pages</a>.
+        </p>
+</div>
+<a name="N10592"></a><a name="fo-special-symbols"></a>
+<h5>8.7. (FO) How do I print an Euro sign, a checkbox or other some other
+      special symbols?<span style="float: right"><a href="#fo-special-symbols-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#xml-special-chars">Special Characters</a>.
+        </p>
+</div>
+<a name="N1059E"></a><a name="fo-preformat"></a>
+<h5>8.8. (FO) How do I keep linebreaks and hard spaces? How do I get
+        preformatted text displayed as expected?<span style="float: right"><a href="#fo-preformat-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#fo-preformat">Preformatting Content</a>.
+        </p>
+</div>
+<a name="N105AA"></a><a name="fo-total-pages"></a>
+<h5>8.9. (FO) How do I print the total number of pages, for example "page 1
+      of 12"<span style="float: right"><a href="#fo-total-pages-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#fo-total-pages">Total Document Pages</a>.
+        </p>
+</div>
+<a name="N105B6"></a><a name="fo-region-overlap"></a>
+<h5>8.10. (FO) The header overlaps body content. The body extends into
+      the footer.<span style="float: right"><a href="#fo-region-overlap-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#fo-region-align">Aligning Regions</a>.
+        </p>
+</div>
+<a name="N105C2"></a><a name="fo-lines"></a>
+<h5>8.11. (FO) How do I get lines in the document, as separators, side
+      bars or folding marks?<span style="float: right"><a href="#fo-lines-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#fo-lines">Drawing Lines</a>.
+        </p>
+</div>
+<a name="N105CE"></a><a name="fo-validate"></a>
+<h5>8.12. (FO) How do I validate my FO document?<span style="float: right"><a href="#fo-validate-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#fo-validate">Validating XSL-FO</a>.
+        </p>
+</div>
+<a name="N105DA"></a><a name="xml-non-breaking-space"></a>
+<h5>8.13. (XML) How do I get a non-breaking space in FO? There are complaints about &amp;nbsp;.<span style="float: right"><a href="#xml-non-breaking-space-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#xml-special-chars">XML Special Characters</a>.
+        </p>
+</div>
+<a name="N105E9"></a><a name="xml-undefined-entities"></a>
+<h5>8.14. (XML) How do I enter special characters in XML? There are complaints about undefined entities, such as &amp;uuml;, which work in HTML. <span style="float: right"><a href="#xml-undefined-entities-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#xml-special-chars">XML Special Characters</a>.
+        </p>
+</div>
+<a name="N105F8"></a><a name="xml-illegal-entities"></a>
+<h5>8.15. (XML) There are complaints about illegal characters and entities
+      in the input.<span style="float: right"><a href="#xml-illegal-entities-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#xml-entity-chars">Using HTML Character Names</a>.
+        </p>
+</div>
+<a name="N10604"></a><a name="xml-illegal-chars"></a>
+<h5>8.16. (XML) There are complaints about illegal bytes or characters in
+      the input. There are odd characters in the result.<span style="float: right"><a href="#xml-illegal-chars-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="fo.html#xml-encoding">XML Encoding Issues</a>.
+        </p>
+</div>
+</div>
+<a name="N10610"></a><a name="part-help"></a>
+<h4>9. General suggestions. How to solve problems.</h4>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N10614"></a><a name="bugs"></a>
+<h5>9.1. I think I have found a bug in FOP. What should I do?<span style="float: right"><a href="#bugs-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<p>
+          See <a href="bugs.html">the Bugs page</a> for information about
+          bugs already reported and how to report new ones.
+        </p>
+</div>
+<a name="N10620"></a><a name="postquestions"></a>
+<h5>9.2. I have questions that are not addressed in this FAQ. Where
+      should I post them?<span style="float: right"><a href="#postquestions-menu">^</a></span>
+</h5>
+<div style="margin-left: 15 ; border: 2px">
+<ul>
+          
+<li>If your question is a development-related question, please see the <a href="dev/faq.html">Developer FAQs</a>.</li>
+          
+<li>
+            If you have a runtime exception or other runtime problem:
+            <ul>
+              
+<li>
+                double-check the <a href="#part-running">Runtime FAQs</a>.
+              </li>
+              
+<li>
+                ClassNotFoundException, NoSuchMethodException and
+                NoSuchFieldException problems are almost always a problem with
+                the local environment. Try to get local help first.
+              </li>
+              
+<li>
+                Check <a href="bugs.html#issues_existing">Reported Issues</a>
+                to see if this is a known problem.
+              </li>
+              
+<li>If none of the above apply, post a question to the fop-dev
+                mailing list.
+              </li>
+            
+</ul>
+          
+</li>
+          
+<li>
+            In the case where something works properly with another formatter,
+            (AntennaHouse, PassiveTex, etc.) but doesn't work with FOP, please
+            check the <a href="relnotes.html">Release Notes</a>, the
+            <a href="compliance.html">FOP Standards Compliance</a> document,
+            and the remaining FAQ in this document. If not found there, look at the
+            list of <a href="bugs.html#issues_existing">Bugs Already Reported</a>.
+            If not found there, please post a question on the fop-user mailing list
+            or <a href="bugs.html#issues_new">Open a New Bug</a>.
+          </li>
+          
+<li>
+            Question about how to use FOP, how to perform certain tasks with FOP
+            or how to integrate FOP into another application should be posted to
+            fop-user.
+          </li>
+          
+<li>
+            XSLT specific stuff sould go to the <a href="http://www.mulberrytech.com/xsl/xsl-list/">XSL
+            list</a>. This includes problems with the language and XSLT
+            HOW-TOs.
+          </li>
+          
+<li>
+            Problems specific to a certain XSLT processor, like Xalan, Saxon or
+            MSXML, should be handled by processor specific lists. This includes
+            problems with deployment, processor specific extensions, suspected
+            bugs and processor specific APIs. Note that JDK 1.4 comes with an
+            XML parser and an XSLT processor which are older versions of
+            Xerces and Xalan, respectively, and both have a number of annoying
+            bugs. See $$$FIXME on how to use more recent versions or other
+            packages instead.
+          </li>
+          
+<li>
+            Problems with servlet containers should be asked on the vendor
+            specific lists for these software packages.
+          </li>
+          
+<li>
+            More general questions regarding Java, including deployment, Java
+            APIs, classpath issues and property definitions should be redirected
+            to some Java specific list.
+          </li>
+        
+</ul>
+</div>
+</div>
+</div>
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="skin/images/spacer.gif"><a href="skin/images/label.gif"></a><a href="skin/images/page.gif"></a><a href="skin/images/chapter.gif"></a><a href="skin/images/chapter_open.gif"></a><a href="skin/images/current.gif"></a><a href="/favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

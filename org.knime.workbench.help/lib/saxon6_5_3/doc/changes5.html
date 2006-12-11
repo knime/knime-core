@@ -1,0 +1,1680 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<HTML><HEAD><TITLE label="&nbsp;Changes&nbsp;">SAXON: Change History</TITLE>
+
+<META content="text/html; charset=windows-1252" http-equiv=Content-Type>
+</HEAD>
+<BODY bgColor=#ddeeff leftMargin=150><FONT face="Arial, Helvetica, sans-serif">
+<div align=right><a href="index.html">SAXON home page</a></div>
+<H1><BIG><FONT color=#ff0080>SAXON: Change History</FONT></BIG></H1>
+
+<p>For changes up to version 5.0, see <a href="history.html">history.html</a></p>
+
+<H2>Changes in version 5.5.2 (to be released)</H2>
+
+<p>In Saxon 5.5, I introduced a change that allows a result-tree-fragment to be implicitly
+converted to a node-set. I did this in anticipation of changes in XSLT 1.1, and to allow
+interoperability with MSXML3. However, Microsoft have now withdrawn this facility and conform
+fully to the XSLT 1.0 rules, so in order to protect Saxon's reputation for 100% conformance,
+I have decided to withdraw the facility too. It can still be used, however, if the stylesheet
+specifies version="1.1". For more details, see <a href="conformance.html">Conformance</a></p>
+
+<H3>Defects in version 5.5.1</H3>
+
+<p>The following errors are known in version 5.5.1:</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>5.5.1/001</TD>
+    <TD>When xsl:copy-of is used to make a copy of an element node that has no attributes or
+    namespace declarations of its own, the namespace nodes inherited from its ancestor elements
+    are not copied to the result tree. (Present since 5.5)</TD></TR>
+    
+    <TD vAlign=top>5.5.1/002</TD>
+    <TD>In some Java environments (ServletExec) the current method for dynamic loading of classes fails.
+    The fix to this detects this failure and reverts to the simple pre-JDK 1.2 method.</TD></TR>
+
+    <TD vAlign=top>5.5.1/003</TD>
+    <TD>When &lt;xsl:namespace-alias&gt; is used, Saxon uses the new (result-prefix) prefix
+    and the new URI in the output. A careful reading of the spec suggests that it should
+    use the old (stylesheet-prefix) prefix with the new URI. (The term "result-prefix" is thus
+    a misnomer).</TD></TR>
+
+    <TD vAlign=top>5.5.1/004</TD>
+    <TD>An ArrayIndexOutOfBounds exception occurs if the match pattern "@comment()" (or "@text()"
+    or "@processing-instruction()") is used in an xsl:template rule. 
+    Such a pattern is meaningless (it will never match any nodes) but entirely legal.</TD></TR>
+
+    <TD vAlign=top>5.5.1/005</TD>
+    <TD>Saxon does not report an error if two sibling &lt;xsl:with-param&gt; elements
+    specify the same parameter name.</TD></TR>
+
+    <TD vAlign=top>5.5.1/006:</TD>
+    <TD>Where conflicting &lt;xsl:strip-space&gt; and &lt;xsl:preserve-space&gt; elements occur in the
+    stylesheet, Saxon gives greater weight to the priority of the pattern than to its import
+    precedence. So &lt;xsl:strip-space elements="ns:item"&gt; in an imported stylesheet will
+    incorrectly override &lt;xsl:preserve-space elements="ns:*"&gt; in the importing stylesheet.
+    </TD></TR>
+
+    <TD vAlign=top>5.5.1/007</TD>
+    <TD>A null pointer exception can occur in the AElfred parser when attempting to access an XML file
+    using a URL, if the resource accessed by the URL is found but its encoding is unknown.</TD></TR>
+
+    <TD vAlign=top>5.5.1/008</TD>
+    <TD>A null pointer exception can occur when evaluating a variable reference within the arguments
+    to an extension function that is called within the predicate of a filter expression.</TD></TR>
+
+    <TD vAlign=top>5.5.1/009</TD>
+    <TD>When running in fowards-compatible mode, Saxon incorrectly rejects XSL elements that contain
+    an attribute other than those defined in XSLT 1.0.</TD></TR>
+
+    <TD vAlign=top>5.5.1/010</TD>
+    <TD>When xsl:copy is applied to an attribute, text node, comment, or processing instruction,
+    the content of the xsl:copy element should be ignored. It isn't.</TD></TR>
+
+    <TD vAlign=top>5.5.1/011</TD>
+    <TD>When output to a DOM Node is requested in the TrAX API, this is ignored if an output
+    method is specified in an xsl:output element of the stylesheet. The output is sent to the
+    standard output stream instead. The xsl:output element should be ignored.</TD></TR>
+
+    <TD vAlign=top>5.5.1/012</TD>
+    <TD>When a top-level element such as xsl:output is used within a template, it is reported
+    as an error. This happens even when processing in forwards-compatible mode (e.g. when
+    version="1.1"). In this case fallback processing (xsl:fallback) should be invoked.</TD></TR>
+
+    <TD vAlign=top>5.5.1/013 <p>not yet fixed</p></TD>
+    <TD>When the first argument to the document() function is a result tree fragment, Saxon
+    takes the Base URI (for resolving the URI if it is relative) as if the argument were a
+    string. The intention of the specification, though not clearly stated, is that the Base URI
+    should be calculated as if the argument were a node-set. That is, if the argument is $tree
+    and $tree is defined by &lt;xsl:variable name="tree"&gt;doc.xml&lt;/xsl:variable&gt;, then
+    the Base URI should be that of the xsl:variable element, not that of the element containing
+    the call on the document() function.</TD></TR>
+    
+</TABLE>
+
+<H2>Changes in version 5.5.1 (2000-10-16)</H2>
+
+<H3>Defects in version 5.5</H3>
+
+<p>The following errors are cleared in version 5.5.1:</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>5.5/001</TD>
+    <TD>An error occurs when a filter expression using the key() function is used as an argument
+    to another function call within an XPath predicate. For example, <br/>
+    <code>item[generate-id(.)=generate-id(key('distinct',.)[1])]</code></TD></TR>
+
+  <TR>
+    <TD vAlign=top>5.5/002</TD>
+    <TD>When the cdata-section-elements attribute of xsl:output is used, disable-output-escaping
+    on xsl:text or xsl:value-of does not always work correctly.</TD></TR>
+
+  <TR>
+    <TD vAlign=top>5.5/003</TD>
+    <TD>When the same PreparedStyleSheet is used repeatedly, with different source documents,
+    and the stylesheet uses keys, then the source documents are not released from memory after
+    use, but accumulate indefinitely.</TD></TR>
+
+  <TR>
+    <TD vAlign=top>5.5/004</TD>
+    <TD>&lt;saxon:output&gt; always fails when using the Microsoft Java VM, or any other JVM
+    that doesn't support the JDK 1.2 method getParentFile(). The fix for this means that
+    saxon:output now works with JDK 1.1, but the ability to create the directory or directories
+    containing the new file is available only with JDK 1.2 or later.</TD></TR>
+
+  <TR>
+    <TD vAlign=top>5.5/005</TD>
+    <TD>In HTML output, the character sequence "]]&gt;" is rendered as "]]&gt;", which
+    is illegal according to SGML. To fix this problem, I have changed it so that "&gt;" is now
+    always output as "&amp;gt;", even when not part of a "]]&gt;" sequence.</TD></TR>
+
+  <TR>
+    <TD vAlign=top>5.5/006</TD>
+    <TD>In HTML output, a &lt;meta&gt; tag should be output immediately after the &lt;head&gt;
+    tag if there is one. At 5.5 a switch was added in the Java API to allow this to be suppressed.
+    The default for this switch was incorrectly set to "off" rather than "on".</TD></TR>
+
+  <TR>
+    <TD vAlign=top>5.5/007</TD>
+    <TD>Instructions such as &lt;xsl:choose&gt; which may only appear within a template (i.e.
+    a template body) are rejected if they appear within an &lt;xsl:attribute&gt; instruction within
+    an &lt;xsl:attribute-set&gt;</TD></TR>
+
+  <TR>
+    <TD vAlign=top>5.5/008</TD>
+    <TD>Some expressions and patterns (for example "xyz[@ref='23']" are displayed incorrectly in
+    error and warning messages, such as the message indicating an ambiguous rule match.</TD></TR>
+
+  <TR>
+    <TD vAlign=top>5.5/009</TD>
+    <TD>Integration with FOP is not working. FOP expects namespace declarations to be passed as
+    attributes rather than using the SAX2 startNamespacePrefix() mechanism. Not yet fixed: I have
+    raised this as a FOP problem. However, I have fixed a secondary problem, that the primary error
+    message is masked by a NullPointerException.</TD></TR>
+
+  <TR>
+    <TD vAlign=top>5.5/010</TD>
+    <TD>Saxon assumes that when a numeric predicate is specified, at most one node can be selected.
+    This is not true: consider $x[position()], which should select every node in $x, but currently
+    selects only the first.</TD></TR>
+
+  <TR>
+    <TD vAlign=top>5.5/011</TD>
+    <TD>The option to write the result tree to a DOM fails if the DOM does not support DOM
+    level 2 (specifically the Node.normalize() interface)</TD></TR>
+
+  <TR>
+    <TD vAlign=top>5.5/012</TD>
+    <TD>The Saxon tree implementation does not implement the isSupported() and hasAttributes()
+    methods from the latest DOM Level 2 Proposed Recommendation. This gives a Java error if the
+    latest DOM interfaces are on the classpath.</TD></TR>
+
+  <TR>
+    <TD vAlign=top>5.5/013</TD>
+    <TD>The -y option on the command line, to define the parser to be used for the stylesheet,
+    still doesn't work properly (see 5.4.1/010)</TD></TR>
+
+</table>
+
+<H2>Changes in version 5.5 (2000-09-22)</H2>
+
+<H3>Defects in version 5.4.1</H3>
+
+<p>The following errors are cleared:</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>5.4.1/001</TD>
+    <TD>In xsl:number, the new format tokens for numbering using Greek letters
+    do not work correctly.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/002</TD>
+    <TD>If the document() function is called twice to load the same document (i.e. with
+    the same absolute URL), two different root nodes are returned, rather than returning
+    the same one each time.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/003</TD>
+    <TD>Where the use expression of an xsl:key definition returns a node-set, it is possible
+    for the node-set returned by the key() function to contain duplicate nodes. This happens
+    if several nodes in the node-set returned by the use expression, when applied to the
+    same target node, have the same string-value.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/004</TD>
+    <TD>xsl:attribute is allowed to appear only within an xsl:attribute-set or xsl:template;
+    it is not allowed to appear, for example, within an xsl:element in a global xsl:variable.
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/005</TD>
+    <TD>Using a match pattern of the form "item[1]" or "item[2]" in an xsl:key definition
+    doesn't work: no keys are returned.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/006</TD>
+    <TD>xsl:strip-space directives are not applied to documents loaded using the document()
+    function.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/007</TD>
+    <TD>disable-output-escaping does not work correctly when applied to text output before the
+    first start tag, unless xsl:output is used to set the output method explicitly.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/008</TD>
+    <TD>No error is reported if xsl:text or xsl:value-of is used at the top level of the
+    stylesheet.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/009</TD>
+    <TD>An IndexOutOfBoundException occurs if the nesting depth of any element within a document
+    (that is, the number of ancestors) exceeds 100.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/010</TD>
+    <TD>The -y option on the command line does not work.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/011</TD>
+    <TD>If the same source document (in memory) is processed several times, using different
+    stylesheets, and the different stylesheets use keys with the same names but different
+    definitions, then the key() function may return the wrong result. (This problem has been
+    fixed by moving the index maintenance out of the DocumentImpl object and into the KeyManager
+    object: an index for a document is still reused if the same source document is used
+    repeatedly with the same prepared stylesheet.)</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/012</TD>
+    <TD>When running from the command line, under some circumstances the xsl:output element
+    is ignored.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/013</TD>
+    <TD>The error recovery action is incorrect if an element node is output
+    while instantiating xsl:attribute, xsl:comment, or xsl:processing instruction. The
+    correct action is to ignore the element node and its content; Saxon currently ignores the
+    node but outputs its text content.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/014</TD>
+    <TD>No error is reported if a a character is output as part of a text node using
+    disable-output-escaping="yes", when that character cannot be represented in the target
+    character encoding. Instead, a fallback character is output.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/015</TD>
+    <TD>When namespaces are used in a result tree output using method="html", redundant
+    namespace declarations are not always eliminated from the final output file.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/016</TD>
+    <TD>A bug in the built-in XML parser (AElfred): when the DTD declares an element type
+    to be EMPTY, but an instance of that element has character content, no error is reported
+    (this is correct because the parser is non-validating) but the character data is not reported
+    to the application (which it should be).</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/017</TD>
+    <TD>When using the Microsoft Java VM, under some circumstances enumerating a node-set
+    incorrectly produced no nodes. The stylesheet that I used to demonstrate this problem
+    now works; however the fix is somewhat unsatisfactory since I don't know why the changes
+    I made cured it. This means it could reappear... </TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/018</TD>
+    <TD>The HTML indenter will indent the end tag of an inline element such as &lt;a&gt; if the
+    content of the element extends over more than one line. This creates whitespace which may
+    spoil the format of the output in the browser.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/019</TD>
+    <TD>In HTML output, URI escaping of non-ASCII characters is applied to the href attribute of
+    the &lt;a&gt; element (because it's a URI), but not to the name attribute (because it isn't).
+    The effect is to break the link between the href and the name. As noted in the HTML spec,
+    section B.2.1 (but not in the XSLT specification), the name attribute should be treated
+    for escaping purposes as if it were a URI. At the same time, I have changed the code so
+    a "%" sign in a URI attribute is not escaped: this means that if URI-escaping has already
+    been applied to the data, it will not be applied again.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/020</TD>
+    <TD>(NOT YET FIXED): A bug in the AElfred XML parser. The XML rules for including a parameter
+    entity reference in the internal DTD subset are relaxed when the PE reference occurs within
+    an external parameter entity; this relaxation is not implented by the parser, so a well-formed
+    document may be rejected with the message "PE reference within decl in internal subset".
+    </TD></TR>
+  <TR>
+    <TD vAlign=top>5.4.1/021</TD>
+    <TD>Comments in the DTD are notified to the application if the stylesheet specifies
+    xsl:strip-space. The XPath data model should remove DTD comments, rather than mapping them to
+    comment nodes in the tree. (See also bug 5.3.2/013: the fix for this didn't work when xsl:strip-space
+    was in use.)
+    </TD></TR>
+
+</TABLE>
+ 
+<H3>Java API Changes</H3>
+
+<p>The <b>StyleSheetInstance</b> class has been merged into the <b>Controller</b> class, to avoid duplication
+of functions. Some of the methods on StyleSheetInstance have been replaced, where they
+duplicated methods defined in TrAX. For example, getSourceContentHandler() is replaced by
+getInputContentHandler(). The renderSource() method is replaced by transform(), and renderDocument()
+by transformDocument() or transformNode(). The setOutputDetails() method in the Controller class
+should now be used only to set initial output details before a transformation starts; to set a new
+output destination during a transformation (e.g. from a Java node handler or an extension function)
+it is now necessary to use setNewOutputDetails() instead.</p>
+
+<p>Some legacy code which was present only to support Saxon's original role as a Java class
+library has been removed. Most of the <b>node handlers</b> in the com.icl.saxon.handlers package have
+gone; if you need them, implement them as part of your application. The applyTemplates() method
+in the Context class has gone: use the corresponding method in Controller instead. Node handlers
+are now called only once per node, using the start() method: <b>the end() method is no longer
+called</b>. The code supporting the function of built-in templates is now part of the various node
+implementation classes in com.icl.saxon.tree, and is no longer provided in separate node handler
+classes.</p>
+
+<p>The <b>setUserData() and getUserData()</b> methods in the Context and NodeInfo objects have been removed, the
+replacement is a similar pair of methods in the Controller class. These allow user data to be
+associated with a node in the source document, but the data is visible only locally within one
+stylesheet execution.</p>
+
+<p>A new method, <b>setIncludeHtmlMetaTag()</b>, is provided on the OutputDetails object. This allows the
+META element that is normally inserted into HTML output immediately after the &lt;HEAD&gt; tag to
+be suppressed (by calling the method with the argument set to false). This can only be controlled
+from the Java API, there is no corresponding switch in the stylesheet itself, nor in the command
+line interface.</p>
+
+<H3>Miscellaneous changes</H3>
+
+<p>I added extension functions <b>saxon:exists()</b>, <b>saxon:forAll(), and saxon:leading()</b>.
+See <a href="extensions.html">extensions.html</a> for details.</p>
+
+<p>I added the extension element <b>saxon:doctype</b> which allows a document type declaration
+to be included in the output file. See <a href="extensions.html">extensions.html</a> for details.</p>
+
+<p><b>Line numbers</b> are no longer stored by default for the source document. They are always held
+for the stylesheet. To get line numbers, use the -l or -T options on the command line (-T also
+gives tracing), or from the Java API use the method <b>setLineNumbering()</b> on the Controller class
+to affect all source documents, or on the Builder class to affect a single source document. </p>
+
+<p>I made several optimisations that reduce the size of the tree: removing base URI and line number
+from all element nodes, removing the array of children from an element that has only one child.
+Elements with no attributes or namespace declarations now have no space allocated to them.
+The typical element node is now 28 bytes smaller as a result.</p>
+
+<p>The extension element <b>&lt;saxon:set-attribute&gt;</b> is withdrawn. This means the
+source tree is now completely immutable, which avoids dangers with multi-threading. The change also
+allows elements with no attributes to be stored in smaller nodes, as described above. The
+functionality (which is especially useful with preview mode) is now available through the
+new <b>saxon:setUserData() and saxon:getUserData()</b> extension functions.</p>
+
+<p>The handling of the <b>xml-stylesheet</b> processing instruction is changed so that if no title
+is explicitly requested (which will always be the case with a command line invocation using the
+-a option), any title pseudo-attribute in the processing instruction is ignored. Previously if
+no title was requested, a processing instruction containing a title caused a no-match.</p>
+
+<p>In functions implemented using <b>saxon:function</b>, the current node is now set to the XPath
+context node at the point where the function is called. This means that if the function is
+called from within a predicate, for example,
+the current node will be the node being tested by the predicate. Previously the current node
+was the node that a call of current() within the predicate would have returned.</p>
+
+<p>The extension functions <b>saxon:system-id() and saxon:line-number()</b> now apply to the context
+node, rather than the current node as before. This will usually be the same, unless the functions are
+used in a predicate, a sort key, or the like.</p>
+
+<p>The expression used in the <b>saxon:expression()</b> extension function may now refer to local variables
+as well as global variables. The variables must be in scope at the point where the saxon:expression()
+function is called, and they are replaced in the stored expression with the values that those variables
+take at the time that saxon:expression() is called.</p>
+
+<p>The handling of <b>recoverable errors</b> has changed. XSLT defines certain conditions as errors, but
+allows the processor to recover from them. In some cases Saxon reports such errors as fatal, in other
+cases it recovers silently without reporting the error. At this release, however, the treatment of
+many of these errors is under user control. There are three options: recover silently as described
+in the XSLT recommendation, recover after writing a warning message to the System.err output, or
+fail. The option can be selected using the <b>setRecoveryPolicy()</b> method on the Controller class,
+or using the options -w0, -w1, and -w2 on the command line.
+Detailed handling of each error is described in <a href="conformance.html#errorrecovery">conformance.html</a>.
+The most notable changes are that under the default policy, (a) ambiguous template rule matches
+are now reported as warnings, and (b) failure to load a document using the document() function
+is now reported as a warning (it was previously a fatal error).
+</p>
+
+<p>A variable referring to a <b>result tree fragment</b> can now be used anywhere that a variable referring
+to a node-set can be used. The extension function <b>saxon:node-set()</b> is therefore no longer required,
+though it remains available for compatibility. Although this feature is a non-compliance with XSLT 1.0,
+it is provided in the interests of portability, since it reflects the behaviour of Microsoft MSXML3,
+and anticipates a feature implied by the published requirements specification for XSLT 1.1.
+<i>A consequence of this change is that a result tree fragment is now passed to an external Java
+method as a DOM Node or NodeList, never as a DOM DocumentFragment.</i></p>
+
+<p>Added support for <b>CP1251</b> Cyrillic character set on output. (But not tested as I can't read Cyrillic)</p>
+
+<p>The FOP integration has been updated to work with FOP 0.14.0. This version of FOP provides a SAX2
+interface replacing the previous SAX1 interface.</p>
+
+<p>I have dropped the RenderBible sample Java application. The things it does can be done far more
+easily in XSLT.</p>
+
+<p><b>&lt;saxon:output&gt;</b> now creates any directories required for the output file if they do not
+already exist. Thanks to Brett Knights for this one.</p>
+
+<H2>Changes in version 5.4.1 (2000-08-07)</H2>
+
+<H3>Defects in version 5.4</H3>
+
+<p>The following errors are cleared:</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>5.4/001</TD>
+    <TD>On the command line, if the -u option is used or if the stylesheet name begins
+    with "http:" or "file:", the processor attempts to use the source file
+    as the stylesheet.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4/002</TD>
+    <TD>A call to "document('foo.xml', /)" fails with the message
+    "No base URI available for resolving relative URI". The same error occurs
+    with any other second argument that refers to the root node of the principal
+    source document.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4/003</TD>
+    <TD>If a top-level element with a non-null namespace URI appears in the stylesheet,
+    and its namespace is designated as an extension element namespace, and Saxon does not
+    recognize the namespace URI as one that identifies an extension element implementation,
+    then Saxon will reject the element with an error.
+    It should ignore it, because a top-level element can never be
+    an extension element.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4/004</TD>
+    <TD>Instant Saxon attempts to read the ParserManager.properties file, and issues a
+    warning message when it is not there.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.4/005</TD>
+    <TD>Saxon complains it cannot find Compare_de if the default language environment
+    is German.</TD></TR>    
+  <TR>
+    <TD vAlign=top>5.4/006</TD>
+    <TD>The internal sequence numbers allocated to nodes in one document may clash with those
+    allocated to nodes in a different document. This means that the nodes may be wrongly
+    treated as duplicates when forming a node-set.</TD></TR>    
+  <TR>
+    <TD vAlign=top>5.4/007</TD>
+    <TD>When the parent axis is used on the right-hand side of a "/" operator,
+    the node-set returned will never include the root node. For example,
+    if the current node is the document element, the expression "./.." will return an empty
+    node-set. (The problem does not occur if this is simplified to "..")</TD></TR>    
+  <TR>
+    <TD vAlign=top>5.4/008</TD>
+    <TD>When one or more elements are designated in xsl:output as cdata-section-elements, then
+    any text node that is output as a direct child of the root node will be wrongly output as a child
+    of the immediately following element.</TD></TR>  
+  <TR>
+    <TD vAlign=top>5.4/009</TD>
+    <TD>On StyleSheetInstance, the method setParameter() requires the parameter name to be
+    interned, but this restriction was not documented and is not conformant with the TrAX API.
+    The fix removes this restriction. It remains true that a name supplied directly to ParameterSet.put()
+    must be interned, this is for efficiency as the class is also used for local parameters.</TD></TR>  
+  <TR>
+    <TD vAlign=top>5.4/010</TD>
+    <TD>A ClassCastException occurs when the argument to the sum() function is not a node-set.</TD></TR>  
+</TABLE>
+
+<p>At version 5.4 &lt;xsl:message&gt; was changed so it no longer generates a newline at the end of the
+message. At version 5.4.1 the newline is reinstated, provided you use the default message emitter.
+If you use your own message emitter, the message will be supplied to the emitter with no added
+newline character.</p>
+
+<p>Various numbering sequences have been added for Japanese (Hiragana, Katakana, and Kanji). Thanks
+to MURAKAMI Shinyu [murakami@nadita.com] for supplying the information for these. I have also taken
+the opportunity to improve other numbering sequences, especially Roman numerals, and Greek and
+Hebrew alphabetic sequences. I also added the format token "one" for the sequence "one, two,
+three, .... ten, eleven" (or "ONE" for the upper case equivalent). At the same time I have made some performance improvements
+to xsl:number. </p>
+
+<p>The handling of the ParserManager.properties file is now done silently. A fatal
+error is reported if the file exists but cannot be read or has the wrong format; if the file doesn't
+exist, the built-in parser is now used without any messages being output. However, if the -t option
+is used on the command line, all classes that are dynamically loaded (including parsers) are now
+listed on the standard error output.</p>
+
+<p>The sample extension element <b>&lt;sql:connect&gt;</b> has been changed to accept an
+an addition attribute <b>driver</b> which names the JDBC driver to be used. Previously the
+code only worked with ODBC drivers. Thanks to Rick Bonnett [rbonnett@acadia.net] for this
+enhancement.</p>
+
+
+<H2>Changes in version 5.4 (2000-07-24)</H2>
+
+<h3>XSLT syntax changes</h3>
+
+<p>It is now possible to write implementations of extension functions in XSLT, within the
+stylesheet, using the two new extension elements &lt;saxon:function&gt; and
+&lt;saxon:return&gt;. XSLT extension functions are similar to named templates, but they
+can be called from within an XPath expression, which makes them syntactically much more
+convenient to use, and they can return values of any XPath data type. For details see
+<a href="extensions.html">extensions.html</a>.</p>
+
+<p>If you use the &lt;saxon:assign&gt; instruction to modify the value of a variable,
+it is now necessary to mark the variable as assignable by using the extra attribute
+<b>saxon:assignable="yes"</b>. This allows optimizations to take place for variables
+that are not assignable, and it also flags that this extension is being used to readers
+of the stylesheet.</p>
+
+
+<h3>Java API changes</h3>
+
+<p>The internal tree structure used by Saxon now offers a DOM interface. This involves some
+<b>incompatible changes</b> that may affect user-written Java code. For example, getNextSibling()
+now returns a DOM Node rather than a Saxon NodeInfo, so if you want to assign the result to a
+NodeInfo object you will need to cast it.</p>
+
+<p>Saxon now offers initial support for the <a href="http://trax.openxml.org">TrAX</a>
+ (Transformation API for XML) interface, which
+provides a common API for different XSLT processors. Currently this is in addition to Saxon's
+native API, in due course it is expected to replace it. For details see
+<a href="conformance.html"/>conformance.html</a>.</p>
+
+<p>The ability of ExtendedInputSource to handle input from DOM Nodes, and its ability to register
+the SAX parser to be used, have been removed, because these facilities proved incompatible
+with the direction taken by the TRAX API.</p>
+
+<p>Details of changes: </p>
+
+<ul>
+
+<li>There have been changes to the package structure of the Java code. The interface to the
+tree structure (including classes such as NodeInfo, ElementInfo, and Name) is now in package
+com.icl.saxon.om. The implementation of the tree structure is in com.icl.saxon.tree. This
+means that user-written Java code will have to be recompiled, and you may need to add extra
+import statements.</li>
+
+<li>The old getAttribute() method has been renamed getAttributeValue(), and a new getAttribute()
+has been introduced that meets the DOM specification (where an absent
+attribute returns "" rather than null).</li>
+<li>The getName() method has been renamed getExpandedName(), leaving getName() free for use
+(on attribute nodes only) with the DOM meaning. On the AttributeCollection class, getFullName()
+has been renamed getExpandedName() for consistency.</li>
+<li>The ContentInfo and ContentImpl classes are renamed TextInfo and TextImpl.</li>
+<li>Many of the simpler methods have been changed so they no longer throw a SAXException.</li>
+<li>Methods defined in the DOM, such as getParentNode(), now return a DOM Node rather than a
+Saxon NodeInfo. NodeInfo is a subclass of Node, so if you call getParentNode() and assign the
+result to a NodeInfo variable, you will need to use a cast.</li>
+
+</ul>
+
+
+<H3>Miscellaneous API changes</H3>
+
+<ul>
+<li><p>It is now possible to specify a user-written URIResolver from the command line,
+using the -r option. This URIResolver is used not only for URIs in xsl:import and xsl:include
+elements and in the document() function, but if the -u option is specified it is used also for
+the source and stylesheet URIs on the command line. The URIResolver interface has changed, based
+on the way it is expected to be defined in TrAX. The URIResolver can also determine a SAX2 parser
+to be used for each input source, making it well-suited to interfacing non-XML sources via a
+SAX2 parser implementation.</p></li>
+
+
+<li><p>The mechanism for defining user-defined collating sequences has changed. It is now controlled
+by the data-type attribute of xsl:sort as well as the lang attribute.
+See <a href="extensibility.html">extensibility.html</a> for details.</p></li>
+
+<li><p>If the destination for the output file is allowed to default to System.out, the file is
+no longer closed after use. Closing of other output files can be suppressed by the method
+outputDetails.setCloseAfterUse(false). This allows multiple output documents to be appended
+to the same destination file.</p></li>
+
+<li><p>It is now possible to specify an Emitter to receive the output of &lt;xsl:message&gt;.
+This allows you, for example, to send the message to a pop-up alert box.
+Each xsl:message instruction generates one output document: in general this is an XML fragment,
+although it will usually be plain text. The default is to use the standard XML emitter, without
+indentation, and omitting the XML declaration, and to send the resulting XML to the System.err
+output destination. There is no longer a newline appended to the end of the message; if
+required, this must now be generated either by the Emitter or by the stylesheet
+ (add "&amp;#xa;" to the message text).
+To specify a different message emitter, use the -m option on the command line, or the
+setMessageEmitter() method on the StyleSheetInstance.</p></li>
+
+<li><p>It is now possible (using the getMediaType() method of the PreparedStyleSheet object)
+ to determine the media-type (MIME type, e.g. "text/html") that a stylesheet will output,
+  before actually applying the stylesheet to an input file. Indeed, the getOutputDetails()
+  method provides access to all aspects of the xsl:output elements in the stylesheet.
+  This capability is now used
+ in the command line interface to decide what file extension to use for output files when
+ processing a directory, and it is also used by SaxonServlet to set the content type in the
+ HTTP header before generating the output stream. Note that this facility doesn't work if the
+ stylesheet uses auto-detection to generate HTML: it is necessary to explicitly specify either
+ the method or media-type attibute of &lt;xsl:output&gt; (or both).</p></li>
+
+
+
+<li><p>As required by the TrAX interface, it is now possible to attach the result tree to
+any Document or Element node of an existing DOM.</p></li>
+
+<li><p>A generalized mechanism, the TraceListener, is provided for interfacing tracing and
+debugging tools. Acknowledgements to Edwin Glaser for this enhancement. There is a standard
+trace output that can be switched on by using -T on the command line, or saxon:trace="yes"
+on the xsl:stylesheet element (it is no longer possible to switch this on selectively on
+the xsl:template element). A custom TraceListener can be invoked using the -TL option
+on the command line, or the addTraceListener() method on StyleSheetInstance.</p></li>
+
+<li><p>On the command line, if either the source file or the stylesheet file starts with
+"file:" or "http:", it is now treated as a URL regardless of the -u option.</p></li>
+
+</ul>
+
+<H3>XSLT and XPath changes</H3>
+
+<ul>
+
+<li><p>The following attributes of the &lt;saxon:output&gt; instruction may now be written
+as attribute value templates: method, version, encoding, indent, media-type, doctype-system,
+doctype-public, standalone, omit-xml-declaration, cdata-section-elements, file, user-data,
+and next-in-chain. Note: this does NOT apply to &lt;xsl:output&gt;.</p></li>
+
+<li><p>A new extension function saxon:path() is provided. This returns (as a string) an XPath expression
+that identifies the context node.</p></li>
+
+<li><p>A new extension function saxon:expression() is provided. This takes as its argument a
+string containing an XPath expression. This function returns a <i>stored expression</i>,
+which may be used as an argument to a number of other extension functions, including saxon:sum(),
+saxon:distinct(), saxon:min(), and saxon:max(). This allows you, for example, to total the result of
+applying the stored
+expression to each node in a node-set in turn, or to eliminate duplicate nodes from a node-set
+based on the value of any expression, not only the string-value of the nodes as before.</p></li>
+
+<li><p>A new extension function saxon:if-null() is provided. This takes a single argument which
+must be an external Java object reference, and returns true if the object reference is null.
+Null Java object references can also now be converted to a String (""), a Number (NaN), or
+a boolean (false): previously this caused an error.</p></li>
+
+</ul>
+
+
+<H3>Defects in version 5.3.2</H3>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>5.3.2/001</TD>
+    <TD>If an element node is output while instantiating the content of xsl:message, the
+    closing ">" or "/>" or the element start tag is omitted. FIXED</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/002</TD>
+    <TD>If an element node is output while instantiating the content of xsl:attribute, no
+    error is reported, the tag is output incorrectly in escaped form. FIXED</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/003</TD>
+    <TD>If an element node is output while instantiating the content of xsl:comment
+    or xsl:processing-instruction, the element node and its content should be ignored. The
+    element node is ignored but its content is output. FIXED</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/004</TD>
+    <TD>If an attribute node is copied using xsl:copy or xsl:copy-of, and it is in a
+    non-default namespace, the result file may contain a reference to a namespace that
+    is not declared. FIXED</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/005</TD>
+    <TD>If an element node is output when the output method is text, the markup should
+    be suppressed but this is not done correctly. FIXED</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/006</TD>
+    <TD>withdrawn: not a bug</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/007</TD>
+    <TD>DTDGenerator calls the Utility class, which was omitted from the distribution. FIXED</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/008</TD>
+    <TD>The URIResolver mechanism doesn't work. FIXED. Note that the methods in URIResolver
+    are no longer static, so any user-written URIResolver subclasses must be changed.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/009</TD>
+    <TD>If the output method is not specified explicitly, special characters such as "&lt;" that
+    are output before the first element start tag are not escaped.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/010</TD>
+    <TD>A bug in the AElfred2 XML parser: when the DTD contains an ATTLIST declaration for
+     an element, but no ELEMENT declaration for that element, the immediate character
+     content of the element is not notified to the application. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/011</TD>
+    <TD>Using &lt;xsl:number/&gt; with no arguments, unnamed nodes such as text
+    nodes and comments are incorrectly numbered. Also, element nodes will be wrongly
+    numbered if they are numbered as part of a sequence of unlike sibling nodes: for
+    example the elements A, B, A will be numbered 1, 2, 3 when they should be numbered
+    1, 1, 2. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/012</TD>
+    <TD>The count() function, when applied to a node-set expressed as a filter expression,
+    may give the wrong answer: specifically, it gives the number of nodes before applying the predicates.
+    Present since 5.3. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/013</TD>
+    <TD>Comments occurring within the DTD are visible as comment nodes within the source tree;
+    they should be ignored. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/014</TD>
+    <TD>When an element is output to the result tree, and its name uses the default namespace
+    prefix and a null namespace URI, but where the result tree contains an ancestor element
+    in which the default namespace prefix is assigned to a non-null namespace URI, a
+    namespace undeclaration (xmlns="") should be output, but isn't. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/015</TD>
+    <TD>No error is reported if an incorrect attribute name is used on the xsl:stylesheet
+    (or xsl:transform) element, for example if "exclude-result-prefixes" is misspelt. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.2/016</TD>
+    <TD>A null pointer exception occurs if a local variable is declared within the template-body
+    of a global variable declaration. FIXED.</TD></TR>  
+  <TR>
+    <TD vAlign=top>5.3.2/017</TD>
+    <TD>If a zero-length piece of character data is supplied to Saxon via the SAX interface, Saxon will
+    create a zero-length text node, which is not allowed in the XPath data model, and can cause
+    a Java Exception. FIXED.</TD></TR>  
+  <TR>
+    <TD vAlign=top>5.3.2/018</TD>
+    <TD>In a location path using the namespace axis with a name test, for example namespace::x,
+    all the namespace nodes are returned in the result, whether or not their name matches "x".
+    FIXED.</TD></TR>  
+  <TR>
+    <TD vAlign=top>5.3.2/019</TD>
+    <TD>When Saxon input is taken from a DOM (using the setDocument() method of ExtendedInputSource),
+    comment nodes are processed twice, once as a comment node and once as a text node. 
+    FIXED.</TD></TR>
+  <TR>  
+    <TD vAlign=top>5.3.2/020</TD>
+    <TD>When Saxon is used with Xerces (or any other SAX2 parser that does not internalize strings
+    by default), attribute names used in a match pattern may go unrecognized. FIXED.</TD></TR>    
+  <TR>  
+    <TD vAlign=top>5.3.2/021</TD>
+    <TD>The content of xsl:choose elements is not checked sufficiently: if there are child nodes
+    other than xsl:when or xsl:otherwise elements, they are ignored rather than being reported
+    as errors. FIXED.</TD></TR>  
+  <TR>  
+    <TD vAlign=top>5.3.2/022</TD>
+    <TD>Conversion of a result-tree-fragment to a boolean is done incorrectly. The result
+    should always be true; Saxon returns false if the result of converting the result tree
+    fragment to a string is zero-length.
+    e.g. after &lt;xsl:variable name="x"&gt;&lt;xsl:text/&gt;&lt;/xsl:variable&gt;,
+    converting $x to a boolean should be true but currently returns false. FIXED.
+    Note, this error is also present in my book, see the table on page 81.</TD></TR>  
+  <TR>  
+    <TD vAlign=top>5.3.2/023</TD>
+    <TD>The function unparsed-entity-uri() should return an absolute URI. It
+    actually returns whatever is supplied by the XML parser. The SAX interface doesn't
+    specify whether the URI supplied by the parser is a relative or absolute URI, and
+    some parsers (including AElfred) supply a relative URI. FIXED: Saxon now converts the
+    URI supplied by the parser, where necessary, into an absolute URI.</TD></TR>
+  <TR>  
+    <TD vAlign=top>5.3.2/024</TD>
+    <TD>When invoked from the command line, Saxon doesn't set the exit code on all
+    failures. FIXED.</TD></TR>
+  <TR>  
+    <TD vAlign=top>5.3.2/025</TD>
+    <TD>When an attribute node is matched against the pattern "@prefix:*", a null
+    pointer exception occurs. FIXED.</TD></TR>
+  <TR>  
+    <TD vAlign=top>5.3.2/026</TD>
+    <TD>AElfred reports very poor diagnostics when the end of file is encountered
+    prematurely. FIXED.</TD></TR>
+  <TR>  
+    <TD vAlign=top>5.3.2/027</TD>
+    <TD>When the current() function is used within the select expression of xsl:sort,
+    it gives the wrong answer (the relevant node will be the context node, but not the
+    current node). This results in an incorrect sort sequence. FIXED.</TD></TR>
+  <TR>  
+    <TD vAlign=top>5.3.2/028</TD>
+    <TD>The concat() function allows zero or more arguments. According to the spec,
+    an error must be reported if there are less than two arguments. FIXED.</TD></TR>
+</TABLE>
+
+
+<H2>Changes in version 5.3.2 (2000-05-12)</H2>
+
+<p>This is an error-clearance release: it clears defects found in version 5.3.1</p>
+
+<p>Other changes: </p>
+
+<ul>
+<li><p>Changed the collating sequence for type=number so that NaN (not-a-number) always
+collates last. Previously the position was undefined, so NaN values could appear anywhere
+in the sequence. Note this does not affect the results of direct numeric comparisons using
+the "&lt;" and "&gt;" operators in XPath: in these cases, the result of a comparison with NaN
+is always false.</p></li>
+
+<li><p>External functions whose arguments or result are of types short, int, long, and float
+(or their object wrapper equivalents) may now be called in the same way as those whose
+arguments/results are of type double.</p></li>
+
+<li><p>Initial XHTML support: on xsl:output and saxon:output, you can now set
+ method="saxon:xhtml" (in fact you can use
+any non-null namespace, so long as the local name is "xhtml"). This follows the same rules as
+method="xml", except that it follows the guidelines for making the XML acceptable to legacy HTML
+browsers. Specifically (a) empty elements such as &lt;br/&gt; are output as &lt;br /&gt;, and
+(b) empty elements such as &lt;p/&gt; are output as &lt;p&gt;&lt;/p&gt;. The indent attribute
+defaults to "yes", and HTML indenting rules are used. (There are many
+other things that could be done to offer more complete XHTML support, e.g. using the HTML
+rules for escaping URLs, using CDATA sections for &lt;script&gt; elements, etc)</p></li>
+
+<li><p>Rebuilt using the final SAX2 distribution (but the LexicalHandler interface, which
+Saxon uses, is still at beta status).</p></li>
+
+</ul>
+
+<H3>Defects in version 5.3.1</H3>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>5.3.1/001</TD>
+    <TD>When stylesheet output is directed to a DocumentHandler or ContentHandler, the content
+    of all output documents other than the first is not notified.
+    This may happen when multiple output files
+    are generated using saxon:output, or when the same PreparedStyleSheet is executed more
+    than once. FIXED in 5.3.2 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.1/002</TD>
+    <TD>Text content may be lost when xsl:copy-of is used to copy from a result tree fragment
+    to an output destination defined with method="html" indent="yes". FIXED in 5.3.2 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.1/003</TD>
+    <TD>Under certain conditions passing a parameter in xsl:with-param that is
+    a node-set-expression containing a variable reference will fail when the parameter value
+    is referenced. FIXED in 5.3.2 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.1/004</TD>
+    <TD>When a template calls itself recursively within an xsl:for-each instruction, tail recursion is
+    invoked but doesn't work correctly. The effect is that the loop is obeyed only once and
+    with the wrong current node. FIXED in 5.3.2 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.1/005</TD>
+    <TD>A union expression whose operands are individual attribute nodes of the same element
+    is evaluated incorrectly. For example count(@a | @b) returns 1. The attributes are wrongly
+    regarded as duplicate nodes. FIXED in 5.3.2 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.1/006</TD>
+    <TD>When a namespace is excluded from the result tree using xsl:exclude-result-prefixes,
+    but is then used on a literal result element, the request to exclude it should be
+    ignored, to ensure that the result is well-formed XML following the Namespace rules.
+    Currently the request to exclude the namespace is ignored if the namespace is used on
+    the element containing the xsl:exclude-result-prefixes attribute, but not if it is used
+    on an inner element. FIXED in 5.3.2 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.1/007</TD>
+    <TD>When a number is converted to a string, XPath requires that "after the decimal point there must be as
+    many, but only as many, more digits as are needed to uniquely
+    distinguish the number from all other IEEE 754 numeric values". Saxon may display more
+    digits than this. FIXED in 5.3.2.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.1/008</TD>
+    <TD>the code in ContentImpl, which tries to avoid calling StringBuffer.substring() when using
+    a JDK earlier than 1.2, fails with a JDK earlier than 1.1. FIXED in 5.3.2.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.3.1/009</TD>
+    <TD>disable-output-escaping="yes" has no effect when writing to a result tree fragment.
+    FIXED in 5.3.2. (This property of the text is retained in the result tree fragment, and
+    used when the text is copied to the final result tree using <xsl:copy-of>. It is still ignored
+    if the RTF is subsequently converted to a string or to a node-set.)</TD></TR>
+</TABLE>
+
+
+
+<H2>Changes in version 5.3.1 (2000-04-20)</H2>
+
+<p>This is an error-clearance release: it clears defects found in version 5.3 (see below),
+also 5.2/021</p>
+
+<p>Other changes: </p>
+
+<ul>
+<li><p>Removed the warning issued when a SAX1 parser is used.</p></li>
+
+<li><p>The -t option on the command line now causes the class name of the XML parser to be output
+(but for a SAX1 parser this is always org.xml.sax.helpers.ParserAdapter)</p></li>
+
+<li><p>Java API: The endPrefixMapping() method in the Emitter interface is removed. It is now the
+responsibility of the Emitter to track namespace declarations. This change is made as a result
+of the fix to defect 5.3/008.</p></li>
+
+<li><p>Added saxon:disable-output-escaping attribute to xsl:attribute. This allows output of
+query strings such as &lt;a href="servlet?x=2&amp;y=3"&gt;, and also prevents substitution of
+special characters by %xx in HTML URL attributes.</p></li>
+
+<li><p>Rebuilt using the latest SAX2 prerelease from David Megginson. The helper classes
+in this distribution were incomplete so I rebuilt them from the source distributed with the
+previous beta, making the necessary changes - renaming getRawName() to getQName() in the
+Attributes interface.</p></li>
+
+
+</ul>
+
+<H3>Defects in version 5.3</H3>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>5.3/001</TD>
+    <TD>When elements containing attributes are written to a result tree fragment,
+    and the tree is then copied using xsl:copy-of, the attribute set used for the last
+    element is applied to each of the elements. FIXED in 5.3.1 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3/002</TD>
+    <TD>saxon:preview works only in conjunction with saxon:output to produce one output
+    file per preview element; it is not possible to append the output from each preview
+    element to the master output file. (This restriction was actually documented, but
+    it was sufficiently nasty to be considered a bug). FIXED in 5.3.1 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3/003</TD>
+    <TD>The attribute <b>[xsl:]exclude-result-prefixes="#default"</b> has
+    no effect. FIXED in 5.3.1 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3/004</TD>
+    <TD>The priorities of the components in a union pattern may be calculated incorrectly,
+    for example in the pattern "text() | *" both components are given priority +0.5 instead
+    of -0.5. FIXED in 5.3.1 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3/005</TD>
+    <TD>If xml:namespace-alias is used in an included or imported stylesheet module,
+    it is ignored. FIXED in 5.3.1 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3/006</TD>
+    <TD>Saxon does not report an error when xsl:attribute is used incorrectly to create an attribute
+    named "xmlns" or "xmlns:xxx". FIXED in 5.3.1 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3/007</TD>
+    <TD>The HTML output method occasionally applies URL escaping to an attribute that is not
+    a URL, for example (with the Microsoft JVM) it does so with &lt;h2 style="clear: all"&gt;.
+    (The algorithm used was probabilistic).
+    FIXED in 5.3.1 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3/008</TD>
+    <TD>When xsl:copy-of is used to copy a result tree fragment to the final tree, no attempt
+    is made to remove redundant namespace declarations. FIXED in 5.3.1. </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3/009</TD>
+    <TD>The parent of a namespace node is the element on which the namespace was
+    declared, not the element on whose namespace axis the namespace node lies.
+    FIXED in 5.3.1 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3/010</TD>
+    <TD>When an element containing the namespace undeclaration xmlns="" is copied,
+    the undeclaration will not be reproduced in the result tree. This applies whether
+    the copying is done using xsl:copy, xsl:copy-of, or by copying a literal result element.
+    FIXED in 5.3.1 </TD></TR>
+  <TR>
+    <TD vAlign=top>5.3/011</TD>
+    <TD>In the absence of an explicit &lt;xsl:output method="html"&gt;, the output is
+    not recognised as HTML if there are any namespace declarations in scope
+    on the outermost element or if the first element node is preceded by a comment or
+    processing instruction node. FIXED in 5.3.1 </TD></TR>
+</TABLE>
+
+<H2>Changes in version 5.3 (2000-04-14)</H2>
+
+<p>The SaxonServlet sample servlet code has been changed so that the source=x and style=y parameters
+in the URL request are now interpreted relative to the servlet context. This means that specifying
+say "style=/styles/styleone.xsl" in the URL will locate the stylesheet in this file relative to the
+root directory for the web server.</p>
+
+<p>The command-line interface (com.icl.saxon.StyleSheet) can now process an entire directory.
+Simply specify a directory name as the source file, and another directory as the output destination,
+for example: <b>java com.icl.saxon.StyleSheet -o outdir sourcedir style.xsl</b> . All the
+files are processed using the same stylesheet, unless the -a option is used, in which case
+each one is processed using the stylesheet identified in its own xml-stylesheet processing
+instruction.</p>
+
+<p>xsl:call-template is extended so the name attribute can be an attribute value template, allowing
+the name of the called template to be decided at run-time. To activate this extension, the
+ xsl:call-template element must have the extra attribute saxon:allow-avt="yes".</p>
+
+<p>Unary minus in XPath expressions now changes the sign of the number rather than subtracting it
+from zero. This means that "-0" is now negative zero rather than positive zero. The specification
+does not actually define this, it says only that "-" is a subtraction operator, but
+James Clark has stated that this is what the spec should have said: it is intuitive, and consistent with
+Java and Javascript. The change is very unlikely to affect real applications.</p>
+
+<p>The namespace for extension functions can now consist simply of the fully-qualified Java class
+name; there is no need for a leading "/". E.g. xmlns:math="java.lang.Math"</p>
+
+<p>The <b>type</b> pseudo-attribute of the <b>&lt;?xml-stylesheet?&gt;</b> processing instruction may now take the value
+"text/xsl", for compatibility with Microsoft. The official values "text/xml" and "application/xml"
+are also supported (these do not currently work with Microsoft MSXML).</p>
+
+<p>Added URIResolver class. You can create a subclass of URIResolver, and register it using
+PreparedStyleSheet.setURIResolver(), to handle URI formats other than standard URLs, including
+private conventions to get data from sources such as databases. The URIResolver is called to
+handle URIs appearing xsl:include, in xsl:import, and in the document() function. For a given
+URI, it returns an InputSource. If it returns an ExtendedInputSource, it can also dictate which
+XML parser should be used for this specific URI.</p>
+
+<p>Changed ParserManager so that if ParserManager.properties cannot be found, it displays a
+message on System.err, and then continues using the built-in &AElig;lfred parser.</p>
+
+<p>The architecture is now based on SAX2 rather than SAX1. Where possible, SAX1 interfaces have
+been retained, for example it is still possible to specify a SAX1 parser for input and a
+DocumentHandler for output. However, some lesser-used interfaces have been deprecated and some
+removed altogether. The Builder now acts as a SAX2 ContentHandler, no longer as a SAX1 DocumentHandler.
+Recompiling any Java application will reveal any calls that are affected.
+Where a SAX1 parser is supplied, it is now used via the SAX2 ParserAdapter class.</p>
+
+<p>The version of &AElig;lfred supplied with the product is now based on David Brownell's version,
+which includes a number of bug fixes and performance improvements relative to the original Microstar
+parser.</p>
+
+<p>There have been many internal changes to achieve improved performance. These should have no impact on
+existing stylesheets, and in most cases they should have no impact on Java applications. There are
+some changes to the classes NodeSetValue and FragmentValue, which may be used by extension functions,
+but the principal methods are unchanged. For performance, it is best to retrieve the nodes in a
+node-set as an array or as a NodeEnumeration rather than as a Vector. NodeSetValue is now an
+abstract class: any code that constructs a node-set should now use NodeSetExtent instead.</p>
+
+<p>Here is a summmary of the main internal performance changes:</p>
+
+<ul>
+
+<li>Node-sets, and many other internal data structures, are held as arrays rather than Vectors.</li>
+
+<li>Evaluation of node-sets is more likely to be done as a pipeline, for example the node-set is no longer
+fully expanded when it is assigned to a variable. This makes it more likely that an expression such
+as "preceding-sibling::*[1]" will avoid retrieving unwanted nodes.</li>
+
+<li>Stripping of whitespace nodes is now generally done before nodes are added to the tree,
+by means of a SAX filter. Nodes are removed from the tree only in the case where the
+stylesheet is embedded in the source document.</li>
+
+<li>A result tree fragment is no longer held as a tree, but as a sequence of output instructions.
+The tree is built (using these output instructions) only when xsl:copy-of or saxon:nodeset()
+ is called. The string value of the result tree fragment is constructed eagerly,
+ as text nodes are added: this is on the assumption that most result-tree-fragments are used
+ simply as strings.</li>
+
+<li>Tail recursion has been implemented where a named template calls itself as the last thing it does. This
+doesn't improve speed, but it does reduce memory usage for a heavily-recursive stylesheet.</li>
+
+<li>The management of internal data structures such as the document tree, the variable stack,
+ and the name pool, has been improved to minimize the number of objects allocated.
+</li>
+
+<li>Successive calls of format-number() using the same second and third arguments now reuse the
+underlying Java objects rather than creating them afresh each time. This makes a dramatic difference
+with the Microsoft Java VM, less so with the Sun Java VM which appears already to perform a similar
+ optimisation.</li>
+
+<li>A simple call of &lt;xsl:number/&gt; now retains memory of the previous numbered node, so
+numbering a sequence of sibling nodes now has linear execution time. Note this does not apply
+if the xsl:number element has any attributes (other than the default level="single").</li>
+
+<li>A path expression of the form "//ITEM", if it contains no predicates, is now treated as
+ "/descendant::ITEM" rather than "/descendant-or-self::node()/child::ITEM". The two are
+ equivalent, but the former is faster, as it retrieves the nodes in document order
+ and therefore requires no sort.</li>
+
+<li>Axes that are in reverse document order are now recognized as a special case when sorting
+into document order. Previously a full sort took place. Various unnecessary sorts have also
+been eliminated, for example on the expressions attribute::* and following::*</li>
+
+<li>Nodes in the tree now carry a sequence number, to speed up the process of sorting into
+document order.</li>
+
+<li>Mode names are resolved at stylesheet preparation time rather than at execution time.</li>
+
+</ul>
+
+<p>The overall performance improvement is in most cases around a factor of two.</p>
+
+
+<H3>Defects in version 5.2</H3>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>5.2/001</TD>
+    <TD>In HTML output with indenting, the TEXTAREA element should be treated as a fixed-format
+    element. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/002</TD>
+    <TD>The AElfred XML parser which is included as the default parser in Saxon validates
+     parameter entity definitions within comments or ignored sections of the external DTD.
+     FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/003</TD>
+    <TD>Preview mode does not work. It causes a null pointer exception if invoked. As a result,
+    the sample play.xsl stylesheet does not work. If you want to run this sample, delete the
+    saxon:preview element at line 11, and add &lt;xsl:apply-templates select="." mode="preview"&gt; at
+    line 102. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/004</TD>
+    <TD>The AElfred XML parser which is included as the default parser in Saxon traps exceptions
+    occurring in the parser call-back code. This results in a lack of diagnostics. FIXED (by changes
+    to the embedded AElfred code: the problem still occurs if the standard AElfred parser is used).</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/005</TD>
+    <TD>If the method attribute of xsl:output is defaulted, and text is output using
+    disable-output-escaping="yes" before the first start tag has been written, or immediately
+    following the first start tag, then the request to disable output escaping is ignored. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/006</TD>
+    <TD>Comparing @A=false() when attribute A doesn't exist may return false; it
+    should return true. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/007</TD>
+    <TD>AElfred is not handling Unicode surrogate pairs correctly.
+    FIXED (but only in the version of AElfred issued with Saxon).</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/008</TD>
+    <TD>Calling xsl:message (or xsl:comment etc) resets the media type to text/plain. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/009</TD>
+    <TD>Stray text characters at the top level of an included or imported stylesheet cause a
+    ClassCastException to be reported. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/010</TD>
+    <TD>The omit-xml-declaration attribute of xsl:output and saxon:output has no effect.
+    FIXED. </TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/011</TD>
+    <TD>Saxon fails with a null pointer exception if you try to locate the root node of the
+    document when the current node is not a descendant-or-self of the document element, or if there
+    is no document element. The "document element" here is defined as the last element child of the
+    root. FIXED. </TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/012</TD>
+    <TD>The key() and id() functions do not work correctly if the source document is not well-formed, for
+    example if the root has more than one element child. FIXED. </TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/013</TD>
+    <TD>In a Location Path Pattern such as A[@a=1]/B, where there is a boolean predicate on a
+    component other than the last, the predicate is evaluated with the wrong node as context
+    node, and may therefore give the wrong result. FIXED. </TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/014</TD>
+    <TD>A Null Pointer Exception occurs if the document() function is called while the context
+    node is a transient node. A transient node is one that is created as part of a node-set using
+    the extension functions node-set(), range(), or tokenize(). FIXED. </TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/015</TD>
+    <TD>String Index Out Of Bounds exception occurs if there is an unmatched "{" and also an
+    unmatched quote within an attribute value template. FIXED</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/016</TD>
+    <TD>The base URI of the nodes in a result tree fragment should be the base URI of the
+    variable-binding element (this affects what happens if you use the document() function
+    with a relative URI, and the context node is a node in a result tree fragment, accessed
+    using the node-set() extesion function). FIXED</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/017</TD>
+    <TD>If you supply an Emitter to xsl:output it complains that it is not a DocumentHandler.
+    (Emitter is no longer a subclass of DocumentHandler). FIXED</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/018</TD>
+    <TD>The sample Java applications assume the use of "\" as a separator in filenames. FIXED</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/019</TD>
+    <TD>self::text() returns an empty set when the current node is a text node (this also applies
+    to any other unnamed node). As a result, the test &lt;xsl:if test="self::text()"&gt; returns
+    false when the current node is a text node. FIXED</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/020</TD>
+    <TD>xsl:namespace-alias only works if it appears earlier in the stylesheet than
+    the literal result element that needs to be aliased. FIXED</TD></TR>
+  <TR>
+    <TD vAlign=top>5.2/021</TD>
+    <TD>Every element should have a namespace node for the "xml" namespace. It doesn't.
+    FIXED in 5.3.1</TD></TR>
+</TABLE>
+
+
+<H2>Changes in version 5.2 (2000-02-12)</H2>
+
+<h3>Extension functions</h3>
+
+<p>The mechanism for calling extension functions has changed, to improve compatibility with xt and Xalan.
+Static methods are unaffected. Methods with no state that are NOT declared static should either be declared
+static, or the class must now be explicitly instantiated using the function new(). Instance-level
+(non-static) methods are now called by supplying the instance as an extra first argument. See
+<a href="extensibility.html">extensibility.html</a> for more details. As a result of these changes,
+ the following stylesheet provided as an example in the xt documentation now works unchanged with
+ SAXON:</p>
+
+<code><pre>
+
+&lt;xsl:stylesheet
+  version="1.0"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:date="http://www.jclark.com/xt/java/java.util.Date">
+
+&lt;xsl:template match="/">
+  &lt;html>
+    &lt;xsl:if test="function-available('date:to-string') and function-available('date:new')">
+      &lt;p>&lt;xsl:value-of select="date:to-string(date:new())"/>&lt;/p>
+    &lt;/xsl:if>
+  &lt;/html>
+&lt;/xsl:template>
+
+&lt;/xsl:stylesheet>
+
+</pre></code>
+
+<p>SAXON-supplied extension functions can now be called using the standard SAXON namespace URI,
+"http://icl.com/saxon", instead of using "/com.icl.saxon.functions.Extensions". This means the same
+namespace can be used for SAXON extension elements and extension functions. The old URI will
+continue to work.</p>
+
+<p>Several new extension functions are available,
+ described in detail in <a href="extensions.html">extensions.html</a>:</p>
+
+<ul>
+
+<li><b>saxon:distinct()</b> takes a node-set and eliminates nodes with duplicate string-values.</li>
+
+<li><b>saxon:evaluate()</b> evaluates an XPath expression constructed at run-time, as a string.</li>
+
+<li><b>saxon:range()</b> creates a node-set containing a list of numbers, allowing
+ xsl:for-each to be used as a traditional for-loop.</li>
+
+<li><b>saxon:tokenize()</b> tokenizes a string value and creates a
+ node-set containing one node for each token value in the string. </li>
+
+</ul> 
+
+<h3>Output formatting</h3>
+
+<p>The XML output method now uses abbreviated syntax for empty element tags
+ (e.g. &lt;EMPTY A="a"/&gt;)</p>
+
+<p>The XML and HTML output methods avoid outputting unnecessary character references,
+ e.g. for quotes occurring in character data.</p>
+
+<p>The HTML output method now uses entity references for characters in the range 160-255, even
+when the character is available in the selected encoding. Characters above this range are output
+as native UTF-8 characters if the encoding is UTF-8, or as character references otherwise. This
+approach is a compromise and I recognise that it will not please everyone. The idea behind it 
+is to try and avoid using UTF-8 characters for English and Western European languages, where many users will
+have keyboards and editors that cannot handle them, but to use them for non-European languages, as
+users working in those languages are more likely to be able to cope with UTF-8.</p>
+
+<p>The indentation algorithms have changed, for both XML and HTML: the result is more careful
+about where it adds whitespace, though it is not necessarily more attractive. On saxon:output
+ you can also now specify the amount of indentation, e.g. indent="2" indents by two spaces.
+ The default is three.</p>
+
+<p>The HTML output method now escapes non-ASCII characters in URI attributes using
+the %HH escape convention.</p>
+
+<h3>XSLT conformance</h3>
+
+<p>For conformance reasons, the method attribute of xsl:output may no longer take the values "fop"
+or a Java class name. Instead, these values must be qualified by a namespace prefix. It does not
+matter what the namespace URI is, so long as it exists. For example, change method="fop" to
+method="saxon:fop", and method="com.me.MyEmitter" to method="saxon:com.me.myEmitter".</p>
+
+<p>For conformance reasons, the ability to specify the attributes version, extension-element-prefixes,
+and exclude-result-prefixes on the xsl:template element is withdrawn. These attributes are only
+allowed on literal result elements and extension elements.</p>
+
+<p>Embedded stylesheets are now supported via the new EmbeddedStylesheet class.</p>
+
+<p>The &lt;?xml-stylesheet?&gt; processing instruction is now supported, via a new method
+getAssociatedStylesheet() on the DocumentInfo class.</p>
+
+
+<h3>Command line (com.icl.saxon.Stylesheet)</h3>
+
+<p>Options may now be specified in any order.</p>
+
+<p>The new -a option will process a specified source document using the stylesheet
+identified in its &lt?xml-stylesheet?&gt; processing instruction.
+No stylesheet should be specified on the command line.  The <b>href</b> pseudo-attribute
+of the xml-stylesheet processing instruction must either be the URL of a freestanding stylesheet
+in an external document, or a fragment identifier matching the id attribute of an embedded stylesheet
+within the same document. The <b>type</b> pseudo-attribute should be "text/xml"</p>
+
+<p>The -t option on the command line now outputs product and version identification as well as timing
+information. </p>
+
+<p>The command line may include the options "-x parser" to specify the parser for source files, and
+"-y parser" to specify the parser for stylesheet modules. In both cases the parser is the fully
+qualified class name of a class that implements the SAX org.xml.sax.Parser interface.</p>
+
+<h3>Java API</h3>
+
+<p>The ExtendedInputSource class is extended to allow a DOM Document to be identified as the
+input source (for either the source document or the stylesheet).</p>
+
+<p>ExtendedInputSource now has a setParser() interface defining which SAX Parser
+is to be used to process this input source. This is now the preferred way of specifying a
+non-default parser; previous methods are deprecated.</p>
+
+<p>Saxon and Instant Saxon now include a bundled version of the AElfred XML parser, modified to
+notify comments to the application in the same way that James Clark's xp does, i.e. as Processing
+Instructions with a null target. The ParserManager.properties file has been changed so this is now
+the default parser.</p>
+
+
+<H3>Defects in version 5.1</H3>
+
+<p>Bug 5.0/015 (see below) is fixed in version 5.2. This has required some changes in internal
+data structures: included and imported stylesheets are no longer grafted into the tree for the
+principal stylesheet, but are now linked to it using a separate data structure.</p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>5.1/001</TD>
+    <TD>In saxon:output, when the next-in-chain attribute is used, a null pointer exception
+    occurs in com.icl.saxon.style.SAXONOutput. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.1/002</TD>
+    <TD>If the stylesheet makes a call on an extension function that cannot be loaded, an
+    error is reported even if the function is not called. This means that testing the
+    availability of the function using function-available() is no use. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.1/003</TD>
+    <TD>In a template rule whose pattern contains the single predicate "[1]" (for example,
+    match="para[1]"), the predicate is ignored when matching the pattern: it will match every
+    element including the first. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.1/004</TD>
+    <TD>A path expression that incorrectly ends with a "/" (for example "A/B/") causes a
+    null pointer exception. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.1/005</TD>
+    <TD>xsl:namespace-alias only works if the namespace prefix used in the literal result element
+    is the same as the stylesheet-prefix used in the xsl:namespace-alias element. It should work
+    if both prefixes refer to the same namespace URI. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.1/006</TD>
+    <TD>The order of top-level elements is not adjusted when an included stylesheet imports
+    another stylesheet. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.1/007</TD>
+    <TD>An element that includes the attribute xmlns="" will have a namespace node corresponding
+    to this (with prefix and URI both null). This attribute cancels the default namespace
+    declaration, it should not be regarded as a namespace declaration in its own right. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.1/008</TD>
+    <TD>SAXON does not validate that all the attributes on an element in the source document
+    have distinct names after taking namespace declarations into account. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.1/009</TD>
+    <TD>A null pointer exception occurs if a text node is written to a result tree fragment
+    having the root node as its parent and an element node as its preceding sibling. FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.1/010</TD>
+    <TD>When using the default decimal format, the format-number() function outputs NaN as
+    Unicode #xFFFD, not as "NaN". FIXED.</TD></TR>
+  <TR>
+    <TD vAlign=top>5.1/011</TD>
+    <TD>SAXON detects when a stylesheet directly includes or imports itself, but when the
+    recursion is indirect (e.g. a.xsl includes b.xsl which includes a.xsl), the failure is
+    detected only by running out of memory. FIXED.</TD></TR>
+   <TR>
+    <TD vAlign=top>5.1/012</TD>
+    <TD>Newline characters in output attribute values are not written as character references.
+    See note at end of XSLT section 7.1.3. FIXED.</TD></TR>   
+   <TR>
+    <TD vAlign=top>5.1/013</TD>
+    <TD>The key() function fails with a null pointer exception when the current node is in a
+    document loaded using the document() function. FIXED.</TD></TR>   
+   <TR>
+    <TD vAlign=top>5.1/014</TD>
+    <TD>saxon:output may fail with a null pointer exception if it has no method attribute
+    and if it is called within an element such as xsl:variable that redirects the current output
+    destination. FIXED.</TD></TR>  
+   <TR>
+    <TD vAlign=top>5.1/015</TD>
+    <TD>The node-set "//*" is not sorted correctly into document order. FIXED.</TD></TR>
+   <TR> 
+    <TD vAlign=top>5.1/016</TD>
+    <TD>With the Microsoft Java VM, the string() function, whether used explicitly or implicitly, converts numbers whose
+    magnitude is above 10,000,000 or below 0.001 to a string in scientific
+    floating point notation. 
+    (The original fix for 5.0/035 did not work with the Microsoft JVM). FIXED.</TD></TR>
+   <TR> 
+    <TD vAlign=top>5.1/017</TD>
+    <TD>When running in a locale that does not use English-language number formatting
+    conventions, the string() function, whether used explicitly or implicitly, displays the
+    number zero as "0,0.". FIXED.</TD></TR>
+   <TR> 
+    <TD vAlign=top>5.1/018</TD>
+    <TD>Outputting an attribute using xsl:attribute fails if the value contains a non-ASCII character.
+    Also, xsl:comment, xsl:message, and xsl:processing-instruction may fail in the same way. FIXED.</TD></TR>
+   <TR> 
+    <TD vAlign=top>5.1/019</TD>
+    <TD>The base URI for a processing instruction is incorrectly assumed to be the same as the
+    base URI of its parent node. FIXED.</TD></TR>
+   <TR> 
+    <TD vAlign=top>5.1/020</TD>
+    <TD>With xsl:output method="html" and the default of indent="yes", Saxon may generate white space
+    in the HTML that affects the appearance in the browser; for example when the output is
+    &lt;A HREF=""&gt;&lt;IMG SRC=""&gt;&lt;/A&gt;. FIXED.</TD></TR>
+   <TR> 
+    <TD vAlign=top>5.1/021</TD>
+    <TD>A null pointer exception occurs in com.icl.saxon.ParentEnumeration when the context node
+    is the root node and the parent axis is followed (e.g. the expression "/.."). FIXED.</TD></TR>
+   <TR> 
+    <TD vAlign=top>5.1/022</TD>
+    <TD>The example extension element SQLConnect is not thread-safe, it modifies the stylesheet
+    tree. FIXED.</TD></TR>
+   <TR> 
+    <TD vAlign=top>5.1/023</TD>
+    <TD>Files referenced using xsl:include and xsl:import are parsed using the default parser
+    specified in ParserManager.properties, not the parser specified using setParser() for the
+    principal stylesheet module. The same is true for document() which should use the source
+    document parser. FIXED. </TD></TR>
+   <TR> 
+    <TD vAlign=top>5.1/024</TD>
+    <TD>If the method attribute on xsl:output is omitted, the cdata-section-elements attribute
+    is ignored. FIXED. </TD></TR>
+   <TR> 
+    <TD vAlign=top>5.1/025</TD>
+    <TD>Within an element that is output as CDATA, the character sequence "]]&gt;" is handled
+    incorrectly if it appears as the last three characters of a text node. FIXED. </TD></TR>
+   <TR> 
+    <TD vAlign=top>5.1/026</TD>
+    <TD>The HTML output method does not escape non-ASCII characters in URI attribute values as
+    recommended in the HTML 4.0 recommendation.
+    FIXED. </TD></TR>
+
+</TABLE>
+
+<H2>Changes in version 5.1 (1999-12-17)</H2>
+
+<h3>XSL changes</h3>
+
+<p>There are no XSL changes in this version other than the bug fixes listed below.</p>
+
+<h3>API changes</h3>
+
+<ul>
+
+<li><p>The two classes Controller and Stylesheet have once again been subject to
+a major reorganisation. This is in the interests of making stylesheets, once prepared, reusable
+and thread-safe. The StyleSheet class is now used only for the command-line interface; underneath
+it are two new classes: PreparedStyleSheet, which represents a validated and precompiled stylesheet
+that is ready to run as many times as required, and StyleSheetInstance, which represents a single
+activation of a PreparedStyleSheet to process a single source document.</p>
+
+<p>In support of this the Controller class has also been split up, separating those components
+that depend only on the stylesheet (the RuleManager, the KeyManager, the DecimalFormatManager),
+and those that depend on the source document (the Builder and the residual Controller).</p>
+
+<p>The Controller changes make life a bit more difficult for the Java-only user, as the application
+now has to manage the RuleManager and the Builder as separate objects from the Controller.</p></li>
+
+<li><p>A new class SaxonServlet has been introduced. This is not in any package, as it is intended
+to be copied into the servlet directory of your web server. This class, once installed, allows
+Saxon stylesheet processing to be invoked using a URL of the form:</p>
+
+<p>http://server.com/servlets/SaxonServlet?source=doc.xml&style=sheet.xsl</p>
+
+<p>The source and style parameters identify the source document and stylesheet by URL.
+Security is your responsibility: there are no restrictions on the use of file URLs, for example.
+The stylesheet is prepared the first time it is used, and held in memory in a cache. The cache may
+be cleared (for example, if a stylesheet has been changed) using a URL such as:</p>
+
+<p>http://server.com/servlets/SaxonServlet?clear-stylesheet-cache=yes</p>
+
+</li>
+
+</ul>
+
+
+<h3>Saxon extensions</h3>
+
+<ul>
+
+<li><p>The integration with James Tauber's FOP processor now works with FOP 0_12_0 or later.
+This is controlled by setting method="fop" in the xsl:output or saxon:output element.</p></li>
+
+<li><p>The file attribute in <b>saxon:output</b> is no longer mandatory, since with a user-specified
+Emitter there may be no need to write to a file. There is a new attribute on saxon:output, user-data.
+It is an attribute value template. The value is available to a user-specified Emitter via the
+getUserData() method of the OutputDetails object.</p></li>
+
+<li><p>The internal implementation of result tree fragments has changed, to remove the artificial
+outermost element (named RESULT-TREE-FRAGMENT) that was previously added below the root node. This change is only visible to
+extension functions that use result tree fragments, or to users of the extension function
+sxf:nodeset(). This function now returns a root node which immediately contains the text nodes,
+element nodes, etc that were written to the result tree fragment.</p></li>
+
+<li><p>When a DocumentHandler is supplied in the method attribute to xsl:output or saxon:output,
+the events passed to the DocumentHandler will now correspond to a well-formed XML document, provided
+that there is at least one element node in the result tree.
+(Remember that in general, the result tree can be any external general parsed entity.) This is done by
+suppressing any text nodes before the first start tag, and suppressing all elements and
+text nodes after the end tag of the first top-level element. However, if there are no elements at
+the top level, the events passed to the DocumentHandler will not include a top-level element.
+If you want to process the full result tree and are prepared for it not to be a well-formed document,
+write an Emitter rather than a DocumentHandler.</p></li>
+
+</ul>
+
+<h3>Internal changes</h3>
+
+<ul>
+
+<li><p>Implemented name pools, and other minor changes, to reduce the memory occupancy of the
+tree.</p></li>
+
+</ul>
+
+<H3>Defects in version 5.0</H3>
+
+<p><i>About a dozen of the defects listed below were found by using the LotusXSL test suite, available
+from www.alphaworks.ibm.com, and comparing SAXON's results with the published LotusXSL results.
+I am grateful to IBM for making this test suite available.</i></p>
+
+<TABLE>
+  <TR>
+    <TD vAlign=top>5.0/001</TD>
+    <TD>In xsl:output and saxon:output, with method="html", when doctype-public is specified
+    and doctype-system is omitted, no DOCTYPE declaration is output. This is the correct behaviour
+    for method="xml" but not for method="html". FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/002</TD>
+    <TD>In xsl:sort, attributes such as order and data-type are not interpreted as attribute
+    value templates. FIXED</TD></TR>
+
+    <TD vAlign=top>5.0/003</TD>
+    <TD>With html output, an attribute of the form x="x" (where the value of the
+    attribute is the same as its name) is abbreviated where it should not be, e.g. &lt;input
+    name="name"&gt; is output as &lt;input name&gt;. FIXED.</TD></TR>    
+
+    <TD vAlign=top>5.0/004</TD>
+    <TD>With the IBM Linux Java VM, encoding="UTF-8" is not recognized, and fails with an
+    IllegalArgumentException. FIXED (but untested).</TD></TR> 
+
+    <TD vAlign=top>5.0/005</TD>
+    <TD>When the TEXT output method encounters a node other than a text node in the result tree,
+    it should ignore it. Instead it reports an error. FIXED</TD></TR> 
+
+    <TD vAlign=top>5.0/006</TD>
+    <TD>When writing a CDATA section to an XML output file, characters that aren't supported
+    in the current encoding should cause the CDATA section to be interrupted by a character
+    reference. This doesn't happen. FIXED</TD></TR>
+
+    <TD vAlign=top>5.0/007</TD>
+    <TD>In TEXT output, characters that aren't supported in the selected encoding should cause
+    an error to be signalled. Instead, they are represented in the output using an XML character
+    reference. FIXED</TD></TR>
+
+    <TD vAlign=top>5.0/008</TD>
+    <TD>If xsl:number uses format="A.1" and there is only one number to be output, it is output as
+    "A." rather than "A". Also, the final punctuation token isn't output if there are fewer
+    numbers than tokens. FIXED</TD></TR>
+
+    <TD vAlign=top>5.0/009</TD>
+    <TD>If a top-level xsl:param or xsl:variable appears in the stylesheet before the first
+    xsl:output element, the stylesheet will produce no output. (There are also related problems
+    associated with multiple xsl:output elements, details not investigated). FIXED</TD></TR>
+
+    <TD vAlign=top>5.0/010</TD>
+    <TD>SAXON reports an error if two ID attributes in a document have the same value (which
+    can only happen if the document is invalid). The XPath spec (5.2.1) says the second ID
+    value should be ignored. FIXED</TD></TR>
+
+    <TD vAlign=top>5.0/011</TD>
+    <TD>By default, white-space nodes in the source document are stripped. They should be
+    preserved. FIXED</TD></TR>
+
+    <TD vAlign=top>5.0/012</TD>
+    <TD>SAXON throws an IllegalArgumentException and prints a stack trace when the format
+    pattern supplied to format-number() is invalid. The spec doesn't define the error
+    handling behaviour here but the current output is messy. FIXED</TD></TR>
+
+    <TD vAlign=top>5.0/013</TD>
+    <TD>SAXON reports an error if two xsl:decimal-format elements have the same name;
+    the spec says this is OK so long as they're compatible. FIXED</TD></TR>
+
+    <TD vAlign=top>5.0/014</TD>
+    <TD>If xsl:output specifies method="text" and indent="yes", no error is reported,
+    and the output disappears into a black hole. Also, if method="xml" or "html" and
+    indent="yes", any text output after the last end tag is lost. FIXED</TD></TR>
+
+    <TD vAlign=top>5.0/015</TD>
+    <TD>Where qualified names are generated and validated at run-time, for example when
+    the name attribute of xsl:element is an AVT, and when they appear within an included
+    or imported stylesheet, the namespace declarations that are checked
+    include the principal xsl:stylesheet element but not the xsl:stylesheet element of the
+    included/imported stylesheet. FIXED in 5.2</TD></TR>
+
+    <TD vAlign=top>5.0/016</TD>
+    <TD>The use-attribute-sets attribute is not allowed on the xsl:copy element.
+    FIXED. </TD></TR>
+
+    <TD vAlign=top>5.0/017</TD>
+    <TD>The substring() function can fail with an index out of range exception if the
+    input string is zero-length or if the start position is beyond the end of the string.
+    FIXED. </TD></TR>
+
+    <TD vAlign=top>5.0/018</TD>
+    <TD>The expanded syntax for the "attribute::" axis doesn't work (the abbreviated syntax @
+    is fine). FIXED. </TD></TR>
+
+    <TD vAlign=top>5.0/019</TD>
+    <TD>The substring() function gives incorrect results when one of the arguments is NaN or
+    infinite. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/020</TD>
+    <TD>A filter expression does not always sort the nodes into document order before
+    applying a positional filter. For example, (ancestor::*)[1] finds the innermost
+    ancestor instead of the outermost. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/021</TD>
+    <TD>The ancestor-or-self:: and descendant-or-self:: axes always include the "self" node even
+    when it does not match the required node type or name. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/022</TD>
+    <TD>The descendant axis may return incorrect results when the context node has no
+    descendants. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/023</TD>
+    <TD>The pattern "node()" matches any node. It should only match a node that is the child
+    of another node, that is, an element, text node, comment, or processing instruction. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/024</TD>
+    <TD>If the match pattern in an xsl:key definition matches attribute nodes, the attribute
+    nodes are not indexed and will not be found when the key is used. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/025</TD>
+    <TD>xsl:number level="any" ignores the "from" pattern unless the relevant node also matches
+    the "count" pattern. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/026</TD>
+    <TD>When name() is used to find the name of an attribute node that was accessed by name in
+    the stylesheet, the prefix of the returned name is the namespace prefix that was used for this
+    URI in the stylesheet, not the prefix that was used in the source document. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/027</TD>
+    <TD>Saxon outputs a newline character after the XML-declaration / text declaration. This
+    is of no consequence when the output is treated as document entity, but it is a significant
+    character when the output is treated as an external general parsed entity. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/028</TD>
+    <TD>When xsl:attribute is used with an unprefixed name and a non-null namespace, the
+    generated attribute name is in the default namespace rather than the namespace requested.
+    FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/029</TD>
+    <TD>The string-value of an element node or of a root node includes the concatenation of not
+    just the descendant text nodes, but the descendant comment and processing instruction nodes
+    as well. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/030</TD>
+    <TD>The string-length function requires an argument. According to the spec, the argument
+    is optional and defaults to the string-value of the current node. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/031</TD>
+    <TD>Variable declarations (but not references) cause the variable name to be incorrectly
+    qualified with the default namespace URI. A default namespace URI is also used incorrectly
+    to qualify various other names of stylesheet objects, e.g. modes and keys. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/032</TD>
+    <TD>The URI for the built-in XML namespace is incorrect. It should be "http://www.w3.org/XML/1998/namespace".
+    The only effect is that namespace-uri() applied to a node that uses this namespace (e.g.
+    an xml:space attribute) gives the wrong answer. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/033</TD>
+    <TD>The default priority for patterns such as "//X" is wrong. It is calculated as if the pattern
+    were simply "X". For example, the default priority of "//*" is calculated as -0.5 when
+    it should be +0.5. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/034</TD>
+    <TD>The round() function handles special values incorrectly. Special values include NaN,
+    infinity, negative zero, numbers between -0.5 and -0.0, and numbers outside the range of
+    a Java long integer. FIXED.</TD></TR>
+
+    <TD vAlign=top>5.0/035</TD>
+    <TD>The string() function, whether used explicitly or implicitly, converts numbers whose
+    magnitude is above 10,000,000 or below 0.001 to a string in scientific
+    floating point notation. FIXED.</TD></TR>
+
+
+</TABLE>
+
+
+<P align=center>Michael H. Kay<BR>16 October 2000</P>
+</FONT></BODY></HTML>

@@ -1,0 +1,23 @@
+<?xml version='1.0'?>
+<!DOCTYPE foo:document [
+  <!ATTLIST xsl:stylesheet id ID #IMPLIED>
+]>
+<?xml-stylesheet type="text/xsl" href="#xsl"?>
+<foo:document 
+		  xmlns:foo="http://apache.org/foo"
+		  xmlns:bar="http://apache.org/bar"
+		  file-name="test"
+         file-path="work"
+		  creation-date="971255692078">
+<bar:element>MyBar</bar:element>
+<xsl:stylesheet 
+   id="xsl"
+   xmlns:xsl='http://www.w3.org/1999/XSL/Transform' 
+   version='1.0'>
+      <xsl:template match="/">
+        <embedded>
+        <xsl:copy-of select="//bar:element"/>
+        </embedded>
+      </xsl:template>
+</xsl:stylesheet>
+</foo:document>

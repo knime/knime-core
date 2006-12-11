@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="ASCII"?>
+<properties:ProjectDescription xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:properties="properties.xmi" modelDir="model" libraryDir="libraries" profileDir="profiles" templateDir="templates">
+  <profiles id="org.eclipse.uml2.resources.BasicProfile" description="Basic Profile" uri="platform:/plugin/org.eclipse.uml2.resources/profiles/Basic.profile.uml2" exported="false" kind="system"/>
+  <profiles id="org.eclipse.uml2.resources.IntermediateProfile" description="Intermediate Profile" uri="platform:/plugin/org.eclipse.uml2.resources/profiles/Intermediate.profile.uml2" exported="false" kind="system"/>
+  <profiles id="org.eclipse.uml2.resources.CompleteProfile" description="Complete Profile" uri="platform:/plugin/org.eclipse.uml2.resources/profiles/Complete.profile.uml2" exported="false" kind="system"/>
+  <profiles id="com.omondo.uml.core.JavaProfile" description="Java Profile" uri="platform:/plugin/com.omondo.uml.core/profiles/Java.profile.uml2" exported="false" kind="system"/>
+  <profiles id="com.omondo.uml2.core.OmondoProfile" description="Omondo Profile" uri="platform:/plugin/com.omondo.uml.core/profiles/Omondo.profile.uml2" exported="false" kind="system"/>
+</properties:ProjectDescription>

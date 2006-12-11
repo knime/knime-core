@@ -1,0 +1,852 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>XSL-FO Input</title>
+<link type="text/css" href="skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Home</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="dev/index.html"><font face="Arial, Helvetica, Sans-serif">Development</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Home</font>
+<ul>
+          
+<li>
+<a href="index.html">Introduction</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Using FOP</font>
+<ul>
+          
+<li>
+<a href="relnotes.html">Release Notes</a>
+</li>
+          
+<li>
+<a href="download.html">Download</a>
+</li>
+          
+<li>
+<a href="compiling.html">Build</a>
+</li>
+          
+<li>
+<a href="configuration.html">Configure</a>
+</li>
+          
+<li>
+<a href="running.html">Run</a>
+</li>
+          
+<li>
+<a href="embedding.html">Embed</a>
+</li>
+          
+<li>
+<a href="servlets.html">Servlets</a>
+</li>
+          
+<li>
+<a href="anttask.html">Ant task</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Features</font>
+<ul>
+          
+<li>
+<a href="compliance.html">Compliance</a>
+</li>
+          
+<li>
+<a href="output.html">Output Targets</a>
+</li>
+          
+<li>
+<a href="pdfencryption.html">PDF encryption</a>
+</li>
+          
+<li>
+<a href="graphics.html">Graphics</a>
+</li>
+          
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+          
+<li>
+<a href="hyphenation.html">Hyphenation</a>
+</li>
+          
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+          
+<li>
+<a href="gethelp.html">Getting Help</a>
+</li>
+          
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+          
+<li>
+<span class="sel"><font color="#ffcc00">XSL-FO</font></span>
+</li>
+          
+<li>
+<a href="examples.html">Examples</a>
+</li>
+          
+<li>
+<a href="maillist.html">Mailing Lists</a>
+</li>
+          
+<li>
+<a href="bugs.html">Bugs</a>
+</li>
+          
+<li>
+<a href="license.html">License</a>
+</li>
+          
+<li>
+<a href="resources.html">Other</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Project</font>
+<ul>
+          
+<li>
+<a href="news.html">News</a>
+</li>
+          
+<li>
+<a href="logocontest.html">Logo contest</a>
+</li>
+          
+<li>
+<a href="status.html">Status</a>
+</li>
+          
+          
+<li>
+<a href="team.html">Team</a>
+</li>
+        
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>XSL-FO Input</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="fo.pdf"><img alt="printer" src="skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<h3>Basic Help for Using XML, XSLT, and XSL-FO</h3>
+<ul class="minitoc">
+<li>
+<a href="#overview">Overview</a>
+</li>
+<li>
+<a href="#xml">XML Issues</a>
+<ul class="minitoc">
+<li>
+<a href="#xml-special-chars">Special Characters</a>
+</li>
+<li>
+<a href="#xml-entity-chars">Entity Characters</a>
+</li>
+<li>
+<a href="#xml-encoding">Encoding Issues</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#xsl-fo">XSL-FO Issues</a>
+<ul class="minitoc">
+<li>
+<a href="#fo-center-vertical">Vertical Centering</a>
+</li>
+<li>
+<a href="#fo-center-table-horizon">Horizontal Centering (Tables)</a>
+</li>
+<li>
+<a href="#fo-oddeven">Recto/Verso Static Content Differences</a>
+</li>
+<li>
+<a href="#fo-first-page">Making the First Page Special</a>
+</li>
+<li>
+<a href="#fo-blank-pages">Blank Pages</a>
+</li>
+<li>
+<a href="#fo-preformat">Preformatting Content</a>
+</li>
+<li>
+<a href="#fo-total-pages">Total Document Pages</a>
+</li>
+<li>
+<a href="#fo-region-align">Aligning Regions</a>
+</li>
+<li>
+<a href="#fo-lines">Drawing Lines</a>
+</li>
+<li>
+<a href="#fo-validate">Validating XSL-FO</a>
+</li>
+<li>
+<a href="#landscape">Producing landscape pages</a>
+</li>
+<li>
+<a href="#external-resources">External Resources</a>
+</li>
+</ul>
+</li>
+</ul>
+    
+<a name="N101C1"></a><a name="overview"></a>
+<h3>Overview</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+        FOP uses XSL-FO as input.
+It is the responsibility of the user to make sure that the XSL-FO submitted to FOP is correct.
+The tutorial items presented here are not comprehensive, but are of the FAQ variety. Another 
+good FAQ is <a target="_blank" href="http://www.dpawson.co.uk/xsl/xslfaq.html">Dave Pawson's XSL FAQ</a>.
+      </p>
+</div>
+    
+<a name="N101CF"></a><a name="xml"></a>
+<h3>XML Issues</h3>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N101D5"></a><a name="xml-special-chars"></a>
+<h4>Special Characters</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          When entering special (non-ASCII) characters in XML, the general rule is to use the applicable Unicode character instead of trying to use a character entity as you would with HTML.
+Remember that HTML is an SGML document type.
+SGML has a limited character set, which requires it to use character entities to represent special characters.
+One of the improvements of XML over SGML (and thus HTML) is native support for Unicode.
+Basic XML has only a handful of character entities, primarily because it doesn't really need more.
+        </p>
+<p>
+          Entities such as <span class="codefrag">&amp;uuml;</span> (u with an umlaut), which work in HTML, will be flagged as undefined entities unless you define them yourself in your DTD.
+Use the corresponding Unicode character instead.
+A list of predefined HTML entities and their Unicode codepoints can be found at <a href="http://www.w3.org/TR/html4/sgml/entities.html">Character entity references in HTML 4</a>.
+        </p>
+<p>
+          One common example is <span class="codefrag">&amp;nbsp;</span>, used to obtain a non-breaking space in HTML.
+In XML, use &amp;#160; instead.
+        </p>
+<p>
+          For other non-ASCII characters, such as the Euro symbol, checkbox, etc., see the <a href="http://www.unicode.org/charts/charindex.html">Unicode Reference By Name</a> document that is found at the <a href="http://www.unicode.org">Unicode Consortium</a> site.
+        </p>
+<p>
+          After finding the correct Unicode codepoint to represent the character, use <a href="http://www.w3.org/TR/2000/REC-xml-20001006#sec-references">XML Character References</a> to put the character into your source XML, XSLT or FO.
+See the non-breaking-space comments above for an example of the syntax using decimal notation.
+The following hexadecimal example will result in a Euro sign:
+        </p>
+<pre class="code">&amp;#x20AC;</pre>
+<p>
+          Getting your XML correctly encoded is only part of the job.
+If you want the character to display or print correctly (and you probably do), then the selected font must contain the necessary glyph.
+Because of differences between font encoding methods, and limitations in some font technologies, this can be a troublesome issue, especially for symbol characters.
+The FOP example file <a href="fo/fonts.fo.pdf">Base-14 Font Character Mapping</a> is a very useful resource in sorting these issues out for the Base-14 fonts.
+For other fonts, use font editing sofware or operating system utilities (such as the Character Map in most Windows platforms) to determine what characters the font supports.
+        </p>
+<p>
+          An alternative to encoding the character and making it available through a font is to use an embedded graphic to represent the character: GIF, PNG, SVG, etc.
+        </p>
+</div>
+<a name="N1020F"></a><a name="xml-entity-chars"></a>
+<h4>Entity Characters</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+            The handful of basic XML character entities that do exist are the ampersand, apostrophe, less-than, greater-than, and single-quote characters.
+These are needed to distinguish markup tags from content, and to distinguish character entities from content.
+To avoid parser complaints about illegal characters and entities in your input, ensure that ampersands in text and attributes are written as &amp;amp;, "&lt;" is written as &amp;lt;, and "&gt;" as &amp;gt;.
+It is not necessary everywhere, but it is wise to do so anyway, just to be sure.
+        </p>
+<p>
+          Most XML parsers will provide a line number and sometimes a column number for offending characters.
+        </p>
+<p>
+          Review the <a href="http://www.w3.org/XML/">XML Specification</a> or a good tutorial for details of the XML file format.
+        </p>
+</div>
+<a name="N10223"></a><a name="xml-encoding"></a>
+<h4>Encoding Issues</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          If the parser complains about illegal bytes or characters in the input, or there are unexpected characters in the output, this is usually is the result of a character encoding problem.
+See the <a href="http://www.dpawson.co.uk/xsl">XSL FAQ</a> for additional information.
+Many software packages that produce XML, including XSLT processors, use UTF-8 encoding as a default.
+If you view their output with something not aware of the encoding, like Notepad for Win95/98/ME/NT, funny characters are displayed. A &Aring; is a giveaway.
+        </p>
+</div>
+</div>
+    
+<a name="N10232"></a><a name="xsl-fo"></a>
+<h3>XSL-FO Issues</h3>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N10238"></a><a name="fo-center-vertical"></a>
+<h4>Vertical Centering</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          To vertically center an image, table, or other item, use display-align="center".
+See <a href="compliance.html#fo-property-display-align">display-align Compliance</a> for implementation status.
+Here is a small, self-contained document centering an image on a page:
+        </p>
+<pre class="code">&lt;?xml version="1.0"?&gt;
+&lt;fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format"&gt;
+  &lt;fo:layout-master-set&gt;
+    &lt;fo:simple-page-master master-name="content"
+        page-width="210mm" page-height="297mm"&gt;
+      &lt;fo:region-body/&gt;
+    &lt;/fo:simple-page-master&gt;
+  &lt;/fo:layout-master-set&gt;
+  &lt;fo:page-sequence master-reference="content"&gt;
+    &lt;fo:flow flow-name="xsl-region-body"&gt;
+      &lt;fo:table table-layout="fixed" width="100%"&gt;
+        &lt;fo:table-column column-width="proportional-column-width(1)"/&gt;
+        &lt;fo:table-body&gt;
+          &lt;fo:table-row height="297mm"&gt;
+            &lt;fo:table-cell display-align="center"&gt;
+              &lt;fo:block text-align="center"&gt;
+                &lt;fo:external-graphic src="fop.jpg"/&gt;
+              &lt;/fo:block&gt;
+            &lt;/fo:table-cell&gt;
+          &lt;/fo:table-row&gt;
+        &lt;/fo:table-body&gt;
+      &lt;/fo:table&gt;
+    &lt;/fo:flow&gt;
+  &lt;/fo:page-sequence&gt;
+&lt;/fo:root&gt;</pre>
+</div>
+<a name="N1024A"></a><a name="fo-center-table-horizon"></a>
+<h4>Horizontal Centering (Tables)</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          To center a table horizontally, one possibility is to add one column on the left and one on the right which pad the table so that the visible part is centered:
+        </p>
+<pre class="code">&lt;?xml version="1.0"?&gt;
+&lt;fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format"&gt;
+  &lt;fo:layout-master-set&gt;
+    &lt;fo:simple-page-master master-name="content"
+      page-width="210mm" page-height="297mm"&gt;
+      &lt;fo:region-body/&gt;
+    &lt;/fo:simple-page-master&gt;
+  &lt;/fo:layout-master-set&gt;
+  &lt;fo:page-sequence master-reference="content"&gt;
+    &lt;fo:flow flow-name="xsl-region-body"&gt;
+      &lt;fo:table table-layout="fixed" width="100%"&gt;
+        &lt;fo:table-column column-width="proportional-column-width(1)"/&gt;
+        &lt;fo:table-column column-width="100mm"/&gt;
+        &lt;fo:table-column column-width="proportional-column-width(1)"/&gt;
+        &lt;fo:table-body&gt;
+          &lt;fo:table-row&gt;
+            &lt;fo:table-cell/&gt;
+            &lt;fo:table-cell&gt;
+              &lt;fo:block&gt;foo&lt;/fo:block&gt;
+            &lt;/fo:table-cell&gt;
+            &lt;fo:table-cell/&gt;
+          &lt;/fo:table-row&gt;
+        &lt;/fo:table-body&gt;
+      &lt;/fo:table&gt;
+    &lt;/fo:flow&gt;
+  &lt;/fo:page-sequence&gt;
+&lt;/fo:root&gt;</pre>
+<p>
+          If your table is more complicated, or if defining borders on individual cells becomes too much work, use the code above and nest your table within the middle cell.
+        </p>
+</div>
+<a name="N1025B"></a><a name="fo-oddeven"></a>
+<h4>Recto/Verso Static Content Differences</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          One frequent request is that static content be different between recto pages (right-side or odd-numbered pages typically) and verso pages(left-side or even-numbered pages typically).
+For example, you may wish to place the page number on the "outer" side of each page.
+There are examples in the FO distribution and in the <a href="http://www.dpawson.co.uk/xsl/sect3/index.html">XSL FAQ FO section</a>.
+        </p>
+<p>
+          First, define a page master with alternating pages masters for odd and even pages.
+Then specify appropriate regions in these page masters, giving them different names.
+Use these names to put different static content in these regions. Here is a self-contained demonstration:
+        </p>
+<pre class="code">&lt;?xml version="1.0"?&gt;
+&lt;fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format"&gt;
+  &lt;fo:layout-master-set&gt;
+    &lt;fo:simple-page-master master-name="even"
+      page-height="297mm" page-width="210mm"
+      margin-top="20mm" margin-bottom="20mm"
+      margin-left="25mm" margin-right="25mm"&gt;
+      &lt;fo:region-body margin-bottom="20mm"/&gt;
+      &lt;fo:region-after region-name="footer-even" extent="20mm"/&gt;
+    &lt;/fo:simple-page-master&gt;
+    &lt;fo:simple-page-master master-name="odd"
+      page-height="297mm" page-width="210mm"
+      margin-top="20mm" margin-bottom="20mm"
+      margin-left="25mm" margin-right="25mm"&gt;
+      &lt;fo:region-body margin-bottom="20mm"/&gt;
+      &lt;fo:region-after region-name="footer-odd" extent="20mm"/&gt;
+    &lt;/fo:simple-page-master&gt;
+    &lt;fo:page-sequence-master master-name="document"&gt;
+      &lt;fo:repeatable-page-master-alternatives&gt;
+        &lt;fo:conditional-page-master-reference odd-or-even="even"
+          master-reference="even"/&gt;
+        &lt;fo:conditional-page-master-reference odd-or-even="odd"
+          master-reference="odd"/&gt;
+      &lt;/fo:repeatable-page-master-alternatives&gt;
+    &lt;/fo:page-sequence-master&gt;
+  &lt;/fo:layout-master-set&gt;
+  &lt;fo:page-sequence master-reference="document"&gt;
+    &lt;fo:static-content flow-name="footer-even"&gt;
+      &lt;fo:block text-align="start"&gt;&lt;fo:page-number/&gt;&lt;/fo:block&gt;
+    &lt;/fo:static-content&gt;
+    &lt;fo:static-content flow-name="footer-odd"&gt;
+      &lt;fo:block text-align-last="end"&gt;&lt;fo:page-number/&gt;&lt;/fo:block&gt;
+    &lt;/fo:static-content&gt;
+    &lt;fo:flow flow-name="xsl-region-body"&gt;
+      &lt;fo:block/&gt;
+      &lt;fo:block break-before="page"/&gt;
+    &lt;/fo:flow&gt;
+  &lt;/fo:page-sequence&gt;
+&lt;/fo:root&gt;</pre>
+</div>
+<a name="N10270"></a><a name="fo-first-page"></a>
+<h4>Making the First Page Special</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          To get a special header on the first page, one possibility is to insert it into the flow instead of the static content. Alternatively, use a page master referring to different page masters for the first page and the rest. Here is a code sample:
+        </p>
+<pre class="code">&lt;?xml version="1.0"?&gt;
+&lt;fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format"&gt;
+  &lt;fo:layout-master-set&gt;
+    &lt;fo:simple-page-master master-name="first"
+      page-height="297mm" page-width="210mm"
+      margin-top="20mm" margin-bottom="20mm"
+      margin-left="25mm" margin-right="25mm"&gt;
+      &lt;fo:region-body margin-bottom="20mm"/&gt;
+      &lt;fo:region-after region-name="footer-first" extent="20mm"/&gt;
+    &lt;/fo:simple-page-master&gt;
+    &lt;fo:simple-page-master master-name="rest"
+      page-height="297mm" page-width="210mm"
+      margin-top="20mm" margin-bottom="20mm"
+      margin-left="25mm" margin-right="25mm"&gt;
+      &lt;fo:region-body margin-bottom="20mm"/&gt;
+      &lt;fo:region-after region-name="footer-rest" extent="20mm"/&gt;
+    &lt;/fo:simple-page-master&gt;
+    &lt;fo:page-sequence-master master-name="document"&gt;
+      &lt;fo:repeatable-page-master-alternatives&gt;
+        &lt;fo:conditional-page-master-reference page-position="first"
+          master-reference="first"/&gt;
+        &lt;fo:conditional-page-master-reference page-position="rest"
+          master-reference="rest"/&gt;
+      &lt;/fo:repeatable-page-master-alternatives&gt;
+    &lt;/fo:page-sequence-master&gt;
+  &lt;/fo:layout-master-set&gt;
+  &lt;fo:page-sequence master-reference="document"&gt;
+    &lt;fo:static-content flow-name="footer-first"&gt;
+      &lt;fo:block text-align="center"&gt;First page.&lt;/fo:block&gt;
+    &lt;/fo:static-content&gt;
+    &lt;fo:static-content flow-name="footer-rest"&gt;
+      &lt;fo:block text-align-last="center"&gt;Other page.&lt;/fo:block&gt;
+    &lt;/fo:static-content&gt;
+    &lt;fo:flow flow-name="xsl-region-body"&gt;
+      &lt;fo:block/&gt;
+      &lt;fo:block break-before="page"/&gt;
+      &lt;fo:block break-before="page"/&gt;
+    &lt;/fo:flow&gt;
+  &lt;/fo:page-sequence&gt;
+&lt;/fo:root&gt;</pre>
+</div>
+<a name="N1027E"></a><a name="fo-blank-pages"></a>
+<h4>Blank Pages</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          Sometimes it is desirable to insert blank pages within your output, starting, for example, a new chapter on an odd page or an even page.
+A blank page can be forced by using <span class="codefrag">break-before="page-even"</span> or similar properties, or by a force-page-count="end-on-odd" on a page sequence.
+        </p>
+<p>
+          To write "This page is intentionally left blank" (or something similar) on an intentionally blank page, first define a conditional page master with a page master specific for blank pages.
+This allows you to specify static content for blank pages (by definition, a page is blank if no content from a flow is rendered on the page).
+Omit your normal headers and footers, and use (for example) an extended header to print the "..left blank" statement:
+          </p>
+<pre class="code">&lt;?xml version="1.0"?&gt;
+&lt;fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format"&gt;
+  &lt;fo:layout-master-set&gt;
+    &lt;fo:simple-page-master master-name="normal"
+      page-height="297mm" page-width="210mm"
+      margin-top="20mm" margin-bottom="20mm"
+      margin-left="25mm" margin-right="25mm"&gt;
+      &lt;fo:region-body margin-bottom="20mm"/&gt;
+      &lt;fo:region-after region-name="footer-normal" extent="20mm"/&gt;
+    &lt;/fo:simple-page-master&gt;
+    &lt;fo:simple-page-master master-name="blank"
+      page-height="297mm" page-width="210mm"
+      margin-top="20mm" margin-bottom="20mm"
+      margin-left="25mm" margin-right="25mm"&gt;
+      &lt;fo:region-body/&gt;
+      &lt;fo:region-before region-name="header-blank" extent="297mm"/&gt;
+    &lt;/fo:simple-page-master&gt;
+    &lt;fo:page-sequence-master master-name="document"&gt;
+      &lt;fo:repeatable-page-master-alternatives&gt;
+        &lt;fo:conditional-page-master-reference blank-or-not-blank="not-blank"
+          master-reference="normal"/&gt;
+        &lt;fo:conditional-page-master-reference blank-or-not-blank="blank"
+          master-reference="blank"/&gt;
+      &lt;/fo:repeatable-page-master-alternatives&gt;
+    &lt;/fo:page-sequence-master&gt;
+  &lt;/fo:layout-master-set&gt;
+  &lt;fo:page-sequence master-reference="document" force-page-count="end-on-even"&gt;
+    &lt;fo:static-content flow-name="footer-normal"&gt;
+      &lt;fo:block text-align="center"&gt;Normal footer&lt;/fo:block&gt;
+    &lt;/fo:static-content&gt;
+    &lt;fo:static-content flow-name="header-blank"&gt;
+      &lt;fo:block space-before="100mm" text-align-last="center"&gt;
+        Intentionally left blank.&lt;/fo:block&gt;
+    &lt;/fo:static-content&gt;
+    &lt;fo:flow flow-name="xsl-region-body"&gt;
+      &lt;fo:block/&gt;
+    &lt;/fo:flow&gt;
+  &lt;/fo:page-sequence&gt;
+&lt;/fo:root&gt;</pre>
+</div>
+<a name="N10292"></a><a name="fo-preformat"></a>
+<h4>Preformatting Content</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          Sometimes it is desirable to retain linebreaks and hard spaces, and to get preformatted text to pass through without being changed.
+The XSL-FO specification provides some properties for this: <a href="http://www.w3.org/TR/xsl/slice7.html#white-space-collapse">white-space-collapse</a> and <a href="http://www.w3.org/TR/xsl/slice7.html#linefeed-treatment">linefeed-treatment</a>.
+In FOP, use white-space-collapse="false" on an enclosing block.
+        </p>
+<div class="frame warning">
+<div class="label">Warning</div>
+<div class="content">
+          Due to a bug in current versions of FOP, setting white-space-collapse="false" will also preserve line breaks in the text. Do not rely on this behavior, as it is non-conformant and will be changed.
+        </div>
+</div>
+</div>
+<a name="N102A7"></a><a name="fo-total-pages"></a>
+<h4>Total Document Pages</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          It is frequently desirable to know the total number of pages in a document and to use that number within the document.
+For example, you might wish to show the page number on the first page as being "page 1 of 12".
+To accomplish this, place an empty block with an id at the end of the flow:
+        </p>
+<pre class="code">&lt;fo:flow ...&gt;
+    ...
+  &lt;fo:block id="last-page"/&gt;
+&lt;/fo:flow&gt;</pre>
+<p>
+          Get the number of the last page as follows:
+        </p>
+<pre class="code"> &lt;fo:page-number-citation ref-id="last-page"/&gt;</pre>
+<p>
+          This does not work in certain situations: multiple page sequences, an initial page number other than 1, or forcing a certain page count, thereby producing blank pages at the end.
+        </p>
+<div class="frame warning">
+<div class="label">Warning</div>
+<div class="content">
+          There is no reliable way to get the real total page count with FO mechanisms. You can only get <em>page numbers</em>.
+        </div>
+</div>
+<p>
+          The FOP library provides a method to get the total page count after an FO document has been rendered.
+One possibility is to implement your own wrapper to do a dummy rendering, inquire the total page count and then perform the real rendering, passing the total page count to the XSLT processor to splice it into the generated FO.
+For example:
+          </p>
+<pre class="code">import org.apache.fop.apps.*;
+import org.xml.sax.*;
+import java.io.*;
+import javax.xml.transform.*;
+import javax.xml.transform.sax.*;
+import javax.xml.transform.stream.*;
+
+class rendtest {
+
+  public static void main(String args[]) {
+    try {
+      Driver driver=new Driver();
+      driver.setOutputStream(new FileOutputStream(args[2]));
+      driver.setRenderer(Driver.RENDER_PDF);
+      Transformer transformer=TransformerFactory.newInstance()
+        .newTransformer(new StreamSource(new File(args[1])));
+      transformer.setParameter("page-count","#");
+      transformer.transform(new StreamSource(new File(args[0])),
+        new SAXResult(driver.getContentHandler()));
+      String pageCount=Integer.toString(driver.getResults().getPageCount());
+      driver=new Driver();
+      driver.setOutputStream(new FileOutputStream(args[2]));
+      driver.setRenderer(Driver.RENDER_PDF);
+      transformer=TransformerFactory.newInstance()
+        .newTransformer(new StreamSource(new File(args[1])));
+      transformer.setParameter("page-count",pageCount);
+      transformer.transform(new StreamSource(new File(args[0])),
+        new SAXResult(driver.getContentHandler()));
+    }
+    catch( Exception e) {
+      e.printStackTrace();
+    }
+  }
+}</pre>
+<p>
+          Declare and use the parameter "page-count" in your XSLT.
+        </p>
+<div class="frame warning">
+<div class="label">Warning</div>
+<div class="content">
+          It is possible to run into a convergence problem with this solution. Replacing the "#" placeholder in the first run with the actual page count in the second run, may change the total number of pages in the document.
+        </div>
+</div>
+</div>
+<a name="N102D2"></a><a name="fo-region-align"></a>
+<h4>Aligning Regions</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          Although it may seem counterintuitive, the regions on a page may overlap.
+Defining a certain body region does not automatically constrain other regions.
+Instead, this has to be done explicitly.
+Sometimes for creative reasons it may be desirable to have the regions overlap.
+Otherwise, you will want to set them up so that the header does not overlap body content or the body extend into the footer.
+        </p>
+<p>
+          Assuming you wish to keep the regions separate, if you have a header region with an extent of 20mm, you should define a margin for the body region of at least 20mm too.
+Otherwise the header content may overwrite some stuff in the body region.
+This applies similarly to the extent of the after region and the bottom margin of the body region.
+        </p>
+</div>
+<a name="N102DF"></a><a name="fo-lines"></a>
+<h4>Drawing Lines</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          It is frequently desirable to draw lines in a document, as separators, side bars or folding marks. There are several possibilities:
+        </p>
+<ul>
+          
+<li>
+            Horizontal lines can be drawn using <a href="http://www.w3.org/TR/xsl/slice6.html#fo_leader">fo:leader</a>.
+          </li>
+          
+<li>
+            Use a solid border on a suitable fo:block. This will work for horizontal and vertical lines only.
+          </li>
+          
+<li>
+            Insert a graphic. GIF, PNG SVG, whatever.
+          </li>
+        
+</ul>
+</div>
+<a name="N102F9"></a><a name="fo-validate"></a>
+<h4>Validating XSL-FO</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          
+<a href="http://www.renderx.com">RenderX</a> has provided an <a href="http://www.renderx.com/Tests/validator/fo.dtd.html">Unofficial DTD for FO Documents</a>, which may be helpful in validating general FO issues.
+        </p>
+<p>
+          FOP also maintains an <a href="http://cvs.apache.org/viewcvs.cgi/*checkout*/xml-fop/docs/foschema/fop.xsd?rev=HEAD&content-type=text/plain">Unofficial FOP Schema</a> in the FOP CVS Repository.
+This document can be used either to validate against the FO standard, or against the actual FOP implementation.
+See the notes near the beginning of the document for instructions on how to use it.
+          </p>
+</div>
+<a name="N10312"></a><a name="landscape"></a>
+<h4>Producing landscape pages</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          Pages in landscape format can easily be produced by exchanging the page-height and page-width values of a simple-page-master element.
+        </p>
+<pre class="code">&lt;fo:layout-master-set&gt;
+  &lt;fo:simple-page-master master-name="A4-portrait" page-height="29.7cm" page-width="21cm" [..]&gt;
+    &lt;fo:region-body/&gt;
+  &lt;/fo:simple-page-master&gt;
+  &lt;fo:simple-page-master master-name="A4-landscape" page-height="21cm" page-width="29.7cm" [..]&gt;
+    &lt;fo:region-body/&gt;
+  &lt;/fo:simple-page-master&gt;
+&lt;/fo:layout-master-set&gt;</pre>
+</div>
+<a name="N10320"></a><a name="external-resources"></a>
+<h4>External Resources</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>Resources needed by an XSL-FO file that are external to it (graphics, for example), are defined in the XSL-FO standard as being of type "uri-specification". This is defined in the standard at <a target="_top" href="http://www.w3.org/TR/2001/REC-xsl-20011015/slice5.html#section-N8794-Property-Datatypes">Section 5.11 Property Datatypes</a>, which includes a link to the URI standard itself. Refer to the XSL-FO and URI standards themselves for more detailed instructions.</p>
+<p>URIs may be either absolute or relative to a base URI. (See <a href="configuration.html">FOP: Configuration</a> for information on setting the base URI for a FOP session). Here is an example referencing an external-graphic that is relative to the base URI:</p>
+<pre class="code">&lt;fo:external-graphic src="url('images/logo.jpg')"/&gt;</pre>
+<p>Here is an example referencing an external-graphic that is an absolute URI on a local filesystem:</p>
+<pre class="code">fo:external-graphic src="url('file:d:///images/logo.jpg')"/&gt;</pre>
+</div>
+</div>
+  
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="skin/images/spacer.gif"><a href="skin/images/label.gif"></a><a href="skin/images/page.gif"></a><a href="skin/images/chapter.gif"></a><a href="skin/images/chapter_open.gif"></a><a href="skin/images/current.gif"></a><a href="/favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

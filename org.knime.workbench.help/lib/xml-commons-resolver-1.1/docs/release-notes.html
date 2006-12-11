@@ -1,0 +1,26 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>org.apache.xml.resolver Release Notes</title><meta content="DocBook XSL Stylesheets V1.62.0" name="generator"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="article" lang="en"><div class="titlepage"><div><div><h1 class="title"><a name="N10001"></a>org.apache.xml.resolver Release Notes</h1></div><div><h3 class="subtitle"><i>Version 1.1 CVS</i></h3></div><div><div class="author"><h3 class="author"><span class="firstname">Norman</span> <span class="surname">Walsh</span></h3><div class="affiliation"><span class="jobtitle">Staff Engineer<br></span><span class="orgname">Sun Microsystems, XML Technology Center<br></span></div></div></div><div><p class="releaseinfo">$Id: release-notes.html 173 2006-02-14 16:13:53Z ohl $
+</p></div><div><p class="copyright">Copyright &copy; 2003 The Apache Software Foundation.</p></div><div><p class="pubdate">6 September 2003</p></div></div><div></div><hr></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="section"><a href="#N1002C">The CatalogManager Is No Longer Static</a></span></dt><dt><span class="section"><a href="#N1003F">System Catalogs Are Always Loaded</a></span></dt><dt><span class="section"><a href="#N1004C">Tests/Examples Available</a></span></dt><dt><span class="section"><a href="#N10055">Bootstrap resolver for loading catalog files</a></span></dt></dl></div><p>This document offers a brief summary of what has changed in the
+<a href="http://xml.apache.org/commons/" target="_top">Apache XML Commons Resolver</a>
+package since the 1.0 release.
+</p><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N1002C"></a>The <tt class="classname">CatalogManager</tt> Is No Longer Static</h2></div></div><div></div></div><p>The most pervasive change is that the <tt class="classname">CatalogManager</tt>
+class is no longer static. It's now possible to instantiate several catalog
+managers and each manager can manage several catalogs.</p><p>There is still a single static instance of the
+<tt class="classname">CatalogManager</tt>, available via
+<tt class="methodname">getStaticManager()</tt>. This is used by default
+if no other catalog manager is instantiated and used. It behaves as
+the old static one used to.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N1003F"></a>System Catalogs Are Always Loaded</h2></div></div><div></div></div><p>In the previous version, the system catalogs were not loaded if
+a private catalog was requested. That has changed; the system catalogs are now
+always loaded.</p><p>If you want to avoid loading any system catalogs, establish your own
+<tt class="classname">CatalogManager</tt> and use the
+<tt class="methodname">setCatalogsFiles()</tt> method to assure that no system
+catalogs are available.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N1004C"></a>Tests/Examples Available</h2></div></div><div></div></div><p>There are several tests in the <tt class="filename">tests/resolver</tt> directory
+that demonstrate how different instantiations can be used.</p></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="N10055"></a>Bootstrap resolver for loading catalog files</h2></div></div><div></div></div><p>The resolver now includes catalog.{dtd,rng,xsd} and uses a "bootstrap"
+resolver when it is loading catalog files. This avoids the Catch-22 of
+having to resolve this before the resolver is in action ...
+</p><pre class="programlisting">
+&lt;!DOCTYPE catalog PUBLIC "-//OASIS//DTD XML Catalogs V1.0//EN"
+"http://www.oasis-open.org/committees/entity/release/1.0/catalog.dtd"&gt;
+&lt;catalog&gt;
+&lt;public publicId="foo" uri="bar"/&gt;
+&lt;/catalog&gt;
+</pre></div></div></body></html>

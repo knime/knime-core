@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<introContent>
+	<!--
+    <page id="root" url="intro/html/root.hmtl"/>
+	<page id="standby" url="intro/html/standby.html"/>     
+    -->
+	<page 
+		alt-style="css/root_swt.properties" style="css/root.css" 
+		id="root" style-id="page">
+
+    	<title style-id="intro-header">Welcome to KNIME - the Konstanz Information Miner</title>
+    	
+		<group id="links-background">
+		<group id="page-links">
+		<anchor id="beginAnchor"/>
+
+		<!--link label="Overview" url="http://org.eclipse.ui.intro/showPage?id=overview" 
+				id="overview" style-id="left">
+				<img id="overview_img" style-id="content-img" src="css/graphics/icons/etool/overview72.gif" alt="Overview"/>
+          		<text>Display a short overview of the Konstanz Information Miner Workbench</text>
+        	</link-->
+			
+			<link label="KNIME Help Center" url="http://org.eclipse.ui.intro/showHelp" 
+				id="help" style-id="left">
+				<img id="help_img" style-id="content-img" src="css/graphics/icons/etool/overview72.gif" alt="Help"/>
+          		<text>Open the KNIME Help Center for more detailed help.</text>
+        	</link>
+			
+			<!--link label="Create a new project..." 
+
+				url="http://org.eclipse.ui.intro/createProjectFromIntro"
+
+				
+				id="newProject" style-id="right">
+				<img id="newProject_img" style-id="content-img" src="css/graphics/icons/etool/overview72.gif" alt="New Project"/>
+          		<text>Create a new KNIME project in the workspace.</text>
+        	</link-->
+		
+		<anchor id="endAnchor"/>
+		</group>
+		</group>
+
+
+
+	</page>
+
+</introContent> 

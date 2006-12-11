@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?><?xml-stylesheet type="text/xsl" href="../xsl/foo.xsl" title="default-stylesheet"?><foo:document xmlns:foo="http://apache.org/foo" xmlns:bar="http://apache.org/bar" file-name="test" file-path="work" creation-date="971255692078">
+<bar><param-val>default param value, text from my-var in inc2.xsl</param-val><data>MyBar</data></bar>
+</foo:document>

@@ -1,0 +1,24 @@
+This directory contains some libraries or class files necessary 
+for compiling, running or testing Fop.
+
+ant.jar           Ant is the scripting tool which is used to build Fop or to run 
+                  the test scripts. see build.xml in root for more information
+                  Also has the XSLT liaison classes
+                  org.apache.tools.ant.taskdefs.optional.*Liaison
+                  added which are needed for the style task.
+
+batik.jar         the svg library from Batik at xml.apache.org
+version 1.5 beta4
+
+xalan-*.jar       XSLT processor from xml.apache.org
+version 2.4.1
+
+xercesImpl-*.jar  XML parser from xml.apache.org
+version 2.2.1
+
+*** OPTIONAL ***
+
+jimi.jar			May be obtained from http://java.sun.com/products/jimi/.
+					Place jimi*.jar in lib/; modify batch/shell script
+					classpaths.
+

@@ -1,0 +1,507 @@
+<html>
+
+<head>
+<title>SAXON: the Java API</title>
+<style type="text/css">
+
+	H1 {
+	    font-family: Arial, Helvetica, sans-serif;
+	    font-size: 16pt;
+	    font-weight: bold;
+	    color: "#FF0080"
+	}
+
+	H2 {
+	    font-family: Arial, Helvetica, sans-serif;
+	    font-size: 14pt;
+	    font-weight: bold;
+	    color: "#FF0080"
+	}
+
+	H3 {
+	    font-family: Arial, Helvetica, sans-serif;
+	    font-size: 12pt;
+	    font-weight: bold;
+	    color: black;
+	}
+
+    P,LI,TD {
+	    font-family: Arial, Helvetica, sans-serif;
+	    font-size: 10pt;
+	    font-weight: normal;
+	    color: black;       
+	}
+
+    CODE {
+	    font-family: Courier, monospace;
+	    font-size: 12pt;
+	    font-weight: normal;
+	    color: black;       
+	}
+
+</style>
+</head>
+
+
+<body leftmargin="150" bgcolor="#ddeeff"><font face="Arial, Helvetica, sans-serif">
+<div align=right><a href="index.html">SAXON home page</a></div>
+<h1><big><font color="#FF0080">SAXON: the Java API</font></big></h1>
+
+<hr>
+
+<table width="727">
+  <tr>
+    <td bgcolor="#0000FF" width="723"><font color="#FFFFFF"><b>Contents</b></font></td>
+  </tr>
+  <tr>
+    <td VALIGN="top" bgcolor="#00FFFF" width="723"><a HREF="#Scope">Introduction</a><br>
+
+    <a HREF="#Parser">Building the Source Document</a><br>
+    <a HREF="#Controller">The Controller</a><br>
+    <a HREF="#Expressions">Using XPath Expressions</a><br>
+    <a HREF="#NodeHandler">Writing and Registering a Node Handler</a><br>
+    <a HREF="#Patterns and Expressions">Patterns</a><br>
+    <a HREF="#NodeInfo">The NodeInfo Object</a></td>
+  </tr>
+</table>
+
+<hr>
+<a NAME="Scope">
+
+<h2>Introduction</h2>
+</a>
+
+<p><b>This document describes how to use SAXON as a Java class library, without making any use
+of XSLT stylesheets. If you want to know how to control stylesheet processing from a Java
+application, see <a href="using-xsl.html">using-xsl.html</a>.</b></p>
+
+<p><i>Note: The Java API was provided in SAXON long before the XSLT interface. Most of the things
+that the Java API was designed to do can now be done more conveniently in XSL. Reflecting this,
+some of the features of the API have been withdrawn as redundant, and the focus in SAXON will
+increasingly be on doing everything possible through XSL.</i></p>
+
+<p>The Java processing model in SAXON is an extension of the XSLT processing model:</p>
+
+<ul>
+<li>You can evaluate XPath expressions to return node-sets or other values, and
+manipulate the node-sets in your application code</li>
+<li>You can write node handlers for elements and other nodes in the
+ document, and you can specify the rules that associate a particular handler with
+  particular elements or
+other nodes. These rules are expressed as XSLT-compatible patterns. The node handlers are
+analogous to XSL templates.</li>
+<li>Within a node handler, you can select other nodes (typically but not necessarily
+the immediate children) for processing. The system will automatically invoke the appropriate
+handler for each selected node. Alternatively, you can use SAXON API calls to navigate directly
+to other nodes in the document, either directly, or using XPath expressions.</li>
+</ul>
+
+<p>You can process some elements in Java and others in XSLT if you wish: to do this, define a
+stylesheet with template rules in the normal way, and use the extension saxon:handler element
+to define any nodes that you want to be processed by Java methods.<p>
+
+<p>When a Java node handler is invoked, it is provided with information about the node via
+a <b>NodeInfo</b> object (usually you will be processing element nodes, in which case the
+NodeInfo will be an <b>ElementInfo</b> object). The node handler is also given information
+about the processing context, and access to a wide range of processing services, via a
+<b>Context</b> object.</P>
+
+<p>The NodeInfo object allows navigation around the tree.
+It also provides facilities to:</p>
+
+<ul>
+  <li>determine the node's name, string-value, 
+       and attributes as defined in the XPath tree model</li>
+  <li>copy the node to the result tree</li>
+  <li>navigate to other nodes using any of the XPath axes
+</ul>
+
+<p>The two basic Saxon tree structures, the standard tree and the tiny tree, both
+implement DOM interfaces as well as Saxon's own NodeInfo interface. However, Saxon will
+work with other tree structures that implement only the NodeInfo interface: one such
+structure is the Saxon JDOM Adapter, which provides a Saxon interface to a JDOM tree.
+(For more information about JDOM, see <a href="http://www.jdom.org/">http://www.jdom.org/</a>.)</p>
+
+<p>The Context object allows a node handler to:</p>
+<ul>
+    <li>access any parameters associated with the applyTemplates() call that invoked this
+    node handler</li>
+    <li>get information about the current node list (the list of nodes being processed by this
+    handler: for example, to determine if this is the last node in the list)</li>
+    <li>evaluate XPath expressions</li>
+    <li>get rapid access to nodes based on registered keys and identifiers</li>
+    <li>declare and reference variables</li>
+    <li>set an output destination for output from this node or its children (useful when
+    splitting an XML document heirarchically) </li>
+    <li>write output to the current destination </li>
+</ul>
+    
+
+<h3>The SAXON API: comparison with SAX and DOM</h3>
+
+<p>There are two standard APIs for processing XML documents: the SAX interface, and the DOM. SAX 
+ (see <a HREF="http://www.megginson.com/SAX/index.html">http://www.megginson.com/SAX/index.html</a>)
+is an event-driven interface in which the parser reports things such as start and end tags to the
+ application as they are encountered, while the Document Object Model (DOM) (see 
+<a HREF="http://www.w3.org/dom">http://www.w3.org/dom</a>
+is a navigational interface in which the application
+can roam over the document in memory by following relationships between its nodes. Another API,
+JDOM, is similar in concept to DOM but provides a lighter-weight API that is more closely
+integrated with the standard Java 2 classes.</p>
+
+<p>SAXON offers a higher-level processing model than either SAX or DOM. It allows applications
+to be written using a rule-based design pattern, in which your application consists of a set of rules
+of the form "when this condition is encountered, do this processing". It is an event-condition-action
+model in which the events are the syntactic constructs of XML, the conditions are XSLT-compatible
+ patterns, and the actions are Java methods. Further, the action taken when these rules are fired
+ may include evaaluation of XPath expressions, providing a higher-level access mechanism than
+ raw navigation of the tree.</p>
+
+<p>If you are familiar with SAX, some of the differences in SAXON are:</p>
+
+<ul>
+  <li>You can provide a separate handler for each element type (or other node),
+     making your application more modular </li>
+  <li>SAXON supplies context information to your application, so you can find out, for
+    example, the parent element of the one you are currently processing </li>
+  <li>SAXON provides facilities for organizing the output of your application, allowing you to
+    direct different parts of the output to different files. SAXON is a particularly
+    convenient tool for splitting a large document into page-sized chunks for viewing, or into
+    individual records for storing in a relational or object database.</li>
+  <li>SAXON allows you to register your preferred SAX-compliant XML parser; you do not need to
+    hard-code the name of the parser into your application or supply it each time on the
+    command line. SAXON also works with several DOM implementations.</li>
+  <li>SAXON extends the SAX InputSource class allowing you to specify a file name as the
+    source of input. </li>
+</ul>
+
+<h3>Serial and Direct processing: preview mode</h3>
+
+<p><i>An earlier release of SAXON allowed a purely serial mode of processing: each node
+was processed as it was encountered. With experience, this proved too restrictive, and caused
+the internal architecture to become too complex, so it was withdrawn. It has been replaced with
+a new facility, <b>preview mode</b>. This is available both with XSL and with the Java API.</i></p>
+
+<p>Preview mode is useful where the document is too large to fit comfortably in main memory. It
+allows you to define node handlers that are called as the document tree is being built in memory,
+rather than waiting until the tree is fully built which is the normal case.</p>
+
+<p>When you define an element as a preview element (using the setPreviewElement() method of the
+PreviewManager class), its node handler is called as soon as the element end tag is encountered. When the node handler returns control
+to SAXON, the children of the preview element are discarded from memory.</p>
+
+<p>This means, for example, that if your large XML document consists of a large number of chapters,
+you can process each chapter as it is read, and the memory available needs to be enough only for
+ (a) the largest individual chapter, and (b) the top-level structure identifying the list of chapters.</P
+
+<p>When the document tree has been fully built, the node handler for its root element will be called
+in the normal way.</p>
+
+<a NAME="Parser">
+<h2>Building the Source Document</h2>
+</a>
+
+<p>The first thing the application must do is to build the source document, in the form of a tree.
+This can be done using the JAXP 1.1 interface. A typical sequence is:</p>
+
+<p>
+<table border="1" width="100%" class="code">
+  <tr>
+    <td width="100%" bgcolor="#00FFFF"><font FACE="Courier New" SIZE="3"><pre>
+        System.setProperty("javax.xml.parsers.DocumentBuilderFactory",
+             "com.icl.saxon.om.DocumentBuilderFactoryImpl");
+        DocumentBuilderFactory dfactory =
+            DocumentBuilderFactory.newInstance();
+
+        dfactory.setNamespaceAware(true);
+
+        DocumentBuilder docBuilder = dfactory.newDocumentBuilder();
+        
+        String systemId = new File(sourceFile).toURL().toString();
+        Node doc = docBuilder.parse(new InputSource(systemId));
+    </pre></font></td>
+  </tr></table></p>
+ 
+<p>Alternatively you can use the underlying Saxon classes directly.</p> 
+  
+<p>The <b>Builder</b> class is used to build a document tree from a SAX InputSource (which must be wrapped
+inside a javax.xml.transform.sax.SAXSource() object: this object can also define the parser to be
+used). There are actually two implementations of the builder, which construct different internal
+data structures: these are the standard builder, com.icl.saxon.tree.TreeBuilder, and the tinytree builder,
+com.icl.saxon.tinytree.TinyBuilder. The main method of the Builder class
+ is build(). The builder can be serially reused to build further documents, but it should only be
+ used for one document at a time. The builder needs to know about the Stripper if whitespace nodes
+ are to be stripped from the tree, and it needs to know about the PreviewManager if any elements
+ are to be processed in preview mode. The relevant classes can be registered with the builder using
+ the setStripper() and setPreviewManager() methods.</p>
+
+<p>SAXON provides a layer of services on top of a SAX-compliant XML parser. It will work
+with any Java-based XML parser that implements
+ the <a HREF="http://www.megginson.com/SAX/index.html">SAX1 or SAX2</a> interface.</p>
+ 
+<p>You can define the parser to be used by supplying a parser within the <code>SAXSource</code> object
+supplied to the <code>Builder.build()</code> method. If you don't supply a parser, SAXON will select one
+using the JAXP mechanisms, specifically, the system property <code>javax.xml.parsers.DocumentBuilderFactory</code>.
+ <i>The mechanism used
+at previous releases, namely the configuration file <code>ParserManager.properties</code>,
+is no longer available.</i></p>
+
+<p>If you want to use different parsers depending on the URI of the document being read,
+you can achieve this by writing a <code>URIResolver</code> that nominates the parser to be used for each
+input file.</p>
+
+<a NAME="Controller">
+<h2>The Controller</h2>
+</a>
+
+<p>Processing is controlled by a class called the Controller. Some of the functions of this class are
+relevant only to XSLT transformation, but most can also be used when Saxon is used purely from Java.
+Each application run must instantiate a new Controller.</p>
+
+<p><i>Using a Controller is not absolutely essential. You need it if you want to register node
+handlers, if you want to evaluate any but the simplest XPath expressions, or if you want to
+use the Saxon Outputter to generate your output file.</i></p>
+
+<p>There are several classes used to define the kind of processing you want to perform. These
+are the RuleManager for registering template rules, the KeyManager for registering key definitions,
+the PreviewManager for registering preview elements, the Stripper for registering which elements
+are to have whitespace nodes stripped, and the DecimalFormatManager for registering named decimal
+formats. These classes can all be reused freely, and they are thread safe once the definitions
+have been set up. All of these objects are registered with the Controller using methods such as
+setRuleManager() and setKeyManager().</p>
+
+
+ <p>The Controller class is used to process a document tree by applying registered node handlers.
+ Its main method is run(). The controller is responsible for navigating through the
+document and calling user-defined handlers which you associate with each element or other node
+type to define how it is to be processed. The controller can also be serially reused, but should not be used to
+ process more than one document at a time. The Controller needs to know about the RuleManager to
+ find the relevant node handlers to invoke. If keys are used it will need to know about the
+ KeyManager, and if decimal formats are used it will need to know about the DecimalFormatManager.
+ These classes can be registered with the Controller using setRuleManager(), setKeyManager(), and
+ setDecimalFormatManager() respectively. If preview mode is used, the PreviewManager will need
+ to know about the Controller, so it has a setController() method for this purpose.</p>
+
+
+
+<a NAME="Expressions">
+<h2>Using XPath Expressions</h2>
+</a>
+
+<p>Saxon allows you to use XPath expressions directly from your Java application.</p>
+
+<p>Using an XPath expression is a two-stage process (rather like <code>prepare statement</code>
+and <code>execute statement</code> in SQL). The first stage parses the XPath expression and returns
+a Java object containing the compiled expression. The second stage evaluates the expression to
+return a result. You can use the same compiled expression as often as you like, and if performance
+is important, it is a good idea to compile the expression once only, and then reuse it.</p>
+
+<p>To compile an expression, use the <code>com.icl.saxon.expr.Expression</code> class. 
+For example:</p> 
+
+<p>
+<table border="1" width="100%" class="code">
+  <tr>
+    <td width="100%" bgcolor="#00FFFF"><font FACE="Courier New" SIZE="3"><pre>
+        StandaloneContext sc = new StandaloneContext(controller.getNamePool());
+        Expression exp = Expression.make("//ITEM[PRICE > 10.00]", sc);
+    </pre></font></td>
+  </tr></table></p>
+
+<p>The first argument of <b>Expression.make()</b> is the XPath expression itself, as a string.
+This can be any XPath expression whatsoever, though using expressions containing variable references
+or external function calls is tricky, and is not described any further here.</p>
+
+<p>The second argument is a <b>StaticContext</b> object. The static context provides all the
+information needed by the XPath processor at compile time: the namespace prefixes in use, the
+mapping of numbers to names used internally in the source document (represented by a
+ NamePool object), the variables that are available and the external functions that can be
+ called. Usually you will simply use a StandaloneContext, which is the simplest kind of
+ StaticContext object. As a minimum, all it needs to know is the NamePool used by the source
+ document, which you can find out by asking the Controller.</p>
+ 
+ <p>The <b>StandaloneContext</b> object also has a method <b>declareNamespace</b> which
+ takes two parameters, a namespace prefix and a namespace URI. This allows you to set up
+ namespace prefixes that can be used in the XPath expression.</p>
+ 
+ <p>There are several ways the compiled expression can be evaluated. All of them require
+ a <b>Context</b> object. It is best to get this from the Controller, using 
+ its <code>makeContext()</code> method. (You can construct a Context directly, but
+ it will fail if you attempt to use functions such as document() or key()).</p>
+ 
+ <p>The main ways of evaluating an expression are:</p>
+ 
+ <table>
+ <tr>
+ 
+ <td valign="top" width="50%">Value v = exp.evaluate(context)</td>
+ <td valign="top">This is a completely general-purpose method, suitable when you don't know
+ what type of value the expression will return. You can test the type of the result
+ using the <code>getDataType()</code> method of the returned <code>Value</code> object.</td>
+ 
+ <tr><td valign="top">boolean b = exp.evaluateAsBoolean(context)</td>
+ <td valign="top">Use this when you want to convert the result of the expression to a boolean.</td></tr>
+
+ <tr><td valign="top">double d = exp.evaluateAsNumber(context)</td>
+ <td valign="top">Use this when you want to convert the result of the expression to a number.</td></tr>
+
+<tr><td valign="top">String s = exp.evaluateAsString(context)</td>
+ <td valign="top">Use this when you want to convert the result of the expression to a string.</td></tr>
+ 
+<tr><td valign="top">NodeEnumeration enum = exp.enumerate(context, sort)</td>
+ <td valign="top">Use this when the expression returns a node-set. The <b>NodeEnumeration</b> class
+ behaves in much the same way as the standard Java <b>Enumeration</b> class (the main difference
+ is that it can throw an exception). Set the <code>sort</code> to true if you want the nodes
+ returned in document order, or to false if you don't care about the order.</td></tr>
+ 
+ <tr><td valign="top">NodeSetValue nsv = exp.evaluateAsNodeSet(context)</td>
+ <td valign="top">This is an alternative way of evaluating an expression that returns a node-set: use it
+ only if you need to have all the nodes available in a data structure in memory.</td></tr>
+ 
+ </table> 
+
+
+<a NAME="NodeHandler">
+<h2>Writing and Registering a Node Handler</h2>
+</a>
+
+<p>You can register a node handlers that will be called to process each node,
+ in the same way as template rules are used in XSLT.
+They node handler can choose whether or not subsidiary elements should
+be processed (by calling applyTemplates()), and can
+dive off into a completely different part of the document tree before resuming. A user-written
+node handler must implement the <b>NodeHandler</b> interface.</p>
+
+<p>To register a node handler, create a <b>RuleManager</b>, register the node handler with it
+using its <b>setHandler()</b> method, and regsiter the RuleManager with the Controller by calling
+the Controller's <b>setRuleManager()</b> method.</p>
+
+<p>Always remember that if you want child elements to be processed recursively, your
+node handler must call the <b>applyTemplates()</b> method.</p>
+
+<p>A node handler can write to the current output destination.
+The controller maintains a current outputter. Your node handler can switch
+output to a new destination by calling <b>changeOutputDestination()</b>, and can revert to the previous
+destination by calling resetOutputDestination(). This is useful both for splitting an input XML
+document into multiple XML documents, and for creating output fragments that can be
+reassembled in a different order for display. Details of the output format required must be
+set up in a Properties object, which is supplied as a parameter to changeOutputDestination().
+</p>
+
+<p>The node handler is supplied with an <b>NodeInfo</b> object which provides information
+about the current node, and with a <b>Context</b> object that gives access to a range of standard services
+such an Outputter object which includes a write() method to produce output.</p>
+
+<p>Normally you will write one node handler for each type of element, but it is quite
+possible to use the same handler for several different elements. You can also write
+completely general-purpose handlers. You define which elements will be handled by each
+element handler using a pattern, exactly as in XSLT.</p>
+
+<p>You only need to provide one method for the selected node type. This is:</p>
+
+<table>
+  <tr>
+    <td VALIGN="TOP" width="25%">start()</td>
+    <td>This is called when the node is encountered in the tree. The NodeInfo object
+    passed gives you information about the relevant node. You can save information
+    for later use if required, using one of several techniques: <ul>
+      <li>The setUserData() interface in the Controller object allows you to associate arbitrary
+        information with any node in the source document. This is useful if you are building up an object model from the XML document, and
+        you want to link XML elements to objects in your model.  </li>
+      <li>You can save information in local variables within the node handler object:
+        but take care not to do this if the same node handler might
+      be used to process another element before the first one ends.</li>
+      <li>Finally, you can create XSL variables using the Context object. These variables are visible
+      only within the current node handler, but the ability to reference them in XPath expressions
+      gives added flexibility. For example, you can set up a variable which is then used in a filter
+      in the expression passed to applyTemplates(), which thus controls which child nodes will be
+      processed.</li>
+    </ul>
+    <p></p>
+    </td>
+  </tr>
+</table>
+
+
+
+<a NAME="Patterns">
+<h2>Patterns</h2>
+</a>
+
+<p>Patterns are used in the setHandler() interface to define which
+nodes a particular handler applies to. Patterns 
+used in the SAXON Java API have exactly the same form as in XSLT.</p>
+
+
+<p>The detailed rules for patterns can be found in <a href=patterns.html>patterns.html</a>.</p>
+
+<p>Patterns are represented in the API by the class <b>com.icl.saxon.pattern.Pattern</b>
+respectively. It operates in much the same way as the <b>Expression</b> class introduced earlier.
+There is a static method to create a Pattern from a String, and a method <b>matches()</b> that tests
+whether a particular node matches a pattern.</p>
+
+<p>When you create a Pattern using the method Pattern.make()
+you must supply a StaticContext object. This object provides the information needed to interpret
+certain patterns: for example, it provides the ability to convert a namespace
+prefix within the expressions into a URI. In an XSLT stylesheet, the StaticContext provides information
+the expression can get from the rest of the stylesheet; in a Java application, this is not available,
+so you must provide the context yourself. If you don't supply a StaticContext object, a default context
+is used: this will prevent you using context-dependent constructs such as variables and namespace prefixes.
+
+<hr>
+
+<a NAME="NodeInfo">
+<h2>The NodeInfo Object</h2>
+</a>
+
+<p>The <b>NodeInfo</b> object represents a node of the XML document. It has a subclass DocumentInfo to
+represent the root node, but all other nodes are represented by NodeInfo itself. These follow the
+XPath data model closely.</p>
+
+<p><i>In previous releases, NodeInfo extended the DOM interface <b>Node</b>. This is no longer the case;
+it was changed to make it easier to integrate Saxon with other XML tree representations uch as JDOM.
+However, the main Saxon implementations of the NodeInfo interface continue to also implement the DOM 
+Node interface, so you can still use DOM methods by casting the concrete node object to a DOM class.</i></p>
+
+<p>The NodeInfo object provides node handlers with
+information about the node. The most commonly-used methods include:</p>
+
+<table>
+  <tr>
+    <td VALIGN="TOP">getNodeType()</td>
+    <td>gets a short identifying the node type. The values are consistent with those used in the DOM.</td>
+  </tr>
+  <tr>
+    <td VALIGN="TOP" WIDTH="30%">getDisplayName(), getLocalName(), getPrefix(), getURI()</td>
+    <td>These methods get the name of the element, or its various parts. The getDisplayName()
+    method returns the QName as used in the original source XML.</td>
+  </tr>
+  <tr>
+    <td VALIGN="TOP">getAttributeValue()</td>
+    <td>get the value of a specified attribute, as a String.</td>
+  </tr>
+  <tr>
+    <td VALIGN="TOP">getStringValue()</td>
+    <td>get the string value of a node, as defined in the XPath data model</td>
+  </tr>
+  <tr>
+    <td VALIGN="TOP">getParent()</td>
+    <td>get the NodeInfo representing the parent element, (which will be a DocumentInfo object
+     if this is the outermost element).</td>
+  </tr>
+  <tr>
+    <td VALIGN="TOP">getEnumeration()</td>
+    <td>returns an AxisEnumeration object that can be used to iterate over the nodes on any of the
+    XPath axes. The first argument is an integer identifying the axis; the second is a NodeTest (a
+    simple form of pattern) which can be used to filter the nodes on the axis. Supply AnyNodeTest.getInstance()
+    if you want all the nodes on the axis.</td>
+  </tr>
+</table>
+
+<hr>
+
+
+<p align="center"><i>Michael H. Kay<br>
+3 July 2001</i></p>
+</body>
+</html>

@@ -1,0 +1,731 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>FOP Graphics Formats</title>
+<link type="text/css" href="skin/page.css" rel="stylesheet">
+</head>
+<body text="#000000" bgcolor="#FFFFFF">
+<!--================= start Navigation Path ==================-->
+<table summary="navigation path" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td nowrap="nowrap" valign="middle" bgcolor="#CFDCED" height="20"><img height="1" width="5" alt="" border="0" src="skin/images/spacer.gif"><!--===== breadcrumb trail (javascript-generated) ====--><font size="2" face="Arial, Helvetica, Sans-serif"><script src="skin/breadcrumbs.js" language="JavaScript" type="text/javascript"></script></font></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" height="2"><img height="2" width="2" alt="" border="0" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Navigation Path ==================-->
+<!--================= start Banner ==================-->
+<table summary="header with logos" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<!--================= start Group Logo ==================-->
+<td bgcolor="#294563"><a href="http://xml.apache.org/"><img border="0" class="logoImage" alt="Apache XML" src="images/group-logo.gif"></a></td>
+<!--================= end Group Logo ==================-->
+<!--================= start Project Logo ==================--><td width="100%" align="center" bgcolor="#294563"><a href="http://xml.apache.org/fop/"><img border="0" class="logoImage" alt="FOP" src="images/logo.jpg"></a></td>
+<!--================= end Project Logo ==================-->
+<!--================= start Search ==================--><td valign="top" rowspan="2" bgcolor="#294563">
+<form target="_blank" action="http://www.google.com/search" method="get">
+<table summary="search" border="0" cellspacing="0" cellpadding="0" bgcolor="#4C6C8F">
+<tr>
+<td colspan="3"><img height="10" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap"><input value="xml.apache.org" name="sitesearch" type="hidden"><input size="15" name="q" id="query" type="text"><img height="1" width="5" alt="" src="skin/images/spacer.gif"><input name="Search" value="Search" type="submit">
+<br>
+<font face="Arial, Helvetica, Sans-serif" size="2" color="white">
+                      the Apache XML site
+                      
+                      
+                    </font></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td><img alt="" border="0" height="10" width="9" src="skin/images/search-left.gif"></td><td><img height="1" width="1" alt="" src="skin/images/spacer.gif"></td><td><img alt="" border="0" height="10" width="9" src="skin/images/search-right.gif"></td>
+</tr>
+</table>
+</form>
+</td>
+<!--================= start Search ==================--><td bgcolor="#294563"><img height="10" width="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" bgcolor="#294563" colspan="2">
+<!--================= start Tabs ==================-->
+<div class="tab">
+<table summary="tab bar" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="selected tab" style="height: 1.7em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-left.gif"></td><td valign="middle" bgcolor="#4C6C8F"><font color="#ffffff" size="2" face="Arial, Helvetica, Sans-serif"><b><a href="index.html"><font color="#000000">Home</font></a></b></font></td><td valign="top" width="5" bgcolor="#4C6C8F"><img height="5" width="5" alt="" src="skin/images/tabSel-right.gif"></td>
+</tr>
+</table>
+</td><td width="8"><img alt="" height="8" width="8" src="skin/images/spacer.gif"></td><td valign="bottom">
+<table summary="non selected tab" style="height: 1.6em" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-left.gif"></td><td valign="middle" bgcolor="#B2C4E0"><a href="dev/index.html"><font face="Arial, Helvetica, Sans-serif">Development</font></a></td><td valign="top" width="5" bgcolor="#B2C4E0"><img height="5" width="5" alt="" src="skin/images/tab-right.gif"></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</div>
+<!--================= end Tabs ==================-->
+</td><td bgcolor="#294563"><img alt="" width="1" height="1" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#4C6C8F" colspan="4"><img width="1" height="10" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+<!--================= end Banner ==================-->
+<!--================= start Menu, NavBar, Content ==================-->
+<table summary="page content" bgcolor="#ffffff" width="100%" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td valign="top">
+<table summary="menu" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<!--================= start left top NavBar ==================-->
+<td rowspan="3" valign="top">
+<table summary="blue line" border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td bgcolor="#CFDCED"><font color="#4C6C8F" size="4" face="Arial, Helvetica, Sans-serif">&nbsp;</font></td>
+</tr>
+<tr>
+<td bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td>
+<!--================= end left top NavBar ==================--><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td nowrap="nowrap" valign="top" bgcolor="#4C6C8F">
+<!--================= start Menu items ==================-->
+<div class="menu">
+<ul>
+<li>
+<font color="#CFDCED">Home</font>
+<ul>
+          
+<li>
+<a href="index.html">Introduction</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Using FOP</font>
+<ul>
+          
+<li>
+<a href="relnotes.html">Release Notes</a>
+</li>
+          
+<li>
+<a href="download.html">Download</a>
+</li>
+          
+<li>
+<a href="compiling.html">Build</a>
+</li>
+          
+<li>
+<a href="configuration.html">Configure</a>
+</li>
+          
+<li>
+<a href="running.html">Run</a>
+</li>
+          
+<li>
+<a href="embedding.html">Embed</a>
+</li>
+          
+<li>
+<a href="servlets.html">Servlets</a>
+</li>
+          
+<li>
+<a href="anttask.html">Ant task</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Features</font>
+<ul>
+          
+<li>
+<a href="compliance.html">Compliance</a>
+</li>
+          
+<li>
+<a href="output.html">Output Targets</a>
+</li>
+          
+<li>
+<a href="pdfencryption.html">PDF encryption</a>
+</li>
+          
+<li>
+<span class="sel"><font color="#ffcc00">Graphics</font></span>
+</li>
+          
+<li>
+<a href="fonts.html">Fonts</a>
+</li>
+          
+<li>
+<a href="hyphenation.html">Hyphenation</a>
+</li>
+          
+<li>
+<a href="extensions.html">Extensions</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Resources</font>
+<ul>
+          
+<li>
+<a href="gethelp.html">Getting Help</a>
+</li>
+          
+<li>
+<a href="faq.html">FAQs</a>
+</li>
+          
+<li>
+<a href="fo.html">XSL-FO</a>
+</li>
+          
+<li>
+<a href="examples.html">Examples</a>
+</li>
+          
+<li>
+<a href="maillist.html">Mailing Lists</a>
+</li>
+          
+<li>
+<a href="bugs.html">Bugs</a>
+</li>
+          
+<li>
+<a href="license.html">License</a>
+</li>
+          
+<li>
+<a href="resources.html">Other</a>
+</li>
+        
+</ul>
+</li>
+<li>
+<font color="#CFDCED">Project</font>
+<ul>
+          
+<li>
+<a href="news.html">News</a>
+</li>
+          
+<li>
+<a href="logocontest.html">Logo contest</a>
+</li>
+          
+<li>
+<a href="status.html">Status</a>
+</li>
+          
+          
+<li>
+<a href="team.html">Team</a>
+</li>
+        
+</ul>
+</li>
+</ul>
+</div>
+<!--================= end Menu items ==================-->
+</td><td valign="bottom" bgcolor="#4C6C8F"><img width="10" height="10" alt="" src="skin/images/spacer.gif"></td><td bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td valign="bottom" align="left" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-left.gif"></td><td bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/spacer.gif"></td><td valign="bottom" align="right" colspan="2" rowspan="2" bgcolor="#4C6C8F"><img height="10" width="10" border="0" alt="" src="skin/images/menu-right.gif"></td>
+</tr>
+<tr>
+<td height="1" bgcolor="#294563"><img width="1" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+</table>
+</td><td valign="top" width="100%">
+<table summary="content" width="100%" border="0" cellpadding="0" cellspacing="0">
+<!--================= start middle NavBar ==================-->
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td align="left" width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td align="right" width="50%" bgcolor="#CFDCED"><font color="#4C6C8F" size="3" face="Arial, Helvetica, Sans-serif">
+                &nbsp;
+                
+                </font><img width="10" height="8" alt="" src="skin/images/spacer.gif"></td><td width="10" bgcolor="#CFDCED"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<tr>
+<td colspan="4" bgcolor="#294563"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end middle NavBar ==================-->
+<!--================= start Content==================-->
+<tr>
+<td align="left" width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td><td align="left" width="100%">
+<div class="content">
+<table class="title" summary="">
+<tr>
+<td valign="middle">
+<h1>FOP Graphics Formats</h1>
+</td><td nowrap="nowrap" width="80" align="center"><a class="dida" href="graphics.pdf"><img alt="printer" src="skin/images/printer.gif" border="0"><br>
+          print-friendly<br>
+          PDF</a></td>
+</tr>
+</table>
+<ul class="minitoc">
+<li>
+<a href="#support-overview">Overview of Graphics Support</a>
+</li>
+<li>
+<a href="#packages">Graphics Packages</a>
+<ul class="minitoc">
+<li>
+<a href="#native">FOP Native</a>
+</li>
+<li>
+<a href="#jimi">JIMI</a>
+</li>
+<li>
+<a href="#jai">JAI (Java Advanced Imaging API)</a>
+</li>
+<li>
+<a href="#batik">Batik</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#bmp">BMP</a>
+</li>
+<li>
+<a href="#eps">EPS</a>
+</li>
+<li>
+<a href="#jpeg">JPEG</a>
+</li>
+<li>
+<a href="#png">PNG</a>
+</li>
+<li>
+<a href="#svg">SVG</a>
+<ul class="minitoc">
+<li>
+<a href="#svg-intro">Introduction</a>
+</li>
+<li>
+<a href="#svg-pdf-graphics">Placing SVG Graphics into PDF</a>
+</li>
+<li>
+<a href="#svg-pdf-text">Placing SVG Text into PDF</a>
+</li>
+<li>
+<a href="#svg-scaling">Scaling</a>
+</li>
+<li>
+<a href="#svg-problems">Known Problems</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="#tiff">TIFF</a>
+</li>
+<li>
+<a href="#resolution">Graphics Resolution</a>
+</li>
+<li>
+<a href="#caching">Image caching</a>
+</li>
+</ul>
+    
+<a name="N101BE"></a><a name="support-overview"></a>
+<h3>Overview of Graphics Support</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+        The table below summarizes the <em>theoretical</em> support for graphical formats within FOP. In other words, within the constraints of the limitations listed here, these formats <em>should</em> work. However, many of them have not been tested, and there may be limitations that have not yet been discovered or documented. The packages needed to support some formats are not included in the FOP distribution and must be installed separately. Follow the links in the "Support Thru" column for more details.
+      </p>
+<table class="ForrestTable" cellspacing="1" cellpadding="4">
+        
+<tr>
+          
+<th colspan="1" rowspan="1">Format</th>
+          <th colspan="1" rowspan="1">Type</th>
+          <th colspan="1" rowspan="1">Support Thru</th>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1"><a href="#bmp">BMP</a> (Microsoft Windows Bitmap)</td>
+          <td colspan="1" rowspan="1">bitmap</td>
+          <td colspan="1" rowspan="1"><a href="#native">FOP native</a></td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1"><a href="#eps">EPS</a> (Encapsulated PostScript)</td>
+          <td colspan="1" rowspan="1">metafile (both bitmap and vector), probably most frequently used for vector drawings</td>
+          <td colspan="1" rowspan="1"><a href="#native">FOP native</a> (limited support, see restrictions below)</td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1">GIF (Graphics Interchange Format)</td>
+          <td colspan="1" rowspan="1">bitmap</td>
+          <td colspan="1" rowspan="1"><a href="#native">FOP native</a></td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1"><a href="#jpeg">JPEG</a> (Joint Photographic Experts Group)</td>
+          <td colspan="1" rowspan="1">bitmap</td>
+          <td colspan="1" rowspan="1"><a href="#native">FOP native</a></td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1"><a href="#png">PNG</a> (Portable Network Graphic)</td>
+          <td colspan="1" rowspan="1">bitmap</td>
+          <td colspan="1" rowspan="1"><a href="#jimi">JIMI</a> or <a href="#jai">JAI</a></td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1"><a href="#svg">SVG</a> (Scalable Vector Graphics)</td>
+          <td colspan="1" rowspan="1">vector (with embedded bitmaps)</td>
+          <td colspan="1" rowspan="1"><a href="#batik">Batik</a></td>
+        
+</tr>
+        
+<tr>
+          
+<td colspan="1" rowspan="1"><a href="#tiff">TIFF</a> (Tag Image Format File)</td>
+          <td colspan="1" rowspan="1">bitmap</td>
+          <td colspan="1" rowspan="1"><a href="#native">FOP native</a> or <a href="#jai">JAI</a>, depending on the subformat. See <a href="#tiff">TIFF</a> for more details.(JIMI also supports TIFF, but this has not been implemented within FOP).</td>
+        
+</tr>
+      
+</table>
+</div>
+    
+<a name="N1028F"></a><a name="packages"></a>
+<h3>Graphics Packages</h3>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N10295"></a><a name="native"></a>
+<h4>FOP Native</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          FOP has native ability to handle some graphic file formats.
+        </p>
+</div>
+<a name="N1029F"></a><a name="jimi"></a>
+<h4>JIMI</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+          Because of licensing issues, the JIMI image library is not included in the FOP distribution. First, <a target="_blank" href="http://java.sun.com/products/jimi">download</a> and install it.
+Then, copy the file "JimiProClasses.zip" from the archive to {fop-install-dir}/lib/jimi-1.0.jar. Please note that FOP binary distributions are compiled with JIMI support, so there is no need for you to build FOP to add the support. If jimi-1.0.jar is installed in the right place, it will automatically be used by FOP, otherwise it will not.
+        </p>
+</div>
+<a name="N102AD"></a><a name="jai"></a>
+<h4>JAI (Java Advanced Imaging API)</h4>
+<div style="margin-left: 0 ; border: 2px">
+<div class="frame warning">
+<div class="label">Warning</div>
+<div class="content">JAI support is available for Release 0.20.5 and later. The comments in this section do not apply to releases earlier than 0.20.5.</div>
+</div>
+<p>
+          FOP has been compiled with JAI support, but JAI is not included in the FOP distribution.
+To use it, install <a href="http://java.sun.com/products/java-media/jai">JAI</a>, then copy the jai_core.jar and the jai_codec.jar files to {fop-install-dir}/lib.
+JAI is much faster than JIMI, but is not available for all platforms. See <a href="http://java.sun.com/products/java-media/jai/forDevelopers/jaifaq.html#platforms">What platforms are supported?</a> on the JAI FAQ page for more details.
+        </p>
+</div>
+<a name="N102C2"></a><a name="batik"></a>
+<h4>Batik</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>Current FOP distributions include a distribution of the Apache Software Foundation's <a target="_top" href="http://xml.apache.org/batik">Batik</a> version 1.5beta4.
+It is automatically installed with FOP.
+Because Batik's API changes frequently, it is highly recommended that you use the version that ships with FOP, at least when running FOP.</p>
+<div class="frame warning">
+<div class="label">Warning</div>
+<div class="content">Batik must be run in a graphical environment.</div>
+</div>
+<p>Batik must be run in a graphical environment.
+It uses AWT classes for rendering SVG, which in turn require an X server on Unixish systems.
+If you run a server without X, or if you can't connect to the X server due to security restrictions or policies (a so-called "headless" environment), SVG rendering will fail.</p>
+<p>Here are some workarounds:</p>
+<ul>
+          
+<li>If you are using JDK 1.4, start it with the <span class="codefrag">-Djava.awt.headless=true</span> command line option.</li>
+          
+<li>Install an X server which provides an in-memory framebuffer without actually using a screen device or any display hardware. One example is Xvfb.</li>
+          
+<li>Install a toolkit which emulates AWT without the need for an underlying X server. One example is the <a href="http://www.eteks.com/pja/en">PJA toolkit</a>, which is free and comes with detailed installation instructions.</li>
+        
+</ul>
+</div>
+</div>
+    
+<a name="N102ED"></a><a name="bmp"></a>
+<h3>BMP</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>FOP native support for BMP images is limited to the RGB color-space.</p>
+</div>
+    
+<a name="N102F7"></a><a name="eps"></a>
+<h3>EPS</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>FOP provides support for two output targets:</p>
+<ul>
+        
+<li>PostScript (full support).</li>
+        
+<li>
+          PDF (partial support). Due to the lack of a built-in PostScript interpreter, FOP 
+          can only embed the EPS file into the PDF. Acrobat Reader will not currently display 
+          the EPS (it doesn't have a PostScript interpreter, either) but it will be shown 
+          correctly when you print the PDF on a PostScript-capable printer. PostScript devices 
+          (including GhostScript) will render the EPS correctly.
+        </li>
+      
+</ul>
+<p>
+        Other output targets can't be supported at the moment because
+        FOP lacks a PostScript interpreter.
+      </p>
+</div>
+    
+<a name="N1030D"></a><a name="jpeg"></a>
+<h3>JPEG</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>FOP native support of JPEG does not include all variants, especially those containing unusual color lookup tables and color profiles.
+If you have trouble with a JPEG image in FOP, try opening it with an image processing program (such as Photoshop or Gimp) and then saving it.
+Specifying 24-bit color output may also help.
+For the PDF and PostScript renderers most JPEG images can be passed through without decompression.
+User reports indicate that grayscale, RGB, and CMYK color-spaces are all rendered properly.
+      </p>
+</div>
+    
+<a name="N10317"></a><a name="png"></a>
+<h3>PNG</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>If using JAI for PNG support, only RGB and RGBA color-spaces are supported for FOP rendering.</p>
+</div>
+    
+<a name="N10321"></a><a name="svg"></a>
+<h3>SVG</h3>
+<div style="margin-left: 0 ; border: 2px">
+<a name="N10327"></a><a name="svg-intro"></a>
+<h4>Introduction</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>FOP uses <a href="#batik">Batik</a> for SVG support.
+This format can be handled as an <span class="codefrag">fo:instream-foreign-object</span> or in a separate
+file referenced with <span class="codefrag">fo:external-graphic</span>.</p>
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">   
+Batik's SVG Rasterizer utility may also be used to convert standalone SVG
+documents into PDF.  For more information please see the
+<a href="http://xml.apache.org/batik/svgrasterizer.html">SVG Rasterizer documentation</a>
+on the Batik site.
+      </div>
+</div>
+</div>
+<a name="N10342"></a><a name="svg-pdf-graphics"></a>
+<h4>Placing SVG Graphics into PDF</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+The SVG is rendered into PDF by using PDF commands to draw and fill
+lines and curves. This means that the graphical objects created with
+this remain as vector graphics.
+        </p>
+<p>
+There are a number of SVG things that cannot be converted directly into
+PDF. Parts of the graphic such as effects, patterns and images are inserted
+into the PDF as a raster graphic. The resolution of this graphic may not
+be ideal depending on the FOP dpi (72dpi) and the scaling for that graphic.
+We hope to improve this in the future.</p>
+<p>
+Currently transparency is not supported in PDF so many svg images that
+contain effects or graphics with transparent areas will not be displayed
+correctly.
+        </p>
+</div>
+<a name="N10352"></a><a name="svg-pdf-text"></a>
+<h4>Placing SVG Text into PDF</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>If possible, Batik will use normal PDF text when inserting text. It does
+this by checking if the text can be drawn normally and the font is
+supported. This example svg <a href="dev/svg/text.svg">text.svg</a> /
+<a href="dev/svg/text.pdf">text.pdf</a>
+shows how various types and effects with text are handled.
+Note that tspan and outlined text are not yet implemented.</p>
+<p>
+Otherwise, text is converted and drawn as a set of shapes by batik, using the stroking text painter.
+This means that a typical character will
+have about 10 curves (each curve consists of at least 20 characters).
+This can make the pdf files large and when the pdf is viewed the
+viewer does not normally draw those fine curves very well (turning on
+Smooth Line Art in the Acrobat preferences will fix this).
+If the text is inserted into the PDF using the inbuilt text commands
+for PDF it will use a single character.
+        </p>
+<p>
+For PDF output, there is a <a href="configuration.html#svg-strokeSVGText">configuration option to force SVG text to be rendered as text</a>.
+The drawback to this approach is that it is effective only for available fonts (including embedded fonts).
+Font sizes are rounded to the next integer point size.
+This will be improved in the future.
+        </p>
+<p>Note that because SVG text can be rendered as either text or a vector graphic, you may need to consider settings in your viewer for both.
+The Acrobat viewer has both "smooth line art" and "smooth text" settings that may need to be set for SVG images to be displayed nicely on your screen (see Edit / Preferences / Display).
+This setting will not affect the printing of your document, which should be OK in any case, but will only affect the quality of the screen display.</p>
+</div>
+<a name="N10371"></a><a name="svg-scaling"></a>
+<h4>Scaling</h4>
+<div style="margin-left: 0 ; border: 2px">
+<p>Currently, SVG images are rendered with the dimensions specified <em>in the SVG file</em>, within the viewport specified in the fo:external-graphic element.
+For everything to work properly, the two should be equal.
+The SVG standard leaves this issue as an implementation detail.
+FOP will probably implement a scaling mechanism in the future.</p>
+</div>
+<a name="N1037E"></a><a name="svg-problems"></a>
+<h4>Known Problems</h4>
+<div style="margin-left: 0 ; border: 2px">
+<ul>
+          
+<li>
+soft mask transparency is combined with white so that it looks better
+on pdf 1.3 viewers but this causes the soft mask to be slightly lighter
+or darker on pdf 1.4 viewers
+          </li>
+          
+<li>
+there is some problem with a gradient inside a pattern causing a pdf
+error when viewed in acrobat 5
+          </li>
+          
+<li>
+text is not always handled correctly, it may select the wrong font
+especially if characters have multiple fonts in the font list
+          </li>
+          
+<li>
+more pdf text handling could be implemented
+It could draw the string using the attributed character iterator
+to handle tspans and other simple changes of text.
+          </li>
+          
+<li>
+JPEG images are not inserted directly into the pdf document
+This area has not been implemented yet since the appropriate
+method in batik is static
+          </li>
+          
+<li>
+Uniform transparency for images and other svg elements that are converted
+into a raster graphic are not drawn properly in PDF. The image is opaque.
+          </li>
+        
+</ul>
+</div>
+</div>
+    
+<a name="N1039B"></a><a name="tiff"></a>
+<h3>TIFF</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>FOP-native TIFF support is limited to PDF and PostScript output only. Also, according to user reports, FOP's native support for TIFF is limited to images with the following characteristics (all must be true for successful rendering):</p>
+<ul>
+        
+<li>single channel images (i.e., bi-level and grayscale only)</li>
+        
+<li>uncompressed images, or images using CCITT T.4, CCITT T.6, or JPEG compression</li>
+        
+<li>images using white-is-zero encoding in the TIFF PhotometricInterpretation tag</li>
+      
+</ul>
+<p>
+<em>JAI:</em> Supports RGB and RGBA only for FOP rendering.</p>
+</div>
+    
+<a name="N103B6"></a><a name="resolution"></a>
+<h3>Graphics Resolution</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>Some bitmapped image file formats store a dots-per-inch (dpi) or other resolution value. Since PDF and most output formats do not have a concept of resolution, but only of absolute image units (i.e. pixels) FOP ignores the resolution values as well. Instead, FOP uses the dimensions of the image as specified in the fo:external-graphic element to render the image:</p>
+<ul>
+        
+<li>If no dimensions are given, FOP uses a default value of 72 dpi to compute the graphic's dimensions. For example, suppose a graphic 300 pixels wide and 400 pixels high. FOP will render the graphic at 4.167 inches wide, 5.555 inches high, with an apparent resolution of 72 dpi.</li>
+        
+<li>If only one dimension is given, FOP by default uses the same aspect ratio to compute the other dimension (to avoid the appearance of stretching). For example, suppose a graphic 300 pixels wide and 400 pixels high, for which content-width = ".5in". FOP will compute the content-height = .667 inches, and will render the graphic at that size, with an apparent resolution of 600 dpi.</li>
+        
+<li>If both dimensions are given, FOP simply renders the image in that space. For example, suppose a graphic 300 pixels wide and 400 pixels high, for which content-width = "3in" and content-height = "4in". FOP will render the graphic at that size, with an apparent resolution of 100 dpi.</li>
+      
+</ul>
+<p>If you need a higher apparent output resolution for bitmapped images, first make sure that at least one dimension of the image is defined in your XSL-FO input. Apart from that, resolution problems are in the image file itself, and must be corrected there: use or create a higher-resolution image file.</p>
+<div class="frame note">
+<div class="label">Note</div>
+<div class="content">The explanation above describes only the basic default behavior. There are other attributes of the fo:external-graphic element that can affect the behavior described above.</div>
+</div>
+</div>
+    
+<a name="N103D2"></a><a name="caching"></a>
+<h3>Image caching</h3>
+<div style="margin-left: 0 ; border: 2px">
+<p>
+        FOP caches images between runs. The URL is used as a key to identify images which means that when
+        a particular URL appears again, the image is taken from the cache. If you have a servlet that
+        generates a different image each time it is called with the same URL you need to use a constantly 
+        changing dummy parameter on the URL to avoid caching.
+      </p>
+<p>
+        Currently, the images are not automatically released when an OutOfMemoryError is imminent. The
+        image cache can grow to a considerable size over time when a lot of different URLs are in use.
+        Starting with version 0.20.5 you can call <span class="codefrag">org.apache.fop.image.FopImageFactory.resetCache()</span>
+        to manually empty the cache. Image caching will be improved as part of our redesign effort.
+      </p>
+</div>
+  
+</div>
+</td><td width="10"><img width="10" height="1" alt="" src="skin/images/spacer.gif"></td>
+</tr>
+<!--================= end Content==================-->
+</table>
+</td>
+</tr>
+</table>
+<!--================= end Menu, NavBar, Content ==================-->
+<!--================= start Footer ==================-->
+<table summary="footer" cellspacing="0" cellpadding="0" width="100%" border="0">
+<tr>
+<td colspan="2" height="1" bgcolor="#4C6C8F"><img height="1" width="1" alt="" src="skin/images/spacer.gif"><a href="skin/images/label.gif"></a><a href="skin/images/page.gif"></a><a href="skin/images/chapter.gif"></a><a href="skin/images/chapter_open.gif"></a><a href="skin/images/current.gif"></a><a href="/favicon.ico"></a></td>
+</tr>
+<tr>
+<td colspan="2" bgcolor="#CFDCED" class="copyright" align="center"><font size="2" face="Arial, Helvetica, Sans-Serif">Copyright &copy;
+          1999-2003&nbsp;The Apache Software Foundation. All rights reserved.<script type="text/javascript" language="JavaScript"><!--
+              document.write(" - "+"Last Published: " + document.lastModified);
+            //  --></script></font></td>
+</tr>
+<tr>
+<td colspan="2" align="left" bgcolor="#CFDCED" class="logos"></td>
+</tr>
+</table>
+<!--================= end Footer ==================-->
+</body>
+</html>

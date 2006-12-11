@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE root [
+<!ENTITY svgimage SYSTEM "blocks.ent">
+]>
+
+<fo:root font-family="Times Roman" font-size="12pt" xmlns:fo="http://www.w3.org/1999/XSL/Format">
+
+<fo:layout-master-set>
+    <fo:simple-page-master
+  margin-right="1.5cm"
+  margin-left="1.5cm"
+  margin-bottom="2cm"
+  margin-top="1cm"
+  page-width="21cm"
+  page-height="29.7cm"
+  master-name="left">
+      <fo:region-before extent="1cm"/>
+      <fo:region-body margin-top="1cm"/>
+      <fo:region-after extent="1.5cm"/>
+    </fo:simple-page-master>
+
+</fo:layout-master-set>
+
+<fo:page-sequence id="N2528" master-reference="left">
+
+<fo:static-content flow-name="xsl-region-after">
+  <fo:block text-align-last="center" font-size="10pt">
+    <fo:page-number/>
+  </fo:block>
+</fo:static-content>
+
+<fo:flow flow-name="xsl-region-body">
+<fo:block font-size="18pt" font-weight="bold" text-align="center">Embedding SVG in Viewport</fo:block>
+<fo:block>
+  <fo:block font-size="16pt" font-weight="bold" space-before.minimum="1em" space-before.optimum="1.5em" space-before.maximum="2em">Align in Larger Viewport</fo:block>
+
+  <fo:block>
+Default align:
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt">&svgimage;</fo:instream-foreign-object>), start
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" text-align="start">&svgimage;</fo:instream-foreign-object>), center
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" text-align="center">&svgimage;</fo:instream-foreign-object>), end
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" text-align="end">&svgimage;</fo:instream-foreign-object>), before
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" display-align="before">&svgimage;</fo:instream-foreign-object>), center
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" display-align="center">&svgimage;</fo:instream-foreign-object>), after
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" display-align="after">&svgimage;</fo:instream-foreign-object>), start-before
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" text-align="start" display-align="before">&svgimage;</fo:instream-foreign-object>), start-center
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" text-align="start" display-align="center">&svgimage;</fo:instream-foreign-object>), start-after
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" text-align="start" display-align="after">&svgimage;</fo:instream-foreign-object>), center-before
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" text-align="center" display-align="before">&svgimage;</fo:instream-foreign-object>), center-center
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" text-align="center" display-align="center">&svgimage;</fo:instream-foreign-object>), center-after
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" text-align="center" display-align="after">&svgimage;</fo:instream-foreign-object>), end-before
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" text-align="end" display-align="before">&svgimage;</fo:instream-foreign-object>), end-center
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" text-align="end" display-align="center">&svgimage;</fo:instream-foreign-object>), end-after
+(<fo:instream-foreign-object width="100pt" height="100pt" content-width="50pt" content-height="50pt" text-align="end" display-align="after">&svgimage;</fo:instream-foreign-object>).
+  </fo:block>
+
+  <fo:block font-size="16pt" font-weight="bold" space-before.minimum="1em" space-before.optimum="1.5em" space-before.maximum="2em">Align in Smaller Viewport</fo:block>
+  <fo:block>
+Default align:
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden">&svgimage;</fo:instream-foreign-object>), start
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" text-align="start">&svgimage;</fo:instream-foreign-object>), center
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" text-align="center">&svgimage;</fo:instream-foreign-object>), end
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" text-align="end">&svgimage;</fo:instream-foreign-object>), before
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" display-align="before">&svgimage;</fo:instream-foreign-object>), center
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" display-align="center">&svgimage;</fo:instream-foreign-object>), after
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" display-align="after">&svgimage;</fo:instream-foreign-object>), start-before
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" text-align="start" display-align="before">&svgimage;</fo:instream-foreign-object>), start-center
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" text-align="start" display-align="center">&svgimage;</fo:instream-foreign-object>), start-after
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" text-align="start" display-align="after">&svgimage;</fo:instream-foreign-object>), center-before
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" text-align="center" display-align="before">&svgimage;</fo:instream-foreign-object>), center-center
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" text-align="center" display-align="center">&svgimage;</fo:instream-foreign-object>), center-after
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" text-align="center" display-align="after">&svgimage;</fo:instream-foreign-object>), end-before
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" text-align="end" display-align="before">&svgimage;</fo:instream-foreign-object>), end-center
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" text-align="end" display-align="center">&svgimage;</fo:instream-foreign-object>), end-after
+(<fo:instream-foreign-object width="50pt" height="50pt" overflow="hidden" text-align="end" display-align="after">&svgimage;</fo:instream-foreign-object>).
+  </fo:block>
+
+  <fo:block font-size="16pt" font-weight="bold" space-before.minimum="1em" space-before.optimum="1.5em" space-before.maximum="2em">Scaling</fo:block>
+  <fo:block>
+Non-uniform
+(<fo:instream-foreign-object content-width="100pt" content-height="50pt" scaling="non-uniform" overflow="hidden" text-align="start">&svgimage;</fo:instream-foreign-object>), non-uniform
+(<fo:instream-foreign-object content-width="50pt" content-height="100pt" scaling="non-uniform" overflow="hidden" text-align="start">&svgimage;</fo:instream-foreign-object>), uniform
+(<fo:instream-foreign-object content-width="100pt" content-height="75pt" scaling="uniform" overflow="hidden" text-align="start">&svgimage;</fo:instream-foreign-object>), uniform
+(<fo:instream-foreign-object content-width="75pt" content-height="100pt" scaling="uniform" overflow="hidden" text-align="start">&svgimage;</fo:instream-foreign-object>).
+  </fo:block>
+
+  <fo:block font-size="16pt" font-weight="bold" space-before.minimum="1em" space-before.optimum="1.5em" space-before.maximum="2em"/>
+  This section is only required to show that the layout still works.
+</fo:block>
+</fo:flow>
+</fo:page-sequence>
+
+</fo:root>
+
