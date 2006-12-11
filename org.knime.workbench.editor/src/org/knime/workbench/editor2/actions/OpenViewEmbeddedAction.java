@@ -28,6 +28,7 @@ import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.internal.Workbench;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.workflow.NodeContainer;
 
@@ -64,20 +65,22 @@ public class OpenViewEmbeddedAction extends OpenViewAction {
     @Override
     public void run() {
         try {
-            IViewPart part = PlatformUI.getWorkbench()
-                    .getActiveWorkbenchWindow().getActivePage().showView(
-                            EmbeddedNodeView.ID,
-                            "" + numInstances++,
-                            IWorkbenchPage.VIEW_CREATE
-                                    | IWorkbenchPage.VIEW_ACTIVATE);
+            IViewPart part =
+                    PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                            .getActivePage().showView(
+                                    EmbeddedNodeView.ID,
+                                    "" + numInstances++,
+                                    IWorkbenchPage.VIEW_CREATE
+                                            | IWorkbenchPage.VIEW_ACTIVATE);
             if (part != null) {
-                EmbeddedNodeView view = (EmbeddedNodeView) part;
+                EmbeddedNodeView view = (EmbeddedNodeView)part;
 
-                
                 NodeView nodeView = m_container.getView(m_viewIndex);
 
                 // sets the Node-view to the Eclipse-View...
                 view.setNodeView(nodeView);
+                Workbench.getInstance().getActiveWorkbenchWindow()
+                        .getActivePage().activate(view);
             }
         } catch (PartInitException e) {
             // TODO Auto-generated catch block
