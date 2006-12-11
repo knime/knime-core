@@ -44,6 +44,7 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class FuzzyBasisFunctionLearnerNodeModel extends
         BasisFunctionLearnerNodeModel {
+    
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(FuzzyBasisFunctionLearnerNodeModel.class);
@@ -62,9 +63,9 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
     /**
      * Starts the learning algorithm in the learner.
      * 
-     * @param data the input trainings data at index 0
+     * @param data the input training data at index 0
      * @param exec the execution monitor
-     * @return the ouput fuzzy rule model
+     * @return the output fuzzy rule model
      * @throws CanceledExecutionException if the training was canceled
      */
     @Override

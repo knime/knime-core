@@ -111,7 +111,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
 
     private final Map<DataCell, List<BasisFunctionLearnerRow>> m_bfs;
 
-    /** Translates hilite events between model and trainings data. */
+    /** Translates hilite events between model and training data. */
     private final HiLiteTranslator m_translator;
 
     /**
@@ -199,7 +199,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     /**
      * Starts the learning algorithm in the learner.
      * 
-     * @param data the input trainings data at index 0
+     * @param data the input training data at index 0
      * @param exec the execution monitor
      * @return the output fuzzy rule model
      * @throws CanceledExecutionException if the training was canceled

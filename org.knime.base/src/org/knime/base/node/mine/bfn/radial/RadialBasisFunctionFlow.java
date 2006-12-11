@@ -76,7 +76,7 @@ public final class RadialBasisFunctionFlow {
         // create nodes
         //
 
-        // create: file reader node for trainings data
+        // create: file reader node for training data
         int fileReaderTrain = flow.addNewNode(new FileReaderNodeFactory(trn))
                 .getID();
         // create: binner
@@ -85,14 +85,14 @@ public final class RadialBasisFunctionFlow {
         int color = flow.addNewNode(new ColorManagerNodeFactory()).getID();
         // create: column filter
         int column = flow.addNewNode(new FilterColumnNodeFactory()).getID();
-        // create: cache node trainings data
+        // create: cache node training data
         int cache1 = flow.addNewNode(new CacheNodeFactory()).getID();
-        // create: table view trainings data
+        // create: table view training data
         int table1 = flow.addNewNode(new TableNodeFactory()).getID();
         // create: radial bf learner node
         int rbfLearner = flow.addNewNode(
                 new RadialBasisFunctionLearnerNodeFactory()).getID();
-        // create: parallel coord
+        // create: parallel coordinates
         int parcoord = flow.addNewNode(new ParallelCoordinatesNodeFactory())
                 .getID();
         // create: table view fuzzy model
@@ -100,7 +100,7 @@ public final class RadialBasisFunctionFlow {
         // create: file reader node for test data
         int fileReaderTest = flow.addNewNode(new FileReaderNodeFactory(tst))
                 .getID();
-        // create: cache node trainings data
+        // create: cache node training data
         int cache2 = flow.addNewNode(new CacheNodeFactory()).getID();
         // create: table view test data
         int table3 = flow.addNewNode(new TableNodeFactory()).getID();
@@ -182,7 +182,7 @@ public final class RadialBasisFunctionFlow {
      * @param args Not used.
      */
     public static final void main(final String[] args) {
-        // get trainings and test data file name from cmd
+        // get training and test data file name
         final String trn = (args.length > 0 ? args[0] : null);
         final String tst = (args.length > 1 ? args[1] : trn);
         try {
