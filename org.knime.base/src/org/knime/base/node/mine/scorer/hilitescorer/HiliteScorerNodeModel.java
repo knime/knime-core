@@ -51,9 +51,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -224,17 +224,19 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         }
         // set the last bit to indicate the end of the set
         m_rocCurve.set(in.getRowCount());
-        
+
         m_nrRows = rowNr;
-        DataRow[] rows = new DataRow[m_values.length];
-        for (int i = 0; i < rows.length; i++) {
-            // need to make a datacell for the row key
-            rows[i] = new DefaultRow(new StringCell(m_values[i]),
-                    m_scorerCount[i]);
-        }
         DataType[] colTypes = new DataType[m_values.length];
         Arrays.fill(colTypes, IntCell.TYPE);
-        DataTable out = new DefaultTable(rows, m_values, colTypes);
+        BufferedDataContainer container =
+                exec.createDataContainer(new DataTableSpec(m_values, colTypes));
+        for (int i = 0; i < m_values.length; i++) {
+            // need to make a datacell for the row key
+            container.addRowToTable(new DefaultRow(new StringCell(m_values[i]),
+                    m_scorerCount[i]));
+        }
+        container.close();
+
         // print info
         int correct = getCorrectCount();
         int incorrect = getFalseCount();
@@ -244,8 +246,10 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         LOGGER.info("error=" + error + ", #correct=" + correct + ", #false="
                 + incorrect + ", #rows=" + nrRows + ", #missing=" + missing);
         // our view displays the table - we must keep a reference in the model.
-        m_lastResult = out;
-        return new BufferedDataTable[]{exec.createBufferedDataTable(out, exec)};
+        m_lastResult = container.getTable();
+        return new BufferedDataTable[]{exec.createBufferedDataTable(
+                m_lastResult, exec)};
+
     } // execute(DataTable[],ExecutionMonitor)
 
     /**
