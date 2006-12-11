@@ -121,12 +121,9 @@ public class InitialUpdateSiteIntroShell {
 
             Shell shell = null;
             if (parentShell != null) {
-                shell =
-                        new Shell(parentShell, SWT.ON_TOP | SWT.DIALOG_TRIM
-                                | SWT.BORDER | SWT.TITLE);
+                shell = new Shell(parentShell, SWT.ON_TOP | SWT.DIALOG_TRIM);
             } else {
-                shell = new Shell(display, SWT.ON_TOP | SWT.DIALOG_TRIM
-                        | SWT.BORDER | SWT.TITLE);
+                shell = new Shell(display, SWT.ON_TOP | SWT.DIALOG_TRIM);
             }
 
             try {
