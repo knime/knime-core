@@ -191,8 +191,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     // **********************************************
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractDrawingPane#
-     * paintContent(java.awt.Graphics)
+     * @see org.knime.base.node.viz.plotter.
+     * AbstractDrawingPane#paintContent(java.awt.Graphics)
      */
     @Override
     public void paintContent(final Graphics g) {
