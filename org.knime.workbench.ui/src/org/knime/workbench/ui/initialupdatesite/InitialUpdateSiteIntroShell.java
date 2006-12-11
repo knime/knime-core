@@ -28,12 +28,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
@@ -55,6 +53,10 @@ public class InitialUpdateSiteIntroShell {
     private static final String NEXT_TIME_CHECK_FILE_NAME = "CheckNextTime";
 
     private static final String VALUE_KEY = "checkNextTime";
+
+    private static final int WIDTH = 600;
+
+    private static final int HEIGHT = 350;
 
     /**
      * This method opens a window where the user can decide whether to open the
@@ -110,7 +112,19 @@ public class InitialUpdateSiteIntroShell {
                 display = Display.getDefault();
             }
 
-            Shell shell = new Shell(display, SWT.ON_TOP | SWT.DIALOG_TRIM);
+            Shell[] shells = display.getShells();
+            Shell parentShell = null;
+            for (Shell s : shells) {
+                parentShell = s;
+                break;
+            }
+
+            Shell shell = null;
+            if (parentShell != null) {
+                shell = new Shell(parentShell, SWT.ON_TOP | SWT.DIALOG_TRIM);
+            } else {
+                shell = new Shell(display, SWT.ON_TOP | SWT.DIALOG_TRIM);
+            }
 
             try {
                 shell.setImage(ImageRepository.getImageDescriptor(
@@ -152,7 +166,7 @@ public class InitialUpdateSiteIntroShell {
             final Button okButton = new Button(shell, SWT.PUSH);
             okButton.setText("OK");
             // button.setBounds(20, 270, 180, 20);
-            //okButton.setSize(180, 20);
+            // okButton.setSize(180, 20);
             okButton.setLayoutData(gridData);
 
             gridData = new GridData();
@@ -191,14 +205,18 @@ public class InitialUpdateSiteIntroShell {
             nextTimeCheck.setLayoutData(gridData);
             nextTimeCheck.setSelection(true);
 
+            final Label blank = new Label(shell, SWT.NONE);
+            blank.setText("");
+            // label.setBounds(20, 15, 380, 260);
+            blank.setLayoutData(gridData);
+
             Composite parent = shell.getParent();
-            getPreferedSize(shell);
             if (parent != null) {
                 shell.setBounds(parent.getBounds().width / 2, parent
-                        .getBounds().height / 2, 550, 255);
+                        .getBounds().height / 2, WIDTH, HEIGHT);
             } else {
-                shell.setBounds(display.getBounds().width / 2, display
-                        .getBounds().height / 2, 550, 255);
+                shell.setBounds(display.getBounds().width / 2 - WIDTH / 2,
+                        display.getBounds().height / 2, WIDTH, HEIGHT);
             }
 
             okButton.setFocus();
@@ -270,20 +288,6 @@ public class InitialUpdateSiteIntroShell {
 
             return m_update;
         }
-    }
-    
-    private Point getPreferedSize(Shell shell)
-    {
-        Control[] controls = shell.getChildren();
-//        int width = 0;
-//        int height = 0;
-        for(Control control : controls)
-        {
-            control.getSize();
-            control.getBounds();
-        }
-        
-        return null;
     }
 
     private void saveNextTimeShowup(final boolean checkNextTime) {
