@@ -38,8 +38,10 @@ public class ConvenientComboBoxRenderer extends BasicComboBoxRenderer {
     public Component getListCellRendererComponent(final JList list,
             final Object value, final int index, final boolean isSelected,
             final boolean cellHasFocus) {
-        if (index > -1) {
+        if ((index > -1) && (value != null)) {
             list.setToolTipText(value.toString());
+        } else {
+            list.setToolTipText(null);
         }
         return super.getListCellRendererComponent(list, value, index,
                 isSelected, cellHasFocus);
