@@ -20,9 +20,11 @@ package org.knime.base.node.viz.histogram.node;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import org.knime.core.node.defaultnodedialog.DialogComponentColumnSelection;
-import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * The dialog of the {@link FixedColumnHistogramNodeModel} where the user can
@@ -30,15 +32,12 @@ import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
  * 
  * @author Tobias Koetter
  */
-public class FixedColumnHistogramNodeDialog extends DefaultNodeDialogPane {
+public class FixedColumnHistogramNodeDialog extends DefaultNodeSettingsPane {
     
     private static final String X_COL_SEL_LABEL = "X column:";
 
     private static final String AGGR_COL_SEL_LABEL = "Aggregation column:";
     
-    private final DialogComponentColumnSelection m_xColComp;
-    
-    private final DialogComponentColumnSelection m_aggrColComp;
     
     /**
      * New pane for configuring BayesianClassifier node dialog.
@@ -46,22 +45,21 @@ public class FixedColumnHistogramNodeDialog extends DefaultNodeDialogPane {
     @SuppressWarnings("unchecked")
     public FixedColumnHistogramNodeDialog() {
         super();
-        addDialogComponent(new DialogComponentNumber(
-                FixedColumnHistogramNodeModel.CFGKEY_NO_OF_ROWS,
-                "No. of rows to display:", 1, Integer.MAX_VALUE, 
-                FixedColumnHistogramNodeModel.DEFAULT_NO_OF_ROWS));
+        addDialogComponent(new DialogComponentNumber(new SettingsModelInteger(
+                FixedColumnHistogramNodeModel.CFGKEY_NO_OF_ROWS, 
+                FixedColumnHistogramNodeModel.DEFAULT_NO_OF_ROWS),
+                "No. of rows to display:", 1));
         
-         m_xColComp = new DialogComponentColumnSelection(
-                 FixedColumnHistogramNodeModel.CFGKEY_X_COLNAME,
+         addDialogComponent(new DialogComponentColumnNameSelection(
+                 new SettingsModelString(
+                 FixedColumnHistogramNodeModel.CFGKEY_X_COLNAME, ""),
                  FixedColumnHistogramNodeDialog.X_COL_SEL_LABEL, 0, 
-                 DataValue.class);
-         addDialogComponent(m_xColComp);
+                 DataValue.class));
          
-         m_aggrColComp = new DialogComponentColumnSelection(
-                 FixedColumnHistogramNodeModel.CFGKEY_AGGR_COLNAME,
-                 FixedColumnHistogramNodeDialog.AGGR_COL_SEL_LABEL, 0, 
-                 DoubleValue.class);
-         addDialogComponent(m_aggrColComp);
-         
+         addDialogComponent(new DialogComponentColumnNameSelection(
+                 new SettingsModelString(
+                         FixedColumnHistogramNodeModel.CFGKEY_AGGR_COLNAME, ""),
+                         FixedColumnHistogramNodeDialog.AGGR_COL_SEL_LABEL, 0, 
+                 DoubleValue.class));
     }
 }

@@ -1054,7 +1054,14 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {
         final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
-        final Collection<BarVisModel> bars = drawingPane.getVisBars().values();
+        if (drawingPane == null) {
+            return;
+        }
+        Hashtable<String, BarVisModel> visBars = drawingPane.getVisBars();
+        if (visBars == null) {
+            return;
+        }
+        final Collection<BarVisModel> bars = visBars.values();
         if (bars == null) {
             return;
         }

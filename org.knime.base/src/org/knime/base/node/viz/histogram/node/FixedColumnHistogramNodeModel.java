@@ -45,6 +45,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 
 /**
@@ -70,11 +72,15 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     /**Settings name of the aggregation column name.*/
     protected static final String CFGKEY_AGGR_COLNAME = "aggrColumn";
 
-    private String m_xColName;
+    private SettingsModelString m_xColName = new SettingsModelString(
+            FixedColumnHistogramNodeModel.CFGKEY_X_COLNAME, "");
     
-    private String m_aggrColName;
+    private SettingsModelString m_aggrColName = new SettingsModelString(
+            FixedColumnHistogramNodeModel.CFGKEY_AGGR_COLNAME, "");
     
-    private int m_noOfRows;
+    private final SettingsModelInteger m_noOfRows = new SettingsModelInteger(
+            FixedColumnHistogramNodeModel.CFGKEY_NO_OF_ROWS, 
+            FixedColumnHistogramNodeModel.DEFAULT_NO_OF_ROWS);
 
     /** The Rule2DPlotter is the core of the view. */
     private FixedColumnHistogramPlotter m_plotter;
@@ -93,13 +99,29 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     }
 
     /**
+     * @see org.knime.core.node.NodeModel
+     *      #loadValidatedSettingsFrom(NodeSettingsRO)
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        try {
+            m_noOfRows.loadSettingsFrom(settings);
+        } catch (Exception e) {
+            // In case of older nodes the row number is not available
+        }
+        m_xColName.loadSettingsFrom(settings);
+        m_aggrColName.loadSettingsFrom(settings);
+    }
+
+    /**
      * @see org.knime.core.node.NodeModel #saveSettingsTo(NodeSettingsWO)
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addInt(CFGKEY_NO_OF_ROWS, m_noOfRows);
-        settings.addString(CFGKEY_X_COLNAME, m_xColName);
-        settings.addString(CFGKEY_AGGR_COLNAME, m_aggrColName);
+        m_noOfRows.saveSettingsTo(settings);
+        m_xColName.saveSettingsTo(settings);
+        m_aggrColName.saveSettingsTo(settings);
     }
 
     /**
@@ -108,32 +130,8 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        String xCol = settings.getString(CFGKEY_X_COLNAME);
-        if (xCol == null || xCol.length() < 1) {
-            throw new InvalidSettingsException(
-                    "The x column needs to be defined.");
-        }
-        String aggrCol = settings.getString(CFGKEY_AGGR_COLNAME);
-        if (aggrCol == null || aggrCol.length() < 1) {
-            throw new InvalidSettingsException(
-                    "The aggregation column needs to be defined.");
-        }
-    }
-
-    /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadValidatedSettingsFrom(NodeSettingsRO)
-     */
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        try {
-            m_noOfRows = settings.getInt(CFGKEY_NO_OF_ROWS);
-        } catch (Exception e) {
-            // In case of older nodes the row number is not available
-        }
-        m_xColName = settings.getString(CFGKEY_X_COLNAME);
-        m_aggrColName = settings.getString(CFGKEY_AGGR_COLNAME);
+        m_xColName.validateSettings(settings);
+        m_aggrColName.validateSettings(settings);
     }
 
     /**
@@ -147,14 +145,14 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         FileInputStream in = new FileInputStream(settingsFile);
         NodeSettingsRO settings = NodeSettings.loadFromXML(in);
         try {
-            m_noOfRows = settings.getInt(CFGKEY_NO_OF_ROWS);
+            m_noOfRows.loadSettingsFrom(settings);
         } catch (InvalidSettingsException e1) {
             //to prevent problems with older work flows
-            m_noOfRows = DEFAULT_NO_OF_ROWS;
+            m_noOfRows.setIntValue(DEFAULT_NO_OF_ROWS);
         }
         try {
-            m_xColName = settings.getString(CFGKEY_X_COLNAME);
-            m_aggrColName = settings.getString(CFGKEY_AGGR_COLNAME);
+            m_xColName.loadSettingsFrom(settings);
+            m_aggrColName.loadSettingsFrom(settings);
         } catch (InvalidSettingsException e) {
             throw new IOException(e.getMessage());
         }
@@ -168,9 +166,9 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
         NodeSettings settings = new NodeSettings(CFG_SETTINGS);
-        settings.addInt(CFGKEY_NO_OF_ROWS, m_noOfRows);
-        settings.addString(CFGKEY_X_COLNAME, m_xColName);
-        settings.addString(CFGKEY_AGGR_COLNAME, m_aggrColName);
+        m_noOfRows.saveSettingsTo(settings);
+        m_xColName.saveSettingsTo(settings);
+        m_aggrColName.saveSettingsTo(settings);
         File settingsFile = new File(nodeInternDir, CFG_SETTINGS);
         FileOutputStream out = new FileOutputStream(settingsFile);
         settings.saveToXML(out);
@@ -190,20 +188,23 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         // create the properties panel
         m_properties = 
             new FixedColumnHistogramProperties(AggregationMethod.COUNT);
+        final String xCol = m_xColName.getStringValue();
+        final String aggrCol = m_aggrColName.getStringValue();
         // create the plotter
         m_plotter = new FixedColumnHistogramPlotter(data.getDataTableSpec(), 
-                m_properties, getInHiLiteHandler(0), m_xColName, m_aggrColName);
+                m_properties, getInHiLiteHandler(0), xCol, aggrCol);
         m_plotter.setBackground(ColorAttr.getBackground());
+        final int selectedNoOfRows = m_noOfRows.getIntValue();
         final int noOfRows = data.getRowCount();
-        if ((m_noOfRows) < noOfRows) {
-            setWarningMessage("Only the first " + noOfRows + " of " 
+        if ((selectedNoOfRows) < noOfRows) {
+            setWarningMessage("Only the first " + selectedNoOfRows + " of " 
                     + noOfRows + " rows are displayed.");
         }
         exec.setMessage("Adding data rows to histogram...");
         final double progressPerRow = 1.0 / noOfRows;
         double progress = 0.0;
         final RowIterator rowIterator = data.iterator();
-        for (int i = 0; i < m_noOfRows && rowIterator.hasNext(); i++) {
+        for (int i = 0; i < selectedNoOfRows && rowIterator.hasNext(); i++) {
             final DataRow row = rowIterator.next();
             m_plotter.addDataRow(row);
             progress += progressPerRow;
@@ -238,18 +239,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
      *      #configure(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-        //check the internal variables if they are valid
-        if (m_xColName == null || m_xColName.length() < 1) {
-            throw new InvalidSettingsException(
-                    "Please define the x column.");
-        }
-
-        if (m_aggrColName == null || m_aggrColName.length() < 1) {
-            throw new InvalidSettingsException(
-                    "Please define the aggregation column.");
-        }
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) {
         return new DataTableSpec[0];
     }
 }

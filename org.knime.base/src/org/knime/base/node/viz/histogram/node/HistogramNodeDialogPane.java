@@ -25,16 +25,21 @@
 package org.knime.base.node.viz.histogram.node;
 
 import org.knime.core.data.DataValue;
-import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import org.knime.core.node.defaultnodedialog.DialogComponentColumnSelection;
-import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * The dialog of the {@link HistogramNodeModel} where the user can
  * define the x column and the number of rows. 
  * @author Tobias Koetter, University of Konstanz
  */
-public class HistogramNodeDialogPane extends DefaultNodeDialogPane {
+public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
+    
+    private static final String X_COL_SEL_LABEL = "X column:";
+    
     /**
      * Constructor for class HistogramNodeDialogPane.
      * 
@@ -42,16 +47,15 @@ public class HistogramNodeDialogPane extends DefaultNodeDialogPane {
     @SuppressWarnings("unchecked")
     protected HistogramNodeDialogPane() {
         super();
-        addDialogComponent(new DialogComponentNumber(
-                HistogramNodeModel.CFGKEY_NO_OF_ROWS,
-                "No. of rows to display:", 1, Integer.MAX_VALUE, 
-                HistogramNodeModel.DEFAULT_NO_OF_ROWS));
+        addDialogComponent(new DialogComponentNumber(new SettingsModelInteger(
+                HistogramNodeModel.CFGKEY_NO_OF_ROWS, 
+                HistogramNodeModel.DEFAULT_NO_OF_ROWS),
+                "No. of rows to display:", 1));
         
-        DialogComponentColumnSelection colSel = 
-            new DialogComponentColumnSelection(
-                HistogramNodeModel.CFGKEY_X_COLNAME,
-                "Select the xcolumn:", 0, DataValue.class);
-        addDialogComponent(colSel);
-
+         addDialogComponent(new DialogComponentColumnNameSelection(
+                 new SettingsModelString(
+                 HistogramNodeModel.CFGKEY_X_COLNAME, ""),
+                 HistogramNodeDialogPane.X_COL_SEL_LABEL, 0, 
+                 DataValue.class));
     }
 }

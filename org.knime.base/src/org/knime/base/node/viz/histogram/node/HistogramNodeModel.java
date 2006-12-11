@@ -47,6 +47,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 
 /**
@@ -87,9 +89,12 @@ public class HistogramNodeModel extends NodeModel {
     private DataTable m_data;
 
     /** The name of the x column. */
-    private String m_xColName;
+    private final SettingsModelString m_xColName = new SettingsModelString(
+            HistogramNodeModel.CFGKEY_X_COLNAME, "");
     
-    private int m_noOfRows = DEFAULT_NO_OF_ROWS;
+    private final SettingsModelInteger m_noOfRows = new SettingsModelInteger(
+            HistogramNodeModel.CFGKEY_NO_OF_ROWS, 
+            HistogramNodeModel.DEFAULT_NO_OF_ROWS);
     /**
      * The constructor.
      */
@@ -105,20 +110,18 @@ public class HistogramNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addInt(CFGKEY_NO_OF_ROWS, m_noOfRows);
-        settings.addString(CFGKEY_X_COLNAME, m_xColName);
+        m_noOfRows.saveSettingsTo(settings);
+        m_xColName.saveSettingsTo(settings);
     }
 
     /**
      * @see org.knime.core.node.NodeModel #validateSettings(NodeSettingsRO)
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings) {
-        /*
-         * try { settings.getString(CFGKEY_ATTRCOLNAME); } catch
-         * (InvalidSettingsException e) { throw new
-         * InvalidSettingsException("Attribute column " + "not specified"); }
-         */
+    protected void validateSettings(final NodeSettingsRO settings) 
+    throws InvalidSettingsException {
+        m_noOfRows.validateSettings(settings);
+        m_xColName.validateSettings(settings);
     }
 
     /**
@@ -129,11 +132,11 @@ public class HistogramNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         try {
-            m_noOfRows = settings.getInt(CFGKEY_NO_OF_ROWS);
+            m_noOfRows.loadSettingsFrom(settings);
         } catch (Exception e) {
             // In case of older nodes the row number is not available
         }
-        m_xColName = settings.getString(CFGKEY_X_COLNAME);
+        m_xColName.loadSettingsFrom(settings);
     }
 
     /**
@@ -149,12 +152,12 @@ public class HistogramNodeModel extends NodeModel {
         final FileInputStream in = new FileInputStream(settingsFile);
         final NodeSettingsRO settings = NodeSettings.loadFromXML(in);
         try {
-            m_noOfRows = settings.getInt(CFGKEY_NO_OF_ROWS);
+            m_noOfRows.loadSettingsFrom(settings);
         } catch (InvalidSettingsException e1) {
-            m_noOfRows = DEFAULT_NO_OF_ROWS;
+            m_noOfRows.setIntValue(DEFAULT_NO_OF_ROWS);
         }
         try {
-            m_xColName = settings.getString(CFGKEY_X_COLNAME);
+            m_xColName.loadSettingsFrom(settings);
         } catch (InvalidSettingsException e) {
             throw new IOException(e.getMessage());
         }
@@ -170,8 +173,8 @@ public class HistogramNodeModel extends NodeModel {
 //        final File f = new File(nodeInternDir, CFG_DATA);
 //        DataContainer.writeToZip(m_data, f, exec);
         final NodeSettings settings = new NodeSettings(CFG_SETTINGS);
-        settings.addInt(CFGKEY_NO_OF_ROWS, m_noOfRows);
-        settings.addString(CFGKEY_X_COLNAME, m_xColName);
+        m_noOfRows.saveSettingsTo(settings);
+        m_xColName.saveSettingsTo(settings);
         final File settingsFile = new File(nodeInternDir, CFG_SETTINGS);
         final FileOutputStream out = new FileOutputStream(settingsFile);
         settings.saveToXML(out);
@@ -189,7 +192,7 @@ public class HistogramNodeModel extends NodeModel {
         // create the data object
         m_data = inData[0];
         final DataTableSpec tableSpec = m_data.getDataTableSpec();
-        String selectedXCol = m_xColName;
+        String selectedXCol = m_xColName.getStringValue();
         if (selectedXCol == null && tableSpec.getNumColumns() > 0) {
             // set the first column of the table as default x column
             selectedXCol = tableSpec.getColumnSpec(0).getName();
@@ -202,16 +205,17 @@ public class HistogramNodeModel extends NodeModel {
                 getInHiLiteHandler(0), selectedXCol);
         m_plotter.setBackground(ColorAttr.getBackground());
         if (m_data != null) {
+            final int selectedNoOfRows = m_noOfRows.getIntValue();
             final int noOfRows = inData[0].getRowCount();
-            if ((m_noOfRows) < noOfRows) {
-                setWarningMessage("Only the first " + noOfRows + " of " 
+            if ((selectedNoOfRows) < noOfRows) {
+                setWarningMessage("Only the first " + selectedNoOfRows + " of " 
                         + noOfRows + " rows are displayed.");
             }
             exec.setMessage("Adding data rows to histogram...");
             final double progressPerRow = 1.0 / noOfRows;
             double progress = 0.0;
             final RowIterator rowIterator = m_data.iterator();
-            for (int i = 0; i < m_noOfRows && rowIterator.hasNext(); i++) {
+            for (int i = 0; i < selectedNoOfRows && rowIterator.hasNext(); i++) {
                 final DataRow row = rowIterator.next();
                 m_plotter.addDataRow(row);
                 progress += progressPerRow;
@@ -232,10 +236,6 @@ public class HistogramNodeModel extends NodeModel {
     public DataTable getData() {
         return m_data;
     }
-
-    /*
-     * protected String getSelectedColumnName() { return m_attrColName; }
-     */
 
     /**
      * @see org.knime.core.node.NodeModel#reset()
