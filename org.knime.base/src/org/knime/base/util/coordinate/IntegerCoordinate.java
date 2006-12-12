@@ -185,9 +185,6 @@ class IntegerCoordinate extends NumericCoordinate {
             for (int i = 0, length = mapping.length; i < length; i++) {
                 double position = calculatePosition(heightPerVal, value,
                         m_baseVal);
-                if (position > absolutLength) {
-                    throw new IllegalArgumentException("Tach");
-                }
                 mapping[i] = new IntegerCoordinateMapping(Integer
                         .toString(value), value, position);
                 value += range;
