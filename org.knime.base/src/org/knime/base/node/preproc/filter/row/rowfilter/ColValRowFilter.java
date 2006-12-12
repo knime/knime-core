@@ -63,6 +63,8 @@ public class ColValRowFilter extends RowFilter {
 
     private static final String CFG_LOWERBOUND = "ColValRowFilterLowerBound";
 
+    private static final String CFG_FILTERMISSING = "ColValFilterMissValues";
+    
     private boolean m_include;
 
     private int m_colIndex;
@@ -87,6 +89,11 @@ public class ColValRowFilter extends RowFilter {
     private DataCell m_upperBound;
 
     private DataValueComparator m_dcComp;
+    
+    /*
+     * variables for missing value filtering
+     */
+    private boolean m_filterMissingValues = false;
 
     /**
      * Creates a new filter which matches the string representation of the
@@ -185,6 +192,20 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
+     * Creates a new filter that filters missing values of the specified column.
+     * 
+     * @param colName the name of the column to test the values of
+     * @param include if true, rows with a missing value in the specified column
+     *            are included, otherwise excluded
+     */
+    public ColValRowFilter(final String colName, final boolean include) {
+        m_include = include;
+        m_colName = colName;
+        m_colIndex = -1;
+        m_filterMissingValues = true;
+    }
+    
+    /**
      * Default contructor. Don't use without loading settings before.
      */
     public ColValRowFilter() {
@@ -228,6 +249,14 @@ public class ColValRowFilter extends RowFilter {
         return m_colName;
     }
 
+    /**
+     * @return true if rows with missing values in the specified attribute are
+     *         filtered.
+     */
+    public boolean getFilterMissingValues() {
+        return m_filterMissingValues;
+    }
+    
     /**
      * @return true if the range of the column is tested
      */
@@ -317,12 +346,11 @@ public class ColValRowFilter extends RowFilter {
         boolean match = false;
 
         if (theCell.isMissing()) {
-            // missing cells never match
-            return false;
-        }
-
-        // do a range checking if we have a comparator and at least one bound
-        if (rangeSet() && (m_dcComp != null)) {
+            // missing cells never match any range or boundaries - only when
+            // we filter missing values we may return true
+            match = m_filterMissingValues;
+        } else if (rangeSet() && (m_dcComp != null)) {
+            // do range checking if we have a comparator and at least one bound
             if (m_lowerBound != null) {
                 match = (m_dcComp.compare(m_lowerBound, theCell) <= 0);
             } else {
@@ -332,8 +360,7 @@ public class ColValRowFilter extends RowFilter {
             if (m_upperBound != null) {
                 match &= (m_dcComp.compare(theCell, m_upperBound) <= 0);
             }
-        }
-        if (m_pattern != null) {
+        } else if (m_pattern != null) {
 
             Matcher matcher = m_pattern.matcher(theCell.toString());
             if (m_startsWith) {
@@ -384,20 +411,31 @@ public class ColValRowFilter extends RowFilter {
 
         m_lowerBound = cfg.getDataCell(CFG_LOWERBOUND, null);
         m_upperBound = cfg.getDataCell(CFG_UPPERBOUND, null);
+        
+        // we introduce this feature with ver1.2, have a default for compatib.
+        m_filterMissingValues = cfg.getBoolean(CFG_FILTERMISSING, false);
 
         if ((m_lowerBound == null) && (m_upperBound == null)
-                && (m_pattern == null)) {
+                && (m_pattern == null) && !m_filterMissingValues) {
             throw new InvalidSettingsException("Column value filter: "
                     + "NodeSettings object contains no matching criteria");
         }
 
+        if ((m_pattern != null) && (m_filterMissingValues)) {
+            throw new InvalidSettingsException("Can't filter missing values"
+                    + " and do pattern matching at the same time.");
+        }
+        if (m_filterMissingValues
+                && ((m_lowerBound != null) || (m_upperBound != null))) {
+            throw new InvalidSettingsException("Can't filter missing values"
+                    + " and do range checking at the same time");
+        }
         if ((m_pattern != null)
                 && ((m_lowerBound != null) || (m_upperBound != null))) {
             throw new InvalidSettingsException("Column value filter: "
                     + "Invalid NodeSettings object; "
                     + "can't match range and pattern.");
         }
-
     }
 
     /**
@@ -417,6 +455,7 @@ public class ColValRowFilter extends RowFilter {
         cfg.addBoolean(CFG_STARTSWITH, m_startsWith);
         cfg.addDataCell(CFG_LOWERBOUND, m_lowerBound);
         cfg.addDataCell(CFG_UPPERBOUND, m_upperBound);
+        cfg.addBoolean(CFG_FILTERMISSING, m_filterMissingValues);
     }
 
     /**
@@ -480,8 +519,6 @@ public class ColValRowFilter extends RowFilter {
         }
 
         m_dcComp = colType.getComparator();
-        // TODO: if range is specidifed: modify range of colSpec, if pattern
-        // is set, filter possible values with pattern.
         return null;
     }
 
@@ -508,6 +545,9 @@ public class ColValRowFilter extends RowFilter {
             if (m_dcComp == null) {
                 result += " NO COMPARATOR SET!!!";
             }
+        }
+        if (m_filterMissingValues) {
+            result += " missing values.";
         }
         return result;
     }

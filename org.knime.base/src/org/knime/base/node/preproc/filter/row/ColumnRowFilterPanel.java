@@ -97,6 +97,8 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
 
     private DataTableSpec m_tSpec;
 
+    private JRadioButton m_useMissValue;
+
     /**
      * Craetes a new panel for column content filter settings.
      * 
@@ -180,7 +182,11 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         m_upperBound.setMaximumSize(new Dimension(75, 20));
         m_upperBound.setPreferredSize(new Dimension(75, 20));
         matchPanel.add(ubBox);
-
+        Box mvBox = Box.createHorizontalBox(); // missing value matching
+        mvBox.add(m_useMissValue);
+        mvBox.add(Box.createHorizontalGlue());
+        matchPanel.add(mvBox);
+        
         panel.add(Box.createVerticalStrut(7));
         panel.add(matchPanel);
 
@@ -227,6 +233,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         /* the selectors for what kind of checking will be done */
         m_useRange = new JRadioButton("use range checking");
         m_useRegExpr = new JRadioButton("use regular expr. pattern matching");
+        m_useMissValue = new JRadioButton("only missing values match");
         m_useRange.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
                 radiosChanged();
@@ -237,9 +244,16 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
                 radiosChanged();
             }
         });
+        m_useMissValue.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                radiosChanged();
+            }
+        });
+
         m_radios = new ButtonGroup();
         m_radios.add(m_useRange);
         m_radios.add(m_useRegExpr);
+        m_radios.add(m_useMissValue);
         /* the bound edit fields */
         m_lowerLabel = new JLabel("lower bound:");
         m_lowerBound = new JTextField();
@@ -321,7 +335,10 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         m_caseSensitive.setEnabled(m_useRegExpr.isSelected());
 
         // have the err text updated
-        if (m_useRange.isSelected()) {
+        if (m_useMissValue.isSelected()) {
+            setErrMsg("");
+            validate();
+        } else if (m_useRange.isSelected()) {
             boundsChanged();
         } else {
             regExprChanged();
@@ -424,7 +441,9 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         if (colName != null) {
             m_colCombo.setSelectedColumn(colName);
         }
-        if (colFilter.rangeSet()) {
+        if (colFilter.getFilterMissingValues()) {
+            m_useMissValue.setSelected(true);
+        } else if (colFilter.rangeSet()) {
             String upper = "";
             String lower = "";
             if (colFilter.getUpperBound() != null) {
@@ -486,6 +505,10 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
 
         }
 
+        if (m_useMissValue.isSelected()) {
+            return new ColValRowFilter(colName, include);
+        }
+        
         throw new InvalidSettingsException("Internal Error. "
                 + "Please change some setting and try again. Sorry");
     }
