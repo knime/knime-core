@@ -108,8 +108,6 @@ public class XValidateModel extends MetaNodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        m_partitionModel.setSettings(m_settings);
-
         for (int i = 0; i < m_settings.validations(); i++) {
             exec.setProgress(i / (double)m_settings.validations(),
                     "Validating in iteration " + (i + 1));
@@ -166,7 +164,6 @@ public class XValidateModel extends MetaNodeModel {
         super.loadValidatedSettingsFrom(nodeDir, settings, exec);
 
         m_settings.loadSettingsFrom(settings);
-        m_partitionModel.setSettings(m_settings);
 
         File internals = new File(nodeDir, "internals.xml");
         if (internals.exists()) {
@@ -198,6 +195,7 @@ public class XValidateModel extends MetaNodeModel {
             throw new InvalidSettingsException(
                     "Could not find ids of internal nodes");
         }
+        m_partitionModel.setSettings(m_settings);
     }
 
     /**
