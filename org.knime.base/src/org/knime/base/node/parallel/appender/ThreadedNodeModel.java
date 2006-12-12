@@ -104,7 +104,7 @@ public abstract class ThreadedNodeModel extends NodeModel {
                         container.close();
                         try {
                             chunks++;
-                            m_futures.add(m_workers.submit(getCallable(
+                            m_futures.add(m_workers.submit(createCallable(
                                     container.getTable(), chunkSize, max)));
                         } catch (InterruptedException ex) {
                             return;
@@ -122,14 +122,14 @@ public abstract class ThreadedNodeModel extends NodeModel {
             }
         }
 
-        private Callable<DataContainer[]> getCallable(
+        private Callable<DataContainer[]> createCallable(
                 final BufferedDataTable data, final int chunkSize,
                 final double max) {
             return new Callable<DataContainer[]>() {
                 public DataContainer[] call() throws Exception {
                     DataContainer[] result = new DataContainer[m_specs.length];
                     for (int i = 0; i < result.length; i++) {
-                        result[i] = new DataContainer(m_specs[i]);
+                        result[i] = m_exec.createDataContainer(m_specs[i]);
 
                         for (DataRow r : data) {
                             m_exec.checkCanceled();
