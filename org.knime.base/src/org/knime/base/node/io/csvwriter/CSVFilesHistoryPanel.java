@@ -45,6 +45,7 @@ import javax.swing.JPanel;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
 import org.knime.core.node.util.StringHistory;
+import org.knime.core.util.SimpleFileFilter;
 
 
 /**
@@ -89,6 +90,10 @@ public final class CSVFilesHistoryPanel extends JPanel {
     private String getOutputFileName() {
         // file chooser triggered by choose button
         final JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setAcceptAllFileFilterUsed(true);
+        fileChooser.setFileFilter(new SimpleFileFilter(".csv"));
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        
         String f = m_textBox.getEditor().getItem().toString();
         File dirOrFile = getFile(f);
         if (dirOrFile.isDirectory()) {
