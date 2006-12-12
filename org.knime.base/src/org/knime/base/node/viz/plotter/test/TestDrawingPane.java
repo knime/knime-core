@@ -49,8 +49,7 @@ public class TestDrawingPane extends BasicDrawingPane {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractDrawingPane#
-     * paintContent(java.awt.Graphics)
+     * @see BasicDrawingPane#paintContent(java.awt.Graphics)
      */
     @Override
     public void paintContent(final Graphics g) {
