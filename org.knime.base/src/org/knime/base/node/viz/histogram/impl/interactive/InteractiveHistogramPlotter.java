@@ -149,11 +149,13 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
             resetHistogramData();
             // set the name of the selected x column in the plotter class
             setXColName(xColName);
-            setXCoordinates();
             // reset the vis bars
             getHistogramDrawingPane().setVisBars(null);
             // reset the aggregation column to the possible new boundaries
             setYColName(null); // set the column name to null to force
+            //set the new axis
+            setXCoordinates();
+            setYCoordinates();
             // resetting
             final InteractiveHistogramProperties interactiveHistoProps = 
                 (InteractiveHistogramProperties)getHistogramPropertiesPanel();

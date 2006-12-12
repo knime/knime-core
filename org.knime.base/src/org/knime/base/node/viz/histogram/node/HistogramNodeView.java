@@ -92,6 +92,11 @@ public class HistogramNodeView extends NodeView {
         getJMenuBar().add(m_plotter.getHiLiteMenu());
         // add the histogram panel to the root window of the node view
         setComponent(m_plotter);
+        //call the fit to screen method to ensure that the new displayed
+        //view fits on the screen
+        //unfortunately this doesn't works always for example if the drawing 
+        //takes longer 
+        m_plotter.fitToScreen();
     }
 
     /**

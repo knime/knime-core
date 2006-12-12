@@ -24,10 +24,15 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.core.data.DataValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -37,9 +42,13 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author Tobias Koetter, University of Konstanz
  */
 public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
-    
+
     private static final String X_COL_SEL_LABEL = "X column:";
-    
+
+    private final DialogComponentNumber m_noOfRowsSpinner;
+
+    private final DialogComponentBoolean m_allRowsBox;
+
     /**
      * Constructor for class HistogramNodeDialogPane.
      * 
@@ -47,15 +56,27 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     protected HistogramNodeDialogPane() {
         super();
-        addDialogComponent(new DialogComponentNumber(new SettingsModelInteger(
-                HistogramNodeModel.CFGKEY_NO_OF_ROWS, 
+        createNewGroup("Rows to display:");
+        m_noOfRowsSpinner = new DialogComponentNumber(new SettingsModelInteger(
+                HistogramNodeModel.CFGKEY_NO_OF_ROWS,
                 HistogramNodeModel.DEFAULT_NO_OF_ROWS),
-                "No. of rows to display:", 1));
-        
-         addDialogComponent(new DialogComponentColumnNameSelection(
-                 new SettingsModelString(
-                 HistogramNodeModel.CFGKEY_X_COLNAME, ""),
-                 HistogramNodeDialogPane.X_COL_SEL_LABEL, 0, 
-                 DataValue.class));
+                "No. of rows to display:", 1);
+        final SettingsModelBoolean allRowsModel = new SettingsModelBoolean(
+                HistogramNodeModel.CFGKEY_ALL_ROWS, false);
+        allRowsModel.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                m_noOfRowsSpinner.setEnabled(!m_allRowsBox.isSelected());
+            }
+        });
+        m_allRowsBox = new DialogComponentBoolean(allRowsModel, "All rows");
+        m_noOfRowsSpinner.setEnabled(!m_allRowsBox.isSelected());
+        addDialogComponent(m_allRowsBox);
+        addDialogComponent(m_noOfRowsSpinner);
+
+        createNewGroup("Column selection:");
+        addDialogComponent(new DialogComponentColumnNameSelection(
+                new SettingsModelString(
+                        HistogramNodeModel.CFGKEY_X_COLNAME, ""),
+                HistogramNodeDialogPane.X_COL_SEL_LABEL, 0, DataValue.class));
     }
 }

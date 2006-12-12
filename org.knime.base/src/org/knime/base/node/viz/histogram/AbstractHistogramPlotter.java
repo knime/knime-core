@@ -538,12 +538,13 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     protected boolean setNumberOfBars(final int noOfBars) {
         if (getHistogramDataModel().setNumberOfBars(noOfBars)) {
             setXCoordinates();
+            setYCoordinates();
             // reset the vis bars
             getHistogramDrawingPane().setVisBars(null);
             // and we have to set the new max value for the y axis
-            DataColumnSpec yColSpec = getAggregationColSpec();
-            Coordinate yCoordinate = Coordinate.createCoordinate(yColSpec);
-            getYAxis().setCoordinate(yCoordinate);
+//            DataColumnSpec yColSpec = getAggregationColSpec();
+//            Coordinate yCoordinate = Coordinate.createCoordinate(yColSpec);
+//            getYAxis().setCoordinate(yCoordinate);
             // updatePaintModel();
             return true;
         }
@@ -825,6 +826,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (showEmptyBars != m_showEmptyBars) {
             m_showEmptyBars = showEmptyBars;
             setXCoordinates();
+            setYCoordinates();
             // updatePaintModel();
             return true;
         }
