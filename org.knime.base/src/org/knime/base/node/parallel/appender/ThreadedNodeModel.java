@@ -53,7 +53,7 @@ import org.knime.core.util.ThreadPool;
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public abstract class ParallelNodeModel extends NodeModel {
+public abstract class ThreadedNodeModel extends NodeModel {
     private class Submitter implements Runnable {
         private final BufferedDataTable[] m_data;
 
@@ -176,7 +176,7 @@ public abstract class ParallelNodeModel extends NodeModel {
      *            {@link org.knime.core.node.ModelContent} elements available as
      *            inputs
      */
-    public ParallelNodeModel(final int nrDataIns, final int nrDataOuts,
+    public ThreadedNodeModel(final int nrDataIns, final int nrDataOuts,
             final int nrPredParamsIns) {
         super(nrDataIns, nrDataOuts, nrPredParamsIns, 0);
     }
@@ -189,7 +189,7 @@ public abstract class ParallelNodeModel extends NodeModel {
      * @param nrDataOuts The number of {@link DataTable} objects expected at the
      *            output.
      */
-    public ParallelNodeModel(final int nrDataIns, final int nrDataOuts) {
+    public ThreadedNodeModel(final int nrDataIns, final int nrDataOuts) {
         super(nrDataIns, nrDataOuts);
     }
 
