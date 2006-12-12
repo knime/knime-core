@@ -69,8 +69,8 @@ final class DataOutPortView extends NodeOutPortView {
     private String m_portName;
 
     private static final DataRow EMPTY_ROW =
-        new DefaultRow(new StringCell(""), new DataCell[]{new StringCell(
-        "<null>")});
+            new DefaultRow(new StringCell(""), new DataCell[]{new StringCell(
+                    "<null>")});
 
     /**
      * A view showing the data stored in the specified output port.
@@ -81,7 +81,7 @@ final class DataOutPortView extends NodeOutPortView {
      * 
      */
     DataOutPortView(final String nodeName, final String portName) {
-        super(createWindowTitle(nodeName, portName, null));
+        super(createWindowTitle(nodeName, portName, null, null, null));
 
         m_nodeName = nodeName;
         m_portName = portName;
@@ -98,7 +98,7 @@ final class DataOutPortView extends NodeOutPortView {
         m_dataView.getHeaderTable().setShowColorInfo(false);
         // in the data view our columns are all of type string. Don't show that.
         // Users confuse it with the type of their table.
-//        m_dataView.getHeaderTable().setShowTypeInfo(false);
+        // m_dataView.getHeaderTable().setShowTypeInfo(false);
         m_specView.getHeaderTable().setShowColorInfo(false);
         m_propsView.getHeaderTable().setShowColorInfo(false);
 
@@ -129,8 +129,17 @@ final class DataOutPortView extends NodeOutPortView {
                     "" + rowCount + " Row" + (rowCount != 1 ? "s" : "") + ", "
                             + colCount + " Col" + (colCount != 1 ? "s" : "");
             m_dataView.getHeaderTable().setColumnName(header);
+            // display the row count in the window title, too. 
+            setTitle(createWindowTitle(m_nodeName, m_portName, 
+                    newDataTable.getDataTableSpec().getName(), 
+                    newDataTable.getDataTableSpec().getNumColumns(), 
+                    bTable.getRowCount()));
+
         } else {
             m_dataView.getHeaderTable().setColumnName("");
+            setTitle(createWindowTitle(
+                    m_nodeName, m_portName, null, null, null));
+
         }
     }
 
@@ -150,11 +159,12 @@ final class DataOutPortView extends NodeOutPortView {
                     "" + numOfCols + " Column" + (numOfCols > 1 ? "s" : ""));
             m_propsView.getHeaderTable().setColumnName("Property Key");
             setTitle(createWindowTitle(m_nodeName, m_portName, newTableSpec
-                    .getName()));
+                    .getName(), newTableSpec.getNumColumns(), null));
         } else {
             m_specView.getHeaderTable().setColumnName("");
             m_propsView.getHeaderTable().setColumnName("");
-            setTitle(createWindowTitle(m_nodeName, m_portName, null));
+            setTitle(createWindowTitle(m_nodeName, m_portName, null, null, 
+                    null));
         }
     }
 
@@ -241,7 +251,7 @@ final class DataOutPortView extends NodeOutPortView {
             addPossValuesRowsToDataContainer(result, spec);
 
         } else {
-            
+
             result.addRowToTable(EMPTY_ROW);
         }
 
@@ -251,11 +261,11 @@ final class DataOutPortView extends NodeOutPortView {
 
     }
 
-    private void addInfoRowsToDataContainer(final DataContainer result, 
+    private void addInfoRowsToDataContainer(final DataContainer result,
             final DataTableSpec spec) {
         assert spec != null;
         assert result != null;
-        
+
         int numCols = spec.getNumColumns();
 
         // 1st row: displays the name of each column
@@ -263,8 +273,8 @@ final class DataOutPortView extends NodeOutPortView {
         for (int c = 0; c < numCols; c++) {
             cols[c] = new StringCell(spec.getColumnSpec(c).getName());
         }
-        result.addRowToTable(new DefaultRow(
-                new StringCell("<html><b>Name"), cols));
+        result.addRowToTable(new DefaultRow(new StringCell("<html><b>Name"),
+                cols));
 
         // 2nd row: displays type of column
         cols = new DataCell[numCols];
@@ -272,8 +282,8 @@ final class DataOutPortView extends NodeOutPortView {
             String typename = spec.getColumnSpec(c).getType().toString();
             cols[c] = new StringCell(typename);
         }
-        result.addRowToTable(new DefaultRow(
-                new StringCell("<html><b>Type"), cols));
+        result.addRowToTable(new DefaultRow(new StringCell("<html><b>Type"),
+                cols));
 
         // 3rd row: shows who has a color handler set
         cols = new DataCell[numCols];
@@ -304,8 +314,9 @@ final class DataOutPortView extends NodeOutPortView {
                 cols[c] = new StringCell(sHdlrStr);
             }
         }
-        result.addRowToTable(new DefaultRow(new StringCell("SizeHandler"),
-                cols));
+        result
+                .addRowToTable(new DefaultRow(new StringCell("SizeHandler"),
+                        cols));
 
         // 5th row: shows where the shape handler is attached to.
         cols = new DataCell[numCols];
@@ -333,8 +344,9 @@ final class DataOutPortView extends NodeOutPortView {
             }
             cols[c] = new StringCell(boundText);
         }
-        result.addRowToTable(new DefaultRow(new StringCell("lower bound"),
-                cols));
+        result
+                .addRowToTable(new DefaultRow(new StringCell("lower bound"),
+                        cols));
 
         // 7th row: shows the upper bound value of the domain
         cols = new DataCell[numCols];
@@ -347,18 +359,18 @@ final class DataOutPortView extends NodeOutPortView {
             }
             cols[c] = new StringCell(boundText);
         }
-        result.addRowToTable(new DefaultRow(new StringCell("upper bound"),
-                cols));
+        result
+                .addRowToTable(new DefaultRow(new StringCell("upper bound"),
+                        cols));
 
     }
-    
+
     private void addPossValuesRowsToDataContainer(final DataContainer result,
             final DataTableSpec spec) {
         assert result != null;
         assert spec != null;
-        
-        int numCols = spec.getNumColumns();
 
+        int numCols = spec.getNumColumns();
 
         // from the 8th row: show the nominal values of that column. If any.
         // find out how many rows we need to create - enough for the column
@@ -375,7 +387,7 @@ final class DataOutPortView extends NodeOutPortView {
                 valueIter[c] = values.iterator();
                 if (values.size() > maxNumValues) {
                     maxNumValues = values.size();
-                }                                  
+                }
             } else {
                 valueIter[c] = emptyIter;
             }
@@ -389,8 +401,7 @@ final class DataOutPortView extends NodeOutPortView {
                     cols[c] = emptyStringCell;
                 } else {
                     // transform it into a string cell
-                    cols[c] =
-                            new StringCell(valueIter[c].next().toString());
+                    cols[c] = new StringCell(valueIter[c].next().toString());
                 }
             }
             result.addRowToTable(new DefaultRow(new StringCell("Val_" + r),
@@ -398,17 +409,23 @@ final class DataOutPortView extends NodeOutPortView {
         }
 
     }
-    
-    
-    
-    
+
     private static String createWindowTitle(final String nodeName,
-            final String portName, final String tableName) {
+            final String portName, final String tableName,
+            final Integer numOfCols, final Integer numOfRows) {
+        StringBuilder result = new StringBuilder("");
         if (tableName != null) {
-            return nodeName + ", " + portName + ", Table: " + tableName;
+            result.append(nodeName + ", " + portName + ", Table: " + tableName);
         } else {
-            return nodeName + ", " + portName;
+            result.append(nodeName + ", " + portName);
         }
+        if (numOfCols != null) {
+            result.append(", Cols: " + numOfCols);
+        }
+        if (numOfRows != null) {
+            result.append(", Rows: " + numOfRows);
+        }
+        return result.toString();
     }
 
 }
