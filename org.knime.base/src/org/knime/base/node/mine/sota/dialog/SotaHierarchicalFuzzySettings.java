@@ -65,6 +65,7 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
      * 
      * @param logger logger object
      */
+    @SuppressWarnings("unchecked")
     public SotaHierarchicalFuzzySettings(final NodeLogger logger) {
         super();
         setLayout(new GridBagLayout());

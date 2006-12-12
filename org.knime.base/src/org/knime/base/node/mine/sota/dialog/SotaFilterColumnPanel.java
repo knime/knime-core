@@ -49,6 +49,7 @@ public class SotaFilterColumnPanel extends JPanel {
     /**
      * Constructor.
      */
+    @SuppressWarnings("unchecked")
     public SotaFilterColumnPanel() {
         super();
         m_filterPanel = new ColumnFilterPanel(DoubleValue.class,
