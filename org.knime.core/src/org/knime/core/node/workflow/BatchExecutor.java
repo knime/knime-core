@@ -68,19 +68,17 @@ public final class BatchExecutor {
     }
 
     private static void usage() {
-        System.err
-                .println("Usage: "
-                        + BatchExecutor.class.getName()
-                        + " OPTIONS\n"
-                        + "where OPTIONS can be:\n"
-                        + " -nosave => do not save the workflow after execution has finished\n"
-                        + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root of the ZIP\n"
-                        + " -workflowDir=... => directory with a ready-to-execute workflow\n"
-                        + " -destFile=... => ZIP file where the executed workflow should be written to\n"
-                        + "                  if omitted the workflow is only saved in place\n"
-                        + " -option=nodeID,name,value,type => set the option with name 'name' of the node with\n"
-                        + "                                   ID 'nodeID' to the given value which has type 'type'\n"
-                        + "                                   type can be any of the primitive Java types or String");
+        System.err.println(
+              "Usage: " + BatchExecutor.class.getName() + " OPTIONS\n"
+            + "where OPTIONS can be:\n"
+            + " -nosave => do not save the workflow after execution has finished\n"
+            + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root of the ZIP\n"
+            + " -workflowDir=... => directory with a ready-to-execute workflow\n"
+            + " -destFile=... => ZIP file where the executed workflow should be written to\n"
+            + "                  if omitted the workflow is only saved in place\n"
+            + " -option=nodeID,name,value,type => set the option with name 'name' of the node with\n"
+            + "                                   ID 'nodeID' to the given value which has type 'type'\n"
+            + "                                   type can be any of the primitive Java types or String");
     }
 
     /**
