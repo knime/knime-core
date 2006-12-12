@@ -37,7 +37,6 @@ import java.util.concurrent.FutureTask;
 
 import org.knime.core.node.NodeLogger;
 
-
 /**
  * Implements a sophisticated thread pool.
  * 
@@ -45,12 +44,11 @@ import org.knime.core.node.NodeLogger;
  */
 public class ThreadPool {
 
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(ThreadPool.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(ThreadPool.class);
 
     private class MyFuture<T> extends FutureTask<T> {
-        
-        
+
         /**
          * @see FutureTask#FutureTask(java.util.concurrent.Callable)
          */
@@ -66,8 +64,7 @@ public class ThreadPool {
          * @param runnable the runnable task
          * @param result the result to return on successful completion. If you
          *            don't need a particular result, consider using
-         *            constructions of the form:
-         *            <tt>Future&lt;?&gt; f = 
+         *            constructions of the form: <tt>Future&lt;?&gt; f = 
          *            new FutureTask&lt;Object&gt;(runnable, null)</tt>
          * @throws NullPointerException if runnable is null
          */
@@ -126,7 +123,7 @@ public class ThreadPool {
                         m_runnable.run();
                     } catch (Exception ex) {
                         // prevent the worker from being terminated
-                        LOGGER.error("An exception occurred while executing " 
+                        LOGGER.error("An exception occurred while executing "
                                 + "a runnable.", ex);
                     }
                     m_runnable = null;
@@ -351,8 +348,7 @@ public class ThreadPool {
 
         Worker thisWorker = (Worker)Thread.currentThread();
         if (!m_runningWorkers.contains(thisWorker)) {
-            if (!thisWorker.m_startedFrom.m_runningWorkers.
-                    contains(thisWorker)) {
+            if (!thisWorker.m_startedFrom.m_runningWorkers.contains(thisWorker)) {
                 throw new IllegalThreadStateException("The current thread is "
                         + "not taken out of this thread pool");
             }
@@ -511,10 +507,10 @@ public class ThreadPool {
             synchronized (m_runningWorkers) {
                 m_runningWorkers.remove(w);
                 m_availableWorkers.add(w);
-            }    
+            }
             if (checkQueue()) {
                 return;
-            }            
+            }
         }
 
         synchronized (m_runningWorkers) {
@@ -546,5 +542,19 @@ public class ThreadPool {
      */
     int getQueueSize() {
         return m_queuedFutures.size();
+    }
+
+    /**
+     * If the current thread is taken out of a thread pool, this method will
+     * return the thread pool. Otherwise it will return <code>null</code>.
+     * 
+     * @return a thread pool or <code>null</code>
+     */
+    public static ThreadPool currentPool() {
+        if (Thread.currentThread() instanceof Worker) {
+            return ((Worker)Thread.currentThread()).m_startedFrom;
+        } else {
+            return null;
+        }
     }
 }
