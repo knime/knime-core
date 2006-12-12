@@ -24,6 +24,8 @@
  */
 package org.knime.base.node.parallel;
 
+import org.knime.base.node.parallel.appender.ThreadedColAppenderNodeModel;
+import org.knime.base.node.parallel.builder.ThreadedTableBuilderNodeModel;
 import org.knime.core.node.KNIMEConstants;
 
 /**
@@ -35,8 +37,10 @@ import org.knime.core.node.KNIMEConstants;
  * {@link #setMaxThreads(int)} but the real maximum is still determined by the
  * global thread pool.
  * 
- * @deprecated Use the new {@link ParallelNodeModel} because this class
- *             duplicates the whole input data.
+ * @deprecated Use either the {@link ThreadedColAppenderNodeModel} if you want
+ *             to add columns to the input tables and the number of rows stays
+ *             the same, or the {@link ThreadedTableBuilderNodeModel} if you
+ *             want to build a completely new table.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */

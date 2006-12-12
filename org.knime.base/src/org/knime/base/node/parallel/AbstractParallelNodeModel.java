@@ -58,12 +58,8 @@ import org.knime.base.data.append.row.AppendedRowsTable;
  * BufferedDataTable, BufferedDataTable[], RowAppender[], ExecutionMonitor)}
  * completely.
  * 
- * @deprecated Use the new {@link ParallelNodeModel} because this class
- *             duplicates the whole input data.
- * 
  * @author Thorsten Meinl, University of Konstanz
  */
-@Deprecated
 public abstract class AbstractParallelNodeModel extends NodeModel {
     private int m_chunkSize;
 
