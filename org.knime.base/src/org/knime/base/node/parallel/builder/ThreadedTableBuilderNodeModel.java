@@ -31,6 +31,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.base.data.append.row.AppendedRowsTable;
+import org.knime.base.node.parallel.appender.ThreadedColAppenderNodeModel;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -41,28 +42,36 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeModel;
 import org.knime.core.util.ThreadPool;
 
 /**
- * This model is an extension of the AbstractParallelNodeModel that uses a sub
- * pool of the global KNIME thread pool.
+ * This model is an extension of the {@link NodeModel} that allows you to easily
+ * process data in parallel. In contrast to the
+ * {@link ThreadedColAppenderNodeModel}, this model is suitable for creating
+ * completely new output tables.
+ * 
+ * All you have to do is create the output table specs in the
+ * {@link #prepareExecute(DataTable[])} method and then implement the
+ * {@link #processRow(DataRow, BufferedDataTable[], RowAppender[])} method
+ * to produce one or more (or even no) output row(s) for each input row.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
     private class Submitter implements Runnable {
-        private final BufferedDataTable[] m_data;
-
         private final BufferedDataTable[] m_additionalData;
+
+        private final BufferedDataTable[] m_data;
 
         private final ExecutionContext m_exec;
 
         private final List<Future<DataContainer[]>> m_futures;
 
-        private final DataTableSpec[] m_specs;
-
         final AtomicInteger m_processedRows = new AtomicInteger();
+
+        private final DataTableSpec[] m_specs;
 
         Submitter(final BufferedDataTable[] inData,
                 final List<Future<DataContainer[]>> futures,
@@ -75,6 +84,37 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
             for (int i = 1; i < inData.length; i++) {
                 m_additionalData[i - 1] = inData[i];
             }
+        }
+
+        private Callable<DataContainer[]> createCallable(
+                final BufferedDataTable data, final int chunkSize,
+                final double max) {
+            return new Callable<DataContainer[]>() {
+                public DataContainer[] call() throws Exception {
+                    DataContainer[] result = new DataContainer[m_specs.length];
+                    for (int i = 0; i < result.length; i++) {
+                        result[i] = m_exec.createDataContainer(m_specs[i]);
+                    }
+
+                    for (DataRow r : data) {
+                        m_exec.checkCanceled();
+                        processRow(r, m_additionalData, result);
+
+                        int pr = m_processedRows.incrementAndGet();
+                        if (pr % 10 == 0) {
+                            // 5% of the progress are reserved for combining
+                            // the partial results lateron
+                            m_exec.setProgress(0.95 * pr / max);
+                        }
+                    }
+
+                    for (int i = 0; i < result.length; i++) {
+                        result[i].close();
+                    }
+
+                    return result;
+                }
+            };
         }
 
         public void run() {
@@ -113,50 +153,29 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
                 container.addRowToTable(it.next());
             }
         }
-
-        private Callable<DataContainer[]> createCallable(
-                final BufferedDataTable data, final int chunkSize,
-                final double max) {
-            return new Callable<DataContainer[]>() {
-                public DataContainer[] call() throws Exception {
-                    DataContainer[] result = new DataContainer[m_specs.length];
-                    for (int i = 0; i < result.length; i++) {
-                        result[i] = m_exec.createDataContainer(m_specs[i]);
-                    }
-
-                    for (DataRow r : data) {
-                        m_exec.checkCanceled();
-                        processRow(r, m_additionalData, result);
-
-                        int pr = m_processedRows.incrementAndGet();
-                        if (pr % 10 == 0) {
-                            // 5% of the progress are reserved for combining
-                            // the partial results lateron
-                            m_exec.setProgress(0.95 * pr / max);
-                        }
-                    }
-
-                    for (int i = 0; i < result.length; i++) {
-                        result[i].close();
-                    }
-
-                    return result;
-                }
-            };
-        }
-    }
-
-    /**
-     * Sets the maximum number of threads that may be used by this node.
-     * 
-     * @param count the maximum thread count
-     */
-    public void setMaxThreads(final int count) {
-        m_workers.setMaxThreads(count);
     }
 
     /** The execution service that is used. */
     private final ThreadPool m_workers;
+
+    /**
+     * Creates a new AbstractParallelNodeModel. The model
+     * 
+     * @param nrDataIns The number of {@link DataTable} elements expected as
+     *            inputs.
+     * @param nrDataOuts The number of {@link DataTable} objects expected at the
+     *            output.
+     */
+    public ThreadedTableBuilderNodeModel(final int nrDataIns,
+            final int nrDataOuts) {
+        super(nrDataIns, nrDataOuts);
+        ThreadPool pool = ThreadPool.currentPool();
+        if (pool != null) {
+            m_workers = pool;
+        } else {
+            m_workers = KNIMEConstants.GLOBAL_THREAD_POOL;
+        }
+    }
 
     /**
      * Creates a new AbstractParallelNodeModel.
@@ -173,9 +192,9 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
      * @param workers a thread pool where threads for processing the chunks are
      *            taken from
      */
-    public ThreadedTableBuilderNodeModel(final int nrDataIns, final int nrDataOuts,
-            final int nrPredParamsIns, final int nrPredParamsOuts,
-            final ThreadPool workers) {
+    public ThreadedTableBuilderNodeModel(final int nrDataIns,
+            final int nrDataOuts, final int nrPredParamsIns,
+            final int nrPredParamsOuts, final ThreadPool workers) {
         super(nrDataIns, nrDataOuts, nrPredParamsIns, nrPredParamsOuts);
         m_workers = workers;
     }
@@ -190,26 +209,11 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
      * @param workers a thread pool where threads for processing the chunks are
      *            taken from
      */
-    public ThreadedTableBuilderNodeModel(final int nrDataIns, final int nrDataOuts,
-            final ThreadPool workers) {
+    public ThreadedTableBuilderNodeModel(final int nrDataIns,
+            final int nrDataOuts, final ThreadPool workers) {
         super(nrDataIns, nrDataOuts);
         m_workers = workers;
     }
-
-    /**
-     * This method is called before the first chunked is processed. The method
-     * must return the data table specification(s) for the result table(s)
-     * because the {@link RowAppender} passed to
-     * {@link #processRow(DataRow, BufferedDataTable[], RowAppender[])} must be
-     * constructed accordingly.
-     * 
-     * @param data the input data tables
-     * @return the table spec(s) of the result table(s) in the right order. The
-     *         result and none of the table specs must be null!
-     * @throws Exception if something goes wrong during preparation
-     */
-    protected abstract DataTableSpec[] prepareExecute(final DataTable[] data)
-            throws Exception;
 
     /**
      * @see org.knime.core.node.NodeModel #execute(BufferedDataTable[],
@@ -290,11 +294,29 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
     }
 
     /**
-     * This method is called as often as necessary by multiple threads. The
-     * <code>inData</code>-table will contain at most
-     * <code>maxChunkSize</code> rows from the the first table in the array
-     * passed to {@link #execute(BufferedDataTable[], ExecutionContext)}, the
-     * <code>additionalData</code>-tables are passed completely.
+     * This method is called before the first row is processed. The method
+     * must return the data table specification(s) for the result table(s)
+     * because the {@link RowAppender} passed to
+     * {@link #processRow(DataRow, BufferedDataTable[], RowAppender[])} must be
+     * constructed accordingly.
+     * 
+     * @param data the input data tables
+     * @return the table spec(s) of the result table(s) in the right order. The
+     *         result and none of the table specs must be null!
+     * @throws Exception if something goes wrong during preparation
+     */
+    protected abstract DataTableSpec[] prepareExecute(final DataTable[] data)
+            throws Exception;
+
+    /**
+     * This method is called once for each row in the first input table. The
+     * remaining tables are passed completely in the second argument. The
+     * output rows must then be written into the row appender(s). There is a
+     * row appender for each output table.
+     * 
+     * Please note that this method is called by many threads at the same time,
+     * so do NOT synchronize it and make sure that write access to global
+     * data does not mess up things.
      * 
      * @param inRow an input row
      * @param additionalData the complete tables of additional data
