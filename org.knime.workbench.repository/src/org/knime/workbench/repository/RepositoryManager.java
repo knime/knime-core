@@ -45,6 +45,7 @@ import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IContainerObject;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
+import org.osgi.framework.BundleException;
 
 /**
  * Manages the (global) KNIME Repository. This class collects all the
@@ -71,6 +72,12 @@ public final class RepositoryManager {
 
     // set the eclipse class creator into the static global class creator class
     static {
+        try {
+            Platform.getBundle("org.knime.deprecated").start();
+        } catch (BundleException ex) {
+            LOGGER.warn("Could not load org.knime.deprecated plugin. The "
+                    + "deprecated nodes will not be available.", ex);
+        }
         GlobalClassCreator.setClassCreator(new EclipseClassCreator(ID_NODE));
     }
 
@@ -148,11 +155,11 @@ public final class RepositoryManager {
                 }
 
                 int countSlashes1 =
-                        element1 == null ? 0 : element1.length()
+                        element1.length()
                                 - element1.replaceAll("/", "").length();
 
                 int countSlashes2 =
-                        element1 == null ? 0 : element2.length()
+                        element2.length()
                                 - element2.replaceAll("/", "").length();
 
                 return countSlashes1 - countSlashes2;
