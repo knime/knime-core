@@ -217,6 +217,7 @@ public class ARFFRowIterator extends RowIterator {
                 }
                 if (m_numMsgMissVal == MAX_ERR_MSG) {
                     LOGGER.warn("   (last message of this kind)");
+                    m_numMsgMissVal++;
                 }
                 isMissingCell = true;
             } else if ((token.equals("?"))
@@ -247,6 +248,7 @@ public class ARFFRowIterator extends RowIterator {
             }
             if (m_numMsgMissCol == MAX_ERR_MSG) {
                 LOGGER.warn("   (last message of this kind)");
+                m_numMsgMissCol++;
             }
             while (createdCols < noOfCols) {
                 rowCells[createdCols] = createNewDataCellOfType(m_tSpec
@@ -281,7 +283,9 @@ public class ARFFRowIterator extends RowIterator {
             }
             if (m_numMsgExtraCol == MAX_ERR_MSG) {
                 LOGGER.warn("   (last message of this kind.)");
+                m_numMsgExtraCol++;
             }
+            token = m_tokenizer.nextToken();
         }
 
     }
@@ -328,11 +332,10 @@ public class ARFFRowIterator extends RowIterator {
                                 + data + "' for an integer.");
                         LOGGER.warn("    Creating missing cell for it.");
                         m_numMsgWrongFormat++;
-                        if (m_numMsgWrongFormat == MAX_ERR_MSG) {
-                            LOGGER
-                                    .warn("    (last message of "
-                                            + "this kind.)");
-                        }
+                    }
+                    if (m_numMsgWrongFormat == MAX_ERR_MSG) {
+                        LOGGER.warn("    (last message of " + "this kind.)");
+                        m_numMsgWrongFormat++;
                     }
                     return DataType.getMissingCell();
                 }
@@ -352,9 +355,10 @@ public class ARFFRowIterator extends RowIterator {
                                 + data + "' for a floating point.");
                         LOGGER.warn("    Creating missing cell for it.");
                         m_numMsgWrongFormat++;
-                        if (m_numMsgWrongFormat == MAX_ERR_MSG) {
-                            LOGGER.warn("    (last message of this kind.)");
-                        }
+                    }
+                    if (m_numMsgWrongFormat == MAX_ERR_MSG) {
+                        m_numMsgWrongFormat++;
+                        LOGGER.warn("    (last message of this kind.)");
                     }
                     return DataType.getMissingCell();
                 }
