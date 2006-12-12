@@ -170,19 +170,24 @@ class IntegerCoordinate extends NumericCoordinate {
                     / IntegerCoordinate.DEFAULT_TICK_DIST);
             double range = Math.ceil((double)m_domainRange / noOfTicks);
             range = roundRange(range);
+            
             while ((m_minDomainValue + noOfTicks * range) < m_maxDomainValue) {
                 // this should never happen
                 noOfTicks++;
             }
-//          while ((m_minDomainValue + noOfTicks * range) > m_maxDomainValue) {
-//              // this should also not happen but happened...
-//              noOfTicks--;
-//          }
+            while ((m_minDomainValue + noOfTicks * range) > m_domainRange) {
+                // this should also not happen but happened...
+                noOfTicks--;
+            }
+
             int value = m_minDomainValue;
-            mapping = new IntegerCoordinateMapping[noOfTicks];
+            mapping = new IntegerCoordinateMapping[noOfTicks + 1];
             for (int i = 0, length = mapping.length; i < length; i++) {
                 double position = calculatePosition(heightPerVal, value,
                         m_baseVal);
+                if (position > absolutLength) {
+                    throw new IllegalArgumentException("Tach");
+                }
                 mapping[i] = new IntegerCoordinateMapping(Integer
                         .toString(value), value, position);
                 value += range;
