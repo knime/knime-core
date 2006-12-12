@@ -55,14 +55,13 @@ import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
+import org.knime.base.node.io.arffreader.ARFFReaderNodeModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-
-import org.knime.base.node.io.arffreader.ARFFReaderNodeModel;
 
 /**
  * Contains the dialog for the ARFF file writer.
@@ -273,13 +272,18 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
 
         JFileChooser chooser;
         chooser = new JFileChooser(startingDir);
+        chooser.setAcceptAllFileFilterUsed(true);
         chooser.setFileFilter(new ARFFReaderNodeModel.ARFFFileFilter());
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         int returnVal = chooser.showSaveDialog(getPanel().getParent());
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             String path;
             try {
                 path = chooser.getSelectedFile().getAbsoluteFile().toURL()
                         .toString();
+                if (!path.toLowerCase().endsWith(".arff")) {
+                    path += ".arff";
+                }
             } catch (Exception e) {
                 path = "<Error: Couldn't create URL for file>";
             }
