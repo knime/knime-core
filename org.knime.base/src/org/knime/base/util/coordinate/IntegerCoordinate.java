@@ -152,7 +152,7 @@ class IntegerCoordinate extends NumericCoordinate {
 
         // the height per 1 value in pixel
         
-        double heightPerVal = absolutLength / m_domainRange;
+        final double heightPerVal = absolutLength / m_domainRange;
         if (m_values != null && m_values.size() > 0) {
             // the user has predefined values which he want to have displayed
             mapping = new CoordinateMapping[m_values.size()];
@@ -168,16 +168,16 @@ class IntegerCoordinate extends NumericCoordinate {
         } else {
             int noOfTicks = (int)Math.ceil(absolutLength
                     / IntegerCoordinate.DEFAULT_TICK_DIST);
-            double range = Math.ceil(m_domainRange / noOfTicks);
+            double range = Math.ceil((double)m_domainRange / noOfTicks);
             range = roundRange(range);
             while ((m_minDomainValue + noOfTicks * range) < m_maxDomainValue) {
                 // this should never happen
                 noOfTicks++;
             }
-            while ((m_minDomainValue + noOfTicks * range) > m_maxDomainValue) {
-                // this should also not happen but happened...
-                noOfTicks--;
-            }
+//          while ((m_minDomainValue + noOfTicks * range) > m_maxDomainValue) {
+//              // this should also not happen but happened...
+//              noOfTicks--;
+//          }
             int value = m_minDomainValue;
             mapping = new IntegerCoordinateMapping[noOfTicks];
             for (int i = 0, length = mapping.length; i < length; i++) {
