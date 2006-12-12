@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- * 
  */
-package org.knime.base.node.parallel;
+package org.knime.base.node.parallel.appender;
 
 import java.util.ArrayList;
 import java.util.List;

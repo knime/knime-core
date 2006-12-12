@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- * 
  */
-package org.knime.base.node.parallel;
+package org.knime.base.node.parallel.appender;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;

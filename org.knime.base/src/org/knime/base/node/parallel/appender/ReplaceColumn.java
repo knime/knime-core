@@ -19,12 +19,31 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- * 
  */
-package org.knime.base.node.parallel;
+package org.knime.base.node.parallel.appender;
 
 /**
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public final class AppendColumn extends ColumnDestination {
-    // no code needed
+public final class ReplaceColumn extends ColumnDestination {
+    private final int m_index;
+    
+    /**
+     * Creates a column destination that replaces a column.
+     * 
+     * @param index the index of the column to replace
+     */
+    public ReplaceColumn(final int index) {
+        m_index = index; 
+    }
+    
+    /**
+     * Returns the index of the column in the original table that should be
+     * replaced.
+     *  
+     * @return the column's index
+     */
+    int getIndex() {
+        return m_index;
+    }
 }

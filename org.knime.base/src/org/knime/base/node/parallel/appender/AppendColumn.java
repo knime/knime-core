@@ -19,31 +19,12 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- * 
  */
-package org.knime.base.node.parallel;
+package org.knime.base.node.parallel.appender;
 
 /**
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public final class InsertColumn extends ColumnDestination {
-    private final int m_index;
-    
-    /**
-     * Creates a column destination that inserts a column.
-     * 
-     * @param index the index of the new column
-     */
-    public InsertColumn(final int index) {
-        m_index = index;
-    }
-    
-    /**
-     * Returns the position at which the columns should be inserted into the
-     * input table.
-     * 
-     * @return the column's index
-     */
-    int getIndex() {
-        return m_index;
-    }
+public final class AppendColumn extends ColumnDestination {
+    // no code needed
 }
