@@ -148,17 +148,20 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
         if (xIndex >= 0) {
             //reset the histogram data model first
             resetHistogramData();
-            //set the actual values after reseting the histogram data model
-            final InteractiveHistogramProperties interactiveHistoProps = 
-                (InteractiveHistogramProperties)getHistogramPropertiesPanel();
-            setAggregationColumn(interactiveHistoProps.getSelectedAggrColumn(), 
-                    interactiveHistoProps.getSelectedAggrMethod());
-            // set the name of the selected x column in the plotter class
+            //set all values which have no side effect
+//          set the name of the selected x column in the plotter class
             setXColName(xColName);
             // reset the vis bars
             getHistogramDrawingPane().setVisBars(null);
             // reset the aggregation column to the possible new boundaries
             setYColName(null); // set the column name to null to force 
+            //after setting all needed values set the aggregation column
+            //which needs the HistogramDataModel!!!
+            final InteractiveHistogramProperties interactiveHistoProps = 
+                (InteractiveHistogramProperties)getHistogramPropertiesPanel();
+            setAggregationColumn(interactiveHistoProps.getSelectedAggrColumn(), 
+                    interactiveHistoProps.getSelectedAggrMethod());
+            
             //set the new axis
             setXCoordinates();
             setYCoordinates();
