@@ -177,8 +177,13 @@ final class InteractiveBarDataModel extends AbstractBarDataModel {
             // calculate the sum of all cells of the aggregation column first
             // because it is needed for both methods!
             double aggrSum = 0.0;
+            final int aggrColIdx = getAggregationColIdx();
+            if (aggrColIdx < 0) {
+                throw new IllegalStateException(
+                        "Wrong aggregation column index.");
+            }
             for (DataRow row : m_rows.values()) {
-                final DataCell cell = row.getCell(getAggregationColIdx());
+                final DataCell cell = row.getCell(aggrColIdx);
                 if (!cell.isMissing()) {
                     aggrSum += ((DoubleValue)cell).getDoubleValue();
                 }

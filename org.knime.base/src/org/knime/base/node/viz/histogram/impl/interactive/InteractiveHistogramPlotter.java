@@ -130,7 +130,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
     }
 
     /**
-     * Sets the new x columns.
+     * Sets the new x column.
      * 
      * @param xColName name of the new x column to plot
      */
@@ -146,21 +146,22 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
         // we don't need to check for null
         int xIndex = getDataTableSpec().findColumnIndex(xColName);
         if (xIndex >= 0) {
+            //reset the histogram data model first
             resetHistogramData();
+            //set the actual values after reseting the histogram data model
+            final InteractiveHistogramProperties interactiveHistoProps = 
+                (InteractiveHistogramProperties)getHistogramPropertiesPanel();
+            setAggregationColumn(interactiveHistoProps.getSelectedAggrColumn(), 
+                    interactiveHistoProps.getSelectedAggrMethod());
             // set the name of the selected x column in the plotter class
             setXColName(xColName);
             // reset the vis bars
             getHistogramDrawingPane().setVisBars(null);
             // reset the aggregation column to the possible new boundaries
-            setYColName(null); // set the column name to null to force
+            setYColName(null); // set the column name to null to force 
             //set the new axis
             setXCoordinates();
             setYCoordinates();
-            // resetting
-            final InteractiveHistogramProperties interactiveHistoProps = 
-                (InteractiveHistogramProperties)getHistogramPropertiesPanel();
-            setAggregationColumn(interactiveHistoProps.getSelectedAggrColumn(), 
-                    interactiveHistoProps.getSelectedAggrMethod());
         } else {
             throw new IllegalArgumentException("No column specification found"
                     + " for column: " + xColName);
