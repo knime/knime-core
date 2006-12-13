@@ -276,7 +276,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         }
         final DataTableSpec spec = inSpecs[0];
         if (spec.getNumColumns() < 2) {
-            throw new IllegalArgumentException(
+            throw new InvalidSettingsException(
                     "Input table should have at least 2 columns.");
         }
         final String xCol = m_xColName.getStringValue();

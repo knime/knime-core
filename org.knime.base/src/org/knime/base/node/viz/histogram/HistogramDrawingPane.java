@@ -79,7 +79,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         new Font("Arial", Font.PLAIN, 12);
 
     /**
-     * Defines the space between the bottom of the plotter and the aggregation
+     * Defines the space between the bottom of the bar and the aggregation
      * value in pixel.
      */
     private static final int AGGR_VAL_LABEL_SPACER = 20;
@@ -115,6 +115,9 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     
     /**If set the base line is drawn at this screen position.*/
     private Integer m_baseLine = null;
+
+    /**If set the grid lines are drawn at the given positions.*/
+    private int[] m_gridLines;
     
     /**
      * Constructor for class HistogramDrawingPane.
@@ -177,6 +180,15 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     }
     
     /**
+     * Indicates if the grid lines should be drawn. Set to <code>null</code> if
+     * none grid lines should be drawn
+     * @param gridLines the Y coordinate of each grid line on the screen
+     */
+    public void setGridLines(final int[] gridLines) {
+        m_gridLines = gridLines;
+    }
+    
+    /**
      * Resets the internal values of the histogram drawing pane to their default
      * values.
      */
@@ -223,8 +235,17 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         }
         //check if we have to draw the base line
         if (m_baseLine != null) {
-            paintBaseLine(g2, m_baseLine.intValue(), 
-                    (int) getBounds().getWidth());
+            paintHorizontalLine(g2, m_baseLine.intValue(), 
+                    (int) getBounds().getWidth(), BASE_LINE_COLOR, 
+                    BASE_LINE_STROKE);
+        }
+        //check if we have to draw the grid lines
+        if (m_gridLines != null) {
+            for (int gridLine : m_gridLines) {
+                paintHorizontalLine(g2, gridLine, 
+                        (int) getBounds().getWidth(), BASE_LINE_COLOR, 
+                        BASE_LINE_STROKE);
+            }
         }
 // loop over all bars and paint them
         for (BarVisModel bar : m_bars.values()) {
@@ -278,14 +299,17 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * @param g2 the graphics object to use
      * @param yOffset the y offset of the line
      * @param screenWidth the width of the line
+     * @param color the drawing color
+     * @param stroke the stroke to use
      */
-    private static void paintBaseLine(final Graphics2D g2, final int yOffset,
-            final int screenWidth) {
+    private static void paintHorizontalLine(final Graphics2D g2, 
+            final int yOffset, final int screenWidth, final Color color, 
+            final BasicStroke stroke) {
         // save the original settings
         final Stroke origStroke = g2.getStroke();
         final Color origColor = g2.getColor();
-        g2.setColor(BASE_LINE_COLOR);
-        g2.setStroke(BASE_LINE_STROKE);
+        g2.setColor(color);
+        g2.setStroke(stroke);
         g2.drawLine(0, yOffset, screenWidth, yOffset);
         //set the original settings
         g2.setStroke(origStroke);

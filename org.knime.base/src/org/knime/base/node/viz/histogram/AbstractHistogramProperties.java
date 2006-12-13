@@ -18,12 +18,15 @@
  */
 package org.knime.base.node.viz.histogram;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemListener;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
 import javax.swing.AbstractButton;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -34,11 +37,13 @@ import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
+import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
@@ -55,6 +60,10 @@ public abstract class AbstractHistogramProperties extends
     private static final String BAR_TAB_LABEL = "Bar settings";
     
     private static final String AGGREGATION_TAB_LABEL = "Aggregation settings";
+    
+    private static final String VIZ_SETTINGS_TAB_LABEL = 
+        "Visualization settings";
+
     
     private static final String X_COLUMN_LABEL = "X Column:";
     private static final String AGGREGATION_COLUMN_ENABLED_TOOLTIP = 
@@ -75,7 +84,10 @@ public abstract class AbstractHistogramProperties extends
     private static final String SHOW_MISSING_VAL_BAR_TOOLTIP = "Shows a bar "
             + "with rows which have a missing value for the selected x column.";
     private static final String SHOW_EMPTY_BARS_LABEL = "Show empty bars";
+    private static final String SHOW_GRID_LABEL = "Show grid lines";
     private static final String APPLY_BUTTON_LABEL = "Apply";
+    
+    private static final Dimension HORIZONTAL_SPACER_DIM = new Dimension(10, 1);
 
     private AggregationMethod m_aggregationMethod;
     private final ColumnSelectionComboxBox m_xCol;
@@ -88,6 +100,7 @@ public abstract class AbstractHistogramProperties extends
     private final JCheckBox m_showMissingValBar;
     private final JButton m_applyAggrSettingsButton;
     private final JButton m_applyBarSettingsButton;
+    private final JCheckBox m_showGrid;
 
     
     /**Constructor for class AbstractHistogramProperties.
@@ -98,8 +111,7 @@ public abstract class AbstractHistogramProperties extends
         //create all swing components first
         m_aggregationMethod = aggrMethod;
         // the column select boxes for the X axis
-        m_xCol = new ColumnSelectionComboxBox(
-                AbstractHistogramProperties.X_COLUMN_LABEL);
+        m_xCol = new ColumnSelectionComboxBox((Border) null, DataValue.class);
         m_xCol.setBackground(this.getBackground());
         // create the additional settings components which get added to the
         // histogram settings panel
@@ -173,6 +185,7 @@ public abstract class AbstractHistogramProperties extends
                 AbstractHistogramProperties.APPLY_BUTTON_LABEL);
         m_applyBarSettingsButton.setHorizontalAlignment(SwingConstants.RIGHT);
         
+        m_showGrid = new JCheckBox(SHOW_GRID_LABEL);
 //the column select tab
         final JPanel columnPanel = createColumnSettingsPanel();
         addTab(COLUMN_TAB_LABEL, columnPanel);
@@ -183,6 +196,24 @@ public abstract class AbstractHistogramProperties extends
 //the aggregation settings tab
         final JPanel aggrPanel = createAggregationSettingsPanel();
         addTab(AGGREGATION_TAB_LABEL, aggrPanel);
+        
+        final JPanel visOptionPanel = createVizSettingsPanel();
+        addTab(VIZ_SETTINGS_TAB_LABEL, visOptionPanel);
+    }
+
+    /**
+     * @return
+     */
+    private JPanel createVizSettingsPanel() {
+        final JPanel vizPanel = new JPanel();
+        final Box vizBox = Box.createHorizontalBox();
+        vizBox.setBorder(BorderFactory
+                .createEtchedBorder(EtchedBorder.RAISED));
+        vizBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+        vizBox.add(m_showGrid);
+        vizBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+        vizPanel.add(vizBox);
+        return vizPanel;
     }
 
     /**
@@ -192,9 +223,16 @@ public abstract class AbstractHistogramProperties extends
      */
     private JPanel createColumnSettingsPanel() {
         final JPanel columnPanel = new JPanel();
-        final Box columnBox = Box.createVerticalBox();
+        final Box columnBox = Box.createHorizontalBox();
+        columnBox.setBorder(BorderFactory
+                .createEtchedBorder(EtchedBorder.RAISED));
+        final JLabel xColLabelLabel = new JLabel(
+                AbstractHistogramProperties.X_COLUMN_LABEL);
+        columnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+        columnBox.add(xColLabelLabel);
+        columnBox.add(Box.createHorizontalGlue());
         columnBox.add(m_xCol);
-        columnBox.add(Box.createVerticalGlue());
+        columnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
         columnPanel.add(columnBox);
         return columnPanel;
     }
@@ -242,12 +280,15 @@ public abstract class AbstractHistogramProperties extends
         colSelectLabelBox.add(colLabelBox);
         colSelectLabelBox.add(m_yCol);
         
-        final Box buttonBox = Box.createVerticalBox();
-        buttonBox.add(Box.createVerticalGlue());
+        final Box buttonBox = Box.createHorizontalBox();
+        buttonBox.add(Box.createHorizontalGlue());
+        buttonBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
         buttonBox.add(m_applyAggrSettingsButton);
-        buttonBox.add(Box.createVerticalGlue());
+        buttonBox.add(Box.createHorizontalGlue());
 //the all surrounding box
         final Box aggrBox = Box.createHorizontalBox();
+        aggrBox.setBorder(BorderFactory
+                .createEtchedBorder(EtchedBorder.RAISED));
         aggrBox.add(aggrLabelButtonBox);
         aggrBox.add(Box.createHorizontalGlue());
         aggrBox.add(colSelectLabelBox);
@@ -306,12 +347,15 @@ public abstract class AbstractHistogramProperties extends
         barSelectBox.add(Box.createVerticalGlue());
         barSelectBox.add(m_showMissingValBar);
         barSelectBox.add(Box.createVerticalGlue());
-        final Box buttonBox = Box.createVerticalBox();
-        buttonBox.add(Box.createVerticalGlue());
+        final Box buttonBox = Box.createHorizontalBox();
+        final Dimension d = new Dimension(130, 1);
+        buttonBox.add(Box.createRigidArea(d));
         buttonBox.add(m_applyBarSettingsButton);
-        buttonBox.add(Box.createVerticalGlue());
+        buttonBox.add(Box.createHorizontalGlue());
         barSelectBox.add(buttonBox);
         final Box barBox = Box.createHorizontalBox();
+        barBox.setBorder(BorderFactory
+                .createEtchedBorder(EtchedBorder.RAISED));
         barBox.add(barWidthBox);
         barBox.add(Box.createHorizontalGlue());
         barBox.add(barNoBox);
@@ -470,6 +514,7 @@ public abstract class AbstractHistogramProperties extends
             m_showMissingValBar.setSelected(plotter.isShowMissingValBar());
             m_showMissingValBar.setEnabled(histoData.containsMissingValueBar());
             m_showEmptyBars.setEnabled(histoData.containsEmptyValueBars());
+            m_showGrid.setSelected(plotter.isShowGridLines());
         } // end of else of if plotter == null
     }
 
@@ -582,6 +627,13 @@ public abstract class AbstractHistogramProperties extends
     public void addAggregationChangedListener(final ActionListener listener) {
         m_applyAggrSettingsButton.addActionListener(listener);
         m_applyBarSettingsButton.addActionListener(listener);
+    }
+    
+    /**
+     * @param listener adds a listener to the show grid lines check box.
+     */
+    public void addShowGridChangedListener(final ItemListener listener) {
+        m_showGrid.addItemListener(listener);
     }
 
     /**

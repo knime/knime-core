@@ -23,6 +23,8 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -108,8 +110,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      * have a missing value for the selected x axis.
      */
     private boolean m_showMissingValBar = true;
-    /** The <code>HiLiteHandler</code>. */
-//    private HiLiteHandler m_hiLiteHandler;
+
+    /**If set to true the plotter paints the grid lines for the y axis values.*/
+    private boolean m_showGridLines = false;
 
     
     /**Constructor for class AbstractHistogramPlotter.
@@ -151,6 +154,13 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 onApply();
             }
         });
+        m_histoProps.addShowGridChangedListener(
+                new ItemListener() {
+                    public void itemStateChanged(final ItemEvent e) {
+                        setShowGridLines(
+                                e.getStateChange() == ItemEvent.SELECTED);
+                    }
+                });
         // set the hilitehandler for highlighting stuff
         if (handler != null) {
             handler.addHiLiteListener(this);
@@ -237,16 +247,35 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             visBars = createUpdateVisBars(visBars, xCoordinates, yCoordinates,
                     drawingSpace);
             drawingPane.setVisBars(visBars);
+            final double drawingHeight = drawingSpace.getHeight();
             if (!yCoordinates.isNominal() 
                     && ((NumericCoordinate)yCoordinates).getMinDomainValue() 
                         < 0) {
-                final double drawingHeight = drawingSpace.getHeight();
                 final int baseLine = (int)(drawingHeight 
                         - yCoordinates.calculateMappedValue(
                                 new DoubleCell(0), drawingHeight, true));
                 drawingPane.setBaseLine(baseLine);
             } else {
                 drawingPane.setBaseLine(null);
+            }
+            if (isShowGridLines()) {
+//                final Axis yAxis = getYAxis();
+//                final int tickOffset = yAxis.getTickOffset();
+                final CoordinateMapping[] tickPos = 
+                    yCoordinates.getTickPositions(drawingHeight, true);
+                final int[] gridLines = new int[tickPos.length];
+                for (int i = 0, length = tickPos.length; i < length; i++) {
+                    final double mapVal = tickPos[i].getMappingValue();
+                    //subtract the axis offset
+                    gridLines[i] = (int)mapVal;
+//                    gridLines[i] = (int)(drawingHeight 
+//                            - yCoordinates.calculateMappedValue(
+//                                    new DoubleCell(mapVal), 
+//                                    drawingHeight, true));
+                }
+                drawingPane.setGridLines(gridLines);
+            } else {
+                drawingPane.setGridLines(null);
             }
             m_histoProps.updateHistogramSettings(this);
             repaint();
@@ -698,11 +727,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      */
     private DataColumnSpec getXColumnSpec() {
         final AbstractHistogramDataModel model = getHistogramDataModel();
-        final DataColumnSpec xColSpec = getHistogramDataModel()
-                .getOriginalXColSpec();
+        final DataColumnSpec xColSpec = model.getOriginalXColSpec();
         String colName = xColSpec.getName();
         Set<DataCell> binCaptions = null;
-        if (getHistogramDataModel().isNominal()) {
+        if (model.isNominal()) {
             // check if the column contains only missing values if that's the
             // case set one value which indicates this
             if (xColSpec.getDomain().getValues() == null
@@ -812,6 +840,23 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
     /**
+     * @return the showGridLines
+     */
+    public boolean isShowGridLines() {
+        return m_showGridLines;
+    }
+    
+    /**
+     * @param showGridLines the showGridLines to set
+     */
+    public void setShowGridLines(final boolean showGridLines) {
+        if (showGridLines != m_showGridLines) {
+            m_showGridLines = showGridLines;
+            updateBarsAndPaint();
+        }
+    }
+    
+    /**
      * @return the showEmptyBars
      */
     public boolean isShowEmptyBars() {
@@ -895,8 +940,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener
-     *      #unHiLite(org.knime.core.node.property.hilite.KeyEvent)
+     * @see org.knime.core.node.property.hilite.
+     * HiLiteListener#unHiLite(org.knime.core.node.property.hilite.KeyEvent)
      */
     @Override
     public void unHiLite(final KeyEvent event) {
@@ -908,8 +953,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener
-     *      #unHiLiteAll()
+     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
      */
     public void unHiLiteAll() {
         // we don't need to take care of un/highlight since we don't save
@@ -1095,11 +1139,4 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             bar.setSelected(false);
         }
     }
-
-//    /**
-//     * @return the {@link HiLiteHandler}
-//     */
-//    protected HiLiteHandler getHiLiteHandler() {
-//        return m_hiLiteHandler;
-//    }
 }

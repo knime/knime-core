@@ -18,7 +18,6 @@
 			<li>Shows empty intervals option</li>
 			<li>Shows missing value bar option</li>
 			<li>Zooming</li>
-			<li>Crosshair cursor</li>
 			<li>...</li>
 			</ol>
 		The bars are colored by the number of rows per color attribute.
