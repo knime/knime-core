@@ -96,6 +96,12 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     /** Defines the stroke of the base line. */
     private static final BasicStroke BASE_LINE_STROKE = new BasicStroke(2f);
     
+    /**Defines the color of the base line.*/
+    private static final Color GRID_LINE_COLOR = Color.LIGHT_GRAY;
+    
+    /** Defines the stroke of the base line. */
+    private static final BasicStroke GRID_LINE_STROKE = new BasicStroke(1f);
+    
     /** Defines the font of the information message which is displayed. */
     private static final Font INFO_MSG_FONT = new Font("Arial", Font.PLAIN, 16);
 
@@ -244,8 +250,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         if (m_gridLines != null) {
             for (int gridLine : m_gridLines) {
                 paintHorizontalLine(g2, gridLine, 
-                        (int) getBounds().getWidth(), BASE_LINE_COLOR, 
-                        BASE_LINE_STROKE);
+                        (int) getBounds().getWidth(), GRID_LINE_COLOR, 
+                        GRID_LINE_STROKE);
             }
         }
 // loop over all bars and paint them
@@ -288,7 +294,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             } // end of the color loop for one bar 
 
             if (bar.isSelected()) {
-                paintBarValue(g2, bar);
+                paintBarValue(g2, bar, getBounds());
             }
             
         } // end of the bar loop
@@ -363,7 +369,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * @param bar the bar which value should be paint
      */
     private static void paintBarValue(final Graphics2D g2, 
-            final BarVisModel bar) {
+            final BarVisModel bar, final Rectangle drawingSpace) {
         // save the original settings
         final AffineTransform origTransform = g2.getTransform();
         final Font origFont = g2.getFont();
@@ -377,6 +383,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         final FontMetrics metrics = g2.getFontMetrics();
         int textX = (int)(barRect.getX() + (barRect.getWidth() / 2));
         int textWidth = metrics.stringWidth(label);
+        //I always divide by 2 because the text is drawn at the specified
+        //position and then rotated by the center!!!
         textX -= textWidth / 2;
         // avoid drawing the aggregation value outside of the display
         if (textX < 1) {
@@ -390,10 +398,13 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         } else {
             textY = (int)(barRect.getY() + textWidth / 2) 
             + AGGR_VAL_LABEL_SPACER;
-            if (textY > barRect.getY() + barRect.getHeight()) {
-                textY = (int)((barRect.getY() + barRect.getHeight())
-                - textWidth / 2) - AGGR_VAL_LABEL_SPACER;
-            }
+        }
+        final double screenHeight = drawingSpace.getHeight();
+        //check if the label is outside of the drawing space
+        if (textY + textWidth / 2 > screenHeight) {
+            textY = (int)(screenHeight - textWidth / 2 - AGGR_VAL_LABEL_SPACER);
+        } else if (textY < 0) {
+            textY = textWidth / 2 + AGGR_VAL_LABEL_SPACER;
         }
         final int textHeight = metrics.getHeight();
         // calculate the text background rectangle
