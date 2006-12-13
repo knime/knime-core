@@ -213,9 +213,6 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      */
     @Override
     public void paintContent(final Graphics g) {
-        if (m_bars == null) {
-            return;
-        }
         final Graphics2D g2 = (Graphics2D)g;
         //check if we have to display an information message
         if (m_infoMsg != null) {
@@ -238,6 +235,9 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             g2.drawString(m_infoMsg, textX, textY);
             //set the original settings
             g2.setFont(origFont);
+            return;
+        }
+        if (m_bars == null) {
             return;
         }
         //check if we have to draw the base line
