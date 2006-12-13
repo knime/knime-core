@@ -71,10 +71,10 @@ public class InitialUpdateSiteIntroShell {
                         "Open the update site",
                         "The KNIME Workbench allows you to enhance the "
                                 + "functionality of KNIME and other "
-                                + "Functionality of Eclipse\nvia the Eclipse"
+                                + "functionality of Eclipse\nvia the Eclipse"
                                 + " update site.\n"
                                 + "If you press OK the Eclipse"
-                                + " Upate Wizard opens, that giudes you "
+                                + " Upate Wizard opens that giudes you "
                                 + "through the update process.\n"
                                 + "After pressing 'OK', proceed with the following steps:\n\n"
                                 + "\t1. Just select 'Search for new features to "
