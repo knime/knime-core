@@ -673,11 +673,15 @@ public class ScatterPlotter extends AbstractPlotter2D implements
     @Override
     public void mouseReleased(final MouseEvent e) {
         super.mouseReleased(e);
-        boolean existSelected = getDrawingPane()
-            .getNumberSelectedElements() > 0;
-        m_hilite.setEnabled(existSelected);
+        boolean existSelected =
+                getDrawingPane().getNumberSelectedElements() > 0;
+        if (m_hilite != null) {
+            m_hilite.setEnabled(existSelected);
+        }
         boolean existHilited = getHiLiteHandler().getHiLitKeys().size() > 0;
-        m_unhilite.setEnabled(existSelected && existHilited);
+        if (m_unhilite != null) {
+            m_unhilite.setEnabled(existSelected && existHilited);
+        }
     }
 
     /**
