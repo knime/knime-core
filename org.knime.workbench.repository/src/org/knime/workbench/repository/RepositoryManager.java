@@ -45,7 +45,6 @@ import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IContainerObject;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
-import org.osgi.framework.BundleException;
 
 /**
  * Manages the (global) KNIME Repository. This class collects all the
@@ -74,7 +73,7 @@ public final class RepositoryManager {
     static {
         try {
             Platform.getBundle("org.knime.deprecated").start();
-        } catch (BundleException ex) {
+        } catch (Throwable ex) {
             LOGGER.warn("Could not load org.knime.deprecated plugin. The "
                     + "deprecated nodes will not be available.", ex);
         }
