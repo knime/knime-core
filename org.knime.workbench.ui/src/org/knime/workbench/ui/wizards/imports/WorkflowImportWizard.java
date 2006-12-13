@@ -26,7 +26,6 @@ package org.knime.workbench.ui.wizards.imports;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.wizards.datatransfer.ExternalProjectImportWizard;
 
 /**
  * Wizard to import a knime workflow project. This project may be an archive or
