@@ -219,6 +219,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             final FontMetrics metrics = g2.getFontMetrics();
             final int textWidth = metrics.stringWidth(m_infoMsg);
             final int textHeight = metrics.getHeight();
+            //get the basic rectangle we have to draw in
             final Rectangle basicRect = getBounds();
             int textX = (int)basicRect.getCenterX() - (textWidth / 2);
             int textY = (int)basicRect.getCenterY() - (textHeight / 2);
@@ -389,6 +390,10 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         } else {
             textY = (int)(barRect.getY() + textWidth / 2) 
             + AGGR_VAL_LABEL_SPACER;
+            if (textY > barRect.getY() + barRect.getHeight()) {
+                textY = (int)((barRect.getY() + barRect.getHeight())
+                - textWidth / 2) - AGGR_VAL_LABEL_SPACER;
+            }
         }
         final int textHeight = metrics.getHeight();
         // calculate the text background rectangle
