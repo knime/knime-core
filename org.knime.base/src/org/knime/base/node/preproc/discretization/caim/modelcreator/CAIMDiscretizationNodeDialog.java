@@ -19,7 +19,7 @@
  * History
  *   25.10.2006 (sieb): created
  */
-package org.knime.exp.node.discretization.caim.modelcreator;
+package org.knime.base.node.preproc.discretization.caim.modelcreator;
 
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.StringValue;

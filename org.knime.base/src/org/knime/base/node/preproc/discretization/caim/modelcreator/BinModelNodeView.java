@@ -16,7 +16,7 @@
  * History
  *   15.11.2006 (Christoph Sieb): created
  */
-package org.knime.exp.node.discretization.caim.modelcreator;
+package org.knime.base.node.preproc.discretization.caim.modelcreator;
 
 import java.util.ArrayList;
 import java.util.List;

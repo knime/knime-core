@@ -19,14 +19,14 @@
  * History
  *   23.10.2006 (sieb): created
  */
-package org.knime.exp.node.discretization.caim.modelcreator;
+package org.knime.base.node.preproc.discretization.caim.modelcreator;
 
 import java.util.Map;
 
+import org.knime.base.node.preproc.discretization.caim.DiscretizationScheme;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.exp.node.discretization.caim.DiscretizationScheme;
 
 /**
  * Implements a 2D quanta matrix that holds for one dimension class values and

@@ -16,7 +16,7 @@
  * History
  *   15.11.2006 (sieb): created
  */
-package org.knime.exp.node.discretization.caim.modelcreator;
+package org.knime.base.node.preproc.discretization.caim.modelcreator;
 
 import java.awt.Cursor;
 import java.awt.Point;
@@ -30,6 +30,8 @@ import java.util.Set;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.node.preproc.discretization.caim.DiscretizationModel;
+import org.knime.base.node.preproc.discretization.caim.DiscretizationScheme;
 import org.knime.base.node.viz.plotter.PlotterMouseListener;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
 import org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixProperties;
@@ -44,8 +46,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.util.ColumnFilterPanel;
-import org.knime.exp.node.discretization.caim.DiscretizationModel;
-import org.knime.exp.node.discretization.caim.DiscretizationScheme;
 
 /**
  * This plotter draws a {@link DiscretizationModel}.

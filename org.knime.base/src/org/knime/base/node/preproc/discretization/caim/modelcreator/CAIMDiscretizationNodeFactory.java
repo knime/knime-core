@@ -16,7 +16,7 @@
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
  */
-package org.knime.exp.node.discretization.caim.modelcreator;
+package org.knime.base.node.preproc.discretization.caim.modelcreator;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

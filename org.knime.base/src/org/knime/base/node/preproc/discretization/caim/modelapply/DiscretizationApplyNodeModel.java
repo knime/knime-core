@@ -14,11 +14,13 @@
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
  */
-package org.knime.exp.node.discretization.caim.modelapply;
+package org.knime.base.node.preproc.discretization.caim.modelapply;
 
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.base.node.preproc.discretization.caim.DiscretizationModel;
+import org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeModel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -32,8 +34,6 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.exp.node.discretization.caim.DiscretizationModel;
-import org.knime.exp.node.discretization.caim.modelcreator.CAIMDiscretizationNodeModel;
 
 /**
  * This node takes a discretization model and applies it to the given input data

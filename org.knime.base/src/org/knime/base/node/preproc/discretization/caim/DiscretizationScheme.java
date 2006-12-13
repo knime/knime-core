@@ -19,7 +19,7 @@
  * History
  *   23.10.2006 (sieb): created
  */
-package org.knime.exp.node.discretization.caim;
+package org.knime.base.node.preproc.discretization.caim;
 
 import java.util.Enumeration;
 import java.util.Vector;

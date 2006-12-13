@@ -19,7 +19,7 @@
  * History
  *   Nov 6, 2006 (sieb): created
  */
-package org.knime.exp.node.discretization.caim.modelcreator;
+package org.knime.base.node.preproc.discretization.caim.modelcreator;
 
 /**
  * A boundary scheme holds the boundaries as linked doubles and the number of

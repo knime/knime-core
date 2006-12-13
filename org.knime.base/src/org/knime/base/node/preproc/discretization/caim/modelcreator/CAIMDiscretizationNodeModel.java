@@ -14,7 +14,7 @@
  *   otherwise expressly permitted in writing by the copyright owner.    *
  * --------------------------------------------------------------------- *
  */
-package org.knime.exp.node.discretization.caim.modelcreator;
+package org.knime.base.node.preproc.discretization.caim.modelcreator;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -31,6 +31,9 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.data.sort.SortedTable;
+import org.knime.base.node.preproc.discretization.caim.DiscretizationModel;
+import org.knime.base.node.preproc.discretization.caim.DiscretizationScheme;
+import org.knime.base.node.preproc.discretization.caim.Interval;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -55,9 +58,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.exp.node.discretization.caim.DiscretizationModel;
-import org.knime.exp.node.discretization.caim.DiscretizationScheme;
-import org.knime.exp.node.discretization.caim.Interval;
 
 /**
  * Implements the CAIM discretization algorithm. The algorithm is based on the

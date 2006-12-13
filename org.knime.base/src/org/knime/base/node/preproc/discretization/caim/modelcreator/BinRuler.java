@@ -19,7 +19,7 @@
  * History
  *   Nov 14, 2006 (sieb): created
  */
-package org.knime.exp.node.discretization.caim.modelcreator;
+package org.knime.base.node.preproc.discretization.caim.modelcreator;
 
 import java.awt.Point;
 
