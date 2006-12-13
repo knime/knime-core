@@ -420,6 +420,14 @@
            category-path="/manipulation/row"
            factory-class="org.knime.base.node.preproc.filter.hilite.HiliteFilterNodeFactory"
            id="org.knime.base.node.preproc.hilite"/>
+    <node
+		 category-path="/manipulation/column"
+         factory-class="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"
+         id="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"/>
+    <node
+   		 category-path="/manipulation/column"
+         factory-class="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"
+         id="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"/>
    </extension>
    
    

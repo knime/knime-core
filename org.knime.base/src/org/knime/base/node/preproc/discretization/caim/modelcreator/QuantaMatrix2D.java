@@ -84,8 +84,17 @@ public class QuantaMatrix2D {
 
         for (DataRow row : inputTable) {
 
+            // skip missing class value rows
+            if (row.getCell(classColumnIndex).isMissing()) {
+                continue;
+            }
             // get the values of the attributes to count
             String classValue = row.getCell(classColumnIndex).toString();
+
+            // skip rows with missing values in the column to discretize
+            if (row.getCell(columnIndex).isMissing()) {
+                continue;
+            }
             double value =
                     ((DoubleValue)row.getCell(columnIndex)).getDoubleValue();
 

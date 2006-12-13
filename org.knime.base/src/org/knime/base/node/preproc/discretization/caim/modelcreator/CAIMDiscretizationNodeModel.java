@@ -273,7 +273,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             subExec.setProgress("Find possible boundaries.");
             BoundaryScheme boundaryScheme = null;
 
-//            long t1 = System.currentTimeMillis();
+            // long t1 = System.currentTimeMillis();
             if (m_classOptimizedVersion) {
                 boundaryScheme =
                         createAllIntervalBoundaries(inData, columnIndex,
@@ -283,10 +283,10 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                         createAllIntervalBoundaries2(inData, columnIndex,
                                 subExec);
             }
-//            long t2 = System.currentTimeMillis() - t1;
-//            LOGGER.error("Create boundaries time: " + (t2 / 1000.0)
-//                    + " optimized: " + m_classOptimizedVersion);
-//            LOGGER.error("Boundaries: " + boundaryScheme.getHead());
+            // long t2 = System.currentTimeMillis() - t1;
+            // LOGGER.error("Create boundaries time: " + (t2 / 1000.0)
+            // + " optimized: " + m_classOptimizedVersion);
+            // LOGGER.error("Boundaries: " + boundaryScheme.getHead());
 
             LinkedDouble allIntervalBoundaries = boundaryScheme.getHead();
 
@@ -507,13 +507,20 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             for (DataCell cell : row) {
 
                 if (included[i]) {
-                    // transform the value to the discretized one
-                    double value = ((DoubleValue)cell).getDoubleValue();
+                    // check for missing values
+                    if (cell.isMissing()) {
+                        newCells[i] = cell;
+                    } else {
 
-                    String discreteValue =
-                            dSchemes[includedCounter].getDiscreteValue(value);
+                        // transform the value to the discretized one
+                        double value = ((DoubleValue)cell).getDoubleValue();
 
-                    newCells[i] = new StringCell(discreteValue);
+                        String discreteValue =
+                                dSchemes[includedCounter]
+                                        .getDiscreteValue(value);
+
+                        newCells[i] = new StringCell(discreteValue);
+                    }
                     includedCounter++;
 
                 } else {
@@ -655,13 +662,24 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
 
         // the first different value is the minimum value of the sorted list
         RowIterator rowIterator = sortedTable.iterator();
-        DataRow firstRow = rowIterator.next();
-        double lastDifferentValue =
-                ((DoubleValue)firstRow.getCell(columnIndex)).getDoubleValue();
 
-        // remember the
-        String firstClassValueOfCurrentValue =
-                firstRow.getCell(m_classifyColumnIndex).toString();
+        // get the first valid value (non-missing
+        double lastDifferentValue = Double.NaN;
+        String firstClassValueOfCurrentValue = null;
+        while (rowIterator.hasNext()) {
+            DataRow firstRow = rowIterator.next();
+
+            if (!firstRow.getCell(columnIndex).isMissing()) {
+                lastDifferentValue =
+                        ((DoubleValue)firstRow.getCell(columnIndex))
+                                .getDoubleValue();
+
+                // also remember the corresponding class value
+                firstClassValueOfCurrentValue =
+                        firstRow.getCell(m_classifyColumnIndex).toString();
+                break;
+            }
+        }
 
         // needed to create a already passed candidate boundary due
         // to a class value change
