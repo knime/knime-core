@@ -29,7 +29,7 @@ import java.util.ResourceBundle;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.util.KnimeEncryption;
-import org.knime.workbench.editor2.EclipseEncryptionKeySupplier2;
+import org.knime.workbench.editor2.EclipseEncryptionKeySupplier;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -69,7 +69,7 @@ public class KNIMEEditorPlugin extends AbstractUIPlugin {
         // create a knime encryption supplier that reads in an encryption key
         // from the user via a dialog
         KnimeEncryption
-                .setEncryptionKeySupplier(new EclipseEncryptionKeySupplier2());
+                .setEncryptionKeySupplier(new EclipseEncryptionKeySupplier());
         
         
     }
