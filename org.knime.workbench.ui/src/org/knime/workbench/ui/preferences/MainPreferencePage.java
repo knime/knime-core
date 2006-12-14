@@ -26,12 +26,16 @@ package org.knime.workbench.ui.preferences;
 
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.RadioGroupFieldEditor;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
-
+import org.eclipse.ui.internal.Workbench;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
@@ -48,6 +52,11 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
  */
 public class MainPreferencePage extends FieldEditorPreferencePage implements
         IWorkbenchPreferencePage {
+
+    boolean m_apply = false;
+
+    String m_tempPath;
+
     /**
      * Constructor .
      */
@@ -58,6 +67,59 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         setPreferenceStore(KNIMEUIPlugin.getDefault().getPreferenceStore());
 
         setDescription("Konstanz Information Miner global preferences");
+
+        // get the preference store for the UI plugin
+        IPreferenceStore store =
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
+        m_tempPath = store.getString(PreferenceConstants.P_TEMP_DIR);
+    }
+
+    @Override
+    protected void performApply() {
+        m_apply = true;
+        super.performApply();
+    }
+
+    /**
+     * Overriden to display a message box in case the temp directory was
+     * changed.
+     * 
+     * @see org.eclipse.jface.preference.FieldEditorPreferencePage#performOk()
+     */
+    @Override
+    public boolean performOk() {
+
+        boolean apply = m_apply;
+        m_apply = false;
+        boolean result = super.performOk();
+        if (apply) {
+            return result;
+        }
+
+        // get the preference store for the UI plugin
+        IPreferenceStore store =
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
+        String currentTmpDir = store.getString(PreferenceConstants.P_TEMP_DIR);
+        boolean tempDirChanged = !m_tempPath.equals(currentTmpDir);
+        if (tempDirChanged) {
+            
+            // reset the directory
+            m_tempPath = currentTmpDir;
+            MessageBox mb =
+                    new MessageBox(Display.getDefault().getActiveShell(),
+                            SWT.ICON_QUESTION | SWT.YES | SWT.NO);
+            mb.setText("Restart workbench...");
+            mb.setMessage("Changes of the temporary directory become "
+                    + "first available after restarting the workbench.\n"
+                    + "Do you want to restart the workbench now?");
+            if (mb.open() != SWT.YES) {
+                return result;
+            }
+
+            Workbench.getInstance().restart();
+        }
+
+        return result;
     }
 
     /**
@@ -106,18 +168,18 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
                         {"&ERROR", PreferenceConstants.P_LOGLEVEL_ERROR}},
                 parent));
 
-        IntegerFieldEditor maxThreadEditor = new IntegerFieldEditor(
-                PreferenceConstants.P_MAXIMUM_THREADS,
-                "Maximum working threads for all nodes", parent, 3);
+        IntegerFieldEditor maxThreadEditor =
+                new IntegerFieldEditor(PreferenceConstants.P_MAXIMUM_THREADS,
+                        "Maximum working threads for all nodes", parent, 3);
         maxThreadEditor.setValidRange(1, Math.max(100, Runtime.getRuntime()
                 .availableProcessors() * 4));
         maxThreadEditor.setTextLimit(3);
         addField(maxThreadEditor);
 
-        DirectoryFieldEditor tempDirEditor = new DirectoryFieldEditor(
-                PreferenceConstants.P_TEMP_DIR,
-                "Directory for temporary files\n(you should restart KNIME after"
-                        + " changing this value)", parent);
+        DirectoryFieldEditor tempDirEditor =
+                new DirectoryFieldEditor(PreferenceConstants.P_TEMP_DIR,
+                        "Directory for temporary files\n(you should restart KNIME after"
+                                + " changing this value)", parent);
         addField(tempDirEditor);
     }
 
