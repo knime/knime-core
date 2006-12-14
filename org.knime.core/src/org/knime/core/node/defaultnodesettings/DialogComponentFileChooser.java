@@ -351,4 +351,15 @@ public class DialogComponentFileChooser extends DialogComponent {
         }
         m_border.setTitle(newTitle);
     }
+
+    /**
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #setToolTipText(java.lang.String)
+     */
+    @Override
+    public void setToolTipText(final String text) {
+        m_browseButton.setToolTipText(text);
+        m_fileComboBox.setToolTipText(text);
+    }
+
 }

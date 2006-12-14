@@ -55,6 +55,8 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     /** Contains all column names matching the given given filter class. */
     private final ColumnSelectionPanel m_chooser;
 
+    private final JLabel m_label;
+    
     private final int m_specIndex;
 
     private final List<Class<? extends DataValue>> m_typeList;
@@ -89,7 +91,8 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             final String label, final int specIndex, final boolean isRequired,
             final Class<? extends DataValue>... classFilter) {
         super(model);
-        this.add(new JLabel(label));
+        m_label = new JLabel(label);
+        this.add(m_label);
         m_chooser = new ColumnSelectionPanel((Border)null, classFilter);
         m_chooser.setRequired(isRequired);
         this.add(m_chooser);
@@ -219,4 +222,15 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     protected void setEnabledComponents(final boolean enabled) {
         m_chooser.setEnabled(enabled);
     }
+
+    /**
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #setToolTipText(java.lang.String)
+     */
+    @Override
+    public void setToolTipText(final String text) {
+        m_chooser.setToolTipText(text);
+        m_label.setToolTipText(text);
+    }
+
 }

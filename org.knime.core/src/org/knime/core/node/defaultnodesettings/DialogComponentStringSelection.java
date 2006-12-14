@@ -54,6 +54,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
 
     private JComboBox m_combobox;
 
+    private final JLabel m_label;
     /**
      * Constructor that puts label and combobox into panel. It expects the user
      * to make a selection, thus, at least one item in the list of selectable
@@ -77,7 +78,8 @@ public final class DialogComponentStringSelection extends DialogComponent {
                     + "shouldn't be null or empty");
         }
 
-        this.add(new JLabel(label));
+        m_label = new JLabel(label);
+        this.add(m_label);
         m_combobox = new JComboBox();
 
         for (String s : list) {
@@ -201,6 +203,16 @@ public final class DialogComponentStringSelection extends DialogComponent {
      */
     public void setSizeComponents(final int width, final int height) {
         m_combobox.setPreferredSize(new Dimension(width, height));
+    }
+
+    /**
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #setToolTipText(java.lang.String)
+     */
+    @Override
+    public void setToolTipText(final String text) {
+        m_label.setToolTipText(text);
+        m_combobox.setToolTipText(text);
     }
 
 }

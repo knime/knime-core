@@ -39,7 +39,7 @@ import org.knime.core.node.NotConfigurableException;
 
 /**
  * Provides a standard component for a dialog that allows to edit a boolean
- * value. Provides a checkbox as well as functionality to load/store the value 
+ * value. Provides a checkbox as well as functionality to load/store the value
  * into a config object.
  * 
  * @author M. Berthold, University of Konstanz
@@ -66,8 +66,7 @@ public final class DialogComponentBoolean extends DialogComponent {
                 model.setBooleanValue(m_checkbox.isSelected());
             }
         });
-       
-        
+
         // update the checkbox, whenever the model changes - make sure we get
         // notified first.
         getModel().prependChangeListener(new ChangeListener() {
@@ -126,4 +125,12 @@ public final class DialogComponentBoolean extends DialogComponent {
         return m_checkbox.isSelected();
     }
 
+    /**
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #setToolTipText(java.lang.String)
+     */
+    @Override
+    public void setToolTipText(final String text) {
+        m_checkbox.setToolTipText(text);
+    }
 }

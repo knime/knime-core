@@ -62,6 +62,8 @@ public final class DialogComponentPasswordField extends DialogComponent {
     
     private final JPasswordField m_pwField;
 
+    private final JLabel m_label;
+    
     private boolean m_containsDefaultValue;
 
     /**
@@ -100,7 +102,8 @@ public final class DialogComponentPasswordField extends DialogComponent {
             final String label, final int compWidth) {
         super(stringModel);
 
-        this.add(new JLabel(label));
+        m_label = new JLabel(label);
+        this.add(m_label);
         m_pwField = new JPasswordField();
         m_pwField.setColumns(compWidth);
 
@@ -258,6 +261,16 @@ public final class DialogComponentPasswordField extends DialogComponent {
         Arrays.fill(pw, (byte)0);
         Arrays.fill(decryptedText, (byte)0);
         return result;
+    }
+
+    /**
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #setToolTipText(java.lang.String)
+     */
+    @Override
+    public void setToolTipText(final String text) {
+        m_label.setToolTipText(text);
+        m_pwField.setToolTipText(text);
     }
 
 }

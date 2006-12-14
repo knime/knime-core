@@ -250,4 +250,10 @@ public abstract class DialogComponent extends JPanel {
 
     }
 
+    /**
+     * Implement this so it sets the tooltip on your component(s).
+     * @see javax.swing.JComponent#setToolTipText(java.lang.String)
+     */
+    @Override
+    public abstract void setToolTipText(final String text);
 }

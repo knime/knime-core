@@ -57,6 +57,8 @@ public class DialogComponentNumber extends DialogComponent {
     private static final int FIELD_MINWIDTH = 2;
 
     private JSpinner m_spinner;
+    
+    private final JLabel m_label;
 
     /**
      * Constructor puts a label and spinner (10 characters wide) into a panel.
@@ -89,7 +91,8 @@ public class DialogComponentNumber extends DialogComponent {
             throw new IllegalArgumentException("Width of component can't be "
                     + "smaller than 1");
         }
-        this.add(new JLabel(label));
+        m_label = new JLabel(label);
+        this.add(m_label);
 
         SpinnerNumberModel spinnerModel;
         if (numberModel instanceof SettingsModelDouble) {
@@ -265,4 +268,16 @@ public class DialogComponentNumber extends DialogComponent {
     protected void setEnabledComponents(final boolean enabled) {
         m_spinner.setEnabled(enabled);
     }
+
+    /**
+     * @see org.knime.core.node.defaultnodesettings.DialogComponent
+     *      #setToolTipText(java.lang.String)
+     */
+    @Override
+    public void setToolTipText(final String text) {
+        m_spinner.setToolTipText(text);
+        m_label.setToolTipText(text);
+    }
+
 }
+
