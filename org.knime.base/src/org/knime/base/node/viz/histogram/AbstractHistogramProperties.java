@@ -311,6 +311,8 @@ public abstract class AbstractHistogramProperties extends
     private JPanel createBarSettingsPanel() {
         final JPanel barPanel = new JPanel();
         final Box barWidthBox = Box.createVerticalBox();
+//        barWidthBox.setBorder(BorderFactory
+//                .createEtchedBorder(EtchedBorder.RAISED));
         final Box barWidthLabelBox = Box.createHorizontalBox();
         final JLabel barWidthLabel = new JLabel(
                 AbstractHistogramProperties.BAR_SIZE_LABEL);
@@ -325,6 +327,8 @@ public abstract class AbstractHistogramProperties extends
         barWidthSliderBox.add(Box.createHorizontalGlue());
         barWidthBox.add(barWidthSliderBox);
         final Box barNoBox = Box.createVerticalBox();
+//        barNoBox.setBorder(BorderFactory
+//                .createEtchedBorder(EtchedBorder.RAISED));
 //      the number of bars label box
         final Box noOfBarsLabelBox = Box.createHorizontalBox();
         final JLabel noOfBarsLabel = new JLabel(
@@ -341,18 +345,26 @@ public abstract class AbstractHistogramProperties extends
         noOfBarsSliderBox.add(m_noOfBars);
         noOfBarsSliderBox.add(Box.createHorizontalGlue());
         barNoBox.add(noOfBarsSliderBox);
+        //the box with the select boxes and apply button
+        final Box barSelButtonBox = Box.createVerticalBox();
+//        barSelButtonBox.setBorder(BorderFactory
+//                .createEtchedBorder(EtchedBorder.RAISED));
         final Box barSelectBox = Box.createVerticalBox();
-        // showEmptyBox.add(Box.createGlue());
+//        barSelectBox.setBorder(BorderFactory
+//                .createEtchedBorder(EtchedBorder.RAISED));
         barSelectBox.add(m_showEmptyBars);
         barSelectBox.add(Box.createVerticalGlue());
         barSelectBox.add(m_showMissingValBar);
         barSelectBox.add(Box.createVerticalGlue());
+        barSelButtonBox.add(barSelectBox);
+        barSelButtonBox.add(Box.createVerticalGlue());
         final Box buttonBox = Box.createHorizontalBox();
-        final Dimension d = new Dimension(130, 1);
+//        buttonBox.setBorder(BorderFactory
+//                .createEtchedBorder(EtchedBorder.RAISED));
+        final Dimension d = new Dimension(75, 1);
         buttonBox.add(Box.createRigidArea(d));
         buttonBox.add(m_applyBarSettingsButton);
-        buttonBox.add(Box.createHorizontalGlue());
-        barSelectBox.add(buttonBox);
+        barSelButtonBox.add(buttonBox);
         final Box barBox = Box.createHorizontalBox();
         barBox.setBorder(BorderFactory
                 .createEtchedBorder(EtchedBorder.RAISED));
@@ -360,7 +372,7 @@ public abstract class AbstractHistogramProperties extends
         barBox.add(Box.createHorizontalGlue());
         barBox.add(barNoBox);
         barBox.add(Box.createHorizontalGlue());
-        barBox.add(barSelectBox);
+        barBox.add(barSelButtonBox);
         barPanel.add(barBox);
         return barPanel;
     }

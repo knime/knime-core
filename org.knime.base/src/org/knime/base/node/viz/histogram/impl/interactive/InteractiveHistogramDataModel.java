@@ -206,6 +206,8 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
         while (minVal + (binInterval * noOfBars) < maxVal) {
             noOfBars++;
         }
+        // TK_TODO: Improve the binning especially the integer binning
+
         double leftBoundary = BinningUtil.myRoundedBorders(minVal, binInterval,
                 INTERVAL_DIGITS);
         List<DataRow> sortedRows = getOrderedDataRows();

@@ -189,37 +189,40 @@ public final class BinningUtil {
             final int noOfDigits, final boolean isInteger) {
         // if the value is >= 1 or an integer return an interval without decimal
         // places
-        if (doubleVal >= 1 || isInteger) {
+        if (doubleVal >= 1) {
             return bigValueRounder(doubleVal);
-        } else {
-            // the given doubleVal is less then zero
-            char[] interval = Double.toString(doubleVal).toCharArray();
-            StringBuffer decimalFormatBuf = new StringBuffer();
-            boolean digitFound = false;
-            int digitCounter = 0;
-            int positionCounter = 0;
-            for (int length = interval.length; positionCounter < length
-                    && digitCounter <= noOfDigits; positionCounter++) {
-                char c = interval[positionCounter];
-                if (c == '.') {
-                    decimalFormatBuf.append(".");
-                } else {
-                    if (c != '0' || digitFound) {
-                        digitFound = true;
-                        digitCounter++;
-                    }
-                    if (digitCounter <= noOfDigits) {
-                        decimalFormatBuf.append("#");
-                    }
+        }
+        //it's an integer an less then one
+        if (isInteger) {
+            return 1;
+        }
+    // the given doubleVal is less then one and no integer
+        char[] interval = Double.toString(doubleVal).toCharArray();
+        StringBuffer decimalFormatBuf = new StringBuffer();
+        boolean digitFound = false;
+        int digitCounter = 0;
+        int positionCounter = 0;
+        for (int length = interval.length; positionCounter < length
+                && digitCounter <= noOfDigits; positionCounter++) {
+            char c = interval[positionCounter];
+            if (c == '.') {
+                decimalFormatBuf.append(".");
+            } else {
+                if (c != '0' || digitFound) {
+                    digitFound = true;
+                    digitCounter++;
+                }
+                if (digitCounter <= noOfDigits) {
+                    decimalFormatBuf.append("#");
                 }
             }
-            double result = Double.parseDouble(new String(interval, 0,
-                    positionCounter));
-            DecimalFormat df = new DecimalFormat(decimalFormatBuf.toString());
-            String resultString = df.format(result);
-            result = Double.parseDouble(resultString);
-            return result;
         }
+        double result = Double.parseDouble(new String(interval, 0,
+                positionCounter));
+        DecimalFormat df = new DecimalFormat(decimalFormatBuf.toString());
+        String resultString = df.format(result);
+        result = Double.parseDouble(resultString);
+        return result;
     }
 
     /**

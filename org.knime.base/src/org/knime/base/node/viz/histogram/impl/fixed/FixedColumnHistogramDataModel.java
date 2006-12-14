@@ -200,9 +200,10 @@ public class FixedColumnHistogramDataModel extends AbstractHistogramDataModel {
         if ((maxVal - minVal) == 0) {
             noOfBars = 1;
         }
+        final boolean isInteger = 
+            getOriginalXColSpec().getType().isCompatible(IntValue.class);
         final double binInterval = BinningUtil.createBinInterval(maxVal, 
-                minVal, noOfBars, 
-                getOriginalXColSpec().getType().isCompatible(IntValue.class));
+                minVal, noOfBars, isInteger);
         minVal = BinningUtil.createBinStart(minVal, binInterval);
         // increase the number of bars to include the max value
         while (minVal + (binInterval * noOfBars) < maxVal) {
