@@ -47,6 +47,7 @@ import junit.framework.TestCase;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("deprecation")
 public class DataContainerTest extends TestCase {
 
     private static final DataTableSpec EMPTY_SPEC = new DataTableSpec(

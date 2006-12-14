@@ -27,9 +27,11 @@ package org.knime.core.data.container;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
+import org.knime.core.node.NodeLogger;
 
 
 /**
@@ -42,24 +44,44 @@ import org.knime.core.data.RowKey;
  */
 class NoKeyBuffer extends Buffer {
     
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(NoKeyBuffer.class);
+    
     private static final RowKey DUMMY_KEY = new RowKey("non-existing");
     
-    private static final String VERSION = "noRowKeyContainer_1.2.0";
+    /** Current version string. */
+    private static final String VERSION = "noRowKeyContainer_4";
     
+    /** The version number corresponding to VERSION. */
+    private static final int IVERSION = 4;
+    
+    private static final HashMap<String, Integer> COMPATIBILITY_MAP;
+    
+    static {
+        // see Buffer static block for details
+        COMPATIBILITY_MAP = new HashMap<String, Integer>();
+        COMPATIBILITY_MAP.put("noRowKeyContainer_1.0.0", 1);
+        COMPATIBILITY_MAP.put("noRowKeyContainer_1.1.0", 2);
+        COMPATIBILITY_MAP.put("noRowKeyContainer_1.2.0", 3);
+        COMPATIBILITY_MAP.put(VERSION, IVERSION);
+    }
     /**
      * For writing.
-     * @see Buffer#Buffer(int)
+     * @see Buffer#Buffer(int, int, java.util.HashMap)
      */
-    NoKeyBuffer(final int maxRowsInMemory) {
-        super(maxRowsInMemory);
+    NoKeyBuffer(final int maxRowsInMemory, 
+            final int bufferID, final HashMap<Integer, ContainerTable> tblRep) {
+        super(maxRowsInMemory, bufferID, tblRep);
     }
     
     /**
-     * @see Buffer#Buffer(File, DataTableSpec, InputStream)
+     * @see Buffer#Buffer(File, File, DataTableSpec, InputStream, int, HashMap)
      */
-    NoKeyBuffer(final File binFile, final DataTableSpec spec, 
-            final InputStream metaIn) throws IOException {
-        super(binFile, spec, metaIn);
+    NoKeyBuffer(final File binFile, final File blobDir, 
+            final DataTableSpec spec, final InputStream metaIn, 
+            final int bufferID, final HashMap<Integer, ContainerTable> tblRep) 
+            throws IOException {
+        super(binFile, blobDir, spec, metaIn, bufferID, tblRep);
     }
     
     /**
@@ -75,17 +97,15 @@ class NoKeyBuffer extends Buffer {
      */
     @Override
     public int validateVersion(final String version) throws IOException {
-        if ("noRowKeyContainer_1.0.0".equals(version)) {
-            return 100;
-        } 
-        if ("noRowKeyContainer_1.1.0".equals(version)) {
-            return 110;
+        Integer iVersion = COMPATIBILITY_MAP.get(version);
+        if (iVersion == null) {
+            throw new IOException("Unsupported version: \"" + version + "\"");
         }
-        if (VERSION.equals(version)) {
-            return 120;
+        if (iVersion < IVERSION) {
+            LOGGER.debug("Table has been written with a previous version of "
+                    + "KNIME (\"" + version + "\", using compatibility mode.");
         }
-        throw new IOException("Unsupported version: \"" + version 
-                + "\" (expected \"" + VERSION + "\")");
+        return iVersion;
     }
     /**
      * Does nothing as row keys are not stored.

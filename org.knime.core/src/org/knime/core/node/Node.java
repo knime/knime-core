@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -40,6 +41,7 @@ import java.util.zip.GZIPOutputStream;
 import javax.swing.UIManager;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.NodeDialogPane.MiscNodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
@@ -323,12 +325,15 @@ public final class Node {
      * @param nodeFile The node settings location.
      * @param execMon The execution monitor reporting progress during reading
      *            structure.
+     * @param tblRep The table repository for the workflow, used for
+     *        blob (de)serialization.
      * @throws IOException If the node settings file can't be found or read.
      * @throws InvalidSettingsException If the settings are wrong.
      * @throws CanceledExecutionException If loading was canceled.
      */
     public void load(final int loadID, final File nodeFile,
-            final ExecutionContext execMon) throws IOException,
+            final ExecutionContext execMon, 
+            final HashMap<Integer, ContainerTable> tblRep) throws IOException, 
             InvalidSettingsException, CanceledExecutionException {
         assert execMon != null;
 
@@ -455,7 +460,7 @@ public final class Node {
                     if (isExecuted()) {
                         BufferedDataTable t = BufferedDataTable.loadFromFile(
                                 dir, /* ignored in 1.2.0+ */null, 
-                                execFilePort, loadID);
+                                execFilePort, loadID, tblRep);
                         t.setOwnerRecursively(this);
                         m_outDataPorts[i].setDataTable(t);
                     }
@@ -527,7 +532,9 @@ public final class Node {
             // dir = /data/data_i
             File dir = new File(dataDir, dataName);
             BufferedDataTable t = BufferedDataTable.loadFromFile(dir,
-                    portSettings, execSub, loadID);
+                    portSettings, execSub, loadID, 
+                    // we didn't have blobs in 1.1.x
+                    new HashMap<Integer, ContainerTable>());
             t.setOwnerRecursively(this);
             m_outDataPorts[i].setDataTable(t);
         }

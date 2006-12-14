@@ -21,22 +21,19 @@
  */
 package org.knime.core.data.container;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataCell;
@@ -53,11 +50,8 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.util.FileUtil;
 
 
 /**
@@ -81,7 +75,6 @@ import org.knime.core.util.FileUtil;
  * i.e. <code>StringCell.TYPE.isSuperTypeOf(yourtype)</code> where 
  * yourtype is the given column type.
  * 
- * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class DataContainer implements RowAppender {
@@ -98,11 +91,15 @@ public class DataContainer implements RowAppender {
      * be memorized.
      */
     private static final int MAX_POSSIBLE_VALUES = 60;
-
+    
+    /** The object that instantiates the buffer, may be set right after 
+     * constructor call before any rows are added. */
+    private BufferCreator m_bufferCreator;
+    
     /** The object that saves the rows. */
     private Buffer m_buffer;
     
-    private final int m_maxCellsInMemory; 
+    private int m_maxRowsInMemory; 
     
     /** Holds the keys of the added rows to check for duplicates. */
     private HashSet<RowKey> m_keySet;
@@ -188,7 +185,6 @@ public class DataContainer implements RowAppender {
             throw new IllegalArgumentException(
                     "Cell count must be positive: " + maxCellsInMemory); 
         }
-        m_maxCellsInMemory = maxCellsInMemory;
         if (spec == null) {
             throw new NullPointerException("Spec must not be null!");
         }
@@ -265,19 +261,24 @@ public class DataContainer implements RowAppender {
         }
         // how many rows will occupy MAX_CELLS_IN_MEMORY
         final int colCount = spec.getNumColumns();
-        int rowsInMemory = m_maxCellsInMemory / ((colCount > 0) ? colCount : 1);
-        m_buffer = newBuffer(rowsInMemory);
+        m_maxRowsInMemory = maxCellsInMemory / ((colCount > 0) ? colCount : 1);
+        m_bufferCreator = new BufferCreator();
     }
     
-    /** Creates a new buffer to be used when writing to a file. 
-     * @param rowsInMemory Argument for the buffer. This method is called 
-     * from the open method. 
-     * @return A new buffer for writing into.
+    /** Set a buffer creator to be used to initialize the buffer. This
+     * method must be called before any rows are added. 
+     * @param bufferCreator To be used.
+     * @throws NullPointerException If the argument is <code>null</code>.
+     * @throws IllegalStateException If the buffer has already been created. 
      */
-    // overridden in an inner class in RearrangeColumnsTable 
-    // to return aNoKeyBuffer 
-    protected Buffer newBuffer(final int rowsInMemory) {
-        return new Buffer(rowsInMemory);
+    protected void setBufferCreator(final BufferCreator bufferCreator) {
+        if (m_buffer != null) {
+            throw new IllegalStateException("Buffer has already been created.");
+        }
+        if (bufferCreator == null) {
+            throw new NullPointerException("BufferCreator must not be null.");
+        }
+        m_bufferCreator = bufferCreator;
     }
     
     /** Define a new threshold for number of possible values to memorize.
@@ -304,21 +305,17 @@ public class DataContainer implements RowAppender {
     /**
      * Returns <code>true</code> if the container has been initialized with 
      * <code>DataTableSpec</code> and is ready to accept rows.
-     * 
-     * <p>This is <code>true</code> after <code>open</code> an there was
-     * no <code>close</code> invocation.
+     *
+     * <p>This implementation returns <code>!isClosed()</code>;
      * @return <code>true</code> if container is accepting rows.
      */
     public boolean isOpen() {
-        return m_buffer != null && m_table == null;
+        return !isClosed();
     }
 
     /**
      * Returns <code>true</code> if table has been closed and 
      * <code>getTable()</code> will return a <code>DataTable</code> object.
-     * 
-     * <p>This method does return <code>false</code> has not even been opened
-     * yet.
      * @return <code>true</code> if table is available, <code>false</code>
      *         otherwise.
      */
@@ -339,6 +336,10 @@ public class DataContainer implements RowAppender {
         if (!isOpen()) {
             throw new IllegalStateException("Cannot close table: container has"
                     + " not been initialized (opened).");
+        }
+        if (m_buffer == null) {
+            m_buffer = m_bufferCreator.createBuffer(m_maxRowsInMemory, 
+                    createInternalBufferID(), getBufferRepository());
         }
         DataTableSpec finalSpec = createTableSpecWithRange();
         m_buffer.close(finalSpec);
@@ -369,7 +370,7 @@ public class DataContainer implements RowAppender {
     }
 
     /**
-     * Get reference to table. This method throws an excpetion unless the 
+     * Get reference to table. This method throws an exception unless the 
      * container is closed and has therefore a table available.
      * @return Reference to the table that has been built up.
      * @throws IllegalStateException If <code>isClosed()</code> returns
@@ -394,16 +395,6 @@ public class DataContainer implements RowAppender {
         return m_table;
     }
     
-    /** Get reference to underlying buffer.
-     * @return The buffer used to keep/write rows.
-     */
-    Buffer getBuffer() {
-        if (isClosed()) {
-            return m_table.getBuffer();
-        }
-        return m_buffer;
-    }
-    
     /** 
      * Get the currently set DataTableSpec.
      * @return The current spec.
@@ -416,7 +407,7 @@ public class DataContainer implements RowAppender {
         }
         throw new IllegalStateException("Cannot get spec: container not open.");
     }
-
+    
     /** 
      * @see RowAppender#addRowToTable(DataRow)
      */
@@ -424,6 +415,16 @@ public class DataContainer implements RowAppender {
         if (!isOpen()) {
             throw new IllegalStateException("Cannot add row: container has"
                     + " not been initialized (opened).");
+        }
+        if (m_buffer == null) {
+            int bufID = createInternalBufferID();
+            HashMap<Integer, ContainerTable> tableRep = getBufferRepository();
+            m_buffer = m_bufferCreator.createBuffer(
+                    m_maxRowsInMemory, bufID, tableRep);
+            if (m_buffer == null) {
+                throw new NullPointerException(
+                        "Implementation error, must not return a null buffer.");
+            }
         }
         // let's do every possible sanity check
         int numCells = row.getNumCells();
@@ -459,6 +460,39 @@ public class DataContainer implements RowAppender {
         m_keySet.add(key);
         m_buffer.addRow(row);
     } // addRowToTable(DataRow)
+    
+    /**
+     * Get an internal id for the buffer being used. This ID is used in 
+     * conjunction with blob serialization to locate buffers. Blobs that belong
+     * to a Buffer (i.e. they have been created in a particular Buffer) will 
+     * write this ID when serialized to a file. Subsequent Buffers that also 
+     * need to serialize Blob cells (which, however, have already been written)
+     * can then reference to the respective Buffer object using this ID.
+     * 
+     * <p>An ID of -1 denotes the fact, that the buffer is not intended to be
+     * used for sophisticated blob serialization. All blob cells that are added
+     * to it will be newly serialized as if they were created for the first 
+     * time. 
+     * 
+     * <p>This implementation returns -1.
+     * @return -1 or a unique buffer ID.
+     */
+    protected int createInternalBufferID() {
+        return -1;
+    }
+    
+    /**
+     * Get the map of buffers that potentially have written blob objects. 
+     * If m_buffer needs to serialize a blob, it will check if any other buffer
+     * has written the blob already and then reference to this buffer rather 
+     * than writing out the blob again.
+     * <p>This implementation does not support sophisticated blob serialization.
+     * It will return a <code>new HashMap&lt;Integer, Buffer&gt;()</code>.
+     * @return The map bufferID to Buffer.
+     */
+    protected HashMap<Integer, ContainerTable> getBufferRepository() {
+        return new HashMap<Integer, ContainerTable>();
+    }
     
     /** Adds another value to the list of possible values in a certain column.
      * This method does nothing if the values don't need to be stored for the
@@ -577,9 +611,9 @@ public class DataContainer implements RowAppender {
     }
     
     /** Used in write/readFromZip: Name of the zip entry containing the spec. */
-    private static final String ZIP_ENTRY_SPEC = "spec.xml";
+    static final String ZIP_ENTRY_SPEC = "spec.xml";
     /** Used in write/readFromZip: Config entry: The spec of the table. */
-    private static final String CFG_TABLESPEC = "table.spec";
+    static final String CFG_TABLESPEC = "table.spec";
     
     /** Writes a given DataTable permanently to a zip file. This includes
      * also all table spec information, such as color, size, and shape 
@@ -596,12 +630,19 @@ public class DataContainer implements RowAppender {
             CanceledExecutionException {
         Buffer buf;
         ExecutionMonitor e = exec;
-        if (table instanceof ContainerTable) {
+        boolean canUseBuffer = table instanceof ContainerTable;
+        if (canUseBuffer) {
+            Buffer b = ((ContainerTable)table).getBuffer();
+            if (b.containsBlobCells() && b.getBufferID() != -1) {
+                canUseBuffer = false;
+            }
+        }
+        if (canUseBuffer) {
             buf = ((ContainerTable)table).getBuffer();
         } else {
             exec.setMessage("Archiving table");
             e = exec.createSubProgress(0.8);
-            buf = new Buffer(/*maxRowsInMemory*/0);
+            buf = new Buffer(0, -1, new HashMap<Integer, ContainerTable>());
             int rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;
@@ -661,74 +702,12 @@ public class DataContainer implements RowAppender {
          * the DTS is not possible, as that may crash (OutOfMemoryError), see
          * bug http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4705373
          */
-        ZipInputStream inStream = new ZipInputStream(
-                new BufferedInputStream(new FileInputStream(zipFile)));
-        ZipEntry entry;
-        File binFile = createTempFile();
-        // we only need to read from this file while being in this method
-        // deleted later on.
-        File metaTempFile = File.createTempFile("meta", ".xml");
-        metaTempFile.deleteOnExit();
-        boolean isDataFound = false;
-        boolean isMetaFound = false;
-        boolean isSpecFound = false;
-        DataTableSpec spec = null;
-        while ((entry = inStream.getNextEntry()) != null) {
-            String name = entry.getName(); 
-            if (name.equals(Buffer.ZIP_ENTRY_DATA)) {
-                OutputStream output = new BufferedOutputStream(
-                        new FileOutputStream(binFile));
-                FileUtil.copy(inStream, output);
-                inStream.closeEntry();
-                output.close();
-                isDataFound = true;
-            } else if (name.equals(Buffer.ZIP_ENTRY_META)) {
-                OutputStream output = new BufferedOutputStream(
-                        new FileOutputStream(metaTempFile));
-                FileUtil.copy(inStream, output);
-                inStream.closeEntry();
-                output.close();
-                isMetaFound = true;
-            } else if (name.equals(ZIP_ENTRY_SPEC)) {
-                InputStream nonClosableStream = 
-                    new NonClosableZipInputStream(inStream);
-                @SuppressWarnings("unchecked") // cast with generics
-                NodeSettingsRO settings = 
-                    NodeSettings.loadFromXML(nonClosableStream);
-                try {
-                    NodeSettingsRO specSettings = 
-                        settings.getNodeSettings(CFG_TABLESPEC);
-                    spec = DataTableSpec.load(specSettings);
-                    isSpecFound = true;
-                } catch (InvalidSettingsException ise) {
-                    IOException ioe = new IOException(
-                            "Unable to read spec from file " + zipFile);
-                    ioe.initCause(ise);
-                    throw ioe;
-                }
-            }
-            if (isSpecFound && isMetaFound && isDataFound) {
-                break;
-            }
-        }
-        inStream.close();
-        if (!isDataFound) {
-            throw new IOException("No entry " + Buffer.ZIP_ENTRY_DATA 
-                    + " in file: " + zipFile.getAbsolutePath());
-        } 
-        if (!isMetaFound) {
-            throw new IOException("No entry " + Buffer.ZIP_ENTRY_META
-                    + " in file: " + zipFile.getAbsolutePath());
-        } 
-        if (!isSpecFound) {
-            throw new IOException("No entry " + ZIP_ENTRY_SPEC
-                    + " in file: " + zipFile.getAbsolutePath());
-        } 
-        InputStream metaIn = new BufferedInputStream(
-                new FileInputStream(metaTempFile));
-        Buffer buffer = creator.createBuffer(binFile, spec, metaIn);
-        metaIn.close();
-        metaTempFile.delete();
+        // bufferID = -1: all blobs are contained in buffer, no fancy
+        // reference handling to other buffer objects
+        CopyOnAccessTask coa = new CopyOnAccessTask(zipFile, null, -1, 
+                new HashMap<Integer, ContainerTable>(), creator);
+        // executing the createBuffer() method will start the copying process
+        Buffer buffer = coa.createBuffer();
         return new ContainerTable(buffer);
     }
     
@@ -737,11 +716,15 @@ public class DataContainer implements RowAppender {
      * location. 
      * @param zipFile To read from (is going to be copied to temp on access)
      * @param spec The DTS for the table.
+     * @param bufferID The buffer's id used for blob (de)serialization
+     * @param bufferRep Repository of buffers for blob (de)serialization.
      * @return Table contained in <code>zipFile</code>.
      */
     protected static ContainerTable readFromZipDelayed(final File zipFile, 
-            final DataTableSpec spec) {
-        CopyOnAccessTask t = new CopyOnAccessTask(zipFile, spec);
+            final DataTableSpec spec, final int bufferID, 
+            final HashMap<Integer, ContainerTable> bufferRep) {
+        CopyOnAccessTask t = new CopyOnAccessTask(
+                zipFile, spec, bufferID, bufferRep, new BufferCreator());
         return readFromZipDelayed(t, spec);
     }
     
@@ -778,6 +761,11 @@ public class DataContainer implements RowAppender {
         return f;
     }
     
+    /**
+     * Get the next running index of the table id counter. This id is supposed
+     * to be unique.
+     */
+    
     /** Returns <code>true</code> if the given argument table has been created
      * by the DataContainer, <code>false</code> otherwise.
      * @param table The table to check.
@@ -794,17 +782,34 @@ public class DataContainer implements RowAppender {
      */
     static class BufferCreator {
         
-        /** Creates buffer.
+        /** Creates buffer for reading.
          * @param binFile the binary temp file.
+         * @param blobDir temp directory containing blobs (may be null).
          * @param spec The spec.
          * @param metaIn Input stream containing meta information.
+         * @param bufID The buffer's id used for blob (de)serialization
+         * @param tblRep Table repository for blob (de)serialization.
          * @return A buffer instance.
          * @throws IOException If parsing fails.
          */
-        Buffer createBuffer(final File binFile, final DataTableSpec spec,
-                final InputStream metaIn) throws IOException {
-            return new Buffer(binFile, spec, metaIn);
+        Buffer createBuffer(final File binFile, final File blobDir, 
+                final DataTableSpec spec, final InputStream metaIn, 
+                final int bufID, final HashMap<Integer, ContainerTable> tblRep) 
+            throws IOException {
+            return new Buffer(binFile, blobDir, spec, metaIn, bufID, tblRep);
         }
+        
+        /** Creates buffer for writing (adding of rows). 
+         * @param rowsInMemory The number of rows being kept in memory.
+         * @param bufferID The buffer's id used for blob (de)serialization.
+         * @param tableRep Table repository for blob (de)serialization.
+         * @return A newly created buffer. 
+         */
+        Buffer createBuffer(final int rowsInMemory, final int bufferID,
+                final HashMap<Integer, ContainerTable> tableRep) {
+            return new Buffer(rowsInMemory, bufferID, tableRep);
+        }
+        
     }
     
 }

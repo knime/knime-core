@@ -32,11 +32,10 @@ import java.io.InvalidObjectException;
 import java.io.NotActiveException;
 import java.io.ObjectInputStream;
 import java.io.ObjectInputValidation;
-import java.io.ObjectStreamClass;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
-import org.knime.core.eclipseUtil.GlobalObjectInputStream;
+import org.knime.core.data.container.BlobDataCell.BlobAddress;
 
 
 /**
@@ -62,7 +61,7 @@ import org.knime.core.eclipseUtil.GlobalObjectInputStream;
 final class DCObjectInputStream extends ObjectInputStream {
 
     /** The streams that is being written to. */
-    private final MyGlobalObjectInputStream m_inObject;
+    private final PriorityGlobalObjectInputStream m_inObject;
     /** Wrapped stream that is passed to the DataCellSerializer,
      * this stream reads from m_in. */
     private final LongUTFDataInputStream m_dataInStream;
@@ -75,7 +74,7 @@ final class DCObjectInputStream extends ObjectInputStream {
      * @throws IOException If the init of the stream reading fails.
      */
     DCObjectInputStream(final InputStream in) throws IOException {
-        m_inObject = new MyGlobalObjectInputStream(in);
+        m_inObject = new PriorityGlobalObjectInputStream(in);
         m_in = new BlockableInputStream(m_inObject);
         m_dataInStream = new LongUTFDataInputStream(new DataInputStream(m_in));
     }
@@ -92,6 +91,18 @@ final class DCObjectInputStream extends ObjectInputStream {
     throws IOException {
         try {
             return serializer.deserialize(m_dataInStream);
+        } finally {
+            m_in.endBlock();
+        }
+    }
+    
+    /** Reads a blob address from the stream and ends the block.
+     * @return as read from the stream.
+     * @throws IOException If that fails.
+     */
+    public BlobAddress readBlobAddress() throws IOException {
+        try {
+            return BlobAddress.deserialize(m_dataInStream);
         } finally {
             m_in.endBlock();
         }
@@ -346,36 +357,4 @@ final class DCObjectInputStream extends ObjectInputStream {
         m_inObject.setCurrentClassLoader(l);
     }
     
-    private static final class MyGlobalObjectInputStream 
-        extends GlobalObjectInputStream {
-        private ClassLoader m_classLoader;
-        
-        /**
-         * @see GlobalObjectInputStream#GlobalObjectInputStream(InputStream)
-         */
-        MyGlobalObjectInputStream(final InputStream in) 
-            throws IOException {
-            super(in);
-        }
-        
-        /**
-         * @see ObjectInputStream#resolveClass(ObjectStreamClass)
-         */
-        @Override
-        protected Class<?> resolveClass(final ObjectStreamClass desc) 
-            throws IOException, ClassNotFoundException {
-            if (m_classLoader != null) {
-                try {
-                    return Class.forName(desc.getName(), true, m_classLoader);
-                } catch (ClassNotFoundException cnfe) {
-                    // ignore and let super do it.
-                }
-            }
-            return super.resolveClass(desc);
-        }
-        
-        private void setCurrentClassLoader(final ClassLoader l) {
-            m_classLoader = l;
-        }
-    }
 }

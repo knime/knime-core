@@ -61,6 +61,9 @@ public final class BufferedDataTable implements DataTable {
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(BufferedDataTable.class);
   
+    /** internal ID for any generated table. */
+    private static int lastID = 0;
+
     /** Contains the repository of DataTables that are available whilst some
      * workflow is being loaded. Most of the times, this map is empty!
      */
@@ -141,8 +144,13 @@ public final class BufferedDataTable implements DataTable {
         hash.put(t.getBufferedTableId(), t);
     }
     
-    /** internal ID for any generated table. */
-    private static int lastID = 0;
+    /** Returns a table identifier and increments the internal counter.
+     * @return Table identifier.
+     */
+    static int generateNewID() {
+        return ++lastID;
+    }
+    
     private final KnowsRowCountTable m_delegate;
     private int m_tableID;
     private Node m_owner;
@@ -150,9 +158,10 @@ public final class BufferedDataTable implements DataTable {
     /** Creates a new buffered data table based on a container table 
      * (caching everything).
      * @param table The reference.
+     * @param bufferID The buffer ID.
      */ 
-    BufferedDataTable(final ContainerTable table) {
-        this((KnowsRowCountTable)table);
+    BufferedDataTable(final ContainerTable table, final int bufferID) {
+        this((KnowsRowCountTable)table, bufferID);
     }
     
     /** Creates a new buffered data table based on a changed columns table
@@ -160,7 +169,7 @@ public final class BufferedDataTable implements DataTable {
      * @param table The reference.
      */ 
     BufferedDataTable(final RearrangeColumnsTable table) {
-        this((KnowsRowCountTable)table);
+        this((KnowsRowCountTable)table, table.getTableID());
     }
     
     /** Creates a new buffered data table based on a changed spec table 
@@ -168,12 +177,13 @@ public final class BufferedDataTable implements DataTable {
      * @param table The reference.
      */ 
     BufferedDataTable(final TableSpecReplacerTable table) {
-        this((KnowsRowCountTable)table);
+        this((KnowsRowCountTable)table, generateNewID());
     }
     
-    private BufferedDataTable(final KnowsRowCountTable table) {
+    private BufferedDataTable(final KnowsRowCountTable table, final int id) {
         m_delegate = table;
-        m_tableID = lastID++;
+        assert id <= lastID : "Table identifiers not unique";
+        m_tableID = id;
     }
     
     /** Get reference to reference table, if any. This returns a non-null
@@ -332,6 +342,7 @@ public final class BufferedDataTable implements DataTable {
      * @param settings The settings to load from.
      * @param exec The exec mon for progress/cancel
      * @param loadID The public loading ID
+     * @param bufferRep The buffer repository (needed for blobs).
      * @return The table as written by save.
      * @throws IOException If reading fails.
      * @throws CanceledExecutionException If canceled.
@@ -339,7 +350,7 @@ public final class BufferedDataTable implements DataTable {
      */
     static BufferedDataTable loadFromFile(final File dir,
             final NodeSettingsRO settings, final ExecutionMonitor exec,
-            final int loadID) 
+            final int loadID, final HashMap<Integer, ContainerTable> bufferRep) 
             throws IOException, CanceledExecutionException,
             InvalidSettingsException {
         HashMap<Integer, BufferedDataTable> hash =
@@ -368,6 +379,7 @@ public final class BufferedDataTable implements DataTable {
             isVersion11x = true;
         }
         int id = s.getInt(CFG_TABLE_ID);
+        lastID = Math.max(lastID, id + 1);
         String fileName = s.getString(CFG_TABLE_FILE_NAME);
         File file;
         if (fileName != null) {
@@ -388,19 +400,21 @@ public final class BufferedDataTable implements DataTable {
                 fromContainer = BufferedDataContainer.readFromZip(file); 
             } else {
                 fromContainer = 
-                    BufferedDataContainer.readFromZipDelayed(file, spec);
+                    BufferedDataContainer.readFromZipDelayed(
+                            file, spec, id, bufferRep);
             }
-            t = new BufferedDataTable(fromContainer);
+            t = new BufferedDataTable(fromContainer, id);
         } else if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)
                 || (tableType.equals(TABLE_TYPE_NEW_SPEC))) {
             String reference = s.getString(CFG_TABLE_REFERENCE, null);
             if (reference != null) {
                 File referenceDir = new File(dir, reference);
-                loadFromFile(referenceDir, s, exec, loadID);
+                loadFromFile(referenceDir, s, exec, loadID, bufferRep);
             }
             if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)) {
                 t = new BufferedDataTable(
-                        new RearrangeColumnsTable(file, s, loadID, spec));
+                        new RearrangeColumnsTable(
+                                file, s, loadID, spec, id, bufferRep));
             } else {
                 TableSpecReplacerTable replTable;
                 if (isVersion11x) {
@@ -415,7 +429,6 @@ public final class BufferedDataTable implements DataTable {
                     + tableType);
         }
         t.m_tableID = id;
-        lastID = Math.max(id, lastID);
         hash.put(id, t);
         return t;
     }
@@ -476,7 +489,7 @@ public final class BufferedDataTable implements DataTable {
                 final ExecutionMonitor exec) 
                 throws IOException, CanceledExecutionException;
         
-        /** Clears and allocated temporary files. The table won't be used
+        /** Clears any allocated temporary files. The table won't be used
          * anymore.
          */
         void clear();

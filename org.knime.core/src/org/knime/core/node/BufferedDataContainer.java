@@ -25,6 +25,7 @@
 package org.knime.core.node;
 
 import java.io.File;
+import java.util.HashMap;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
@@ -85,15 +86,24 @@ import org.knime.core.node.Node.MemoryPolicy;
 public class BufferedDataContainer extends DataContainer {
     
     private final Node m_node;
+    private final HashMap<Integer, ContainerTable> m_tableRepository;
     private BufferedDataTable m_resultTable; 
 
     /**
+     * Creates new container.
+     * @param spec The table spec.
+     * @param initDomain Whether or not the spec's domain shall be used for
+     * initialization.
+     * @param node The owner of the outcome table.
+     * @param tableRepository The table repository for blob (de)serialization.
      * @see DataContainer#DataContainer(DataTableSpec, boolean)
      */
-    BufferedDataContainer(final DataTableSpec spec, 
-            final boolean initDomain, final Node node) {
+    BufferedDataContainer(final DataTableSpec spec, final boolean initDomain, 
+            final Node node, 
+            final HashMap<Integer, ContainerTable> tableRepository) {
         super(spec, initDomain, getMaxCellsInMemory(node));
         m_node = node;
+        m_tableRepository = tableRepository;
     }
     
     /** Check the node if its outport memory policy says we should keep 
@@ -111,6 +121,19 @@ public class BufferedDataContainer extends DataContainer {
             return 0;
         }
     }
+    
+    /** @see DataContainer#createInternalBufferID() */
+    @Override
+    protected int createInternalBufferID() {
+        return BufferedDataTable.generateNewID();
+    }
+    
+    /** @see org.knime.core.data.container.DataContainer#getBufferRepository() 
+     */
+    @Override
+    protected HashMap<Integer, ContainerTable> getBufferRepository() {
+        return m_tableRepository;
+    }
 
     /**
      * Returns the content of this container in a BufferedDataTable. The result
@@ -121,7 +144,7 @@ public class BufferedDataContainer extends DataContainer {
     public BufferedDataTable getTable() {
         if (m_resultTable == null) {
             ContainerTable buffer = getBufferedTable();
-            m_resultTable = new BufferedDataTable(buffer);
+            m_resultTable = new BufferedDataTable(buffer, buffer.getBufferID());
             m_resultTable.setOwnerRecursively(m_node);
         }
         return m_resultTable;
@@ -134,10 +157,14 @@ public class BufferedDataContainer extends DataContainer {
      * package to use it.
      * @param zipFile Delegated.
      * @param spec Delegated.
+     * @param bufID Delegated.
+     * @param bufferRep Delegated.
      * @return {@link DataContainer#readFromZipDelayed(File, DataTableSpec)}
      */
     protected static ContainerTable readFromZipDelayed(
-            final File zipFile, final DataTableSpec spec) {
-        return DataContainer.readFromZipDelayed(zipFile, spec);
+            final File zipFile, final DataTableSpec spec, final int bufID, 
+            final HashMap<Integer, ContainerTable> bufferRep) {
+        return DataContainer.readFromZipDelayed(
+                zipFile, spec, bufID, bufferRep);
     }
 }

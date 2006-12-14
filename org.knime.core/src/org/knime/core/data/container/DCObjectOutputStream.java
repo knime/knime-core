@@ -31,6 +31,7 @@ import java.io.OutputStream;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
+import org.knime.core.data.container.BlobDataCell.BlobAddress;
 
 
 /**
@@ -102,7 +103,19 @@ class DCObjectOutputStream extends ObjectOutputStream {
             m_out.endBlock();
         }
     }
-
+    
+    /** Writes a given blob address to the stream and marks the end by a 
+     * block character.
+     * @param address to write out.
+     * @throws IOException if that fails
+     */
+    public void writeBlobAddress(final BlobAddress address) throws IOException {
+        try {
+            address.serialize(m_dataOut);
+        } finally {
+            m_out.endBlock();
+        }
+    }
     
     /* The following methods all delegate to the internal ObjectOutputStream */
     

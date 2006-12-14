@@ -31,14 +31,17 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
@@ -891,8 +894,10 @@ public class NodeContainer implements NodeStateListener {
     public void load(final int loadID, final File nodeFile,
             final NodeProgressMonitor progMon) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
-        ExecutionContext context = new ExecutionContext(progMon, m_node);
-        m_node.load(loadID, nodeFile, context);
+        HashMap<Integer, ContainerTable> bufferRep = m_wfm.getTableRepository();
+        ExecutionContext context = 
+            new ExecutionContext(progMon, m_node, bufferRep);
+        m_node.load(loadID, nodeFile, context, bufferRep);
     }
 
     /**
@@ -1006,8 +1011,7 @@ public class NodeContainer implements NodeStateListener {
     public void save(final NodeSettingsWO settings, final File nodeFile,
             final NodeProgressMonitor progMon) throws IOException,
             CanceledExecutionException {
-
-        ExecutionContext exec = new ExecutionContext(progMon, m_node);
+        ExecutionMonitor exec = new ExecutionMonitor(progMon);
         saveSettings(settings);
         m_node.save(nodeFile, exec);
     }
@@ -1087,11 +1091,13 @@ public class NodeContainer implements NodeStateListener {
                     m_isQueued = false;
                     pm.checkCanceled();
                     pm.setMessage("Preparing...");
+                    HashMap<Integer, ContainerTable> bufferRep =
+                        m_wfm.getTableRepository();
                     // executeNode() should return as soon as possible if
                     // canceled - or after it has been finished of course
                     // NOTE: the return from this call may happen AFTER
                     // the state-changed event has already been processed!
-                    m_node.execute(new ExecutionContext(pm, m_node));
+                    m_node.execute(new ExecutionContext(pm, m_node, bufferRep));
                 } catch (CanceledExecutionException ex) {
                     // This can happen if the node is queued in the thread pool
                     // and the whole workflow is canceled. Then a worker

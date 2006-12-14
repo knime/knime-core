@@ -45,8 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
@@ -356,11 +355,10 @@ public class WorkflowManager implements WorkflowListener {
                 if (m_runningNodes.size() == 0) {
                     if (m_waitingNodes.size() > 0) {
                         if (watchdog) {
-                            LOGGER
-                                    .error("Whoa there, the watchdog found a "
-                                            + "possible deadlock situation! Some nodes "
-                                            + "are still waiting, but none is running"
-                                            + m_waitingNodes);
+                            LOGGER.error("Whoa there, the watchdog found a "
+                                    + "possible deadlock situation! Some nodes "
+                                    + "are still waiting, but none is running"
+                                    + m_waitingNodes);
                         } else {
                             LOGGER.warn("Some nodes were still waiting but "
                                     + "none is running: " + m_waitingNodes);
@@ -656,12 +654,17 @@ public class WorkflowManager implements WorkflowListener {
 
     private final List<NodeContainer> m_detachedNodes =
             new ArrayList<NodeContainer>();
+    
+    /** Table repository, important for blob (de)serialization. A sub workflow
+     * manager will use the map of its parent WFM. */
+    private final HashMap<Integer, ContainerTable> m_tableRepository;
 
     /**
      * Create new Workflow.
      */
     public WorkflowManager() {
         m_parent = null;
+        m_tableRepository = new HashMap<Integer, ContainerTable>();
         m_executor = new WorkflowExecutor();
         m_runningConnectionID = new MutableInteger(-1);
         m_runningNodeID = new MutableInteger(0);
@@ -711,6 +714,7 @@ public class WorkflowManager implements WorkflowListener {
         m_executor = m_parent.m_executor;
         m_runningConnectionID = parent.m_runningConnectionID;
         m_runningNodeID = parent.m_runningNodeID;
+        m_tableRepository = m_parent.m_tableRepository;
     }
 
     /**
@@ -822,7 +826,8 @@ public class WorkflowManager implements WorkflowListener {
 
         // notify listeners
         LOGGER.debug("Added " + newNode.getNameWithID());
-        fireWorkflowEvent(new WorkflowEvent.NodeAdded(newNodeID, null, newNode));
+        fireWorkflowEvent(
+                new WorkflowEvent.NodeAdded(newNodeID, null, newNode));
 
         LOGGER.debug("done, ID=" + newNodeID);
         return newNode;
@@ -1479,7 +1484,8 @@ public class WorkflowManager implements WorkflowListener {
         while (!pred.isEmpty()) {
             NodeContainer nodeCont = pred.removeFirst();
             for (NodeContainer nc : nodeCont.getPredecessors()) {
-                if (nc.isConfigured() && !nc.isExecuted() && !pred.contains(nc)) {
+                if (nc.isConfigured() && !nc.isExecuted() 
+                        && !pred.contains(nc)) {
                     pred.add(nc);
                     nodes.add(nc);
                 }
@@ -1641,11 +1647,12 @@ public class WorkflowManager implements WorkflowListener {
         }
 
         // ==================================================================
-        // FIXME The following two lines and the one in the finally-block
+        // FIXME The following lines and the ones in the finally-block
         // are just hacks to omit warnings messages during loading the flow.
         // When the WFM is redesigned we need a proper way to do this.
-        final Level lastLogLevel = Logger.getRootLogger().getLevel();
-        Logger.getRootLogger().setLevel(Level.ERROR);
+        if (m_parent == null) { // meta nodes must not do anything here!
+            NodeLogger.setIgnoreConfigureWarning(true);
+        }
         // ==================================================================
         try {
         // load workflow topology
@@ -1731,10 +1738,12 @@ public class WorkflowManager implements WorkflowListener {
         }
         } finally {
             // ===============================================================
-            // FIXME The following linesand the two lines above are just hacks
+            // FIXME The following linesand the one line above are just hacks
             // to omit warnings messages during loading the flow.
             // When the WFM is redesigned we need a proper way to do this.
-            Logger.getRootLogger().setLevel(lastLogLevel);
+            if (m_parent == null) { // meta nodes must not do anything here!
+                NodeLogger.setIgnoreConfigureWarning(false);
+            }
             // ===============================================================
         }
     }
@@ -1925,7 +1934,8 @@ public class WorkflowManager implements WorkflowListener {
             m_idsByNode.remove(container);
 
             LOGGER.debug("Removed: " + container.getNameWithID());
-            fireWorkflowEvent(new WorkflowEvent.NodeRemoved(id, container, null));
+            fireWorkflowEvent(
+                    new WorkflowEvent.NodeRemoved(id, container, null));
         } else {
             LOGGER.error("Could not find (and remove): " + container);
             throw new IllegalArgumentException(
@@ -1965,6 +1975,10 @@ public class WorkflowManager implements WorkflowListener {
 
         for (NodeContainer nc : m_nodesByID.values()) {
             nc.resetAndConfigure();
+        }
+        if (!m_tableRepository.isEmpty()) {
+            LOGGER.debug("Table repository is not empty after workflow " 
+                    + "is reset (" + m_tableRepository.size() + " elements)");
         }
     }
 
@@ -2211,5 +2225,13 @@ public class WorkflowManager implements WorkflowListener {
      */
     public boolean isQueued(final NodeContainer cont) {
         return m_executor.isQueued(cont);
+    }
+
+    /**
+     * @return The bufferRepositoryMap associated with this workflow. This
+     * is used for blob (de)serialization.
+     */
+    HashMap<Integer, ContainerTable> getTableRepository() {
+        return m_tableRepository;
     }
 }

@@ -22,11 +22,14 @@
  */
 package org.knime.core.node;
 
+import java.util.HashMap;
+
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
 
@@ -76,19 +79,37 @@ import org.knime.core.data.container.TableSpecReplacerTable;
 public class ExecutionContext extends ExecutionMonitor {
 
     private final Node m_node;
+    private final HashMap<Integer, ContainerTable> m_tableRepository;
 
     /** Creates new object based on a progress monitor and a node as parent
      * of any created buffered data table. 
      * @param progMon To report progress to.
      * @param node The parent of any BufferedDataTable being created.
+     * themselves; used internally to identify tables that serialize blob cells.
+     * @deprecated Use the constructor with a table repository argument instead.
+     *             This constructor potentially does not support serialization
+     *             of blobs.
      */
     public ExecutionContext(
             final NodeProgressMonitor progMon, final Node node) {
+        this(progMon, node, new HashMap<Integer, ContainerTable>());
+    }
+
+        /** Creates new object based on a progress monitor and a node as parent
+     * of any created buffered data table. 
+     * @param progMon To report progress to.
+     * @param node The parent of any BufferedDataTable being created.
+     * @param tableRepository A map to which BufferedDataTables register 
+     * themselves; used internally to identify tables that serialize blob cells.
+     */
+    public ExecutionContext(final NodeProgressMonitor progMon, final Node node, 
+            final HashMap<Integer, ContainerTable> tableRepository) {
         super(progMon);
-        if (node == null) {
+        if (node == null || tableRepository == null) {
             throw new NullPointerException("Argument must not be null.");
         }
         m_node = node;
+        m_tableRepository = tableRepository;
     }
 
     /**
@@ -109,8 +130,8 @@ public class ExecutionContext extends ExecutionMonitor {
     public BufferedDataTable createBufferedDataTable(final DataTable table,
             final ExecutionMonitor subProgressMon)
             throws CanceledExecutionException {
-        BufferedDataContainer c = createDataContainer(table.getDataTableSpec(),
-                true);
+        BufferedDataContainer c = createDataContainer(
+                table.getDataTableSpec(), true);
         int row = 0;
         try {
             for (RowIterator it = table.iterator(); it.hasNext(); row++) {
@@ -183,7 +204,8 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataContainer createDataContainer(final DataTableSpec spec,
             final boolean initDomain) {
-        return new BufferedDataContainer(spec, initDomain, m_node);
+        return new BufferedDataContainer(
+                spec, initDomain, m_node, m_tableRepository);
     }
 
     /**
@@ -205,7 +227,7 @@ public class ExecutionContext extends ExecutionMonitor {
             final ExecutionMonitor subProgressMon)
             throws CanceledExecutionException {
         RearrangeColumnsTable t = RearrangeColumnsTable.create(
-                rearranger, in, subProgressMon);
+                rearranger, in, subProgressMon, this);
         BufferedDataTable out = new BufferedDataTable(t);
         out.setOwnerRecursively(m_node);
         return out;
@@ -228,6 +250,7 @@ public class ExecutionContext extends ExecutionMonitor {
         return out;
     }
     
+    
     /**
      * Creates a new execution context with a different max progress value.
      * This method is the counterpart to {@link #createSubProgress(double)} 
@@ -241,7 +264,7 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public ExecutionContext createSubExecutionContext(final double maxProg) {
         NodeProgressMonitor subProgress = createSubProgressMonitor(maxProg);
-        return new ExecutionContext(subProgress, m_node);
+        return new ExecutionContext(subProgress, m_node, m_tableRepository);
     }
     
     /**
@@ -262,6 +285,6 @@ public class ExecutionContext extends ExecutionMonitor {
             final double maxProg) {
         NodeProgressMonitor subProgress = 
             createSilentSubProgressMonitor(maxProg);
-        return new ExecutionContext(subProgress, m_node);
+        return new ExecutionContext(subProgress, m_node, m_tableRepository);
     }
 }

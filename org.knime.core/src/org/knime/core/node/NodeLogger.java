@@ -219,6 +219,12 @@ public final class NodeLogger {
 
     /** The Log4J logger to which all messages are logged. */
     private final Logger m_logger;
+    
+    /** Ignore configure warnings. This field is obsolete. It is a workaround
+     * to avoid the flood of configure warning during startup. This field
+     * will be deleted when the workflow manager is rewritten.
+     */
+    private static boolean isIgnoreConfigureWarning;
 
     /**
      * Hidden default constructor, logger created by
@@ -278,6 +284,10 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void warn(final Object o) {
+        if (isIgnoreConfigureWarning 
+                && o.toString().startsWith("Configure failed: ")) {
+            return;
+        }
         m_logger.warn(o);
     }
 
@@ -296,6 +306,9 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void info(final Object o) {
+        if (isIgnoreConfigureWarning && o.toString().equals("reset")) {
+            return;
+        }
         m_logger.info(o);
     }
 
@@ -519,6 +532,20 @@ public final class NodeLogger {
         default:
             return Level.ALL;
         }
+    }
+
+    /**
+     * Ignore configure warnings. This field is obsolete. It is a workaround
+     * to avoid the flood of configure warning during startup. This field
+     * will be deleted when the workflow manager is rewritten.
+     * @param value the isIgnoreConfigureWarning to set
+     * @deprecated Obsolete, will be removed when WFM is rewritten.
+     */
+    public static void setIgnoreConfigureWarning(
+            final boolean value) {
+        // FIXME: Remove when WFM is rewritten.
+        assert isIgnoreConfigureWarning == isIgnoreConfigureWarning;
+        isIgnoreConfigureWarning = value;
     }
 
 }

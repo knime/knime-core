@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Vector;
 
@@ -42,6 +43,7 @@ import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -50,7 +52,7 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
 
 /**
- * Table implemenation that is created based on a ColumnRearranger. This class
+ * Table implementation that is created based on a ColumnRearranger. This class
  * is not intended for subclassing or to be used directly in any node 
  * implementation. Instead use the functionality provided through the 
  * {@link ColumnRearranger} and the {@link org.knime.core.node.ExecutionContext}
@@ -85,6 +87,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     
     private final DataTableSpec m_spec;
     private final BufferedDataTable m_reference;
+    private final int m_tableID;
     private final int[] m_map;
     private final boolean[] m_isFromRefTable;
     private final ContainerTable m_appendTable;
@@ -95,13 +98,13 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      */
     private RearrangeColumnsTable(final BufferedDataTable reference, 
             final int[] map, final boolean[] isFromRefTable, 
-            final DataTableSpec spec, final NoKeyBuffer appendBuffer) {
+            final DataTableSpec spec, final ContainerTable appendTbl) {
         m_spec = spec;
         m_reference = reference;
-        m_appendTable = 
-            appendBuffer != null ? new ContainerTable(appendBuffer) : null;
+        m_appendTable = appendTbl;
         m_map = map;
         m_isFromRefTable = isFromRefTable;
+        m_tableID = m_appendTable.getBufferID();
     }
     
     /**
@@ -119,19 +122,23 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      * @param spec The data table spec of the resulting table. This argument
      * is <code>null</code> when the data to restore is written using 
      * KNIME 1.1.x or before.
+     * @param tableID buffer ID of underlying buffer.
+     * @param bufferRep Repository of buffers for blob (de)serialization.
      * @throws IOException If reading the fails.
      * @throws InvalidSettingsException If the settings are invalid.
      */
     public RearrangeColumnsTable(final File f, final NodeSettingsRO settings,
-            final int loadID, final DataTableSpec spec) 
+            final int loadID, final DataTableSpec spec, final int tableID,
+            final HashMap<Integer, ContainerTable> bufferRep) 
         throws IOException, InvalidSettingsException {
         NodeSettingsRO subSettings = 
             settings.getNodeSettings(CFG_INTERNAL_META);
-        int tableID = subSettings.getInt(CFG_REFERENCE_ID);
-        m_reference = BufferedDataTable.getDataTable(loadID, tableID);
+        int refTableID = subSettings.getInt(CFG_REFERENCE_ID);
+        m_reference = BufferedDataTable.getDataTable(loadID, refTableID);
         m_map = subSettings.getIntArray(CFG_MAP);
         m_isFromRefTable = subSettings.getBooleanArray(CFG_FLAGS);
         DataColumnSpec[] appendColSpecs;
+        m_tableID = tableID;
         int appendColCount = 0;
         for (int i = 0; i < m_isFromRefTable.length; i++) {
             if (!m_isFromRefTable[i]) {
@@ -145,14 +152,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
             // is contained in zip file)
             if (spec == null) { 
                 m_appendTable = DataContainer.readFromZip(
-                        f, new DataContainer.BufferCreator() {
-                    @Override
-                    Buffer createBuffer(final File binFile, 
-                            final DataTableSpec aspec, final InputStream metaIn)
-                        throws IOException {
-                        return new NoKeyBuffer(binFile, aspec, metaIn);
-                    }
-                });
+                        f, new NoKeyBufferCreator());
                 DataTableSpec appendSpec = m_appendTable.getDataTableSpec();
                 if (appendSpec.getNumColumns() != appendColCount) {
                     throw new IOException("Inconsistency in data file " 
@@ -173,15 +173,9 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
                 }
                 assert index == appendColCount;
                 DataTableSpec appendSpec = new DataTableSpec(appendColSpecs);
-                CopyOnAccessTask noKeyBufferOnAccessTask =
-                    new CopyOnAccessTask(f, appendSpec) {
-                    @Override
-                    Buffer createBuffer(
-                            final File tempFile, final DataTableSpec myspec, 
-                            final InputStream metaIn) throws IOException {
-                        return new NoKeyBuffer(tempFile, myspec, metaIn);
-                    }
-                };
+                CopyOnAccessTask noKeyBufferOnAccessTask = new CopyOnAccessTask(
+                        f, appendSpec, tableID, bufferRep, 
+                        new NoKeyBufferCreator());
                 m_appendTable = DataContainer.readFromZipDelayed(
                         noKeyBufferOnAccessTask, appendSpec);
             }
@@ -235,6 +229,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      * @param rearranger The meta information how to assemble everything.
      * @param table The reference table.
      * @param subProgress The progress monitor for progress/cancel.
+     * @param context Used for data container creation.
      * @return The newly created table.
      * @throws CanceledExecutionException If canceled.
      * @throws IllegalArgumentException If the spec is not equal to the
@@ -242,7 +237,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      */
     public static RearrangeColumnsTable create(
             final ColumnRearranger rearranger, final BufferedDataTable table, 
-            final ExecutionMonitor subProgress) 
+            final ExecutionMonitor subProgress, final ExecutionContext context)
         throws CanceledExecutionException {
         DataTableSpec originalSpec = rearranger.getOriginalSpec();
         Vector<SpecAndFactoryObject> includes = rearranger.getIncludes();
@@ -277,19 +272,15 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         final int factoryCount = counter.size();
         DataColumnSpec[] newColSpecs = 
             newColSpecsList.toArray(new DataColumnSpec[newColSpecsList.size()]);
-        NoKeyBuffer appendBuffer;
-        DataTableSpec appendBufferSpec;
+        ContainerTable appendTable;
+        DataTableSpec appendTableSpec;
         // for a pure filter (a table that just hides some columns from
         // the reference table but does not add any new column we avoid to scan
         // the entire table (nothing is written anyway))
         if (newColCount > 0) {
-            DataContainer container = new DataContainer(
-                    new DataTableSpec(newColSpecs), true) {
-                @Override
-                protected Buffer newBuffer(final int rowsInMemory) {
-                    return new NoKeyBuffer(rowsInMemory);
-                }
-            };
+            DataContainer container = 
+                context.createDataContainer(new DataTableSpec(newColSpecs));
+            container.setBufferCreator(new NoKeyBufferCreator());
             assert reducedList.size() == newColCount;
             int finalRowCount = table.getRowCount();
             int r = 0;
@@ -334,11 +325,11 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
             } finally {
                 container.close();
             }
-            appendBuffer = (NoKeyBuffer)container.getBuffer();
-            appendBufferSpec = appendBuffer.getTableSpec();
+            appendTable = (ContainerTable)container.getBufferedTable();
+            appendTableSpec = appendTable.getDataTableSpec();
         } else {
-            appendBuffer = null;
-            appendBufferSpec = new DataTableSpec();
+            appendTable = null;
+            appendTableSpec = new DataTableSpec();
         }
         boolean[] isFromRefTable = new boolean[size];
         int[] includesIndex = new int[size];
@@ -351,7 +342,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
             if (c.isNewColumn()) {
                 isFromRefTable[i] = false;
                 includesIndex[i] = newColIndex;
-                colSpecs[i] = appendBufferSpec.getColumnSpec(newColIndex); 
+                colSpecs[i] = appendTableSpec.getColumnSpec(newColIndex); 
                 newColIndex++;
             } else {
                 isFromRefTable[i] = true;
@@ -363,7 +354,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         DataTableSpec spec = new DataTableSpec(colSpecs);
         assert newColCount == newColCount;
         return new RearrangeColumnsTable(
-                table, includesIndex, isFromRefTable, spec, appendBuffer);
+                table, includesIndex, isFromRefTable, spec, appendTable);
     }
 
     /**
@@ -372,6 +363,19 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      */
     public int getRowCount() {
         return m_reference.getRowCount();
+    }
+    
+    /**
+     * Get the table id. Used for blob serialization.
+     * @return The table ID.
+     */
+    public int getTableID() {
+        /* generally, we could put the assertion here. However, it needs not
+         * to be true if the workflow is saved in format of version 1.1.x
+         * (no blobs in that version). */
+        // assert m_appendTable == null 
+        //      || m_appendTable.getBufferID() == m_tableID;
+        return m_tableID;
     }
     
     /**
@@ -402,4 +406,27 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         }
     }
     
+    /** Creates NoKeyBuffer objects rather then Buffer objects. */
+    private static class NoKeyBufferCreator 
+        extends DataContainer.BufferCreator {
+
+        /** @see DataContainer.BufferCreator#createBuffer(int, int, HashMap) */
+        @Override
+        Buffer createBuffer(final int rowsInMemory, final int bufferID, 
+                final HashMap<Integer, ContainerTable> tableRep) {
+            return new NoKeyBuffer(rowsInMemory, bufferID, tableRep);
+        }
+        
+        /** @see DataContainer.BufferCreator#createBuffer(
+         *       File, File, DataTableSpec, InputStream, int, HashMap)
+        */
+        @Override
+        Buffer createBuffer(final File binFile, final File blobDir, 
+                final DataTableSpec spec, final InputStream metaIn, 
+                final int bufID, final HashMap<Integer, ContainerTable> tblRep) 
+            throws IOException {
+            return new NoKeyBuffer(
+                    binFile, blobDir, spec, metaIn, bufID, tblRep);
+        }
+    }
 }

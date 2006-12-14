@@ -26,6 +26,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.zip.ZipOutputStream;
 
 import org.knime.core.data.DataTable;
@@ -34,6 +35,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
@@ -49,6 +51,9 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ContainerTable implements DataTable, KnowsRowCountTable {
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(ContainerTable.class);
     
     /** To read the data from. */
     private Buffer m_buffer;
@@ -66,6 +71,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     ContainerTable(final Buffer buffer) {
         assert (buffer != null);
         m_buffer = buffer;
+        registerTable();
     }
     
     /**
@@ -74,10 +80,10 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
      *        (just once).
      * @param spec The spec of this table.
      */
-    ContainerTable(final CopyOnAccessTask readTask, 
-            final DataTableSpec spec) {
+    ContainerTable(final CopyOnAccessTask readTask, final DataTableSpec spec) {
         m_readTask = readTask;
         m_spec = spec;
+        registerTable();
     }
 
     /**
@@ -113,6 +119,19 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
         ensureBufferOpen();
         return m_buffer;
     }
+    
+    /** 
+     * Delegates to buffer to get its ID.
+     * @return the buffer ID
+     * @see Buffer#getBufferID()
+     */
+    public int getBufferID() {
+        if (m_buffer != null) {
+            return m_buffer.getBufferID();
+        }
+        return m_readTask.getBufferID();
+    }
+
 
     /**
      * Do not call this method! Internal use!
@@ -137,6 +156,11 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     public void clear() {
         if (m_buffer != null) {
             m_buffer.clear();
+            if (m_buffer.getTableRepository().remove(m_buffer.getBufferID())
+                    == null) {
+                LOGGER.debug("Failed to remove container table with id "
+                        + m_buffer.getBufferID() + " from global repository");
+            }
         }
     }
     
@@ -163,10 +187,31 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
             if (m_buffer != null) {
                 return;
             }
-            m_buffer = m_readTask.createBuffer();
+            try {
+                m_buffer = m_readTask.createBuffer();
+            } catch (IOException i) {
+                throw new RuntimeException("Exception while accessing file: \"" 
+                        + m_readTask.getFileName() + "\": " 
+                        + i.getMessage(), i);
+            }
             m_spec = null;
             m_readTask = null;
         }
+    }
+    
+    /** Registers this table to the global table repository. */
+    private void registerTable() {
+        HashMap<Integer, ContainerTable> tblRep;
+        int bufferID;
+        if (m_readTask != null) {
+            tblRep = m_readTask.getTableRepository();
+            bufferID = m_readTask.getBufferID();
+        } else {
+            tblRep = m_buffer.getTableRepository();
+            bufferID = m_buffer.getBufferID();
+        }
+        assert !tblRep.containsKey(bufferID);
+        tblRep.put(bufferID, this);
     }
     
 }
