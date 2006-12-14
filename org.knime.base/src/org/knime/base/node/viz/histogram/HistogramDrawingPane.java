@@ -127,7 +127,6 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     
     /**
      * Constructor for class HistogramDrawingPane.
-     * 
      * @param handler the {@link HiLiteHandler} to use
      */
     protected HistogramDrawingPane(final HiLiteHandler handler) {
@@ -255,6 +254,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             }
         }
 // loop over all bars and paint them
+        // TK_TODO: Calculate the rectangle only when necessary
         for (BarVisModel bar : m_bars.values()) {
             final Rectangle barRect = bar.getRectangle();
             int noOfRows = bar.getNumberOfRows();
@@ -267,7 +267,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             // Loop through all available colors of this bar to calculate
             //and draw the blocks per color
             for (ColorAttr colorAttr : bar.getSortedColors()) {
-                Collection<RowKey> rowKeys = bar.getRowsByColorAttr(colorAttr);
+                final Collection<RowKey> rowKeys = 
+                    bar.getRowsByColorAttr(colorAttr);
                 int noOfHiLite = 0;
                 int noOfNotHiLite = 0;
                 // loop through all rows of the current color to count the

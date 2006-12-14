@@ -7,16 +7,18 @@
 	</shortDescription>	
 	<fullDescription>
 		<intro>
-		<p>Displays an interactive histogram view with different viewing options.</p>
+		<p>Displays an interactive histogram view with different viewing 
+		options.</p>
 		<p>The user can change the following properties on the fly:
 			<ol>
 			<li>X axis</li>
 			<li>Aggregation column (Y axis)</li>
 			<li>Aggregation method (count, summary, average)</li>
-			<li>Number of bins for numerical attributes(incl. empty bars, excl. missing value )</li>
+			<li>Number of bins for numerical attributes (incl. empty bars, excl. 
+			missing value )</li>
 			<li>The width of the bars</li>
-			<li>Shows empty intervals option</li>
-			<li>Shows missing value bar option</li>
+			<li>Show empty intervals</li>
+			<li>Show missing value bar</li>
 			<li>Zooming</li>
 			<li>...</li>
 			</ol>
@@ -24,12 +26,14 @@
 		</p>
 		<p><b>Please note: This node caches all data in the main memory to 
 		provide interactive functions. For huge data sets use the 
-		"Histogram" node instead.</b></p>
+		"Histogram" node.</b></p>
 		</intro>
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Data in port">The data table that should be displayed.</dataIn>
+		<dataIn index="0" name="Data in port">
+			The data table that should be displayed.
+		</dataIn>
 	</ports>	
 	<views>
 		<view index="0" name="Histogram View">

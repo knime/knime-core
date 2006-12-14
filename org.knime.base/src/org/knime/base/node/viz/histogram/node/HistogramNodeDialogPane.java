@@ -43,6 +43,10 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
 
+    private static final String ALL_ROWS_LABEL = "Display all rows";
+
+    private static final String NO_OF_ROWS_LABEL = "No. of rows to display:";
+
     private static final String X_COL_SEL_LABEL = "X column:";
 
     private final DialogComponentNumber m_noOfRowsSpinner;
@@ -55,12 +59,15 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
      */
     @SuppressWarnings("unchecked")
     protected HistogramNodeDialogPane() {
+        // TK_TODO: Abstract class which handles the row options and maybe 
+        //some more
+
         super();
         createNewGroup("Rows to display:");
         m_noOfRowsSpinner = new DialogComponentNumber(new SettingsModelInteger(
                 HistogramNodeModel.CFGKEY_NO_OF_ROWS,
                 HistogramNodeModel.DEFAULT_NO_OF_ROWS),
-                "No. of rows to display:", 1);
+                NO_OF_ROWS_LABEL, 1);
         final SettingsModelBoolean allRowsModel = new SettingsModelBoolean(
                 HistogramNodeModel.CFGKEY_ALL_ROWS, false);
         allRowsModel.addChangeListener(new ChangeListener() {
@@ -68,7 +75,7 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
                 m_noOfRowsSpinner.setEnabled(!m_allRowsBox.isSelected());
             }
         });
-        m_allRowsBox = new DialogComponentBoolean(allRowsModel, "All rows");
+        m_allRowsBox = new DialogComponentBoolean(allRowsModel, ALL_ROWS_LABEL);
         m_noOfRowsSpinner.setEnabled(!m_allRowsBox.isSelected());
         addDialogComponent(m_allRowsBox);
         addDialogComponent(m_noOfRowsSpinner);

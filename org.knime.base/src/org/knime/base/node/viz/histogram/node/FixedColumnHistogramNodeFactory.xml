@@ -11,23 +11,26 @@
 		<p>The user can change the following properties on the fly:
 			<ol>
 			<li>Aggregation method (count, summary, average)</li>
-			<li>Number of bins for numerical attributes (incl. empty bars, excl. missing value bar)</li>
+			<li>Number of bins for numerical attributes (incl. empty bars, 
+			excl. missing value bar)</li>
 			<li>The width of the bars</li>
-			<li>Shows empty intervals option</li>
-			<li>Shows missing value bar option</li>
+			<li>Show empty intervals</li>
+			<li>Show missing value bar</li>
 			<li>Zooming</li>
 			<li>...</li>
 			</ol>
 		The bars are colored by the number of rows per color attribute.
 		</p>
-		<p>To allow the work with huge datasets the user has to specify the desired
-		x and aggregation column before opening the view. For more interaction
-		use the "Interactive Histogram".</p>
+		<p>To allow the work with huge data sets the user has to specify the 
+		desired x and aggregation column before opening the view. For more 
+		interaction use the "Interactive Histogram" node.</p>
 		</intro>
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Data in port">The data table that should be displayed.</dataIn>
+		<dataIn index="0" name="Data in port">
+			The data table that should be displayed.
+		</dataIn>
 	</ports>	
 	<views>
 		<view index="0" name="Histogram View">
