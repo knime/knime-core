@@ -24,6 +24,7 @@
 			</ol>
 		The bars are colored by the number of rows per color attribute.
 		</p>
+		<p>The binning labels are the borders of the bin which are included.</p>
 		<p><b>Please note: This node caches all data in the main memory to 
 		provide interactive functions. For huge data sets use the 
 		"Histogram" node.</b></p>

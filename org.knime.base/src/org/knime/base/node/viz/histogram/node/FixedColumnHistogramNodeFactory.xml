@@ -21,6 +21,7 @@
 			</ol>
 		The bars are colored by the number of rows per color attribute.
 		</p>
+		<p>The binning labels are the borders of the bin which are included.</p>
 		<p>To allow the work with huge data sets the user has to specify the 
 		desired x and aggregation column before opening the view. For more 
 		interaction use the "Interactive Histogram" node.</p>
