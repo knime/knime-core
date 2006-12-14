@@ -119,12 +119,15 @@ public class DialogComponentNumber extends DialogComponent {
                     + "currently supported by the NumberComponent");
         }
         m_spinner = new JSpinner(spinnerModel);
-
+        m_spinner.setEditor(
+                new JSpinner.NumberEditor(m_spinner, 
+                        "#.0################################################"));
         JSpinner.DefaultEditor editor =
                 (JSpinner.DefaultEditor)m_spinner.getEditor();
         editor.getTextField().setColumns(compWidth);
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
-
+        
+        
         m_spinner.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 try {
