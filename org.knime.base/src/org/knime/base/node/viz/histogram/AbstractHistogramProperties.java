@@ -84,7 +84,7 @@ public abstract class AbstractHistogramProperties extends
     private static final String SHOW_MISSING_VAL_BAR_TOOLTIP = "Shows a bar "
             + "with rows which have a missing value for the selected x column.";
     private static final String SHOW_EMPTY_BARS_LABEL = "Show empty bars";
-    private static final String SHOW_GRID_LABEL = "Show grid lines";
+    private static final String SHOW_GRID_LABEL = "Y grid lines";
     private static final String APPLY_BUTTON_LABEL = "Apply";
     
     private static final Dimension HORIZONTAL_SPACER_DIM = new Dimension(10, 1);

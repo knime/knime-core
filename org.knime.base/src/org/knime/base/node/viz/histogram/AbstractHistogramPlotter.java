@@ -67,7 +67,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     /** The unhighlight item menu entry. */
     public static final String CLEAR_HILITE = HiLiteHandler.CLEAR_HILITE;
     /** Defines the minimum width of a bar. */
-    public static final int MIN_BAR_WIDTH = 10;
+    public static final int MIN_BAR_WIDTH = 15;
     /** This is the minimum space between two bars. */
     public static final int SPACE_BETWEEN_BARS = 5;
     /** The <code>DataTableSpec</code> of the input data. */
@@ -265,13 +265,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     yCoordinates.getTickPositions(drawingHeight, true);
                 final int[] gridLines = new int[tickPos.length];
                 for (int i = 0, length = tickPos.length; i < length; i++) {
-                    final double mapVal = tickPos[i].getMappingValue();
-                    //subtract the axis offset
-                    gridLines[i] = (int)mapVal;
-//                    gridLines[i] = (int)(drawingHeight 
-//                            - yCoordinates.calculateMappedValue(
-//                                    new DoubleCell(mapVal), 
-//                                    drawingHeight, true));
+                    gridLines[i] = 
+                        (int)(drawingHeight - tickPos[i].getMappingValue());
                 }
                 drawingPane.setGridLines(gridLines);
             } else {
