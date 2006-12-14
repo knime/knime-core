@@ -87,7 +87,6 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     
     private final DataTableSpec m_spec;
     private final BufferedDataTable m_reference;
-    private final int m_tableID;
     private final int[] m_map;
     private final boolean[] m_isFromRefTable;
     private final ContainerTable m_appendTable;
@@ -104,7 +103,6 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         m_appendTable = appendTbl;
         m_map = map;
         m_isFromRefTable = isFromRefTable;
-        m_tableID = m_appendTable.getBufferID();
     }
     
     /**
@@ -138,7 +136,6 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         m_map = subSettings.getIntArray(CFG_MAP);
         m_isFromRefTable = subSettings.getBooleanArray(CFG_FLAGS);
         DataColumnSpec[] appendColSpecs;
-        m_tableID = tableID;
         int appendColCount = 0;
         for (int i = 0; i < m_isFromRefTable.length; i++) {
             if (!m_isFromRefTable[i]) {
@@ -200,6 +197,16 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      */
     public BufferedDataTable getReferenceTable() {
         return m_reference;
+    }
+    
+    /** Get reference to the appended table. This table must not be used
+     * publically as the append table is corrupted: It does not contain proper
+     * row keys (it contains only the appended columns). This method returns
+     * null if this table only filters out some of the columns.
+     * @return Reference to append table.
+     */
+    public ContainerTable getAppendTable() {
+        return m_appendTable;
     }
 
     /**
@@ -363,19 +370,6 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      */
     public int getRowCount() {
         return m_reference.getRowCount();
-    }
-    
-    /**
-     * Get the table id. Used for blob serialization.
-     * @return The table ID.
-     */
-    public int getTableID() {
-        /* generally, we could put the assertion here. However, it needs not
-         * to be true if the workflow is saved in format of version 1.1.x
-         * (no blobs in that version). */
-        // assert m_appendTable == null 
-        //      || m_appendTable.getBufferID() == m_tableID;
-        return m_tableID;
     }
     
     /**

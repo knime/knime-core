@@ -169,7 +169,8 @@ public final class BufferedDataTable implements DataTable {
      * @param table The reference.
      */ 
     BufferedDataTable(final RearrangeColumnsTable table) {
-        this((KnowsRowCountTable)table, table.getTableID());
+        this((KnowsRowCountTable)table, table.getAppendTable() != null 
+                ? table.getAppendTable().getBufferID() : generateNewID());
     }
     
     /** Creates a new buffered data table based on a changed spec table 
