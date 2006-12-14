@@ -74,7 +74,7 @@ public final class DialogComponentBoolean extends DialogComponent {
                 updateComponent();
             }
         });
-        this.add(m_checkbox);
+        getComponentPanel().add(m_checkbox);
 
     }
 
@@ -129,7 +129,6 @@ public final class DialogComponentBoolean extends DialogComponent {
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #setToolTipText(java.lang.String)
      */
-    @Override
     public void setToolTipText(final String text) {
         m_checkbox.setToolTipText(text);
     }

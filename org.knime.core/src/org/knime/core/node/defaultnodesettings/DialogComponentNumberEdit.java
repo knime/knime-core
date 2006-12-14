@@ -87,12 +87,12 @@ public class DialogComponentNumberEdit extends DialogComponent {
         super(numberModel);
         
         m_label = new JLabel(label); 
-        this.add(m_label);
+        getComponentPanel().add(m_label);
         m_valueField = new JTextField();
         String defValue = numberModel.getNumberValueStr();
         m_valueField.setText(defValue);
         m_valueField.setColumns(compWidth);
-        this.add(m_valueField);
+        getComponentPanel().add(m_valueField);
 
         m_valueField.getDocument().addDocumentListener(new DocumentListener() {
             public void removeUpdate(final DocumentEvent e) {
@@ -226,7 +226,6 @@ public class DialogComponentNumberEdit extends DialogComponent {
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #setToolTipText(java.lang.String)
      */
-    @Override
     public void setToolTipText(final String text) {
         m_label.setToolTipText(text);
         m_valueField.setToolTipText(text);

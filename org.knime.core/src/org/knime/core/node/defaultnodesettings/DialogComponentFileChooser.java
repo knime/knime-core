@@ -134,7 +134,7 @@ public class DialogComponentFileChooser extends DialogComponent {
             final boolean directoryOnly, final String... validExtensions) {
         super(stringModel);
 
-        setLayout(new FlowLayout());
+        getComponentPanel().setLayout(new FlowLayout());
 
         JPanel p = new JPanel();
         m_fileHistory = StringHistory.getInstance(historyID);
@@ -154,7 +154,7 @@ public class DialogComponentFileChooser extends DialogComponent {
         p.setBorder(m_border);
         p.add(m_fileComboBox);
         p.add(m_browseButton);
-        super.add(p);
+        getComponentPanel().add(p);
 
         m_browseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
@@ -178,7 +178,8 @@ public class DialogComponentFileChooser extends DialogComponent {
                         chooser.setFileFilter(new SimpleFileFilter(extension));
                     }
                 }
-                int returnVal = chooser.showDialog(getParent(), null);
+                int returnVal = chooser.showDialog(
+                        getComponentPanel().getParent(), null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String newFile;
                     try {
@@ -200,7 +201,7 @@ public class DialogComponentFileChooser extends DialogComponent {
                     m_fileComboBox.removeItem(newFile);
                     m_fileComboBox.addItem(newFile);
                     m_fileComboBox.setSelectedItem(newFile);
-                    revalidate();
+                    getComponentPanel().revalidate();
                 }
             }
         });
@@ -356,7 +357,6 @@ public class DialogComponentFileChooser extends DialogComponent {
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #setToolTipText(java.lang.String)
      */
-    @Override
     public void setToolTipText(final String text) {
         m_browseButton.setToolTipText(text);
         m_fileComboBox.setToolTipText(text);

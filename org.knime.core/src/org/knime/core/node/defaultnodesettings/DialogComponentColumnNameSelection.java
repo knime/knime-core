@@ -92,10 +92,10 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             final Class<? extends DataValue>... classFilter) {
         super(model);
         m_label = new JLabel(label);
-        this.add(m_label);
+        getComponentPanel().add(m_label);
         m_chooser = new ColumnSelectionPanel((Border)null, classFilter);
         m_chooser.setRequired(isRequired);
-        this.add(m_chooser);
+        getComponentPanel().add(m_chooser);
 
         m_specIndex = specIndex;
         m_typeList = Arrays.asList(classFilter);
@@ -227,7 +227,6 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #setToolTipText(java.lang.String)
      */
-    @Override
     public void setToolTipText(final String text) {
         m_chooser.setToolTipText(text);
         m_label.setToolTipText(text);

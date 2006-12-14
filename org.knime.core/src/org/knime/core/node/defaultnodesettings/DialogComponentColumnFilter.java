@@ -89,7 +89,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
         m_inPortIndex = inPortIndex;
 
         m_columnFilter = new ColumnFilterPanel(allowedTypes);
-        super.add(m_columnFilter);
+        getComponentPanel().add(m_columnFilter);
 
         // when the user input changes we need to update the model.
         m_columnFilter.addChangeListener(new ChangeListener() {
@@ -198,7 +198,6 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #setToolTipText(java.lang.String)
      */
-    @Override
     public void setToolTipText(final String text) {
         m_columnFilter.setToolTipText(text);
     }

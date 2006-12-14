@@ -56,7 +56,7 @@ import org.knime.core.node.NotConfigurableException;
  * 
  * @author M. Berthold, University of Konstanz
  */
-public abstract class DialogComponent extends JPanel {
+public abstract class DialogComponent {
 
     /** default foreground color for editable components. */
     protected static final Color DEFAULT_FG = new JTextField().getForeground();
@@ -65,6 +65,8 @@ public abstract class DialogComponent extends JPanel {
     protected static final Color DEFAULT_BG = new JTextField().getBackground();
 
     private final SettingsModel m_model;
+
+    private final JPanel m_panel;
 
     /**
      * the specs that came with the last loadSettings. Could be null.
@@ -80,8 +82,17 @@ public abstract class DialogComponent extends JPanel {
         if (model == null) {
             throw new NullPointerException("SettingsModel can't be null.");
         }
+        m_panel = new JPanel();
         m_model = model;
         m_lastSpecs = null;
+    }
+
+    /**
+     * @return the panel in which all sub-components of this component are
+     *         arranged. This panel will be added to the dialog pane.
+     */
+    JPanel getComponentPanel() {
+        return m_panel;
     }
 
     /**
@@ -196,11 +207,10 @@ public abstract class DialogComponent extends JPanel {
      * @see #setEnabledComponents(boolean)
      * @see java.awt.Component#setEnabled(boolean)
      */
-    @Override
     public final void setEnabled(final boolean enabled) {
         m_model.setEnabled(enabled);
         setEnabledComponents(enabled);
-        super.setEnabled(enabled);
+        getComponentPanel().setEnabled(enabled);
     }
 
     /**
@@ -252,8 +262,9 @@ public abstract class DialogComponent extends JPanel {
 
     /**
      * Implement this so it sets the tooltip on your component(s).
+     * 
+     * @param text the tool tip text to set.
      * @see javax.swing.JComponent#setToolTipText(java.lang.String)
      */
-    @Override
     public abstract void setToolTipText(final String text);
 }

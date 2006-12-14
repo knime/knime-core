@@ -79,7 +79,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
         }
 
         m_label = new JLabel(label);
-        this.add(m_label);
+        getComponentPanel().add(m_label);
         m_combobox = new JComboBox();
 
         for (String s : list) {
@@ -89,7 +89,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
             }
             m_combobox.addItem(s);
         }
-        this.add(m_combobox);
+        getComponentPanel().add(m_combobox);
 
         m_combobox.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
@@ -209,7 +209,6 @@ public final class DialogComponentStringSelection extends DialogComponent {
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #setToolTipText(java.lang.String)
      */
-    @Override
     public void setToolTipText(final String text) {
         m_label.setToolTipText(text);
         m_combobox.setToolTipText(text);

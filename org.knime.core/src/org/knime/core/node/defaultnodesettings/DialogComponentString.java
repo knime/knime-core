@@ -87,7 +87,7 @@ public final class DialogComponentString extends DialogComponent {
         m_disallowEmtpy = disallowEmptyString;
 
         m_label = new JLabel(label);
-        this.add(m_label);
+        getComponentPanel().add(m_label);
         m_valueField = new JTextField();
         m_valueField.setColumns(compWidth);
 
@@ -124,7 +124,7 @@ public final class DialogComponentString extends DialogComponent {
             }
         });
 
-        this.add(m_valueField);
+        getComponentPanel().add(m_valueField);
     }
 
     /**
@@ -218,7 +218,6 @@ public final class DialogComponentString extends DialogComponent {
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #setToolTipText(java.lang.String)
      */
-    @Override
     public void setToolTipText(final String text) {
         m_label.setToolTipText(text);
         m_valueField.setToolTipText(text);

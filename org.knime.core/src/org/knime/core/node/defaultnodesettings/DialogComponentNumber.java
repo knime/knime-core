@@ -92,7 +92,7 @@ public class DialogComponentNumber extends DialogComponent {
                     + "smaller than 1");
         }
         m_label = new JLabel(label);
-        this.add(m_label);
+        getComponentPanel().add(m_label);
 
         SpinnerNumberModel spinnerModel;
         if (numberModel instanceof SettingsModelDouble) {
@@ -151,7 +151,7 @@ public class DialogComponentNumber extends DialogComponent {
             }
         });
 
-        this.add(m_spinner);
+        getComponentPanel().add(m_spinner);
     }
 
     /**
@@ -273,7 +273,6 @@ public class DialogComponentNumber extends DialogComponent {
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #setToolTipText(java.lang.String)
      */
-    @Override
     public void setToolTipText(final String text) {
         m_spinner.setToolTipText(text);
         m_label.setToolTipText(text);

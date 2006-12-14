@@ -109,7 +109,7 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
      */
     public void addDialogComponent(final DialogComponent diaC) {
         m_dialogComponents.add(diaC);
-        m_currentPanel.add(diaC);
+        m_currentPanel.add(diaC.getComponentPanel());
     }
 
     /**
