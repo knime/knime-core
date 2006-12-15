@@ -257,19 +257,7 @@ public final class RepositoryManager {
                 }
 
                 if (parent[0] != null) {
-                    // create a dummy shell, to force the message box to the top
-                    // otherwise it could be lost in the background of the
-                    // desktop
-                    Shell dummy =
-                            new Shell(parent[0], SWT.DIALOG_TRIM | SWT.ON_TOP);
-                    MessageBox mb =
-                            new MessageBox(dummy, SWT.ICON_WARNING | SWT.OK
-                                    | SWT.ON_TOP);
-                    mb.setText("KNIME node(s) could not be loaded!");
-                    mb.setMessage("Some contributed nodes could not be "
-                            + "loaded by KNIME, skipped: \n\n'"
-                            + errorString.toString());
-                    mb.open();
+                    showErrorMessage(parent[0], errorString.toString());
                 }
             }
 
@@ -277,6 +265,33 @@ public final class RepositoryManager {
                     .warning("Could not load all contributed nodes: \n"
                             + errorString);
         }
+
+    }
+
+    private void showErrorMessage(final Shell parent, final String errorMessage) {
+        // create a dummy shell, to force the message box to the top
+        // otherwise it could be lost in the background of the
+        // desktop
+
+        new Thread() {
+            @Override
+            public void run() {
+                Display.getDefault().syncExec(new Runnable() {
+                    public void run() {
+                        Shell dummy =
+                                new Shell(parent, SWT.DIALOG_TRIM | SWT.ON_TOP);
+                        MessageBox mb =
+                                new MessageBox(dummy, SWT.ICON_WARNING | SWT.OK
+                                        | SWT.ON_TOP);
+                        mb.setText("KNIME node(s) could not be loaded!");
+                        mb.setMessage("Some contributed nodes could not be "
+                                + "loaded by KNIME, skipped: \n\n'"
+                                + errorMessage.toString());
+                        mb.open();
+                    }
+                });
+            }
+        }.start();
 
     }
 
