@@ -1,6 +1,4 @@
-/* @(#)$RCSfile$ 
- * $Revision: 178 $ $Date: 2006-02-15 09:52:11 +0100 (Mi, 15 Feb 2006) $ $Author: ohl $
- * 
+/* 
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.

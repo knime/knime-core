@@ -75,7 +75,7 @@ public class BinModelDrawingPane extends ScatterPlotterDrawingPane {
     @Override
     public void paintContent(final Graphics g) {
 
-        // set the prefered size to the needed height
+        // set the preferred size to the needed height
         int width = getPreferredSize().width;
         int height =
                 m_binningSchemes[m_binningSchemes.length - 1]
@@ -143,6 +143,7 @@ public class BinModelDrawingPane extends ScatterPlotterDrawingPane {
      * @param x2 right corner x
      * @param y2 right corner y
      */
+    @Override
     public void selectElementsIn(final int x1, final int y1, final int x2,
             final int y2) {
 
