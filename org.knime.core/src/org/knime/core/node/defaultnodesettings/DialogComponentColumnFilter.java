@@ -113,17 +113,22 @@ public class DialogComponentColumnFilter extends DialogComponent {
     @Override
     void updateComponent() {
         // update component only if content is out of sync
-        boolean update = false;
         SettingsModelFilterString filterModel =
                 (SettingsModelFilterString)getModel();
         Set<String> compIncl = m_columnFilter.getIncludedColumnSet();
         Set<String> compExcl = m_columnFilter.getExcludedColumnSet();
         List<String> modelIncl = filterModel.getIncludeList();
         List<String> modelExcl = filterModel.getExcludeList();
-        for (String s : compIncl) {
-            if (!modelIncl.contains(s)) {
-                update = true;
-                break;
+
+         boolean update = (compIncl.size() != modelIncl.size())
+                        || (compExcl.size() != modelExcl.size());
+
+        if (!update) {
+            for (String s : compIncl) {
+                if (!modelIncl.contains(s)) {
+                    update = true;
+                    break;
+                }
             }
         }
         if (!update) {

@@ -122,7 +122,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
         String val = ((SettingsModelString)getModel()).getStringValue();
         boolean update;
         if (val == null) {
-            update = (m_combobox.getSelectedItem() == null);
+            update = (m_combobox.getSelectedItem() != null);
         } else {
             update = !val.equals(m_combobox.getSelectedItem());
         }
