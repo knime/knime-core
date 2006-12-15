@@ -18,6 +18,8 @@
  */
 package org.knime.base.node.viz.plotter.box;
 
+import org.knime.base.node.viz.plotter.DataProvider;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -48,7 +50,11 @@ public class BoxPlotNodeView extends NodeView {
     @Override
     protected void modelChanged() {
         if (getNodeModel() != null) {
-            m_plotter.setDataProvider((BoxPlotNodeModel)getNodeModel());
+            NodeModel model = getNodeModel();
+            m_plotter.reset();
+            m_plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
+            m_plotter.setAntialiasing(true);
+            m_plotter.setDataProvider((DataProvider)model);
             m_plotter.updatePaintModel();
         }
     }
@@ -67,7 +73,6 @@ public class BoxPlotNodeView extends NodeView {
      */
     @Override
     protected void onOpen() {
-        m_plotter.fitToScreen();
     }
 
 }

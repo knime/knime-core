@@ -53,7 +53,7 @@ public class BoxPlotNodeFactory extends NodeFactory {
     public NodeView createNodeView(final int viewIndex, 
             final NodeModel nodeModel) {
         return new BoxPlotNodeView((BoxPlotNodeModel)nodeModel, 
-                ((BoxPlotNodeModel)nodeModel).getPlotter());
+                new BoxPlotter());
     }
 
     /**

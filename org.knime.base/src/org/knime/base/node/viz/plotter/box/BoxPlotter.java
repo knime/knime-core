@@ -114,6 +114,8 @@ public class BoxPlotter extends BasicPlotter {
     public void reset() {
         m_coordinates = null;
         m_selectedColumns = null;
+        ((BoxPlotDrawingPane)getDrawingPane()).setBoxes(null);
+        getDrawingPane().repaint();
     }
 
     /**

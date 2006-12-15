@@ -53,7 +53,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * 
@@ -96,8 +95,6 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     
     private DataArray m_array;
     
-    private final BoxPlotter m_plotter;
-    
     
     /**
      * One input for the data one output for the parameters (median, 
@@ -106,26 +103,6 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
      */
     public BoxPlotNodeModel() {
         super(1, 1);
-        m_plotter = new BoxPlotter();
-    }
-    
-    /**
-     * 
-     * @return the box plotter of this node (with the correct hilite handler).
-     */
-    public BoxPlotter getPlotter() {
-        return m_plotter;
-    }
-    
-
-    /**
-     * @see org.knime.core.node.NodeModel#setInHiLiteHandler(int, 
-     * org.knime.core.node.property.hilite.HiLiteHandler)
-     */
-    @Override
-    protected void setInHiLiteHandler(final int inIndex, 
-            final HiLiteHandler hiLiteHdl) {
-        m_plotter.setHiLiteHandler(hiLiteHdl);
     }
 
 
