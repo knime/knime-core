@@ -20,11 +20,15 @@ package org.knime.base.node.viz.plotter.node;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ContainerTable;
@@ -61,7 +65,14 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     /** Config key for the last displayed row. */
     public static final String CFG_END = "end";
     
+    /** Config key for dis- or enabling antialiasing. */
+    public static final String CFG_ANTIALIAS = "antialias";
+    
     private static final String FILE_NAME = "internals";
+    
+    private boolean m_antialiasing;
+    
+    private int[] m_excludedColumns;
     
     
     /**
@@ -72,6 +83,13 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         super(1, 0);
     }
     
+    /**
+     * Constructor for extending classes to define an arbitrary number of
+     * in- and outports.
+     * 
+     * @param nrInports number of data inports
+     * @param nrOutports number of data outports
+     */
     public DefaultVisualizationNodeModel(final int nrInports, 
             final int nrOutports) {
         super(nrInports, nrOutports);
@@ -87,9 +105,17 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     }
 
 
+    /**
+     * True, if antialiasing should be used, false otherwise.
+     * @return true, if antialiasing should be used, false otherwise
+     */
+    public boolean antiAliasingOn() {
+        return m_antialiasing;
+    }
 
     /**
-     * Checks if the nominal values have possible values.
+     * All nominal columns without possible values or with more than 60
+     * possible values are ignored. A warning is set if so.
      * 
      * @see org.knime.core.node.NodeModel#configure(
      * org.knime.core.data.DataTableSpec[])
@@ -97,15 +123,31 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        // first filter out those nominal columns with
+        // possible values == null
+        // or possibleValues.size() > 60
+        List<Integer>excludedCols = new ArrayList<Integer>();
+        int currColIdx = 0;
         for (DataColumnSpec colSpec : inSpecs[0]) {
-            // if we have nominal columns without possible values
-            if (!colSpec.getType().isCompatible(DoubleValue.class) 
-                    && colSpec.getDomain().getValues() == null) {
-                throw new InvalidSettingsException(
-                        "Found nominal column without possible values: "
-                        + colSpec.getName() 
-                        + " Please use DomainCalculator or ColumnFilter!");
+            // nominal value
+            if (!colSpec.getType().isCompatible(DoubleValue.class)) {
+                if (colSpec.getDomain().hasValues() &&
+                        colSpec.getDomain().getValues().size() > 60) {
+                    excludedCols.add(currColIdx);
+                } else if (!colSpec.getDomain().hasValues()) {
+                    excludedCols.add(currColIdx);
+                }
+                
             }
+            currColIdx++;
+        }
+        m_excludedColumns = new int[excludedCols.size()];
+        for (int i = 0; i < excludedCols.size(); i++) {
+            m_excludedColumns[i] = excludedCols.get(i);
+        }
+        if (excludedCols.size() > 0) {
+            setWarningMessage("Nominal columns without possible values or with "
+                    + "more than 60 possible values are ignored!");   
         }
         return new DataTableSpec[0];
     }
@@ -113,7 +155,9 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     /**
      * Converts the input data at inport 0 into a 
      * {@link org.knime.base.node.util.DataArray} with maximum number of rows as
-     * defined in the {@link DefaultVisualizationNodeDialog}.
+     * defined in the {@link DefaultVisualizationNodeDialog}. Thereby nominal 
+     * columns are irgnored whose possible values are null or more than 60.
+     * 
      * @see org.knime.core.node.NodeModel#execute(
      * org.knime.core.node.BufferedDataTable[], 
      * org.knime.core.node.ExecutionContext)
@@ -121,7 +165,12 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        m_input = new DefaultDataArray(inData[0], 1, m_last, exec);
+        // first filter out those nominal columns with
+        // possible values == null
+        // or possibleValues.size() > 60
+        DataTable filter = new FilterColumnTable(inData[0], false, 
+                m_excludedColumns);
+        m_input = new DefaultDataArray(filter, 1, m_last, exec);
         if ((m_last) < inData[0].getRowCount()) {
             setWarningMessage("Only the rows from 0 to " + m_last 
                     + "are displayed.");
@@ -154,6 +203,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_last = settings.getInt(CFG_END);
+        m_antialiasing = settings.getBoolean(CFG_ANTIALIAS);
     }
 
     /**
@@ -163,6 +213,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
      */
     @Override
     protected void reset() {
+        m_excludedColumns = null;
         m_input = null;
     }
 
@@ -189,6 +240,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addInt(CFG_END, m_last);
+        settings.addBoolean(CFG_ANTIALIAS, m_antialiasing);
     }
 
     /**
@@ -198,8 +250,8 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-//        settings.getInt(CFG_START);
         settings.getInt(CFG_END);
+        settings.getBoolean(CFG_ANTIALIAS);
     }
 
 }

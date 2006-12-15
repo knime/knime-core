@@ -19,31 +19,47 @@
 package org.knime.base.node.viz.plotter.node;
 
 import org.knime.base.node.viz.plotter.DataProvider;
-import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+
 
 /**
  * Lets the user define the maximum number of rows to be displayed. 
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class DefaultVisualizationNodeDialog extends DefaultNodeDialogPane {
+public class DefaultVisualizationNodeDialog extends DefaultNodeSettingsPane {
     
-    private final int m_cntMIN = 1;
-
-    private final int m_cntSTART = DataProvider.END;
 
     /**
      * Creates a new default visualization dialog with the maximum number of 
-     * rows to display.
+     * rows to display as defined in 
+     * {@link org.knime.base.node.viz.plotter.DataProvider#END}.
      * 
      */
     public DefaultVisualizationNodeDialog() {
+        this(DataProvider.END);
+    }
+    
+    /**
+     * Creates a new default visualization dialog with the maximum number of 
+     * rows to display as defined by the passed parameter.
+     * 
+     * @param defaultNrOfRows default value for the number of rows to display
+     */
+    public DefaultVisualizationNodeDialog(final int defaultNrOfRows) {
         super();
         addDialogComponent(new DialogComponentNumber(
-                DefaultVisualizationNodeModel.CFG_END,
-                "No. of rows to display:", m_cntMIN, Integer.MAX_VALUE,
-                m_cntSTART));
+                new SettingsModelIntegerBounded(
+                DefaultVisualizationNodeModel.CFG_END, defaultNrOfRows, 
+                1, Integer.MAX_VALUE), "No. of rows to display:", 10));
+        addDialogComponent(new DialogComponentBoolean(
+                new SettingsModelBoolean(
+                        DefaultVisualizationNodeModel.CFG_ANTIALIAS,false), 
+                        "Enable Antialiasing"));        
     }
 
 }
