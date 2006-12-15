@@ -401,16 +401,6 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      */
     @Override
     public boolean equals(final Object o) {
-        try {
-            throw new AssertionError("See the stacktrace for more details...");
-        } catch (AssertionError ae) {
-            LOGGER.coding(
-                "equals() is called, please check if you only want to compare"
-                    + " DataTableSpecs by reference (this==obj) or if you"
-                    + " intended to compare column names and types using"
-                    + " equalStructure!?!", ae);
-            ae.printStackTrace();
-        }
         return (this == o);
     }
 

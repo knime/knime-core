@@ -29,7 +29,6 @@ import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
@@ -208,16 +207,6 @@ public final class DataColumnSpec {
      */
     @Override
     public boolean equals(final Object obj) {
-        try {
-            throw new AssertionError("See the stacktrace for more details...");
-        } catch (AssertionError ae) {
-            NodeLogger.getLogger(DataColumnSpec.class).coding(
-                "equals() is called, please check if you only want to compare"
-                    + " DataColumnSpecs by reference (this==obj) or if you"
-                    + " intended to compare column names and types using"
-                    + " equalStructure!?!", ae);
-            ae.printStackTrace();
-        }
         return (this == obj);
     }
     
