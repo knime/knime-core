@@ -33,6 +33,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
 
 /**
@@ -41,7 +42,8 @@ import org.knime.core.data.StringValue;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public final class StringCell extends DataCell implements StringValue {
+public final class StringCell extends DataCell
+implements StringValue, NominalValue {
 
     /**
      * Convenience access member for

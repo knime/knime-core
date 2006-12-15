@@ -45,9 +45,9 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.StringValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettings;
@@ -215,14 +215,16 @@ public class DataContainer implements RowAppender {
                     m_possibleValues[i] = new LinkedHashSet<DataCell>(values);
                     // negative value means: store all!
                     m_possibleValuesSizes[i] = -1;
-                } else if (colType.isCompatible(StringValue.class)) {
+                } else if (colType.isCompatible(NominalValue.class)) {
+                    // mb: used to test for StringValue - let's be more specific
                     m_possibleValues[i] = new LinkedHashSet<DataCell>();
                     m_possibleValuesSizes[i] = MAX_POSSIBLE_VALUES;
                 } else {
                     m_possibleValues[i] = null;
                     m_possibleValuesSizes[i] = -1;
                 }
-            } else if (colType.isCompatible(StringValue.class)) {
+            } else if (colType.isCompatible(NominalValue.class)) {
+                // mb: used to test for StringValue - let's be more specific
                 m_possibleValues[i] = new LinkedHashSet<DataCell>();
                 m_possibleValuesSizes[i] = MAX_POSSIBLE_VALUES;
             } else {
