@@ -37,8 +37,8 @@
 		</dataIn>
 	</ports>	
 	<views>
-		<view index="0" name="Histogram View">
-			Interactive histogram view
+		<view index="0" name="Interactive Histogram View">
+			Displays the data in a histogram view.
 		</view>
 	</views>
 </knimeNode>
