@@ -83,7 +83,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
         // target column
         m_targetColumn = new JComboBox();
         m_targetColumn.setRenderer(new DataColumnSpecListCellRenderer());
-        m_targetColumn.setPreferredSize(new Dimension(150, 25));
+        m_targetColumn.setPreferredSize(new Dimension(200, 25));
         JPanel targetPanel = new JPanel();
         targetPanel.setBorder(BorderFactory
                 .createTitledBorder(" Target Column "));
@@ -103,7 +103,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
         // }
         // }
         // });
-        m_missings.setPreferredSize(new Dimension(150, 25));
+        m_missings.setPreferredSize(new Dimension(200, 25));
         JPanel missingPanel = new JPanel();
         missingPanel.setBorder(BorderFactory
                 .createTitledBorder(" Missing Values "));
@@ -112,7 +112,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
         
         // distance function
         m_distance = new JComboBox(BasisFunctionLearnerNodeModel.DISTANCES);
-        m_distance.setPreferredSize(new Dimension(150, 25));
+        m_distance.setPreferredSize(new Dimension(200, 25));
         JPanel distancePanel = new JPanel();
         distancePanel.setBorder(BorderFactory
                 .createTitledBorder(" Distance Function "));
@@ -120,7 +120,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
 
         // shrink after commit
         m_shrinkAfterCommit = new JCheckBox(" Shrink After Commit ");
-        m_shrinkAfterCommit.setPreferredSize(new Dimension(150, 25));
+        m_shrinkAfterCommit.setPreferredSize(new Dimension(200, 25));
         JPanel shrinkPanel = new JPanel();
         shrinkPanel.setBorder(BorderFactory.createTitledBorder(" Properties "));
         shrinkPanel.add(m_shrinkAfterCommit);
@@ -133,10 +133,10 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
                 m_maxEpochs.setEnabled(m_isMaxEpochs.isSelected());
             } 
         });
-        m_isMaxEpochs.setPreferredSize(new Dimension(50, 25));
+        m_isMaxEpochs.setPreferredSize(new Dimension(75, 25));
         m_maxEpochs = new JSpinner(new SpinnerNumberModel(
                 42, 1, Integer.MAX_VALUE, 1));
-        m_maxEpochs.setPreferredSize(new Dimension(100, 25));
+        m_maxEpochs.setPreferredSize(new Dimension(125, 25));
         m_maxEpochs.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 try {
