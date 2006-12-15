@@ -177,13 +177,18 @@ public class DBReaderDialogPane extends NodeDialogPane {
             final DataTableSpec[] specs) throws NotConfigurableException {
         // database driver and name
         m_driver.removeAllItems();
-        m_db.setText(settings.getString("database", ""));
+        String dbName = settings.getString("database", null);
+        m_db.setText(dbName == null ? "jdbc:odbc:<database_name>" : dbName);
         // statement
-        m_statmnt.setText(settings.getString("statement", ""));
+        String statement = settings.getString("statement", null); 
+        m_statmnt.setText(statement == null 
+                ? "SELECT * FROM <table>" : statement);
         // user
-        m_user.setText(settings.getString("user", ""));
+        String user = settings.getString("user", null);
+        m_user.setText(user == null ? "<user>" : user);
         // password
-        m_pass.setText(settings.getString("password", ""));
+        String password = settings.getString("password", null);
+        m_pass.setText(password == null ? "" : password);
         m_passwordChanged = false;
         // save loaded driver
         m_driverLoaded.clear();

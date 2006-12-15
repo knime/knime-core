@@ -62,13 +62,11 @@ class DBReaderConnectionNodeModel extends NodeModel {
 
     private String m_driver = DBDriverLoader.JDBC_ODBC_DRIVER;
 
-    private String m_query = "SELECT * FROM <table>";
+    private String m_query = null;
 
-    private String m_name = "jdbc:odbc:<database_name>";
-
-    private String m_user = "<user>";
-
-    private String m_pass = "";
+    private String m_name = null;
+    private String m_user = null;
+    private String m_pass = null;
 
     /**
      * The name of the view created on the database defined by the given query.
@@ -165,6 +163,13 @@ class DBReaderConnectionNodeModel extends NodeModel {
         if (write) {
             m_driver = driver;
             m_query = statement;
+            boolean changed = false;
+            if (m_user != null && m_name != null && m_pass != null) { 
+                if (!user.equals(m_user) || !database.equals(m_name)
+                        || !password.equals(m_pass)) {
+                    changed = true;
+                }
+            }
             m_name = database;
             m_user = user;
             m_pass = password;
@@ -178,7 +183,18 @@ class DBReaderConnectionNodeModel extends NodeModel {
                             + loadedDriver, e2);
                 }
             }
+            if (changed) {
+                connectionChanged();
+            }
         }
+    }
+    
+    /**
+     * Called when the connection settings have changed, that are, database
+     * name, user name, and password.
+     */
+    protected void connectionChanged() {
+        
     }
 
     /**
@@ -204,6 +220,10 @@ class DBReaderConnectionNodeModel extends NodeModel {
     }
     
     private Exception execute(final String statement) {
+        if (m_name == null || m_user == null || m_pass == null) {
+            return new InvalidSettingsException("No settings available "
+                    + "to create database connection.");
+        }
         Connection conn = null;
         try {
             DBDriverLoader.registerDriver(getDriver());
@@ -276,35 +296,35 @@ class DBReaderConnectionNodeModel extends NodeModel {
     /**
      * @return user name to login to the database
      */
-    protected String getUser() {
+    protected final String getUser() {
         return m_user;
     }
 
     /**
      * @return password used to login to the database
      */
-    protected String getPassword() {
+    protected final String getPassword() {
         return m_pass;
     }
 
     /**
      * @return database driver to create connection
      */
-    protected String getDriver() {
+    protected final String getDriver() {
         return m_driver;
     }
 
     /**
      * @return database name to create connection to
      */
-    protected String getDatabaseName() {
+    protected final String getDatabaseName() {
         return m_name;
     }
 
     /**
      * @return SQl query/statement to execute
      */
-    protected String getQuery() {
+    protected final String getQuery() {
         return m_query;
     }
 
