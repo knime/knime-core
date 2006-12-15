@@ -37,6 +37,7 @@ import org.knime.base.util.coordinate.Coordinate;
 import org.knime.base.util.coordinate.CoordinateMapping;
 import org.knime.base.util.coordinate.NumericCoordinate;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -154,6 +155,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 onApply();
             }
         });
+        //add the visualization listener and their default values in the
+        //drawing pane
+        final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
         m_histoProps.addShowGridChangedListener(
                 new ItemListener() {
                     public void itemStateChanged(final ItemEvent e) {
@@ -161,6 +165,21 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                                 e.getStateChange() == ItemEvent.SELECTED);
                     }
                 });
+        //set the default value
+        m_showGridLines = m_histoProps.isShowGrid();
+        m_histoProps.addShowBarOutlineChangedListener(
+                new ItemListener() {
+                    public void itemStateChanged(final ItemEvent e) {
+                        final HistogramDrawingPane drawingPane = 
+                            getHistogramDrawingPane();
+                        if (drawingPane != null) {
+                            drawingPane.setShowBarOutline(
+                                e.getStateChange() == ItemEvent.SELECTED);
+                        }
+                    }
+                });
+        //set the default value
+        drawingPane.setShowBarOutline(m_histoProps.isShowBarOutline());
         // set the hilitehandler for highlighting stuff
         if (handler != null) {
             handler.addHiLiteListener(this);
@@ -367,7 +386,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 }
                 //check the height for the minimum height
                 int height = fixPoint - startY;
-                if (height <= minHeight && aggrVal > 0) {
+                if (height <= minHeight) {
                     height = minHeight;
                     //adjust the starting point to the new height to avoid
                     //painting in the negatives
@@ -591,10 +610,31 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      * @return the maximum number of bars which could be displayed.
      */
     protected int getMaxNoOfBars() {
-        Rectangle rect = calculateDrawingRectangle();
+        final Rectangle rect = calculateDrawingRectangle();
         int maxNoOfBars = 
             (int)(rect.getWidth() / (MIN_BAR_WIDTH + SPACE_BETWEEN_BARS));
-        if (m_showMissingValBar) {
+        //handle integer values special
+        final AbstractHistogramDataModel dataModel = getHistogramDataModel();
+        final DataColumnSpec xColSpec = dataModel.getOriginalXColSpec();
+        if (xColSpec != null) {
+            final boolean isInteger = 
+                xColSpec.getType().isCompatible(IntValue.class);
+            if (isInteger) {
+                final DataColumnDomain domain = xColSpec.getDomain();
+                if (domain != null) {
+                    final IntCell lowerBound = 
+                        (IntCell)domain.getLowerBound();
+                    final IntCell upperBound = 
+                        (IntCell)domain.getUpperBound();
+                    final int range = 
+                        upperBound.getIntValue() - lowerBound.getIntValue();
+                    if (maxNoOfBars > range) {
+                        maxNoOfBars = range;
+                    }
+                }
+            }
+        }
+        if (m_showMissingValBar && dataModel.containsMissingValueBar()) {
             maxNoOfBars--;
         }
         // display at least one bar
@@ -835,14 +875,15 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
     /**
-     * @return the showGridLines
+     * @return <code>true</code> if the y axis grid lines should be shown.
      */
     public boolean isShowGridLines() {
         return m_showGridLines;
     }
     
     /**
-     * @param showGridLines the showGridLines to set
+     * @param showGridLines set to <code>true</code> if the grid lines of the
+     * y axis should be shown
      */
     public void setShowGridLines(final boolean showGridLines) {
         if (showGridLines != m_showGridLines) {

@@ -85,6 +85,8 @@ public abstract class AbstractHistogramProperties extends
             + "with rows which have a missing value for the selected x column.";
     private static final String SHOW_EMPTY_BARS_LABEL = "Show empty bars";
     private static final String SHOW_GRID_LABEL = "Y grid lines";
+    private static final String SHOW_BAR_OUTLINE_LABEL = 
+        "Show outline on bars";
     private static final String APPLY_BUTTON_LABEL = "Apply";
     
     private static final Dimension HORIZONTAL_SPACER_DIM = new Dimension(10, 1);
@@ -101,6 +103,7 @@ public abstract class AbstractHistogramProperties extends
     private final JButton m_applyAggrSettingsButton;
     private final JButton m_applyBarSettingsButton;
     private final JCheckBox m_showGrid;
+    private final JCheckBox m_showBarOutline;
 
     
     /**Constructor for class AbstractHistogramProperties.
@@ -184,8 +187,10 @@ public abstract class AbstractHistogramProperties extends
         m_applyBarSettingsButton = new JButton(
                 AbstractHistogramProperties.APPLY_BUTTON_LABEL);
         m_applyBarSettingsButton.setHorizontalAlignment(SwingConstants.RIGHT);
+        //create the visualization option elements
+        m_showGrid = new JCheckBox(SHOW_GRID_LABEL, false);
+        m_showBarOutline = new JCheckBox(SHOW_BAR_OUTLINE_LABEL, true);
         
-        m_showGrid = new JCheckBox(SHOW_GRID_LABEL);
 //the column select tab
         final JPanel columnPanel = createColumnSettingsPanel();
         addTab(COLUMN_TAB_LABEL, columnPanel);
@@ -202,17 +207,36 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
-     * @return panel
+     * The visualization panel with the following options:
+     * <ol><li>Show grid line</li><li>Show bar outline</li></ol>.
+     * @return the visualization settings panel
      */
     private JPanel createVizSettingsPanel() {
         final JPanel vizPanel = new JPanel();
         final Box vizBox = Box.createHorizontalBox();
-        vizBox.setBorder(BorderFactory
-                .createEtchedBorder(EtchedBorder.RAISED));
-        vizBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+//        vizBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
+//                .createEtchedBorder(), "Layout"));
+        vizBox.add(Box.createVerticalGlue());
         vizBox.add(m_showGrid);
-        vizBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-        vizPanel.add(vizBox);
+        vizBox.add(Box.createVerticalGlue());
+        vizBox.add(m_showBarOutline);
+        vizBox.add(Box.createVerticalGlue());
+//        final Box labelBox = Box.createHorizontalBox();
+//        labelBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
+//                .createEtchedBorder(), "Labels"));
+//        labelBox.add(Box.createHorizontalGlue());
+//        final Box labelShowBox = Box.createVerticalBox();
+//        //labelShowBox.add();
+//        labelBox.add(Box.createHorizontalGlue());
+        final Box rootBox = Box.createHorizontalBox();
+        rootBox.setBorder(BorderFactory
+                .createEtchedBorder(EtchedBorder.RAISED));
+        rootBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+        rootBox.add(vizBox);
+//        rootBox.add(Box.createHorizontalGlue());
+//        rootBox.add(labelBox);
+        rootBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+        vizPanel.add(rootBox);
         return vizPanel;
     }
 
@@ -649,6 +673,24 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
+     * @return the current value of the show grid line select box
+     */
+    public boolean isShowGrid() {
+        return m_showGrid.isSelected();
+    }
+    /**
+     * @param listener adds a listener to the show grid lines check box.
+     */
+    public void addShowBarOutlineChangedListener(final ItemListener listener) {
+        m_showBarOutline.addItemListener(listener);
+    }
+    /**
+     * @return the current value of the show bar outline select box
+     */
+    public boolean isShowBarOutline() {
+        return m_showBarOutline.isSelected();
+    }
+    /**
      * @return if the empty bars should be shown
      */
     protected boolean getShowEmptyBars() {
@@ -667,4 +709,5 @@ public abstract class AbstractHistogramProperties extends
         }
         return m_showMissingValBar.isSelected();
     }
+
 }

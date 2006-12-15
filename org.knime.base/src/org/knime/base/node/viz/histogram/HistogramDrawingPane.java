@@ -57,11 +57,11 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * unhighlighted rows per color.*/
     private static final BasicStroke BLOCK_UNHILITE_STROKE = 
         new BasicStroke(1f);
-
+    
     /**This stroke is used to draw the rectangle around each group of 
      * highlighted rows per color.*/
     private static final BasicStroke BLOCK_HILITE_STROKE = 
-        new BasicStroke(2f);
+        new BasicStroke(3.0f);
     
     /** Defines the stroke of the rectangle which surrounds the bar label. */
     private static final BasicStroke VALUE_RECT_STROKE = new BasicStroke(1f);
@@ -124,6 +124,11 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
 
     /**If set the grid lines are drawn at the given positions.*/
     private int[] m_gridLines;
+    
+
+    /**If set to true the plotter paints the outline of the bars. The outline
+     * is always painted for highlighted blocks!.*/
+    private boolean m_showBarOutlines = false;
     
     /**
      * Constructor for class HistogramDrawingPane.
@@ -192,7 +197,25 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     public void setGridLines(final int[] gridLines) {
         m_gridLines = gridLines;
     }
+
+    /**
+     * @return <code>true</code> if the bar outline should be also shown for
+     * none highlighted blocks
+     */
+    public boolean isShowBarOutline() {
+        return m_showBarOutlines;
+    }
     
+    /**
+     * @param showBarOutline set to <code>true</code> if the outline of the
+     * bars should be also shown for not highlighted bars
+     */
+    public void setShowBarOutline(final boolean showBarOutline) {
+        if (showBarOutline != m_showBarOutlines) {
+            m_showBarOutlines = showBarOutline;
+            repaint();
+        }
+    }
     /**
      * Resets the internal values of the histogram drawing pane to their default
      * values.
@@ -239,13 +262,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         if (m_bars == null) {
             return;
         }
-        //check if we have to draw the base line
-        if (m_baseLine != null) {
-            paintHorizontalLine(g2, m_baseLine.intValue(), 
-                    (int) getBounds().getWidth(), BASE_LINE_COLOR, 
-                    BASE_LINE_STROKE);
-        }
-        //check if we have to draw the grid lines
+//      check if we have to draw the grid lines
         if (m_gridLines != null) {
             for (int gridLine : m_gridLines) {
                 paintHorizontalLine(g2, gridLine, 
@@ -253,6 +270,13 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                         GRID_LINE_STROKE);
             }
         }
+        //check if we have to draw the base line
+        if (m_baseLine != null) {
+            paintHorizontalLine(g2, m_baseLine.intValue(), 
+                    (int) getBounds().getWidth(), BASE_LINE_COLOR, 
+                    BASE_LINE_STROKE);
+        }
+        
 // loop over all bars and paint them
         // TK_TODO: Calculate the rectangle only when necessary
         for (BarVisModel bar : m_bars.values()) {
@@ -284,13 +308,11 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 }
                 if (noOfHiLite > 0) {
                     startY = paintColorBlock(g2, bar, heightPerRow, startY, 
-                            colorAttr, noOfHiLite, BLOCK_HILITE_STROKE,
-                            true);
+                            colorAttr, noOfHiLite, true);
                 }
                 if (noOfNotHiLite > 0) {
                     startY = paintColorBlock(g2, bar, heightPerRow, startY, 
-                            colorAttr, noOfNotHiLite, BLOCK_UNHILITE_STROKE,
-                            false);
+                            colorAttr, noOfNotHiLite, false);
                 }
             } // end of the color loop for one bar 
 
@@ -335,11 +357,12 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * @param startY the y coordinate
      * @param colorAttr the color attribute to use
      * @param noOfRows number of rows to paint
+     * @param isHilite <code>true</code> if the block is highlighted
      */
-    private static int paintColorBlock(final Graphics2D g2, 
+    private int paintColorBlock(final Graphics2D g2, 
             final BarVisModel bar, final double heightPerRow, final int startY, 
-            final ColorAttr colorAttr, final int noOfRows, 
-            final BasicStroke stroke, final boolean isHilite) {
+            final ColorAttr colorAttr, final int noOfRows,
+            final boolean isHilite) {
         // save the original settings
         final Stroke origStroke = g2.getStroke();
         final Paint origPaint = g2.getPaint();
@@ -347,16 +370,25 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         final Rectangle fillRect = calculateFillingRect(
                 heightPerRow, noOfRows, barRect, startY);
         //first fill the rectangle...
-        g2.setStroke(stroke);
         g2.setPaint(colorAttr.getColor(bar.isSelected(), isHilite));
         g2.fill(fillRect);
-        //... and then draw the border
-        final Rectangle borderRect = 
-            calculateBorderRect(fillRect, stroke);
-        final Color borderColor = 
-            colorAttr.getBorderColor(bar.isSelected(), isHilite);
-        g2.setPaint(borderColor);
-        g2.draw(borderRect);
+        //... and then draw the border but only if the bar is highlighted
+        //or the user wants to have the outline painted
+        if (isHilite || m_showBarOutlines || bar.isSelected()) {
+            BasicStroke stroke = BLOCK_UNHILITE_STROKE;
+            if (isHilite) {
+                stroke = BLOCK_HILITE_STROKE;
+            }
+            g2.setStroke(stroke);
+            final Rectangle borderRect = 
+                calculateBorderRect(fillRect, stroke);
+            final Color borderColor = 
+                colorAttr.getBorderColor(bar.isSelected(), isHilite);
+            g2.setPaint(borderColor);
+            g2.draw(borderRect);
+        }
+        //calculate the lowest point of the bar as the new starting point 
+        //for the next bar
         int newStartY = (int)(startY + fillRect.getHeight());
         //set the old settings
         g2.setStroke(origStroke);
@@ -464,11 +496,21 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      */
     private static Rectangle calculateBorderRect(final Rectangle rect, 
             final BasicStroke stroke) {
-        final int width = (int)stroke.getLineWidth();
-        final int halfWidth = width / 2;
-        final Rectangle strokeRect = new Rectangle((int) rect.getX() 
-                + halfWidth, (int) rect.getY() + halfWidth, 
-                (int) rect.getWidth() - width, (int) rect.getHeight() - width);
+        final int strokeWidth = (int)stroke.getLineWidth();
+        final int halfStrokeWidth = strokeWidth / 2;
+        final int newX = (int) rect.getX() + halfStrokeWidth;
+        final int newY = (int) rect.getY() + halfStrokeWidth;
+        int newWidth = (int) rect.getWidth() - strokeWidth;
+        int newHeight = (int) rect.getHeight() - strokeWidth;
+        //check for negative values
+        if (newWidth <= 0) {
+            newWidth = 1;
+        }
+        if (newHeight <= 0) {
+            newHeight = 1;
+        }
+        final Rectangle strokeRect = 
+            new Rectangle(newX, newY, newWidth, newHeight);
         return strokeRect;
     }
     
