@@ -36,6 +36,8 @@ import org.knime.base.util.coordinate.NumericCoordinate;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
@@ -93,8 +95,8 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
      *
      */
     public TwoColumnProperties() {
-       this(new Class[]{DataValue.class},
-               new Class[]{DataValue.class});
+       this(new Class[]{NominalValue.class, DoubleValue.class},
+               new Class[]{NominalValue.class, DoubleValue.class});
     }
     
     /**

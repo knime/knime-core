@@ -23,6 +23,8 @@ import java.util.Set;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
@@ -56,7 +58,7 @@ public class MultiColumnPlotterProperties extends AbstractPlotterProperties {
      * 
      */
     public MultiColumnPlotterProperties() {
-        this(DataValue.class);
+        this(NominalValue.class, DoubleValue.class);
     }
     
     

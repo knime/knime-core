@@ -30,7 +30,7 @@ import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -130,7 +130,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         int currColIdx = 0;
         for (DataColumnSpec colSpec : inSpecs[0]) {
             // nominal value
-            if (!colSpec.getType().isCompatible(DoubleValue.class)) {
+            if (colSpec.getType().isCompatible(NominalValue.class)) {
                 if (colSpec.getDomain().hasValues() &&
                         colSpec.getDomain().getValues().size() > 60) {
                     excludedCols.add(currColIdx);
