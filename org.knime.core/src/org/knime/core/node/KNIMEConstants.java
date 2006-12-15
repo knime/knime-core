@@ -44,7 +44,7 @@ public final class KNIMEConstants {
     /** Workflow file version. */
     // IMPORTANT: Remember to also update the NodeLogger welcome screen with
     // the current version and the prerequisites
-    public static final String VERSION = "1.1.0";
+    public static final String VERSION = "1.2.0pre";
 
     /**
      * The name of the system property whose value is - if set - used as knime
@@ -63,10 +63,10 @@ public final class KNIMEConstants {
      * <i>Welcome to KNIME Konstanz Information Miner</i>.
      */
     public static final String WELCOME_MESSAGE =
-            "****************************************************************\n"
-                    + "*** Welcome to KNIME v1.1.0 - the Konstanz Information Miner ***\n"
-                    + "*** Copyright, 2003 - 2006, University of Konstanz, Germany. ***\n"
-                    + "****************************************************************\n";
+        "*******************************************************************\n"
+      + "*** Welcome to KNIME v1.2.0pre - the Konstanz Information Miner ***\n"
+      + "*** Copyright, 2003 - 2006, University of Konstanz, Germany.    ***\n"
+      + "*******************************************************************\n";
 
     /** Path to the <i>knime.png</i> icon. */
     private static final String KNIME_ICON_PATH =

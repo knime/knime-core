@@ -119,10 +119,10 @@ public final class NodeLogger {
     static {
         // check if KNIME log4j config exists in users home
         File knimeDir = new File(KNIMEConstants.getKNIMEHomeDir());
-        File log4j = new File(knimeDir, "log4j-1.1.0.xml");
+        File log4j = new File(knimeDir, "log4j-1.2.0pre.xml");
         if (!log4j.exists()) {
             InputStream in = NodeLogger.class.getClassLoader()
-                    .getResourceAsStream("log4j-1.1.0.xml");
+                    .getResourceAsStream("log4j-1.2.0pre.xml");
             if (in != null) {
                 byte[] buf = new byte[4096];
                 try {
@@ -177,10 +177,10 @@ public final class NodeLogger {
         NodeLogger l = getLogger(NodeLogger.class);
         l.info("#############################################################");
         l.info("#                                                           #");
-        l.info("# Welcome to KNIME v1.1.0 (Build August 16, 2006)           #");
+        l.info("# Welcome to KNIME v1.2pre (Build December 18, 2006)        #");
         l.info("# the Konstanz Information Miner                            #");
         l.info("# Based on Eclipse 3.2, www.eclipse.org                     #");
-        l.info("# Uses: Java5, GEF, Log4J, Weka, JFreeChart                 #");
+        l.info("# Uses: Java5, GEF, Log4J                                   #");
         l.info("#                                                           #");
         l.info("#############################################################");
         l.info("#                                                           #");

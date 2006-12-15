@@ -1,6 +1,6 @@
 
-KNIME - the Konstanz Information Miner, version 1.1.0,
-(including WEKA and the WEKA integration plugin - ).
+KNIME - the Konstanz Information Miner, version 1.2.0pre,
+(including WEKA and the WEKA integration plugin).
 ============================================================
 
 Quickstart guide:
@@ -27,13 +27,13 @@ How to use additional plugins:
 
    - plugins
        |
-       - org.knime.chem_1.1.0
+       - org.knime.chem_1.1.2pre
             |
             - ...
        - ...
    - features
        |
-       - org.knime.chem_1.1.0
+       - org.knime.chem_1.1.2pre
             |
             - ...
   Copy the folders contained in the plugin archive to their destination
