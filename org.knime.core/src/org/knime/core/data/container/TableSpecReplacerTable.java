@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -101,6 +102,22 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
         m_newSpec.save(specWriteSettings);
         // will also close the stream.
         specWriteSettings.saveToXML(zipOut);
+    }
+    
+    /**
+     * Does nothing.
+     * @see KnowsRowCountTable#putIntoTableRepository(HashMap)
+     */
+    public void putIntoTableRepository(
+            final HashMap<Integer, ContainerTable> rep) {
+    }
+    
+    /**
+     * Does nothing.
+     * @see KnowsRowCountTable#removeFromTableRepository(HashMap)
+     */
+    public void removeFromTableRepository(
+            final HashMap<Integer, ContainerTable> rep) {
     }
     
     /**

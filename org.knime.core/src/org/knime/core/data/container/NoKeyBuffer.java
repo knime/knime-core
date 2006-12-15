@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
@@ -67,19 +68,20 @@ class NoKeyBuffer extends Buffer {
     }
     /**
      * For writing.
-     * @see Buffer#Buffer(int, int, java.util.HashMap)
+     * @see Buffer#Buffer(int, int, java.util.Map, java.util.Map)
      */
     NoKeyBuffer(final int maxRowsInMemory, 
-            final int bufferID, final HashMap<Integer, ContainerTable> tblRep) {
-        super(maxRowsInMemory, bufferID, tblRep);
+            final int bufferID, final Map<Integer, ContainerTable> tblRep,
+            final Map<Integer, ContainerTable> localTblRep) {
+        super(maxRowsInMemory, bufferID, tblRep, localTblRep);
     }
     
     /**
-     * @see Buffer#Buffer(File, File, DataTableSpec, InputStream, int, HashMap)
+     * @see Buffer#Buffer(File, File, DataTableSpec, InputStream, int, Map)
      */
     NoKeyBuffer(final File binFile, final File blobDir, 
             final DataTableSpec spec, final InputStream metaIn, 
-            final int bufferID, final HashMap<Integer, ContainerTable> tblRep) 
+            final int bufferID, final Map<Integer, ContainerTable> tblRep) 
             throws IOException {
         super(binFile, blobDir, spec, metaIn, bufferID, tblRep);
     }

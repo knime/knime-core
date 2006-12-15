@@ -27,7 +27,6 @@ package org.knime.core.data.container;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.def.DefaultRow;
 
 /**
  * Internal iterator class that concatenates two rows. The iterator assumes
@@ -78,11 +77,9 @@ class JoinTableIterator extends RowIterator {
         int sanityCount = 0;
         for (int i = 0; i < cells.length; i++) {
             if (m_flags[i]) {
-                cells[i] = ref.getCell(m_map[i]);
+                cells[i] = getUnwrappedCell(ref, m_map[i]);
             } else {
-                // TODO can we be sure that the m_map is sorted such that
-                // column swappings are not possible?
-                cells[i] = app.getCell(m_map[i]);
+                cells[i] = getUnwrappedCell(app, m_map[i]);
                 sanityCount++;
             }
         }
@@ -91,7 +88,12 @@ class JoinTableIterator extends RowIterator {
                     + "from file do not have the right count: " + sanityCount 
                     + " vs. " + app.getNumCells());
         }
-        return new DefaultRow(ref.getKey(), cells);
+        return new BlobSupportDataRow(ref.getKey(), cells);
+    }
+    
+    private static DataCell getUnwrappedCell(final DataRow row, final int i) {
+        return row instanceof BlobSupportDataRow 
+            ? ((BlobSupportDataRow)row).getRawCell(i) : row.getCell(i);
     }
 
 }

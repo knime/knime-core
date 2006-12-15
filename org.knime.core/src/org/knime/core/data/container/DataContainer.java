@@ -32,6 +32,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -48,7 +49,9 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
@@ -132,6 +135,12 @@ public class DataContainer implements RowAppender {
     /** The max values in each column, similar to m_minCells.
      */
     private DataCell[] m_maxCells;
+    
+    /** Global repository map, created lazily. */
+    private Map<Integer, ContainerTable> m_globalMap;
+    
+    /** Local repository map, created lazily. */
+    private Map<Integer, ContainerTable> m_localMap;
     
     /**
      * Opens the container so that rows can be added by
@@ -341,11 +350,13 @@ public class DataContainer implements RowAppender {
         }
         if (m_buffer == null) {
             m_buffer = m_bufferCreator.createBuffer(m_maxRowsInMemory, 
-                    createInternalBufferID(), getBufferRepository());
+                    createInternalBufferID(), getGlobalTableRepository(),
+                    getLocalTableRepository());
         }
         DataTableSpec finalSpec = createTableSpecWithRange();
         m_buffer.close(finalSpec);
         m_table = new ContainerTable(m_buffer);
+        getLocalTableRepository().put(m_table.getBufferID(), m_table);
         m_buffer = null;
         m_spec = null;
         m_keySet = null;
@@ -420,9 +431,12 @@ public class DataContainer implements RowAppender {
         }
         if (m_buffer == null) {
             int bufID = createInternalBufferID();
-            HashMap<Integer, ContainerTable> tableRep = getBufferRepository();
+            Map<Integer, ContainerTable> globalTableRep = 
+                getGlobalTableRepository();
+            Map<Integer, ContainerTable> localTableRep = 
+                getLocalTableRepository();
             m_buffer = m_bufferCreator.createBuffer(
-                    m_maxRowsInMemory, bufID, tableRep);
+                    m_maxRowsInMemory, bufID, globalTableRep, localTableRep);
             if (m_buffer == null) {
                 throw new NullPointerException(
                         "Implementation error, must not return a null buffer.");
@@ -488,12 +502,32 @@ public class DataContainer implements RowAppender {
      * If m_buffer needs to serialize a blob, it will check if any other buffer
      * has written the blob already and then reference to this buffer rather 
      * than writing out the blob again.
+     * <p>If used along with the {@link ExecutionContext}, this method
+     * returns the global table repository (global = in the context of
+     * the current workflow).
      * <p>This implementation does not support sophisticated blob serialization.
      * It will return a <code>new HashMap&lt;Integer, Buffer&gt;()</code>.
      * @return The map bufferID to Buffer.
+     * @see #getLocalTableRepository()
      */
-    protected HashMap<Integer, ContainerTable> getBufferRepository() {
-        return new HashMap<Integer, ContainerTable>();
+    protected Map<Integer, ContainerTable> getGlobalTableRepository() {
+        if (m_globalMap == null) {
+            m_globalMap = new HashMap<Integer, ContainerTable>();
+        }
+        return m_globalMap;
+    }
+    
+    /**
+     * Get the local repository. Overridden in 
+     * {@link BufferedDataContainer#getLocalTableRepository()}
+     * @return A local repository to which tables are added that have been
+     * created during the node's execution.
+     */
+    protected Map<Integer, ContainerTable> getLocalTableRepository() {
+        if (m_localMap == null) {
+            m_localMap = new HashMap<Integer, ContainerTable>();
+        }
+        return m_localMap;
     }
     
     /** Adds another value to the list of possible values in a certain column.
@@ -644,7 +678,9 @@ public class DataContainer implements RowAppender {
         } else {
             exec.setMessage("Archiving table");
             e = exec.createSubProgress(0.8);
-            buf = new Buffer(0, -1, new HashMap<Integer, ContainerTable>());
+            buf = new Buffer(0, -1, 
+                    new HashMap<Integer, ContainerTable>(),
+                    new HashMap<Integer, ContainerTable>());
             int rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;
@@ -724,7 +760,7 @@ public class DataContainer implements RowAppender {
      */
     protected static ContainerTable readFromZipDelayed(final File zipFile, 
             final DataTableSpec spec, final int bufferID, 
-            final HashMap<Integer, ContainerTable> bufferRep) {
+            final Map<Integer, ContainerTable> bufferRep) {
         CopyOnAccessTask t = new CopyOnAccessTask(
                 zipFile, spec, bufferID, bufferRep, new BufferCreator());
         return readFromZipDelayed(t, spec);
@@ -796,7 +832,7 @@ public class DataContainer implements RowAppender {
          */
         Buffer createBuffer(final File binFile, final File blobDir, 
                 final DataTableSpec spec, final InputStream metaIn, 
-                final int bufID, final HashMap<Integer, ContainerTable> tblRep) 
+                final int bufID, final Map<Integer, ContainerTable> tblRep) 
             throws IOException {
             return new Buffer(binFile, blobDir, spec, metaIn, bufID, tblRep);
         }
@@ -804,12 +840,15 @@ public class DataContainer implements RowAppender {
         /** Creates buffer for writing (adding of rows). 
          * @param rowsInMemory The number of rows being kept in memory.
          * @param bufferID The buffer's id used for blob (de)serialization.
-         * @param tableRep Table repository for blob (de)serialization.
+         * @param globalTableRep Table repository for blob (de)serialization.
+         * @param localTableRep Table repository for blob (de)serialization.
          * @return A newly created buffer. 
          */
         Buffer createBuffer(final int rowsInMemory, final int bufferID,
-                final HashMap<Integer, ContainerTable> tableRep) {
-            return new Buffer(rowsInMemory, bufferID, tableRep);
+                final Map<Integer, ContainerTable> globalTableRep,
+                final Map<Integer, ContainerTable> localTableRep) {
+            return new Buffer(
+                    rowsInMemory, bufferID, globalTableRep, localTableRep);
         }
         
     }

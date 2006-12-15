@@ -74,12 +74,13 @@ import org.knime.core.data.container.TableSpecReplacerTable;
  * reponsible to report progress information. See the super class for more 
  * information.
  * 
- * @author wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class ExecutionContext extends ExecutionMonitor {
 
     private final Node m_node;
-    private final HashMap<Integer, ContainerTable> m_tableRepository;
+    private final HashMap<Integer, ContainerTable> m_globalTableRepository;
+    private final HashMap<Integer, ContainerTable> m_localTableRepository;
 
     /** Creates new object based on a progress monitor and a node as parent
      * of any created buffered data table. 
@@ -109,7 +110,8 @@ public class ExecutionContext extends ExecutionMonitor {
             throw new NullPointerException("Argument must not be null.");
         }
         m_node = node;
-        m_tableRepository = tableRepository;
+        m_globalTableRepository = tableRepository;
+        m_localTableRepository = new HashMap<Integer, ContainerTable>();
     }
 
     /**
@@ -204,8 +206,8 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataContainer createDataContainer(final DataTableSpec spec,
             final boolean initDomain) {
-        return new BufferedDataContainer(
-                spec, initDomain, m_node, m_tableRepository);
+        return new BufferedDataContainer(spec, initDomain, m_node, 
+                m_globalTableRepository, m_localTableRepository);
     }
 
     /**
@@ -264,7 +266,8 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public ExecutionContext createSubExecutionContext(final double maxProg) {
         NodeProgressMonitor subProgress = createSubProgressMonitor(maxProg);
-        return new ExecutionContext(subProgress, m_node, m_tableRepository);
+        return new ExecutionContext(subProgress, m_node, 
+                m_globalTableRepository);
     }
     
     /**
@@ -285,6 +288,18 @@ public class ExecutionContext extends ExecutionMonitor {
             final double maxProg) {
         NodeProgressMonitor subProgress = 
             createSilentSubProgressMonitor(maxProg);
-        return new ExecutionContext(subProgress, m_node, m_tableRepository);
+        return new ExecutionContext(subProgress, m_node, 
+                m_globalTableRepository);
+    }
+    
+    /**
+     * Get reference to the local table repository. It contains 
+     * <code>ContainerTable</code> objects that have been created during the
+     * execution of a node. Some of which will be put into the global 
+     * repository after execution.
+     * @return The local table repository.
+     */
+    HashMap<Integer, ContainerTable> getLocalTableRepository() {
+        return m_localTableRepository;
     }
 }

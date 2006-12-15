@@ -27,7 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -57,7 +57,7 @@ final class CopyOnAccessTask {
     /** The buffer's id used for blob (de)serialization. */
     private final int m_bufferID;
     /** Repository of tables in the workflow for blob (de)serialization. */
-    private final HashMap<Integer, ContainerTable> m_tableRep;
+    private final Map<Integer, ContainerTable> m_tableRep;
     /** To instantiate the buffer object. */
     private final BufferCreator m_bufferCreator;
 
@@ -71,7 +71,7 @@ final class CopyOnAccessTask {
      * @param creator To instantiate the buffer object.
      */
     CopyOnAccessTask(final File file, final DataTableSpec spec, 
-            final int bufferID, final HashMap<Integer, ContainerTable> tblRep,
+            final int bufferID, final Map<Integer, ContainerTable> tblRep,
             final BufferCreator creator) {
         m_file = file;
         m_spec = spec;
@@ -179,7 +179,7 @@ final class CopyOnAccessTask {
     /** Get table repository in workflow for blob (de)serialization.
      * @return table repository reference
      */
-    HashMap<Integer, ContainerTable> getTableRepository() {
+    Map<Integer, ContainerTable> getTableRepository() {
         return m_tableRep;
     }
     

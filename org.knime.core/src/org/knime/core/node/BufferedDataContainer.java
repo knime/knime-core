@@ -25,7 +25,7 @@
 package org.knime.core.node;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
@@ -86,7 +86,8 @@ import org.knime.core.node.Node.MemoryPolicy;
 public class BufferedDataContainer extends DataContainer {
     
     private final Node m_node;
-    private final HashMap<Integer, ContainerTable> m_tableRepository;
+    private final Map<Integer, ContainerTable> m_globalTableRepository;
+    private final Map<Integer, ContainerTable> m_localTableRepository;
     private BufferedDataTable m_resultTable; 
 
     /**
@@ -95,15 +96,20 @@ public class BufferedDataContainer extends DataContainer {
      * @param initDomain Whether or not the spec's domain shall be used for
      * initialization.
      * @param node The owner of the outcome table.
-     * @param tableRepository The table repository for blob (de)serialization.
+     * @param globalTableRepository 
+     *        The global (WFM) table repository for blob (de)serialization.
+     * @param localTableRepository 
+     *        The local (Node) table repository for blob (de)serialization.
      * @see DataContainer#DataContainer(DataTableSpec, boolean)
      */
     BufferedDataContainer(final DataTableSpec spec, final boolean initDomain, 
             final Node node, 
-            final HashMap<Integer, ContainerTable> tableRepository) {
+            final Map<Integer, ContainerTable> globalTableRepository,
+            final Map<Integer, ContainerTable> localTableRepository) {
         super(spec, initDomain, getMaxCellsInMemory(node));
         m_node = node;
-        m_tableRepository = tableRepository;
+        m_globalTableRepository = globalTableRepository;
+        m_localTableRepository = localTableRepository;
     }
     
     /** Check the node if its outport memory policy says we should keep 
@@ -128,11 +134,22 @@ public class BufferedDataContainer extends DataContainer {
         return BufferedDataTable.generateNewID();
     }
     
-    /** @see org.knime.core.data.container.DataContainer#getBufferRepository() 
+    /** Returns the table repository from this workflow.
+     * @see DataContainer#getGlobalTableRepository() 
      */
     @Override
-    protected HashMap<Integer, ContainerTable> getBufferRepository() {
-        return m_tableRepository;
+    protected Map<Integer, ContainerTable> getGlobalTableRepository() {
+        return m_globalTableRepository;
+    }
+    
+    /**
+     * Returns the local repository of tables. It contains tables that have
+     * been created during the execution of a node.
+     * @see DataContainer#getLocalTableRepository()
+     */
+    @Override
+    protected Map<Integer, ContainerTable> getLocalTableRepository() {
+        return m_localTableRepository;
     }
 
     /**
@@ -164,7 +181,7 @@ public class BufferedDataContainer extends DataContainer {
      */
     protected static ContainerTable readFromZipDelayed(
             final File zipFile, final DataTableSpec spec, final int bufID, 
-            final HashMap<Integer, ContainerTable> bufferRep) {
+            final Map<Integer, ContainerTable> bufferRep) {
         return DataContainer.readFromZipDelayed(
                 zipFile, spec, bufID, bufferRep);
     }

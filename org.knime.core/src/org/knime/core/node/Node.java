@@ -1197,6 +1197,34 @@ public final class Node {
             }
         }
     }
+    
+    /** Enumerates the output tables and puts them into the global worflow 
+     * repository of tables. This method is basically delegates from the
+     * NodeContainer class to access a package-scope method in 
+     * BufferedDataTable.
+     * @param rep The global repository.
+     */
+    public void putOutputTablesIntoGlobalRepository(
+            final HashMap<Integer, ContainerTable> rep) {
+        for (DataOutPort p : m_outDataPorts) {
+            BufferedDataTable t = p.getBufferedDataTable();
+            if (t != null) {
+                t.putIntoTableRepository(rep);
+            }
+        }
+    }
+    
+    /** Delegate method to allow access to the (package scope) method
+     * {@link ExecutionContext#getLocalTableRepository()}. Called after
+     * execution has finished to clean up temporary tables.
+     * @param c To access.
+     * @return Its local table repository.
+     */
+    public static HashMap<Integer, ContainerTable> 
+        getLocalTableRepositoryFromContext(final ExecutionContext c) {
+        return c.getLocalTableRepository();
+    }
+
 
     /**
      * Deletes and temporary rescources associated with this node.

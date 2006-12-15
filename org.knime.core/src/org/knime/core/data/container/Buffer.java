@@ -61,7 +61,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
-import org.knime.core.data.def.DefaultRow;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -207,8 +206,16 @@ class Buffer {
     private final int m_bufferID;
     
     /** A map with other buffers that may have written certain blob cells.
-     * We reference them by using the bufferID that is written to the file. */
-    private final HashMap<Integer, ContainerTable> m_tableRepository;
+     * We reference them by using the bufferID that is written to the file. 
+     * This member is a reference to the (WorkflowManager-)global table
+     * repository. */
+    private final Map<Integer, ContainerTable> m_globalRepository;
+    
+    /** A map with other buffers that may have written certain blob cells.
+     * We reference them by using the bufferID that is written to the file. 
+     * This temporary repository is exists only while a node is being
+     * executed. It is only important while writing to this buffer. */
+    private Map<Integer, ContainerTable> m_localRepository;
     
     /** Number of open file input streams on m_binFile. */
     private int m_nrOpenInputStreams;
@@ -225,7 +232,7 @@ class Buffer {
     private int m_size;
     
     /** the list that keeps up to m_maxRowsInMem in memory. */
-    private List<DataRow> m_list;
+    private List<BlobSupportDataRow> m_list;
     
     private int[] m_indicesOfBlobInColumns;
     
@@ -264,18 +271,21 @@ class Buffer {
      * @param maxRowsInMemory Maximum numbers of rows that are kept in memory 
      *        until they will be subsequent written to the temp file. (0 to 
      *        write immediately to a file)
-     * @param tableRep Table repository for blob (de)serialization.
+     * @param globalRep Table repository for blob (de)serialization (read only).
+     * @param localRep Local table repository for blob (de)serialization.
      * @param bufferID The id of this buffer used for blob (de)serialization.
      */
     Buffer(final int maxRowsInMemory, final int bufferID, 
-            final HashMap<Integer, ContainerTable> tableRep) {
+            final Map<Integer, ContainerTable> globalRep,
+            final Map<Integer, ContainerTable> localRep) {
         assert (maxRowsInMemory >= 0);
         m_maxRowsInMem = maxRowsInMemory;
-        m_list = new LinkedList<DataRow>();
+        m_list = new LinkedList<BlobSupportDataRow>();
         m_openIteratorSet = new HashSet<WeakReference<FromFileIterator>>();
         m_size = 0;
         m_bufferID = bufferID;
-        m_tableRepository = tableRep;
+        m_globalRepository = globalRep;
+        m_localRepository = localRep;
     }
     
     /** Creates new buffer for <strong>reading</strong>. The 
@@ -293,12 +303,12 @@ class Buffer {
      */
     Buffer(final File binFile, final File blobDir, final DataTableSpec spec, 
             final InputStream metaIn, final int bufferID, 
-            final HashMap<Integer, ContainerTable> tblRep) throws IOException {
+            final Map<Integer, ContainerTable> tblRep) throws IOException {
         m_spec = spec;
         m_binFile = binFile;
         m_blobDir = blobDir;
         m_bufferID = bufferID;
-        m_tableRepository = tblRep;
+        m_globalRepository = tblRep;
         if (metaIn == null) {
             throw new IOException("No meta information given (null)");
         }
@@ -357,22 +367,129 @@ class Buffer {
      * Adds a row to the buffer. The rows structure is not validated against
      * the table spec that was given in the constructor. This should have been
      * done in the caller class <code>DataContainer</code>.
-     * @param row The row to be added.
+     * @param r The row to be added.
      */
-    public void addRow(final DataRow row) {
+    @SuppressWarnings("unchecked")
+    public void addRow(final DataRow r) {
+        try {
+            BlobSupportDataRow row = saveBlobs(r);
+            m_list.add(row);
+            incrementSize();
+            // if size is violated
+            if (m_list.size() > m_maxRowsInMem) {
+                ensureTempFileExists();
+                if (m_outStream == null) {
+                    m_outStream = initOutFile(new BufferedOutputStream(
+                            new FileOutputStream(m_binFile)));
+                }
+                while (!m_list.isEmpty()) {
+                    BlobSupportDataRow firstRow = m_list.remove(0);
+                    writeRow(firstRow, m_outStream); // write it to the file
+                }
+                // write next rows directly to file  
+                m_maxRowsInMem = 0;
+            }
+        } catch (IOException ioe) {
+            String fileName = (m_binFile != null 
+                    ? "\"" + m_binFile.getName() + "\"" : "");
+            throw new RuntimeException(
+                    "Unable to write to file " + fileName , ioe);
+        }
+        assert (m_list.size() <= m_maxRowsInMem);
+    } // addRow(DataRow)
+    
+    private BlobSupportDataRow saveBlobs(final DataRow row) throws IOException {
+        final int cellCount = row.getNumCells();
+        DataCell[] cellCopies = null;
+        if (!(row instanceof BlobSupportDataRow)) {
+            cellCopies = new DataCell[cellCount];
+            for (int i = 0; i < cellCount; i++) {
+                cellCopies[i] = row.getCell(i);
+            }
+        }
         // take ownership of unassigned blob cells (if any)
-        for (int col = 0; col < row.getNumCells(); col++) {
-            DataCell cell = row.getCell(col);
-            if (cell instanceof BlobDataCell) {
-                m_containsBlobs = true;
-                BlobDataCell c = (BlobDataCell)cell;
-                BlobAddress ad = c.getBlobAddress();
+        for (int col = 0; col < cellCount; col++) {
+            DataCell cell = row instanceof BlobSupportDataRow 
+                ? ((BlobSupportDataRow)row).getRawCell(col) 
+                        : cellCopies[col];
+            BlobWrapperDataCell wc;
+            boolean mustChangeRow = false;
+            if (cell instanceof BlobWrapperDataCell) {
+                assert row instanceof BlobSupportDataRow;
+                wc = (BlobWrapperDataCell)cell;
+                BlobAddress ad = wc.getAddress();
+                assert ad != null : "Blob address must not be null in wrapper";
+                if (!m_globalRepository.containsKey(ad.getBufferID())) {
+                    BlobAddress rewrite = new BlobAddress(m_bufferID, col);
+                    if (m_indicesOfBlobInColumns == null) {
+                        m_indicesOfBlobInColumns = new int[cellCount];
+                    }
+                    ContainerTable b = m_localRepository.get(ad.getBufferID());
+                    if (b != null) {
+                        int indexBlobInCol = m_indicesOfBlobInColumns[col]++;
+                        rewrite.setIndexOfBlobInColumn(indexBlobInCol);
+                        File source = b.getBuffer().getBlobFile(
+                                ad.getIndexOfBlobInColumn(), 
+                                ad.getColumn(), false);
+                        File dest = getBlobFile(indexBlobInCol, col, true);
+                        FileUtil.copy(source, dest);
+                    } else {
+                        BlobDataCell bc = wc.getCell();
+                        writeBlobDataCell(bc, rewrite, 
+                                getSerializerForDataCell(bc.getClass()));
+                    }
+                    wc = new BlobWrapperDataCell(
+                            this, rewrite, wc.getBlobClass());
+                    mustChangeRow = true;
+                }
+            } else if (cell instanceof BlobDataCell) {
+                BlobDataCell bc = (BlobDataCell)cell;
+                BlobAddress ad = bc.getBlobAddress();
                 // need to set ownership if this blob was not assigned yet
                 // or has been assigned to an unlinked buffer
-                if (ad == null || (ad.getBufferID() == -1 
-                        && m_bufferID != -1)) {
-                    c.setBlobAddress(new BlobAddress(m_bufferID, col));
+                Class<? extends DataCell> cl = bc.getClass();
+                if (ad == null 
+                        || !m_globalRepository.containsKey(ad.getBufferID())) {
+                    BlobAddress rewrite = new BlobAddress(m_bufferID, col);
+                    if (bc.getBlobAddress() == null) {
+                        bc.setBlobAddress(rewrite);
+                    }
+                    wc = new BlobWrapperDataCell(this, rewrite, cl);
+                    ensureBlobDirExists();
+                    if (m_indicesOfBlobInColumns == null) {
+                        m_indicesOfBlobInColumns = new int[cellCount];
+                    }
+                    ContainerTable b = m_localRepository.get(
+                            bc.getBlobAddress().getBufferID());
+                    if (b != null) {
+                        int indexBlobInCol = m_indicesOfBlobInColumns[col]++;
+                        rewrite.setIndexOfBlobInColumn(indexBlobInCol);
+                        File source = b.getBuffer().getBlobFile(
+                                ad.getIndexOfBlobInColumn(), 
+                                ad.getColumn(), false);
+                        File dest = getBlobFile(indexBlobInCol, col, true);
+                        FileUtil.copy(source, dest);
+                    } else {
+                        writeBlobDataCell(bc, rewrite, 
+                                getSerializerForDataCell(bc.getClass()));
+                    }
+                } else {
+                    ContainerTable o = m_globalRepository.get(ad.getBufferID());
+                    wc = new BlobWrapperDataCell(o.getBuffer(), ad, cl);
                 }
+                mustChangeRow = true;
+            } else {
+                wc = null;
+            }
+            if (mustChangeRow) {
+                m_containsBlobs = true;
+                if (cellCopies == null) {
+                    cellCopies = new DataCell[cellCount];
+                    for (int i = 0; i < cellCount; i++) {
+                        cellCopies[i] = ((BlobSupportDataRow)row).getRawCell(i);
+                    }
+                }
+                cellCopies[col] = wc;
             }
         }
         if (row.getKey().getId() instanceof BlobDataCell) {
@@ -380,31 +497,9 @@ class Buffer {
                     "Row keys must not wrap blob data cells (of class \""
                         + row.getKey().getId().getClass().getName() + "\"");
         }
-        m_list.add(row);
-        incrementSize();
-        // if size is violated
-        if (m_list.size() > m_maxRowsInMem) {
-            try {
-                ensureTempFileExists();
-                if (m_outStream == null) {
-                    m_outStream = initOutFile(new BufferedOutputStream(
-                            new FileOutputStream(m_binFile)));
-                }
-                while (!m_list.isEmpty()) {
-                    DataRow firstRow = m_list.remove(0);
-                    writeRow(firstRow, m_outStream); // write it to the file
-                }
-                // write next rows directly to file  
-                m_maxRowsInMem = 0;
-            } catch (IOException ioe) {
-                String fileName = (m_binFile != null 
-                        ? "\"" + m_binFile.getName() + "\"" : "");
-                throw new RuntimeException(
-                        "Unable to write to file " + fileName , ioe);
-            }
-        }
-        assert (m_list.size() <= m_maxRowsInMem);
-    } // addRow(DataRow)
+        return cellCopies == null ? (BlobSupportDataRow)row 
+                : new BlobSupportDataRow(row.getKey(), cellCopies);
+    }
     
     /** Creates temp file (m_binFile) and adds this buffer to shutdown hook. */
     private void ensureTempFileExists() throws IOException {
@@ -431,7 +526,8 @@ class Buffer {
         // everything is in the list, i.e. in memory
         if (m_outStream == null) {
             // disallow modification
-            List<DataRow> newList = Collections.unmodifiableList(m_list);
+            List<BlobSupportDataRow> newList = 
+                Collections.unmodifiableList(m_list);
             m_list = newList;
         } else {
             try {
@@ -448,6 +544,7 @@ class Buffer {
                         + m_binFile.getName() + "\"", ioe); 
             }
         }
+        m_localRepository = null;
     } // close()
     
     /**
@@ -573,11 +670,20 @@ class Buffer {
     }
     
     /** Get reference to the table repository that this buffer was initially
-     * instantiated with. Used fro blob reading/writing.
-     * @return table repository.
+     * instantiated with. Used for blob reading/writing.
+     * @return (Worflow-) global table repository.
      */
-    HashMap<Integer, ContainerTable> getTableRepository() {
-        return m_tableRepository;
+    Map<Integer, ContainerTable> getGlobalRepository() {
+        return m_globalRepository;
+    }
+    
+    /** Get reference to the local table repository that this buffer was 
+     * initially instantiated with. Used for blob reading/writing. This
+     * may be null.
+     * @return (Worflow-) global table repository.
+     */
+    Map<Integer, ContainerTable> getLocalRepository() {
+        return m_localRepository;
     }
     
     /**
@@ -585,17 +691,17 @@ class Buffer {
      * is called from <code>addRow(DataRow)</code>.
      * @throws IOException If an IO error occurs while writing to the file.
      */
-    private void writeRow(final DataRow row, 
+    private void writeRow(final BlobSupportDataRow row, 
             final DCObjectOutputStream outStream) throws IOException {
         RowKey id = row.getKey();
         writeRowKey(id, outStream);
         for (int i = 0; i < row.getNumCells(); i++) {
-            DataCell cell = row.getCell(i);
+            DataCell cell = row.getRawCell(i);
             if (m_indicesOfBlobInColumns == null 
                     && cell instanceof BlobDataCell) {
                 m_indicesOfBlobInColumns = new int[row.getNumCells()];
             }
-            writeDataCell(cell, outStream, i);
+            writeDataCell(cell, outStream);
         }
         outStream.writeChar(ROW_SEPARATOR);
         outStream.reset();
@@ -610,7 +716,7 @@ class Buffer {
     void writeRowKey(final RowKey key, 
             final DCObjectOutputStream outStream) throws IOException {
         DataCell id = key.getId();
-        writeDataCell(id, outStream, -1);
+        writeDataCell(id, outStream);
     }
     
     /** Reads a row key from a string. Is overridden in {@link NoKeyBuffer} 
@@ -631,23 +737,24 @@ class Buffer {
      * @throws IOException
      */
     private void writeDataCell(final DataCell cell, 
-            final DCObjectOutputStream outStream, 
-            final int column) throws IOException {
+            final DCObjectOutputStream outStream) throws IOException {
         if (cell.isMissing()) {
             outStream.writeByte(BYTE_TYPE_MISSING);
             return;
         }
-        DataCellSerializer<DataCell> ser = getSerializerForDataCell(cell);
-        Byte identifier = m_typeShortCuts.get(cell.getClass());
-        boolean isBlob = cell instanceof BlobDataCell;
+        boolean isBlob = cell instanceof BlobWrapperDataCell;
+        Class<? extends DataCell> cellClass = isBlob 
+        ? ((BlobWrapperDataCell)cell).getBlobClass() 
+                : cell.getClass();
+        DataCellSerializer<DataCell> ser = getSerializerForDataCell(cellClass);
+        Byte identifier = m_typeShortCuts.get(cellClass);
         // DataCell is datacell-serializable
         if (ser != null || isBlob) {
             // memorize type if it does not exist
             outStream.writeByte(identifier);
             if (isBlob) {
-                BlobDataCell bc = (BlobDataCell)cell;
-                BlobAddress ad = writeBlobDataCell(bc, column);
-                outStream.writeBlobAddress(ad);
+                BlobWrapperDataCell bc = (BlobWrapperDataCell)cell;
+                outStream.writeBlobAddress(bc.getAddress());
             } else {
                 outStream.writeDataCell(ser, cell);
             }
@@ -660,12 +767,14 @@ class Buffer {
     
     /** Get the serializer object to be used for writing the argument cell
      * or <code>null</code> if it needs to be java-serialized.
-     * @param cell The cell to write out.
+     * @param cellClass The cell's class to write out.
      * @return The serializer to use or <code>null</code>.
      */
     private DataCellSerializer<DataCell> getSerializerForDataCell(
-            final DataCell cell) throws IOException {
-        Class<? extends DataCell> cellClass = cell.getClass();
+            final Class<? extends DataCell> cellClass) throws IOException {
+        if (m_typeShortCuts == null) {
+            m_typeShortCuts = new HashMap<Class<? extends DataCell>, Byte>();
+        }
         @SuppressWarnings("unchecked")
         DataCellSerializer<DataCell> serializer = 
             (DataCellSerializer<DataCell>)DataType.getCellSerializer(
@@ -677,7 +786,7 @@ class Buffer {
                 "Too many different cell implemenations");
             }
             Byte identifier = (byte)(size + BYTE_TYPE_START);
-            m_typeShortCuts.put(cell.getClass(), identifier);
+            m_typeShortCuts.put(cellClass, identifier);
         }
         return serializer;
     }
@@ -701,7 +810,16 @@ class Buffer {
         boolean isBlob = BlobDataCell.class.isAssignableFrom(type);
         if (isBlob) {
             BlobAddress address = inStream.readBlobAddress();
-            return readBlobDataCell(address, type);
+            Buffer blobBuffer = this;
+            if (address.getBufferID() != m_bufferID) {
+                ContainerTable cnTbl = m_globalRepository.get(address.getBufferID());
+                if (cnTbl == null) {
+                    throw new IOException(
+                            "Unable to retrieve table that owns the blob cell");
+                }
+                blobBuffer = cnTbl.getBuffer();
+            }
+            return new BlobWrapperDataCell(blobBuffer, address, type);
         } 
         if (isSerialized) {
             try {
@@ -761,41 +879,41 @@ class Buffer {
         }
     } // readDataCellVersion1(DCObjectInputStream)
     
-    private BlobAddress writeBlobDataCell(final BlobDataCell cell, 
-            final int column) throws IOException {
-        BlobAddress ba = cell.getBlobAddress();
-        // return immediately if the buffer has been written already
-        // make sure that this writing process is not writing to an output
-        // zip file (i.e. m_bufferID = -1). If so, make sure we write it again.
-        if (m_bufferID != -1 && ba.getBufferID() != -1 
-                && cell.hasBlobBeenWritten()) {
-            // has been written previously (may be by another buffer)
-            return ba;
-        }
-        // blobs hasn't been previously written
-        boolean mustWriteMySelf = m_bufferID == ba.getBufferID();
-        // this is a unlinked table (like in the table writer node)
-        mustWriteMySelf |= m_bufferID == -1 && m_bufferID != ba.getBufferID();
-        // the blob is read from a unlinked table (table reader node)
-        mustWriteMySelf |= ba.getBufferID() == -1 && m_bufferID > 0;
-        DataCellSerializer<DataCell> ser = getSerializerForDataCell(cell);
-        int blobBufferID = ba.getBufferID();
-        if (!mustWriteMySelf) {
-            ContainerTable cnTbl = m_tableRepository.get(blobBufferID);
-            if (cnTbl == null) {
-                throw new IOException(
-                        "Unable to retrieve table that owns the blob cell");
-            }
-            Buffer blobBuffer = cnTbl.getBuffer();
-            blobBuffer.writeBlobDataCell(cell, ba, ser);
-        } else {
-            if (m_bufferID != blobBufferID) {
-                ba = new BlobAddress(m_bufferID, column);
-            }
-            writeBlobDataCell(cell, ba, ser);
-        }
-        return ba;
-    }
+//    private BlobAddress writeBlobDataCell(final BlobDataCell cell, 
+//            final int column) throws IOException {
+//        BlobAddress ba = cell.getBlobAddress();
+//        // return immehttp://www.spiegel.de/diately if the buffer has been written already
+//        // make sure that this writing process is not writing to an output
+//        // zip file (i.e. m_bufferID = -1). If so, make sure we write it again.
+//        if (m_bufferID != -1 && ba.getBufferID() != -1 
+//                && cell.hasBlobBeenWritten()) {
+//            // has been written previously (may be by another buffer)
+//            return ba;
+//        }
+//        // blobs hasn't been previously written
+//        boolean mustWriteMySelf = m_bufferID == ba.getBufferID();
+//        // this is a unlinked table (like in the table writer node)
+//        mustWriteMySelf |= m_bufferID == -1 && m_bufferID != ba.getBufferID();
+//        // the blob is read from a unlinked table (table reader node)
+//        mustWriteMySelf |= ba.getBufferID() == -1 && m_bufferID > 0;
+//        DataCellSerializer<DataCell> ser = getSerializerForDataCell(cell);
+//        int blobBufferID = ba.getBufferID();
+//        if (!mustWriteMySelf) {
+//            ContainerTable cnTbl = m_globalRepository.get(blobBufferID);
+//            if (cnTbl == null) {
+//                throw new IOException(
+//                        "Unable to retrieve table that owns the blob cell");
+//            }
+//            Buffer blobBuffer = cnTbl.getBuffer();
+//            blobBuffer.writeBlobDataCell(cell, ba, ser);
+//        } else {
+//            if (m_bufferID != blobBufferID) {
+//                ba = new BlobAddress(m_bufferID, column);
+//            }
+//            writeBlobDataCell(cell, ba, ser);
+//        }
+//        return ba;
+//    }
     
     private void writeBlobDataCell(final BlobDataCell cell, final BlobAddress a,
             final DataCellSerializer<DataCell> ser) throws IOException {
@@ -830,11 +948,18 @@ class Buffer {
         }
     }
     
-    private DataCell readBlobDataCell(final BlobAddress blobAddress, 
+    /** 
+     * Reads the blob from the given blob address.
+     * @param blobAddress The address to read from.
+     * @param cl The expected class.
+     * @return The blob cell being read.
+     * @throws IOException If that fails.
+     */
+    BlobDataCell readBlobDataCell(final BlobAddress blobAddress, 
             final Class<? extends DataCell> cl) throws IOException {
         int blobBufferID = blobAddress.getBufferID();
         if (blobBufferID != m_bufferID) {
-            ContainerTable cnTbl = m_tableRepository.get(blobBufferID);
+            ContainerTable cnTbl = m_globalRepository.get(blobBufferID);
             if (cnTbl == null) {
                 throw new IOException(
                         "Unable to retrieve table that owns the blob cell");
@@ -852,11 +977,11 @@ class Buffer {
         try {
             if (ser != null) {
                 inStream = new DataInputStream(in);
-                DataCell c = ser.deserialize((DataInput)inStream);
                 // the DataType class will reject Serializer that do not have
                 // the appropriate return type
-                assert c instanceof BlobDataCell : "Did not read blob cell.";
-                ((BlobDataCell)c).setBlobAddress(blobAddress);
+                BlobDataCell c = 
+                    (BlobDataCell)ser.deserialize((DataInput)inStream);
+                c.setBlobAddress(blobAddress);
                 return c;
             } else {
                 inStream = new PriorityGlobalObjectInputStream(in);
@@ -898,7 +1023,6 @@ class Buffer {
      */
     private DCObjectOutputStream initOutFile(
             final OutputStream outStream) throws IOException {
-        m_typeShortCuts = new HashMap<Class<? extends DataCell>, Byte>();
         return new DCObjectOutputStream(new GZIPOutputStream(outStream));
     }
     
@@ -1041,7 +1165,7 @@ class Buffer {
             DCObjectOutputStream outStream = 
                 initOutFile(new NonClosableZipOutputStream(zipOut));
             int count = 1;
-            for (DataRow row : m_list) {
+            for (BlobSupportDataRow row : m_list) {
                 exec.setProgress(count / (double)size(), "Writing row " 
                         + count + " (\"" + row.getKey() + "\")");
                 exec.checkCanceled();
@@ -1244,7 +1368,7 @@ class Buffer {
                     throw new IOException("Exptected end of row character, " 
                             + "got '" + eoRow + "'");
                 }
-                return new DefaultRow(key, cells);
+                return new BlobSupportDataRow(key, cells);
             } catch (Exception ioe) {
                 throw new RuntimeException("Cannot read line "  
                     + (m_pointer + 1) + " from file \"" 
@@ -1292,7 +1416,7 @@ class Buffer {
      */
     private class FromListIterator extends RowIterator {
         
-        private Iterator<DataRow> m_it = m_list.iterator();
+        private Iterator<BlobSupportDataRow> m_it = m_list.iterator();
 
         /**
          * @see org.knime.core.data.RowIterator#hasNext()

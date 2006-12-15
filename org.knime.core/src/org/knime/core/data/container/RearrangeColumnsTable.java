@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import org.knime.core.data.DataCell;
@@ -46,6 +47,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -61,6 +63,9 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
  * @author wiswedel, University of Konstanz
  */
 public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(RearrangeColumnsTable.class);
     
     private static final RowKey DUMMY_KEY = new RowKey("non-existing");
     private static final DataRow DUMMY_ROW = 
@@ -399,25 +404,51 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
             m_appendTable.clear();
         }
     }
+
+    /**
+     * @see KnowsRowCountTable#putIntoTableRepository(HashMap)
+     */
+    public void putIntoTableRepository(
+            final HashMap<Integer, ContainerTable> rep) {
+        if (m_appendTable != null) {
+            rep.put(m_appendTable.getBufferID(), m_appendTable);
+        }
+    }
+    
+    /**
+     * @see KnowsRowCountTable#removeFromTableRepository(HashMap)
+     */
+    public void removeFromTableRepository(
+            final HashMap<Integer, ContainerTable> rep) {
+        if (m_appendTable != null) {
+            int id = m_appendTable.getBufferID();
+            if (rep.remove(id) == null) {
+                LOGGER.debug("Failed to remove appended table with id " 
+                        + id + " from global table repository.");
+            }
+        }
+    }
     
     /** Creates NoKeyBuffer objects rather then Buffer objects. */
     private static class NoKeyBufferCreator 
         extends DataContainer.BufferCreator {
 
-        /** @see DataContainer.BufferCreator#createBuffer(int, int, HashMap) */
+        /** @see DataContainer.BufferCreator#createBuffer(int, int, Map, Map) */
         @Override
         Buffer createBuffer(final int rowsInMemory, final int bufferID, 
-                final HashMap<Integer, ContainerTable> tableRep) {
-            return new NoKeyBuffer(rowsInMemory, bufferID, tableRep);
+                final Map<Integer, ContainerTable> globalTableRep, 
+                final Map<Integer, ContainerTable> localTableRep) {
+            return new NoKeyBuffer(
+                    rowsInMemory, bufferID, globalTableRep, localTableRep);
         }
         
         /** @see DataContainer.BufferCreator#createBuffer(
-         *       File, File, DataTableSpec, InputStream, int, HashMap)
+         *       File, File, DataTableSpec, InputStream, int, Map)
         */
         @Override
         Buffer createBuffer(final File binFile, final File blobDir, 
                 final DataTableSpec spec, final InputStream metaIn, 
-                final int bufID, final HashMap<Integer, ContainerTable> tblRep) 
+                final int bufID, final Map<Integer, ContainerTable> tblRep) 
             throws IOException {
             return new NoKeyBuffer(
                     binFile, blobDir, spec, metaIn, bufID, tblRep);

@@ -201,6 +201,18 @@ public final class BufferedDataTable implements DataTable {
         return null;
     }
     
+    /** Called after execution of node has finished to put the tables that
+     * are returned from the execute method into a global table repository.
+     * @param rep The repository from the workflow
+     */
+    void putIntoTableRepository(final HashMap<Integer, ContainerTable> rep) {
+        m_delegate.putIntoTableRepository(rep);
+        BufferedDataTable reference = getReferenceTable();
+        if (reference != null) {
+            reference.putIntoTableRepository(rep);
+        }
+    }
+    
     /**
      * @see org.knime.core.data.DataTable#getDataTableSpec()
      */
@@ -501,7 +513,19 @@ public final class BufferedDataTable implements DataTable {
          * @return The reference table or <code>null</code>.
          */
         BufferedDataTable getReferenceTable();
+        
+        /** Put this table into the global table repository. Called when
+         * execution finished.
+         * @param rep The workflow table repository.
+         */
+        void putIntoTableRepository(final HashMap<Integer, ContainerTable> rep);
+        
+        /** Remove this table from global table repository. Called when
+         * node is reset.
+         * @param rep The workflow table repository.
+         */
+        void removeFromTableRepository(
+                final HashMap<Integer, ContainerTable> rep);
     }
-
 }
 

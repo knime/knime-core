@@ -71,7 +71,6 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     ContainerTable(final Buffer buffer) {
         assert (buffer != null);
         m_buffer = buffer;
-        registerTable();
     }
     
     /**
@@ -83,7 +82,6 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     ContainerTable(final CopyOnAccessTask readTask, final DataTableSpec spec) {
         m_readTask = readTask;
         m_spec = spec;
-        registerTable();
     }
 
     /**
@@ -149,6 +147,25 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
     
     /**
+     * @see KnowsRowCountTable#putIntoTableRepository(HashMap)
+     */
+    public void putIntoTableRepository(
+            final HashMap<Integer, ContainerTable> rep) {
+        rep.put(getBufferID(), this);
+    }
+    
+    /**
+     * @see KnowsRowCountTable#removeFromTableRepository(HashMap)
+     */
+    public void removeFromTableRepository(
+            final HashMap<Integer, ContainerTable> rep) {
+        if (rep.remove(getBufferID()) == null) {
+            LOGGER.debug("Failed to remove container table with id " 
+                    + getBufferID() + " from global table repository.");
+        }
+    }
+    
+    /**
      * Do not call this method! It's used internally to delete temp files. 
      * Any iteration on the table will fail!
      * @see KnowsRowCountTable#clear()
@@ -156,11 +173,8 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     public void clear() {
         if (m_buffer != null) {
             m_buffer.clear();
-            if (m_buffer.getTableRepository().remove(m_buffer.getBufferID())
-                    == null) {
-                LOGGER.debug("Failed to remove container table with id "
-                        + m_buffer.getBufferID() + " from global repository");
-            }
+            // it may not even be in there
+            m_buffer.getGlobalRepository().remove(m_buffer.getBufferID());
         }
     }
     
@@ -197,21 +211,6 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
             m_spec = null;
             m_readTask = null;
         }
-    }
-    
-    /** Registers this table to the global table repository. */
-    private void registerTable() {
-        HashMap<Integer, ContainerTable> tblRep;
-        int bufferID;
-        if (m_readTask != null) {
-            tblRep = m_readTask.getTableRepository();
-            bufferID = m_readTask.getBufferID();
-        } else {
-            tblRep = m_buffer.getTableRepository();
-            bufferID = m_buffer.getBufferID();
-        }
-        assert !tblRep.containsKey(bufferID);
-        tblRep.put(bufferID, this);
     }
     
 }

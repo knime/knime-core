@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
@@ -898,6 +899,27 @@ public class NodeContainer implements NodeStateListener {
         ExecutionContext context = 
             new ExecutionContext(progMon, m_node, bufferRep);
         m_node.load(loadID, nodeFile, context, bufferRep);
+        putOutputTablesIntoGlobalRepository(context);
+    }
+    
+    /** Enumerates the output tables and puts them into the worflow global
+     * repository of tables.
+     * @param c The execution context containing the (so far) local tables.
+     */
+    private void putOutputTablesIntoGlobalRepository(final ExecutionContext c) {
+        HashMap<Integer, ContainerTable> globalRep = m_wfm.getTableRepository();
+        m_node.putOutputTablesIntoGlobalRepository(globalRep);
+        HashMap<Integer, ContainerTable> localRep = 
+            Node.getLocalTableRepositoryFromContext(c);
+        for (Map.Entry<Integer, ContainerTable> t : localRep.entrySet()) {
+            ContainerTable fromGlob = globalRep.get(t.getKey());
+            if (fromGlob == null) {
+                // not used globally
+                t.getValue().clear();
+            } else {
+                assert fromGlob == t.getValue();
+            }
+        }
     }
 
     /**
@@ -1097,7 +1119,10 @@ public class NodeContainer implements NodeStateListener {
                     // canceled - or after it has been finished of course
                     // NOTE: the return from this call may happen AFTER
                     // the state-changed event has already been processed!
-                    m_node.execute(new ExecutionContext(pm, m_node, bufferRep));
+                    ExecutionContext exec = 
+                        new ExecutionContext(pm, m_node, bufferRep);
+                    m_node.execute(exec);
+                    putOutputTablesIntoGlobalRepository(exec);
                 } catch (CanceledExecutionException ex) {
                     // This can happen if the node is queued in the thread pool
                     // and the whole workflow is canceled. Then a worker
