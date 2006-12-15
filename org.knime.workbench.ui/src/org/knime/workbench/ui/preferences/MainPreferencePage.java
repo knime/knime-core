@@ -89,11 +89,33 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
     @Override
     public boolean performOk() {
 
+        boolean result = super.performOk();
+
+        checkChanges();
+
+        return result;
+    }
+
+    /**
+     * Overriden to react when the users applies but then presses cancel.
+     * 
+     * @see org.eclipse.jface.preference.PreferencePage#performCancel()
+     */
+    @Override
+    public boolean performCancel() {
+        boolean result = super.performCancel();
+
+        checkChanges();
+
+        return result;
+    }
+
+    private void checkChanges() {
         boolean apply = m_apply;
         m_apply = false;
-        boolean result = super.performOk();
+
         if (apply) {
-            return result;
+            return;
         }
 
         // get the preference store for the UI plugin
@@ -102,7 +124,7 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         String currentTmpDir = store.getString(PreferenceConstants.P_TEMP_DIR);
         boolean tempDirChanged = !m_tempPath.equals(currentTmpDir);
         if (tempDirChanged) {
-            
+
             // reset the directory
             m_tempPath = currentTmpDir;
             MessageBox mb =
@@ -113,13 +135,11 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
                     + "first available after restarting the workbench.\n"
                     + "Do you want to restart the workbench now?");
             if (mb.open() != SWT.YES) {
-                return result;
+                return;
             }
 
             Workbench.getInstance().restart();
         }
-
-        return result;
     }
 
     /**
