@@ -29,6 +29,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 
 import javax.swing.JPanel;
+import javax.swing.border.EtchedBorder;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -59,9 +60,20 @@ public class SotaNodeDialog extends NodeDialogPane {
         super();
         
         m_settings = new SotaSettingsPanel(LOGGER);
+        JPanel outerSettingsPanel = new JPanel();
+        outerSettingsPanel.add(m_settings);
+        outerSettingsPanel.setBorder(new EtchedBorder());
+        
         m_filterSettings = new SotaFilterColumnPanel();
+        JPanel outerFilterPanel = new JPanel();
+        outerFilterPanel.add(m_filterSettings);
+        outerFilterPanel.setBorder(new EtchedBorder());        
+        
         m_hierarchicalFuzzyDataSettings = 
             new SotaHierarchicalFuzzySettings(LOGGER);
+        JPanel outerFuzzyPanel = new JPanel();
+        outerFuzzyPanel.add(m_hierarchicalFuzzyDataSettings);
+        outerFuzzyPanel.setBorder(new EtchedBorder());
         
         JPanel jp = new JPanel(new GridBagLayout());
         
@@ -69,21 +81,33 @@ public class SotaNodeDialog extends NodeDialogPane {
         c.gridx = 0;
         c.gridy = 0;
         c.gridwidth = 2;
-        c.fill = GridBagConstraints.BOTH;
         c.weightx = 10;
-        c.weighty = 10;
-        jp.add(m_filterSettings, c);
+        c.weighty = 10;        
+        c.fill = GridBagConstraints.BOTH;
+        c.insets = new Insets(10, 10, 0, 10);
+        jp.add(outerFilterPanel, c);
 
         c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 1;
+        c.weightx = 10;
+        c.weighty = 10;
         c.fill = GridBagConstraints.BOTH;
         c.anchor = GridBagConstraints.WEST;
         c.insets = new Insets(10, 10, 10, 10);
-        jp.add(m_hierarchicalFuzzyDataSettings, c);
+        jp.add(outerSettingsPanel, c);
         
-        addTab("Settings", m_settings);
-        addTab("Column filter", jp);
+        c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 1;
+        c.weightx = 10;
+        c.weighty = 10;
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(10, 10, 10, 10);
+        jp.add(outerFuzzyPanel, c);
+                
+        addTab("Settings", jp);
     }
 
     /**

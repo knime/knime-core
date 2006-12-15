@@ -33,7 +33,6 @@ import java.awt.event.ActionListener;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.border.EtchedBorder;
 
 import org.knime.base.node.mine.sota.SotaConfigKeys;
 import org.knime.base.node.mine.sota.SotaManager;
@@ -69,7 +68,6 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
     public SotaHierarchicalFuzzySettings(final NodeLogger logger) {
         super();
         setLayout(new GridBagLayout());
-        setBorder(new EtchedBorder());
 
         m_logger = logger;
 

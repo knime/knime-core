@@ -26,6 +26,8 @@ package org.knime.base.node.mine.sota;
 
 import org.knime.base.node.util.DataArray;
 import org.knime.core.data.DataRow;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 
 /**
  * The SotaHelper class helps the SotaManager to manage the tree. SotaHelper has
@@ -34,6 +36,9 @@ import org.knime.core.data.DataRow;
  * @author Kilian Thiel, University of Konstanz
  */
 public abstract class SotaHelper {
+    
+    private ExecutionMonitor m_exec;
+    
     private DataArray m_inDataContainer;
 
     private int m_dimension;
@@ -43,10 +48,13 @@ public abstract class SotaHelper {
      * training data.
      * 
      * @param rowContainer DataArray with the training data
+     * @param exec the <code>ExecutionMonitor</code> to set.
      */
-    public SotaHelper(final DataArray rowContainer) {
+    public SotaHelper(final DataArray rowContainer, 
+            final ExecutionMonitor exec) {
         m_inDataContainer = rowContainer;
         m_dimension = 0;
+        m_exec = exec;
     }
 
     /**
@@ -91,8 +99,10 @@ public abstract class SotaHelper {
      * concrete implementation.
      * 
      * @return the initialized tree with a ancestor node and two children cells
+     * @throws CanceledExecutionException if execution was canceled.
      */
-    public abstract SotaTreeCell initializeTree();
+    public abstract SotaTreeCell initializeTree() 
+        throws CanceledExecutionException;
 
     /**
      * Adjusts the given SotaTreeCell related to the given DataRow and
@@ -104,4 +114,18 @@ public abstract class SotaHelper {
      */
     public abstract void adjustSotaCell(SotaTreeCell cell, DataRow row,
             double learningrate);
+
+    /**
+     * @return the <code>ExecutionMonitor</code>
+     */
+    protected ExecutionMonitor getExec() {
+        return m_exec;
+    }
+
+    /**
+     * @param exec the <code>ExecutionMonitor</code> to set
+     */
+    protected void setExec(final ExecutionMonitor exec) {
+        this.m_exec = exec;
+    }
 }

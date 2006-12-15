@@ -309,11 +309,13 @@ public class SotaManager {
         // / Create concrete specialized SotaHelper here !!!
         //
         if (this.m_isFuzzy) {
-            m_helper = new SotaFuzzyHelper(m_inDataContainer);
+            m_helper = new SotaFuzzyHelper(m_inDataContainer, m_exec);
         } else {
-            m_helper = new SotaNumberHelper(m_inDataContainer);
+            m_helper = new SotaNumberHelper(m_inDataContainer, m_exec);
         }
 
+        m_exec.checkCanceled();
+        
         // Count all number cells in rows of row container
         m_dimension = m_helper.initializeDimension();
 
@@ -321,6 +323,8 @@ public class SotaManager {
         m_root = m_helper.initializeTree();
         m_root.setLevel(1);
 
+        m_exec.checkCanceled();
+        
         // assign all Data to the root cell which have no missing values
         for (int i = 0; i < m_inDataContainer.size(); i++) {
             if (m_root.getDataIds().indexOf(new Integer(i)) == -1) {
@@ -413,6 +417,7 @@ public class SotaManager {
         double errorRel = Math.abs((error2 - error1) / error1);
 
         while (errorRel >= this.m_minError) {
+            m_exec.checkCanceled();
             error1 = error2;
             error2 = doEpoch();
             errorRel = Math.abs((error2 - error1) / error1);
@@ -430,6 +435,7 @@ public class SotaManager {
             double tmpVar;
 
             for (int i = 0; i < cells.size(); i++) {
+                m_exec.checkCanceled();
                 tmpVar = getVariability(cells.get(i).getDataIds());
                 cells.get(i).setMaxDistance(tmpVar);
 
@@ -467,8 +473,9 @@ public class SotaManager {
      * tree after this epoch.
      * 
      * @return the error of the tree after this epoch
+     * @throws CanceledExecutionException is execution was canceled.
      */
-    public double doEpoch() {
+    public double doEpoch() throws CanceledExecutionException {
         ArrayList<SotaTreeCell> cells = new ArrayList<SotaTreeCell>();
         SotaManager.getCells(cells, m_root);
 
@@ -478,6 +485,7 @@ public class SotaManager {
         //
         for (int i = 0; i < cells.size(); i++) {
             for (int j = 0; j < cells.get(i).getDataIds().size(); j++) {
+                m_exec.checkCanceled();
                 DataRow row = m_inDataContainer.getRow(cells.get(i)
                         .getDataIds().get(j));
                 adjustCell(cells.get(i), row);
@@ -496,6 +504,8 @@ public class SotaManager {
             res = 0;
 
             for (int j = 0; j < cells.get(i).getDataIds().size(); j++) {
+                m_exec.checkCanceled();
+                
                 int index = cells.get(i).getDataIds().get(j).intValue();
                 DataRow row = m_inDataContainer.getRow(index);
 
@@ -546,8 +556,10 @@ public class SotaManager {
      * 
      * @param ids IDs of DataRow to compute variability for
      * @return the variability value
+     * @throws CanceledExecutionException if execution was canceled.
      */
-    private double getVariability(final ArrayList<Integer> ids) {
+    private double getVariability(final ArrayList<Integer> ids) 
+    throws CanceledExecutionException {
         double maxDist = 0;
         double tmpDist;
 
@@ -555,6 +567,8 @@ public class SotaManager {
             DataRow row1 = this.m_inDataContainer.getRow(ids.get(i));
 
             for (int j = 0; j < ids.size(); j++) {
+                m_exec.checkCanceled();
+                
                 if (i != j) {
                     DataRow row2 = this.m_inDataContainer.getRow(ids.get(j));
                     tmpDist = m_distanceManager.getDistance(row1, row2);
@@ -625,6 +639,8 @@ public class SotaManager {
 
             adjustCell(cell.getLeft(), row1);
             adjustCell(cell.getRight(), row2);
+            
+            m_exec.checkCanceled();
         }
     }
 
@@ -671,8 +687,10 @@ public class SotaManager {
      * distance to the data.
      * 
      * @param cells cells to assign data to
+     * @throws CanceledExecutionException if execution was canceled.
      */
-    private void assignNewData(final ArrayList<SotaTreeCell> cells) {
+    private void assignNewData(final ArrayList<SotaTreeCell> cells) 
+    throws CanceledExecutionException {
         for (int i = 0; i < m_inDataContainer.size(); i++) {
             DataRow row = m_inDataContainer.getRow(i);
 
@@ -680,6 +698,8 @@ public class SotaManager {
             double minDist = Double.MAX_VALUE;
 
             for (int j = 0; j < cells.size(); j++) {
+                m_exec.checkCanceled();
+                
                 double dist = m_distanceManager.getDistance(row, cells.get(j));
                 if (dist < minDist) {
                     winner = cells.get(j);

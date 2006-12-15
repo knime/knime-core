@@ -28,6 +28,8 @@ import org.knime.base.node.util.DataArray;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 
 /**
  * 
@@ -39,9 +41,11 @@ public class SotaNumberHelper extends SotaHelper {
      * trainingdata.
      * 
      * @param rowContainer the DataArray with the training data
+     * @param exec the <code>ExecutionMonitor</code> to set.
      */
-    public SotaNumberHelper(final DataArray rowContainer) {
-        super(rowContainer);
+    public SotaNumberHelper(final DataArray rowContainer, 
+            final ExecutionMonitor exec) {
+        super(rowContainer, exec);
     }
 
     /**
@@ -69,10 +73,11 @@ public class SotaNumberHelper extends SotaHelper {
     }
 
     /**
+     * @throws CanceledExecutionException 
      * @see SotaHelper#initializeTree()
      */
     @Override
-    public SotaTreeCell initializeTree() {
+    public SotaTreeCell initializeTree() throws CanceledExecutionException {
         //
         // / Calculate the mean values of each column of the row container
         //
@@ -87,6 +92,8 @@ public class SotaNumberHelper extends SotaHelper {
             col = 0;
             for (int j = 0; j < this.getRowContainer().getDataTableSpec()
                     .getNumColumns(); j++) {
+                getExec().checkCanceled();
+                
                 DataType type = this.getRowContainer().getDataTableSpec()
                         .getColumnSpec(j).getType();
 

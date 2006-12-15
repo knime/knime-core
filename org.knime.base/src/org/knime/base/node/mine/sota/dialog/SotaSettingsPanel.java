@@ -24,7 +24,9 @@
  */
 package org.knime.base.node.mine.sota.dialog;
 
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.text.ParseException;
 
 import javax.swing.JCheckBox;
@@ -81,80 +83,138 @@ public class SotaSettingsPanel extends JPanel {
      * @param logger the NodeLogger object to use for logging
      */
     public SotaSettingsPanel(final NodeLogger logger) {
-        super(new GridLayout(8, 2));
-
+        super(new GridBagLayout());
         m_logger = logger;
 
+        GridBagConstraints gbc = new GridBagConstraints();
+        
+        // Winner Learningrate
+        add(new JLabel("Winner learningrate"), getLabelGBC(0, 0));        
+        
         m_jsLearningRateWinner = new JSpinner(new SpinnerNumberModel(
                 SotaManager.LR_WINNER, SotaManager.LR_WINNER_MIN,
-                SotaManager.LR_WINNER_MAX, m_learningrateINCR));
+                SotaManager.LR_WINNER_MAX, m_learningrateINCR));        
         JSpinner.DefaultEditor editor 
             = (JSpinner.DefaultEditor)m_jsLearningRateWinner.getEditor();
         editor.getTextField().setColumns(m_width);
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(10, 0, 0, 10);
+        add(m_jsLearningRateWinner, gbc);
 
+        // Sister Learninrate  
+        add(new JLabel("Sister learningrate"), getLabelGBC(0, 1));   
+        
         m_jsLearningRateSister = new JSpinner(new SpinnerNumberModel(
                 SotaManager.LR_SISTER, SotaManager.LR_SISTER_MIN,
                 SotaManager.LR_SISTER_MAX, m_learningrateINCR));
         editor = (JSpinner.DefaultEditor)m_jsLearningRateSister.getEditor();
         editor.getTextField().setColumns(m_width);
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(10, 0, 0, 10);
+        add(m_jsLearningRateSister, gbc);
 
+        // Ancestor Learningrate
+        add(new JLabel("Ancestor learningrate"), getLabelGBC(0, 2));   
+        
         m_jsLearningRateAncestor = new JSpinner(new SpinnerNumberModel(
                 SotaManager.LR_ANCESTOR, SotaManager.LR_ANCESTOR_MIN,
                 SotaManager.LR_ANCESTOR_MAX, m_learningrateINCR));
         editor = (JSpinner.DefaultEditor)m_jsLearningRateAncestor.getEditor();
         editor.getTextField().setColumns(m_width);
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(10, 0, 0, 10);
+        add(m_jsLearningRateAncestor, gbc);
 
+        // Minimal Variability
+        add(new JLabel("Minimal variability"), getLabelGBC(0, 3));
+        
         m_jsVariability = new JSpinner(new SpinnerNumberModel(
                 SotaManager.MIN_VARIABILITY, SotaManager.MIN_VARIABILITY_MIN,
                 SotaManager.MIN_VARIABILITY_MAX, m_variabilityINCR));
         editor = (JSpinner.DefaultEditor)m_jsVariability.getEditor();
         editor.getTextField().setColumns(m_width);
-
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(10, 0, 0, 10);
+        add(m_jsVariability, gbc);
+        
+        // Minimal Resource
+        add(new JLabel("Minimal resource"), getLabelGBC(0, 4));
+        
         m_jsResource = new JSpinner(new SpinnerNumberModel(
                 SotaManager.MIN_RESOURCE, SotaManager.MIN_RESOURCE_MIN,
                 SotaManager.MIN_RESOURCE_MAX, m_resourceINCR));
         editor = (JSpinner.DefaultEditor)m_jsResource.getEditor();
         editor.getTextField().setColumns(m_width);
-
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(10, 0, 0, 10);
+        add(m_jsResource, gbc);
+        
+        // Minimal Error
+        add(new JLabel("Minimal error"), getLabelGBC(0, 5));
+        
         m_jsError = new JSpinner(new SpinnerNumberModel(SotaManager.MIN_ERROR,
                 SotaManager.MIN_ERROR_MIN, SotaManager.MIN_ERROR_MAX,
                 m_errorINCR));
         editor = (JSpinner.DefaultEditor)m_jsError.getEditor();
         editor.getTextField().setColumns(m_width);
-
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 5;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(10, 0, 0, 10);
+        add(m_jsError, gbc);
+        
+        // Use Variability
+        add(new JLabel("Use variability"), getLabelGBC(0, 6));
+        
         m_jchbUseVariability = new JCheckBox();
         m_jchbUseVariability.setSelected(SotaManager.USE_VARIABILITY);
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 6;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(10, 0, 0, 10);
+        add(m_jchbUseVariability, gbc);
+        
+        // Distance Metrik
+        add(new JLabel("Dictance metric"), getLabelGBC(0, 7));
 
         m_jcbDistance = new JComboBox();
         m_jcbDistance.addItem(SotaManager.EUCLIDEAN_DIST);
         m_jcbDistance.addItem(SotaManager.COS_DIST);
         m_jcbDistance.setSelectedItem(SotaManager.EUCLIDEAN_DIST);
-
-        add(new JLabel("Winner learningrate"));
-        add(m_jsLearningRateWinner);
-
-        add(new JLabel("Sister learningrate"));
-        add(m_jsLearningRateSister);
-
-        add(new JLabel("Ancestor learningrate"));
-        add(m_jsLearningRateAncestor);
-
-        add(new JLabel("Minimal variability"));
-        add(m_jsVariability);
-
-        add(new JLabel("Minimal resource"));
-        add(m_jsResource);
-
-        add(new JLabel("Minimal error"));
-        add(m_jsError);
-
-        add(new JLabel("Use variability"));
-        add(m_jchbUseVariability);
-
-        add(new JLabel("Distance metric"));
-        add(m_jcbDistance);
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 7;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(10, 0, 0, 10);
+        add(m_jcbDistance, gbc);
     }
 
+    private GridBagConstraints getLabelGBC(final int x, final int y) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = x;
+        gbc.gridy = y;
+        gbc.anchor = GridBagConstraints.EAST;
+        gbc.insets = new Insets(10, 10, 0, 10);
+        return gbc;
+    }
+    
     /**
      * Method loadSettingsFrom.
      * 
