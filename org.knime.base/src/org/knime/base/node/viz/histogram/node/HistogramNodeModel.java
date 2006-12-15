@@ -30,9 +30,11 @@ import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramPlotter;
 import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramProperties;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.BufferedDataTable;
@@ -305,6 +307,17 @@ public class HistogramNodeModel extends NodeModel {
         if (spec.getNumColumns() < 2) {
             throw new InvalidSettingsException(
                     "Input table should have at least 2 columns.");
+        }
+        // if we have nominal columns without possible values
+        for (DataColumnSpec colSpec : spec) {
+
+            if (!colSpec.getType().isCompatible(DoubleValue.class) 
+                    && colSpec.getDomain().getValues() == null) {
+                throw new InvalidSettingsException(
+                        "Found nominal column without possible values: "
+                        + colSpec.getName() 
+                        + " Please use DomainCalculator or ColumnFilter!");
+            }
         }
         final String xCol = m_xColName.getStringValue();
         if (!spec.containsName(xCol)) {

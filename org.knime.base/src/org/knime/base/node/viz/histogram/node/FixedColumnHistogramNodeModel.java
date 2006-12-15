@@ -29,6 +29,7 @@ import java.io.File;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramPlotter;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramProperties;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -278,6 +279,17 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         if (spec.getNumColumns() < 2) {
             throw new InvalidSettingsException(
                     "Input table should have at least 2 columns.");
+        }
+        // if we have nominal columns without possible values
+        for (DataColumnSpec colSpec : spec) {
+
+            if (!colSpec.getType().isCompatible(DoubleValue.class) 
+                    && colSpec.getDomain().getValues() == null) {
+                throw new InvalidSettingsException(
+                        "Found nominal column without possible values: "
+                        + colSpec.getName() 
+                        + " Please use DomainCalculator or ColumnFilter!");
+            }
         }
         final String xCol = m_xColName.getStringValue();
         if (!spec.containsName(xCol)) {
