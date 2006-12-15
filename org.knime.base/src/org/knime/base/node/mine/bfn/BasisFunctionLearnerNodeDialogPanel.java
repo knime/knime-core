@@ -152,7 +152,9 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
                 " Maximum #Epochs "));
         epochPanel.add(m_isMaxEpochs);
         epochPanel.add(m_maxEpochs);
-        super.add(epochPanel);
+        JPanel epochPanel2 = new JPanel(new GridLayout(1, 2));
+        epochPanel2.add(epochPanel);
+        super.add(epochPanel2);
     }
     
     /**
