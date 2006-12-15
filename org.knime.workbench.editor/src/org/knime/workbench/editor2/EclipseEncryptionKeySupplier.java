@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.knime.core.util.EncryptionKeySupplier;
+import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
  * This class implements a decryption key supplier that is registered at the
@@ -96,9 +97,24 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
             } catch (Throwable t) {
                 display = Display.getDefault();
             }
+            // search for suitable parents
+            Shell[] shells = display.getShells();
+            Shell dialogShell = null;
+            for (Shell posShell : shells) {
+                if (posShell.getData() != null
+                        && posShell.getData() instanceof WrappedNodeDialog) {
+                    dialogShell = posShell;
+                    break;
+                }
+            }
 
-            Shell shell = new Shell(display, SWT.ON_TOP | SWT.SHELL_TRIM);
-            
+            Shell shell = null;
+            if (dialogShell != null) {
+                shell = new Shell(dialogShell);
+            } else {
+                shell = new Shell(display, SWT.ON_TOP | SWT.SHELL_TRIM);
+            }
+
             try {
                 shell.setImage(ImageRepository.getImageDescriptor(
                         "icons/knime.bmp").createImage());
@@ -188,7 +204,6 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
 
             shell.pack();
             shell.open();
-            
 
             text.setFocus();
 
