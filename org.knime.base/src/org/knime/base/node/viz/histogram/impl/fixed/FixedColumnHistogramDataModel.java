@@ -58,7 +58,7 @@ public class FixedColumnHistogramDataModel extends AbstractHistogramDataModel {
     
 
     /**
-     * Constructor for class HistogramData.
+     * Constructor for class FixedColumnHistogramDataModel.
      * 
      * @param tableSpec the <code>DataTableSpec</code> of the data on which
      *            this <code>HistogramData</code> object based on
