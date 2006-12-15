@@ -54,8 +54,8 @@ public class CAIMDiscretizationNodeDialog extends DefaultNodeDialogPane {
         // the column filter panel
         DialogComponentColumnFilter columnFilter =
                 new DialogComponentColumnFilter(
-                        CAIMDiscretizationNodeModel.INCLUDED_COLUMNS_KEY,
-                        "Columns for discretization:", false, DoubleValue.class);
+                       CAIMDiscretizationNodeModel.INCLUDED_COLUMNS_KEY,
+                       "Columns for discretization:", false, DoubleValue.class);
         this.addDialogComponent(columnFilter);
 
         // whether to sort in memory

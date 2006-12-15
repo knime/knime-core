@@ -381,8 +381,7 @@ public class BinModelPlotter extends ScatterPlotter {
         }
 
         /**
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#
-         *      mouseDragged(java.awt.event.MouseEvent)
+         * @see PlotterMouseListener#mouseDragged(java.awt.event.MouseEvent)
          */
         @Override
         public void mouseDragged(final MouseEvent e) {

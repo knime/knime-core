@@ -33,6 +33,7 @@ public class DiscretizationApplyNodeFactory extends NodeFactory {
     /**
      * @see org.knime.core.node.NodeFactory#createNodeModel()
      */
+    @Override
     public NodeModel createNodeModel() {
         return new DiscretizationApplyNodeModel();
     }
@@ -40,6 +41,7 @@ public class DiscretizationApplyNodeFactory extends NodeFactory {
     /**
      * @see org.knime.core.node.NodeFactory#getNrNodeViews()
      */
+    @Override
     public int getNrNodeViews() {
         return 0;
     }
@@ -47,6 +49,7 @@ public class DiscretizationApplyNodeFactory extends NodeFactory {
     /**
      * @see org.knime.core.node.NodeFactory#createNodeView(int,NodeModel)
      */
+    @Override
     public NodeView createNodeView(final int i, final NodeModel nodeModel) {
         return null;
     }
@@ -55,6 +58,7 @@ public class DiscretizationApplyNodeFactory extends NodeFactory {
      * @return <b>true</b>.
      * @see org.knime.core.node.NodeFactory#hasDialog()
      */
+    @Override
     public boolean hasDialog() {
         return false;
     }
@@ -62,6 +66,7 @@ public class DiscretizationApplyNodeFactory extends NodeFactory {
     /**
      * @see org.knime.core.node.NodeFactory#createNodeDialogPane()
      */
+    @Override
     public NodeDialogPane createNodeDialogPane() {
         return null;
     }

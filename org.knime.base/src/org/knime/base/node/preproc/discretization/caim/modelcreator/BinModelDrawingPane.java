@@ -69,8 +69,7 @@ public class BinModelDrawingPane extends ScatterPlotterDrawingPane {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane#
-     *      paintContent(java.awt.Graphics)
+     * @see ScatterPlotterDrawingPane#paintContent(java.awt.Graphics)
      */
     @Override
     public void paintContent(final Graphics g) {

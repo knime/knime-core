@@ -83,6 +83,7 @@ class DiscretizationApplyNodeModel extends NodeModel {
      * @throws Exception if something else goes wrong.
      * @return the discretized input table
      */
+    @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
@@ -121,6 +122,7 @@ class DiscretizationApplyNodeModel extends NodeModel {
     /**
      * Resets all internal data.
      */
+    @Override
     protected void reset() {
 
         // nothing to do yet
@@ -133,6 +135,7 @@ class DiscretizationApplyNodeModel extends NodeModel {
      * 
      * @see NodeModel#configure(DataTableSpec[])
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
 
@@ -175,6 +178,7 @@ class DiscretizationApplyNodeModel extends NodeModel {
      * 
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
@@ -185,6 +189,7 @@ class DiscretizationApplyNodeModel extends NodeModel {
      * 
      * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
 
     }
@@ -198,6 +203,7 @@ class DiscretizationApplyNodeModel extends NodeModel {
      * 
      * @see NodeModel#validateSettings(NodeSettingsRO)
      */
+    @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
@@ -221,7 +227,7 @@ class DiscretizationApplyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node. NodeModel#loadInternals(File, ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel#loadInternals(File, ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -232,7 +238,7 @@ class DiscretizationApplyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node. NodeModel#saveInternals(File, ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel#saveInternals(File, ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

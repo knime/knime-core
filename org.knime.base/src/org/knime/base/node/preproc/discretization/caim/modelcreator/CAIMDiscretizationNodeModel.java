@@ -200,6 +200,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
      * @throws Exception if something else goes wrong.
      * @return the result table with the discretized values
      */
+    @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
@@ -207,10 +208,10 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         // measure the time
         long startTime = System.currentTimeMillis();
 
-        // if nothing to discretize return the origninal data and create an
+        // if nothing to discretize return the original data and create an
         // empty model
-        if (m_includedColumnNames == null || 
-                m_includedColumnNames.length == 0) {
+        if (m_includedColumnNames == null 
+                || m_includedColumnNames.length == 0) {
             m_discretizationModel =
                     new DiscretizationModel(new String[0],
                             new DiscretizationScheme[0]);
@@ -777,6 +778,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     /**
      * Resets all internal data.
      */
+    @Override
     protected void reset() {
 
         // nothing to do yet
@@ -789,6 +791,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
      * 
      * @see NodeModel#configure(DataTableSpec[])
      */
+    @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
 
@@ -832,6 +835,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
      * 
      * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
      */
+    @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
@@ -852,6 +856,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
      * 
      * @see NodeModel#saveSettingsTo(NodeSettingsWO)
      */
+    @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         assert (settings != null);
         settings.addString(CLASS_COLUMN_KEY, m_classColumnName);
@@ -870,6 +875,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
      * 
      * @see NodeModel#validateSettings(NodeSettingsRO)
      */
+    @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         String classifyColumn = settings.getString(CLASS_COLUMN_KEY);
@@ -912,7 +918,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node. NodeModel#loadInternals(File, ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel#loadInternals(File, ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -941,7 +947,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node. NodeModel#saveInternals(File, ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel#saveInternals(File, ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

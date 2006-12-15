@@ -22,7 +22,6 @@
 package org.knime.base.node.preproc.discretization.caim;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.config.Config;
 
 /**
@@ -242,6 +241,7 @@ public class Interval {
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
@@ -287,7 +287,8 @@ public class Interval {
     }
 
     /**
-     * Saves this interval to a {@link ModelContentWO} object.
+     * Saves this interval to a {@link org.knime.core.node.ModelContentWO} 
+     * object.
      * 
      * @param modelContent the {@link Config} object to store the
      *            {@link Interval} to
