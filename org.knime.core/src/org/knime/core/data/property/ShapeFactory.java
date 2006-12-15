@@ -121,7 +121,7 @@ public final class ShapeFactory {
         
         private static final int DEFAULT_SIZE = 11;
         
-        private static final double BORDER_SIZE = 0.2;
+        private static final double BORDER_SIZE = 0.4;
         
         private static final float DASH_FACTOR = 0.4f;
         
@@ -168,8 +168,8 @@ public final class ShapeFactory {
                 final int y, final int size, final boolean hilited, 
                 final boolean selected) {
             int borderSize = (int)Math.ceil(BORDER_SIZE * size);
-            if (borderSize < 2) {
-                borderSize = 2;
+            if (borderSize < 1) {
+                borderSize = 1;
             }
             float dash = DASH_FACTOR * size;
             if (dash == 0) {
