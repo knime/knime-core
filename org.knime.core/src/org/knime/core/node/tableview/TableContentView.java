@@ -156,8 +156,7 @@ public class TableContentView extends JTable {
                             DataTable data = getContentModel().getDataTable();
                             DataColumnSpec headerValue = 
                                 data.getDataTableSpec().getColumnSpec(i);
-                            // FIXME: set headervalue instead of name
-                            tcM.getColumn(i).setHeaderValue(headerValue.getName());
+                            tcM.getColumn(i).setHeaderValue(headerValue);
                         }
                     }
                 }  
@@ -405,10 +404,9 @@ public class TableContentView extends JTable {
         int i = aColumn.getModelIndex();
         DataTable data = getContentModel().getDataTable();
         DataColumnSpec headerValue = data.getDataTableSpec().getColumnSpec(i);
-        aColumn.setHeaderValue(headerValue.getName());
-        // FIXME: set headervalue instead of name
+        aColumn.setHeaderValue(headerValue);
         DataValueRendererFamily renderer = 
-            headerValue.getType().getRenderer(headerValue);                              
+            headerValue.getType().getRenderer(headerValue);
         aColumn.setCellRenderer(renderer);
         super.addColumn(aColumn);
     }
