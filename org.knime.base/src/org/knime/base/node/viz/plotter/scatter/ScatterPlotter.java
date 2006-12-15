@@ -46,7 +46,6 @@ import org.knime.base.util.coordinate.Coordinate;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.property.ColorAttr;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
@@ -55,8 +54,8 @@ import org.knime.core.node.property.hilite.KeyEvent;
  */
 public class ScatterPlotter extends TwoColumnPlotter {
     
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            ScatterPlotter.class);
+//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+//            ScatterPlotter.class);
     
     private int m_dotSize = ScatterPlotterProperties.DEFAULT_DOT_SIZE;
     
@@ -288,7 +287,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
         // get the rowInfo from the model
         DataArray rowsCont = getDataProvider().getDataArray(0);
         if (rowsCont != null) {
-            LOGGER.debug("row container != null");
+//            LOGGER.debug("row container != null");
             // and create a new DotInfo array with the rowKeys in the DotInfos.
             List<DotInfo> dotList = new ArrayList<DotInfo>();
             int rowNr = 0;

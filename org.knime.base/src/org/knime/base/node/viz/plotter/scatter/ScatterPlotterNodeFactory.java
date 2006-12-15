@@ -18,6 +18,8 @@
  */
 package org.knime.base.node.viz.plotter.scatter;
 
+import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeDialog;
+import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeModel;
 import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -35,7 +37,7 @@ public class ScatterPlotterNodeFactory extends NodeFactory {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new ScatterPlotterNodeDialog();
+        return new DefaultVisualizationNodeDialog();
     }
 
     /**
@@ -43,7 +45,7 @@ public class ScatterPlotterNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new ScatterPlotterNodeModel();
+        return new DefaultVisualizationNodeModel();
     }
 
     /**
@@ -55,7 +57,7 @@ public class ScatterPlotterNodeFactory extends NodeFactory {
             final NodeModel nodeModel) {
         DefaultVisualizationNodeView view 
             = new ScatterPlotterNodeView(nodeModel, 
-                ((ScatterPlotterNodeModel)nodeModel).getPlotter());
+                new ScatterPlotter());
         return view;
     }
 
