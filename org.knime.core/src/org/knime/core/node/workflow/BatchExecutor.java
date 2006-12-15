@@ -54,7 +54,13 @@ public final class BatchExecutor {
         private final String m_value;
 
         private final String m_type;
-
+        /**
+         * Create new <code>Option</code>.
+         * @param nodeID node ID
+         * @param name name
+         * @param value value
+         * @param type type
+         */
         Option(final int nodeID, final String name, final String value,
                 final String type) {
             m_nodeID = nodeID;

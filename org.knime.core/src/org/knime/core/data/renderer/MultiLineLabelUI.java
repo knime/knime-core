@@ -1,4 +1,4 @@
-/* Created on Dec 6, 2006 3:18:53 PM by thor
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -72,7 +72,8 @@ public class MultiLineLabelUI extends BasicLabelUI {
             final String[] text, final Icon icon, final int verticalAlignment,
             final int horizontalAlignment, final int verticalTextPosition,
             final int horizontalTextPosition, final Rectangle viewR,
-            final Rectangle iconR, final Rectangle textR, final int textIconGap) {
+            final Rectangle iconR, final Rectangle textR, 
+            final int textIconGap) {
         /*
          * Initialize the icon bounds rectangle iconR.
          */
@@ -92,10 +93,8 @@ public class MultiLineLabelUI extends BasicLabelUI {
 
         // Fix for textIsEmpty sent by Paulo Santos
         boolean textIsEmpty =
-                (text == null)
-                        || (text.length == 0)
-                        || (text.length == 1 && ((text[0] == null) || text[0]
-                                .equals("")));
+            (text == null) || (text.length == 0) 
+            || (text.length == 1 && ((text[0] == null) || text[0].equals("")));
 
         String rettext = "";
         if (textIsEmpty) {
@@ -310,7 +309,8 @@ public class MultiLineLabelUI extends BasicLabelUI {
     @Override
     protected String layoutCL(final JLabel label,
             final FontMetrics fontMetrics, final String text, final Icon icon,
-            final Rectangle viewR, final Rectangle iconR, final Rectangle textR) {
+            final Rectangle viewR, final Rectangle iconR, 
+            final Rectangle textR) {
         String s =
                 layoutCompoundLabel(label, fontMetrics,
                         splitStringByLines(text), icon, label

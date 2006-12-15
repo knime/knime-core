@@ -37,7 +37,8 @@ import org.knime.core.data.DataCell;
  * <li>Cells of this class will be only written once, i.e. any subsequent node 
  * that references this cell object will not buffer a copy of it again 
  * but rather reference to this single cell. (In comparison to ordinary cells
- * such as {@link core.data.def.DoubleCell} or {@link core.data.def.StringCell},
+ * such as {@link org.knime.core.data.def.DoubleCell} or 
+ * {@link org.knime.core.data.def.StringCell},
  * which get copied when buffered multiple times.)  
  * </li>
  * <li>

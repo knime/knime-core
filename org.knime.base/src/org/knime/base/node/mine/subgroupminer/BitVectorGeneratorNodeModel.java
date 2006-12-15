@@ -245,8 +245,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         int nrOfRows = 0;
         for (DataRow row : input) {
             for (int i = 0; i < row.getNumCells(); i++) {
-                if (row.getCell(i).isMissing() ||
-                    !row.getCell(i).getType().isCompatible(DoubleValue.class)) {
+                if (row.getCell(i).isMissing()
+                 || !row.getCell(i).getType().isCompatible(DoubleValue.class)) {
                     continue;
                 }
                 meanValues[i] += ((DoubleValue)row.getCell(i)).getDoubleValue();
@@ -352,7 +352,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
 
     private BufferedDataTable[] createBitVectorsFromStrings(
             final BufferedDataTable data,
-            final int stringColIndex, ExecutionContext exec) 
+            final int stringColIndex, final ExecutionContext exec) 
             throws CanceledExecutionException {
         ColumnRearranger c = createColumnRearranger(data.getDataTableSpec(),
                 stringColIndex);
@@ -428,7 +428,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         }
         if (m_fromString) {
             int stringColIdx = inSpecs[0].findColumnIndex(m_stringColumn);
-            ColumnRearranger c = createColumnRearranger(inSpecs[0], stringColIdx);
+            ColumnRearranger c = createColumnRearranger(
+                    inSpecs[0], stringColIdx);
             return new DataTableSpec[]{c.createSpec()};
         } else {
             return new DataTableSpec[]{createNumericOutputSpec(inSpecs[0])};

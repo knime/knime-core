@@ -1,4 +1,4 @@
-/* Created on Dec 7, 2006 12:55:28 PM by thor
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.

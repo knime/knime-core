@@ -177,7 +177,6 @@ public class HistogramNodeModel extends NodeModel {
     }
 
     /**
-     * @throws CanceledExecutionException 
      * @see org.knime.core.node.NodeModel#saveInternals( java.io.File,
      *      org.knime.core.node.ExecutionMonitor)
      */

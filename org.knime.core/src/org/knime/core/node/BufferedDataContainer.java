@@ -151,15 +151,16 @@ public class BufferedDataContainer extends DataContainer {
     }
     
     /**
-     * Just delegates to 
-     * {@link DataContainer#readFromZipDelayed(File, DataTableSpec)}. 
+     * Just delegates to {@link 
+     * DataContainer#readFromZipDelayed(File, DataTableSpec, int, HashMap)} 
      * This method is available in this class to enable other classes in this
      * package to use it.
      * @param zipFile Delegated.
      * @param spec Delegated.
      * @param bufID Delegated.
      * @param bufferRep Delegated.
-     * @return {@link DataContainer#readFromZipDelayed(File, DataTableSpec)}
+     * @return {@link 
+     *     DataContainer#readFromZipDelayed(File, DataTableSpec, int, HashMap)}
      */
     protected static ContainerTable readFromZipDelayed(
             final File zipFile, final DataTableSpec spec, final int bufID, 

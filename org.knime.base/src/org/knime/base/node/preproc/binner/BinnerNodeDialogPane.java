@@ -208,6 +208,9 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
         return p;
     }
 
+    /**
+     * Creates new panel holding one bin column. 
+     */
     final class IntervalPanel extends JPanel {
         /** List of intervals. */
         private final JList m_intervalList;
@@ -251,7 +254,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                         // if the first interval needs to be split
                         if (size == 1) {
                             IntervalItemPanel p = new IntervalItemPanel(
-                                    IntervalPanel.this, 0.0, null, "Bin2", type);
+                                   IntervalPanel.this, 0.0, null, "Bin2", type);
                             m_intervalMdl.addElement(p);
                             p.updateInterval();
                         } else {
@@ -259,7 +262,8 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                             // if non is selected or the last one is selected
                             if (o == null
                                     || m_intervalMdl.indexOf(o) == size - 1) {
-                                IntervalItemPanel p1 = (IntervalItemPanel)m_intervalMdl
+                                IntervalItemPanel p1 = 
+                                    (IntervalItemPanel)m_intervalMdl
                                         .getElementAt(size - 1);
                                 double d = p1.getLeftValue(false);
                                 IntervalItemPanel p = new IntervalItemPanel(
@@ -270,8 +274,10 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                                 p.updateInterval();
                             } else {
                                 IntervalItemPanel p1 = (IntervalItemPanel)o;
-                                IntervalItemPanel p2 = (IntervalItemPanel)m_intervalMdl
-                                        .getElementAt(m_intervalMdl.indexOf(p1) + 1);
+                                IntervalItemPanel p2 = 
+                                    (IntervalItemPanel) m_intervalMdl
+                                        .getElementAt(
+                                                m_intervalMdl.indexOf(p1) + 1);
                                 double d1 = p1.getRightValue(false);
                                 double d2 = p2.getLeftValue(false);
                                 IntervalItemPanel p = new IntervalItemPanel(
@@ -457,6 +463,9 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
         }
     }
 
+    /**
+     * Creates a new panel holding one interval.
+     */
     final class IntervalItemPanel extends JPanel {
         private final IntervalPanel m_parent;
 
@@ -567,8 +576,8 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                     repairLeft();
                 }
             });
-            final JSpinner.DefaultEditor editorLeft = (JSpinner.DefaultEditor)m_left
-                    .getEditor();
+            final JSpinner.DefaultEditor editorLeft = 
+                (JSpinner.DefaultEditor)m_left.getEditor();
             editorLeft.getTextField().addFocusListener(new FocusAdapter() {
                 @Override
                 public void focusLost(final FocusEvent e) {
@@ -586,8 +595,8 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                     repairRight();
                 }
             });
-            final JSpinner.DefaultEditor editorRight = (JSpinner.DefaultEditor)m_right
-                    .getEditor();
+            final JSpinner.DefaultEditor editorRight = 
+                (JSpinner.DefaultEditor)m_right.getEditor();
             editorRight.getTextField().addFocusListener(new FocusAdapter() {
                 @Override
                 public void focusLost(final FocusEvent e) {
@@ -874,8 +883,8 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                 m_numMdl.addElement(cspec);
             }
         }
-        String[] columns = settings.getStringArray(BinnerNodeModel.NUMERIC_COLUMNS,
-                (String[])null);
+        String[] columns = settings.getStringArray(
+                BinnerNodeModel.NUMERIC_COLUMNS, (String[])null);
         // if numeric columns in settings, select first
         if (columns != null && columns.length > 0) {
             for (int i = 0; i < columns.length; i++) {
@@ -893,7 +902,8 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                     continue;
                 }
                 String appendedColumn = null;
-                if (settings.containsKey(columns[i].toString() + BinnerNodeModel.IS_APPENDED)) {
+                if (settings.containsKey(columns[i].toString() 
+                        + BinnerNodeModel.IS_APPENDED)) {
                     appendedColumn = settings.getString(columns[i].toString()
                             + BinnerNodeModel.IS_APPENDED, null);
                 }
@@ -953,10 +963,11 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                                             + " matches other column.");
                         }
                     }
-                    settings.addString(cell.toString() + BinnerNodeModel.IS_APPENDED,
-                            appendedName);
+                    settings.addString(cell.toString() 
+                            + BinnerNodeModel.IS_APPENDED, appendedName);
                 } else {
-                    settings.addString(cell.toString() + BinnerNodeModel.IS_APPENDED, null);
+                    settings.addString(cell.toString() 
+                            + BinnerNodeModel.IS_APPENDED, null);
                 }
                 for (int j = 0; j < p.getNumIntervals(); j++) {
                     IntervalItemPanel item = p.getInterval(j);

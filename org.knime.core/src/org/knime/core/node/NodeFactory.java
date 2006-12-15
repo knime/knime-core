@@ -282,7 +282,7 @@ public abstract class NodeFactory {
             Document doc = null;
             Exception exception = null;
             try {
-                synchronized(parser) {
+                synchronized (parser) {
                     parser.setErrorHandler(new DefaultHandler() {
                         @Override
                         public void error(final SAXParseException ex)

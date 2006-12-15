@@ -56,9 +56,11 @@ final class BinnerNodeModel extends NodeModel {
     static final String IS_APPENDED = "_is_appended";
 
     /** Selected columns for binning. */
-    private final Map<String, Bin[]> m_columnToBins = new HashMap<String, Bin[]>();
+    private final Map<String, Bin[]> m_columnToBins = 
+        new HashMap<String, Bin[]>();
 
-    private final Map<String, String> m_columnToAppended = new HashMap<String, String>();
+    private final Map<String, String> m_columnToAppended = 
+        new HashMap<String, String>();
 
     /** Keeps index of the input port which is 0. */
     static final int INPORT = 0;
