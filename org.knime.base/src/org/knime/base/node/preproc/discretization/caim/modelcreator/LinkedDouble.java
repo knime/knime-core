@@ -26,29 +26,29 @@ package org.knime.base.node.preproc.discretization.caim.modelcreator;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class LinkedDouble {
+class LinkedDouble {
 
     /**
      * The double value of this list element.
      */
-    public double m_value;
+    double m_value;
 
     /**
      * The next double element in this list.
      */
-    public LinkedDouble m_next;
+    LinkedDouble m_next;
 
     /**
      * The previous double element in this list.
      */
-    public LinkedDouble m_previous;
+    LinkedDouble m_previous;
 
     /**
      * Creates a new linked double list element.
      * 
      * @param value the value of this double list element
      */
-    public LinkedDouble(final double value) {
+    LinkedDouble(final double value) {
 
         if (Double.isNaN(value)) {
             throw new IllegalArgumentException("Value must be a valid number");
@@ -59,7 +59,7 @@ public class LinkedDouble {
     /**
      * Removes this element from the double linked list.
      */
-    public void remove() {
+    void remove() {
 
         if (m_previous != null) {
             m_previous.m_next = m_next;
@@ -75,7 +75,6 @@ public class LinkedDouble {
      * 
      * @see java.lang.Object#toString()
      */
-    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
