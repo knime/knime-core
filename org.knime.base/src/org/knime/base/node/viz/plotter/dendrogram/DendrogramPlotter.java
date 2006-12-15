@@ -36,19 +36,25 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
- * 
+ * Converts a {@link org.knime.base.node.viz.plotter.dendrogram.ClusterNode}
+ * into a {@link org.knime.base.node.viz.plotter.dendrogram.BinaryTree} of 
+ * {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramPoint}s, which
+ * is the visual representation of a hierachical clustering result stored in the
+ * {@link org.knime.base.node.viz.plotter.dendrogram.ClusterNode}.
+ *  
  * @author Fabian Dill, University of Konstanz
  */
 public class DendrogramPlotter extends ScatterPlotter {
     
     private static final int OFFSET = 6;
 
+    /** The hierachcal clustering result. */
     private ClusterNode m_rootNode;
-    
+    /** The visual model of the clustering result. */ 
     private BinaryTree<DendrogramPoint> m_tree;
-    
+    /** The set of selected dendrogram points. */
     private Set<DendrogramPoint> m_selected;
-    
+    /** The dot size of the leafs and cluster nodes. */
     private int m_dotSize;
     
     /**
@@ -60,16 +66,10 @@ public class DendrogramPlotter extends ScatterPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
-     */
-    @Override
-    public void reset() {
-        m_rootNode = null;
-        ((DendrogramDrawingPane)getDrawingPane()).setRootNode(null);
-        getDrawingPane().repaint();
-    }
-    
-    /**
+     * Constructor for extending classes. Registers all necessary listeners to
+     * the control elements of the 
+     * {@link org.knime.base.node.viz.plotter.dendrogram
+     * .DendrogramPlotterProperties}
      * 
      * @param panel drawing pane
      * @param props properties
@@ -114,7 +114,22 @@ public class DendrogramPlotter extends ScatterPlotter {
         
     }
     
+    
     /**
+     * Resets the visual model and repaints. 
+     * 
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
+     */
+    @Override
+    public void reset() {
+        m_rootNode = null;
+        ((DendrogramDrawingPane)getDrawingPane()).setRootNode(null);
+        getDrawingPane().repaint();
+    }
+    
+    /**
+     * Sets the result of the hierachical clustering represented in a 
+     * {@link org.knime.base.node.viz.plotter.dendrogram.ClusterNode}.
      * 
      * @param root the root node of the dendrogram.
      */
@@ -132,15 +147,6 @@ public class DendrogramPlotter extends ScatterPlotter {
 
     }
 
-    /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLite(
-     * org.knime.core.node.property.hilite.KeyEvent)
-     */
-    @Override
-    public void hiLite(final KeyEvent event) {
-        // TODO Auto-generated method stub
-
-    }
 
     /**
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLiteSelected()
@@ -249,6 +255,7 @@ public class DendrogramPlotter extends ScatterPlotter {
     /**
      * Converts the cluster node into a view model,
      * where cluster nodes are points and leaf nodes are dots.
+     * 
      * @param node the cluster node tree.
      */
     public void createViewModel(final ClusterNode node) {
@@ -259,6 +266,17 @@ public class DendrogramPlotter extends ScatterPlotter {
         m_tree = new BinaryTree<DendrogramPoint>(viewNode);
     }
     
+    /**
+     * Recursive method to convert the result of the hierachical clustering 
+     * result represented by a 
+     * {@link org.knime.base.node.viz.plotter.dendrogram.ClusterNode} into a 
+     * {@link org.knime.base.node.viz.plotter.dendrogram.BinaryTree} of 
+     * {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramPoint}s.
+     * 
+     * @param node the node to convert
+     * @return the visual model of the passed 
+     * {@link org.knime.base.node.viz.plotter.dendrogram.ClusterNode}
+     */
     private BinaryTreeNode<DendrogramPoint> createViewModelFor(
             final ClusterNode node) {
         if (getXAxis() == null || getXAxis().getCoordinate() == null
@@ -314,6 +332,13 @@ public class DendrogramPlotter extends ScatterPlotter {
     }
 
     
+    /**
+     * The x position is the center of the distance between the two subnodes or
+     * the position of the leaf node on the x axis.
+     * 
+     * @param node the node to determine the mapped x position for
+     * @return the x position of the visual model for the passed node
+     */
     private int getXPosition(final ClusterNode node) {
         if (node.isLeaf()) {
             DataCell value = node.getLeafDataPoint().getKey().getId();

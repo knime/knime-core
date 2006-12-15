@@ -10,7 +10,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 
 /**
- * Represents a Node in the hirarchie tree (Dendrogram)
+ * Represents a Node in the hierarchy tree (Dendrogram)
  * of a hierarchical clustering.
  * 
  * @author Christoph Sieb, University of Konstanz

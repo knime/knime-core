@@ -71,12 +71,6 @@ public class BinaryTree<T> {
         } else if (traversal.equals(Traversal.IN)) {
             inorder(list, m_root);
         }
-//        else if (traversal.equals(Traversal.LEVEL)) {
-//            List<BinaryTreeNode<T>> tempList 
-//        = new ArrayList<BinaryTreeNode<T>>();
-//            tempList.add(m_root);
-//            levelorder(list, tempList);
-//        }
         return list;
     }
     
@@ -99,10 +93,11 @@ public class BinaryTree<T> {
             }
     }
     
-    /*
+    /**
      * Adds the passed new node to the node as a left child 
      * (if this position is free) or as the right child if this position is 
      * free. Returns true if a node can be added, false otherwise. 
+     * 
      * @param node the current node to test.
      * @param newNode the node to add
      * @return true if the node could be added, false otherwise.
@@ -153,26 +148,5 @@ public class BinaryTree<T> {
         list.add(node);
         inorder(list, node.getRightChild());
     }
-    
-    /*
-    private void levelorder(final List<BinaryTreeNode<T>> list,
-            final List<BinaryTreeNode<T>> tempList) {
-        if (list == null) {
-            return;
-        }
-        List<BinaryTreeNode<T>> tempList2 = new ArrayList<BinaryTreeNode<T>>();
-        for (BinaryTreeNode<T> node : tempList) {
-            list.add(node);
-            if (node.getLeftChild() != null) {
-                tempList2.add(node.getLeftChild());
-            }
-            if (node.getRightChild() != null) {
-                tempList2.add(node.getRightChild());
-            }
-        }
-        levelorder(list, tempList2);
-    }
-    */
-    
-    
+   
 }

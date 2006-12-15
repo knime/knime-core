@@ -34,19 +34,30 @@ import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
 
 /**
+ * Interprets the {@link org.knime.base.node.viz.plotter.dendrogram.BinaryTree}
+ * of {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramPoint}s such
+ * that the leaf nodes (the data points) are painted and the cluster nodes are
+ * drawn with a horizontal line between the contained subnodes and vertical 
+ * lines to that subnodes. The distance of the two subclsuters is displayed on
+ * the y axis, the data points are displayed on the x axis. A tooltip to provide
+ * information about the exct distance is provided for the nodes.
  * 
  * @author Fabian Dill, University of Konstanz
  */
 public class DendrogramDrawingPane extends AbstractDrawingPane {
     
+    /** The tree containing the DendrogramPoints. */
     private BinaryTree<DendrogramPoint> m_rootNode;
     
+    /** Flag to display or hide the points. */
     private boolean m_showDots = true;
     
     private int m_dotSize = 4;
     
     private int m_lineThickness = 1;
     
+    /** Constant by which the thickness of hilited or selected lines is 
+     * increased. */
     private static final float EMPH = 1.4f;
     
     /**
@@ -99,6 +110,19 @@ public class DendrogramDrawingPane extends AbstractDrawingPane {
     
 
     /**
+     * Paints a dendrogram such that the leaf nodes are painted at the border
+     * (with distance 0) and on the nominal x axis and the cluster nodes are 
+     * drawn with increasing distance to the top (that is the distance is 
+     * plotted on the y axis). Each cluster node has exactly two subnodes, 
+     * a horizontal line on the height of the distance between these two 
+     * subnodes and two vertical lines from the end points of the 
+     * horizontal line to the subnodes. 
+     * 
+     * <p>
+     * Hilited (sub)nodes are colored with the hilite color and hilited and 
+     * selected clusteres are visualized through color and emphasized line 
+     * thickness.
+     * 
      * @see org.knime.base.node.viz.plotter.AbstractDrawingPane
      * #paintContent(java.awt.Graphics)
      */
@@ -169,6 +193,9 @@ public class DendrogramDrawingPane extends AbstractDrawingPane {
     
     
     /**
+     * The original (not mapped) distance of the clustering between the two
+     * subnodes. 
+     * 
      * @see javax.swing.JComponent#getToolTipText(java.awt.event.MouseEvent)
      */
     @Override

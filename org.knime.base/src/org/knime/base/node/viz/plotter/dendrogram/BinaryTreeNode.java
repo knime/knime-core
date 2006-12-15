@@ -20,13 +20,19 @@ package org.knime.base.node.viz.plotter.dendrogram;
 
 
 /**
+ * A generic tree with a content, a reference to the parent node and with a left
+ * child and a right child. Everything might be <code>null</code> except of the
+ * content, i.e. the children and the parent might be added later but only once. 
+ * 
+ * Nodes without children are considered ot be leaf nodes, i.e. 
+ * {@link org.knime.base.node.viz.plotter.dendrogram.BinaryTreeNode#isLeaf()} 
+ * returns <code>true</code>.
+ * 
  * @param <T> the type of the nodes content.
  * 
  * @author Fabian Dill, University of Konstanz
  */
 public class BinaryTreeNode<T> {
-    
-
 
     private final T m_content;
     
@@ -38,6 +44,8 @@ public class BinaryTreeNode<T> {
     
 
     /**
+     * The content of a <code>BinaryTreeNode</code> is final and is set only 
+     * once.
      * 
      * @param content the content of the node.
      */
@@ -62,8 +70,11 @@ public class BinaryTreeNode<T> {
     }
     
     /**
-     * 
+     * The parent of the node can be set only once, if the parent is already set
+     * an {@link java.lang.IllegalArgumentException} is thrown.
+     *  
      * @param parent the parent of this node.
+     * @throws IllegalArgumentException if the parent is already set.
      */
     public void setParent(final BinaryTreeNode<T> parent) {
         if (m_parent != null) {
@@ -82,8 +93,11 @@ public class BinaryTreeNode<T> {
     }
     
     /**
+     * The parent of the node can be set only once, if the left child is 
+     * already set an {@link java.lang.IllegalArgumentException} is thrown.
      * 
-     * @param leftChild the left child of this node.
+     * @param leftChild the left child of this node
+     * @throws IllegalArgumentException if the left child is already set.
      */
     public void setLeftChild(final BinaryTreeNode<T> leftChild) {
         if (m_leftChild != null) {
@@ -102,8 +116,11 @@ public class BinaryTreeNode<T> {
     }
     
     /**
+     * * The parent of the node can be set only once, if the right child is 
+     * already set an {@link java.lang.IllegalArgumentException} is thrown.
      * 
      * @param rightChild the right child.
+     * @throws IllegalArgumentException if the right child is already set.
      */
     public void setRightChild(final BinaryTreeNode<T> rightChild) {
         if (m_rightChild != null) {

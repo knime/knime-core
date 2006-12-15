@@ -25,6 +25,11 @@ import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.base.node.viz.plotter.props.LinePlotterAppearanceTab;
 
 /**
+ * In addition to the 
+ * {@link org.knime.base.node.viz.plotter.AbstractPlotterProperties} a 
+ * {@link org.knime.base.node.viz.plotter.props.LinePlotterAppearanceTab} is
+ * added, to adjust the dot size and line thickness and to show or hide the 
+ * dots.
  * 
  * @author Fabian Dill, University of Konstanz
  */
