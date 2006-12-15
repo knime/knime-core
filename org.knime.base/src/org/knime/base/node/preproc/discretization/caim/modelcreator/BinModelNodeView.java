@@ -49,7 +49,8 @@ public class BinModelNodeView extends NodeView {
      * @param model the node model (must implement DataProvider).
      * @param plotter the plotter
      */
-    public BinModelNodeView(final NodeModel model, final AbstractPlotter plotter) {
+    public BinModelNodeView(final NodeModel model, 
+            final AbstractPlotter plotter) {
         super(model);
         m_plotters = new ArrayList<AbstractPlotter>();
         m_plotters.add(plotter);
@@ -128,7 +129,7 @@ public class BinModelNodeView extends NodeView {
                 plotter.reset();
                 plotter.setHiLiteHandler(hiliteHandler);
                 ((BinModelPlotter)plotter)
-                        .setDiscretizationModel(((CAIMDiscretizationNodeModel)model)
+                    .setDiscretizationModel(((CAIMDiscretizationNodeModel)model)
                                 .getDiscretizationModel());
                 plotter.updatePaintModel();
             }

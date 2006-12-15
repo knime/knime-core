@@ -31,7 +31,7 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.config.Config;
 
 /**
- * Contains the {@link DiscretizationScheme}s for the given columns.
+ * Contains the {@link DiscretizationScheme}s for a given columns.
  * 
  * @author Christoph, University of Konstanz
  */

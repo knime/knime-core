@@ -1,6 +1,6 @@
 /*
  * @(#)$RCSfile$ 
- * $Revision: 4973 $ $Date: 2006-08-01 12:15:56 +0200 (Di, 01 Aug 2006) $ $Author: meinl $
+ * $Revision: 4973 $ $Date: 2006-08-01 12:15:56 +0200 (Di, 01 Aug 2006) $ $
  * --------------------------------------------------------------------- *
  *   This source code, its documentation and all appendant files         *
  *   are protected by copyright law. All rights reserved.                *

@@ -67,17 +67,5 @@ public class CAIMDiscretizationNodeDialog extends DefaultNodeDialogPane {
                         "Sort in memory:", true);
 
         this.addDialogComponent(inMemory);
-
-        // NOTE: this code was just for evalutation and testing purpose
-        // the optimization has shown to be faster in general and produce
-        // the same binning results and is therefore prefered always
-//        // whether to use the class optimized version
-//        DialogComponentBoolean classOptimized =
-//                new DialogComponentBoolean(
-//                        CAIMDiscretizationNodeModel.USE_CLASS_OPTIMIZATION,
-//                        "Class optimized:", true);
-//
-//        this.addDialogComponent(classOptimized);
-
     }
 }

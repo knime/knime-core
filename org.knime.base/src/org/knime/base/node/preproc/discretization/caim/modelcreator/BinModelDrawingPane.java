@@ -136,6 +136,7 @@ public class BinModelDrawingPane extends ScatterPlotterDrawingPane {
     }
 
     /**
+     * Not supported yet.
      * 
      * @param x1 left corner x
      * @param y1 left corner y
@@ -149,6 +150,7 @@ public class BinModelDrawingPane extends ScatterPlotterDrawingPane {
     }
 
     /**
+     * No tool tips yet.
      * 
      * @see javax.swing.JComponent#getToolTipText(java.awt.event.MouseEvent)
      */

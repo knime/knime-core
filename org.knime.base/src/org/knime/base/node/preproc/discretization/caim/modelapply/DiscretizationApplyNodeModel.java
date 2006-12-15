@@ -76,10 +76,12 @@ class DiscretizationApplyNodeModel extends NodeModel {
 
     /**
      * Applies the discretization model to the input data table.
-     * 
+     * @param data the input data to which the model should be applied
+     * @param exec the execution context for this node
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      * @throws CanceledExecutionException If canceled.
      * @throws Exception if something else goes wrong.
+     * @return the discretized input table
      */
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException,

@@ -38,7 +38,7 @@ import org.knime.core.node.config.Config;
  */
 public class DiscretizationScheme {
 
-    private final static String CONFIG_KEY_INTERVAL_PREFIX = "Interval_";
+    private static final String CONFIG_KEY_INTERVAL_PREFIX = "Interval_";
 
     /**
      * The sorted vector of intervals.
@@ -182,162 +182,164 @@ public class DiscretizationScheme {
         return m_intervals.size();
     }
 
-    /**
-     * TODO: STILL BUGGY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Adds
-     * an interval to the given discretization scheme. If the interval conflicts
-     * with the current intervals they are adapted accordingly.
-     * 
-     * @param interval the new interval to add
-     */
-    public void addInterval(final Interval interval) {
-
-        throw new RuntimeException("Buggy at the moment. Can not be used.");
-
-        // if (m_intervals.size() == 0) {
-        // m_intervals.add(interval);
-        // return;
-        // }
-        //
-        // // at the beginning the insertion before index is 0
-        // int indexOfLeftInterval = 0;
-        //
-        // // first find the interval where the left bound of the interval to
-        // // insert is located
-        // for (int i = 0; i < m_intervals.size(); i++) {
-        //
-        // Interval currInterval = m_intervals.get(i);
-        //
-        // if (interval.compareLeftBoundToLeft(currInterval) <= 0) {
-        // // if the interval to insert starts before the current one
-        // // or is equal break
-        // break;
-        // } else if (interval.compareLeftBoundToRight(currInterval) <= 0) {
-        // // if the interval starts within the current interval
-        // // break
-        // break;
-        // }
-        //
-        // // else increment the interval counter and proceed with the next
-        // // interval
-        // indexOfLeftInterval++;
-        // }
-        //
-        // int indexOfRightInterval = indexOfLeftInterval;
-        //
-        // // now find the interval where the right bound of the interval
-        // // to insert is falling in
-        // for (int i = indexOfLeftInterval; i < m_intervals.size(); i++) {
-        //
-        // Interval currInterval = m_intervals.get(i);
-        //
-        // if (interval.compareRightBoundToLeft(currInterval) <= 0) {
-        // // if the interval to insert starts before the current one
-        // // or is equal break
-        // break;
-        // } else if (interval.compareRightBoundToRight(currInterval) <= 0) {
-        // // if the interval starts within the current interval
-        // // break
-        // break;
-        // }
-        //
-        // // else increment the interval counter and proceed with the next
-        // // interval
-        // indexOfRightInterval++;
-        // }
-        //
-        // Interval leftShrinkedInterval = null;
-        // Interval rightShrinkedInterval = null;
-        // if (indexOfLeftInterval < m_intervals.size()) {
-        // if (interval.compareLeftBoundToLeft(m_intervals
-        // .get(indexOfLeftInterval)) <= 0) {
-        // // if the interval is before or equal to the indexed one
-        // // do nothing with the left bound of the indexed interval
-        // } else {
-        // // shrink the indexed interval to the left bound of the interval
-        // // to insert
-        //
-        // double leftBound =
-        // m_intervals.get(indexOfLeftInterval).getLeftBound();
-        // double rightBound = interval.getLeftBound();
-        // boolean includeLeft =
-        // m_intervals.get(indexOfLeftInterval).isIncludeLeft();
-        // boolean includeRight = !interval.isIncludeLeft();
-        //
-        // leftShrinkedInterval =
-        // new Interval(leftBound, rightBound, includeLeft,
-        // includeRight);
-        // }
-        //
-        // if (indexOfRightInterval < m_intervals.size()) {
-        //
-        // if (interval.compareRightBoundToLeft(m_intervals
-        // .get(indexOfRightInterval)) < 0) {
-        // // if the interval ends before the indexed one
-        // // do nothing with the left bound of the indexed interval
-        // } else {
-        // // shrink the indexed interval to the right bound of the
-        // // interval
-        // // to insert
-        //
-        // double leftBound = interval.getRightBound();
-        // double rightBound =
-        // m_intervals.get(indexOfRightInterval)
-        // .getRightBound();
-        // boolean includeLeft = !interval.isIncludeRight();
-        //
-        // boolean includeRight =
-        // m_intervals.get(indexOfRightInterval)
-        // .isIncludeRight();
-        //
-        // rightShrinkedInterval =
-        // new Interval(leftBound, rightBound, includeLeft,
-        // includeRight);
-        // }
-        // }
-        // }
-        //
-        // // change the intervals if they were shrinked
-        // // and remove all intermediate intervals covered by the interval
-        // // to insert
-        // for (int i = indexOfRightInterval; i >= 0; i--) {
-        //
-        // if (i == indexOfLeftInterval || i == indexOfRightInterval) {
-        // if (i == indexOfRightInterval) {
-        // if (rightShrinkedInterval != null) {
-        // m_intervals.remove(i);
-        // m_intervals.add(i, rightShrinkedInterval);
-        // }
-        // }
-        // if (i == indexOfLeftInterval) {
-        // if (leftShrinkedInterval != null) {
-        // if (i < m_intervals.size()
-        // && rightShrinkedInterval == null) {
-        // m_intervals.remove(i);
-        // }
-        // m_intervals.add(i, leftShrinkedInterval);
-        // m_intervals.add(i + 1, interval);
-        //
-        // // finished
-        // break;
-        // } else {
-        // // remove the left one
-        // if (i < m_intervals.size()) {
-        // m_intervals.remove(i);
-        // }
-        // m_intervals.add(i, interval);
-        //
-        // // finished
-        // break;
-        // }
-        // }
-        // } else {
-        // // remove all intermediate intervals
-        // if (i < m_intervals.size()) {
-        // m_intervals.remove(i);
-        // }
-        // }
-        // }
-    }
+    // /**
+    // * TODO: STILL BUGGY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // Adds
+    // * an interval to the given discretization scheme. If the interval
+    // conflicts
+    // * with the current intervals they are adapted accordingly.
+    // *
+    // * @param interval the new interval to add
+    // */
+    // public void addInterval(final Interval interval) {
+    //
+    // throw new RuntimeException("Buggy at the moment. Can not be used.");
+    //
+    // // if (m_intervals.size() == 0) {
+    // // m_intervals.add(interval);
+    // // return;
+    // // }
+    // //
+    // // // at the beginning the insertion before index is 0
+    // // int indexOfLeftInterval = 0;
+    // //
+    // // // first find the interval where the left bound of the interval to
+    // // // insert is located
+    // // for (int i = 0; i < m_intervals.size(); i++) {
+    // //
+    // // Interval currInterval = m_intervals.get(i);
+    // //
+    // // if (interval.compareLeftBoundToLeft(currInterval) <= 0) {
+    // // // if the interval to insert starts before the current one
+    // // // or is equal break
+    // // break;
+    // // } else if (interval.compareLeftBoundToRight(currInterval) <= 0) {
+    // // // if the interval starts within the current interval
+    // // // break
+    // // break;
+    // // }
+    // //
+    // // // else increment the interval counter and proceed with the next
+    // // // interval
+    // // indexOfLeftInterval++;
+    // // }
+    // //
+    // // int indexOfRightInterval = indexOfLeftInterval;
+    // //
+    // // // now find the interval where the right bound of the interval
+    // // // to insert is falling in
+    // // for (int i = indexOfLeftInterval; i < m_intervals.size(); i++) {
+    // //
+    // // Interval currInterval = m_intervals.get(i);
+    // //
+    // // if (interval.compareRightBoundToLeft(currInterval) <= 0) {
+    // // // if the interval to insert starts before the current one
+    // // // or is equal break
+    // // break;
+    // // } else if (interval.compareRightBoundToRight(currInterval) <= 0) {
+    // // // if the interval starts within the current interval
+    // // // break
+    // // break;
+    // // }
+    // //
+    // // // else increment the interval counter and proceed with the next
+    // // // interval
+    // // indexOfRightInterval++;
+    // // }
+    // //
+    // // Interval leftShrinkedInterval = null;
+    // // Interval rightShrinkedInterval = null;
+    // // if (indexOfLeftInterval < m_intervals.size()) {
+    // // if (interval.compareLeftBoundToLeft(m_intervals
+    // // .get(indexOfLeftInterval)) <= 0) {
+    // // // if the interval is before or equal to the indexed one
+    // // // do nothing with the left bound of the indexed interval
+    // // } else {
+    // // // shrink the indexed interval to the left bound of the interval
+    // // // to insert
+    // //
+    // // double leftBound =
+    // // m_intervals.get(indexOfLeftInterval).getLeftBound();
+    // // double rightBound = interval.getLeftBound();
+    // // boolean includeLeft =
+    // // m_intervals.get(indexOfLeftInterval).isIncludeLeft();
+    // // boolean includeRight = !interval.isIncludeLeft();
+    // //
+    // // leftShrinkedInterval =
+    // // new Interval(leftBound, rightBound, includeLeft,
+    // // includeRight);
+    // // }
+    // //
+    // // if (indexOfRightInterval < m_intervals.size()) {
+    // //
+    // // if (interval.compareRightBoundToLeft(m_intervals
+    // // .get(indexOfRightInterval)) < 0) {
+    // // // if the interval ends before the indexed one
+    // // // do nothing with the left bound of the indexed interval
+    // // } else {
+    // // // shrink the indexed interval to the right bound of the
+    // // // interval
+    // // // to insert
+    // //
+    // // double leftBound = interval.getRightBound();
+    // // double rightBound =
+    // // m_intervals.get(indexOfRightInterval)
+    // // .getRightBound();
+    // // boolean includeLeft = !interval.isIncludeRight();
+    // //
+    // // boolean includeRight =
+    // // m_intervals.get(indexOfRightInterval)
+    // // .isIncludeRight();
+    // //
+    // // rightShrinkedInterval =
+    // // new Interval(leftBound, rightBound, includeLeft,
+    // // includeRight);
+    // // }
+    // // }
+    // // }
+    // //
+    // // // change the intervals if they were shrinked
+    // // // and remove all intermediate intervals covered by the interval
+    // // // to insert
+    // // for (int i = indexOfRightInterval; i >= 0; i--) {
+    // //
+    // // if (i == indexOfLeftInterval || i == indexOfRightInterval) {
+    // // if (i == indexOfRightInterval) {
+    // // if (rightShrinkedInterval != null) {
+    // // m_intervals.remove(i);
+    // // m_intervals.add(i, rightShrinkedInterval);
+    // // }
+    // // }
+    // // if (i == indexOfLeftInterval) {
+    // // if (leftShrinkedInterval != null) {
+    // // if (i < m_intervals.size()
+    // // && rightShrinkedInterval == null) {
+    // // m_intervals.remove(i);
+    // // }
+    // // m_intervals.add(i, leftShrinkedInterval);
+    // // m_intervals.add(i + 1, interval);
+    // //
+    // // // finished
+    // // break;
+    // // } else {
+    // // // remove the left one
+    // // if (i < m_intervals.size()) {
+    // // m_intervals.remove(i);
+    // // }
+    // // m_intervals.add(i, interval);
+    // //
+    // // // finished
+    // // break;
+    // // }
+    // // }
+    // // } else {
+    // // // remove all intermediate intervals
+    // // if (i < m_intervals.size()) {
+    // // m_intervals.remove(i);
+    // // }
+    // // }
+    // // }
+    // }
 
     /**
      * @see java.lang.Object#toString()
@@ -389,31 +391,5 @@ public class DiscretizationScheme {
         }
 
         return result;
-    }
-
-    public static void main(final String[] args) {
-
-        Interval i1 = new Interval(1, 14, true, false);
-
-        DiscretizationScheme ds = new DiscretizationScheme(i1);
-
-        System.out.println("Init: " + ds);
-
-        ds.insertBound(2.3);
-
-        System.out.println("After: " + ds);
-
-        ds.insertBound(1);
-
-        System.out.println("After: " + ds);
-
-        ds.insertBound(2.3);
-
-        System.out.println("After: " + ds);
-
-        ds.insertBound(14.3);
-
-        System.out.println("After: " + ds);
-
     }
 }

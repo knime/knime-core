@@ -30,7 +30,7 @@ import org.knime.core.node.BufferedDataTable;
 
 /**
  * Implements a 2D quanta matrix that holds for one dimension class values and
- * for the other dimension the intervals of discretization
+ * for the other dimension the intervals of discretization.
  * 
  * @author Christoph Sieb, University of Konstanz
  */

@@ -193,9 +193,12 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     /**
      * Starts the diescretization.
      * 
+     * @param data the input data tables
+     * @param exec the execution context for this node
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      * @throws CanceledExecutionException If canceled.
      * @throws Exception if something else goes wrong.
+     * @return the result table with the discretized values
      */
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException,
@@ -206,7 +209,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
 
         // if nothing to discretize return the origninal data and create an
         // empty model
-        if (m_includedColumnNames == null || m_includedColumnNames.length == 0) {
+        if (m_includedColumnNames == null || 
+                m_includedColumnNames.length == 0) {
             m_discretizationModel =
                     new DiscretizationModel(new String[0],
                             new DiscretizationScheme[0]);
@@ -246,7 +250,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                     + "'");
             ExecutionContext subExec =
                     exec
-                            .createSubExecutionContext(1.0D / (double)m_includedColumnNames.length);
+                            .createSubExecutionContext(1.0D / (
+                                    double)m_includedColumnNames.length);
             subExec.checkCanceled();
             // never discretize the column index (should never happen)
             if (m_classColumnName.equals(includedColumnName)) {
@@ -729,7 +734,9 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                     if (!Double.isNaN(lastChangeValueWithoutNewBoundary)) {
                         // a new boundary is the midpoint
                         double newBoundary =
-                                (lastDifferentValue + lastChangeValueWithoutNewBoundary) / 2.0D;
+                                (lastDifferentValue 
+                                        + lastChangeValueWithoutNewBoundary) 
+                                        /  2.0D;
 
                         // add the new midpoint boundary to the linked list
                         lastAdded.m_next = new LinkedDouble(newBoundary);
@@ -786,7 +793,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             throws InvalidSettingsException {
 
         // if no columns are defined to discretize, return the input spec
-        if (m_includedColumnNames == null || m_includedColumnNames.length == 0) {
+        if (m_includedColumnNames == null 
+                || m_includedColumnNames.length == 0) {
             setWarningMessage(WARNING_NO_COLS_SELECTED);
             return inSpecs;
         } else {
@@ -799,7 +807,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             for (DataColumnSpec originalColumnSpec : inSpecs[DATA_INPORT]) {
 
                 // if the column is included for discretizing, change the spec
-                if (isIncluded(originalColumnSpec, m_includedColumnNames) > -1) {
+                if (isIncluded(originalColumnSpec, m_includedColumnNames) 
+                        > -1) {
                     // creat a nominal string column spec
                     newColumnSpecs[counter] =
                             new DataColumnSpecCreator(originalColumnSpec

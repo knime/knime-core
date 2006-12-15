@@ -66,6 +66,7 @@ public class BinRuler {
      * @param width the width of the ruler
      * @param binPositions binning boundary positions
      * @param binPosValues the value labels for the boundaries
+     * @param name the name for this ruler; normaly the column name
      */
     public BinRuler(final Point leftStartPoint, final int width,
             final int[] binPositions, final String[] binPosValues,
