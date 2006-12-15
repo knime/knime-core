@@ -40,11 +40,11 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * {@link org.knime.base.node.viz.histogram.HistogramDrawingPane}. It creates 
  * the {@link org.knime.base.node.viz.histogram.BarVisModel} objects 
  * based on the 
- * {@link org.knime.base.node.viz.histogram.impl.interactive.
- * InteractiveBarDataModel} 
+ * {@link 
+ * org.knime.base.node.viz.histogram.impl.interactive.InteractiveBarDataModel} 
  * of the 
- * {@link org.knime.base.node.viz.histogram.impl.interactive.
- * InteractiveHistogramDataModel} 
+ * {@link 
+ * org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel} 
  * class by enhancing these information 
  * with information about the size of the drawing space like height and width 
  * in pixel.

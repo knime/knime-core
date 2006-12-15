@@ -202,7 +202,7 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
-     * @return
+     * @return panel
      */
     private JPanel createVizSettingsPanel() {
         final JPanel vizPanel = new JPanel();
