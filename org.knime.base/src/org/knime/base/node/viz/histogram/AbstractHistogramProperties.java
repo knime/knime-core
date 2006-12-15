@@ -188,7 +188,7 @@ public abstract class AbstractHistogramProperties extends
                 AbstractHistogramProperties.APPLY_BUTTON_LABEL);
         m_applyBarSettingsButton.setHorizontalAlignment(SwingConstants.RIGHT);
         //create the visualization option elements
-        m_showGrid = new JCheckBox(SHOW_GRID_LABEL, false);
+        m_showGrid = new JCheckBox(SHOW_GRID_LABEL, true);
         m_showBarOutline = new JCheckBox(SHOW_BAR_OUTLINE_LABEL, true);
         
 //the column select tab
