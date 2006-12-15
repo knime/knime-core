@@ -42,10 +42,6 @@ public class LinePlotterProperties extends MultiColumnPlotterProperties {
     
     private final LinePlotterAppearanceTab m_appearance;
     
-//    private final ColumnFilterTab m_columnFilter;
-    
-
-    
     /**
      * 
      *
@@ -59,27 +55,6 @@ public class LinePlotterProperties extends MultiColumnPlotterProperties {
         m_appearance = new LinePlotterAppearanceTab();
         addTab(m_appearance.getDefaultName(), m_appearance);
     }
-    
- /*
-    /**
-     * Updates the column filtering with a new 
-     * {@link org.knime.core.data.DataColumnSpec}.
-     * @param spec the data table spec.
-     * @param selected the former selected columns.
-     *
-    public void updateColumnSelection(final DataTableSpec spec, 
-            final Set<String> selected) {
-        m_columnFilter.updateColumnSelection(spec, selected);
-    }
-    
-    /**
-     * 
-     * @return the column filter.
-     *
-    public ColumnFilterPanel getColumnFilter() {
-        return m_columnFilter.getColumnFilter();
-    }
-    */
     
     /**
      * 
