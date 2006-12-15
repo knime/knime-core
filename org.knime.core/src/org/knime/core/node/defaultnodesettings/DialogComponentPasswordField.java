@@ -267,6 +267,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #setToolTipText(java.lang.String)
      */
+    @Override
     public void setToolTipText(final String text) {
         m_label.setToolTipText(text);
         m_pwField.setToolTipText(text);
