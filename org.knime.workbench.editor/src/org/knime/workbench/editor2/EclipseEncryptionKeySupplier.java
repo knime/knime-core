@@ -100,11 +100,20 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
             // search for suitable parents
             Shell[] shells = display.getShells();
             Shell dialogShell = null;
-            for (Shell posShell : shells) {
-                if (posShell.getData() != null
-                        && posShell.getData() instanceof WrappedNodeDialog) {
-                    dialogShell = posShell;
-                    break;
+            if (shells != null) {
+                for (Shell posShell : shells) {
+                    if (posShell.getData() != null
+                            && posShell.getData() instanceof WrappedNodeDialog) {
+                        dialogShell = posShell;
+                        break;
+                    }
+                }
+
+                // if dialogShell is null get another default shell
+                if (dialogShell == null) {
+                    if (shells.length > 0) {
+                        dialogShell = shells[0];
+                    }
                 }
             }
 
