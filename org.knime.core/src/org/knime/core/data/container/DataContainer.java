@@ -49,9 +49,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
@@ -452,8 +450,20 @@ public class DataContainer implements RowAppender {
         }
         for (int c = 0; c < numCells; c++) {
             DataType columnClass = m_spec.getColumnSpec(c).getType();
-            DataCell value = row.getCell(c);
-            DataType runtimeClass = value.getType();
+            DataCell value;
+            DataType runtimeClass;
+            if (row instanceof BlobSupportDataRow) {
+                BlobSupportDataRow bsvalue = (BlobSupportDataRow)row;
+                DataCell ce  = bsvalue.getRawCell(c);
+                runtimeClass = ce instanceof BlobWrapperDataCell
+                    ? DataType.getType(((BlobWrapperDataCell)ce).getBlobClass())
+                            : ce.getType();
+                value = ce;
+            } else {
+                value = row.getCell(c);
+                runtimeClass = value.getType();
+            }
+                
             if (!columnClass.isASuperTypeOf(runtimeClass)) {
                 throw new IllegalArgumentException("Runtime class of object \""
                         + value.toString() + "\" (index " + c
@@ -502,9 +512,9 @@ public class DataContainer implements RowAppender {
      * If m_buffer needs to serialize a blob, it will check if any other buffer
      * has written the blob already and then reference to this buffer rather 
      * than writing out the blob again.
-     * <p>If used along with the {@link ExecutionContext}, this method
-     * returns the global table repository (global = in the context of
-     * the current workflow).
+     * <p>If used along with the {@link org.knime.core.node.ExecutionContext}, 
+     * this method returns the global table repository (global = in the context
+     * of the current workflow).
      * <p>This implementation does not support sophisticated blob serialization.
      * It will return a <code>new HashMap&lt;Integer, Buffer&gt;()</code>.
      * @return The map bufferID to Buffer.
@@ -519,7 +529,8 @@ public class DataContainer implements RowAppender {
     
     /**
      * Get the local repository. Overridden in 
-     * {@link BufferedDataContainer#getLocalTableRepository()}
+     * {@link org.knime.core.node.BufferedDataContainer#
+     * getLocalTableRepository()}
      * @return A local repository to which tables are added that have been
      * created during the node's execution.
      */
@@ -536,10 +547,12 @@ public class DataContainer implements RowAppender {
      * @param col The column of interest.
      * @param value The (maybe) new value.
      */
-    private void updatePossibleValues(final int col, final DataCell value) {
-        if (m_possibleValues[col] == null || value.isMissing()) {
+    private void updatePossibleValues(final int col, final DataCell cell) {
+        if (m_possibleValues[col] == null || cell.isMissing()) {
             return;
         } 
+        DataCell value = cell instanceof BlobWrapperDataCell 
+            ? ((BlobWrapperDataCell)cell).getCell() : cell;
         m_possibleValues[col].add(value);
         if (m_possibleValuesSizes[col] >= 0 
                 && m_possibleValues[col].size() > m_possibleValuesSizes[col]) {
@@ -555,10 +568,12 @@ public class DataContainer implements RowAppender {
      * @param col The column of interest.
      * @param value The new value to check.
      */
-    private void updateMinMax(final int col, final DataCell value) {
-        if (m_minCells[col] == null || value.isMissing()) {
+    private void updateMinMax(final int col, final DataCell cell) {
+        if (m_minCells[col] == null || cell.isMissing()) {
             return;
         }
+        DataCell value = cell instanceof BlobWrapperDataCell 
+        ? ((BlobWrapperDataCell)cell).getCell() : cell;
         if (m_minCells[col].isMissing()) {
             assert (m_maxCells[col].isMissing());
             m_minCells[col] = value;
@@ -750,8 +765,8 @@ public class DataContainer implements RowAppender {
     }
     
     /**
-     * Used in BufferedDataContainer to read the tables from the workspace
-     * location. 
+     * Used in {@link org.knime.core.node.BufferedDataContainer} to read
+     * the tables from the workspace location. 
      * @param zipFile To read from (is going to be copied to temp on access)
      * @param spec The DTS for the table.
      * @param bufferID The buffer's id used for blob (de)serialization
@@ -767,8 +782,8 @@ public class DataContainer implements RowAppender {
     }
     
     /**
-     * Used in BufferedDataContainer to read the tables from the workspace
-     * location.
+     * Used in {@link org.knime.core.node.BufferedDataContainer} to read the 
+     * tables from the workspace location.
      * @param c The factory that create the Buffer instance that the 
      * returned table reads from. 
      * @param spec The DTS for the table.
