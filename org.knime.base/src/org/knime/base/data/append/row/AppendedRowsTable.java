@@ -90,9 +90,9 @@ public class AppendedRowsTable implements DataTable {
     } // AppendedRowsTable(DataTable[])
 
     /**
-     * Concatenates a set of tables. Duplicate keys may be skipped (<code>suffix</code>
-     * argument is <code>null</code>) or may be avoided by appending a fixed
-     * suffix to any subsequent occurence of a duplicate.
+     * Concatenates a set of tables. Duplicate keys may be skipped 
+     * (<code>suffix</code> argument is <code>null</code>) or may be avoided 
+     * by appending a fixed suffix to any subsequent occurence of a duplicate.
      * 
      * @param tables all tables to be appended
      * @param suffix suffix to append to duplicate keys or <code>null</code>
@@ -158,9 +158,12 @@ public class AppendedRowsTable implements DataTable {
         // memorize the first column spec in the argument array for
         // each column name, we use it later on to initialize the column
         // spec creator.
-        LinkedHashMap<String, DataColumnSpec> columnSet = new LinkedHashMap<String, DataColumnSpec>();
-        LinkedHashMap<String, DataType> typeSet = new LinkedHashMap<String, DataType>();
-        LinkedHashMap<String, DataColumnDomain> domainSet = new LinkedHashMap<String, DataColumnDomain>();
+        LinkedHashMap<String, DataColumnSpec> columnSet = 
+            new LinkedHashMap<String, DataColumnSpec>();
+        LinkedHashMap<String, DataType> typeSet = 
+            new LinkedHashMap<String, DataType>();
+        LinkedHashMap<String, DataColumnDomain> domainSet = 
+            new LinkedHashMap<String, DataColumnDomain>();
 
         // create final data table spec
         for (int i = 0; i < tableSpecs.length; i++) {
