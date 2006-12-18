@@ -278,7 +278,8 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                     public void setProgress(final int curRowNr,
                             final int rowCount, final RowKey lastKey,
                             final ExecutionMonitor exek) {
-                        // do nothing here
+                        exec.setProgress(curRowNr / (double)rowCount, "Processed row " 
+                                + curRowNr + " (\"" + lastKey + "\")");
                     }
                 };
 
@@ -291,6 +292,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                 }
             }
 
+            exec.setMessage("Aggregating chunks");
             resultTables[i] =
                     exec.createColumnRearrangeTable(data[0], rea, exec
                             .createSubProgress(0.05));
