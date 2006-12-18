@@ -168,14 +168,16 @@ public class AppendedRowsIterator extends RowIterator {
      * Get next row internally.
      */
     private void initNextRow() {
+        // reached end of table's iterator - take next
         if (!m_curIterator.hasNext()) {
-            // reached of table's iterator - take next
-            if (m_curTable < m_tables.length - 1) {
-                initNextTable();
-            } else { // final end
-                m_nextRow = null;
-                return; // reached end of this table
-            }
+            do {
+                if (m_curTable < m_tables.length - 1) {
+                    initNextTable();
+                } else { // final end
+                    m_nextRow = null;
+                    return; // reached end of this table
+                }
+            } while (!m_curIterator.hasNext());
         }
         DataRow baseRow = m_curIterator.next(); // row from table
         m_curRowIndex++;
