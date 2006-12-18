@@ -184,7 +184,6 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
             ((ScatterMatrixProperties)getProperties()).updateColumnSelection(
                     data.getDataTableSpec(), m_selectedColumns);
         }
-        
         if (m_selectedColumns.size() == 0) {
             getDrawingPane().repaint();
             return;
@@ -322,7 +321,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
      */
     @Override
     public void updateSize() {
-        super.updateSize();
+//        super.updateSize();
         updatePaintModel();
     }
     
