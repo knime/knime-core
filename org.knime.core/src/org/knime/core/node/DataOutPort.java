@@ -171,8 +171,7 @@ public final class DataOutPort extends NodeOutPort
     public void openPortView(final String nodeName) {
         if (getPortView() == null) {
             super.setPortView(new DataOutPortView(nodeName, getPortName()));
-            ((DataOutPortView) getPortView()).updateDataTable(m_dataTable);
-            ((DataOutPortView) getPortView()).updateDataTableSpec(m_tableSpec);
+            ((DataOutPortView) getPortView()).update(m_dataTable, m_tableSpec);
         }
         getPortView().openView();
     }

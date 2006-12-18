@@ -32,7 +32,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -63,6 +66,8 @@ final class DataOutPortView extends NodeOutPortView {
     private final TableView m_dataView;
 
     private final TableView m_propsView;
+    
+    private final JLabel m_busyLabel;
 
     private String m_nodeName;
 
@@ -107,7 +112,55 @@ final class DataOutPortView extends NodeOutPortView {
         m_tabs.addTab("DataColumnProperties", m_propsView);
 
         m_tabs.setBackground(NodeView.COLOR_BACKGROUND);
+        
+        m_busyLabel = new JLabel("Fetching data ...");
         cont.add(m_tabs, BorderLayout.CENTER);
+    }
+    
+    /** Updates table and spec. This is executed in a newly created thread to
+     * allow the view to pop up quickly. The view will show a label that
+     * the data is being loaded while the set process is executing.
+     * @param table The new table (may be null).
+     * @param spec The new spec.
+     */
+    void update(final DataTable table, final DataTableSpec spec) {
+        /* Thread that executes the setDataTable method in the TableView.
+         * The reason for that is that setting the table may require some time
+         * as sometimes the entire data needs to be extracted from a workspace
+         * archive to the temp directory. During that time, this view will 
+         * show label "Getting data..." and be more responsive.
+         */
+        Thread updateThread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    updateDataTable(table);
+                    updateDataTableSpec(spec);
+                    SwingUtilities.invokeAndWait(new Runnable() {
+                        public void run() {
+                            showComponent(m_tabs);
+                        }
+                    });
+                } catch (Exception ite) {
+                    NodeLogger.getLogger(getClass()).warn(
+                            "Exception while setting table", ite);
+                    showComponent(new JLabel(
+                            ite.getClass().getSimpleName() + " while setting " 
+                            + "table, see log file for details"));
+                }
+            }
+        };
+        showComponent(m_busyLabel);
+        updateThread.start();
+    }
+    
+    private synchronized void showComponent(final JComponent p) {
+        Container contentPane = getContentPane();
+        contentPane.removeAll();
+        contentPane.add(p, BorderLayout.CENTER);
+        contentPane.invalidate();
+        contentPane.validate();
+        contentPane.repaint();
     }
 
     /**
@@ -344,8 +397,7 @@ final class DataOutPortView extends NodeOutPortView {
             }
             cols[c] = new StringCell(boundText);
         }
-        result
-                .addRowToTable(new DefaultRow(new StringCell("lower bound"),
+        result.addRowToTable(new DefaultRow(new StringCell("lower bound"),
                         cols));
 
         // 7th row: shows the upper bound value of the domain
@@ -427,5 +479,5 @@ final class DataOutPortView extends NodeOutPortView {
         }
         return result.toString();
     }
-
+    
 }
