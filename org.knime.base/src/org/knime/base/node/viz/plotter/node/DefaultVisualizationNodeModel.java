@@ -30,6 +30,7 @@ import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
@@ -130,14 +131,17 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         int currColIdx = 0;
         for (DataColumnSpec colSpec : inSpecs[0]) {
             // nominal value
+            if (!colSpec.getType().isCompatible(NominalValue.class) &&
+                    !colSpec.getType().isCompatible(DoubleValue.class)) {
+                    excludedCols.add(currColIdx);
+            }
             if (colSpec.getType().isCompatible(NominalValue.class)) {
-                if (colSpec.getDomain().hasValues() &&
-                        colSpec.getDomain().getValues().size() > 60) {
+                if (colSpec.getDomain().hasValues() 
+                        && colSpec.getDomain().getValues().size() > 60) {
                     excludedCols.add(currColIdx);
                 } else if (!colSpec.getDomain().hasValues()) {
                     excludedCols.add(currColIdx);
                 }
-                
             }
             currColIdx++;
         }
@@ -146,8 +150,9 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
             m_excludedColumns[i] = excludedCols.get(i);
         }
         if (excludedCols.size() > 0) {
-            setWarningMessage("Nominal columns without possible values or with "
-                    + "more than 60 possible values are ignored!");   
+            setWarningMessage("Some columns are ignored! Not compatible " 
+                    + "with DoubleValue or NominalValue or no or too many" 
+                    + " possible values");   
         }
         return new DataTableSpec[0];
     }
@@ -173,7 +178,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         m_input = new DefaultDataArray(filter, 1, m_last, exec);
         if ((m_last) < inData[0].getRowCount()) {
             setWarningMessage("Only the rows from 0 to " + m_last 
-                    + "are displayed.");
+                    + " are displayed.");
         }
         return new BufferedDataTable[0];
     }
