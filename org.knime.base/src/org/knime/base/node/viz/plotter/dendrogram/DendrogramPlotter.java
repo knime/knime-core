@@ -191,16 +191,6 @@ public class DendrogramPlotter extends ScatterPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLite(
-     * org.knime.core.node.property.hilite.KeyEvent)
-     */
-    @Override
-    public void unHiLite(final KeyEvent event) {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLiteSelected()
      */
     @Override
@@ -308,6 +298,7 @@ public class DendrogramPlotter extends ScatterPlotter {
             p.setColor(spec.getRowColor(row));
             p.setShape(spec.getRowShape(row));
             p.setRelativeSize(spec.getRowSize(row));
+            p.setHilite(delegateIsHiLit(row.getKey().getId()));
         }
         viewNode = new BinaryTreeNode<DendrogramPoint>(p);
         Set<DataCell>keys = new LinkedHashSet<DataCell>();
@@ -377,5 +368,25 @@ public class DendrogramPlotter extends ScatterPlotter {
     public void unHiLiteAll() {
         updatePaintModel();
     }
+
+    /**
+     * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotter#hiLite(
+     * org.knime.core.node.property.hilite.KeyEvent)
+     */
+    @Override
+    public void hiLite(KeyEvent event) {
+        updatePaintModel();
+    }
+
+    /**
+     * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotter#unHiLite(
+     * org.knime.core.node.property.hilite.KeyEvent)
+     */
+    @Override
+    public void unHiLite(KeyEvent event) {
+        updatePaintModel();
+    }
+    
+    
 
 }
