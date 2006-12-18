@@ -92,6 +92,7 @@ public class ARFFTableTest extends TestCase {
             + "@attribute col2 string\n" + "\n\n" + "@data\n\n" + "foo, poo\n"
             + "foo, ?\n" + "?, foo\n" + "%\n" + "%\n" + "\n";
 
+    
     /**
      * tests the creatoion of a table spec from a nice ARFF file.
      * 
@@ -267,5 +268,154 @@ public class ARFFTableTest extends TestCase {
             // no exec monitor, no cancel
         }
 
+    }
+    
+    /**
+     * Customer file. Weka is able to read it. We failed on the missing space 
+     * in the last "@attribute" line.
+     * 
+     * @throws IOException some time.
+     * @throws InvalidSettingsException sometimes.
+     */
+    public void testARFFwithMissingSpace() throws IOException,
+            InvalidSettingsException {
+        final String missingSpace = 
+            "@relation kredit_bereinigt\n"
+            + "\n"
+            + "@attribute REPAYMENT_PROBLEM {0,1}\n" /* Col 0*/
+            + "@attribute RSV {0,1}\n"/* Col 1*/
+            + "@attribute GENDER {0,1}\n"/* Col 2*/
+            + "@attribute AGE real\n"/* Col 3*/
+            + "@attribute PHONE {0,1}\n"/* Col 4*/
+            + "@attribute NUMBER_CHILDREN real\n"/* Col 5*/
+            + "@attribute ADDRESS_CHANGED {0,1}\n"/* Col 6*/
+            + "@attribute GUARANTOR {0,1}\n"/* Col 7*/
+            + "@attribute JOB_DURATION real\n"/* Col 8*/
+            + "@attribute INCOME real\n"/* Col 9*/
+            + "@attribute DISP_INCOME real\n"/* Col 10*/
+            + "@attribute RENTAL_FEE real\n"/* Col 11*/
+            + "@attribute CAR {0,1}\n"/* Col 12*/
+            + "@attribute OTHER_CONTRACTS {0,1}\n"/* Col 13*/
+            + "@attribute OTHER_LOANS {0,1}\n"/* Col 14*/
+            + "@attribute EXPENSE real\n"/* Col 15*/
+            + "@attribute SAVINGS {0,1}\n"/* Col 16*/
+            /* following line is missing a space */ 
+            + "@attribute STOCK{0,1}\n"/* Col 17*/
+            + "\n"
+            + "@data\n"
+            + "1,1,1,27,0,1,1,1,2,2900,1335,330,1,0,0,1565,1,0\n"
+            + "1,1,0,28,1,0,1,0,20,2000,1100,150,0,1,0,900,1,0\n";
+
+        File tempFile = File.createTempFile("ARFFReaderUnitTest", "missSpace");
+        tempFile.deleteOnExit();
+        Writer out = new BufferedWriter(new FileWriter(tempFile));
+        out.write(missingSpace);
+        out.close();
+        try {
+        ARFFTable table = new ARFFTable(tempFile.toURL(), ARFFTable.
+                createDataTableSpecFromARFFfile(tempFile.toURL(), null), 
+                                                    "Row");
+
+        assertEquals(table.getDataTableSpec().getNumColumns(), 18);
+        
+        assertEquals(table.getDataTableSpec().getColumnSpec(0).getType(),
+                StringCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(1).getType(),
+                StringCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(2).getType(),
+                StringCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(3).getType(),
+                DoubleCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(4).getType(),
+                StringCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(5).getType(),
+                DoubleCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(6).getType(),
+                StringCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(7).getType(),
+                StringCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(8).getType(),
+                DoubleCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(9).getType(),
+                DoubleCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(10).getType(),
+                DoubleCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(11).getType(),
+                DoubleCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(12).getType(),
+                StringCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(13).getType(),
+                StringCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(14).getType(),
+                StringCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(15).getType(),
+                DoubleCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(16).getType(),
+                StringCell.TYPE);
+        assertEquals(table.getDataTableSpec().getColumnSpec(17).getType(),
+                StringCell.TYPE);
+
+        
+/*
+        + "1,1,1,27,0,1,1,1,2,2900,1335,330,1,0,0,1565,1,0\n"
+*/
+        DataRow row;
+        RowIterator rIter = table.iterator();
+
+        assertTrue(rIter.hasNext());
+        row = rIter.next();
+        assertEquals(row.getKey().toString(), "Row1");
+        assertEquals(row.getCell(0).toString(), "1");
+        assertEquals(row.getCell(1).toString(), "1");
+        assertEquals(row.getCell(2).toString(), "1");
+        assertEquals(row.getCell(3).toString(), "27");
+        assertEquals(row.getCell(4).toString(), "0");
+        assertEquals(row.getCell(5).toString(), "1");
+        assertEquals(row.getCell(6).toString(), "1");
+        assertEquals(row.getCell(7).toString(), "1");
+        assertEquals(row.getCell(8).toString(), "2");
+        assertEquals(row.getCell(9).toString(), "2900");
+        assertEquals(row.getCell(10).toString(), "1335");
+        assertEquals(row.getCell(11).toString(), "330");
+        assertEquals(row.getCell(12).toString(), "1");
+        assertEquals(row.getCell(13).toString(), "0");
+        assertEquals(row.getCell(14).toString(), "0");
+        assertEquals(row.getCell(15).toString(), "1565");
+        assertEquals(row.getCell(16).toString(), "1");
+        assertEquals(row.getCell(17).toString(), "0");
+
+/*
+ *         + "1,1,0,28,1,0,1,0,20,2000,1100,150,0,1,0,900,1,0\n";
+ */
+        assertTrue(rIter.hasNext());
+        row = rIter.next();
+        assertEquals(row.getKey().toString(), "Row2");
+        assertEquals(row.getCell(0).toString(), "1");
+        assertEquals(row.getCell(1).toString(), "1");
+        assertEquals(row.getCell(2).toString(), "0");
+        assertEquals(row.getCell(3).toString(), "28");
+        assertEquals(row.getCell(4).toString(), "1");
+        assertEquals(row.getCell(5).toString(), "0");
+        assertEquals(row.getCell(6).toString(), "1");
+        assertEquals(row.getCell(7).toString(), "0");
+        assertEquals(row.getCell(8).toString(), "20");
+        assertEquals(row.getCell(9).toString(), "2000");
+        assertEquals(row.getCell(10).toString(), "1100");
+        assertEquals(row.getCell(11).toString(), "150");
+        assertEquals(row.getCell(12).toString(), "0");
+        assertEquals(row.getCell(13).toString(), "1");
+        assertEquals(row.getCell(14).toString(), "0");
+        assertEquals(row.getCell(15).toString(), "900");
+        assertEquals(row.getCell(16).toString(), "1");
+        assertEquals(row.getCell(17).toString(), "0");
+
+        assertFalse(rIter.hasNext());
+
+        } catch (CanceledExecutionException cee) {
+            // no exec monitor, no cancel
+        }
+
+   
+        
     }
 }
