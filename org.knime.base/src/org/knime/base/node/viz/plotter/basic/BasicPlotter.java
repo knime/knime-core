@@ -134,9 +134,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
             DataCell value = row.getCell(colIdx);
             if (!value.isMissing()) {
                 int mappedX = getMappedXValue(new IntCell(x));
-                mappedX += getXAxis().getTickOffset();
                 int mappedY = getMappedYValue(value);
-                mappedY -= getYAxis().getTickOffset();
                 DataCellPoint domainPoint = new DataCellPoint(
                         row.getKey().getId(), value);
                 line.addDomainValue(domainPoint);
@@ -474,11 +472,15 @@ public abstract class BasicPlotter extends AbstractPlotter {
                         // update position
                         int x = (int)getXAxis().getCoordinate()
                                 .calculateMappedValue(p.getX(),
-                                        getDrawingPaneDimension().width, true);
-                        x -= getXAxis().getTickOffset();
+                                        getDrawingPaneDimension().width
+                                        - (2 * getXAxis().getTickOffset()), 
+                                        true);
+                        x +=  getXAxis().getTickOffset();
                         int y = (int)getYAxis().getCoordinate()
                                 .calculateMappedValue(p.getY(),
-                                        getDrawingPaneDimension().height, true);
+                                        getDrawingPaneDimension().height
+                                        - (2 * getYAxis().getTickOffset()), 
+                                        true);
                         y += getYAxis().getTickOffset();
                         newPoint = new Point(x,
                                 (int)getScreenYCoordinate(y));
