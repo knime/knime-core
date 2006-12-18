@@ -65,7 +65,7 @@ public abstract class AbstractHistogramDataModel {
      * <code>Hashtable</code> with all <code>AbstractBarDataModel</code> 
      * objects as values and their caption as <code>String</code> as key.
      */
-    private final Hashtable<String, AbstractBarDataModel> m_bars;
+    private Hashtable<String, AbstractBarDataModel> m_bars;
     
     /**
      * <code>AbstractBarDataModel</code> object with all rows which have no 
@@ -92,7 +92,7 @@ public abstract class AbstractHistogramDataModel {
     private final DataValueComparator m_xColComparator;
     
     /** All bar captions in the order they should be displayed. */
-    private final LinkedHashSet<DataCell> m_barCaptions;
+    private LinkedHashSet<DataCell> m_barCaptions;
 
     /** The max value for the x column. */
     private DataCell m_maxVal = null;
@@ -155,6 +155,12 @@ public abstract class AbstractHistogramDataModel {
         }
         if (aggrMethod == null) {
             throw new IllegalArgumentException("Aggregation method shouldn't"
+                    + " be null");
+        }
+        if (!aggrMethod.equals(AggregationMethod.COUNT) 
+                && (aggregationColumn == null 
+                        || aggregationColumn.trim().length() < 0)) {
+            throw new IllegalArgumentException("Aggregation column shouldn't"
                     + " be null");
         }
         m_aggrColIDx = m_tableSpec.findColumnIndex(aggregationColumn);
@@ -282,7 +288,34 @@ public abstract class AbstractHistogramDataModel {
         m_barCaptions.add(new StringCell(bar.getCaption()));
         m_noOfBars = m_bars.size();
     }
+    /**
+     * @return the bars
+     */
+    protected Hashtable<String, AbstractBarDataModel> getBars() {
+        return m_bars;
+    }
 
+    /**
+     * @param bars the bars to set
+     */
+    protected void setBars(final Hashtable<String, AbstractBarDataModel> bars) {
+        m_bars = bars;
+    }
+    
+    /**
+     * @return the barCaptions
+     */
+    protected LinkedHashSet<DataCell> getBarCaptions() {
+        return m_barCaptions;
+    }
+    
+    /**
+     * @param barCaptions the barCaptions to set
+     */
+    protected void setBarCaptions(final LinkedHashSet<DataCell> barCaptions) {
+        m_barCaptions = barCaptions;
+    }
+    
     /** Clears the internal used variables which holds the bar information. */
     protected void clearBarInformation() {
         // remove the old bars
@@ -452,6 +485,13 @@ public abstract class AbstractHistogramDataModel {
     }
 
     /**
+     * @param maxVal the maxVal to set
+     */
+    protected void setMaxVal(DataCell maxVal) {
+        m_maxVal = maxVal;
+    }
+    
+    /**
      * @return the minimum <code>DataCell</code> of all rows for the defined x
      *         axis column
      */
@@ -459,6 +499,13 @@ public abstract class AbstractHistogramDataModel {
         return m_minVal;
     }
 
+    /**
+     * @param minVal the minVal to set
+     */
+    protected void setMinVal(DataCell minVal) {
+        m_minVal = minVal;
+    }
+    
     /**
      * @return <code>true</code> if the a missing value bar is present
      */
@@ -515,6 +562,14 @@ public abstract class AbstractHistogramDataModel {
     public String getAggregationColumn() {
         return m_aggrColumn;
     }
+    
+    /**
+     * Return the name of the selected x column.
+     * @return name of the x column
+     */
+    public String getXColumn() {
+        return m_originalXColSpec.getName();
+    }
 
     /**
      * @return the column specification from the given table specification
@@ -551,4 +606,10 @@ public abstract class AbstractHistogramDataModel {
     protected DataTableSpec getTableSpec() {
         return m_tableSpec;
     }
+    
+    /**
+     * @see java.lang.Object#clone()
+     */
+    @Override
+    public abstract Object clone();
 }

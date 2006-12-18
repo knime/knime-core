@@ -22,9 +22,6 @@
 package org.knime.base.node.viz.histogram.impl.fixed;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
-import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
@@ -50,37 +47,15 @@ public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
      * Creates a new PlotterScrolling pane and associates it with the passed
      * view control panel.
      * 
-     * @param spec the specification of the input data table
      * @param histogramProps the <code>FixedColumnHistogramProperties</code>
      *            with the view options for the user
+     * @param dataModel the data model on which the plotter based on
      * @param handler the hilite handler from the input port
-     * @param xCol the x axis column which should be selected, if it's
-     *            <code>null</code> the first column will be selected
-     * @param aggrCol the name of the aggregation column
      */
-    public FixedColumnHistogramPlotter(final DataTableSpec spec,
+    public FixedColumnHistogramPlotter(
             final FixedColumnHistogramProperties histogramProps,
-            final HiLiteHandler handler, final String xCol, 
-            final String aggrCol) {
-        super(spec, histogramProps, handler, xCol, aggrCol);
-        setHistogramDataModel(
-                new FixedColumnHistogramDataModel(spec, xCol, aggrCol,
-                AggregationMethod.getDefaultMethod()));
-        histogramProps.updateHistogramSettings(this);
-    }
-
-    /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter
-     *      #addDataRow(org.knime.core.data.DataRow)
-     */
-    @Override
-    public void addDataRow(final DataRow row) {
-        if (getHistogramDataModel() == null) {
-            setHistogramDataModel(
-                    new FixedColumnHistogramDataModel(getDataTableSpec(),
-                    getXColName(), getAggregationColName(),
-                    getAggregationMethod()));
-        }
-        super.addDataRow(row);
+            final FixedColumnHistogramDataModel dataModel,
+            final HiLiteHandler handler) {
+        super(histogramProps, dataModel, handler);
     }
 }

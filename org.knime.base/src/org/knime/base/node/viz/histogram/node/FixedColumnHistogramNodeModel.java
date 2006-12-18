@@ -27,8 +27,7 @@ package org.knime.base.node.viz.histogram.node;
 import java.io.File;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramPlotter;
-import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramProperties;
+import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramDataModel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -36,7 +35,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -87,15 +85,18 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_allRows = new SettingsModelBoolean(
             CFGKEY_ALL_ROWS, false);
-    
-    /** The Rule2DPlotter is the core of the view. */
-    private FixedColumnHistogramPlotter m_plotter;
+//    
+//    /** The Rule2DPlotter is the core of the view. */
+//    private FixedColumnHistogramPlotter m_plotter;
+//
+//    /**
+//     * The <code>HistogramProps</code> class which holds the properties dialog
+//     * elements.
+//     */
+//    private FixedColumnHistogramProperties m_properties;
 
-    /**
-     * The <code>HistogramProps</code> class which holds the properties dialog
-     * elements.
-     */
-    private FixedColumnHistogramProperties m_properties;
+    /**The data model on which the plotter based on.*/
+    private FixedColumnHistogramDataModel m_model;
 
     /**
      * The constructor.
@@ -212,14 +213,16 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         // create the data object
         BufferedDataTable data = inData[0];
         // create the properties panel
-        m_properties = 
-            new FixedColumnHistogramProperties(AggregationMethod.COUNT);
+//        m_properties = 
+//            new FixedColumnHistogramProperties(AggregationMethod.COUNT);
         final String xCol = m_xColName.getStringValue();
         final String aggrCol = m_aggrColName.getStringValue();
         // create the plotter
-        m_plotter = new FixedColumnHistogramPlotter(data.getDataTableSpec(), 
-                m_properties, getInHiLiteHandler(0), xCol, aggrCol);
-        m_plotter.setBackground(ColorAttr.getBackground());
+//        m_plotter = new FixedColumnHistogramPlotter(data.getDataTableSpec(), 
+//                m_properties, getInHiLiteHandler(0), xCol, aggrCol);
+//        m_plotter.setBackground(ColorAttr.getBackground());
+        m_model = new FixedColumnHistogramDataModel(data.getDataTableSpec(), 
+                xCol, aggrCol, AggregationMethod.COUNT);
         final int rowCount = data.getRowCount();
         if (m_allRows.getBooleanValue()) {
             //set the actual number of rows in the selected number of rows
@@ -237,13 +240,12 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         final RowIterator rowIterator = data.iterator();
         for (int i = 0; i < selectedNoOfRows && rowIterator.hasNext(); i++) {
             final DataRow row = rowIterator.next();
-            m_plotter.addDataRow(row);
+            m_model.addDataRow(row);
             progress += progressPerRow;
             exec.setProgress(progress, "Adding data rows to histogram...");
             exec.checkCanceled();
         }
         exec.setProgress(1.0, "Histogram finished.");
-        m_plotter.lastDataRowAdded();
         LOGGER.info("Exiting execute(inData, exec) of class "
                 + "FixedColumnHistogramNodeModel.");
         return new BufferedDataTable[0];
@@ -254,15 +256,16 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        m_plotter = null;
-        m_properties = null;
+//        m_plotter = null;
+//        m_properties = null;
+        m_model = null;
     }
 
     /**
-     * @return the plotter
+     * @return the histogram data model 
      */
-    protected FixedColumnHistogramPlotter getPlotter() {
-        return m_plotter;
+    protected FixedColumnHistogramDataModel getHistogramModel() {
+        return m_model;
     }
     
     /** 

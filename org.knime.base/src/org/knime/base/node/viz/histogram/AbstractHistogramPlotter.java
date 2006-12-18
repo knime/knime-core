@@ -41,7 +41,6 @@ import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.IntValue;
@@ -117,37 +116,19 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 
     
     /**Constructor for class AbstractHistogramPlotter.
-     * @param spec the specification of the input table
      * @param histogramProps the histogram properties panel
+     * @param dataModel the data model on which the plotter based on
      * @param handler the HiLiteHandler to use
-     * @param xColumn the name of the selected x column
-     * @param aggrCol the name of the aggregation column
      */
-    public AbstractHistogramPlotter(final DataTableSpec spec,
+    public AbstractHistogramPlotter(
             final AbstractHistogramProperties histogramProps,
-            final HiLiteHandler handler, final String xColumn, 
-            final String aggrCol) {
+            final AbstractHistogramDataModel dataModel,
+            final HiLiteHandler handler) {
         super(new HistogramDrawingPane(handler), histogramProps);
-        if (spec == null) {
-            throw new IllegalArgumentException("Internal exception:"
-                    + " Row container shouldn't be null.");
+        if (dataModel == null) {
+            throw new IllegalArgumentException("Internal exception: " 
+                    + " Histogram data model shouldn't be null.");
         }
-        m_tableSpec = spec;
-        if (m_tableSpec == null) {
-            throw new IllegalArgumentException("Internal exception:"
-                    + " Table specification shouldn't be null.");
-        }
-
-        if (xColumn == null || xColumn.length() < 1) {
-            throw new IllegalArgumentException("No column available to set.");
-        }
-        m_xColumn = xColumn;
-        m_aggrColName = aggrCol;
-        // set the initial x column
-//        setXColName(xColumn);
-        // select the x column also in the select box of the properties
-        // panel
-        histogramProps.updateColumnSelection(m_tableSpec, xColumn, aggrCol);
         m_histoProps = histogramProps;
         m_histoProps.addAggregationChangedListener(
                 new ActionListener() {
@@ -180,17 +161,14 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 });
         //set the default value
         drawingPane.setShowBarOutline(m_histoProps.isShowBarOutline());
+        //which needs the histoProps
+        setHistogramDataModel(dataModel);
         // set the hilitehandler for highlighting stuff
         if (handler != null) {
-            handler.addHiLiteListener(this);
             super.setHiLiteHandler(handler);
-//            this.m_hiLiteHandler = handler;
-//            this.m_hiLiteHandler.addHiLiteListener(this);
         } else {
             throw new IllegalArgumentException("HiLiteHandler not defined.");
         }
-        //disable the cross hair cursor by default for all histogram plots
-//        setCrosshairCursorEnabled(false);
     }
 
     /**
@@ -216,20 +194,20 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         return;
     }    
     
-    /**
-     * @param row the {@link DataRow} to add
-     */
-    public void addDataRow(final DataRow row) {
-        m_histoData.addDataRow(row);
-    }
-    
-    /**
-     * Call this method after adding the last data row.
-     */
-    public void lastDataRowAdded() {
-        setXCoordinates();
-        setYCoordinates();
-    }
+//    /**
+//     * @param row the {@link DataRow} to add
+//     */
+//    public void addDataRow(final DataRow row) {
+//        m_histoData.addDataRow(row);
+//    }
+//    
+//    /**
+//     * Call this method after adding the last data row.
+//     */
+//    public void lastDataRowAdded() {
+//        setXCoordinates();
+//        setYCoordinates();
+//    }
 
     /**
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#updateSize()
@@ -245,10 +223,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     @Override
     public void updatePaintModel() {
         updateBarsAndPaint();
-        // update the Histogram properties panel
-        if (m_tableSpec != null) {
-            getHistogramPropertiesPanel().updateHistogramSettings(this);
-        }
+//        // update the Histogram properties panel
+//        if (m_tableSpec != null) {
+//            getHistogramPropertiesPanel().updateHistogramSettings(this);
+//        }
     }
 
     /**
@@ -448,24 +426,6 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         return visBars;
     }
 
-    /*
-     * Called by the view, forwarding a model changed event.
-     * 
-     * @param spec the specification of the input data table
-     * @param selectedXCol the name of the new x column
-     * @param aggrCol the name of the new aggregation column
-     * 
-    public void modelChanged(final DataTableSpec spec, 
-            final String selectedXCol, final String aggrCol) {
-        m_tableSpec = spec;
-        setXColName(selectedXCol);
-        setBackground(ColorAttr.getBackground());
-        AbstractHistogramProperties props = getHistogramPropertiesPanel();
-        props.updateColumnSelection(spec, selectedXCol, aggrCol);
-        props.setUpdateHistogramSettings(this);
-        updatePaintModel();
-    }*/
-
     /**
      * This method is called when ever something basic has changed. This method
      * forces the class to reload the HistogramData.
@@ -536,7 +496,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      * @return the current preferred width of the bars.
      */
     protected int getBarWidth() {
-        if (m_barWidth < 0) {
+        if (m_barWidth < 0 && getHistogramDataModel() != null) {
             // that only occurs at the first call
             int noOfBars = getHistogramDataModel().getNumberOfBars();
             Rectangle drawingSpace = calculateDrawingRectangle();
@@ -1036,9 +996,27 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     /**
      * @param histoData the new {@link AbstractHistogramDataModel}
      */
-    protected void setHistogramDataModel(
+    public void setHistogramDataModel(
             final AbstractHistogramDataModel histoData) {
         m_histoData = histoData;
+        m_tableSpec = m_histoData.getTableSpec();
+        if (m_tableSpec == null) {
+            throw new IllegalArgumentException("Internal exception:"
+                    + " Row container shouldn't be null.");
+        }
+        m_xColumn = m_histoData.getXColumn();
+        if (m_xColumn == null || m_xColumn.length() < 1) {
+            throw new IllegalArgumentException("No column available to set.");
+        }
+        m_aggrColName = m_histoData.getAggregationColumn();
+        m_aggrMethod = m_histoData.getAggregationMethod();
+        //after setting all properties set the coordinate axis as well
+        setXCoordinates();
+        setYCoordinates();
+        // select the x column also in the select box of the properties
+        // panel
+       m_histoProps.updateColumnSelection(m_tableSpec, m_xColumn, 
+                m_aggrColName);
     }
 
     /**

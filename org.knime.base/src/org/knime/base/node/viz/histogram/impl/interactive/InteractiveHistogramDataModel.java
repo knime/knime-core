@@ -22,7 +22,10 @@
 package org.knime.base.node.viz.histogram.impl.interactive;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Hashtable;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.knime.base.node.viz.histogram.AbstractBarDataModel;
@@ -92,7 +95,7 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
      * @param aggregationColumn column to aggregate on
      * @param aggrMethod the aggregation method
      */
-    protected InteractiveHistogramDataModel(final DataTableSpec tableSpec,
+    public InteractiveHistogramDataModel(final DataTableSpec tableSpec,
             final String xCoordLabel, final String aggregationColumn,
             final AggregationMethod aggrMethod) {
         this(tableSpec, xCoordLabel, DEFAULT_NO_OF_BARS,
@@ -275,6 +278,12 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
         calculateAggregationValues();
     }
 
+    /**
+     * @return all <code>DataRows</code> on which this model based on
+     */
+    protected Collection<DataRow> getDataRow() {
+        return m_dataRows;
+    }
 
     /**
      * @return all rows sorted by the x axis property in ascending order
@@ -285,5 +294,27 @@ public class InteractiveHistogramDataModel extends AbstractHistogramDataModel {
             m_noOfNotSortedRows = 0;
         }
         return m_dataRows;
+    }
+
+    /**
+     * @see org.knime.base.node.viz.histogram.AbstractHistogramDataModel#clone()
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Object clone() {
+        final InteractiveHistogramDataModel model = 
+            new InteractiveHistogramDataModel(getTableSpec(), getXColumn(), 
+                getNumberOfBars(), getAggregationColumn(), 
+                getAggregationMethod());
+        model.m_dataRows.addAll(m_dataRows);
+        model.m_noOfNotSortedRows = m_noOfNotSortedRows;
+        model.setBarCaptions((LinkedHashSet<DataCell>)getBarCaptions().clone());
+        model.setBars(
+                (Hashtable<String, AbstractBarDataModel>)getBars().clone());
+        model.setMissingValueBar(getMissingValueBar());
+        model.setMinVal(getMinVal());
+        model.setMaxVal(getMaxVal());
+        model.calculateAggregationValues();
+        return model;
     }
 }

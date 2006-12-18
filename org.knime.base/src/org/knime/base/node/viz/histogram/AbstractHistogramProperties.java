@@ -505,8 +505,6 @@ public abstract class AbstractHistogramProperties extends
         if (plotter == null) {
             return;
         } else {
-            AbstractHistogramDataModel histoData = 
-                plotter.getHistogramDataModel();
             // set the bar width slider
             int currentBarWidth = plotter.getBarWidth();
             int maxBarWidth = plotter.getMaxBarWidth();
@@ -524,7 +522,8 @@ public abstract class AbstractHistogramProperties extends
             setSliderLabels(m_barWidth, 2, false);
     
             // set the number of bars slider
-            // int currentNoOfBars = plotter.getNoOfDisplayedBars();
+            final AbstractHistogramDataModel histoData = 
+                plotter.getHistogramDataModel();
             int currentNoOfBars = histoData.getNumberOfBars();
             int maxNoOfBars = plotter.getMaxNoOfBars();
             if (currentNoOfBars > maxNoOfBars) {
@@ -545,6 +544,24 @@ public abstract class AbstractHistogramProperties extends
                 m_noOfBars.setToolTipText(
                         "Only available for numerical properties");
             }
+            //set the aggregation method if it has changed
+            final AggregationMethod aggrMethod = 
+                plotter.getAggregationMethod();
+            if (!m_aggregationMethod.equals(aggrMethod)) {
+                m_aggregationMethod = aggrMethod;
+                for (Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
+                        .getElements(); buttons.hasMoreElements();) {
+                    AbstractButton button = buttons.nextElement();
+                    //enable the radio buttons only if we have some aggregation 
+                    //columns to choose from
+                    button.setEnabled(m_yCol.getModel().getSize() > 0);
+                    if (button.getActionCommand()
+                            .equals(m_aggregationMethod.name())) {
+                        button.setSelected(true);
+                    }
+                }
+            }
+            
             // set the values of the select boxes
             m_showEmptyBars.setSelected(plotter.isShowEmptyBars());
             m_showMissingValBar.setSelected(plotter.isShowMissingValBar());

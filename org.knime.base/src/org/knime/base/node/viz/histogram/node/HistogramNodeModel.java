@@ -26,17 +26,14 @@ package org.knime.base.node.viz.histogram.node;
 
 import java.io.File;
 
-import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramPlotter;
-import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramProperties;
+import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -74,18 +71,12 @@ public class HistogramNodeModel extends NodeModel {
      */
     static final String CFGKEY_X_COLNAME = "HistogramXColName";
 
-    /** The Rule2DPlotter is the core of the view. */
-    private InteractiveHistogramPlotter m_plotter;
-
-    /**
-     * The <code>HistogramProps</code> class which holds the properties dialog
-     * elements.
-     */
-    private InteractiveHistogramProperties m_properties;
-
     /** The <code>BufferedDataTable</code> of the input port. */
     private DataTable m_data;
 
+    /**The histogram data model which holds all information.*/
+    private InteractiveHistogramDataModel m_model;
+    
     /** The name of the x column. */
     private final SettingsModelString m_xColName = new SettingsModelString(
             CFGKEY_X_COLNAME, "");
@@ -222,7 +213,7 @@ public class HistogramNodeModel extends NodeModel {
         }
         final String selectedXCol = m_xColName.getStringValue();
         // create the plotter
-        createPlotter(m_data, rowCount, exec, selectedXCol);
+        createHistogramModel(m_data, rowCount, exec, selectedXCol);
         LOGGER.info(
                 "Exiting execute(inData, exec) of class HistogramNodeModel.");
         return new BufferedDataTable[0];
@@ -235,16 +226,19 @@ public class HistogramNodeModel extends NodeModel {
      * @param selectedXCol
      * @throws CanceledExecutionException
      */
-    private void createPlotter(final DataTable dataTable, final int noOfRows,
-            final ExecutionContext exec, final String selectedXCol) 
+    private void createHistogramModel(final DataTable dataTable, 
+            final int noOfRows, final ExecutionContext exec, 
+            final String selectedXCol) 
     throws CanceledExecutionException {
         final DataTableSpec tableSpec = dataTable.getDataTableSpec();
         // create the properties panel
-        m_properties = 
-            new InteractiveHistogramProperties(AggregationMethod.COUNT);
-        m_plotter = new InteractiveHistogramPlotter(tableSpec, m_properties, 
-                getInHiLiteHandler(0), selectedXCol);
-        m_plotter.setBackground(ColorAttr.getBackground());
+//        m_properties = 
+//            new InteractiveHistogramProperties(AggregationMethod.COUNT);
+//        m_plotter = new InteractiveHistogramPlotter(tableSpec, m_properties, 
+//                getInHiLiteHandler(0), selectedXCol);
+//        m_plotter.setBackground(ColorAttr.getBackground());
+        m_model = new InteractiveHistogramDataModel(tableSpec, selectedXCol, 
+                    null, AggregationMethod.COUNT);
         if (dataTable != null) {
             final int selectedNoOfRows = m_noOfRows.getIntValue();
             //final int noOfRows = inData[0].getRowCount();
@@ -259,13 +253,14 @@ public class HistogramNodeModel extends NodeModel {
             for (int i = 0; i < selectedNoOfRows && rowIterator.hasNext();
                 i++) {
                 final DataRow row = rowIterator.next();
-                m_plotter.addDataRow(row);
+//                m_plotter.addDataRow(row);
+                m_model.addDataRow(row);
                 progress += progressPerRow;
                 exec.setProgress(progress, "Adding data rows to histogram...");
                 exec.checkCanceled();
             }
             exec.setProgress(1.0, "Histogram finished.");
-            m_plotter.lastDataRowAdded();
+//            m_plotter.lastDataRowAdded();
         }
     }
 
@@ -282,15 +277,14 @@ public class HistogramNodeModel extends NodeModel {
     @Override
     protected void reset() {
         m_data = null;
-        m_plotter = null;
-        m_properties = null;
+        m_model = null;
     }
 
     /**
-     * @return the plotter
+     * @return the histogram data model
      */
-    protected AbstractHistogramPlotter getPlotter() {
-        return m_plotter;
+    protected InteractiveHistogramDataModel getHistogramModel() {
+        return m_model;
     }
     
     /**

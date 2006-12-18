@@ -24,8 +24,9 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
+import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramDataModel;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramPlotter;
-import org.knime.core.data.DataTableSpec;
+import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramProperties;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
@@ -39,7 +40,7 @@ public class FixedColumnHistogramNodeView extends NodeView {
     
     private final FixedColumnHistogramNodeModel m_model;
     
-    private FixedColumnHistogramPlotter m_plotter;
+    private final FixedColumnHistogramPlotter m_plotter;
 
     /**
      * Creates a new view instance for the histogram node.
@@ -54,9 +55,16 @@ public class FixedColumnHistogramNodeView extends NodeView {
                     + HistogramNodeModel.class.getName());
         }
         m_model = (FixedColumnHistogramNodeModel)nodeModel;
-        if (m_model != null) {
-            m_plotter = m_model.getPlotter();
-        }
+        final FixedColumnHistogramDataModel histogramModel = 
+            (FixedColumnHistogramDataModel)m_model.getHistogramModel().clone();
+        final FixedColumnHistogramProperties props =
+            new FixedColumnHistogramProperties(
+                    histogramModel.getAggregationMethod());
+        m_plotter = new FixedColumnHistogramPlotter(props, histogramModel, 
+                m_model.getInHiLiteHandler(0));
+        // add the hilite menu to the menu bar of the node view
+        getJMenuBar().add(m_plotter.getHiLiteMenu());
+        setComponent(m_plotter);
     }
 
     /**
@@ -73,30 +81,18 @@ public class FixedColumnHistogramNodeView extends NodeView {
     @Override
     public void modelChanged() {
         if (m_model == null) {
-            if (m_model != null) {
-                m_model.reset();
-            }
             return;
         }
-        m_plotter = m_model.getPlotter();
-        if (m_plotter == null) {
+        final FixedColumnHistogramDataModel histogramModel = 
+            m_model.getHistogramModel();
+        if (histogramModel == null) {
             return;
         }
-        final DataTableSpec spec = m_plotter.getDataTableSpec();
-        if (spec == null) {
-            throw new IllegalArgumentException(
-                    "Table specification shouldn't be null.");
-        }
-        setViewTitle(getViewName() + " " + spec.getName());
-        // add the hilite menu to the menu bar of the node view
-        getJMenuBar().add(m_plotter.getHiLiteMenu());
-        // add the histogram panel to the root window of the node view
-        setComponent(m_plotter);
-        //call the fit to screen method to ensure that the new displayed
-        //view fits on the screen
-        //unfortunately this doesn't works always for example if the drawing 
-        //takes longer 
-        m_plotter.fitToScreen();
+        m_plotter.reset();
+        m_plotter.setHistogramDataModel(
+                (FixedColumnHistogramDataModel)histogramModel.clone());
+        m_plotter.setHiLiteHandler(m_model.getInHiLiteHandler(0));
+        m_plotter.updatePaintModel();
     }
 
     /**

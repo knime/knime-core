@@ -23,7 +23,6 @@ package org.knime.base.node.viz.histogram.impl.interactive;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -31,7 +30,6 @@ import org.knime.base.node.viz.histogram.AbstractHistogramDataModel;
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
@@ -62,20 +60,16 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
      * Creates a new PlotterScrolling pane and associates it with the passed
      * view control panel.
      * 
-     * @param spec the specification of the input data table
      * @param histogramProps the <code>FixedColumnHistogramProperties</code> 
      * with the view options for the user
+     * @param dataModel the data model on which this plotter based on
      * @param handler the hilite handler from the input port
-     * @param xColumn the x axis column which should be selected, if it's
-     *            <code>null</code> the first column will be selected
      */
-    public InteractiveHistogramPlotter(final DataTableSpec spec,
+    public InteractiveHistogramPlotter(
             final InteractiveHistogramProperties histogramProps,
-            final HiLiteHandler handler, final String xColumn) {
-        super(spec, histogramProps, handler, xColumn, null);
-        setHistogramDataModel(
-                new InteractiveHistogramDataModel(spec, xColumn, 
-                null, AggregationMethod.getDefaultMethod()));
+            final InteractiveHistogramDataModel dataModel,
+            final HiLiteHandler handler) {
+        super(histogramProps, dataModel, handler);
         histogramProps.getXColSelectBox().addActionListener(
                 new ActionListener() {
                     public void actionPerformed(final ActionEvent e) {
@@ -85,8 +79,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                         onXColChanged(props.getSelectedXColumn());
                     }
                 });
-        histogramProps.updateHistogramSettings(this);
-        m_data = new ArrayList<DataRow>();
+        m_data = dataModel.getDataRow();
     }
    
     /**
@@ -117,22 +110,6 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
        super.onApply();
        return;
    }
-    /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter
-     * #addDataRow(org.knime.core.data.DataRow)
-     */
-    @Override
-    public void addDataRow(final DataRow row) {
-        m_data.add(row);
-        AbstractHistogramDataModel histoData = getHistogramDataModel();
-        if (histoData == null) {
-            setHistogramDataModel(
-                    new InteractiveHistogramDataModel(getDataTableSpec(), 
-                    getXColName(), getAggregationColName(), 
-                    getAggregationMethod()));
-        }
-        super.addDataRow(row);
-    }
 
     /**
      * Sets the new x column.
@@ -141,7 +118,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
      */
     public void setXColumn(final String xColName) {
         if (xColName == null || xColName.trim().length() < 1) {
-            throw new IllegalArgumentException("X axis must be defined.");
+            return;
         }
         // if it's the same name we don't need to do anything
         if (getXColName() != null && getXColName().equals(xColName)) {
@@ -223,16 +200,4 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
         }
         return histoData;
     }
-    
-    /*
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter#
-     * modelChanged(org.knime.core.data.DataTableSpec, java.lang.String)
-    @Override
-    public void modelChanged(final DataTableSpec spec, 
-            final String selectedXCol, final String aggrCol) {
-        setAggregationColName(aggrCol);
-        setAggregationMethod(AggregationMethod.getDefaultMethod());
-        setXColumn(selectedXCol);
-        super.modelChanged(spec, selectedXCol, aggrCol);
-    }*/
 }
