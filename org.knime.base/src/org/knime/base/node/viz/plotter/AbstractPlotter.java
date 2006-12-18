@@ -606,6 +606,10 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * Returns the hilite menu displayed in the 
      * {@link org.knime.core.node.NodeView}'s menu bar.
      * In this class the hilite, unhilite and clear hilite actions are added.
+     * This method is called in the 
+     * {@link org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView}
+     * if it is not <code>null</code>, i.e. if an extending plotter doesn't 
+     * support hiliting override this method by returning <code>null</code>.
      * 
      * @return the filled menu for the {@link org.knime.core.node.NodeView}'s 
      * menu bar.
