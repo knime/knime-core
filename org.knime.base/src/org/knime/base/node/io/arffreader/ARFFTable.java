@@ -130,21 +130,16 @@ public class ARFFTable implements DataTable {
         // create tokenizer settings that will deliver us the attributes and
         // arguments as tokens.
         tokenizer.setSettings(getTokenizerHeaderSettings());
-
         // prepare for creating a column spec for each "@attribute" read
         Vector<DataColumnSpec> colSpecs = new Vector<DataColumnSpec>();
         String tableName = null;
-
         String token;
-
         // now we collect the header information - until we see the EOF or
         // the data section begins.
         while (true) {
-
             if (exec != null) {
                 exec.checkCanceled(); // throws exception if user canceled.
             }
-
             DataCell[] possVals = null;
             DataType type;
             token = tokenizer.nextToken();
@@ -160,18 +155,37 @@ public class ARFFTable implements DataTable {
                 // this starts the data section: we are done.
                 break;
             }
-
             if (token.equalsIgnoreCase("@ATTRIBUTE")) {
                 // defines a new data column
                 String colName = tokenizer.nextToken();
-                String colType = tokenizer.nextToken();
+                String colType = null;
+                if (tokenizer.lastTokenWasQuoted() 
+                        && tokenizer.getLastQuoteBeginPattern().equals("{")) {
+                    // Weka allows the nominal value list to be appended without
+                    // a space delimiter. We will get it then hanging at the 
+                    // name. Extract it from there and set it in the 'colType'
+                    if (colName.charAt(0) == '{') {
+                        // seems we only got a value list. 
+                        // The col name must be empty/missing then...
+                        colType = colName;
+                        colName = null;
+                    } else {
+                        int openBraceIdx = colName.indexOf('{');
+                        int closeBraceIdx = colName.lastIndexOf('}');
+                        colType = colName.substring(openBraceIdx + 1,
+                                closeBraceIdx);
+                        colName = colName.substring(0, openBraceIdx);
+                        // we ignore everything after the nominal value list
+                    }
+                } else {
+                    colType = tokenizer.nextToken();
+                }
                 if ((colName == null) || (colType == null)) {
                     throw new InvalidSettingsException(
                             "Incomplete '@attribute' statement at line "
                                     + tokenizer.getLineNumber()
                                     + " in ARFF file '" + fileLoc + "'.");
                 }
-
                 // make sure 'colType' is the last token we read before we
                 // start the 'if' thing here.
                 if (colType.equalsIgnoreCase("NUMERIC")
@@ -206,7 +220,6 @@ public class ARFFTable implements DataTable {
                             + "statement in ARFF file '" + fileLoc
                             + "' at line " + tokenizer.getLineNumber() + ".");
                 }
-
                 DataColumnSpecCreator dcsc = new DataColumnSpecCreator(colName,
                         type);
                 if (possVals != null) {
@@ -242,8 +255,7 @@ public class ARFFTable implements DataTable {
 
         } // end of while (not EOF)
 
-        // check the correctness of the table spec read.
-        // 1.: uniqueness of column names
+        // check uniqueness of column names
         for (int c = 0; c < colSpecs.size(); c++) {
             // compare it with all specs with higher index
             for (int h = c + 1; h < colSpecs.size(); h++) {
@@ -255,12 +267,8 @@ public class ARFFTable implements DataTable {
                 }
             }
         }
-        // 2.: check uniquity of possible values for each nominal column
-        // we've moved that part where we read in the values
-
         return new DataTableSpec(tableName, colSpecs
                 .toArray(new DataColumnSpec[colSpecs.size()]));
-
     } // createDataTableSpecFromARFFfile(URL)
 
     /*
@@ -276,8 +284,9 @@ public class ARFFTable implements DataTable {
         // ARFF knows single and double quotes
         settings.addQuotePattern("'", "'");
         settings.addQuotePattern("\"", "\"");
-        // the nominal values list will be quoted into one token
-        settings.addQuotePattern("{", "}");
+        // the nominal values list will be quoted into one token (but the
+        // braces must stay in)
+        settings.addQuotePattern("{", "}", true);
         // the attribute statement and arguments are separated by space(s)
         settings.addDelimiterPattern(" ", true, false, false);
         // or tabs
