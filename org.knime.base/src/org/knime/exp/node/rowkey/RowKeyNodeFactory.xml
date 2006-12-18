@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./rowKey_small.png" type="Manipulator">
+	<name>RowID</name>
+	
+	<shortDescription>
+		Node to replace the row ID and/or to create a column with the values
+		of the current row IDs.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+		<p>This node can be used to replace the row ID of the input data with 
+		the values of another column (by converting the values to String). The 
+		user has additional options to ensure the uniqueness and to handle 
+		missing values.</p>
+		<p>
+		It can also be used to create a new column which contains the row ID
+		as value.</p>
+		<p>If both options are selected the node appends a new column
+		with the current row ID values to the table and replaces the row
+		key with the values of the selected column.</p>
+		<p>Notice: Highlighting doesn't work across this node.</p>
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Data to process">Data</dataIn>
+		<dataOut index="0" name="Processed data">Data with the row ID values 
+		as column and/or a new row IDs</dataOut>
+	</ports>	
+</knimeNode>
