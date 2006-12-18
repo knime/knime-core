@@ -49,6 +49,16 @@ import org.knime.core.data.property.ShapeFactory;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
+ * The <code>BoxPlotter</code> calculates, based on the statistical 
+ * parameters determined by the 
+ * {@link org.knime.base.node.viz.plotter.box.BoxPlotNodeModel}, the 
+ * {@link org.knime.base.node.viz.plotter.box.Box}es to 
+ * draw in the <code>updateSize</code> method. The drawable box is represented 
+ * by a {@link org.knime.base.node.viz.plotter.box.Box} which 
+ * holds the mapped value for each statistcal parameter and its x position. The 
+ * mild and extreme outliers are set as a 
+ * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} used from the 
+ * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotter}.
  * 
  * @author Fabian Dill, University of Konstanz
  */

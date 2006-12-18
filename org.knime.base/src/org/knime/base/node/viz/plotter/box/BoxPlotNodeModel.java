@@ -55,6 +55,15 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
+ * The input data is sorted for each numeric column and the necessary 
+ * parameters are determined: minimum, lower whisker 
+ * (in case of outliers it is the first non-outlier), lower quartile, median, 
+ * upper quartile, upper whisker and maximum. Each column is then associated 
+ * with a double array of these parameters, which are passed to the 
+ * {@link org.knime.base.node.viz.plotter.box.BoxPlotter}. 
+ * To do so, the <code>BoxPlotNodeModel</code> implements a new interface, the
+ * {@link org.knime.base.node.viz.plotter.box.BoxPlotDataProvider}, which 
+ * passes the statistical parameters and the mild and extreme outliers.
  * 
  * @author Fabian Dill, University of Konstanz
  */

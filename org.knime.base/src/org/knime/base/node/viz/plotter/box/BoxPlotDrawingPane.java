@@ -32,6 +32,11 @@ import org.knime.base.node.viz.plotter.scatter.DotInfoArray;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 
 /**
+ * Paints the {@link org.knime.base.node.viz.plotter.box.Box}es, the dots from 
+ * the {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} 
+ * (since it derives from 
+ * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}) 
+ * and the labels for the boxes and outliers.
  * 
  * @author Fabian Dill, University of Konstanz
  */
