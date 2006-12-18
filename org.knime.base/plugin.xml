@@ -133,6 +133,13 @@
             level-id="meta"
             name="Meta"
             path="/"/>
+      <category
+            after="dtree"
+            description="miscellaneous classifiers"
+            icon="icons/missing.gif"
+            level-id="miscClass"
+            name="Misc Classifiers"
+            path="/mining"/>
             
    </extension>
 
