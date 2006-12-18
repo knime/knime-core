@@ -158,7 +158,7 @@ public class RowKeyNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
-        LOGGER.debug("Entering execute(inData, exec) of class RowKeyNodeModel.");
+        LOGGER.debug("Entering execute(inData, exec) of class RowKeyNodeModel");
         // check input data
         if (inData == null || inData.length != 1
                 || inData[DATA_IN_PORT] == null) {
