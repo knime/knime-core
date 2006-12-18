@@ -428,6 +428,11 @@
    		 category-path="/manipulation/column"
          factory-class="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"/>
+    <node
+         factory-class="org.knime.base.node.preproc.rowkey.RowKeyNodeFactory"
+         category-path="/manipulation/row"
+         id="org.knime.base.node.preproc.rowkey.RowKeyNodeFactory"/>
+   
    </extension>
    
    

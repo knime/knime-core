@@ -22,7 +22,7 @@
  * History
  *    03.11.2006 (Tobias Koetter): created
  */
-package org.knime.exp.node.rowkey;
+package org.knime.base.node.preproc.rowkey;
 
 import java.util.HashMap;
 import java.util.Map;

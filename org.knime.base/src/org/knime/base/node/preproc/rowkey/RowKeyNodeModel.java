@@ -18,7 +18,7 @@
  * 
  * History 05.11.2006 (Tobias Koetter): created
  */
-package org.knime.exp.node.rowkey;
+package org.knime.base.node.preproc.rowkey;
 
 import java.io.File;
 import java.util.HashSet;
