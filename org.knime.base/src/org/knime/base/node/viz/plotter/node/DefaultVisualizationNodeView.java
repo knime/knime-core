@@ -18,9 +18,12 @@
  */
 package org.knime.base.node.viz.plotter.node;
 
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractAction;
+import javax.swing.JMenu;
 import javax.swing.JTabbedPane;
 
 import org.knime.base.node.viz.plotter.AbstractPlotter;
@@ -48,8 +51,6 @@ public class DefaultVisualizationNodeView extends NodeView {
     private int m_plotterCounter = 1;
     
     
-     
-    
     /**
      * A generic {@link org.knime.core.node.NodeView} which sets the model and 
      * calls the right methods of the plotters.
@@ -68,8 +69,9 @@ public class DefaultVisualizationNodeView extends NodeView {
         m_plotters.add(plotter);
         plotter.setDataProvider((DataProvider)model);
         plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
-//        plotter.updatePaintModel();
-        getJMenuBar().add(plotter.getHiLiteMenu());
+        if (plotter.getHiLiteMenu() != null) {
+            getJMenuBar().add(getHiLiteMenu());
+        }
         setComponent(plotter);
     }
     
@@ -95,6 +97,9 @@ public class DefaultVisualizationNodeView extends NodeView {
         plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
         m_tabs = new JTabbedPane();
         m_tabs.addTab(title, plotter);
+        if (plotter.getHiLiteMenu() != null) {
+            getJMenuBar().add(getHiLiteMenu());
+        }
         setComponent(m_tabs);
     }    
     
@@ -152,6 +157,42 @@ public class DefaultVisualizationNodeView extends NodeView {
                 plotter.updatePaintModel();
             }
         }
+    }
+    
+    /**
+     * Dynamically creates a hilite menu with the typical hilite options:
+     * hilite, unhilite and clear hilite. Determines the currently selected 
+     * plotter and forwards to it's corresponding action.
+     * 
+     * @return a hilite menu which forwards the actions to the currently 
+     * selected plotter.
+     */
+    protected JMenu getHiLiteMenu() {
+        JMenu menu = new JMenu(HiLiteHandler.HILITE);
+        menu.add(new AbstractAction(HiLiteHandler.HILITE_SELECTED) {
+
+            public void actionPerformed(ActionEvent e) {
+                getActivePlotter().getHiliteAction().actionPerformed(e);
+            }
+            
+        });
+        menu.add(new AbstractAction(HiLiteHandler.UNHILITE_SELECTED) {
+
+            public void actionPerformed(ActionEvent e) {
+                getActivePlotter().getUnhiliteAction().actionPerformed(e);
+            }
+        });
+        menu.add(new AbstractAction(HiLiteHandler.CLEAR_HILITE) {
+
+            public void actionPerformed(ActionEvent e) {
+                getActivePlotter().getClearHiliteAction().actionPerformed(e);
+            }
+        });
+        return menu;
+    }
+    
+    private AbstractPlotter getActivePlotter() {
+        return (AbstractPlotter)m_tabs.getSelectedComponent();
     }
 
     /**
