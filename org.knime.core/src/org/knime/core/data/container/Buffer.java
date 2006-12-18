@@ -429,8 +429,9 @@ class Buffer {
             } else {
                 continue; // ordinary cell (e.g. double cell)
             }
-            if (ad == null 
-                    || !m_globalRepository.containsKey(ad.getBufferID())) {
+            final ContainerTable ownerTable = ad != null 
+            	? m_globalRepository.get(ad.getBufferID()) : null;
+            if (ownerTable == null) {
                 // need to set ownership if this blob was not assigned yet
                 // or has been assigned to an unlinked (i.e. local) buffer
                 BlobAddress rewrite = new BlobAddress(m_bufferID, col);
@@ -463,8 +464,13 @@ class Buffer {
                 mustChangeRow = true;
             } else {
                 // blob has been saved in one of the predecessor nodes
-                assert isWrapperCell;
-                wc = (BlobWrapperDataCell)cell;
+            	if (isWrapperCell) {
+            		wc = (BlobWrapperDataCell)cell;
+            	} else {
+            		mustChangeRow = true;
+            		wc = new BlobWrapperDataCell(
+            				ownerTable.getBuffer(), ad, cl);
+            	}
             } 
             if (mustChangeRow) {
                 m_containsBlobs = true;
