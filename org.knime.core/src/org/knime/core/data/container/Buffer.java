@@ -412,75 +412,60 @@ class Buffer {
             DataCell cell = row instanceof BlobSupportDataRow 
                 ? ((BlobSupportDataRow)row).getRawCell(col) 
                         : cellCopies[col];
-            BlobWrapperDataCell wc;
+            boolean isWrapperCell = cell instanceof BlobWrapperDataCell;
             boolean mustChangeRow = false;
-            if (cell instanceof BlobWrapperDataCell) {
+            BlobAddress ad;
+            final Class<? extends DataCell> cl;
+            BlobWrapperDataCell wc;
+            if (isWrapperCell) {
                 assert row instanceof BlobSupportDataRow;
                 wc = (BlobWrapperDataCell)cell;
-                BlobAddress ad = wc.getAddress();
+                ad = wc.getAddress();
+                cl = wc.getBlobClass();
                 assert ad != null : "Blob address must not be null in wrapper";
-                if (!m_globalRepository.containsKey(ad.getBufferID())) {
-                    BlobAddress rewrite = new BlobAddress(m_bufferID, col);
-                    if (m_indicesOfBlobInColumns == null) {
-                        m_indicesOfBlobInColumns = new int[cellCount];
-                    }
-                    ContainerTable b = m_localRepository.get(ad.getBufferID());
-                    if (b != null) {
-                        int indexBlobInCol = m_indicesOfBlobInColumns[col]++;
-                        rewrite.setIndexOfBlobInColumn(indexBlobInCol);
-                        File source = b.getBuffer().getBlobFile(
-                                ad.getIndexOfBlobInColumn(), 
-                                ad.getColumn(), false);
-                        File dest = getBlobFile(indexBlobInCol, col, true);
-                        FileUtil.copy(source, dest);
-                    } else {
-                        BlobDataCell bc = wc.getCell();
-                        writeBlobDataCell(bc, rewrite, 
-                                getSerializerForDataCell(bc.getClass()));
-                    }
-                    wc = new BlobWrapperDataCell(
-                            this, rewrite, wc.getBlobClass());
-                    mustChangeRow = true;
-                }
             } else if (cell instanceof BlobDataCell) {
-                BlobDataCell bc = (BlobDataCell)cell;
-                BlobAddress ad = bc.getBlobAddress();
+                cl = cell.getClass();
+                ad = ((BlobDataCell)cell).getBlobAddress();
+            } else {
+                continue; // ordinary cell (e.g. double cell)
+            }
+            if (ad == null 
+                    || !m_globalRepository.containsKey(ad.getBufferID())) {
                 // need to set ownership if this blob was not assigned yet
-                // or has been assigned to an unlinked buffer
-                Class<? extends DataCell> cl = bc.getClass();
-                if (ad == null 
-                        || !m_globalRepository.containsKey(ad.getBufferID())) {
-                    BlobAddress rewrite = new BlobAddress(m_bufferID, col);
-                    if (bc.getBlobAddress() == null) {
-                        bc.setBlobAddress(rewrite);
-                    }
-                    wc = new BlobWrapperDataCell(this, rewrite, cl);
-                    ensureBlobDirExists();
-                    if (m_indicesOfBlobInColumns == null) {
-                        m_indicesOfBlobInColumns = new int[cellCount];
-                    }
-                    ContainerTable b = m_localRepository.get(
-                            bc.getBlobAddress().getBufferID());
-                    if (b != null) {
-                        int indexBlobInCol = m_indicesOfBlobInColumns[col]++;
-                        rewrite.setIndexOfBlobInColumn(indexBlobInCol);
-                        File source = b.getBuffer().getBlobFile(
-                                ad.getIndexOfBlobInColumn(), 
-                                ad.getColumn(), false);
-                        File dest = getBlobFile(indexBlobInCol, col, true);
-                        FileUtil.copy(source, dest);
-                    } else {
-                        writeBlobDataCell(bc, rewrite, 
-                                getSerializerForDataCell(bc.getClass()));
-                    }
-                } else {
-                    ContainerTable o = m_globalRepository.get(ad.getBufferID());
-                    wc = new BlobWrapperDataCell(o.getBuffer(), ad, cl);
+                // or has been assigned to an unlinked (i.e. local) buffer
+                BlobAddress rewrite = new BlobAddress(m_bufferID, col);
+                if (ad == null) {
+                    ((BlobDataCell)cell).setBlobAddress(rewrite);
+                    ad = rewrite;
                 }
+                if (m_indicesOfBlobInColumns == null) {
+                    m_indicesOfBlobInColumns = new int[cellCount];
+                }
+                ContainerTable b = m_localRepository.get(ad.getBufferID());
+                if (b != null) {
+                    int indexBlobInCol = m_indicesOfBlobInColumns[col]++;
+                    rewrite.setIndexOfBlobInColumn(indexBlobInCol);
+                    File source = b.getBuffer().getBlobFile(
+                            ad.getIndexOfBlobInColumn(), 
+                            ad.getColumn(), false);
+                    File dest = getBlobFile(indexBlobInCol, col, true);
+                    FileUtil.copy(source, dest);
+                } else {
+                    BlobDataCell bc;
+                    if (isWrapperCell) {
+                        bc = ((BlobWrapperDataCell)cell).getCell();
+                    } else {
+                        bc = (BlobDataCell)cell;
+                    }
+                    writeBlobDataCell(bc, rewrite, getSerializerForDataCell(cl));
+                }
+                wc = new BlobWrapperDataCell(this, rewrite, cl);
                 mustChangeRow = true;
             } else {
-                wc = null;
-            }
+                // blob has been saved in one of the predecessor nodes
+                assert isWrapperCell;
+                wc = (BlobWrapperDataCell)cell;
+            } 
             if (mustChangeRow) {
                 m_containsBlobs = true;
                 if (cellCopies == null) {
@@ -845,7 +830,7 @@ class Buffer {
     }
     
     /** Backward compatibility: DataCells that are (java-) serialized are
-     * not annotated with a byte identifying its type. We need that in the
+     * not annotated with a byte identifying their type. We need that in the
      * future to make sure we use the right class loader.
      * @param inStream To read from.
      * @return The cell.
@@ -879,48 +864,12 @@ class Buffer {
         }
     } // readDataCellVersion1(DCObjectInputStream)
     
-//    private BlobAddress writeBlobDataCell(final BlobDataCell cell, 
-//            final int column) throws IOException {
-//        BlobAddress ba = cell.getBlobAddress();
-//        // return immehttp://www.spiegel.de/diately if the buffer has been written already
-//        // make sure that this writing process is not writing to an output
-//        // zip file (i.e. m_bufferID = -1). If so, make sure we write it again.
-//        if (m_bufferID != -1 && ba.getBufferID() != -1 
-//                && cell.hasBlobBeenWritten()) {
-//            // has been written previously (may be by another buffer)
-//            return ba;
-//        }
-//        // blobs hasn't been previously written
-//        boolean mustWriteMySelf = m_bufferID == ba.getBufferID();
-//        // this is a unlinked table (like in the table writer node)
-//        mustWriteMySelf |= m_bufferID == -1 && m_bufferID != ba.getBufferID();
-//        // the blob is read from a unlinked table (table reader node)
-//        mustWriteMySelf |= ba.getBufferID() == -1 && m_bufferID > 0;
-//        DataCellSerializer<DataCell> ser = getSerializerForDataCell(cell);
-//        int blobBufferID = ba.getBufferID();
-//        if (!mustWriteMySelf) {
-//            ContainerTable cnTbl = m_globalRepository.get(blobBufferID);
-//            if (cnTbl == null) {
-//                throw new IOException(
-//                        "Unable to retrieve table that owns the blob cell");
-//            }
-//            Buffer blobBuffer = cnTbl.getBuffer();
-//            blobBuffer.writeBlobDataCell(cell, ba, ser);
-//        } else {
-//            if (m_bufferID != blobBufferID) {
-//                ba = new BlobAddress(m_bufferID, column);
-//            }
-//            writeBlobDataCell(cell, ba, ser);
-//        }
-//        return ba;
-//    }
-    
     private void writeBlobDataCell(final BlobDataCell cell, final BlobAddress a,
             final DataCellSerializer<DataCell> ser) throws IOException {
         // addRow will make sure that m_indicesOfBlobInColumns is initialized
         // when this method is called. If this method is called from a different
         // buffer object, in means that this buffer has been closed!
-        // (When can this happen? This buffer resizes in memory, a successing 
+        // (When can this happen? This buffer resizes in memory, a successor 
         // node is written to disc; they have different memory policies.)
         if (m_indicesOfBlobInColumns == null) {
             assert m_spec != null;
@@ -930,7 +879,29 @@ class Buffer {
         int indexInColumn = m_indicesOfBlobInColumns[column]++;
         a.setIndexOfBlobInColumn(indexInColumn);
         File outFile = getBlobFile(indexInColumn, column, true);
-        OutputStream out = new GZIPOutputStream(new FileOutputStream(outFile));
+        BlobAddress originalBA = cell.getBlobAddress();
+        if (originalBA != a) {
+            int originalBufferIndex = originalBA.getBufferID();
+            Buffer originalBuffer = null;
+            ContainerTable t = m_globalRepository.get(originalBufferIndex);
+            if (t != null) {
+                originalBuffer = t.getBuffer();
+            } else if (m_localRepository != null) {
+                t = m_localRepository.get(originalBufferIndex);
+                if (t != null) {
+                    originalBuffer = t.getBuffer();
+                }
+            }
+            if (originalBuffer != null) {
+                int index = originalBA.getIndexOfBlobInColumn();
+                int col = originalBA.getColumn();
+                File source = originalBuffer.getBlobFile(index, col, false);
+                FileUtil.copy(source, outFile);
+                return;
+            }
+        }
+        OutputStream out = new GZIPOutputStream(
+                new BufferedOutputStream(new FileOutputStream(outFile)));
         OutputStream outStream = null;
         try {
             if (ser != null) { // DataCell is datacell-serializable
@@ -970,7 +941,8 @@ class Buffer {
         int column = blobAddress.getColumn();
         int indexInColumn = blobAddress.getIndexOfBlobInColumn();
         File inFile = getBlobFile(indexInColumn, column, false);
-        InputStream in = new GZIPInputStream(new FileInputStream(inFile));
+        InputStream in = new GZIPInputStream(new BufferedInputStream(
+                new FileInputStream(inFile)));
         DataCellSerializer<? extends DataCell> ser = 
             DataType.getCellSerializer(cl);
         InputStream inStream = null;
