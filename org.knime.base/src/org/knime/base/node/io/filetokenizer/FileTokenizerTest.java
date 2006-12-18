@@ -423,6 +423,33 @@ public final class FileTokenizerTest extends TestCase {
         assertNull(token);
 
         // reset stream
+        /* "123,\"23,4\"\"3,4\\\",5\",\"45,6\",\"\",\"3" */
+        strReader = new StringReader(inputString);
+        fts = new FileTokenizerSettings();
+        ft = new FileTokenizer(strReader);
+        fts.addDelimiterPattern(",", false, false, false);
+        // make sure quotes stay in the token
+        fts.addQuotePattern("\"", "\"", '\\', true);
+        ft.setSettings(fts);
+        token = ft.nextToken();
+        assertEquals(token, "123");
+        assertFalse(ft.lastTokenWasQuoted());
+        token = ft.nextToken();
+        assertEquals(token, "\"23,4\"\"3,4\",5\"");
+        assertTrue(ft.lastTokenWasQuoted());
+        token = ft.nextToken();
+        assertEquals(token, "\"45,6\"");
+        assertTrue(ft.lastTokenWasQuoted());
+        token = ft.nextToken();
+        assertEquals(token, "\"\"");
+        assertTrue(ft.lastTokenWasQuoted());
+        token = ft.nextToken();
+        assertEquals(token, "\"3");
+        assertTrue(ft.lastTokenWasQuoted());
+        token = ft.nextToken();
+        assertNull(token);
+
+        // reset stream
         strReader = new StringReader(inputString);
         ft = new FileTokenizer(strReader);
         fts = new FileTokenizerSettings();

@@ -212,7 +212,8 @@ public class FileTokenizerSettings {
      * defined in there, it is going to print an error message and is ignoring
      * it.
      */
-    private void addDelimitersFromConfiguration(final NodeSettingsRO allDelims) {
+    private void addDelimitersFromConfiguration(
+            final NodeSettingsRO allDelims) {
         for (String delimKey : allDelims.keySet()) {
             // they should all start with "Delim"...
             if (delimKey.indexOf(CFGKEY_DELIMCFG) != 0) {
@@ -327,7 +328,8 @@ public class FileTokenizerSettings {
      * defined in there, it is going to print an error message and is ignoring
      * it.
      */
-    private void addCommentsFromConfiguration(final NodeSettingsRO allComments) {
+    private void addCommentsFromConfiguration(
+            final NodeSettingsRO allComments) {
         for (String commentKey : allComments.keySet()) {
             // they should all start with "Comment"...
             if (commentKey.indexOf(CFGKEY_COMMNTCFG) != 0) {
@@ -428,7 +430,8 @@ public class FileTokenizerSettings {
      * addQuotePattern("'", "'", "\\"); - support for double quotes
      * addQuotePattern("\"", "\"", "\\"); - both calls also add support for the
      * escape character '\'. If you don't want an escape character, use the next
-     * function.
+     * function. The Quote patterns get removed from the token by default. There
+     * are methods that take a flag, if you want them to remain in the token.  
      * 
      * @param leftQuote A string containing the left quote pattern.
      * @param rightQuote A string containing the right quote pattern.
@@ -441,16 +444,41 @@ public class FileTokenizerSettings {
     }
 
     /**
+     * @param leftQuote the left quote pattern
+     * @param rightQuote the right quote pattern
+     * @param escapeChar the escape character inside a quoted text 
+     * @param dontRemoveQuotes true if quote patterns should stay in the token,
+     *            false, if they should be removed from the returned token.
+     */
+    public void addQuotePattern(final String leftQuote, final String rightQuote,
+            final char escapeChar, final boolean dontRemoveQuotes) {
+        addQuotePattern(new Quote(leftQuote, rightQuote, escapeChar,
+                dontRemoveQuotes));
+    }
+    
+    /**
      * @param leftQuote The left quot char.
      * @param rightQuote The right quot char.
      * 
      * @see #addQuotePattern(String, String, char)
      */
-    public void addQuotePattern(final String leftQuote, final String rightQuote) {
+    public void addQuotePattern(final String leftQuote, 
+            final String rightQuote) {
 
         addQuotePattern(new Quote(leftQuote, rightQuote));
     }
 
+    /**
+     * @param leftQuote the left quote pattern
+     * @param rightQuote the right quote pattern
+     * @param dontRemoveQuotes true if quote patterns should stay in the token,
+     *            false, if they should be removed from the returned token.
+     */            
+    public void addQuotePattern(final String leftQuote, 
+            final String rightQuote, final boolean dontRemoveQuotes) {
+        addQuotePattern(new Quote(leftQuote, rightQuote, dontRemoveQuotes));
+    }
+    
     /*
      * adds a new Quotepattern expecting a Quote object. Does all kinds of
      * checking and throws IllegalArgument exceptions
@@ -485,15 +513,16 @@ public class FileTokenizerSettings {
                     + "quote pattern.\n";
         }
 
-        if ((quote.getLeft() == null) || (quote.getLeft().length() < 1)) {
-            errMsg += "Left quote pattern must be a non-empty string\n";
-        }
         if ((quote.getRight() == null) || (quote.getRight().length() < 1)) {
             errMsg += "Right quote pattern must be a non-empty string\n";
         }
-        if (quote.getLeft().charAt(0) > FileTokenizer.MAX_CHAR) {
-            errMsg += "The left quote must begin with a plain ASCII "
-                    + "character (ascii code < 127) \n";
+        if ((quote.getLeft() == null) || (quote.getLeft().length() < 1)) {
+            errMsg += "Left quote pattern must be a non-empty string\n";
+        } else {
+            if (quote.getLeft().charAt(0) > FileTokenizer.MAX_CHAR) {
+                errMsg += "The left quote must begin with a plain ASCII "
+                        + "character (ascii code < 127) \n";
+            }
         }
         if (!errMsg.equals("")) {
             throw new IllegalArgumentException(errMsg);
@@ -614,15 +643,17 @@ public class FileTokenizerSettings {
         if ((delimiter.getDelimiter() == null)
                 || (delimiter.getDelimiter().length() < 1)) {
             errMsg += "Delimiter pattern must be a non-empty string\n";
+        } else {
+            if (delimiter.getDelimiter().charAt(0) > FileTokenizer.MAX_CHAR) {
+                errMsg += "The delimiter must begin with a plain ASCII "
+                        + "character (ascii code < 127) \n";
+            }   
         }
         if (delimiter.returnAsToken() && delimiter.includeInToken()) {
             errMsg += "Cannot set 'returnAsSeparateToken' AND"
                     + " 'includeInToken'. They are mutually exclusive!\n";
         }
-        if (delimiter.getDelimiter().charAt(0) > FileTokenizer.MAX_CHAR) {
-            errMsg += "The delimiter must begin with a plain ASCII "
-                    + "character (ascii code < 127) \n";
-        }
+        
         if (!errMsg.equals("")) {
             throw new IllegalArgumentException(errMsg);
         }
@@ -904,6 +935,11 @@ public class FileTokenizerSettings {
         String errMsg = "";
         if ((comment.getBegin() == null) || (comment.getBegin().length() < 1)) {
             errMsg += "The comment begin pattern must be a non-empty string.\n";
+        } else {
+            if (comment.getBegin().charAt(0) > FileTokenizer.MAX_CHAR) {
+                errMsg += "The comment pattern must begin with a plain ASCII "
+                    + "character (ascii code < 127) \n";
+            }
         }
         if ((comment.getEnd() == null) || (comment.getEnd().length() < 1)) {
             errMsg += "The comment end pattern must be a non-empty string.\n";
@@ -911,10 +947,6 @@ public class FileTokenizerSettings {
         if (comment.returnAsSeparateToken() && comment.includeInToken()) {
             errMsg += "Cannot specify 'returnAsSeparateToken' AND"
                     + "'includeInToken'. They are mutually exclusive!\n";
-        }
-        if (comment.getBegin().charAt(0) > FileTokenizer.MAX_CHAR) {
-            errMsg += "The comment pattern must begin with a plain ASCII "
-                    + "character (ascii code < 127) \n";
         }
 
         if (!errMsg.equals("")) {
@@ -1155,7 +1187,8 @@ public class FileTokenizerSettings {
         }
         // at last add the quote definitions
         result.append("Quotes:\n");
-        for (Iterator<Quote> qIter = getAllQuotes().iterator(); qIter.hasNext();) {
+        for (Iterator<Quote> qIter = getAllQuotes().iterator(); 
+                qIter.hasNext();) {
             Quote quote = qIter.next();
             assert quote != null;
             result.append("    " + quote.toString());

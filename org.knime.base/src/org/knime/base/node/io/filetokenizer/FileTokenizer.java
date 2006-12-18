@@ -855,7 +855,7 @@ public class FileTokenizer {
      */
     private String readQuotedString(final Quote quote) 
             throws FileTokenizerException {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         int patternLength;
         String endPattern = quote.getRight();
         int nextChar = 0;
@@ -874,6 +874,7 @@ public class FileTokenizer {
                 return "";
             }
         }
+        
         // end pattern idx always points to result.length()-endPattern.length()
         endPatternIdx = -endPattern.length();
         // the index where we start searching in the result for the endPattern
@@ -917,8 +918,13 @@ public class FileTokenizer {
             }
         }
 
-        // return only the part up to the closing quote.
-        if (nextChar != EOF) {
+        // add the quote patterns, if they should stay in the token
+        if (quote.getDontRemoveFlag()) {
+            result.insert(0, quote.getLeft());
+        }
+
+        if (!quote.getDontRemoveFlag() && (nextChar != EOF)) {
+            // remove the end pattern from the token 
             assert result.indexOf(endPattern, endPatternIdx) > -1;
             return result.substring(0, result.length()
                     - quote.getRight().length());

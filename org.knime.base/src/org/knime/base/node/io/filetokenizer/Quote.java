@@ -42,6 +42,8 @@ public class Quote {
     private char m_escape;
 
     private boolean m_hasEscape;
+    
+    private boolean m_dontRemove;
 
     /* keys used to store parameters in a config object */
     private static final String CFGKEY_LEFT = "left";
@@ -49,6 +51,8 @@ public class Quote {
     private static final String CFGKEY_RIGHT = "right";
 
     private static final String CFGKEY_ESC = "EscChar";
+    
+    private static final String CFGKEY_DONTREM = "DontRem";
 
     /**
      * Creates a new Quote object. Only constructed by the
@@ -58,25 +62,56 @@ public class Quote {
      * @param left the left quote pattern
      * @param right the right quote pattern
      * @param escape the escape character for these quotes.
+     * @param dontRemove if set true the quote patterns will not be removed
+     *            from, but returned in the token.
      */
-    public Quote(final String left, final String right, final char escape) {
+    public Quote(final String left, final String right, final char escape, 
+            final boolean dontRemove) {
         m_left = left;
         m_right = right;
         m_escape = escape;
         m_hasEscape = true;
+        m_dontRemove = dontRemove;
+    }
+    /**
+     * Creates a new Quote object. The quotes will be removed from the token.
+     * Only constructed by the <code>FileTokenizerSettings</code> class.
+     * 
+     * @see FileTokenizerSettings
+     * @param left the left quote pattern
+     * @param right the right quote pattern
+     * @param escape the escape character for these quotes.
+     */
+    public Quote(final String left, final String right, final char escape) {
+        this(left, right, escape, false);
     }
 
     /**
-     * Creates a new Quote object, without escape character.
+     * Creates a new Quote object, without escape character, quotes being 
+     * removed from the token.
+     * 
+     * @param left The left quote pattern.
+     * @param right The right quote pattern.
+     * @param dontRemove if set true quote patterns don't get removed but be
+     *            returned in the token.
+     */
+    public Quote(final String left, final String right, 
+            final boolean dontRemove) {
+        m_left = left;
+        m_right = right;
+        m_escape = '\0';
+        m_hasEscape = false;
+        m_dontRemove = dontRemove;
+    } 
+    /**
+     * Creates a new Quote object, without escape character, quotes being 
+     * removed from the token.
      * 
      * @param left The left quote pattern.
      * @param right The right quote pattern.
      */
     public Quote(final String left, final String right) {
-        m_left = left;
-        m_right = right;
-        m_escape = '\0';
-        m_hasEscape = false;
+        this(left, right, false);
     }
 
     /**
@@ -114,6 +149,9 @@ public class Quote {
                     + "quote (must not specify mult char string as escape"
                     + "character)! Settings incomplete!");
         }
+        
+        // optional for backward compatibility
+        m_dontRemove = settings.getBoolean(CFGKEY_DONTREM, false);
     }
 
     /**
@@ -136,6 +174,7 @@ public class Quote {
             cfg.addChar(CFGKEY_ESC, getEscape());
         }
 
+        cfg.addBoolean(CFGKEY_DONTREM, m_dontRemove);
     }
 
     /**
@@ -169,6 +208,14 @@ public class Quote {
     }
 
     /**
+     * @return true if the quote patterns will remain in the token, false, if
+     *         they get removed and discarded when read.
+     */
+    public boolean getDontRemoveFlag() {
+        return m_dontRemove;
+    }
+    
+    /**
      * @return The first character of the left quote pattern.
      */
     public char getFirstCharOfLeft() {
@@ -191,6 +238,9 @@ public class Quote {
             result.append(", '");
             result.append(getEscape());
             result.append("'");
+        }
+        if (m_dontRemove) {
+            result.append("(remains)");
         }
         return result.toString();
     }
