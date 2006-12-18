@@ -21,7 +21,6 @@
  */
 package org.knime.base.node.io.filetokenizer;
 
-import java.io.IOException;
 import java.io.StringReader;
 
 import junit.framework.TestCase;
@@ -54,11 +53,12 @@ public final class FileTokenizerTest extends TestCase {
         // The default doesn't support any comment, delimiter, or quotes.
         // So, this string should come back in one piece.
         String token;
-        final String inputString = "123,234,\",,3 4 5\n,'456'\n\naß?#~\\,,\n\n";
+        final String inputString = 
+            "123,234,\",,3 4 5\n,'456'\n\naï¿½?#~\\,,\n\n";
         FileTokenizer ft = new FileTokenizer(new StringReader(inputString));
 
         token = ft.nextToken();
-        assertEquals(token, "123,234,\",,3 4 5\n,'456'\n\naß?#~\\,,\n\n");
+        assertEquals(token, "123,234,\",,3 4 5\n,'456'\n\naï¿½?#~\\,,\n\n");
         token = ft.nextToken();
         assertNull(token);
         System.out.println("FileTokenizer constructor: Done.");
@@ -114,11 +114,6 @@ public final class FileTokenizerTest extends TestCase {
         fts.addDelimiterPattern(",", false, true, false);
         ft.setSettings(fts);
 
-        try {
-            strReader.mark(0); // mark the beginning
-        } catch (IOException ioe) {
-            fail("Exception: " + ioe.getMessage());
-        }
         token = ft.nextToken();
         assertEquals(token, "123");
         token = ft.nextToken();
@@ -130,7 +125,11 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, " ");
         token = ft.nextToken();
+        assertEquals(token, "");
+        token = ft.nextToken();
         assertEquals(token, ",");
+        token = ft.nextToken();
+        assertEquals(token, "");
         token = ft.nextToken();
         assertEquals(token, " ");
         token = ft.nextToken();
@@ -159,7 +158,8 @@ public final class FileTokenizerTest extends TestCase {
      */
     public void testNextToken() throws FileTokenizerException {
         String token;
-        final String inputString = "1,2\n\n\n\n3\tßöäü,4\b\r\"°^´`'#";
+        final String inputString = 
+            "1,2\n\n\n\n3\tï¿½ï¿½ï¿½ï¿½,4\b\r\"ï¿½^ï¿½`'#";
         StringReader strReader = new StringReader(inputString);
         FileTokenizerSettings fts = new FileTokenizerSettings();
         FileTokenizer ft = new FileTokenizer(strReader);
@@ -180,9 +180,9 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, "");
         token = ft.nextToken();
-        assertEquals(token, "3\tßöäü");
+        assertEquals(token, "3\tï¿½ï¿½ï¿½ï¿½");
         token = ft.nextToken();
-        assertEquals(token, "4\b\r\"°^´`'#");
+        assertEquals(token, "4\b\r\"ï¿½^ï¿½`'#");
         token = ft.nextToken();
         assertNull(token);
 
@@ -255,12 +255,6 @@ public final class FileTokenizerTest extends TestCase {
         fts.addDelimiterPattern("\n", false, false, false);
         ft.setSettings(fts);
 
-        try {
-            strReader.mark(0);
-        } catch (IOException ioe) {
-            fail("Exception: " + ioe.getMessage());
-        }
-
         token = ft.nextToken();
         assertEquals(token, "\"123\"");
         assertFalse(ft.lastTokenWasQuoted());
@@ -279,13 +273,10 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertNull(token);
 
-        try {
-            strReader.reset();
-            /* inputString = "\"123\"\n'234'\n <quote>345 </quote>\n"; */
-        } catch (IOException ioe) {
-            fail("Exception: " + ioe.getMessage());
-        }
-
+ 
+        // reset stream
+        strReader = new StringReader(inputString);
+        
         ft = new FileTokenizer(strReader);
         fts = new FileTokenizerSettings();
         fts.addDelimiterPattern("\n", false, false, false);
@@ -310,12 +301,8 @@ public final class FileTokenizerTest extends TestCase {
         assertNull(token);
         assertFalse(ft.lastTokenWasQuoted());
 
-        try {
-            strReader.reset();
-            /* inputString = "\"123\"\n'234'\n <quote>345 </quote>\n"; */
-        } catch (IOException ioe) {
-            fail("Exception: " + ioe.getMessage());
-        }
+        // reset stream
+        strReader = new StringReader(inputString);
 
         ft = new FileTokenizer(strReader);
         fts = new FileTokenizerSettings();
@@ -359,12 +346,8 @@ public final class FileTokenizerTest extends TestCase {
         assertNull(ft.getLastQuoteBeginPattern());
         assertNull(ft.getLastQuoteEndPattern());
 
-        try {
-            strReader.reset();
-            /* inputString = "\"123\"\n'234'\n <quote>345 </quote>\n"; */
-        } catch (IOException ioe) {
-            fail("Exception: " + ioe.getMessage());
-        }
+        // reset stream
+        strReader = new StringReader(inputString);
 
         ft = new FileTokenizer(strReader);
         fts = new FileTokenizerSettings();
@@ -418,11 +401,6 @@ public final class FileTokenizerTest extends TestCase {
         strReader = new StringReader(inputString);
         FileTokenizerSettings fts = new FileTokenizerSettings();
         ft = new FileTokenizer(strReader);
-        try {
-            strReader.mark(0);
-        } catch (IOException ioe) {
-            fail("Exception: " + ioe.getMessage());
-        }
         fts.addDelimiterPattern(",", false, false, false);
         fts.addQuotePattern("\"", "\"", '\\');
         ft.setSettings(fts);
@@ -444,13 +422,8 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertNull(token);
 
-        // see how the same thing works without escape character
-        try {
-            // = "123,\"23,4\"\"3,4\\\",5\",\"45,6\",\"\",\"3";
-            strReader.reset();
-        } catch (IOException ioe) {
-            fail("Exception: " + ioe.getMessage());
-        }
+        // reset stream
+        strReader = new StringReader(inputString);
         ft = new FileTokenizer(strReader);
         fts = new FileTokenizerSettings();
         fts.addDelimiterPattern(",", false, false, false);
@@ -516,11 +489,6 @@ public final class FileTokenizerTest extends TestCase {
                 + "890,\t,\t901, the end";
         strReader = new StringReader(inputString);
         ft = new FileTokenizer(strReader);
-        try {
-            strReader.mark(0);
-        } catch (IOException ioe) {
-            fail("Exception: " + ioe.getMessage());
-        }
         // two delimiters, one will be returned as separate token.
         // delimiter pattern inside quotes should not start a new token.
         fts.addDelimiterPattern(", ", false, false, false);
@@ -554,11 +522,6 @@ public final class FileTokenizerTest extends TestCase {
         strReader = new StringReader(inputString);
         fts = new FileTokenizerSettings();
         ft = new FileTokenizer(strReader);
-        try {
-            strReader.mark(0);
-        } catch (IOException ioe) {
-            fail("Exception: " + ioe.getMessage());
-        }
         // tests combine consecutive delimiters
         fts.addDelimiterPattern(", ", true, false, false);
         ft.setSettings(fts);
@@ -577,12 +540,10 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertNull(token);
         // delimiter coming back as separate token.
-        try {
-            // = "123, 234, , , , 456,,567, 678, , 789, end"
-            strReader.reset();
-        } catch (IOException ioe) {
-            fail("Exception: " + ioe.getMessage());
-        }
+        
+        // = "123, 234, , , , 456,,567, 678, , 789, end"
+        // reset stream
+        strReader = new StringReader(inputString);
         ft = new FileTokenizer(strReader);
         fts = new FileTokenizerSettings();
         fts.addDelimiterPattern(", ", false, true, false);
@@ -596,9 +557,15 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, ", ");
         token = ft.nextToken();
-        assertEquals(token, ", "); // consec. returned tokens will not generate
-        token = ft.nextToken(); // empty tokens inbetween.
+        assertEquals(token, ""); 
+        token = ft.nextToken();
         assertEquals(token, ", ");
+        token = ft.nextToken();
+        assertEquals(token, ""); 
+        token = ft.nextToken(); 
+        assertEquals(token, ", ");
+        token = ft.nextToken();
+        assertEquals(token, ""); 
         token = ft.nextToken();
         assertEquals(token, ", ");
         token = ft.nextToken();
@@ -609,6 +576,8 @@ public final class FileTokenizerTest extends TestCase {
         assertEquals(token, "678");
         token = ft.nextToken();
         assertEquals(token, ", ");
+        token = ft.nextToken();
+        assertEquals(token, ""); 
         token = ft.nextToken();
         assertEquals(token, ", ");
         token = ft.nextToken();
@@ -746,6 +715,10 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, "345");
 
+        token = ft.nextToken();
+        assertEquals(token, "-");
+        token = ft.nextToken();
+        assertEquals(token, "\\\n");
         token = ft.nextToken();
         assertEquals(token, "-");
         token = ft.nextToken();
@@ -1070,11 +1043,7 @@ public final class FileTokenizerTest extends TestCase {
         StringReader strReader = new StringReader(inputString);
         FileTokenizerSettings fts = new FileTokenizerSettings();
         FileTokenizer ft = new FileTokenizer(strReader);
-        try {
-            strReader.mark(0);
-        } catch (IOException ioe) {
-            fail("Exception: " + ioe.getMessage());
-        }
+
         fts.addQuotePattern("'", "'");
         fts.addDelimiterPattern(",", false, false, false);
         fts.setLineContinuationCharacter('\\');
@@ -1342,8 +1311,10 @@ public final class FileTokenizerTest extends TestCase {
         token = ft.nextToken();
         assertEquals(token, ",");
         token = ft.nextToken();
-        assertEquals(token, ";"); // consec. returned tokens will not generate
-        token = ft.nextToken(); // empty tokens inbetween.
+        assertEquals(token, "");
+        token = ft.nextToken();
+        assertEquals(token, ";");
+        token = ft.nextToken(); 
         assertEquals(token, "567");
         token = ft.nextToken();
         assertNull(token);
