@@ -1235,11 +1235,11 @@ class Buffer {
             }
         }
         if (m_blobDir != null) {
-            boolean deleted = FileUtil.deleteRecursively(m_blobDir);
+            boolean deleted = deleteRecursively(m_blobDir);
             if (!hasRunGC && (!deleted && m_blobDir.exists())) {
                 System.gc();
             }
-            if (deleted || FileUtil.deleteRecursively(m_blobDir)) {
+            if (deleted || deleteRecursively(m_blobDir)) {
                 logDebug("Deleted blob directory \"" 
                         + m_blobDir.getAbsolutePath() + "\"", null);
             } else {
@@ -1411,5 +1411,27 @@ class Buffer {
         public DataRow next() {
             return m_it.next();
         }
+    }
+    
+    /** Deletes the argument directory recursively and returns true
+     * if this was successful. This method follows any symbolic link 
+     * (in comparison to 
+     * {@link org.knime.core.utilFileUtil#deleteRecursively(File)}.
+     * @param dir The (blob) directory to delete.
+     * @return Whether or not the directory has been deleted.
+     */
+    private static boolean deleteRecursively(final File dir) {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                boolean deleted = file.delete();
+                if (!deleted) {
+                    if (file.isDirectory()) {
+                        deleteRecursively(file);
+                    }
+                }
+            }
+        }
+        return dir.delete();
     }
 }
