@@ -42,8 +42,6 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -351,12 +349,8 @@ public final class EntropyCalculator {
             }
         });
         DataRow[] rows = sortedRows.toArray(new DataRow[0]);
-        DataColumnSpec[] colSpecs = new DataColumnSpec[NAMES.length];
-        for (int i = 0; i < colSpecs.length; i++) {
-            colSpecs[i] = new DataColumnSpecCreator(
-                    NAMES[i], TYPES[i]).createSpec();
-        }
-        DataTableSpec tableSpec = new DataTableSpec("Entropy Scores", colSpecs);
+        DataTableSpec tableSpec = 
+            new DataTableSpec("Entropy Scores", NAMES, TYPES);
         DataContainer container = new DataContainer(tableSpec);
         for (DataRow r : rows) {
             container.addRowToTable(r);
