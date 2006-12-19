@@ -540,6 +540,11 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
     
     /**
+     * This action calls {@link #hiLiteSelected()}, if it is overridden take 
+     * care to not return <code>null</code> since it might be called also when
+     * the {@link #getHiLiteMenu()} returns null. If no hilite behavior should
+     * be implemented either let the {@link #hiLiteSelected()} empty 
+     * (recommended) or override this method by returning an empty action.
      * 
      * @return the menu entry for hilite
      */
@@ -557,6 +562,12 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
     
     /**
+     * This action calls {@link #unHiLiteSelected()}, if it is 
+     * overridden take care to not return <code>null</code> since it might be 
+     * called also when the {@link #getHiLiteMenu()} returns null. If no 
+     * hilite behavior should be implemented either let the 
+     * {@link #unHiLiteSelected()} empty (recommended) or override this
+     * method by returning an empty action.
      * 
      * @return the menu entry for unhilite
      */
@@ -574,6 +585,11 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     }
     
     /**
+     * This action calls {@link #delegateUnHiLiteAll()}, if it is overridden 
+     * take care to not return <code>null</code> since it might be called also 
+     * when the {@link #getHiLiteMenu()} returns null. If not hilite behavior 
+     * should be implemented override this method by returning an empty action
+     * (not recommended).
      * 
      * @return the menu entry for clear hilite
      */
