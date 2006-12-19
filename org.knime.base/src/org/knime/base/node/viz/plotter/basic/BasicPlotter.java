@@ -86,8 +86,19 @@ public abstract class BasicPlotter extends AbstractPlotter {
         super(new BasicDrawingPane(), new AbstractPlotterProperties());
     }
     
+    
+    
 
     
+    /**
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
+     */
+    @Override
+    public void reset() {
+        ((BasicDrawingPane)getDrawingPane()).clearPlot();
+    }
+
+
     /**
      * Plots the column in the table specified by the column index as a 
      * line plot.
