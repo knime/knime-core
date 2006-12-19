@@ -78,6 +78,9 @@ public class DomainNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        if (m_possValCols.length == 0 && m_minMaxCols.length == 0) {
+            return inData;
+        }
         final DataTableSpec oldSpec = inData[0].getDataTableSpec();
         final int colCount = oldSpec.getNumColumns();
         HashSet<String> possValColsHash = 
