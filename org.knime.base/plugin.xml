@@ -442,7 +442,12 @@
       <node
             category-path="/mining/miscClass"
             factory-class="org.knime.base.node.mine.knn.KnnNodeFactory"
-            id="org.knime.base.node.mine.knn.KnnNodeFactory"/>   
+            id="org.knime.base.node.mine.knn.KnnNodeFactory"/>  
+   <node
+         category-path="/mining/clustering"
+         factory-class="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"
+         id="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"/>         
+            
    </extension>
    
    
