@@ -15,7 +15,7 @@
             file="context_help.xml">
       </contexts>
    </extension>
-   <!--extension
+   <extension
          point="org.eclipse.ui.intro">
       <intro
             class="org.eclipse.ui.intro.config.CustomizableIntroPart"
@@ -46,6 +46,10 @@
 		name="createProjectFromIntro"
 		replaces="runAction?pluginId=org.eclipse.pde.ui&amp;class=org.eclipse.pde.ui.internal.samples.ShowSampleAction">
 	</action>
-</extension-->
+	<action
+		name="launchUpdateWizard"
+		replaces="runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.InvokeInstallSiteAction">
+	</action>
+</extension>
    
 </plugin>

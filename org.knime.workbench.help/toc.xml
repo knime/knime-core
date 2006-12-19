@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <toc label="The Konstanz Information Miner - KNIME" topic="index.html">
-   <topic label="KNIME Quickstart Guide" href="quickstart.html">
-      <topic label="License" href="quickstart_1.html"/>
-      <topic label="Requirements" href="ch01s02.html"/>
-      <topic label="Installing KNIME" href="quickstart_2.html">
-         <topic label="Windows users" href="quickstart_2_1.html"/>
-         <topic label="Linux users" href="quickstart_2_2.html"/>
-         <topic label="Sample data sets" href="ch01s03s03.html"/>
-      </topic>
-      <topic label="Starting the Application" href="ch01s04.html"/>
-   </topic>
+   <topic label="KNIME online documentation" href="onlinedocu.html"/>
+   <topic label="KNIME local documentation" href="localdocu.html"/>
 </toc>

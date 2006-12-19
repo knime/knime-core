@@ -43,15 +43,23 @@
 		</legalnotice>
     </bookinfo>
     
-    The full KNIME documentation and API reference can be found at 
-    <ulink url="http://www.knime.org/documentation.html">http://www.knime.org/documentation.html</ulink>    
-    
-    <toc/>
 
 
 <!-- ************** Link chapters here ****************** -->
 
-	&quickstartguide;
+  <chapter id="onlinedocu">
+    <title>KNIME online documentation</title>
+    The most recent KNIME documentation and API reference can be found at 
+    <ulink url="http://www.knime.org/documentation.html">http://www.knime.org/documentation.html</ulink>
+  </chapter>
+  
+  <chapter id="localdocu">
+    <title>KNIME local documentation</title>
+    The local documentation shipped with this installation can be found 
+    in the installation directory of KNIME under doc/index.html
+  </chapter>
+  
+  
     
     
 </book>

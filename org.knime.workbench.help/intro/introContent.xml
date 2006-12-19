@@ -24,8 +24,20 @@
 			<link label="KNIME Help Center" url="http://org.eclipse.ui.intro/showHelp" 
 				id="help" style-id="left">
 				<img id="help_img" style-id="content-img" src="css/graphics/icons/etool/overview72.gif" alt="Help"/>
-          		<text>Open the KNIME Help Center for more detailed help.</text>
+          		<text>Open the Help Center for more information.</text>
         	</link>
+        	
+        	<link label="Install additional features..." url="http://org.eclipse.ui.intro/runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.InvokeInstallSiteAction" 
+				id="newProject" style-id="right">
+				<img id="newProject_img" style-id="content-img" src="css/graphics/icons/etool/overview72.gif" alt="New Project"/>
+          		<text>Opens the install wizard to install additional KNIME features.</text>
+        	</link>
+        	
+        	<!--link label="Go to KNIME..." url="http://org.eclipse.ui.intro/runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.CloseIntroPage" 
+				id="newProject" style-id="right">
+				<img id="newProject_img" style-id="content-img" src="css/graphics/icons/etool/overview72.gif" alt="New Project"/>
+          		<text>Closes this intro page and starts KNIME.</text>
+        	</link-->
 			
 			<!--link label="Create a new project..." 
 
