@@ -9,7 +9,9 @@
 		alt-style="css/root_swt.properties" style="css/root.css" 
 		id="root" style-id="page">
 
+		<!--
     	<title style-id="intro-header">Welcome to KNIME - the Konstanz Information Miner</title>
+    	-->
     	
 		<group id="links-background">
 		<group id="page-links">
@@ -23,7 +25,7 @@
 			
 			<link label="KNIME Help Center" url="http://org.eclipse.ui.intro/showHelp" 
 				id="help" style-id="left">
-				<img id="help_img" style-id="content-img" src="css/graphics/icons/etool/overview72.gif" alt="Help"/>
+				<img id="help_img" style-id="content-img" src="css/graphics/icons/help.png" alt="Help"/>
           		<text>Open the Help Center for more information.</text>
         	</link>
         	
