@@ -286,16 +286,6 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "Input table should have at least 2 columns.");
         }
-        // if we have nominal columns without possible values
-        final DataColumnSpec colSpec = 
-            spec.getColumnSpec(m_xColName.getStringValue());
-        if (!colSpec.getType().isCompatible(DoubleValue.class) 
-                && colSpec.getDomain().getValues() == null) {
-            throw new InvalidSettingsException(
-                    "Found nominal column without possible values: "
-                    + colSpec.getName() 
-                    + " Please use DomainCalculator or ColumnFilter node!");
-        }
         final String xCol = m_xColName.getStringValue();
         if (!spec.containsName(xCol)) {
             //if the input table has only two columns where only one column
@@ -323,6 +313,17 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
                 throw new InvalidSettingsException(
                         "Please define the x column name.");
             }
+        }
+        // if we have nominal columns without possible values
+        final DataColumnSpec colSpec = 
+            spec.getColumnSpec(m_xColName.getStringValue());
+        if (colSpec != null 
+                && !colSpec.getType().isCompatible(DoubleValue.class) 
+                && colSpec.getDomain().getValues() == null) {
+            throw new InvalidSettingsException(
+                    "Found nominal column without possible values: "
+                    + colSpec.getName() 
+                    + " Please use DomainCalculator or ColumnFilter node!");
         }
         final String aggrCol = m_aggrColName.getStringValue();
         if (!spec.containsName(aggrCol)) {
