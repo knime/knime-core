@@ -17,7 +17,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.exp.node.cluster.hierarchical;
+package org.knime.base.node.mine.cluster.hierarchical;
 
 
 import org.knime.base.node.viz.plotter.dendrogram.DendrogramPlotter;

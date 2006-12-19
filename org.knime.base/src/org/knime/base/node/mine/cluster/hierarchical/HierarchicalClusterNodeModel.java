@@ -17,7 +17,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.exp.node.cluster.hierarchical;
+package org.knime.base.node.mine.cluster.hierarchical;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import org.knime.base.node.mine.cluster.hierarchical.distfunctions.DistanceFunction;
+import org.knime.base.node.mine.cluster.hierarchical.distfunctions.EuclideanDist;
+import org.knime.base.node.mine.cluster.hierarchical.distfunctions.ManhattanDist;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.base.node.viz.plotter.DataProvider;
@@ -52,9 +55,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.exp.node.cluster.hierarchical.distfunctions.DistanceFunction;
-import org.knime.exp.node.cluster.hierarchical.distfunctions.EuclideanDist;
-import org.knime.exp.node.cluster.hierarchical.distfunctions.ManhattanDist;
 
 /**
  * Implements a Single Linkage Hirarchical Clustering.

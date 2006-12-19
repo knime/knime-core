@@ -17,57 +17,41 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.exp.node.cluster.hierarchical.distfunctions;
+package org.knime.base.node.mine.cluster.hierarchical.distfunctions;
+
+import java.io.Serializable;
 
 import org.knime.core.data.DataRow;
 
 
+// TODO: has to changed to the knime framework distance functions when available
 /**
- * Calculates the distance for two data rows based on the manhatten distance.
+ * The interface a distance function must implement.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class ManhattanDist extends MinkowskiDist {
+public interface DistanceFunction extends Serializable {
     
     /**
-     * An instance of this distance function.
+     * The name sof the implemented distance functions.
+     * 
+     * @author Fabian Dill, University of Konstanz
      */
-    public static final ManhattanDist MANHATTEN_DISTANCE
-         = new ManhattanDist();
-
-    /**
-     * Creates a Manhatten distance object from an Minkowski distance
-     * which means the power is one.
-     */
-    protected ManhattanDist() {
-        // generates minkowski with power 1
-        super(1);
+    public enum Names {
+        /** Euclidean distance function. */
+        Euclidean,
+        /** Manhattan distance function. */
+        Manhattan
     }
-    
-    /**
-     * Calculates the distance between two data rows based on the 
-     * Manhatten distance.
+
+     /**
+     * Calculates the distance between two data rows.
      * 
      * @param firstDataRow the first data row used to calculate the distance
      * @param secondDataRow the second data row used to calculate the distance
      * 
      * @return the distance of the two rows
      */
-    @Override
-    public double calcDistance(final DataRow firstDataRow, 
-                               final DataRow secondDataRow) {
-        
-        return super.calcDistance(firstDataRow, secondDataRow);
-    }
+    public double calcDistance(DataRow firstDataRow, DataRow secondDataRow);
     
-    /**
-     * Returns the String representation of this distance function.
-     * 
-     * @return the String representation
-     */
-    @Override
-    public String toString() {
-        
-        return "Manhattan Distance";
-    }
 }

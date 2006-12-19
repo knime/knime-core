@@ -18,7 +18,7 @@
  * 
  */
 
-package org.knime.exp.node.cluster.hierarchical;
+package org.knime.base.node.mine.cluster.hierarchical;
 
 import java.awt.Color;
 

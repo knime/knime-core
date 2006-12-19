@@ -17,7 +17,7 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.exp.node.cluster.hierarchical.distfunctions;
+package org.knime.base.node.mine.cluster.hierarchical.distfunctions;
 
 
 import org.knime.core.data.DataCell;

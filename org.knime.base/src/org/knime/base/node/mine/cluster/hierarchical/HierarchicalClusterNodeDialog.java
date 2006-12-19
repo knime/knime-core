@@ -18,16 +18,16 @@
  * 
  */
 
-package org.knime.exp.node.cluster.hierarchical;
+package org.knime.base.node.mine.cluster.hierarchical;
 
+import org.knime.base.node.mine.cluster.hierarchical.distfunctions.DistanceFunction;
+import org.knime.base.node.mine.cluster.hierarchical.distfunctions.EuclideanDist;
+import org.knime.base.node.mine.cluster.hierarchical.distfunctions.ManhattanDist;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.exp.node.cluster.hierarchical.distfunctions.DistanceFunction;
-import org.knime.exp.node.cluster.hierarchical.distfunctions.EuclideanDist;
-import org.knime.exp.node.cluster.hierarchical.distfunctions.ManhattanDist;
 
 /**
  * A dialog to get the number of output clusters,

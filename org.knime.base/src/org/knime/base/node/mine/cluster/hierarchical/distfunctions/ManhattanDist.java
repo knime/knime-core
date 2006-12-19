@@ -17,35 +17,36 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.exp.node.cluster.hierarchical.distfunctions;
+package org.knime.base.node.mine.cluster.hierarchical.distfunctions;
 
 import org.knime.core.data.DataRow;
 
+
 /**
- * Calculates the distance for two data rows based on the euclidean distance.
+ * Calculates the distance for two data rows based on the manhatten distance.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class EuclideanDist extends MinkowskiDist {
+public class ManhattanDist extends MinkowskiDist {
     
     /**
      * An instance of this distance function.
      */
-    public static final EuclideanDist EUCLIDEAN_DISTANCE
-         = new EuclideanDist();
+    public static final ManhattanDist MANHATTEN_DISTANCE
+         = new ManhattanDist();
 
     /**
-     * Creates a Euclidean distance object from an Minkowski distance
-     * which means the power is two.
+     * Creates a Manhatten distance object from an Minkowski distance
+     * which means the power is one.
      */
-    protected EuclideanDist() {
-        // generates minkowski with power 2
-        super(2);
+    protected ManhattanDist() {
+        // generates minkowski with power 1
+        super(1);
     }
-
+    
     /**
      * Calculates the distance between two data rows based on the 
-     * Euclidean distance.
+     * Manhatten distance.
      * 
      * @param firstDataRow the first data row used to calculate the distance
      * @param secondDataRow the second data row used to calculate the distance
@@ -53,11 +54,12 @@ public class EuclideanDist extends MinkowskiDist {
      * @return the distance of the two rows
      */
     @Override
-    public double calcDistance(
-            final DataRow firstDataRow, final DataRow secondDataRow) {
+    public double calcDistance(final DataRow firstDataRow, 
+                               final DataRow secondDataRow) {
+        
         return super.calcDistance(firstDataRow, secondDataRow);
     }
-
+    
     /**
      * Returns the String representation of this distance function.
      * 
@@ -65,7 +67,7 @@ public class EuclideanDist extends MinkowskiDist {
      */
     @Override
     public String toString() {
-
-        return "Euclidean Distance";
+        
+        return "Manhattan Distance";
     }
 }

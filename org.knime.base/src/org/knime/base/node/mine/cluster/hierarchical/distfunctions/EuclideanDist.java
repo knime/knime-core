@@ -17,41 +17,55 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.exp.node.cluster.hierarchical.distfunctions;
-
-import java.io.Serializable;
+package org.knime.base.node.mine.cluster.hierarchical.distfunctions;
 
 import org.knime.core.data.DataRow;
 
-
-// TODO: has to changed to the knime framework distance functions when available
 /**
- * The interface a distance function must implement.
+ * Calculates the distance for two data rows based on the euclidean distance.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public interface DistanceFunction extends Serializable {
+public class EuclideanDist extends MinkowskiDist {
     
     /**
-     * The name sof the implemented distance functions.
-     * 
-     * @author Fabian Dill, University of Konstanz
+     * An instance of this distance function.
      */
-    public enum Names {
-        /** Euclidean distance function. */
-        Euclidean,
-        /** Manhattan distance function. */
-        Manhattan
+    public static final EuclideanDist EUCLIDEAN_DISTANCE
+         = new EuclideanDist();
+
+    /**
+     * Creates a Euclidean distance object from an Minkowski distance
+     * which means the power is two.
+     */
+    protected EuclideanDist() {
+        // generates minkowski with power 2
+        super(2);
     }
 
-     /**
-     * Calculates the distance between two data rows.
+    /**
+     * Calculates the distance between two data rows based on the 
+     * Euclidean distance.
      * 
      * @param firstDataRow the first data row used to calculate the distance
      * @param secondDataRow the second data row used to calculate the distance
      * 
      * @return the distance of the two rows
      */
-    public double calcDistance(DataRow firstDataRow, DataRow secondDataRow);
-    
+    @Override
+    public double calcDistance(
+            final DataRow firstDataRow, final DataRow secondDataRow) {
+        return super.calcDistance(firstDataRow, secondDataRow);
+    }
+
+    /**
+     * Returns the String representation of this distance function.
+     * 
+     * @return the String representation
+     */
+    @Override
+    public String toString() {
+
+        return "Euclidean Distance";
+    }
 }
