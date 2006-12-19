@@ -32,11 +32,11 @@ final class BlobWrapperDataCell extends DataCell {
     
     private final Buffer m_buffer;
     private final BlobAddress m_blobAddress;
-    private final Class<? extends DataCell> m_blobClass;
+    private final Class<? extends BlobDataCell> m_blobClass;
     private BlobDataCell m_cell;
     
     BlobWrapperDataCell(final Buffer b, final BlobAddress ba,
-            final Class<? extends DataCell> cl) {
+            final Class<? extends BlobDataCell> cl) {
         assert b.getBufferID() == ba.getBufferID();
         m_buffer = b;
         m_blobAddress = ba;
@@ -58,7 +58,7 @@ final class BlobWrapperDataCell extends DataCell {
         return m_blobAddress;
     }
     
-    Class<? extends DataCell> getBlobClass() {
+    Class<? extends BlobDataCell> getBlobClass() {
         return m_blobClass;
     }
 

@@ -67,6 +67,18 @@ import org.knime.core.data.DataCell;
  */
 public abstract class BlobDataCell extends DataCell {
     
+    /**
+     * Shall blob cells be compressed when saved to blob file. This 
+     * field is <code>true</code>, which means the file is 
+     * compressed using the gzip compression format. 
+     * 
+     * <p>This field is accessed on the concrete implementation of 
+     * <code>BlobDataCell</code> using reflection. If objects of the derived
+     * class shall not be compressed, define a static field with the same
+     * name/type/scope, which returns <code>false</code>. 
+     */
+    public static final boolean IS_BLOB_COMPRESS = true;
+    
     private transient BlobAddress m_blobAddress;
     
     /** Get the location of the blob or <code>null</code> 
@@ -92,16 +104,6 @@ public abstract class BlobDataCell extends DataCell {
         m_blobAddress = blobAddress;
     }
     
-    /**
-     * Returns <code>true</code> if the blob has already been written out to 
-     * a separate file.
-     * @return If the blob was written out.
-     */
-    boolean hasBlobBeenWritten() {
-        return m_blobAddress != null 
-            && m_blobAddress.getIndexOfBlobInColumn() >= 0;
-    }
-    
     /** Utitility class that holds information where the blob is located. 
      * This contains: bufferID, column index, index of blob in the column. */
     static final class BlobAddress {
@@ -109,16 +111,20 @@ public abstract class BlobDataCell extends DataCell {
         private final int m_bufferID;
         private final int m_column;
         private int m_indexOfBlobInColumn;
+        private boolean m_isToCompress;
         
         /**
          * Create new address object.
          * @param bufferID ID of corresponding buffer.
          * @param column The column index
+         * @param isToCompress Whether or not the file is to be compressed.
          */
-        BlobAddress(final int bufferID, final int column) {
+        BlobAddress(final int bufferID, final int column, 
+                final boolean isToCompress) {
             m_bufferID = bufferID;
             m_column = column;
             m_indexOfBlobInColumn = -1;
+            m_isToCompress = isToCompress;
         }
         
         /** Set the corresponding address.
@@ -139,6 +145,12 @@ public abstract class BlobDataCell extends DataCell {
         /** @return the column */
         int getColumn() {
             return m_column;
+        }
+        
+        /** @return Whether or not the blob is (to be) compressed.
+         */
+        public boolean isCompress() {
+            return m_isToCompress;
         }
         
         /** Get the index of the blob in the columns (if a column only
@@ -164,6 +176,7 @@ public abstract class BlobDataCell extends DataCell {
             output.writeInt(m_bufferID);
             output.writeInt(m_column);
             output.writeInt(m_indexOfBlobInColumn);
+            output.writeBoolean(m_isToCompress);
         }
         
         /**
@@ -177,7 +190,8 @@ public abstract class BlobDataCell extends DataCell {
             int bufferID = input.readInt();
             int column = input.readInt();
             int indexOfBlobInColumn = input.readInt();
-            BlobAddress address = new BlobAddress(bufferID, column);
+            boolean isCompress = input.readBoolean();
+            BlobAddress address = new BlobAddress(bufferID, column, isCompress);
             address.setIndexOfBlobInColumn(indexOfBlobInColumn);
             return address;
         }

@@ -37,6 +37,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collections;
@@ -85,10 +86,18 @@ class Buffer {
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(Buffer.class);
     
+    /** Contains the information whether or not certain blob cell 
+     * implementations shall be compressed when saved. This information
+     * is retrieved from the field BlobDataCell#IS_BLOB_COMPRESS.
+     */
+    private static final Map<Class<? extends BlobDataCell>, Boolean>
+        BLOB_COMPRESS_MAP = 
+            new HashMap<Class<? extends BlobDataCell>, Boolean>();
+    
     /** Separator for different rows, new line. */
     private static final char ROW_SEPARATOR = '\n';
     
-    /** The char for cell whose type needs serialization. */
+    /** The char for missing cells. */
     private static final byte BYTE_TYPE_MISSING = Byte.MIN_VALUE;
 
     /** The char for cell whose type needs serialization. */
@@ -187,6 +196,47 @@ class Buffer {
         } catch (Exception e) {
             LOGGER.warn("Unable to add shutdown hook to delete temp files", e);
         }
+    }
+    
+    private static boolean isCompressOnSave(
+            final Class<? extends BlobDataCell> cl) {
+        Boolean result = BLOB_COMPRESS_MAP.get(cl);
+        if (result != null) {
+            return result;
+        }
+        if (result == null) {
+            Exception exception = null;
+            try {
+                // Java will fetch a static field that is public, if you
+                // declare it to be non-static or give it the wrong scope, it 
+                // automatically retrieves the static field from a super
+                // class/interface. If this field has the wrong type, a coding
+                // problem is reported.
+                Field typeField = cl.getField("IS_BLOB_COMPRESS");
+                Object typeObject = typeField.get(null);
+                result = (Boolean)typeObject;
+                if (result == null) {
+                    throw new NullPointerException("IS_BLOB_COMPRESS is null.");
+                }
+            } catch (NoSuchFieldException nsfe) {
+                exception = nsfe;
+            } catch (NullPointerException npe) {
+                exception = npe;
+            } catch (IllegalAccessException iae) {
+                exception = iae;
+            } catch (ClassCastException cce) {
+                exception = cce;
+            }
+            if (exception != null) {
+                LOGGER.coding("BlobDataCell interface \"" + cl.getSimpleName() 
+                        + "\" seems to have a problem with the static field " 
+                        + "\"IS_BLOB_COMPRESS\"", exception);
+                // fall back - no meta information available
+                result = false;
+            }
+            BLOB_COMPRESS_MAP.put(cl, result);
+        }
+        return result;
     }
 
     /** the file to write to. */
@@ -415,7 +465,7 @@ class Buffer {
             boolean isWrapperCell = cell instanceof BlobWrapperDataCell;
             boolean mustChangeRow = false;
             BlobAddress ad;
-            final Class<? extends DataCell> cl;
+            final Class<? extends BlobDataCell> cl;
             BlobWrapperDataCell wc;
             if (isWrapperCell) {
                 assert row instanceof BlobSupportDataRow;
@@ -424,17 +474,20 @@ class Buffer {
                 cl = wc.getBlobClass();
                 assert ad != null : "Blob address must not be null in wrapper";
             } else if (cell instanceof BlobDataCell) {
-                cl = cell.getClass();
+                cl = ((BlobDataCell)cell).getClass();
                 ad = ((BlobDataCell)cell).getBlobAddress();
             } else {
                 continue; // ordinary cell (e.g. double cell)
             }
             final ContainerTable ownerTable = ad != null 
-            	? m_globalRepository.get(ad.getBufferID()) : null;
+                ? m_globalRepository.get(ad.getBufferID()) : null;
             if (ownerTable == null) {
                 // need to set ownership if this blob was not assigned yet
                 // or has been assigned to an unlinked (i.e. local) buffer
-                BlobAddress rewrite = new BlobAddress(m_bufferID, col);
+                boolean isCompress = ad != null ? ad.isCompress()
+                        : isCompressOnSave(cl);
+                BlobAddress rewrite = 
+                    new BlobAddress(m_bufferID, col, isCompress);
                 if (ad == null) {
                     ((BlobDataCell)cell).setBlobAddress(rewrite);
                     ad = rewrite;
@@ -448,8 +501,9 @@ class Buffer {
                     rewrite.setIndexOfBlobInColumn(indexBlobInCol);
                     File source = b.getBuffer().getBlobFile(
                             ad.getIndexOfBlobInColumn(), 
-                            ad.getColumn(), false);
-                    File dest = getBlobFile(indexBlobInCol, col, true);
+                            ad.getColumn(), false, ad.isCompress());
+                    File dest = getBlobFile(
+                            indexBlobInCol, col, true, ad.isCompress());
                     FileUtil.copy(source, dest);
                 } else {
                     BlobDataCell bc;
@@ -458,19 +512,20 @@ class Buffer {
                     } else {
                         bc = (BlobDataCell)cell;
                     }
-                    writeBlobDataCell(bc, rewrite, getSerializerForDataCell(cl));
+                    writeBlobDataCell(
+                            bc, rewrite, getSerializerForDataCell(cl));
                 }
                 wc = new BlobWrapperDataCell(this, rewrite, cl);
                 mustChangeRow = true;
             } else {
                 // blob has been saved in one of the predecessor nodes
-            	if (isWrapperCell) {
-            		wc = (BlobWrapperDataCell)cell;
-            	} else {
-            		mustChangeRow = true;
-            		wc = new BlobWrapperDataCell(
-            				ownerTable.getBuffer(), ad, cl);
-            	}
+                if (isWrapperCell) {
+                    wc = (BlobWrapperDataCell)cell;
+                } else {
+                    mustChangeRow = true;
+                    wc = new BlobWrapperDataCell(
+                            ownerTable.getBuffer(), ad, cl);
+                }
             } 
             if (mustChangeRow) {
                 m_containsBlobs = true;
@@ -783,6 +838,7 @@ class Buffer {
     }
     
     /* Reads a datacell from a string. */
+    @SuppressWarnings("unchecked")
     private DataCell readDataCell(final DCObjectInputStream inStream) 
         throws IOException {
         if (m_version == 1) {
@@ -803,14 +859,16 @@ class Buffer {
             BlobAddress address = inStream.readBlobAddress();
             Buffer blobBuffer = this;
             if (address.getBufferID() != m_bufferID) {
-                ContainerTable cnTbl = m_globalRepository.get(address.getBufferID());
+                ContainerTable cnTbl = 
+                    m_globalRepository.get(address.getBufferID());
                 if (cnTbl == null) {
                     throw new IOException(
                             "Unable to retrieve table that owns the blob cell");
                 }
                 blobBuffer = cnTbl.getBuffer();
             }
-            return new BlobWrapperDataCell(blobBuffer, address, type);
+            return new BlobWrapperDataCell(
+                    blobBuffer, address, (Class<? extends BlobDataCell>)type);
         } 
         if (isSerialized) {
             try {
@@ -884,7 +942,8 @@ class Buffer {
         int column = a.getColumn();
         int indexInColumn = m_indicesOfBlobInColumns[column]++;
         a.setIndexOfBlobInColumn(indexInColumn);
-        File outFile = getBlobFile(indexInColumn, column, true);
+        boolean isToCompress = isCompressOnSave(cell.getClass());
+        File outFile = getBlobFile(indexInColumn, column, true, isToCompress);
         BlobAddress originalBA = cell.getBlobAddress();
         if (originalBA != a) {
             int originalBufferIndex = originalBA.getBufferID();
@@ -901,13 +960,18 @@ class Buffer {
             if (originalBuffer != null) {
                 int index = originalBA.getIndexOfBlobInColumn();
                 int col = originalBA.getColumn();
-                File source = originalBuffer.getBlobFile(index, col, false);
+                boolean compress = originalBA.isCompress();
+                File source = originalBuffer.getBlobFile(
+                        index, col, false, compress);
                 FileUtil.copy(source, outFile);
                 return;
             }
         }
-        OutputStream out = new GZIPOutputStream(
-                new BufferedOutputStream(new FileOutputStream(outFile)));
+        OutputStream out = 
+            new BufferedOutputStream(new FileOutputStream(outFile));
+        if (isToCompress) {
+            out = new GZIPOutputStream(out);
+        }
         OutputStream outStream = null;
         try {
             if (ser != null) { // DataCell is datacell-serializable
@@ -946,9 +1010,12 @@ class Buffer {
         }
         int column = blobAddress.getColumn();
         int indexInColumn = blobAddress.getIndexOfBlobInColumn();
-        File inFile = getBlobFile(indexInColumn, column, false);
-        InputStream in = new GZIPInputStream(new BufferedInputStream(
-                new FileInputStream(inFile)));
+        boolean isCompress = blobAddress.isCompress();
+        File inFile = getBlobFile(indexInColumn, column, false, isCompress);
+        InputStream in = new BufferedInputStream(new FileInputStream(inFile));
+        if (isCompress) {
+            in = new GZIPInputStream(in);
+        }
         DataCellSerializer<? extends DataCell> ser = 
             DataType.getCellSerializer(cl);
         InputStream inStream = null;
@@ -1047,7 +1114,8 @@ class Buffer {
      * @throws IOException If that fails (e.g. blob dir does not exist).
      */
     File getBlobFile(final int indexBlobInCol, final int column, 
-            final boolean createPath) throws IOException {
+            final boolean createPath, final boolean isCompressed) 
+        throws IOException {
         StringBuffer childPath = new StringBuffer();
         childPath.append("col_" + column);
         childPath.append(File.separatorChar);
@@ -1073,7 +1141,10 @@ class Buffer {
                         + blobDir.getAbsolutePath() + "\" does not exist");
             }
         }
-        String file = Integer.toString(indexBlobInCol) + ".bin.gz";
+        String file = Integer.toString(indexBlobInCol) + ".bin";
+        if (isCompressed) {
+            file = file.concat(".gz");
+        }
         return new File(blobDir, file);
     }
     
