@@ -2,18 +2,34 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./smote.png" type="Manipulator">
     <name>SMOTE</name>
-    <shortDescription>SMOTE algorithm by Chawla et. al.</shortDescription>
+    <shortDescription>Adds artificial data to improve the learning quality using the SMOTE algorithm</shortDescription>
     <fullDescription>
         <intro>
-			Oversamples data using the 
-			<a href="http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume16/chawla02a.pdf">
-			SMOTE (Synthetic Minority Over-sampling Technique)</a> algorithm by 
-			Chawla et al. The algorithm creates synthetic examples for classes
-			of interest by extrapolating between a real sample of the class and
-			one of the sample's neighbors. The paper describing this technique 
-			is available online at
+	        <p>
+        	This node oversamples the input data (i.e. adds artificial rows) to enrich the 
+        	training data. The applied technique is called 
+        	<a href="http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume16/chawla02a.pdf">
+			SMOTE (Synthetic Minority Over-sampling Technique)</a> by 
+			Chawla et al. 
+			</p>
+			<p>
+			Some supervised learning algorithms (such as decision trees and neural nets)
+			require an equal class distribution to generalize well, i.e. to get good 
+			classification performance. In case of unbalanced input data,
+			for instance there are only few objects of the &quot;active&quot; but 
+			many of the &quot;inactive&quot; class, this node adjusts the class distribution 
+			by adding artifical rows (in the example by adding rows for the of the &quot;active&quot; class). 
+			</p>
+			<p>
+			The algorithm works roughly as follows: It creates synthetic rows by extrapolating 
+			between a real object of a given class (in the above example &quot;active&quot;) 
+			and one of its nearest neighbors (of the same class). It then picks a point
+			along the line between these two objects and determines the attributes (cell values)
+			of the new object based on this randomly chosen point.
+			The paper describing this technique in detail is available online at
 			<a href="http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume16/chawla02a.pdf">
 			http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume16/chawla02a.pdf</a>.
+			</p>
 		</intro>
 		<option name="Class Column">
 		    Pick the column that contains the class information.
