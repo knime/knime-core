@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- * 
  */
-package org.knime.dev.node.knn;
+package org.knime.base.node.mine.knn;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;

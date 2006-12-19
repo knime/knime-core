@@ -21,7 +21,7 @@
  * History
  *   10.11.2006 (berthold): created
  */
-package org.knime.dev.node.knn;
+package org.knime.base.node.mine.knn;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;

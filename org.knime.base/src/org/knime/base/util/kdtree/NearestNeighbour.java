@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- * 
  */
-package org.knime.dev.util.kdtree;
+package org.knime.base.util.kdtree;
 
 /**
  * This class represents a nearest neighbour found during the search.

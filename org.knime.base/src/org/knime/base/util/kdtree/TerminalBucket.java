@@ -19,13 +19,36 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- * 
  */
-package org.knime.dev.util.kdtree;
+package org.knime.base.util.kdtree;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
- * Empty interface for nodes in the k-d tree.
- *  
+ * This class represents a terminal bucket in a k-d tree. A bucket contains
+ * several terminal nodes.
+ * 
+ * @param <T> the type of the data stored inside the tree
  * @author Thorsten Meinl, University of Konstanz
  */
-interface Node {
+class TerminalBucket<T> implements Node, Iterable<TerminalNode<T>> {
+    private final ArrayList<TerminalNode<T>> m_nodes =
+        new ArrayList<TerminalNode<T>>();
+    
+    /**
+     * Creates a new terminal bucket.
+     * 
+     * @param nodes the nodes inside the bucket
+     */
+    public TerminalBucket(final List<TerminalNode<T>> nodes) {
+        m_nodes.addAll(nodes);
+    }
 
+    /**
+     * @see java.lang.Iterable#iterator()
+     */
+    public Iterator<TerminalNode<T>> iterator() {
+        return m_nodes.iterator();
+    }
 }

@@ -1,4 +1,4 @@
-package org.knime.dev.node.knn;
+package org.knime.base.node.mine.knn;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.knime.base.util.kdtree.KDTree;
+import org.knime.base.util.kdtree.KDTreeBuilder;
+import org.knime.base.util.kdtree.NearestNeighbour;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -28,9 +31,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.MutableDouble;
-import org.knime.dev.util.kdtree.KDTree;
-import org.knime.dev.util.kdtree.KDTreeBuilder;
-import org.knime.dev.util.kdtree.NearestNeighbour;
 
 /**
  * This is the model for the k Nearest Neighbor node. In contrast to most
