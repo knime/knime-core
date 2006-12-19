@@ -169,13 +169,10 @@ public class MultiLayerPerceptron {
         m_inputmap = map;
         Layer inputlayer = m_layers[0];
         Set<String> keyset = m_inputmap.keySet();
-        Iterator<String> it = keyset.iterator();
-        for (int j = 0; j < inputlayer.getPerceptrons().length; j++) {
-            String dc = it.next();
-            inputlayer.getPerceptron(j).setClassValue(dc.toString());
+        for (String key : keyset) {
+            inputlayer.getPerceptron(m_inputmap.get(key)).setClassValue(key);
         }
-
-    }
+     }
 
     /**
      * Allows to get the class mapping from output neurons to class values.
@@ -418,7 +415,8 @@ public class MultiLayerPerceptron {
         Layer actLayer;
         ModelContentRO alllayers = predParams.getModelContent(ALLLAYERS_KEY);
         Layer[] allLayers = new Layer[alllayers.keySet().size()];
-        HashMap<DataCell, Integer> myclassmap = new HashMap<DataCell, Integer>();
+        HashMap<DataCell, Integer> myclassmap =
+            new HashMap<DataCell, Integer>();
         HashMap<String, Integer> myinputmap = new HashMap<String, Integer>();
         int l = 0;
         for (String layerKey : alllayers.keySet()) {
