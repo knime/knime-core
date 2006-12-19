@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Learner" icon="./pnn_small.ico">
+<knimeNode type="Learner" icon="./knn.png">
 	<name>K Nearest Neighbor</name>
 	<shortDescription>
 		 Classifies a set of test data based on the k Nearest Neighbor algorithm
