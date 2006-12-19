@@ -241,7 +241,8 @@ public class RProp {
         // STEP 2: for all weights set delta_w
         for (int i = 1; i < nn.getLayers().length; i++) {
             for (int j = 0; j < nn.getLayer(i).getPerceptrons().length; j++) {
-                for (int k = 0; k < nn.getLayer(i - 1).getPerceptrons().length; k++) {
+                for (int k = 0; 
+                k < nn.getLayer(i - 1).getPerceptrons().length; k++) {
                     // Compute error derivation
                     errDer = m_errDers[i - 1][j][k];
                     // Also get old error derivation
@@ -326,7 +327,8 @@ public class RProp {
             // initialize eta_ij with etaNull
             m_etaIJ = new double[m_nn.getLayers().length - 1][][];
             for (int i = 0; i < m_etaIJ.length; i++) {
-                m_etaIJ[i] = new double[m_nn.getLayer(i + 1).getPerceptrons().length][];
+                m_etaIJ[i] = 
+                    new double[m_nn.getLayer(i + 1).getPerceptrons().length][];
                 for (int j = 0; j < m_etaIJ[i].length; j++) {
                     m_etaIJ[i][j] = new double[m_nn.getLayer(i)
                             .getPerceptrons().length];
@@ -350,16 +352,19 @@ public class RProp {
         // initialize err_ders
         m_errDers = new double[m_nn.getLayers().length - 1][][];
         for (int i = 0; i < m_errDers.length; i++) {
-            m_errDers[i] = new double[m_nn.getLayer(i + 1).getPerceptrons().length][];
+            m_errDers[i] = new double[
+                           m_nn.getLayer(i + 1).getPerceptrons().length][];
             for (int j = 0; j < m_errDers[i].length; j++) {
-                m_errDers[i][j] = new double[m_nn.getLayer(i).getPerceptrons().length];
+                m_errDers[i][j] = new double[
+                                 m_nn.getLayer(i).getPerceptrons().length];
             }
         }
 
         // initialize thr_err_ders
         m_thrErrDers = new double[m_nn.getLayers().length - 1][];
         for (int i = 0; i < m_thrErrDers.length; i++) {
-            m_thrErrDers[i] = new double[m_nn.getLayer(i + 1).getPerceptrons().length];
+            m_thrErrDers[i] = new double[
+                             m_nn.getLayer(i + 1).getPerceptrons().length];
         }
         if (m_newPhase) {
             // initialize old_err_der
