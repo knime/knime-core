@@ -20,8 +20,11 @@ package org.knime.base.node.viz.plotter.basic;
 
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JMenu;
 
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.node.property.hilite.KeyEvent;
@@ -45,6 +48,16 @@ public class BasicPlotterImpl extends BasicPlotter {
      */
     public BasicPlotterImpl() {
         super(new BasicDrawingPaneImpl(), new AbstractPlotterProperties());
+    }
+    
+    
+
+    /**
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter#getHiLiteMenu()
+     */
+    @Override
+    public JMenu getHiLiteMenu() {
+        return null;
     }
 
     /**
@@ -81,7 +94,13 @@ public class BasicPlotterImpl extends BasicPlotter {
      */
     @Override
     public Action getClearHiliteAction() {
-        return null;
+        return new AbstractAction() {
+
+            public void actionPerformed(ActionEvent e) {
+                // do nothing
+            }
+            
+        };
     }
 
     /**
@@ -89,8 +108,13 @@ public class BasicPlotterImpl extends BasicPlotter {
      */
     @Override
     public Action getHiliteAction() {
-        // TODO Auto-generated method stub
-        return null;
+        return new AbstractAction() {
+
+            public void actionPerformed(ActionEvent e) {
+                // do nothing
+            }
+            
+        };
     }
 
     /**
@@ -98,8 +122,13 @@ public class BasicPlotterImpl extends BasicPlotter {
      */
     @Override
     public Action getUnhiliteAction() {
-        // TODO Auto-generated method stub
-        return null;
+        return new AbstractAction() {
+
+            public void actionPerformed(ActionEvent e) {
+                // do nothing
+            }
+            
+        };
     }
     
     
