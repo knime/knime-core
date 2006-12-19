@@ -55,7 +55,6 @@ public class KnnNodeModel extends NodeModel {
      * arguments with sensible values.
      * 
      * @param inSpecs the input tables' specs
-     * @param classColIndex the index of the class column (from the first table)
      * @param featureColumns a list that gets filled with the feature columns'
      *            indices; all columns with {@link DoubleValue}s are used as
      *            features
@@ -65,7 +64,7 @@ public class KnnNodeModel extends NodeModel {
      * @throws InvalidSettingsException if the two tables are not compatible
      */
     private void checkInputTables(final DataTableSpec[] inSpecs,
-            final int classColIndex, final List<Integer> featureColumns,
+            final List<Integer> featureColumns,
             final Map<Integer, Integer> firstToSecond)
             throws InvalidSettingsException {
         if (!inSpecs[0].containsCompatibleType(DoubleValue.class)) {
@@ -141,7 +140,7 @@ public class KnnNodeModel extends NodeModel {
 
         List<Integer> featureColumns = new ArrayList<Integer>();
         Map<Integer, Integer> secondIndex = new HashMap<Integer, Integer>();
-        checkInputTables(inSpecs, classColIndex, featureColumns, secondIndex);
+        checkInputTables(inSpecs, featureColumns, secondIndex);
 
         DataColumnSpec[] colSpecs =
                 new DataColumnSpec[inSpecs[1].getNumColumns() + 1];
@@ -175,7 +174,7 @@ public class KnnNodeModel extends NodeModel {
         List<Integer> featureColumns = new ArrayList<Integer>();
         Map<Integer, Integer> firstToSecond = new HashMap<Integer, Integer>();
         checkInputTables(new DataTableSpec[]{inData[0].getDataTableSpec(),
-                inData[1].getDataTableSpec()}, classColIndex, featureColumns,
+                inData[1].getDataTableSpec()}, featureColumns,
                 firstToSecond);
 
         KDTreeBuilder<DataCell> treeBuilder =
