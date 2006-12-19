@@ -42,14 +42,16 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.BufferedDataTable;
@@ -349,7 +351,18 @@ public final class EntropyCalculator {
             }
         });
         DataRow[] rows = sortedRows.toArray(new DataRow[0]);
-        return new DefaultTable(rows, NAMES, TYPES);
+        DataColumnSpec[] colSpecs = new DataColumnSpec[NAMES.length];
+        for (int i = 0; i < colSpecs.length; i++) {
+            colSpecs[i] = new DataColumnSpecCreator(
+                    NAMES[i], TYPES[i]).createSpec();
+        }
+        DataTableSpec tableSpec = new DataTableSpec("Entropy Scores", colSpecs);
+        DataContainer container = new DataContainer(tableSpec);
+        for (DataRow r : rows) {
+            container.addRowToTable(r);
+        }
+        container.close();
+        return container.getTable();
     }
 
     private static HashMap<DataCell, Set<DataCell>> getClusterMap(

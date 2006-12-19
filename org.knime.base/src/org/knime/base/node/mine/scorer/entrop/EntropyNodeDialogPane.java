@@ -58,8 +58,8 @@ public class EntropyNodeDialogPane extends NodeDialogPane {
      * The dialog for the entropy scorer. 
      *
      */
+    @SuppressWarnings("unchecked")
     public EntropyNodeDialogPane() {
-        super();
         m_comboReference = new ColumnSelectionComboxBox((Border)null,
                 DataValue.class);
         m_comboCluster = new ColumnSelectionComboxBox((Border)null,
