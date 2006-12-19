@@ -24,7 +24,9 @@ package org.knime.base.data.join;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Set;
 
+import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -32,8 +34,6 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
-
-import org.knime.base.data.filter.column.FilterColumnTable;
 
 /**
  * Creates new table by appending all columns from <i>right</i> table to the
@@ -226,17 +226,36 @@ public class JoinedTable implements DataTable {
     public static final DataTableSpec createSpec(final DataTableSpec left,
             final DataTableSpec right, final String duplicateMethod,
             final String suffix) {
+        DataColumnSpec[] leftCols;
+        DataColumnSpec[] rightCols;
         if (METHOD_FAIL.equals(duplicateMethod)) {
-            return new DataTableSpec(left, right);
-        }
-        if (METHOD_FILTER.equals(duplicateMethod)) {
+            leftCols = new DataColumnSpec[left.getNumColumns()];
+            rightCols = new DataColumnSpec[right.getNumColumns()];
+            Set<String> hash = new HashSet<String>();
+            for (int i = 0; i < left.getNumColumns(); i++) {
+                leftCols[i] = left.getColumnSpec(i);
+                hash.add(leftCols[i].getName());
+            }
+            for (int i = 0; i < right.getNumColumns(); i++) {
+                rightCols[i] = right.getColumnSpec(i);
+                if (hash.contains(rightCols[i].getName())) {
+                    throw new IllegalArgumentException("Duplicate column: " 
+                            + rightCols[i].getName());
+                }
+            }
+        } else if (METHOD_FILTER.equals(duplicateMethod)) {
             String[] survivers = getSurvivers(left, right);
             DataTableSpec newRight = FilterColumnTable.createFilterTableSpec(
                     right, survivers);
-            return new DataTableSpec(left, newRight);
-
-        }
-        if (METHOD_APPEND_SUFFIX.equals(duplicateMethod)) {
+            leftCols = new DataColumnSpec[left.getNumColumns()];
+            rightCols = new DataColumnSpec[newRight.getNumColumns()];
+            for (int i = 0; i < left.getNumColumns(); i++) {
+                leftCols[i] = left.getColumnSpec(i);
+            }
+            for (int i = 0; i < right.getNumColumns(); i++) {
+                rightCols[i] = newRight.getColumnSpec(i);
+            }
+        } else if (METHOD_APPEND_SUFFIX.equals(duplicateMethod)) {
             final int rightColCount = right.getNumColumns();
             HashSet<String> newInvented = new HashSet<String>();
             DataColumnSpec[] newCols = new DataColumnSpec[rightColCount];
@@ -263,13 +282,62 @@ public class JoinedTable implements DataTable {
                 }
             }
             DataTableSpec newRight = new DataTableSpec(newCols);
-            return new DataTableSpec(left, newRight);
+            leftCols = new DataColumnSpec[left.getNumColumns()];
+            rightCols = new DataColumnSpec[newRight.getNumColumns()];
+            for (int i = 0; i < left.getNumColumns(); i++) {
+                leftCols[i] = left.getColumnSpec(i);
+            }
+            for (int i = 0; i < right.getNumColumns(); i++) {
+                rightCols[i] = newRight.getColumnSpec(i);
+            }
+        } else {
+            throw new IllegalArgumentException(
+                    "Unknown method: " + duplicateMethod);
         }
-        throw new IllegalArgumentException(
-                "Unknown method: " + duplicateMethod);
+        boolean isLeftContainColorHandler = false;
+        boolean isLeftContainSizeHandler = false;
+        boolean isLeftContainShapeHandler = false;
+        for (DataColumnSpec s : leftCols) {
+            isLeftContainColorHandler |= s.getColorHandler() != null;
+            isLeftContainSizeHandler |= s.getSizeHandler() != null;
+            isLeftContainShapeHandler |= s.getShapeHandler() != null;
+        }
+        for (int i = 0; i < rightCols.length; i++) {
+            DataColumnSpec s = rightCols[i];
+            boolean removeColorHandler = false;
+            if (s.getColorHandler() != null && isLeftContainColorHandler) {
+                removeColorHandler = true;
+            }
+            boolean removeSizeHandler = false;
+            if (s.getSizeHandler() != null && isLeftContainSizeHandler) {
+                removeSizeHandler = true;
+            }
+            boolean removeShapeHandler = false;
+            if (s.getShapeHandler() != null && isLeftContainShapeHandler) {
+                removeShapeHandler = true;
+            }
+            if (removeColorHandler || removeSizeHandler || removeShapeHandler) {
+                DataColumnSpecCreator c = new DataColumnSpecCreator(s);
+                if (removeColorHandler) {
+                    c.setColorHandler(null);
+                }
+                if (removeSizeHandler) {
+                    c.setSizeHandler(null);
+                }
+                if (removeShapeHandler) {
+                    c.setShapeHandler(null);
+                }
+                rightCols[i] = c.createSpec();
+            }
+        }
+        DataColumnSpec[] sp = 
+            new DataColumnSpec[leftCols.length + rightCols.length];
+        System.arraycopy(leftCols, 0, sp, 0, leftCols.length);
+        System.arraycopy(rightCols, 0, sp, leftCols.length, rightCols.length);
+        return new DataTableSpec(sp);
     }
 
-    /* Determine the column names that only exist in the left table. */
+    /* Determines set of unique names, duplicates in right are skipped. */
     private static String[] getSurvivers(final DataTableSpec left,
             final DataTableSpec right) {
         // hash column names from right table
@@ -288,7 +356,7 @@ public class JoinedTable implements DataTable {
         }
         return survivers.toArray(new String[0]);
     }
-
+    
     /**
      * Requested by iterated.
      * 
