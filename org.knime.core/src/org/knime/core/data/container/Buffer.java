@@ -1150,6 +1150,12 @@ class Buffer {
                 writeRow(row, outStream);
                 count++;
             }
+            // if the table contains no rows at all, the shortcut 
+            // table may be null!
+            if (m_typeShortCuts == null) {
+                m_typeShortCuts = 
+                    new HashMap<Class<? extends DataCell>, Byte>();
+            }
             shortCutsLookup = closeFile(outStream);
         } else {
             // no need for BufferedInputStream here as the copy method
