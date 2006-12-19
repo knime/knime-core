@@ -147,6 +147,16 @@ public final class Node {
     }
     
     private File m_nodeDir = null;
+    
+    /** Contains the set of tables that have been created during the execute
+     * using the ExecutionContext. This set does not contain the 
+     * outport tables. For a threaded node (chunk-wise processing), this
+     * set will contain the temporary chunk containers. Ideally, we will
+     * clear theses tables when the execution finishes but some implementations
+     * (for instance a scatterplot, scorer) do create tables that they keep
+     * a reference on (for displaying in the view). 
+     */
+    private final Set<ContainerTable> m_localTempTables;
 
     // lock that prevents a possible deadlock if a node is currently configuring
     // (e.g. because inportHasNodeModelContent has been called)
@@ -258,7 +268,7 @@ public final class Node {
             ((SpecialNodeModel)m_model).setNode(this);
             ((SpecialNodeModel)m_model).setInternalWFM(wfm.createSubManager());
         }
-
+        m_localTempTables = new HashSet<ContainerTable>();
         // let the model create its 'default' table specs
         configure();
     }
@@ -1113,6 +1123,11 @@ public final class Node {
             // m_outDataPorts[p].setDataTableSpec(null);
             m_outDataPorts[p].setDataTable(null);
         }
+        // clear temporary tables that have been created during execute 
+        for (ContainerTable t : m_localTempTables) {
+            t.clear();
+        }
+        m_localTempTables.clear();
 
         // blow away our pred models in the out ports
         for (int p = 0; p < getNrModelContentOutPorts(); p++) {
@@ -1129,12 +1144,11 @@ public final class Node {
         // load ModelContent from all available InPorts again
         for (int p = 0; p < getNrModelContentInPorts(); p++) {
             try {
-                m_model
-                        .loadModelContent(p, m_inModelPorts[p]
-                                .getModelContent());
+                m_model.loadModelContent(
+                        p, m_inModelPorts[p].getModelContent());
             } catch (NullPointerException npe) {
-                m_logger.coding("loadModelContent() does not check for null"
-                        + " argument.");
+                m_logger.coding(
+                        "loadModelContent() does not check for null argument.");
                 m_status = new NodeStatus.Warning("Node does not check for "
                         + "null argument in loadModelContent().");
             } catch (InvalidSettingsException ise) {
@@ -1196,6 +1210,14 @@ public final class Node {
                 m_logger.warn("Unable to delete dir: \"" + m_nodeDir + "\"");
             }
         }
+    }
+    
+    /** Adds the argument set of tables to the set of temporary tables in
+     * this node. Called after execute.
+     * @param tempTables Tables to add, not <code>null</code>.
+     */
+    public void addToTemporaryTables(final Set<ContainerTable> tempTables) {
+        m_localTempTables.addAll(tempTables);
     }
     
     /** Enumerates the output tables and puts them into the global worflow 
