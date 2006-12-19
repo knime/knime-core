@@ -34,6 +34,24 @@ import org.knime.base.util.coordinate.NominalCoordinate;
 import org.knime.base.util.coordinate.NominalCoordinateMapping;
 
 /**
+ * Holds a matrix of 
+ * {@link org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixElement}s.
+ * This class only paints the surrounding rectangles of the matrix elements, 
+ * the painting of the actual dots is done by the 
+ * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}.
+ * In addition to the scatter matrix elements the coordinates of the scatter
+ * matrix elements are plotted at the borders of the drawing pane.
+ * The {@link #setBackground(Color)} is overriden, since it sets the color of
+ * the scatter matrix elements and not of the whole component.
+ * 
+ * The 
+ * {@link org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixElement}s
+ *  know there associated dots. By setting them with the 
+ *  {@link #setScatterMatrixElements(ScatterMatrixElement[][])}, the 
+ *  {@link org.knime.base.node.viz.plotter.scatter.DotInfo}s are put into a 
+ *  {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}, which can then
+ *  be painted with the inherited functionality of the 
+ *  {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -43,6 +61,7 @@ public class ScatterMatrixDrawingPane extends ScatterPlotterDrawingPane {
 //            ScatterMatrixDrawingPane.class);
 //    
     private ScatterMatrixElement[][] m_matrixElements;
+    
     
     private static final int TICK_SIZE = 4;
     
@@ -117,6 +136,11 @@ public class ScatterMatrixDrawingPane extends ScatterPlotterDrawingPane {
     
     
     /**
+     * Paints the rectangles of the scatter matrix elements and the vertical and
+     * horizontal coordinates at the border of the drawing pane. The painting 
+     * of the dots is inherited from the 
+     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}.
+     * 
      * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane
      * #paintContent(java.awt.Graphics)
      */
@@ -168,6 +192,7 @@ public class ScatterMatrixDrawingPane extends ScatterPlotterDrawingPane {
     }
     
     /**
+     * Paints the vertical coordinates at the border of the drawing pane.
      * 
      * @param g graphics
      * @param element element to provide posiotn and coordinate
@@ -227,6 +252,8 @@ public class ScatterMatrixDrawingPane extends ScatterPlotterDrawingPane {
     }
 
     /**
+     * Paints the horizontal coordinates of the matrix elements at the border 
+     * of the drawing pane.
      * 
      * @param g graphics
      * @param element the element to provide position and coordinate

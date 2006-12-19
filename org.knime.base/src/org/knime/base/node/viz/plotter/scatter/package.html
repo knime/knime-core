@@ -1,2 +1,20 @@
 <body>
+<p>
+A scatter plot maps to columns (dimensions) of data to 2-dimensional space, which
+results that each row (data instance) can be represented as one 2-dimensional point.
+
+The {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotter} maps the 
+data to visualize to the screen coordinates. Afterwards a data point is 
+represented by a {@link org.knime.base.node.viz.plotter.scatter.DotInfo}. All
+{@link org.knime.base.node.viz.plotter.scatter.DotInfo}s are stored in a 
+{@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} which is passed
+to the 
+{@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}.
+
+<p>
+For nominal values a jittering is realized. Unhilited dots may be hidden or 
+faded, which is the reason for extending the 
+{@link org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView} with the
+{@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterNodeView} which adds
+the show/hide menu to the menu bar.
 </body>

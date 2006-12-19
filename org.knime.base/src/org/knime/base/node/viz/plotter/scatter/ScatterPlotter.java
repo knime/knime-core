@@ -49,6 +49,16 @@ import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
+ * Maps the two selected columns to the screen coordinates. 
+ * The resulting points in 2-dimensional space are represented by 
+ * {@link org.knime.base.node.viz.plotter.scatter.DotInfo}s, which are 
+ * stored in a {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}
+ * which is then passed to the 
+ * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}.
+ * For nominal values it is typically that many points are on the same 
+ * coordinate which leads to overplotting. One possible solution is to jitter
+ * the points around the original point, to visualize that many points are on
+ * the same coordinate. The jittering for nominal values is done here.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -65,7 +75,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
    
     
     /**
-     * Construction kit constructor to construct a customized plotter.
+     * Construction kit constructor to construct a customized plotter, 
+     * registeres all necessary listeners.
      * 
      * @param panel the drawing pane
      * @param properties the properties
@@ -116,7 +127,10 @@ public class ScatterPlotter extends TwoColumnPlotter {
         }
     }
     /**
-     * Default constructor.
+     * Default constructor with 
+     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}
+     * and 
+     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterProperties}.
      *
      */
     public ScatterPlotter() {
@@ -124,16 +138,22 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
     
     /**
+     * Passes an empty 
+     * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} to the 
+     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}.
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
      */
     @Override
     public void reset() {
+        super.reset();
         getScatterPlotterDrawingPane().setDotInfoArray(new DotInfoArray(
                 new DotInfo[0]));
     }
     
     
     /**
+     * Sets the size of the dots and sets a tick offset to both axes to ensure
+     * that the points are always completely visible.
      * 
      * @param dotSize the dot size.
      */
@@ -173,6 +193,14 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
     
     /**
+     * The <code>ScatterPlotter</code> adds the posssibility to show, fade or
+     * hide unhilited dots and this is the show all action.
+     * The hide flag is administered in the <code>ScatterPlotter</code>, since
+     * hidden points are not passed to the 
+     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * the fade flag is administered in the 
+     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * since the dots are painted but with a different (faded) color.
      * 
      * @return the menu item for show all.
      */
@@ -194,6 +222,14 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
     
     /**
+     * The <code>ScatterPlotter</code> adds the posssibility to show, fade or
+     * hide unhilited dots and this is the hide unhilited action.
+     * The hide flag is administered in the <code>ScatterPlotter</code>, since
+     * hidden points are not passed to the 
+     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * the fade flag is administered in the 
+     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * since the dots are painted but with a different (faded) color.
      * 
      * @return the menu item for hide unhilited.
      */
@@ -223,7 +259,14 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
     
     /**
-     * 
+     * The <code>ScatterPlotter</code> adds the posssibility to show, fade or
+     * hide unhilited dots and this is the fade unhilited action.
+     * The hide flag is administered in the <code>ScatterPlotter</code>, since
+     * hidden points are not passed to the 
+     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * the fade flag is administered in the 
+     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * since the dots are painted but with a different (faded) color.
      * @return the menu item for fade unhilited.
      */
     public Action getFadeAction() {
@@ -245,6 +288,14 @@ public class ScatterPlotter extends TwoColumnPlotter {
     
 
     /**
+     * The <code>ScatterPlotter</code> adds the posssibility to show, fade or
+     * hide unhilited dots and this is the complete menu to hide, fade.
+     * The hide flag is administered in the <code>ScatterPlotter</code>, since
+     * hidden points are not passed to the 
+     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * the fade flag is administered in the 
+     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * since the dots are painted but with a different (faded) color.
      * 
      * @return an additional menu for the NodeView's menu bar containing
      * the actions for show, fade and hide unhilited dots.
@@ -259,6 +310,10 @@ public class ScatterPlotter extends TwoColumnPlotter {
     
 
     /**
+     * The inherited hilite menu from the 
+     * {@link org.knime.base.node.viz.plotter.AbstractPlotter} and the 
+     * show all, fade or hide unhilited menu.
+     * 
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#fillPopupMenu(
      * javax.swing.JPopupMenu)
      */
@@ -279,6 +334,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
      * a {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} to the 
      * {@link org.knime.base.node.viz.plotter.scatter
      * .ScatterPlotterDrawingPane}. Repaint of the drawing pane is triggered.
+     * Jittering is also triggered from here.
      * 
      * 
      * @see org.knime.base.node.viz.plotter.columns.TwoColumnPlotter

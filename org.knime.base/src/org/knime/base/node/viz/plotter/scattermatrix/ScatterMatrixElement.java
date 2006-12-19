@@ -26,6 +26,11 @@ import org.knime.base.node.viz.plotter.scatter.DotInfo;
 import org.knime.base.util.coordinate.Coordinate;
 
 /**
+ * Represents one matrix element in a scatter plot matrix, 
+ * with the upper left corner, the width and height of the surrounding 
+ * rectangle, the x and y coordinate of the scatter plot and a list of the 
+ * contained 
+ * {@link org.knime.base.node.viz.plotter.scatter.DotInfo}s.
  * 
  * @author Fabian Dill, University of Konstanz
  */

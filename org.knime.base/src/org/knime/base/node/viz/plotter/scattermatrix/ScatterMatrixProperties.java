@@ -25,6 +25,11 @@ import org.knime.base.node.viz.plotter.columns.MultiColumnPlotterProperties;
 import org.knime.base.node.viz.plotter.props.ScatterPlotterAppearanceTab;
 
 /**
+ * Extends the 
+ * {@link org.knime.base.node.viz.plotter.columns.MultiColumnPlotterProperties}
+ * by adding a 
+ * {@link org.knime.base.node.viz.plotter.props.ScatterPlotterAppearanceTab}.
+ * 
  * 
  * @author Fabian Dill, University of Konstanz
  */
