@@ -20,10 +20,7 @@ package org.knime.base.node.viz.plotter.basic;
 
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
 import javax.swing.JMenu;
 
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
@@ -84,51 +81,6 @@ public class BasicPlotterImpl extends BasicPlotter {
      */
     public void unHiLiteAll() {
 
-    }
-
-    
-
-    /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter
-     * #getClearHiliteAction()
-     */
-    @Override
-    public Action getClearHiliteAction() {
-        return new AbstractAction() {
-
-            public void actionPerformed(ActionEvent e) {
-                // do nothing
-            }
-            
-        };
-    }
-
-    /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#getHiliteAction()
-     */
-    @Override
-    public Action getHiliteAction() {
-        return new AbstractAction() {
-
-            public void actionPerformed(ActionEvent e) {
-                // do nothing
-            }
-            
-        };
-    }
-
-    /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#getUnhiliteAction()
-     */
-    @Override
-    public Action getUnhiliteAction() {
-        return new AbstractAction() {
-
-            public void actionPerformed(ActionEvent e) {
-                // do nothing
-            }
-            
-        };
     }
     
     
