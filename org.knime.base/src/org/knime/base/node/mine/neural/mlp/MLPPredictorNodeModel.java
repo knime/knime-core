@@ -106,16 +106,16 @@ public class MLPPredictorNodeModel extends NodeModel {
             HashMap<String, Integer> inputmap = m_mlp.getInputMapping();
             Set<String> inputcols = inputmap.keySet();
             m_columns = new int[inputcols.size()];
-            int index = 0;
             for (String incol : inputcols) {
                 if (!inSpecs[0].containsName(incol)) {
                     throw new InvalidSettingsException("Could not" + " find "
                             + incol.toString() + " in inputspec");
                 } else {
-                    m_columns[index] = inSpecs[0].findColumnIndex(incol);
-                    index++;
+                    m_columns[inputmap.get(incol)] =
+                            inSpecs[0].findColumnIndex(incol);
                 }
             }
+            
 
             String name = "PredClass";
             DataType type;
