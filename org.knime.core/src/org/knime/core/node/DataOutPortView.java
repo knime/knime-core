@@ -150,7 +150,6 @@ final class DataOutPortView extends NodeOutPortView {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(2000);
                     updateDataTable(m_table);
                     updateDataTableSpec(m_tableSpec);
                     showComponent(m_tabs);
