@@ -88,7 +88,7 @@ class Buffer {
     
     /** Contains the information whether or not certain blob cell 
      * implementations shall be compressed when saved. This information
-     * is retrieved from the field BlobDataCell#IS_BLOB_COMPRESS.
+     * is retrieved from the field BlobDataCell#USE_COMPRESSION.
      */
     private static final Map<Class<? extends BlobDataCell>, Boolean>
         BLOB_COMPRESS_MAP = 
@@ -198,7 +198,7 @@ class Buffer {
         }
     }
     
-    private static boolean isCompressOnSave(
+    private static boolean isUseCompressionForBlobs(
             final Class<? extends BlobDataCell> cl) {
         Boolean result = BLOB_COMPRESS_MAP.get(cl);
         if (result != null) {
@@ -212,11 +212,11 @@ class Buffer {
                 // automatically retrieves the static field from a super
                 // class/interface. If this field has the wrong type, a coding
                 // problem is reported.
-                Field typeField = cl.getField("IS_BLOB_COMPRESS");
+                Field typeField = cl.getField("USE_COMPRESSION");
                 Object typeObject = typeField.get(null);
                 result = (Boolean)typeObject;
                 if (result == null) {
-                    throw new NullPointerException("IS_BLOB_COMPRESS is null.");
+                    throw new NullPointerException("USE_COMPRESSION is null.");
                 }
             } catch (NoSuchFieldException nsfe) {
                 exception = nsfe;
@@ -230,7 +230,7 @@ class Buffer {
             if (exception != null) {
                 LOGGER.coding("BlobDataCell interface \"" + cl.getSimpleName() 
                         + "\" seems to have a problem with the static field " 
-                        + "\"IS_BLOB_COMPRESS\"", exception);
+                        + "\"USE_COMPRESSION\"", exception);
                 // fall back - no meta information available
                 result = false;
             }
@@ -484,8 +484,8 @@ class Buffer {
             if (ownerTable == null) {
                 // need to set ownership if this blob was not assigned yet
                 // or has been assigned to an unlinked (i.e. local) buffer
-                boolean isCompress = ad != null ? ad.isCompress()
-                        : isCompressOnSave(cl);
+                boolean isCompress = ad != null ? ad.isUseCompression()
+                        : isUseCompressionForBlobs(cl);
                 BlobAddress rewrite = 
                     new BlobAddress(m_bufferID, col, isCompress);
                 if (ad == null) {
@@ -501,9 +501,9 @@ class Buffer {
                     rewrite.setIndexOfBlobInColumn(indexBlobInCol);
                     File source = b.getBuffer().getBlobFile(
                             ad.getIndexOfBlobInColumn(), 
-                            ad.getColumn(), false, ad.isCompress());
+                            ad.getColumn(), false, ad.isUseCompression());
                     File dest = getBlobFile(
-                            indexBlobInCol, col, true, ad.isCompress());
+                            indexBlobInCol, col, true, ad.isUseCompression());
                     FileUtil.copy(source, dest);
                 } else {
                     BlobDataCell bc;
@@ -942,7 +942,7 @@ class Buffer {
         int column = a.getColumn();
         int indexInColumn = m_indicesOfBlobInColumns[column]++;
         a.setIndexOfBlobInColumn(indexInColumn);
-        boolean isToCompress = isCompressOnSave(cell.getClass());
+        boolean isToCompress = isUseCompressionForBlobs(cell.getClass());
         File outFile = getBlobFile(indexInColumn, column, true, isToCompress);
         BlobAddress originalBA = cell.getBlobAddress();
         if (originalBA != a) {
@@ -960,7 +960,7 @@ class Buffer {
             if (originalBuffer != null) {
                 int index = originalBA.getIndexOfBlobInColumn();
                 int col = originalBA.getColumn();
-                boolean compress = originalBA.isCompress();
+                boolean compress = originalBA.isUseCompression();
                 File source = originalBuffer.getBlobFile(
                         index, col, false, compress);
                 FileUtil.copy(source, outFile);
@@ -1010,7 +1010,7 @@ class Buffer {
         }
         int column = blobAddress.getColumn();
         int indexInColumn = blobAddress.getIndexOfBlobInColumn();
-        boolean isCompress = blobAddress.isCompress();
+        boolean isCompress = blobAddress.isUseCompression();
         File inFile = getBlobFile(indexInColumn, column, false, isCompress);
         InputStream in = new BufferedInputStream(new FileInputStream(inFile));
         if (isCompress) {

@@ -77,7 +77,7 @@ public abstract class BlobDataCell extends DataCell {
      * class shall not be compressed, define a static field with the same
      * name/type/scope, which returns <code>false</code>. 
      */
-    public static final boolean IS_BLOB_COMPRESS = true;
+    public static final boolean USE_COMPRESSION = true;
     
     private transient BlobAddress m_blobAddress;
     
@@ -111,20 +111,20 @@ public abstract class BlobDataCell extends DataCell {
         private final int m_bufferID;
         private final int m_column;
         private int m_indexOfBlobInColumn;
-        private boolean m_isToCompress;
+        private boolean m_isUseCompression;
         
         /**
          * Create new address object.
          * @param bufferID ID of corresponding buffer.
          * @param column The column index
-         * @param isToCompress Whether or not the file is to be compressed.
+         * @param isUseCompression Whether or not the file is to be compressed.
          */
         BlobAddress(final int bufferID, final int column, 
-                final boolean isToCompress) {
+                final boolean isUseCompression) {
             m_bufferID = bufferID;
             m_column = column;
             m_indexOfBlobInColumn = -1;
-            m_isToCompress = isToCompress;
+            m_isUseCompression = isUseCompression;
         }
         
         /** Set the corresponding address.
@@ -149,8 +149,8 @@ public abstract class BlobDataCell extends DataCell {
         
         /** @return Whether or not the blob is (to be) compressed.
          */
-        public boolean isCompress() {
-            return m_isToCompress;
+        public boolean isUseCompression() {
+            return m_isUseCompression;
         }
         
         /** Get the index of the blob in the columns (if a column only
@@ -176,7 +176,7 @@ public abstract class BlobDataCell extends DataCell {
             output.writeInt(m_bufferID);
             output.writeInt(m_column);
             output.writeInt(m_indexOfBlobInColumn);
-            output.writeBoolean(m_isToCompress);
+            output.writeBoolean(m_isUseCompression);
         }
         
         /**
