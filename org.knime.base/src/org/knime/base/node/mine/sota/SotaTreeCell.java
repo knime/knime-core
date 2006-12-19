@@ -81,10 +81,10 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     private int m_endX = Locatable.Y;
 
     // Related to interface Hilitable
-    private boolean m_hilited = false;
+    private transient boolean m_hilited = false;
 
     // Related to interface Selectable
-    private boolean m_selected = false;
+    private transient boolean m_selected = false;
 
     /**
      * Creates new instance of Cell with given dimension of data vector, given

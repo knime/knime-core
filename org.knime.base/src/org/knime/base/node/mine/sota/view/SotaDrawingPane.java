@@ -41,7 +41,6 @@ import java.util.Set;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToolTip;
 import javax.swing.ToolTipManager;
@@ -195,10 +194,6 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
         this.setSize(m_jpWidth, m_jpHeight);
         this.setPreferredSize(new Dimension(m_jpWidth, m_jpHeight));
-
-        if (m_root == null) {
-            JOptionPane.showMessageDialog(this, "No data to draw");
-        }
     }
 
     /**
