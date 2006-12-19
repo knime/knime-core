@@ -156,11 +156,15 @@ public abstract class BasicPlotter extends AbstractPlotter {
     /**
      * Paints the values in the double array as y-values and the x-values are 
      * simply the position in the array, which implies, that the y-values are 
-     * equidistant.
+     * equidistant. Color and Stroke might be <code>null</code>, then the 
+     * default values for them are used (the currently set color and stroke in
+     * the graphics object).
      * 
      * @param y the equidistant y values
-     * @param color color of the line.
-     * @param stroke stroke of the line.
+     * @param color color of the line, might be <code>null</code>, then the 
+     * default color is used
+     * @param stroke stroke of the line, might be <code>null</code>, then the 
+     * default  stroke is used
      */
     public void addLine(final double[] y, final Color color, 
             final Stroke stroke) {
