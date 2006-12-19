@@ -439,7 +439,10 @@
          factory-class="org.knime.base.node.preproc.rowkey.RowKeyNodeFactory"
          category-path="/manipulation/row"
          id="org.knime.base.node.preproc.rowkey.RowKeyNodeFactory"/>
-   
+      <node
+            category-path="/mining/miscClass"
+            factory-class="org.knime.base.node.mine.knn.KnnNodeFactory"
+            id="org.knime.base.node.mine.knn.KnnNodeFactory"/>   
    </extension>
    
    
