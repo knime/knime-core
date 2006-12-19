@@ -41,8 +41,8 @@
 		<modelOut index="0" name = "Neural Network">RProp trained Neural Network</modelOut>
 		</ports>
     <views>
-    <view index="0" name="Neural Net View">
-			Displays the error at each iteration.
+    <view index="0" name="Error Plot">
+			Displays the error for each iteration.
 		</view>
 		</views>
 		</knimeNode>
