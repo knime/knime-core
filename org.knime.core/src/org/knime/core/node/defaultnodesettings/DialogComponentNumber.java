@@ -71,7 +71,7 @@ public class DialogComponentNumber extends DialogComponent {
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize) {
         this(numberModel, label, stepSize, 
-                calcDefaultWidth(numberModel.getNumberValueStr()));
+                calcDefaultWidth(numberModel));
     }
 
     /**
@@ -106,6 +106,9 @@ public class DialogComponentNumber extends DialogComponent {
             spinnerModel =
                     new SpinnerNumberModel(dblModel.getDoubleValue(), min, max,
                             stepSize);
+            m_spinner.setEditor(
+                    new JSpinner.NumberEditor(m_spinner, 
+                    "#.0################################################"));
         } else if (numberModel instanceof SettingsModelInteger) {
             SettingsModelInteger intModel = (SettingsModelInteger)numberModel;
             Comparable min = null;
@@ -122,9 +125,6 @@ public class DialogComponentNumber extends DialogComponent {
                     + "currently supported by the NumberComponent");
         }
         m_spinner = new JSpinner(spinnerModel);
-        m_spinner.setEditor(
-                new JSpinner.NumberEditor(m_spinner, 
-                        "#.0################################################"));
         JSpinner.DefaultEditor editor =
                 (JSpinner.DefaultEditor)m_spinner.getEditor();
         editor.getTextField().setColumns(compWidth);
@@ -155,19 +155,35 @@ public class DialogComponentNumber extends DialogComponent {
     }
 
     /**
-     * @param defaultValue the default value in the component
-     * @return the width of the spinner, derived from the defaultValue.
+     * Tries to calculate a field width from the model specified. If the model
+     * is a bounded int/double model, is uses the max value to determine the
+     * width, if its not bounded, it uses the actual value.
+     * @param model number model to derive field width from
+     * @return the width of the spinner, derived from the values in the model.
      */
-    private static int calcDefaultWidth(final String defaultValue) {
-        if ((defaultValue == null) || (defaultValue.length() == 0)) {
-            // no default value, return the default width of 10
+    private static int calcDefaultWidth(final SettingsModelNumber model) {
+
+        if (model == null) {
+            // no model, return the default width of 10
             return FIELD_DEFWIDTH;
         }
-        if (defaultValue.length() < FIELD_MINWIDTH) {
+        
+        String value = "12";
+        if (model instanceof SettingsModelIntegerBounded) {
+            value = Integer.toString(
+                    ((SettingsModelIntegerBounded)model).getUpperBound());
+        } else if (model instanceof SettingsModelDoubleBounded) {
+            value = Double.toString(
+                    ((SettingsModelDoubleBounded)model).getUpperBound());
+        } else {
+            value = model.getNumberValueStr();
+        }
+        
+        if (value.length() < FIELD_MINWIDTH) {
             // spinner should be at least 2 columns wide.
             return FIELD_MINWIDTH;
         }
-        return defaultValue.length();
+        return value.length();
         
     }
     
