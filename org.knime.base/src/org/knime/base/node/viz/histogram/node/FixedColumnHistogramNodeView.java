@@ -38,9 +38,9 @@ import org.knime.core.node.NodeView;
  */
 public class FixedColumnHistogramNodeView extends NodeView {
     
-    private final FixedColumnHistogramNodeModel m_model;
+    private final FixedColumnHistogramNodeModel m_nodeModel;
     
-    private final FixedColumnHistogramPlotter m_plotter;
+    private FixedColumnHistogramPlotter m_plotter;
 
     /**
      * Creates a new view instance for the histogram node.
@@ -54,24 +54,14 @@ public class FixedColumnHistogramNodeView extends NodeView {
                     + " not an instance of "
                     + HistogramNodeModel.class.getName());
         }
-        m_model = (FixedColumnHistogramNodeModel)nodeModel;
-        final FixedColumnHistogramDataModel histogramModel = 
-            m_model.getHistogramModelClone();
-        final FixedColumnHistogramProperties props =
-            new FixedColumnHistogramProperties(
-                    histogramModel.getAggregationMethod());
-        m_plotter = new FixedColumnHistogramPlotter(props, histogramModel, 
-                m_model.getInHiLiteHandler(0));
-        // add the hilite menu to the menu bar of the node view
-        getJMenuBar().add(m_plotter.getHiLiteMenu());
-        setComponent(m_plotter);
+        m_nodeModel = (FixedColumnHistogramNodeModel)nodeModel;
     }
 
     /**
      * Clears the plot and unregisters from any hilite handler.
      */
     public void reset() {
-        m_model.reset();
+        m_nodeModel.reset();
     }
 
     /**
@@ -80,18 +70,29 @@ public class FixedColumnHistogramNodeView extends NodeView {
      */
     @Override
     public void modelChanged() {
-        if (m_model == null) {
+        if (m_nodeModel == null) {
             return;
         }
         final FixedColumnHistogramDataModel histogramModel = 
-            m_model.getHistogramModelClone();
+            m_nodeModel.getHistogramModelClone();
         if (histogramModel == null) {
             return;
         }
-        m_plotter.reset();
-        m_plotter.setHistogramDataModel(histogramModel);
-        m_plotter.setHiLiteHandler(m_model.getInHiLiteHandler(0));
-        m_plotter.updatePaintModel();
+        if (m_plotter == null) {
+            final FixedColumnHistogramProperties props =
+                new FixedColumnHistogramProperties(
+                        histogramModel.getAggregationMethod());
+            m_plotter = new FixedColumnHistogramPlotter(props, histogramModel, 
+                    m_nodeModel.getInHiLiteHandler(0));
+            // add the hilite menu to the menu bar of the node view
+            getJMenuBar().add(m_plotter.getHiLiteMenu());
+            setComponent(m_plotter);
+        } else {
+            m_plotter.reset();
+            m_plotter.setHistogramDataModel(histogramModel);
+            m_plotter.setHiLiteHandler(m_nodeModel.getInHiLiteHandler(0));
+            m_plotter.updatePaintModel();
+        }
     }
 
     /**

@@ -38,9 +38,9 @@ import org.knime.core.node.NodeView;
  */
 public class HistogramNodeView extends NodeView {
     
-    private final HistogramNodeModel m_model;
+    private final HistogramNodeModel m_nodeModel;
     
-    private final InteractiveHistogramPlotter m_plotter;
+    private InteractiveHistogramPlotter m_plotter;
 
     /**
      * Creates a new view instance for the histogram node.
@@ -54,24 +54,14 @@ public class HistogramNodeView extends NodeView {
                     + " not an instance of "
                     + HistogramNodeModel.class.getName());
         }
-        m_model = (HistogramNodeModel)nodeModel;
-        final InteractiveHistogramDataModel histogramModel = 
-            m_model.getHistogramModelClone();
-        final InteractiveHistogramProperties props =
-            new InteractiveHistogramProperties(
-                    histogramModel.getAggregationMethod());
-        m_plotter = new InteractiveHistogramPlotter(props, histogramModel, 
-                m_model.getInHiLiteHandler(0));
-        // add the hilite menu to the menu bar of the node view
-        getJMenuBar().add(m_plotter.getHiLiteMenu());
-        setComponent(m_plotter);
+        m_nodeModel = (HistogramNodeModel)nodeModel;
     }
 
     /**
      * Clears the plot and unregisters from any hilite handler.
      */
     public void reset() {
-        m_model.reset();
+        m_nodeModel.reset();
     }
 
     /**
@@ -81,14 +71,25 @@ public class HistogramNodeView extends NodeView {
     @Override
     public void modelChanged() {
         final InteractiveHistogramDataModel histogramModel = 
-            m_model.getHistogramModelClone();
+            m_nodeModel.getHistogramModelClone();
         if (histogramModel == null) {
             return;
         }
-        m_plotter.reset();
-        m_plotter.setHistogramDataModel(histogramModel);
-        m_plotter.setHiLiteHandler(m_model.getInHiLiteHandler(0));
-        m_plotter.updatePaintModel();
+        if (m_plotter == null) {
+            final InteractiveHistogramProperties props =
+                new InteractiveHistogramProperties(
+                        histogramModel.getAggregationMethod());
+            m_plotter = new InteractiveHistogramPlotter(props, histogramModel, 
+                    m_nodeModel.getInHiLiteHandler(0));
+            // add the hilite menu to the menu bar of the node view
+            getJMenuBar().add(m_plotter.getHiLiteMenu());
+            setComponent(m_plotter);
+        } else {
+            m_plotter.reset();
+            m_plotter.setHistogramDataModel(histogramModel);
+            m_plotter.setHiLiteHandler(m_nodeModel.getInHiLiteHandler(0));
+            m_plotter.updatePaintModel();
+        }
     }
 
     /**
