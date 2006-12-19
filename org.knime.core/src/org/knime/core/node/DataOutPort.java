@@ -81,7 +81,7 @@ public final class DataOutPort extends NodeOutPort
             ((DataInPort) inPort).newTableSpecAvailable();
         }
         if (getPortView() != null) {
-            ((DataOutPortView) getPortView()).updateDataTableSpec(m_tableSpec);
+            ((DataOutPortView) getPortView()).update(m_dataTable, m_tableSpec);
         }
     }
 
@@ -114,7 +114,7 @@ public final class DataOutPort extends NodeOutPort
             ((DataInPort) inPort).newDataTableAvailable();
         }
         if (getPortView() != null) {
-            ((DataOutPortView) getPortView()).updateDataTable(m_dataTable);
+            ((DataOutPortView) getPortView()).update(m_dataTable, m_tableSpec);
         }
     }
 

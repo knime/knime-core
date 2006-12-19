@@ -26,6 +26,7 @@ package org.knime.core.node;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -57,7 +58,9 @@ import org.knime.core.node.tableview.TableView;
  * @author Peter Ohl, University of Konstanz
  */
 final class DataOutPortView extends NodeOutPortView {
-    private static final long serialVersionUID = 2253483422757100346L;
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(DataOutPortView.class); 
 
     private final JTabbedPane m_tabs;
 
@@ -73,6 +76,16 @@ final class DataOutPortView extends NodeOutPortView {
 
     private String m_portName;
 
+    private DataTable m_table;
+    
+    private DataTableSpec m_tableSpec;
+    
+    /** Updates are synchronized on this object. Declaring the methods
+     * as synchronized (i.e. using "this" as mutex) does not work as swing
+     * also aquires locks on this graphical object.
+     */
+    private final Object m_updateLock = new Object();
+    
     private static final DataRow EMPTY_ROW =
             new DefaultRow(new StringCell(""), new DataCell[]{new StringCell(
                     "<null>")});
@@ -88,6 +101,9 @@ final class DataOutPortView extends NodeOutPortView {
     DataOutPortView(final String nodeName, final String portName) {
         super(createWindowTitle(nodeName, portName, null, null, null));
 
+        m_table = null;
+        m_tableSpec = null;
+        
         m_nodeName = nodeName;
         m_portName = portName;
 
@@ -134,33 +150,47 @@ final class DataOutPortView extends NodeOutPortView {
             @Override
             public void run() {
                 try {
-                    updateDataTable(table);
-                    updateDataTableSpec(spec);
-                    SwingUtilities.invokeAndWait(new Runnable() {
-                        public void run() {
-                            showComponent(m_tabs);
-                        }
-                    });
+                    Thread.sleep(2000);
+                    updateDataTable(m_table);
+                    updateDataTableSpec(m_tableSpec);
+                    showComponent(m_tabs);
                 } catch (Exception ite) {
-                    NodeLogger.getLogger(getClass()).warn(
-                            "Exception while setting table", ite);
-                    showComponent(new JLabel(
-                            ite.getClass().getSimpleName() + " while setting " 
-                            + "table, see log file for details"));
+                    LOGGER.warn("Exception while setting table", ite);
+                    showComponent(new JLabel(ite.getClass().getSimpleName()
+                            + " while setting table, "
+                            + "see log file for details"));
                 }
             }
         };
+
+        m_table = table;
+        m_tableSpec = spec;
         showComponent(m_busyLabel);
+        // this updates the table view and table spec view in a background 
+        // process and replaces the busy label with the table views.
         updateThread.start();
     }
     
-    private synchronized void showComponent(final JComponent p) {
-        Container contentPane = getContentPane();
-        contentPane.removeAll();
-        contentPane.add(p, BorderLayout.CENTER);
-        contentPane.invalidate();
-        contentPane.validate();
-        contentPane.repaint();
+    private void showComponent(final JComponent p) {
+        Runnable run = new Runnable() {
+            public void run() {
+                Container contentPane = getContentPane();
+                contentPane.removeAll();
+                contentPane.add(p, BorderLayout.CENTER);
+                updatePortView();
+            }
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            run.run();
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(run);
+            } catch (InvocationTargetException ite) {
+                LOGGER.warn("Exception while setting new component", ite);
+            } catch (InterruptedException ie) {
+                // do nothing here.
+            }
+        }
     }
 
     /**
@@ -168,31 +198,33 @@ final class DataOutPortView extends NodeOutPortView {
      * 
      * @param newDataTable The new data table (or null) to display in the view.
      */
-    void updateDataTable(final DataTable newDataTable) {
-        m_dataView.setDataTable(newDataTable);
-        // display the number of rows in the upper left corner
-
-        if (newDataTable instanceof BufferedDataTable) {
-            // only BufferedTables have the row count set.
-            BufferedDataTable bTable = (BufferedDataTable)newDataTable;
-            int colCount = bTable.getDataTableSpec().getNumColumns();
-            int rowCount = bTable.getRowCount();
-
-            String header =
+    private void updateDataTable(final DataTable newDataTable) {
+        synchronized (m_updateLock) {
+            m_dataView.setDataTable(newDataTable);
+            // display the number of rows in the upper left corner
+            
+            if (newDataTable instanceof BufferedDataTable) {
+                // only BufferedTables have the row count set.
+                BufferedDataTable bTable = (BufferedDataTable)newDataTable;
+                int colCount = bTable.getDataTableSpec().getNumColumns();
+                int rowCount = bTable.getRowCount();
+                
+                String header =
                     "" + rowCount + " Row" + (rowCount != 1 ? "s" : "") + ", "
-                            + colCount + " Col" + (colCount != 1 ? "s" : "");
-            m_dataView.getHeaderTable().setColumnName(header);
-            // display the row count in the window title, too. 
-            setTitle(createWindowTitle(m_nodeName, m_portName, 
-                    newDataTable.getDataTableSpec().getName(), 
-                    newDataTable.getDataTableSpec().getNumColumns(), 
-                    bTable.getRowCount()));
-
-        } else {
-            m_dataView.getHeaderTable().setColumnName("");
-            setTitle(createWindowTitle(
-                    m_nodeName, m_portName, null, null, null));
-
+                    + colCount + " Col" + (colCount != 1 ? "s" : "");
+                m_dataView.getHeaderTable().setColumnName(header);
+                // display the row count in the window title, too. 
+                setTitle(createWindowTitle(m_nodeName, m_portName, 
+                        newDataTable.getDataTableSpec().getName(), 
+                        newDataTable.getDataTableSpec().getNumColumns(), 
+                        bTable.getRowCount()));
+                
+            } else {
+                m_dataView.getHeaderTable().setColumnName("");
+                setTitle(createWindowTitle(
+                        m_nodeName, m_portName, null, null, null));
+                
+            }
         }
     }
 
@@ -202,22 +234,24 @@ final class DataOutPortView extends NodeOutPortView {
      * @param newTableSpec The new data table spec (or null) to display in the
      *            view.
      */
-    void updateDataTableSpec(final DataTableSpec newTableSpec) {
-        m_specView.setDataTable(createTableSpecTable(newTableSpec));
-        m_propsView.setDataTable(createPropsTable(newTableSpec));
-        // display the number of columns in the upper left corner
-        if (newTableSpec != null) {
-            int numOfCols = newTableSpec.getNumColumns();
-            m_specView.getHeaderTable().setColumnName(
-                    "" + numOfCols + " Column" + (numOfCols > 1 ? "s" : ""));
-            m_propsView.getHeaderTable().setColumnName("Property Key");
-            setTitle(createWindowTitle(m_nodeName, m_portName, newTableSpec
-                    .getName(), newTableSpec.getNumColumns(), null));
-        } else {
-            m_specView.getHeaderTable().setColumnName("");
-            m_propsView.getHeaderTable().setColumnName("");
-            setTitle(createWindowTitle(m_nodeName, m_portName, null, null, 
-                    null));
+    private void updateDataTableSpec(final DataTableSpec newTableSpec) {
+        synchronized (m_updateLock) {
+            m_specView.setDataTable(createTableSpecTable(newTableSpec));
+            m_propsView.setDataTable(createPropsTable(newTableSpec));
+            // display the number of columns in the upper left corner
+            if (newTableSpec != null) {
+                int numOfCols = newTableSpec.getNumColumns();
+                m_specView.getHeaderTable().setColumnName("" + numOfCols 
+                        + " Column" + (numOfCols > 1 ? "s" : ""));
+                m_propsView.getHeaderTable().setColumnName("Property Key");
+                setTitle(createWindowTitle(m_nodeName, m_portName, newTableSpec
+                        .getName(), newTableSpec.getNumColumns(), null));
+            } else {
+                m_specView.getHeaderTable().setColumnName("");
+                m_propsView.getHeaderTable().setColumnName("");
+                setTitle(createWindowTitle(m_nodeName, m_portName, null, null, 
+                        null));
+            }
         }
     }
 
@@ -266,7 +300,7 @@ final class DataOutPortView extends NodeOutPortView {
         } else {
             DataContainer result =
                     new DataContainer(new DataTableSpec(
-                            new String[]{"No incoming table spec"},
+                            new String[]{"No outgoing table spec"},
                             new DataType[]{StringCell.TYPE}));
             result.addRowToTable(EMPTY_ROW);
             result.close();
@@ -290,7 +324,7 @@ final class DataOutPortView extends NodeOutPortView {
                 types[c] = StringCell.TYPE;
             }
         } else {
-            names = new String[]{"No incoming table spec"};
+            names = new String[]{"No outgoing table spec"};
             types = new DataType[]{StringCell.TYPE};
         }
 
