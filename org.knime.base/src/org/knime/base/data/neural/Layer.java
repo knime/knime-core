@@ -85,7 +85,8 @@ public abstract class Layer {
      * @param perceptrons new perceptrons for the layer
      */
     public void setPerceptrons(final Perceptron[] perceptrons) {
-        if (m_perceptrons != null && m_perceptrons.length != perceptrons.length) {
+        if (m_perceptrons != null 
+                && m_perceptrons.length != perceptrons.length) {
             throw new IllegalArgumentException(
                     "Cannot set Perceptrons, inappropriate array length");
         } else {
