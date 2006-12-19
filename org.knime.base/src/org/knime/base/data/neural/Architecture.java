@@ -113,7 +113,8 @@ public class Architecture {
             m_nrHiddenLayers = nrHiddenLayers;
         } else {
             throw new IllegalArgumentException(
-                    "Number of HiddenLayers must be greater than or equal to zero.");
+                    "Number of HiddenLayers must " 
+                    + "be greater than or equal to zero.");
         }
     }
 
