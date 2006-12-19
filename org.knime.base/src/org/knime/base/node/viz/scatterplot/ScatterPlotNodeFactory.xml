@@ -4,12 +4,16 @@
 	<name>Scatterplot</name>
 	
 	<shortDescription>
-        This node is obsolete! Please use the new Parallel Coordinates located 
+        This node is obsolete! Please use the new Scatter Plotter located 
         in the Data Views category.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
+		        <p>
+        This node is obsolete! Please use the new Scatter Plotter located in 
+	    the Data Views category.</p>
+		
 	    <p>Creates a scatterplot of two selectable attributes.
 		</p>
 		<p>It is possible to open the view multiple times and to select two

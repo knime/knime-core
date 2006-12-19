@@ -4,10 +4,13 @@
     <name>Scorer</name>
     <shortDescription>
    	    This node is obsolete! Please use the new Scorer located in 
-	    the Data Manipulation - Column category.
+	    the Mining -&gt; ModelEvaluation category.
     </shortDescription>
     <fullDescription>
         <intro>
+        <p />
+        This node is obsolete! Please use the new Scorer located in 
+	    the Mining -&gt; ModelEvaluation category.<p />
 			Compares two columns by their attribute value pairs and shows the 
 		    confusion matrix, i.e. how many rows of which attribute and their classification. 
 		    The dialog allows you to select two columns to compare;

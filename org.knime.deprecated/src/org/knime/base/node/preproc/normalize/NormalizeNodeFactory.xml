@@ -3,11 +3,15 @@
 <knimeNode icon="./normalize.png" type="Manipulator" deprecated="true">
     <name>Normalizer</name>
     <shortDescription>
-    	This node is obsolete! Please use the new Normailzer located in the
-    	Data Manipulation - Column category.
+    	This node is obsolete! Please use the new Normalizer located in the
+    	Data Manipulation-&gt;Column category.
     </shortDescription>
     <fullDescription>
         <intro>
+                <p />
+        This node is obsolete! Please use the new Normalizer located in 
+	    the Data Manipulation-&gt;Column category.<p />
+        
 	        This node normalizes the values of all (numeric) columns. In the
 			second tab of the dialog, you can choose the columns you want to work on.
 			The following normalizations are available in the dialog:

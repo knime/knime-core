@@ -5,11 +5,14 @@
 	
 	<shortDescription>
 	    This node is obsolete! Please use the new Domain Calculator located in 
-	    the Data Manipulation - Column category.
+	    the Data Manipulation-&gt;Column category.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
+		<p />
+		This node is obsolete! Please use the new Domain Calculator located in 
+	    the Data Manipulation-&gt;Column category.<p />
 	    Collects and sets all nominal values for the columns selected in the
 	    dialog. There is no upper limit defined for the number of values.
 	    The node iterates over the entire table and sets the nominal 

@@ -11,6 +11,10 @@
 	
 	<fullDescription>
 		<intro>
+		<p>
+		This node is obsolete! Please use the new Parallel Coordinates located 
+        in the Data Views category.
+		</p>
             Numerical and nominal data is shown in a parallel coordinate
 		    display where axes are depicted in parallel as vertical lines.
 	   		A vector of the input space is visualized as
