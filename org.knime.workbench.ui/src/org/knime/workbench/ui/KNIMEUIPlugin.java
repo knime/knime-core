@@ -32,10 +32,7 @@ import java.util.ResourceBundle;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.internal.ide.update.InstallWizardAction;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.knime.workbench.ui.initialupdatesite.InitialUpdateSiteIntroShell;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -79,35 +76,35 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         getImageRegistry().put("knime",
                 imageDescriptorFromPlugin(PLUGIN_ID, "/icons/knime.png"));
 
-        try {
-
-            new Thread() {
-                @Override
-                public void run() {
-                    Display.getDefault().syncExec(new Runnable() {
-                        public void run() {
-                            if (InitialUpdateSiteIntroShell
-                                    .loadNextTimeShowup()) {
-
-                                InitialUpdateSiteIntroShell shell =
-                                        new InitialUpdateSiteIntroShell();
-
-                                boolean update = shell.open();
-
-                                if (update) {
-                                    InstallWizardAction iwa =
-                                            new InstallWizardAction();
-                                    iwa.run();
-                                }
-                            }
-                        }
-                    });
-                }
-            }.start();
-
-        } catch (Throwable t) {
-            // do nothing
-        }
+//        try {
+//
+//            new Thread() {
+//                @Override
+//                public void run() {
+//                    Display.getDefault().syncExec(new Runnable() {
+//                        public void run() {
+//                            if (InitialUpdateSiteIntroShell
+//                                    .loadNextTimeShowup()) {
+//
+//                                InitialUpdateSiteIntroShell shell =
+//                                        new InitialUpdateSiteIntroShell();
+//
+//                                boolean update = shell.open();
+//
+//                                if (update) {
+//                                    InstallWizardAction iwa =
+//                                            new InstallWizardAction();
+//                                    iwa.run();
+//                                }
+//                            }
+//                        }
+//                    });
+//                }
+//            }.start();
+//
+//        } catch (Throwable t) {
+//            // do nothing
+//        }
 
     }
 
