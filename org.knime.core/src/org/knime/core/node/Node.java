@@ -1591,11 +1591,11 @@ public final class Node {
                     m_outDataPorts[p].setDataTableSpec(newOutSpec[p]);
                 }
 
+                processModelWarnings();
                 if (localStatus != null) {
                     m_status = localStatus;
                     notifyStateListeners(localStatus);
                 }
-                processModelWarnings();
             }
         }
     }
