@@ -24,6 +24,7 @@
  */
 package org.knime.base.node.mine.neural.rprop;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -39,19 +40,14 @@ import javax.swing.JPanel;
 import org.knime.base.data.neural.Architecture;
 import org.knime.base.data.neural.MultiLayerPerceptron;
 import org.knime.base.data.neural.methods.RProp;
-import org.knime.base.node.util.DefaultDataArray;
-import org.knime.base.node.viz.scatterplot.ScatterProps;
+import org.knime.base.node.viz.plotter.basic.BasicPlotterImpl;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.container.DataContainer;
-import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
@@ -504,24 +500,9 @@ public class RPropNodeModel extends NodeModel {
         if (m_errors == null) {
             return new JPanel();
         }
-        DataColumnSpec[] colspecs = new DataColumnSpec[2];
-        DataColumnSpecCreator colspecCreator = new DataColumnSpecCreator(
-                "Iteration", DoubleCell.TYPE);
-        colspecs[0] = colspecCreator.createSpec();
-        colspecCreator = new DataColumnSpecCreator("Error", DoubleCell.TYPE);
-        colspecs[1] = colspecCreator.createSpec();
-        DataTableSpec spec = new DataTableSpec(colspecs);
-        DataContainer con = new DataContainer(spec);
-        for (int x = 0; x < m_errors.length; x++) {
-            DataCell[] cells = new DataCell[]{new DoubleCell(x),
-                    new DoubleCell(m_errors[x])};
-            con.addRowToTable(new DefaultRow(new StringCell("" + x), cells));
-        }
-        con.close();
-        DefaultDataArray darray = new DefaultDataArray(con.getTable(), 1, con
-                .size());
-        return new ErrorPlot(darray, 300, new ScatterProps());
-
+        BasicPlotterImpl bpi = new BasicPlotterImpl();
+        bpi.addLine(m_errors, Color.BLACK, null);
+        return bpi;
     }
 
      /**
