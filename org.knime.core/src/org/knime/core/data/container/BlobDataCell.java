@@ -58,7 +58,7 @@ import org.knime.core.data.DataCell;
  * 
  * <p>Implementation note: The content of a <code>DataContainer</code> is 
  * usually written to a file <code>knime_container_<i>date</i>_xxx.bin.gz</code>
- * file in the temp directory. <code>BlobDataCell</code> objects are treted
+ * file in the temp directory. <code>BlobDataCell</code> objects are treated
  * differently, they are written to a separate directory called
  * <code>knime_container_<i>date</i></code>, each blob cell into a separate 
  * (compressed) file. 
