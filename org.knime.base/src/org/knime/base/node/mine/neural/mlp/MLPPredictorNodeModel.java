@@ -121,15 +121,15 @@ public class MLPPredictorNodeModel extends NodeModel {
             DataType type;
             if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
                 type = DoubleCell.TYPE;
-            } else if (m_mlp.getMode() == MultiLayerPerceptron
-                    .CLASSIFICATION_MODE) {
+            } else if (m_mlp.getMode() 
+                    == MultiLayerPerceptron.CLASSIFICATION_MODE) {
                 type = StringCell.TYPE;
             } else {
                 throw new InvalidSettingsException("Unsupported mode in MLP: "
                         + m_mlp.getMode());
             }
-            DataColumnSpec appendSpec = new DataColumnSpecCreator(name, type)
-                    .createSpec();
+            DataColumnSpec appendSpec =
+                    new DataColumnSpecCreator(name, type).createSpec();
             DataColumnSpec[] allappSpec;
 
             /*
@@ -148,12 +148,12 @@ public class MLPPredictorNodeModel extends NodeModel {
                 for (int i = 1; i <= m_nrPossValues; i++) {
                     name = "Neuron" + (i - 1);
                     type = DoubleCell.TYPE;
-                    allappSpec[i] = new DataColumnSpecCreator(name, type)
-                            .createSpec();
+                    allappSpec[i] =
+                            new DataColumnSpecCreator(name, type).createSpec();
                 }
             }
-            DataTableSpec returnspec = AppendedColumnTable.getTableSpec(
-                    inSpecs[0], allappSpec);
+            DataTableSpec returnspec =
+                    AppendedColumnTable.getTableSpec(inSpecs[0], allappSpec);
             return new DataTableSpec[]{returnspec};
         }
         throw new InvalidSettingsException("No model content "
@@ -168,43 +168,22 @@ public class MLPPredictorNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         m_mlp = MultiLayerPerceptron.loadPredictorParams(m_predParams);
         MLPClassificationFactory mymlp;
-
-        String name = "PredClass";
-        DataType type;
-        if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
-            type = DoubleCell.TYPE;
-        } else if (m_mlp.getMode() == MultiLayerPerceptron
-                .CLASSIFICATION_MODE) {
-            type = StringCell.TYPE;
-        } else {
-            throw new Exception("Unsupported mode in MLP: " + m_mlp.getMode());
-        }
-        DataColumnSpec appendSpec = new DataColumnSpecCreator(name, type)
-                .createSpec();
-        DataColumnSpec[] allappSpec;
-
         /*
          * Regression
          */
         if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
-            allappSpec = new DataColumnSpec[1];
-            allappSpec[0] = appendSpec;
+
             mymlp = new MLPClassificationFactory(true, m_columns);
-        } else {
+        } else if (m_mlp.getMode() 
+                == MultiLayerPerceptron.CLASSIFICATION_MODE) {
             /*
              * Classification
              */
             mymlp = new MLPClassificationFactory(false, m_columns);
-            m_nrPossValues = m_mlp.getArchitecture().getNrOutputNeurons();
-            allappSpec = new DataColumnSpec[m_nrPossValues + 1];
-            allappSpec[0] = appendSpec;
-            for (int i = 1; i <= m_nrPossValues; i++) {
-                name = "Neuron" + (i - 1);
-                type = DoubleCell.TYPE;
-                allappSpec[i] =
-                        new DataColumnSpecCreator(name, type).createSpec();
-            }
+        } else {
+            throw new Exception("Unsupported Mode: " + m_mlp.getMode());
         }
+
         ColumnRearranger colre =
                 new ColumnRearranger(inData[0].getDataTableSpec());
         colre.append(mymlp);
@@ -265,7 +244,7 @@ public class MLPPredictorNodeModel extends NodeModel {
      */
     private class MLPClassificationFactory implements CellFactory {
 
-         /*
+        /*
          * Flag whether regression is done or not.
          */
         private boolean m_regression;
@@ -282,7 +261,7 @@ public class MLPPredictorNodeModel extends NodeModel {
          * @param regression indicates whether a regression should take place.
          * @param columns to work on.
          */
-        MLPClassificationFactory(final boolean regression, 
+        MLPClassificationFactory(final boolean regression,
                 final int[] columns) {
             m_regression = regression;
             m_faccolumns = columns;
@@ -320,23 +299,46 @@ public class MLPPredictorNodeModel extends NodeModel {
             }
             return append;
         }
-        
+
         /**
          * 
          * @see org.knime.core.data.container.CellFactory#getColumnSpecs()
          */
         public DataColumnSpec[] getColumnSpecs() {
-            DataType type = StringCell.TYPE;
             String name = "PredClass";
+            DataType type;
             if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
                 type = DoubleCell.TYPE;
-            } else if (m_mlp.getMode() == MultiLayerPerceptron
-                    .CLASSIFICATION_MODE) {
+            } else {
                 type = StringCell.TYPE;
-            } 
-            DataColumnSpec appendSpec = new DataColumnSpecCreator(name, type)
-                    .createSpec();
-            return new DataColumnSpec[] {appendSpec};
+            }
+            DataColumnSpec appendSpec =
+                    new DataColumnSpecCreator(name, type).createSpec();
+            DataColumnSpec[] allappSpec;
+
+            /*
+             * Regression
+             */
+            if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
+                allappSpec = new DataColumnSpec[1];
+                allappSpec[0] = appendSpec;
+
+            } else {
+                /*
+                 * Classification
+                 */
+
+                m_nrPossValues = m_mlp.getArchitecture().getNrOutputNeurons();
+                allappSpec = new DataColumnSpec[m_nrPossValues + 1];
+                allappSpec[0] = appendSpec;
+                for (int i = 1; i <= m_nrPossValues; i++) {
+                    name = "Neuron" + (i - 1);
+                    type = DoubleCell.TYPE;
+                    allappSpec[i] =
+                            new DataColumnSpecCreator(name, type).createSpec();
+                }
+            }
+            return allappSpec;
         }
 
         /**
