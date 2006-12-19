@@ -26,6 +26,9 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 
 /**
+ * Represents a parallel axis in a parallel coordinates plot with an x position,
+ * a height, a {@link org.knime.base.util.coordinate.Coordinate}, a name and a
+ * flag, whether this <code>ParallelAxis</code> is selected.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -46,6 +49,12 @@ public abstract class ParallelAxis {
     
     
     /**
+     * Factory method to get an instance of a <code>ParallelAxis</code>. 
+     * Determines whether a 
+     * {@link org.knime.base.node.viz.plotter.parcoord.NumericParallelAxis} or 
+     * a {@link org.knime.base.node.viz.plotter.parcoord.NominalParallelAxis}
+     * should be returned, based on the passed 
+     * {@link org.knime.core.data.DataColumnSpec}.
      * 
      * @param colSpec the column spec for this parallel axis.
      * @return either a nominal or a numeric parallel axis based on the column 

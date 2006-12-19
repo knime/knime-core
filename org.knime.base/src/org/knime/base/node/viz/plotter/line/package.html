@@ -1,2 +1,19 @@
 <body>
+A line plot plots the numeric columns of the input table as lines. 
+All values are mapped to a single y coordinate. 
+This may distort the visualization if the difference of the values in the 
+columns is large. 
+<p>
+The {link org.knime.base.node.viz.plotter.line.LinePlotter} extends the 
+{link org.knime.base.node.viz.plotter.scatter.ScatterPlotter}, since it 
+calculates the dots where each datapoint of one column resides on the 
+drawing pane. 
+Hence, the minimum and maximum of all columns is used as the range in which 
+each entry of one column lies. The so calculated dots are passed to the 
+{link org.knime.base.node.viz.plotter.line.LinePlotterDrawingPane}. The color 
+for each line is put into a color mapping which is also passed to the 
+{link org.knime.base.node.viz.plotter.line.LinePlotterDrawingPane}. 
+The color mapping is created by dividing the hue circle of the HSB color model
+by the number of selected columns and retrieve the color of each resulting 
+segment.
 </body>

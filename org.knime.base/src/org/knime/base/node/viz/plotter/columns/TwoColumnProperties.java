@@ -94,6 +94,7 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
      * {@link org.knime.core.data.DataValue}s.
      *
      */
+    @SuppressWarnings("unchecked")
     public TwoColumnProperties() {
        this(new Class[]{NominalValue.class, DoubleValue.class},
                new Class[]{NominalValue.class, DoubleValue.class});

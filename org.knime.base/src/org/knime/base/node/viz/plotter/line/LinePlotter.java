@@ -49,17 +49,29 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.property.ColorAttr;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
+ * Plots the values of all selected numeric columns as lines in a plot, where 
+ * the x axis are the rows and the y axis are the values from the minimum of the 
+ * values in all columns to the maximum of the values of all selected columns.
+ * The <code>LinePlotter</code> extends the 
+ * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotter} to inherit 
+ * the dot functionality and the hiliting behavior.
+ * It determines the overall minimum and maximum of the selected columns, 
+ * creates the referring coordinates and calculates the mapped values. The so 
+ * mapped data points are passed to the drawing pane in one large
+ * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}. The 
+ * {@link org.knime.base.node.viz.plotter.line.LinePlotterDrawingPane} connects
+ * the points by lines. Due to performance issues it initially plots the first 
+ * five numeric columns.
  * 
  * @author Fabian Dill, University of Konstanz
  */
 public class LinePlotter extends ScatterPlotter {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            LinePlotter.class);
+//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+//            LinePlotter.class);
     
     /** Initial dot size. */
     public static final int SIZE = 4;
@@ -77,13 +89,13 @@ public class LinePlotter extends ScatterPlotter {
     
     
     /**
-     * The construction kit constructor.
+     * The construction kit constructor. Registers all necessary listeners.
+     * 
      * @param panel the drawing panel
      * @param properties the properties
      */
     public LinePlotter(final AbstractDrawingPane panel, 
-            final  
-            AbstractPlotterProperties properties) {
+            final AbstractPlotterProperties properties) {
         super(panel, properties);
         setDotSize(SIZE);
         m_columns2Draw = new ArrayList<Integer>();
@@ -103,7 +115,6 @@ public class LinePlotter extends ScatterPlotter {
                                     .getDataArray(0).getDataTableSpec();
                                 m_columnNames = columnFilter
                                     .getIncludedColumnSet();
-                                LOGGER.debug("incl cols: " + m_columnNames);
                                 m_columns2Draw.clear();
                                 for (String name : m_columnNames) {
                                     m_columns2Draw.add(spec.findColumnIndex(
@@ -189,6 +200,8 @@ public class LinePlotter extends ScatterPlotter {
     }
     
     /**
+     * Sets color mapping and column selection to <code>null</code>.
+     * 
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
      */
     @Override
@@ -199,9 +212,12 @@ public class LinePlotter extends ScatterPlotter {
     }
     
     /**
+     * Missing values may be linearly interpolated, if true they will be 
+     * interpolated, if false missing values will be left out and the line
+     * will be interrupted.
      * 
      * @param enable true if missing values should be interpolated(linear), 
-     * false otherwise.
+     * false otherwise
      */
     public void setInterpolation(final boolean enable) {
         m_interpolate = enable;
@@ -209,6 +225,11 @@ public class LinePlotter extends ScatterPlotter {
     
     
     /**
+     * Creates the color mapping by dividing the hue circle of the HSB color 
+     * model by the number of selected columns, calculates the coordinates by 
+     * determining the overall minimum and maximum values of the selected 
+     * columns and maps the data points to the resulting screen coordinates.
+     * 
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()
      */
     @Override
@@ -248,6 +269,12 @@ public class LinePlotter extends ScatterPlotter {
         }
     }
     
+    /**
+     * Selects the first five numeric columns. If there are some columns left,
+     * the column filter tab is set to be on top.
+     * 
+     * @param array the data to visualize
+     */
     private void initColumnNames(final DataArray array) {
         m_columnNames = new LinkedHashSet<String>();
         int colIdx = 0;
@@ -265,7 +292,10 @@ public class LinePlotter extends ScatterPlotter {
     }
     
     /**
-     * draws the dots to the lines.
+     * Calculates the screen coordinates (dots) for the lines and puts them in 
+     * a large {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}, 
+     * which is passed to the 
+     * {@link org.knime.base.node.viz.plotter.line.LinePlotterDrawingPane}.
      *
      */
     protected void calculateDots() {
@@ -356,6 +386,11 @@ public class LinePlotter extends ScatterPlotter {
         }
     }
     
+    /**
+     * Determines the overall minimum and maximum value of all selected columns.
+     * 
+     * @param array the data to visualize
+     */
     private void calculateCoordinates(final DataArray array) {
         Set<DataCell> rowKeys = new LinkedHashSet<DataCell>(array.size());
         double minY = Double.POSITIVE_INFINITY;
@@ -392,8 +427,6 @@ public class LinePlotter extends ScatterPlotter {
         calculateDots();
     }
     
-    // TODO: maybe better to pass a point array with the right x values, where
-    // only the y values have to be set.
     /**
      * The nr of intermediate points and the last row index is used to 
      * determine the x value (only the y value is interpolated).

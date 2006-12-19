@@ -25,6 +25,8 @@ import org.knime.base.util.coordinate.CoordinateMapping;
 import org.knime.base.util.coordinate.NominalCoordinate;
 
 /**
+ * Represents a {@link org.knime.base.node.viz.plotter.parcoord.ParallelAxis} 
+ * with nominal values and provides access to the possible values.
  * 
  * @author Fabian Dill, University of Konstanz
  */

@@ -32,6 +32,8 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.property.ShapeFactory;
 
 /**
+ * Shows the mapped data points and provides a tooltip for each data point with
+ * the domain value and the row ID.
  * 
  * @author Fabian Dill, University of Konstanz
  */

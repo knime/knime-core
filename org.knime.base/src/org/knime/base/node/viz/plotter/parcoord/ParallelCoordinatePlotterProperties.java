@@ -28,6 +28,13 @@ import org.knime.base.node.viz.plotter.props.ParallelCoordinatesMissingValueTab;
 import org.knime.core.data.DataValue;
 
 /**
+ * In addition to the 
+ * {@link org.knime.base.node.viz.plotter.columns.MultiColumnPlotterProperties}
+ * a tab to select how to handle missing values and a tab to adjust dot size,
+ * line thickness and select whether to show or hide dots is provided.
+ * 
+ * @see org.knime.base.node.viz.plotter.props.ParallelCoordinatesMissingValueTab
+ * @see org.knime.base.node.viz.plotter.props.ParallelCoordinateAppearanceTab
  * 
  * @author Fabian Dill, University of Konstanz
  */

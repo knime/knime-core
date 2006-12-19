@@ -41,6 +41,12 @@ import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
 
 /**
+ * Since the 
+ * {@link org.knime.base.node.viz.plotter.parcoord.ParallelCoordinatesPlotter}
+ * only calculates the mapped datapoints, the connection of them by lines or
+ * curves is done here, also the missing values handling. Thus, also the 
+ * interpretation of the line thickness, dot size, fading of unhilited lines is
+ * done here.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -201,7 +207,10 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
     }
     
     /**
-     * @param g the graphics object.
+     * Draws the parallel axes and, if missing values are displayed explicitly, 
+     * the horizontal line at the bottom.
+     * 
+     * @param g the graphics object
      */
     protected void drawAxes(final Graphics g) {
         if (m_axes == null) {
@@ -252,8 +261,9 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
     
     /**
      * Draws a nominal axis with the labels of all possible values.
+     * 
      * @param g the graphics object
-     * @param axis the axis.
+     * @param axis the axis
      */
     protected void drawNominalAxis(final Graphics g,
             final NominalParallelAxis axis) {
@@ -286,12 +296,14 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
     }
     
     /**
-     * Checks for all labels if the string length is smaller than the distance.
+     * Checks for all labels if the string length is smaller than the distance 
+     * between two parallel axes.
+     * 
      * @param labels the labels
      * @param metrics the font metrics
      * @param distance the available space
      * @return true if the string length of all labels is smaller than the 
-     * distance.
+     * distance
      */
     protected boolean checkLabelSpace(final Set<String> labels, 
             final FontMetrics metrics, final int distance) {
@@ -306,8 +318,9 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
     /**
      * Draws a numeric axis with the min value at the bottom and the max value 
      * at the top.
-     * @param g the graphics object.
-     * @param axis the axis.
+     * 
+     * @param g the graphics object
+     * @param axis the axis
      */
     protected void drawNumericAxis(final Graphics g, 
             final NumericParallelAxis axis) {
@@ -326,8 +339,9 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
     
     /**
      * Draws the lines / rows.
+     * 
      * @param lines the lines
-     * @param g the graphics object.
+     * @param g the graphics object
      */
     protected void drawLines(final Graphics g, final List<LineInfo> lines) {
         if (lines == null || lines.size() == 0) {
@@ -393,6 +407,13 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
         }
     }
     
+    /**
+     * Draws the line between the mapped data points of one 
+     * {@link org.knime.base.node.viz.plotter.parcoord.LineInfo}.
+     * 
+     * @param g graphics object
+     * @param line one line / row
+     */
     private void drawLine(final Graphics g, final LineInfo line) {
         if (m_fade && !line.isHilite()) {
             if (line.isSelected()) {
@@ -465,6 +486,13 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
         ((Graphics2D)g).setStroke(new BasicStroke(1));
     }
     
+    /**
+     * Draws a quad curve between the mapped data points of one 
+     * {@link org.knime.base.node.viz.plotter.parcoord.LineInfo}.
+     * 
+     * @param g graphics object
+     * @param line one line / row
+     */
     private void drawCurve(final Graphics2D g, final LineInfo line) {
         // for each line
             GeneralPath path = null;
@@ -536,7 +564,8 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
     }
     
     /**
-     * Paints one dot.
+     * Paints one dot with its shape.
+     * 
      * @param g the graphics object
      * @param p the point
      * @param line the line
@@ -555,8 +584,8 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
     }
 
     
-    /*
-     * chooses the next control point such that it lies with the old 
+    /**
+     * Chooses the next control point such that it lies with the old 
      * control point and p2 on one straight line.
      */
     private Point getNextControlPoint(final Point oldCtrl, 
@@ -570,10 +599,10 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
         return p;
     }
     
-    /*
-     * creates a second control point for cubic curves.
-     * depend on the first control point. if the first control point lies below 
-     * p2 then a point above p2 is chosen, otherwise a point above p2.
+    /**
+     * Creates a second control point for cubic curves which depends on the 
+     * first control point. If the first control point lies below 
+     * p2 then a point above p2 is chosen, otherwise a point below p2.
      */
     private Point createAdditionalCtrlPoint(final int x, final Point p2, 
             final Point firstCtrlPoint) {

@@ -88,7 +88,9 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     
     
     /**
-     * Default constructor.
+     * Registers listeners to the control elements of the 
+     * {@link org.knime.base.node.viz.plotter.parcoord
+     * .ParallelCoordinatePlotterProperties}
      */
     public ParallelCoordinatesPlotter() {
         super(new ParallelCoordinateDrawingPane(), 
@@ -213,6 +215,11 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     }
     
     /**
+     * Sets the axes, the selected data points, the selected columns and the 
+     * calculated lines <code>null</code>, triggers a repaint in the 
+     * {@link org.knime.base.node.viz.plotter.parcoord
+     * .ParallelCoordinateDrawingPane}
+     * 
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
      */
     @Override
@@ -446,6 +453,14 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     // ----------- painting ----------------
 
     /**
+     * Creates a nominal x axis with the names of the selected columns,
+     * the referring 
+     * {@link org.knime.base.node.viz.plotter.parcoord.ParallelAxis} for each
+     * column and calculates the lines with the mapped values which are passed
+     * together with the axes to the 
+     * {@link org.knime.base.node.viz.plotter.parcoord
+     * .ParallelCoordinateDrawingPane}.
+     * 
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()
      */
     @Override
@@ -491,6 +506,11 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         getDrawingPane().repaint();
     }
     
+    /**
+     * The initial columns are the first five columns.
+     * 
+     * @param array data to visualize
+     */
     private void initColumnNames(final DataArray array) {
         m_columnNames = new ArrayList<String>();
         int colNr = 0;
@@ -506,7 +526,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     }
 
     /**
-     * 
+     * Calculates the lines, containing the mapped data points.
      */
     private synchronized List<LineInfo> calculateLines() {
         if (getDataProvider() == null 
@@ -553,6 +573,10 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         return lines;
     }
     
+    /**
+     * Updates the x position and the height of the parallel axes.
+     *
+     */
     private synchronized void updateAxesPosition() {
         int width = getDrawingPaneDimension().width;
         int height = getDrawingPaneDimension().height
@@ -591,6 +615,8 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     }
     
     /**
+     * MouseListener to change the order of the 
+     * {@link org.knime.base.node.viz.plotter.parcoord.ParallelAxis}.
      * 
      * @author Fabian Dill, University of Konstanz
      */

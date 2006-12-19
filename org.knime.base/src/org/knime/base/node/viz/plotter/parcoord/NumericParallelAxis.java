@@ -21,6 +21,9 @@ package org.knime.base.node.viz.plotter.parcoord;
 import org.knime.base.util.coordinate.NumericCoordinate;
 
 /**
+ * Represents a {@link org.knime.base.node.viz.plotter.parcoord.ParallelAxis} 
+ * with numeric values and provides access to the minimum and maximum value of 
+ * the domain.
  * 
  * @author Fabian Dill, University of Konstanz
  */

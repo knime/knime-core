@@ -57,6 +57,7 @@ public class MultiColumnPlotterProperties extends AbstractPlotterProperties {
      * All {@link org.knime.core.data.DataValue}s are allowed.
      * 
      */
+    @SuppressWarnings("unchecked")
     public MultiColumnPlotterProperties() {
         this(NominalValue.class, DoubleValue.class);
     }

@@ -28,6 +28,10 @@ import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
 
 /**
+ * Represents a line (one row) in the parallel coordinates plot. Stores the 
+ * mapped points, the domain values (for tooltip information), flags whether this
+ * line is selected and/or hilited, the {@link org.knime.core.data.RowKey} and the
+ * visual properties size, color and shape (for the dots).
  * 
  * @author Fabian Dill, University of Konstanz
  */

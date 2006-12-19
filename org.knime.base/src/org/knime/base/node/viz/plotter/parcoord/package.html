@@ -1,2 +1,30 @@
 <body>
+A ParallelCoordinatePlot is a representation of multi-dimensional information 
+or data, in which multiple dimensions are allocated to parallel axes on-screen. 
+An object in a data set is then mapped as a series of points, one per axis, 
+with the position of each point on the axis being dependent on their value in 
+the associated dimension. The points are then joined together by line segments 
+from one axis to its immediate neighbour, forming a poly-line across the set of axes.
+
+<p>
+The {@link org.knime.base.node.viz.plotter.parcoord.ParallelCoordinatesPlotter}
+creates the parallel coordinates, represented by either a 
+{@link org.knime.base.node.viz.plotter.parcoord.NominalParallelAxis} or a 
+{@link org.knime.base.node.viz.plotter.parcoord.NumericParallelAxis} and 
+determines their x position. Then the data points of the data to visualize are 
+mapped to these coordinates. This results in a 
+The {@link org.knime.base.node.viz.plotter.parcoord.LineInfo} for each row, 
+which is passed to the 
+{@link org.knime.base.node.viz.plotter.parcoord.ParallelCoordinateDrawingPane}.
+The {@link org.knime.base.node.viz.plotter.parcoord.ParallelCoordinateNodeView}
+is necessary, since an additional menu is provided to show or hide the unhilited lines.
+The {@link org.knime.base.node.viz.plotter.parcoord.ParallelCoordinatePlotterProperties}
+let the user selected the columns of interest, adjust the line thickness and dot size and
+whether the dots are shown or hidden. In addition, the way how missing values are 
+handled can be selected:
+<ul>
+<li>Skip rows containing missing values,</li>
+<li>skip missing values which interrupts the lines, or</li>
+<li>explicitly show missing values as points on a horizontal line at the bottom</li>
+</ul>
 </body>

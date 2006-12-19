@@ -25,6 +25,12 @@ import org.knime.base.node.viz.plotter.columns.TwoColumnProperties;
 import org.knime.base.node.viz.plotter.props.ScatterPlotterAppearanceTab;
 
 /**
+ * In addition to the 
+ * {@link org.knime.base.node.viz.plotter.columns.TwoColumnProperties} a 
+ * tab to adjust the dot size and the jitter rate is provided.
+ * 
+ * @see org.knime.base.node.viz.plotter.columns.TwoColumnProperties
+ * @see org.knime.base.node.viz.plotter.props.ScatterPlotterAppearanceTab
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -37,7 +43,8 @@ public class ScatterPlotterProperties extends TwoColumnProperties {
     private final ScatterPlotterAppearanceTab m_appearance;
     
     /**
-     * 
+     * Default tab, two column selection and ranges and dot size and jitter
+     * rate adjustment.
      *
      */
     public ScatterPlotterProperties() {

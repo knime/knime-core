@@ -22,6 +22,9 @@ import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
 import org.knime.core.node.NodeModel;
 
 /**
+ * Extends the 
+ * {@link org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView} by
+ * adding an additional menu to show, fade or hide unhilited dots.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -29,6 +32,7 @@ public class ScatterPlotterNodeView extends DefaultVisualizationNodeView {
     
     /**
      * Adds  a show/hide menu to the menu bar.
+     * 
      * @param model the node model
      * @param plotter the plotter
      */

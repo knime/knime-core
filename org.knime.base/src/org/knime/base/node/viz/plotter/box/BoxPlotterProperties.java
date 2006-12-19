@@ -25,6 +25,7 @@ import org.knime.base.node.viz.plotter.props.BoxPlotAppearanceTab;
 import org.knime.core.data.DoubleValue;
 
 /**
+ * Tab to select whether to normalize the drawing or not.
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -34,8 +35,9 @@ public class BoxPlotterProperties extends MultiColumnPlotterProperties {
     
     /**
      * 
-     *
+     * 
      */
+    @SuppressWarnings("unchecked")
     public BoxPlotterProperties() {
         super(DoubleValue.class);
         m_normalizeTab = new BoxPlotAppearanceTab();

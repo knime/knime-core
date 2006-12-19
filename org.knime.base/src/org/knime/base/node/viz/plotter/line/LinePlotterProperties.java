@@ -31,6 +31,14 @@ import org.knime.base.node.viz.plotter.props.LinePlotterAppearanceTab;
 import org.knime.core.data.DoubleValue;
 
 /**
+ * One tab for the color legend with the possibility to change the color for 
+ * each column, one tab to set whether missing values should be interpolated 
+ * or not and one tab to adjust dot size and line thickness and to select
+ * whether to show or hide the dots.
+ * 
+ * @see org.knime.base.node.viz.plotter.props.ColorLegendTab
+ * @see org.knime.base.node.viz.plotter.props.InterpolationTab
+ * @see org.knime.base.node.viz.plotter.props.LinePlotterAppearanceTab
  * 
  * @author Fabian Dill, University of Konstanz
  */
@@ -46,6 +54,7 @@ public class LinePlotterProperties extends MultiColumnPlotterProperties {
      * 
      *
      */
+    @SuppressWarnings("unchecked")
     public LinePlotterProperties() {
         super(new Class[]{DoubleValue.class});
         m_colorLegend = new ColorLegendTab();
@@ -90,6 +99,7 @@ public class LinePlotterProperties extends MultiColumnPlotterProperties {
     
     /**
      * Updates the colorLegend.
+     * 
      * @param colorMapping column name, color
      */
     public void updateColorLegend(final Map<String, Color>colorMapping) {

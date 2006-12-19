@@ -29,12 +29,17 @@ import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 import org.knime.core.data.property.ShapeFactory;
 
 /**
+ * Connects the dots in the passed 
+ * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} with lines. 
+ * The number of lines has to be set, in order to determine, where a line starts
+ * since the dots are stored sequentially in the 
+ * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}.
  * 
  * @author Fabian Dill, University of Konstanz
  */
 public class LinePlotterDrawingPane extends ScatterPlotterDrawingPane {
     
-    
+    /** To know when a line starts. */
     private int m_nrOfLines;
     
     private boolean m_showDots = true;
@@ -44,8 +49,10 @@ public class LinePlotterDrawingPane extends ScatterPlotterDrawingPane {
 
     /**
      * Sets the number of line (used for modulo calculation since all dots 
-     * are in one array.
-     * @param nrOfLines the number of lines.
+     * are in one 
+     * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}).
+     * 
+     * @param nrOfLines the number of lines
      */
     public void setNumberOfLines(final int nrOfLines) {
         m_nrOfLines = nrOfLines;
@@ -53,7 +60,7 @@ public class LinePlotterDrawingPane extends ScatterPlotterDrawingPane {
     
     /**
      * 
-     * @param showDots true if dots should be painted, false otherwise.
+     * @param showDots true if dots should be painted, false otherwise
      */
     public void setShowDots(final boolean showDots) {
         m_showDots = showDots;
@@ -68,6 +75,10 @@ public class LinePlotterDrawingPane extends ScatterPlotterDrawingPane {
     }
     
     /**
+     * Connects the points of one column by a line, which is done by modulo 
+     * calculation, the color information is stored in the 
+     * {@link org.knime.base.node.viz.plotter.scatter.DotInfo}s.
+     * 
      * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane
      * #paintContent(java.awt.Graphics)
      */

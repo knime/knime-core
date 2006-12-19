@@ -273,6 +273,13 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
     
     /**
+     * The data points of the data to visulaize are mapped to screen 
+     * coordinates, represented by 
+     * {@link org.knime.base.node.viz.plotter.scatter.DotInfo} and are passed in
+     * a {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} to the 
+     * {@link org.knime.base.node.viz.plotter.scatter
+     * .ScatterPlotterDrawingPane}. Repaint of the drawing pane is triggered.
+     * 
      * 
      * @see org.knime.base.node.viz.plotter.columns.TwoColumnPlotter
      * #updatePaintModel()
@@ -323,11 +330,12 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
     
     /**
-     * given the actual size of the drawing pane, the actual zoom factor, and
+     * Given the actual size of the drawing pane, the actual zoom factor, and
      * min/max values it calculates the screen coordinates for each dot info in
      * the array passed in. It accesses the model to retrieve the actual values
      * of the rows. It changes the contents of the DotInfos passed in. It also
      * triggers resorting of the sorted lists in the dot container.
+     * 
      * @param dotsArray the array containing the dots.
      */
     protected void calculateCoordinates(final DotInfoArray dotsArray) {
