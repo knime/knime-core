@@ -24,13 +24,13 @@
  */
 package org.knime.core.node;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Writer;
-import java.net.MalformedURLException;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -44,6 +44,7 @@ import org.apache.log4j.WriterAppender;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
 import org.apache.log4j.xml.DOMConfigurator;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.LogfileAppender;
 
 /**
@@ -93,12 +94,12 @@ public final class NodeLogger {
     }
 
     /** Keeps set of <code>NodeLogger</code> elements by class name as key. */
-    private static final HashMap<String, NodeLogger> LOGGERS = 
-        new HashMap<String, NodeLogger>();
+    private static final HashMap<String, NodeLogger> LOGGERS =
+            new HashMap<String, NodeLogger>();
 
     /** Map of additionally added writers: Writer -> Appender. */
-    private static final HashMap<Writer, WriterAppender> WRITER = 
-        new HashMap<Writer, WriterAppender>();
+    private static final HashMap<Writer, WriterAppender> WRITER =
+            new HashMap<Writer, WriterAppender>();
 
     /**
      * Maximum number of chars (10000) printed on <code>System.out</code> and
@@ -112,41 +113,43 @@ public final class NodeLogger {
     /** Default log file appender. */
     private static final Appender FILE_APPENDER;
 
+    private static final String LATEST_LOG4J_CONFIG =
+            "log4j/log4j-" + KNIMEConstants.MAJOR + "." + KNIMEConstants.MINOR
+                    + "." + KNIMEConstants.REV + ".xml";
+
     /**
      * Inits Log4J logger and appends <code>System.out</code>,
      * <code>System.err</code>, and <i>knime.log</i> to it.
      */
     static {
-        // check if KNIME log4j config exists in users home
+        assert (NodeLogger.class.getClassLoader().getResourceAsStream(
+                LATEST_LOG4J_CONFIG) != null) : "log4j-configuration for "
+                + "version " + KNIMEConstants.VERSION + " does not exist yet";
         File knimeDir = new File(KNIMEConstants.getKNIMEHomeDir());
-        File log4j = new File(knimeDir, "log4j-1.2.0pre.xml");
-        if (!log4j.exists()) {
-            InputStream in = NodeLogger.class.getClassLoader()
-                    .getResourceAsStream("log4j-1.2.0pre.xml");
-            if (in != null) {
-                byte[] buf = new byte[4096];
-                try {
-                    OutputStream out = new FileOutputStream(log4j);
-                    int count = 0;
-                    while ((count = in.read(buf)) > 0) {
-                        out.write(buf, 0, count);
-                    }
-                    in.close();
-                    out.close();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
+        File log4j = new File(knimeDir, "log4j.xml");
+
+        File legacyFile = new File(knimeDir, "log4j-1.1.0.xml");
+        if (legacyFile.exists()) {
+            if (!legacyFile.renameTo(log4j)) {
+                System.err.println("Your log4j-configuration file "
+                        + "'log4j-1.1.0.xml' could not be renamed to "
+                        + "'log4j.xml'. KNIME now uses 'log4j.xml' as default "
+                        + "configuration file.");
             }
         }
 
-        if (System.getProperty("log4j.configuration") == null) {
-            try {
-                DOMConfigurator.configure(log4j.toURL());
-            } catch (MalformedURLException ex) {
-                ex.printStackTrace();
-            } catch (FactoryConfigurationError ex) {
-                ex.printStackTrace();
+        try {
+            if (!log4j.exists() || checkPreviousLog4j(log4j)) {
+                copyCurrentLog4j(log4j);
             }
+
+            if (System.getProperty("log4j.configuration") == null) {
+                DOMConfigurator.configure(log4j.toURL());
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } catch (FactoryConfigurationError ex) {
+            ex.printStackTrace();
         }
 
         // init root logger
@@ -154,22 +157,103 @@ public final class NodeLogger {
         Appender a = root.getAppender("stderr");
         a = root.getAppender("stdout");
         if (a != null) {
-            SOUT_APPENDER = a;    
+            SOUT_APPENDER = a;
         } else {
             root.warn("Could not find 'stdout' appender");
             SOUT_APPENDER = new NullAppender();
         }
-        
+
         a = root.getAppender("logfile");
         if (a != null) {
-            FILE_APPENDER = a;    
+            FILE_APPENDER = a;
         } else {
             root.warn("Could not find 'logfile' appender");
             FILE_APPENDER = new NullAppender();
         }
-        
 
         startMessage();
+    }
+
+    private static void copyCurrentLog4j(final File dest) throws IOException {
+        InputStream in =
+                NodeLogger.class.getClassLoader().getResourceAsStream(
+                        LATEST_LOG4J_CONFIG);
+        FileOutputStream out = new FileOutputStream(dest);
+        FileUtil.copy(in, out);
+        in.close();
+        out.close();
+    }
+
+    /**
+     * Checks if any of the previous shipped log4j-XMLs matches the current one
+     * the user has in its local KNIME directory.
+     * 
+     * @param current the user's current file
+     * @return <code>true</code> if it matches, <code>false</code> otherwise
+     * @throws IOException if an I/O error occurs
+     */
+    private static boolean checkPreviousLog4j(final File current)
+            throws IOException {
+        FileInputStream reader = new FileInputStream(current);
+        byte[] currentContents = new byte[(int)current.length()];
+        reader.read(currentContents);
+        reader.close();
+
+        ClassLoader cl = NodeLogger.class.getClassLoader();
+
+        for (int maj = KNIMEConstants.MAJOR; maj >= 1; maj--) {
+            outer: for (int min = 0;; min++) {
+                for (int rev = 0;; rev++) {
+                    if ((maj == KNIMEConstants.MAJOR)
+                            && (min == KNIMEConstants.MINOR)
+                            && (rev == KNIMEConstants.REV)) {
+                        continue;
+                    }
+                    InputStream in =
+                            cl.getResourceAsStream("log4j/log4j-" + maj + "."
+                                    + min + "." + rev + ".xml");
+                    if (in == null) {
+                        if (rev == 0) {
+                            break outer;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // compare the two files
+                    in = new BufferedInputStream(in);
+                    int i = 0;
+                    boolean match = true;
+                    while (true) {
+                        byte b = (byte) in.read();
+                        if ((i >= currentContents.length) && (b == -1)) {
+                            break;
+                        }
+
+                        if (i >= currentContents.length) {
+                            match = false;
+                            break;
+                        }
+
+                        if (b == -1) {
+                            match = false;
+                            break;
+                        }
+
+                        if (currentContents[i] != b) {
+                            match = false;
+                            break;
+                        }
+                        i++;
+                    }
+                    in.close();
+                    if (match) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /** Write start logging message to info logger of this class. */
@@ -188,10 +272,10 @@ public final class NodeLogger {
         l.info("#                                                           #");
         l.info("#############################################################");
         if (FILE_APPENDER instanceof LogfileAppender) {
-            l.info("# For more details see:" 
+            l.info("# For more details see:"
                     + "                                     #");
             l.info("# " + ((LogfileAppender)FILE_APPENDER).getFile());
-            l.info("#-----------------------------------------------" 
+            l.info("#-----------------------------------------------"
                     + "------------#");
         }
 
@@ -200,8 +284,9 @@ public final class NodeLogger {
         l.info("# java.vm.version=" + System.getProperty("java.vm.version"));
         l.info("# java.vendor=" + System.getProperty("java.vendor"));
         l.info("# os.name=" + System.getProperty("os.name"));
-        l.info("# number of CPUs=" 
-                + Runtime.getRuntime().availableProcessors());
+        l
+                .info("# number of CPUs="
+                        + Runtime.getRuntime().availableProcessors());
         l.info("# assertions=" + (ASSERT ? "on" : "off"));
         l.info("#############################################################");
     }
@@ -219,10 +304,11 @@ public final class NodeLogger {
 
     /** The Log4J logger to which all messages are logged. */
     private final Logger m_logger;
-    
-    /** Ignore configure warnings. This field is obsolete. It is a workaround
-     * to avoid the flood of configure warning during startup. This field
-     * will be deleted when the workflow manager is rewritten.
+
+    /**
+     * Ignore configure warnings. This field is obsolete. It is a workaround to
+     * avoid the flood of configure warning during startup. This field will be
+     * deleted when the workflow manager is rewritten.
      */
     private static boolean isIgnoreConfigureWarning;
 
@@ -284,7 +370,7 @@ public final class NodeLogger {
      * @param o The object to print.
      */
     public void warn(final Object o) {
-        if (isIgnoreConfigureWarning 
+        if (isIgnoreConfigureWarning
                 && o.toString().startsWith("Configure failed: ")) {
             return;
         }
@@ -417,7 +503,7 @@ public final class NodeLogger {
     }
 
     /**
-     * Writes <i>CODING PROBLEM</i> plus this message, as well as the the 
+     * Writes <i>CODING PROBLEM</i> plus this message, as well as the the
      * message of the throwable into this logger as error and debug.
      * 
      * @param o The message to print.
@@ -442,8 +528,7 @@ public final class NodeLogger {
     }
 
     /**
-     * Adds a new {@link java.io.Writer} with the given level to this
-     * logger.
+     * Adds a new {@link java.io.Writer} with the given level to this logger.
      * 
      * @param writer The writer to add.
      * @param minLevel The minimum level to output.
@@ -458,8 +543,9 @@ public final class NodeLogger {
             WRITER.remove(writer);
         }
         // register new appender
-        WriterAppender app = new WriterAppender(new PatternLayout(
-                "%-5p\t %c{1}\t %." + MAX_CHARS + "m\n"), writer);
+        WriterAppender app =
+                new WriterAppender(new PatternLayout("%-5p\t %c{1}\t %."
+                        + MAX_CHARS + "m\n"), writer);
         app.setImmediateFlush(true);
         LevelRangeFilter filter = new LevelRangeFilter();
         filter.setLevelMin(getLevel(minLevel));
@@ -470,8 +556,7 @@ public final class NodeLogger {
     }
 
     /**
-     * Removes the previously added {@link java.io.Writer} from the
-     * logger.
+     * Removes the previously added {@link java.io.Writer} from the logger.
      * 
      * @param writer The Writer to remove.
      */
@@ -489,9 +574,9 @@ public final class NodeLogger {
 
     /**
      * Sets an new minimum logging level for all internal appenders, that are,
-     * log file, and <code>System.out</code> and <code>System.err</code> 
-     * appender. The maximum logging level stays <code>LEVEL.ALL</code> for all 
-     * appenders.
+     * log file, and <code>System.out</code> and <code>System.err</code>
+     * appender. The maximum logging level stays <code>LEVEL.ALL</code> for
+     * all appenders.
      * 
      * @param level The new minimum logging level.
      */
@@ -535,14 +620,14 @@ public final class NodeLogger {
     }
 
     /**
-     * Ignore configure warnings. This field is obsolete. It is a workaround
-     * to avoid the flood of configure warning during startup. This field
-     * will be deleted when the workflow manager is rewritten.
+     * Ignore configure warnings. This field is obsolete. It is a workaround to
+     * avoid the flood of configure warning during startup. This field will be
+     * deleted when the workflow manager is rewritten.
+     * 
      * @param value the isIgnoreConfigureWarning to set
      * @deprecated Obsolete, will be removed when WFM is rewritten.
      */
-    public static void setIgnoreConfigureWarning(
-            final boolean value) {
+    public static void setIgnoreConfigureWarning(final boolean value) {
         // FIXME: Remove when WFM is rewritten.
         assert isIgnoreConfigureWarning == isIgnoreConfigureWarning;
         isIgnoreConfigureWarning = value;

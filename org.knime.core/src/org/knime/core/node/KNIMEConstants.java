@@ -40,11 +40,17 @@ import org.knime.core.util.ThreadPool;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class KNIMEConstants {
-
+    /** KNIME's major release number. */
+    public static final int MAJOR = 1;
+    /** KNIME's minor release number. */
+    public static final int MINOR = 2;
+    /** KNIME's revision number. */
+    public static final int REV = 0;
+    
     /** Workflow file version. */
     // IMPORTANT: Remember to also update the NodeLogger welcome screen with
     // the current version and the prerequisites
-    public static final String VERSION = "1.2.0pre";
+    public static final String VERSION = MAJOR + "." + MINOR + "." + REV;
 
     /**
      * The name of the system property whose value is - if set - used as knime
