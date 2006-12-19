@@ -112,9 +112,16 @@ public class DecisionTreeNodeView extends JPanel {
                 for (Color c : colorCounts.keySet()) {
                     double thisCount = colorCounts.get(c).doubleValue();
                     int deltaAngle = (int)(thisCount * 360.0 / totalSum);
-                    g.setColor(c);
-                    g.fillArc(0, 2, sqLen - 4, sqLen - 4, orgAngle, deltaAngle);
-                    orgAngle += deltaAngle;
+                    if (deltaAngle > 0) {
+                        // only paint if it's worth it... (bugfix #892)
+                        g.setColor(c);
+                        // draw piece of pie with at least 5 degree angle
+                        // (also bugfix #892) on windows something seems to
+                        // go wrong (sometimes) when the angle is too small...
+                        g.fillArc(0, 2, sqLen - 4, sqLen - 4, orgAngle,
+                                deltaAngle >= 5 ? deltaAngle : 5);
+                        orgAngle += deltaAngle;
+                    }
                 }
             }
         }
