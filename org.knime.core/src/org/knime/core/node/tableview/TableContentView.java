@@ -196,6 +196,7 @@ public class TableContentView extends JTable {
         return super.prepareRenderer(renderer, row, column);
     }
     
+    
     /**
      * Is the row count returned by {@link #getRowCount()} final?
      * 
@@ -372,6 +373,7 @@ public class TableContentView extends JTable {
         super.setTableHeader(newTableHeader);
     }
 
+    private float[] m_tempHSBColor;
     /**
      * Overridden to avoid event storm. The super implementation will invoke
      * a repaint if the color has changed. Since that happens frequently (and
@@ -380,11 +382,26 @@ public class TableContentView extends JTable {
      * @see javax.swing.JTable#setSelectionBackground(java.awt.Color)
      */
     @Override
-    public void setSelectionBackground(final Color newColor) {
-        if (newColor == null) {
+    public void setSelectionBackground(final Color back) {
+        if (back == null) {
             throw new NullPointerException("Color must not be null!");  
         }
-        super.selectionBackground = newColor;
+        Color fore;
+        if (m_tempHSBColor == null) {
+            m_tempHSBColor = new float[3];
+        }
+        float[] hsb = m_tempHSBColor;
+        if (back != null) {
+            Color.RGBtoHSB(back.getRed(), back.getGreen(), back.getBlue(), 
+                    hsb);
+            if (hsb[2] > 0.5f) {
+                fore = Color.BLACK;
+            } else {
+                fore = Color.WHITE;
+            }
+            super.selectionForeground = fore;
+        }
+        super.selectionBackground = back;
     }
     
     /**
