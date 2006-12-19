@@ -204,4 +204,17 @@ final class InteractiveBarDataModel extends AbstractBarDataModel {
             }
         }
     }
+
+    /**
+     * @see org.knime.base.node.viz.histogram.AbstractBarDataModel#clone()
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Object clone() {
+        final InteractiveBarDataModel copy = new InteractiveBarDataModel(
+                getCaption(), getAggregationColIdx(), getAggregationMethod());
+        copy.m_aggrValue = m_aggrValue;
+        copy.m_rows = (Hashtable<DataCell, DataRow>)m_rows.clone();
+        return copy;
+    }
 }

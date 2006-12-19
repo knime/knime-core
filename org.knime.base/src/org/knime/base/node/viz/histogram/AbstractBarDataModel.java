@@ -242,4 +242,10 @@ public abstract class AbstractBarDataModel {
         buf.append(getNumberOfRows());
         return buf.toString();
     }
+    
+    /**
+     * @see java.lang.Object#clone()
+     */
+    @Override
+    public abstract Object clone();
 }

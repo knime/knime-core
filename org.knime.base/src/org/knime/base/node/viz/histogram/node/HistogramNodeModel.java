@@ -283,8 +283,11 @@ public class HistogramNodeModel extends NodeModel {
     /**
      * @return the histogram data model
      */
-    protected InteractiveHistogramDataModel getHistogramModel() {
-        return m_model;
+    protected InteractiveHistogramDataModel getHistogramModelClone() {
+        if (m_model == null) {
+            return null;
+        }
+        return (InteractiveHistogramDataModel)m_model.clone();
     }
     
     /**
@@ -310,7 +313,7 @@ public class HistogramNodeModel extends NodeModel {
                 throw new InvalidSettingsException(
                         "Found nominal column without possible values: "
                         + colSpec.getName() 
-                        + " Please use DomainCalculator or ColumnFilter!");
+                        + " Please use DomainCalculator or ColumnFilter node!");
             }
         }
         final String xCol = m_xColName.getStringValue();

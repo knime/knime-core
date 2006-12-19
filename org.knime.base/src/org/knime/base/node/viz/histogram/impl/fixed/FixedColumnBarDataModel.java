@@ -153,4 +153,18 @@ final class FixedColumnBarDataModel extends AbstractBarDataModel {
         }
         return rowsByColor;
     }
+
+    /**
+     * @see org.knime.base.node.viz.histogram.AbstractBarDataModel#clone()
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Object clone() {
+        final FixedColumnBarDataModel copy = new FixedColumnBarDataModel(
+                getCaption(), getXCoordColIdx(), getAggregationColIdx(), 
+                getAggregationMethod());
+        copy.m_aggrSum = m_aggrSum;
+        copy.m_rows = (Hashtable<DataCell, HistogramDataRow>)m_rows.clone();
+        return copy;
+    }
 }

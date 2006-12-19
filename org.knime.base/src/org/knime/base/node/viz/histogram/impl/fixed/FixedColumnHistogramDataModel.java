@@ -22,6 +22,7 @@ package org.knime.base.node.viz.histogram.impl.fixed;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -34,6 +35,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorAttr;
 
 
@@ -303,9 +305,24 @@ public class FixedColumnHistogramDataModel extends AbstractHistogramDataModel {
                 getAggregationMethod());
         model.m_dataRows.addAll(m_dataRows);
         model.m_noOfNotSortedRows = m_noOfNotSortedRows;
-        model.setBarCaptions((LinkedHashSet<DataCell>)getBarCaptions().clone());
-        model.setBars(
-                (Hashtable<String, AbstractBarDataModel>)getBars().clone());
+        final LinkedHashSet<DataCell> barCaptions = getBarCaptions();
+        final LinkedHashSet<DataCell> captionCopy = 
+            new LinkedHashSet<DataCell>(barCaptions.size());
+        for (DataCell cell : barCaptions) {
+            captionCopy.add(new StringCell(cell.toString()));
+        }
+        model.setBarCaptions(captionCopy);
+        final Hashtable<String, AbstractBarDataModel> bars = getBars();
+        final Hashtable<String, AbstractBarDataModel> barsCopy =  
+            new Hashtable<String, AbstractBarDataModel>(bars.size());
+        final Enumeration<String> barKeys = bars.keys();
+        while (barKeys.hasMoreElements()) {
+            String barKey = barKeys.nextElement();
+            final AbstractBarDataModel barModel = 
+                (AbstractBarDataModel)bars.get(barKey).clone();
+            barsCopy.put(barKey, barModel);
+        }
+        model.setBars(barsCopy);
         model.setMissingValueBar(getMissingValueBar());
         model.setMinVal(getMinVal());
         model.setMaxVal(getMaxVal());

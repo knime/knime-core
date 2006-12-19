@@ -264,8 +264,11 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     /**
      * @return the histogram data model 
      */
-    protected FixedColumnHistogramDataModel getHistogramModel() {
-        return m_model;
+    protected FixedColumnHistogramDataModel getHistogramModelClone() {
+        if (m_model == null) {
+            return null;
+        }
+        return (FixedColumnHistogramDataModel)m_model.clone();
     }
     
     /** 
@@ -284,15 +287,14 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
                     "Input table should have at least 2 columns.");
         }
         // if we have nominal columns without possible values
-        for (DataColumnSpec colSpec : spec) {
-
-            if (!colSpec.getType().isCompatible(DoubleValue.class) 
-                    && colSpec.getDomain().getValues() == null) {
-                throw new InvalidSettingsException(
-                        "Found nominal column without possible values: "
-                        + colSpec.getName() 
-                        + " Please use DomainCalculator or ColumnFilter!");
-            }
+        final DataColumnSpec colSpec = 
+            spec.getColumnSpec(m_xColName.getStringValue());
+        if (!colSpec.getType().isCompatible(DoubleValue.class) 
+                && colSpec.getDomain().getValues() == null) {
+            throw new InvalidSettingsException(
+                    "Found nominal column without possible values: "
+                    + colSpec.getName() 
+                    + " Please use DomainCalculator or ColumnFilter node!");
         }
         final String xCol = m_xColName.getStringValue();
         if (!spec.containsName(xCol)) {

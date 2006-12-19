@@ -56,7 +56,7 @@ public class FixedColumnHistogramNodeView extends NodeView {
         }
         m_model = (FixedColumnHistogramNodeModel)nodeModel;
         final FixedColumnHistogramDataModel histogramModel = 
-            (FixedColumnHistogramDataModel)m_model.getHistogramModel().clone();
+            m_model.getHistogramModelClone();
         final FixedColumnHistogramProperties props =
             new FixedColumnHistogramProperties(
                     histogramModel.getAggregationMethod());
@@ -84,13 +84,12 @@ public class FixedColumnHistogramNodeView extends NodeView {
             return;
         }
         final FixedColumnHistogramDataModel histogramModel = 
-            m_model.getHistogramModel();
+            m_model.getHistogramModelClone();
         if (histogramModel == null) {
             return;
         }
         m_plotter.reset();
-        m_plotter.setHistogramDataModel(
-                (FixedColumnHistogramDataModel)histogramModel.clone());
+        m_plotter.setHistogramDataModel(histogramModel);
         m_plotter.setHiLiteHandler(m_model.getInHiLiteHandler(0));
         m_plotter.updatePaintModel();
     }
