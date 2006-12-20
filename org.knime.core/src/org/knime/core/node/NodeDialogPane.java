@@ -38,6 +38,7 @@ import java.util.LinkedHashMap;
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -45,6 +46,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
+import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.plaf.basic.BasicComboPopup;
 
 import org.knime.core.data.DataTableSpec;
@@ -334,10 +336,16 @@ public abstract class NodeDialogPane {
      */
     private static void commitComponentsRecursively(final Component c) {
         if (c instanceof JSpinner) {
+            JSpinner spin = (JSpinner)c;
             try {
-                ((JSpinner)c).commitEdit();
+                spin.commitEdit();
             } catch (ParseException e) {
-                // ignore
+                // reset the value also in the GUI
+                JComponent editor = spin.getEditor();
+                if (editor instanceof DefaultEditor) {
+                    ((DefaultEditor)editor).getTextField().setValue(
+                            spin.getValue());
+                }
             }
         } else if (c instanceof JFormattedTextField) {
             try {
