@@ -120,16 +120,17 @@ public class LinePlotterDrawingPane extends ScatterPlotterDrawingPane {
                 path.moveTo(dot1.getXCoord(), dot1.getYCoord());
                 continue;
             }
-            if (i % (m_nrOfLines - 1) == 0) {
+            if (dot1.paintDot()) {
+                // add line segment to path
+                path.lineTo(dot1.getXCoord(), dot1.getYCoord());
+            }
+            if (i %  m_nrOfLines == (m_nrOfLines - 1)) {
                 // end of one line -> paint it
                 g.setColor(dot1.getColor().getColor());
                 ((Graphics2D)g).setStroke(new BasicStroke(m_thickness));
                 ((Graphics2D)g).draw(path);
             }
-            if (dot1.paintDot()) {
-                // add line segment to path
-                path.lineTo(dot1.getXCoord(), dot1.getYCoord());
-            }
+            
         }
     }
    
