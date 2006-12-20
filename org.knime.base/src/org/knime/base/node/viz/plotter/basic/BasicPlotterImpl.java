@@ -110,6 +110,7 @@ public class BasicPlotterImpl extends BasicPlotter {
      */
     @Override
     public void updatePaintModel() {
+        updateSize();
     }
     
     /**

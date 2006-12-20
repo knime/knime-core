@@ -62,7 +62,7 @@ public class BasicDrawingPane extends AbstractDrawingPane {
      * Removes all drawing elements. Repaint has to be triggered. 
      *
      */
-    public void clearPlot() {
+    public synchronized void clearPlot() {
         m_elements.clear();
     }
     
@@ -70,7 +70,7 @@ public class BasicDrawingPane extends AbstractDrawingPane {
      * 
      * @param shape shape to draw
      */
-    public void addDrawingElement(final BasicDrawingElement shape) {
+    public synchronized void addDrawingElement(final BasicDrawingElement shape) {
         m_elements.add(shape);
     }
     
@@ -78,7 +78,7 @@ public class BasicDrawingPane extends AbstractDrawingPane {
      * 
      * @return the current stored drawing elements
      */
-    public List<BasicDrawingElement> getDrawingElements() {
+    public synchronized List<BasicDrawingElement> getDrawingElements() {
         return m_elements;
     }
 
@@ -97,7 +97,7 @@ public class BasicDrawingPane extends AbstractDrawingPane {
      * java.awt.Graphics)
      */
     @Override
-    public void paintContent(final Graphics g) {
+    public synchronized void paintContent(final Graphics g) {
         Graphics2D g2 = (Graphics2D)g;
         // paint paths if there are some
         if (getDrawingElements() != null) {

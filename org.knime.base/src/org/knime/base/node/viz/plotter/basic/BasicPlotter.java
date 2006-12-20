@@ -222,7 +222,8 @@ public abstract class BasicPlotter extends AbstractPlotter {
             line.addDomainValue(new DataCellPoint(new DoubleCell(xCoords[i]), 
                     new DoubleCell(value)));
             }
-        ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);        
+        ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);    
+        fitToScreen();
     }
    
     
@@ -281,7 +282,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
                 new DoubleCell(value)));
         }
         ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);
-//        fitToScreen();
+        fitToScreen();
     }
     
     
