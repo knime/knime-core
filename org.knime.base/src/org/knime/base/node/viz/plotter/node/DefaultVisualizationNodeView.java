@@ -198,6 +198,9 @@ public class DefaultVisualizationNodeView extends NodeView {
     }
     
     private AbstractPlotter getActivePlotter() {
+        if (m_tabs == null) {
+            return m_plotters.get(0);
+        }
         return (AbstractPlotter)m_tabs.getSelectedComponent();
     }
 
