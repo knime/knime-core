@@ -28,18 +28,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.DataProvider;
@@ -49,7 +49,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
@@ -61,6 +60,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -103,21 +103,18 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     /** Counter for misclassification, set in execute. */
     private int m_falseCount;
 
-    private BitSet m_rocCurve;
-    
     /**
      * Stores the row keys for the confusion matrix fields to allow hiliting.
      */
     private List<DataCell>[][] m_keyStore;
 
     /**
-     * The confusion matrix as int 2-D array. Note: m_lastResult contains the
-     * same data as DataTable which is put to the output port.
+     * The confusion matrix as int 2-D array. 
      */
     private int[][] m_scorerCount;
 
     /**
-     * The attribute names of the confution matrix.
+     * The attribute names of the confusion matrix.
      */
     private String[] m_values;
 
@@ -127,13 +124,9 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      */
     private int m_nrRows;
 
-    /** holds the last scorer table for the view. */
-    private DataTable m_lastResult;
-
     /** Inits a new <code>ScorerNodeModel</code> with one in- and one output. */
     HiliteScorerNodeModel() {
         super(1, 1);
-        m_lastResult = null;
     }
 
     /**
@@ -152,7 +145,6 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         // check input data
         assert (data != null && data.length == 1 && data[INPORT] != null);
         // blow away result from last execute (should have been reset anyway)
-        m_lastResult = null;
         // first try to figure out what are the different class values
         // in the two respective columns
         BufferedDataTable in = data[INPORT];
@@ -176,8 +168,6 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         // the scorerCount counts the confusions
         m_scorerCount = new int[m_values.length][m_values.length];
         
-        m_rocCurve = new BitSet(in.getRowCount() + 1);
-
         // init the matrix
         for (int i = 0; i < m_keyStore.length; i++) {
             for (int j = 0; j < m_keyStore[i].length; j++) {
@@ -204,8 +194,6 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
             }
             boolean areEqual = cell1.equals(cell2);
             
-            m_rocCurve.set(rowNr, areEqual);
-            
             // need to cast to string (column keys are strings!)
             int i1 = valuesList.indexOf(cell1.toString());
             int i2 = areEqual ? i1 : valuesList.indexOf(cell2.toString());
@@ -222,8 +210,6 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                 m_falseCount++;
             }
         }
-        // set the last bit to indicate the end of the set
-        m_rocCurve.set(in.getRowCount());
 
         m_nrRows = rowNr;
         DataType[] colTypes = new DataType[m_values.length];
@@ -246,9 +232,8 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         LOGGER.info("error=" + error + ", #correct=" + correct + ", #false="
                 + incorrect + ", #rows=" + nrRows + ", #missing=" + missing);
         // our view displays the table - we must keep a reference in the model.
-        m_lastResult = container.getTable();
-        return new BufferedDataTable[]{exec.createBufferedDataTable(
-                m_lastResult, exec)};
+        BufferedDataTable result = container.getTable();
+        return new BufferedDataTable[]{result};
 
     } // execute(DataTable[],ExecutionMonitor)
 
@@ -259,17 +244,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     protected void reset() {
         m_correctCount = -1;
         m_falseCount = -1;
-        m_lastResult = null;
         m_keyStore = null;
-        m_rocCurve = null;
-    }
-
-    /**
-     * @return the result of the last run. Will be <code>null</code> before an
-     *         execute and after a reset.
-     */
-    DataTable getScorerTable() {
-        return m_lastResult;
     }
 
     /**
@@ -603,7 +578,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         
         return result.toArray(new Point[result.size()]);
     }
-
+    
     /**
      * @see org.knime.core.node.NodeModel
      *      #loadInternals(java.io.File,ExecutionMonitor)
@@ -611,31 +586,32 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     @Override
     protected void loadInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
-        // TODO: load last result and internal variables to restore
-        // view content (see reset())
-
-        File f = new File(internDir, "data.ser");
-        ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(
+        File f = new File(internDir, "internals.xml.gz");
+        InputStream in = new GZIPInputStream(new BufferedInputStream(
                 new FileInputStream(f)));
         try {
-            @SuppressWarnings("unchecked")
-            HashMap<String, Object> hm =
-                (HashMap<String, Object>)in.readObject();
-            m_correctCount = (Integer)hm.get("correctCount");
-            m_falseCount = (Integer)hm.get("falseCount");
-            m_keyStore = (List<DataCell>[][])hm.get("keyStore");
-            m_nrRows = (Integer) hm.get("nrRows");
-            m_rocCurve = (BitSet)hm.get("rocCurve");
-            m_scorerCount = (int[][])hm.get("scorerCount");
-            m_values = (String[])hm.get("values");
-        } catch (ClassNotFoundException ex) {         
-            // should not happen at all
-            LOGGER.error("Could not read internals", ex);
+            NodeSettingsRO set = NodeSettings.loadFromXML(in);
+            m_correctCount = set.getInt("correctCount");
+            m_falseCount = set.getInt("falseCount");
+            m_nrRows = set.getInt("nrRows");
+            m_values = set.getStringArray("values");
+            m_scorerCount = new int[m_values.length][];
+            m_keyStore = new List[m_values.length][m_values.length];
+            for (int i = 0; i < m_values.length; i++) {
+                NodeSettingsRO sub = set.getNodeSettings(m_values[i]);
+                m_scorerCount[i] = sub.getIntArray("scorerCount");
+                NodeSettingsRO subSub = sub.getNodeSettings("hilightMap");
+                for (int j = 0; j < m_values.length; j++) {
+                    NodeSettingsRO sub3 = subSub.getNodeSettings(m_values[j]);
+                    DataCell[] cells = sub3.getDataCellArray("keyStore");
+                    m_keyStore[i][j] = Arrays.asList(cells);
+                }
+            }
+        } catch (InvalidSettingsException ise) {
+            IOException ioe = new IOException("Unable to read internals");
+            ioe.initCause(ise);
+            throw ioe;
         }
-        in.close();
-        
-        f = new File(internDir, "lastResult.tab.zip");
-        m_lastResult = DataContainer.readFromZip(f);
     }
 
     /**
@@ -645,34 +621,25 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     @Override
     protected void saveInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
-        // TODO: load last result and internal variables to restore
-        // view content (see reset())
-
-        HashMap<String, Object> hs = new HashMap<String, Object>();
-        hs.put("correctCount", m_correctCount);
-        hs.put("falseCount", m_falseCount);
-        hs.put("keyStore", m_keyStore);
-        hs.put("nrRows", m_nrRows);
-        hs.put("rocCurve", m_rocCurve);
-        hs.put("scorerCount", m_scorerCount);
-        hs.put("values", m_values);
-
-        ObjectOutputStream out = new ObjectOutputStream(
-                new BufferedOutputStream(new FileOutputStream(
-                new File(internDir, "data.ser"))));
-        out.writeObject(hs);
-        out.close();
-
-
-        if (m_lastResult != null) {
-            File f = new File(internDir, "lastResult.tab.zip");
-            try {
-                DataContainer.writeToZip(m_lastResult, f, exec);
-            } catch (CanceledExecutionException ex) {
-                // TODO Auto-generated catch block
-                ex.printStackTrace();
+        NodeSettings set = new NodeSettings("scorer");
+        set.addInt("correctCount", m_correctCount);
+        set.addInt("falseCount", m_falseCount);
+        set.addInt("nrRows", m_nrRows);
+        set.addStringArray("values", m_values);
+        for (int i = 0; i < m_values.length; i++) {
+            NodeSettingsWO sub = set.addNodeSettings(m_values[i]);
+            sub.addIntArray("scorerCount", m_scorerCount[i]);
+            NodeSettingsWO subSub = sub.addNodeSettings("hilightMap");
+            for (int j = 0; j < m_values.length; j++) {
+                NodeSettingsWO sub3 = subSub.addNodeSettings(m_values[j]);
+                DataCell[] cells = m_keyStore[i][j].toArray(
+                        new DataCell[m_keyStore[i][j].size()]);
+                sub3.addDataCellArray("keyStore", cells);
             }
         }
+
+        set.saveToXML(new GZIPOutputStream(new BufferedOutputStream(
+              new FileOutputStream(new File(internDir, "internals.xml.gz")))));
     }
 
     /**
@@ -691,7 +658,8 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      * @return a bit set
      */
     BitSet getRocCurve() {
-        return m_rocCurve;
+        // disabled
+        return new BitSet();
     }
         
     /**

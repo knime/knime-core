@@ -39,6 +39,8 @@ import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ROCView extends DefaultVisualizationNodeView {
+    /* (BW, 20. Dec 2006) Disabled this view as a ROC curve is senseless for 
+     * the scorer */
     private static class ROCPlotter extends BasicPlotterImpl {
         private final HiliteScorerNodeModel m_model;
         private final NumberFormat m_formatter = new DecimalFormat("0.000");

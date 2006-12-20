@@ -7,7 +7,7 @@
         <intro>
 			Compares two columns by their attribute value pairs and shows the 
 		    confusion matrix, i.e. how many rows of which attribute and their classification. 
-		    Additionally, it is possible to hilight cells of this matrix do
+		    Additionally, it is possible to hilight cells of this matrix to
 		    determine the data rows that have been predicted wrongly.
 		    The dialog allows you to select two columns to compare;
 			the values from the first selected column are represented in the 
@@ -21,14 +21,11 @@
         <dataOut index="0" name="Confusion matrix">The confusion matrix.</dataOut>
 	</ports>
 	<views>
-		<view index="0" name="Confusion Matrix View enabling highliting">
+		<view index="0" name="Confusion Matrix">
 			Displays the confusion matrix in a table view. It is possible
 			to hilight a cell of the matrix which propagates highlighting
 			to the corresponding rows. Therefore, it is possible to identify
 			wrongly classified predictions.
 		</view>
-        <view index="1" name="ROC curve">
-            Displays a ROC curve for the classified data.
-        </view>
 	</views>
 </knimeNode>
