@@ -1117,7 +1117,7 @@ public final class Node {
         m_isCurrentlySaved = false;
         // reset the model
         m_model.resetModel();
-
+    
         // blow away our data tables in the port
         for (int p = 0; p < getNrDataOutPorts(); p++) {
             // m_outDataPorts[p].setDataTableSpec(null);
@@ -1137,7 +1137,7 @@ public final class Node {
                 m_logger.coding("loadModelContent() does not check for null"
                         + " argument.");
                 m_status = new NodeStatus.Warning("Node does not check for "
-                        + "null argument in loadPreddictorParams().");
+                        + "null argument in loadPredictorParams().");
             }
         }
 
@@ -1865,7 +1865,7 @@ public final class Node {
             } catch (InvalidSettingsException ex) {
                 // this should never happen as we have added the model
                 // in saveSettings(...) above
-                m_logger.error("Internal error while saving a meta node", ex);
+                m_logger.error("Internal error while saving a meta node: ", ex);
             }
         }
 

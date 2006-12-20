@@ -1767,7 +1767,7 @@ public class WorkflowManager implements WorkflowListener {
         }
 
         final WorkflowException workflowException =
-                new WorkflowException("Error while loading workflow");
+                new WorkflowException("Error while loading workflow: ");
         WorkflowException lastEx = workflowException;
 
         // Node-Subconfig
@@ -1784,21 +1784,21 @@ public class WorkflowManager implements WorkflowListener {
                 addNodeWithID(newNode);
             } catch (InstantiationException ex) {
                 lastEx =
-                        new WorkflowException("Error while loading node",
+                        new WorkflowException("Error while loading node: ",
                                 lastEx, ex);
                 LOGGER.error("Could not create factory object of type "
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
                                 "??") + " for node " + nodeKey, ex);
             } catch (IllegalAccessException ex) {
                 lastEx =
-                        new WorkflowException("Error while loading node",
+                        new WorkflowException("Error while loading node: ",
                                 lastEx, ex);
                 LOGGER.error("Could not access factory class "
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
                                 "??") + " for node " + nodeKey, ex);
             } catch (ClassNotFoundException ex) {
                 lastEx =
-                        new WorkflowException("Error while loading node",
+                        new WorkflowException("Error while loading node: ",
                                 lastEx, ex);
                 LOGGER.error("Could not find factory class "
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
@@ -1806,7 +1806,7 @@ public class WorkflowManager implements WorkflowListener {
             } catch (Throwable t) {
                 LOGGER.error(t.getMessage(), t);
                 lastEx =
-                        new WorkflowException("Error while loading node",
+                        new WorkflowException("Error while loading node: ",
                                 lastEx, t);
             }
         }
@@ -1826,7 +1826,7 @@ public class WorkflowManager implements WorkflowListener {
                 addConnection(cc);
             } catch (Exception ex) {
                 lastEx =
-                        new WorkflowException("Error while adding connection",
+                        new WorkflowException("Error while adding connection: ",
                                 lastEx, ex);
                 LOGGER.error("Could not create connection: " + connectionKey
                         + " reason: " + ex.getMessage());
@@ -1925,7 +1925,7 @@ public class WorkflowManager implements WorkflowListener {
                 disconnectNodeContainer(container);
                 m_detachedNodes.add(container);
             } catch (Exception ex) {
-                LOGGER.error("Error while removing node", ex);
+                LOGGER.error("Error while removing node: ", ex);
             }
 
             container.removeAllListeners();
