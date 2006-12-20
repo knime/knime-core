@@ -119,6 +119,7 @@ public class MoveModelProvider extends ModelProvider {
             // do nothing
         }
 
+        // else performe the default behavior
         return super.validateChange(delta, monitor);
     }
 }
