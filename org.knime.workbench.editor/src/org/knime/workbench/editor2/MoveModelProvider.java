@@ -1,0 +1,74 @@
+/* @(#)$RCSfile$ 
+ * $Revision$ $Date$ $Author$
+ * 
+ * -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ * 
+ * Copyright, 2003 - 2007
+ * Universitaet Konstanz, Germany.
+ * Lehrstuhl fuer Angewandte Informatik
+ * Prof. Dr. Michael R. Berthold
+ * 
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner.
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   Dec 19, 2006 (sieb): created
+ */
+package org.knime.workbench.editor2;
+
+import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.resources.mapping.ModelProvider;
+import org.eclipse.core.resources.mapping.ModelStatus;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
+
+public class MoveModelProvider extends ModelProvider {
+
+    public MoveModelProvider() {
+    }
+
+    public String getModelProviderId() {
+        return "org.knime.workbench.editor2.MoveModelProvider";
+    }
+
+    public IStatus validateChange(IResourceDelta delta, IProgressMonitor monitor) {
+
+        try {
+            // check whether this is a knime project
+            boolean existsworkflow =
+                    delta.getAffectedChildren()[1].getResource().getProject()
+                            .exists(new Path("workflow.knime"));
+
+            // check whether this is a move delta
+            IResourceDelta[] deltas = delta.getAffectedChildren();
+            boolean moveAction = false;
+            for (IResourceDelta curDelta : deltas) {
+
+                if ((curDelta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
+                    moveAction = true;
+                    break;
+                }
+            }
+
+            if (existsworkflow && moveAction) {
+                return new ModelStatus(
+                        IStatus.WARNING,
+                        ResourcesPlugin.PI_RESOURCES,
+                        getModelProviderId(),
+                        "In case the editor for this workflow is opened"
+                                + ", renaming will result in inconsistant states!");
+            }
+        } catch (Throwable t) {
+            // do nothing
+        }
+
+        return super.validateChange(delta, monitor);
+    }
+}

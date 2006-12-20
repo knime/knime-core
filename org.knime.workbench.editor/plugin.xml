@@ -279,5 +279,17 @@
             
             
    </extension>
+    <extension
+         id="modelProvider"
+         name="Rename avoidance"
+         point="org.eclipse.core.resources.modelProviders">
+      <modelProvider
+            class="org.knime.workbench.editor2.MoveModelProvider"
+       />
+      <extends-model id="org.knime.workbench.editor2.MoveModelProvider"/>
+      <enablement>
+			<instanceof value="org.eclipse.core.resources.IResource"/>
+      </enablement>
+   </extension>
 
 </plugin>
