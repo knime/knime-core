@@ -58,7 +58,6 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
@@ -92,8 +91,8 @@ import org.knime.core.node.property.hilite.KeyEvent;
 public abstract class AbstractPlotter extends JPanel implements HiLiteListener, 
         ComponentListener {
     
-    private static final NodeLogger LOGGER = NodeLogger
-        .getLogger(AbstractPlotter.class);
+//    private static final NodeLogger LOGGER = NodeLogger
+//        .getLogger(AbstractPlotter.class);
     
     /** The default zoom factor. */
     public static final double DEFAULT_ZOOM_FACTOR = 1.2;
@@ -315,7 +314,6 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      */
     protected void zoomByClick(final Point clicked) {
         // adjust the draw pane ranges
-        try {
         m_width = (int)Math.round(m_width * DEFAULT_ZOOM_FACTOR);
         m_height = (int)Math.round(m_height * DEFAULT_ZOOM_FACTOR);
         m_drawingPane.setPreferredSize(new Dimension(m_width, m_height));
@@ -337,9 +335,6 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         m_drawingPane.scrollRectToVisible(recToVisible); 
         m_scroller.revalidate();
         m_drawingPane.repaint();
-        } catch (Exception e) {
-            LOGGER.warn(e.getMessage(), e);
-        }
     }
     
     
