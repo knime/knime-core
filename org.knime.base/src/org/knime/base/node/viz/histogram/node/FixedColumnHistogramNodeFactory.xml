@@ -8,7 +8,8 @@
 	<fullDescription>
 		<intro>
 		<p>Displays an histogram view with different viewing options.</p>
-		<p>The user can change the following properties on the fly:
+		<p>The user can change the following properties on the fly in the 
+		view properties:
 			<ol>
 			<li>Aggregation method (count, summary, average)</li>
 			<li>Number of bins for numerical attributes (incl. empty bars, 
@@ -21,11 +22,32 @@
 			</ol>
 		The bars are colored by the number of rows per color attribute.
 		</p>
-		<p>The binning labels are the borders of the bin which are included.</p>
+		<p>All automatically created bins, with exception to the first one, are
+		left opened intervals (a,b] where a is excluded and b is included in 
+		the interval. To cover all values the first interval is a closed 
+		interval [a,b] where a and b are included.</p>
 		<p>To allow the work with huge data sets the user has to specify the 
 		desired x and aggregation column before opening the view. For more 
 		interaction use the "Interactive Histogram" node.</p>
 		</intro>
+		<option name="Display all rows">
+		    If selected the histogram view displays all rows of the incoming data.
+	    </option>
+	    <option name="No. of rows to display: ">
+		    Defines the number of rows which are displayed in the histogram view.
+		    This option is disabled if the 'Display all rows' option is selected.
+	    </option>
+	    <option name="X column: ">
+	     	The column which should be shown on the x axis of the histogram view.
+	     	For numerical values the number of bars could be adjusted later 
+	     	in the view properties in the 'Bar settings' section.
+   	    </option>
+   	  	<option name="Aggregation column: ">
+   	  		The column which should be used as bar value and displayed on the
+   	  		y axis. Only numerical values are allowed. The aggregation method
+   	  		could be adjusted later in the view properties in the 'Aggregation setting'
+   	  		section.
+   	    </option>
 	</fullDescription>
 	
 	<ports>
