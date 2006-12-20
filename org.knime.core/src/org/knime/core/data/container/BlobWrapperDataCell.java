@@ -30,7 +30,9 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 
 /**
- * 
+ * Wrapper for {@link BlobDataCell}. We explicitely wrap those cells in this
+ * package to delay the access to the latest time possible (when someone
+ * calls getCell() on the row).
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class BlobWrapperDataCell extends DataCell {
@@ -40,6 +42,12 @@ final class BlobWrapperDataCell extends DataCell {
     private final Class<? extends BlobDataCell> m_blobClass;
     private BlobDataCell m_cell;
     
+    /**
+     * Keeps references.
+     * @param b The buffer that owns the cell.
+     * @param ba Its address.
+     * @param cl The class of the blob.
+     */
     BlobWrapperDataCell(final Buffer b, final BlobAddress ba,
             final Class<? extends BlobDataCell> cl) {
         assert b.getBufferID() == ba.getBufferID();
@@ -48,6 +56,10 @@ final class BlobWrapperDataCell extends DataCell {
         m_blobClass = cl;
     }
     
+    /**
+     * Fetches the content of the blob cell. May last long.
+     * @return The blob Data cell being read.
+     */
     BlobDataCell getCell() {
         if (m_cell == null) {
             try {
@@ -59,10 +71,12 @@ final class BlobWrapperDataCell extends DataCell {
         return m_cell;
     }
     
+    /** @return The blob address. */
     BlobAddress getAddress() {
         return m_blobAddress;
     }
     
+    /** @return Blob class. */
     Class<? extends BlobDataCell> getBlobClass() {
         return m_blobClass;
     }

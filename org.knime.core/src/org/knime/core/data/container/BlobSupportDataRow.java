@@ -31,17 +31,31 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultCellIterator;
 
-class BlobSupportDataRow implements DataRow {
+/**
+ * Special row implementation that supports to access the wrapper cells of
+ * {@link BlobDataCell}. Dealing with the wrapper cells only 
+ * ({@link BlobWrapperDataCell}) gives the benefit that blobs are not read
+ * from the file when passed from one place to another (they will be read
+ * on access).
+ * @author Bernd Wiswedel, University of Konstanz
+ */
+final class BlobSupportDataRow implements DataRow {
     
     private final RowKey m_key;
     private final DataCell[] m_cells;
 
+    /**
+     * @param key Row key
+     * @param cells cell array.
+     */
     BlobSupportDataRow(final RowKey key, final DataCell[] cells) {
         m_key = key;
         m_cells = cells;
     }
 
     /**
+     * If the cell at index is a blob wrapper cell, it will fetch the content
+     * and return it.
      * @see org.knime.core.data.DataRow#getCell(int)
      */
     public DataCell getCell(final int index) {
@@ -52,6 +66,10 @@ class BlobSupportDataRow implements DataRow {
         return c;
     }
     
+    /** Returns the cell at given index. Returns the wrapper cell (if any).
+     * @param index Cell index.
+     * @return Raw cell.
+     */
     DataCell getRawCell(final int index) {
         return m_cells[index];
     }

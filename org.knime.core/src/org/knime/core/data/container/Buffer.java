@@ -1110,6 +1110,7 @@ class Buffer {
      * @param indexBlobInCol The index in the column (generally the row number).
      * @param column The column index.
      * @param createPath Create the directory, if necessary (when writing)
+     * @param isCompressed If file is (to be) compressed
      * @return The file location.
      * @throws IOException If that fails (e.g. blob dir does not exist).
      */
