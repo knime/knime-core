@@ -67,8 +67,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
 
     /**
      * 
-     * @see org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView#
-     * modelChanged()
+     * @see DefaultVisualizationNodeView#modelChanged()
      */
     @Override
     public void modelChanged() {

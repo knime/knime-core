@@ -428,7 +428,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node. NodeModel#loadInternals(File, ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel#loadInternals(File, ExecutionMonitor)
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -437,7 +437,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node. NodeModel#saveInternals(File, ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel#saveInternals(File, ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

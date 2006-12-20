@@ -529,8 +529,8 @@ public class DataContainer implements RowAppender {
     
     /**
      * Get the local repository. Overridden in 
-     * {@link org.knime.core.node.BufferedDataContainer#
-     * getLocalTableRepository()}
+     * {@link 
+     * org.knime.core.node.BufferedDataContainer#getLocalTableRepository()}
      * @return A local repository to which tables are added that have been
      * created during the node's execution.
      */
