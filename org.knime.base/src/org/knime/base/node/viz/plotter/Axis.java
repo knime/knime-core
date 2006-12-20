@@ -28,10 +28,8 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.event.MouseEvent;
 
 import javax.swing.JComponent;
 
@@ -126,14 +124,14 @@ public class Axis extends JComponent {
         m_fullLength = length;
 
         m_horizontal = (orientation == HORIZONTAL);
-        setToolTipText("complete label");
+//        setToolTipText("complete label");
     }
     
 
-    /**
+    /*
      * 
      * @see javax.swing.JComponent#getToolTipText(java.awt.event.MouseEvent)
-     */
+     *
     @Override
     public String getToolTipText(final MouseEvent event) {
         if (m_complLabels == null || m_tickDist == 0) {
@@ -158,6 +156,7 @@ public class Axis extends JComponent {
         setToolTipText(tooltip);
         return tooltip;
     }
+    */
 
     /**
      * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
