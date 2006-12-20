@@ -504,10 +504,10 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // remove appender listener from "our" NodeLogger
         NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
-//        // remove appender listener from "our" NodeLogger
-//        for (int i = 0; i < APPENDERS.size(); i++) {
-//            removeAppender(APPENDERS.get(i));
-//        }
+        // // remove appender listener from "our" NodeLogger
+        // for (int i = 0; i < APPENDERS.size(); i++) {
+        // removeAppender(APPENDERS.get(i));
+        // }
 
         m_manager.removeListener(this);
         getSite().getWorkbenchWindow().getSelectionService()
@@ -739,6 +739,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         setDefaultInput(input);
         // we only support file inputs
+        
         m_fileResource = ((IFileEditorInput)input).getFile();
 
         // TODO try to load a WFM-config from the file, create an empty one if
