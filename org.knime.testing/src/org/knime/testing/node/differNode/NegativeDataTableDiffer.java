@@ -51,7 +51,8 @@ public class NegativeDataTableDiffer implements TestEvaluator {
     public void compare(final DataTable table1, final DataTable table2)
             throws TestEvaluationException {
         boolean testResult = true;
-        if (!table1.getDataTableSpec().equals(table2.getDataTableSpec())) {
+        if (!table1.getDataTableSpec().equalStructure(
+                table2.getDataTableSpec())) {
             testResult = false;
         }
         Iterator<DataRow> rowIt1 = table1.iterator();

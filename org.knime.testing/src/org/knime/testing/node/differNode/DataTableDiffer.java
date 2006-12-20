@@ -71,7 +71,7 @@ public class DataTableDiffer implements TestEvaluator {
      * @return true if each cell in the datatables equals, false otherwise
      */
     public boolean compare() {
-        if (!m_dataTable1.getDataTableSpec().equals(
+        if (!m_dataTable1.getDataTableSpec().equalStructure(
                 m_dataTable2.getDataTableSpec())) {
             return false;
         }
@@ -101,7 +101,8 @@ public class DataTableDiffer implements TestEvaluator {
      */
     public void compare(final DataTable table1, final DataTable table2)
             throws TestEvaluationException {
-        if (!table1.getDataTableSpec().equals(table2.getDataTableSpec())) {
+        if (!table1.getDataTableSpec().equalStructure(
+                table2.getDataTableSpec())) {
             throw new TestEvaluationException("The specs are not the same");
         }
         Iterator<DataRow> rowIt1 = table1.iterator();
