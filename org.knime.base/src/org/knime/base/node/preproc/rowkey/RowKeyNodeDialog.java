@@ -39,15 +39,48 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author Tobias Koetter
  */
 public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
+
+    /**The label of the replace row key group section.*/
+    private static final String REPLACE_ROW_KEY_GROUP_LABEL = 
+        "Replace RowID:";
+
+    /**The label of the replace row id select box which enables/disables
+     * the replacing options.*/
+    private static final String REPLACE_ROW_BOX_LABEL = 
+        "Replace RowID with selected column values";
     
-    /**The label of the replace missing values checkbox.*/
+    /**The label of the new row key column select box.*/
+    private static final String NEW_ROW_KEY_COLUMN_LABEL = 
+        "New RowID column:";
+    
+    /**The label of the replace missing values check box.*/
     protected static final String HANDLE_MISSING_VALUES_LABEL = 
         "Handle missing values";
-
-    /**The label of the uniqueness checkbox.*/
+    /**The tool tip of the replace missing value check box.*/
+    private static final String HANDLEMISSING_VALUES_TOOLTIP = 
+        "Replaces missing values with '" 
+        + RowKeyUtil.MISSING_VALUE_REPLACEMENT + "'.";
+    
+    /**The label of the uniqueness check box.*/
     protected static final String ENSURE_UNIQUENESS_LABEL = 
         "Ensure uniqueness";
+    /**The tool tip of the uniqueness check box.*/
+    private static final String ENSURE_UNIQUENESS_TOOLTIP = 
+        "Appends (x) to none unique values.";
 
+    
+    /**The name of the append row key group section.*/
+    private static final String APPEND_ROW_KEY_GROUP_LABEL = 
+        "Append RowID column:";
+    
+    /**The label of the append row key column check box which enables/disables 
+     * the append row key options.*/
+    private static final String APPEND_ROW_KEY_COLUMN_LABEL = 
+        "Create new column with the RowID values";
+    
+    /**The label of the new column name input field.*/
+    private static final String NEW_COLUMN_NAME_LABEL = "New column name:";
+    
     private final DialogComponentBoolean m_replaceRowKey;
     
     /**
@@ -72,7 +105,7 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     public RowKeyNodeDialog() {
         super();
-        createNewGroup("Replace row key:");
+        createNewGroup(REPLACE_ROW_KEY_GROUP_LABEL);
         final SettingsModelBoolean replaceKeyModel = 
             new SettingsModelBoolean(RowKeyNodeModel.REPLACE_ROWKEY, true);
         replaceKeyModel.addChangeListener(
@@ -85,13 +118,12 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
                     }
                 });
         m_replaceRowKey = 
-            new DialogComponentBoolean(replaceKeyModel,
-                    "Replace row key with selected column values");
+            new DialogComponentBoolean(replaceKeyModel, REPLACE_ROW_BOX_LABEL);
         addDialogComponent(m_replaceRowKey);
          m_newRowKeyCol = new DialogComponentColumnNameSelection(
                  new SettingsModelString(
                          RowKeyNodeModel.SELECTED_NEW_ROWKEY_COL, (String)null),
-                 "New row key column:", RowKeyNodeModel.DATA_IN_PORT,
+                 NEW_ROW_KEY_COLUMN_LABEL, RowKeyNodeModel.DATA_IN_PORT,
                 DataValue.class);
          final boolean replaceKey = m_replaceRowKey.isSelected();
          m_newRowKeyCol.setEnabled(replaceKey);
@@ -100,15 +132,15 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
                  new SettingsModelBoolean(RowKeyNodeModel.ENSURE_UNIQUNESS, 
                          false),
          ENSURE_UNIQUENESS_LABEL);
-         m_ensureUniqueness.setToolTipText("Appends (x) to none unique values");
+         m_ensureUniqueness.setToolTipText(ENSURE_UNIQUENESS_TOOLTIP);
          addDialogComponent(m_ensureUniqueness);
          m_replaceMissingvals = new DialogComponentBoolean(
                  new SettingsModelBoolean(RowKeyNodeModel.REPLACE_MISSING_VALS, 
                          false), HANDLE_MISSING_VALUES_LABEL);
-         m_replaceMissingvals.setToolTipText("Replaces missing values with " 
-                 + RowKeyUtil.MISSING_VALUE_REPLACEMENT);
+         m_replaceMissingvals.setToolTipText(HANDLEMISSING_VALUES_TOOLTIP);
          addDialogComponent(m_replaceMissingvals);
-         createNewGroup("Append row key column:");
+         
+         createNewGroup(APPEND_ROW_KEY_GROUP_LABEL);
          final SettingsModelBoolean appendRowModel = new SettingsModelBoolean(
                  RowKeyNodeModel.APPEND_ROWKEY_COLUMN, false);
          appendRowModel.addChangeListener(
@@ -120,11 +152,11 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
                  });
          m_appendRowKeyCol = 
              new DialogComponentBoolean(appendRowModel, 
-                     "Create new column with row keys");
+                     APPEND_ROW_KEY_COLUMN_LABEL);
          addDialogComponent(m_appendRowKeyCol);
          m_newColumnName = new DialogComponentString(new SettingsModelString(
                  RowKeyNodeModel.NEW_COL_NAME_4_ROWKEY_VALS, (String)null),
-                 "New column name:");
+                 NEW_COLUMN_NAME_LABEL);
          m_newColumnName.setEnabled(m_appendRowKeyCol.isSelected());
          addDialogComponent(m_newColumnName);
     }
