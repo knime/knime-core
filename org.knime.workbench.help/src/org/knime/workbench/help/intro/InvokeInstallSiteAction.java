@@ -1,12 +1,12 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2006
- * University of Konstanz, Germany.
- * Chair for Bioinformatics and Information Mining
- * Prof. Dr. Michael R. Berthold
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
  *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- *
+ * ---------------------------------------------------------------------
  * 
  * History
  *   Dec 18, 2006 (sieb): created
