@@ -76,7 +76,6 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * <code>ArrayList</code> which can be referenced by its
      * <code>RowKey</code> info as key values.
      */
-    //private final Map<DataCell, List<BasisFunctionLearnerRow>> m_bfs;
     private final Map<DataCell, List<BasisFunctionLearnerRow>> m_bfs;
 
     /** The underlying factory used to generate new basisfunctions. */
@@ -188,8 +187,11 @@ public final class BasisFunctionLearnerTable implements DataTable {
             exec.checkCanceled();
             String progMsg = "Learning... #rules=" + getNumBasisFunctions()
                     + " at #epoch=" + (m_cycles + 1);
-//            exec.setProgress(Math.min(0.90, ((m_cycles + 1) * 10) / 100.0),
-//                    progMsg);
+            if (maxNrEpochs > 0 && maxNrEpochs < Integer.MAX_VALUE) {
+                exec.setProgress((m_cycles + 1.0) / maxNrEpochs, progMsg);
+            } else {
+                exec.setProgress(progMsg);
+            }
             goon = false; // reset flag for a new run
 
             /* --- R E S E T --- */
