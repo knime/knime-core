@@ -69,9 +69,9 @@
 			</div>
 		</xsl:for-each>
 	</xsl:if>					
-	<xsl:if test="predParamIn">
+	<xsl:if test="predParamIn|modelIn">
 		<h4>Model Input</h4>
-		<xsl:for-each select="predParamIn">
+		<xsl:for-each select="predParamIn|modelIn">
 			<xsl:sort select="@index" />
 			<div>			
 				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
@@ -79,9 +79,9 @@
 			</div>
 		</xsl:for-each>
 	</xsl:if>					
-	<xsl:if test="predParamOut">
+	<xsl:if test="predParamOut|modelOut">
 		<h4>Model Output</h4>
-		<xsl:for-each select="predParamOut">
+		<xsl:for-each select="predParamOut|modelOut">
 			<xsl:sort select="@index" />
 			<div>
 				<span style="font-weight: bold; margin-right: 3mm;"><xsl:value-of select="@index" /></span>
