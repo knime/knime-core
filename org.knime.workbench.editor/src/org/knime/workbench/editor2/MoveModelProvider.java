@@ -29,16 +29,36 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 
+/**
+ * This model provider is registered in the plugin.xml and checks if a KNIIME
+ * workflow project is intended to be renamed. The reason is, that at the moment
+ * the KNIME core saves an absolute path for storage reasons. If renamed save
+ * actions would fail.
+ * 
+ * @author Christoph Sieb, University of Konstanz
+ */
 public class MoveModelProvider extends ModelProvider {
 
-    public MoveModelProvider() {
-    }
-
+    /**
+     * Returns the id of this provider.
+     * 
+     * @return the id of this provider
+     */
     public String getModelProviderId() {
         return "org.knime.workbench.editor2.MoveModelProvider";
     }
 
-    public IStatus validateChange(IResourceDelta delta, IProgressMonitor monitor) {
+    /**
+     * Checks if a KNIIME workflow project is intended to be renamed. The reason
+     * is, that at the moment the KNIME core saves an absolute path for storage
+     * reasons. If renamed save actions would fail.
+     * 
+     * @see org.eclipse.core.resources.mapping.ModelProvider#
+     *      validateChange(org.eclipse.core.resources.IResourceDelta,
+     *      org.eclipse.core.runtime.IProgressMonitor)
+     */
+    public IStatus validateChange(final IResourceDelta delta, 
+            final IProgressMonitor monitor) {
 
         try {
             // check whether this is a knime project
@@ -58,12 +78,11 @@ public class MoveModelProvider extends ModelProvider {
             }
 
             if (existsworkflow && moveAction) {
-                return new ModelStatus(
-                        IStatus.WARNING,
-                        ResourcesPlugin.PI_RESOURCES,
-                        getModelProviderId(),
+                return new ModelStatus(IStatus.WARNING,
+                        ResourcesPlugin.PI_RESOURCES, getModelProviderId(),
                         "In case the editor for this workflow is opened"
-                                + ", renaming will result in inconsistant states!");
+                                + ", renaming will result in "
+                                + "inconsistant states!");
             }
         } catch (Throwable t) {
             // do nothing
