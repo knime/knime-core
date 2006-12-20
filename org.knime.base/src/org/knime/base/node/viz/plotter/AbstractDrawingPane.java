@@ -130,7 +130,9 @@ public abstract class AbstractDrawingPane extends JPanel {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                     RenderingHints.VALUE_ANTIALIAS_OFF);            
         }
+        Color backupColor = g2.getColor();
         paintContent(g2);
+        g2.setColor(backupColor);
         // paint selection rectangle if mouse is down
         if (m_isMouseDown) {
             paintSelectionRectangle(g2);
