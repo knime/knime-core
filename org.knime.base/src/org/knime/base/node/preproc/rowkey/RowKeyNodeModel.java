@@ -28,13 +28,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -227,14 +227,13 @@ public class RowKeyNodeModel extends NodeModel {
                     + "name " + m_newColumnName);
             // the user wants only a column with the given name which 
             //contains the rowkey as value
-            final RowKeyUtil cellAppender = new RowKeyUtil();
             final DataTableSpec tableSpec = data.getDataTableSpec();
             final DataType type = getCommonSuperType4RowKey(data);
-            final DataColumnSpec[] colSpecs = RowKeyUtil.getResultColSpecs(
-                    tableSpec, m_newColumnName.getStringValue(), type);
-            final AppendedColumnTable appTable = new AppendedColumnTable(
-                    data, cellAppender, colSpecs);
-            outData = exec.createBufferedDataTable(appTable, exec);
+            final String newColumnName = m_newColumnName.getStringValue();
+            final ColumnRearranger c = RowKeyUtil.createColumnRearranger(
+                    tableSpec, newColumnName, type);
+            outData = 
+                exec.createColumnRearrangeTable(data, c, exec);
             exec.setMessage("New column created");
             LOGGER.debug("Column appended successfully");
         } else {

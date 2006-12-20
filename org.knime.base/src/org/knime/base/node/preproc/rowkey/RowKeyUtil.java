@@ -27,7 +27,6 @@ package org.knime.base.node.preproc.rowkey;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.knime.base.data.append.column.AppendedCellFactory;
 import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -35,6 +34,9 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.container.CellFactory;
+import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -50,7 +52,7 @@ import org.knime.core.util.MutableInteger;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-public class RowKeyUtil implements AppendedCellFactory {
+public class RowKeyUtil {
     private static final NodeLogger LOGGER = NodeLogger
         .getLogger(RowKeyUtil.class);
     
@@ -61,57 +63,38 @@ public class RowKeyUtil implements AppendedCellFactory {
     private int m_duplicatesCounter = 0;
     
     private int m_missingValueCounter = 0;
-    
+
+
     /**
-     * Creates the <code>DataColumnSpec</code> of the row which contains
-     * the row key as value. If the name already exists it appends (x)
-     * to the name with x starting by 1 incrementing as long as a column
-     * with the same name exists in the given table specification.
-     * @param inSpec the <code>DataTableSpec</code> of the input data
-     * @param colName the name of the new column
-     * @param type the type of the new column
-     * @return <code>DataColumnSpec[]</code> with the column specifications
-     * of the result columns
+     * Creates the {@link ColumnRearranger} that appends a new column with the
+     * values of the row id to a data table.
+     * 
+     * @param inSpec the <code>DataTableSpec</code> of table were the column 
+     * should be appended
+     * @param newColName the name of the added column
+     * @param type the <code>DataType</code> of the new column
+     * @return the {@link ColumnRearranger} to use
      */
-    public static DataColumnSpec[] getResultColSpecs(
-            final DataTableSpec inSpec, final String colName, 
+    public static ColumnRearranger createColumnRearranger(
+            final DataTableSpec inSpec, final String newColName, 
             final DataType type) {
-        LOGGER.debug("Entering getResultColSpecs(inSpec) of class RowKeyUtil.");
-        if (inSpec == null || colName == null || type == null) {
-            throw new IllegalArgumentException(
-                    "All arguments shouldn't be null.");
-        }
-        String newColName = colName;
-        //check if the column name already exists
-        if (inSpec.containsName(newColName)) {
-            //if that's the case append (x) where x starts by 1 and gets 
-            //incremented until the name doesn't exists
-            int colNameAddOn = 1;
-            String nameAddOn = colName;
-            do {
-                nameAddOn = colName + "(" + colNameAddOn + ")";
-                LOGGER.debug("Column already exists changed to " + nameAddOn);
-                colNameAddOn++;
-            } while(inSpec.containsName(nameAddOn));
-            newColName = nameAddOn;
-        }
+        final ColumnRearranger c = new ColumnRearranger(inSpec);
+        // column specification of the appended column
         final DataColumnSpecCreator colSpecCreater = 
             new DataColumnSpecCreator(newColName, type);
-        final DataColumnSpec colSpec = colSpecCreater.createSpec();
-        LOGGER.debug(
-                "Exiting getResultColSpecs(inSpec, colName, type) " 
-                + "of class RowKeyUtil.");
-        return new DataColumnSpec[] {colSpec};
+        final DataColumnSpec newColSpec = colSpecCreater.createSpec();
+        // utility object that performs the calculation
+        final CellFactory factory = new SingleCellFactory(newColSpec) {
+            @Override
+            public DataCell getCell(final DataRow row) {
+                return row.getKey().getId();
+            }
+        };
+        c.append(factory);
+        return c;
     }
-
-    /**
-     * @see org.knime.base.data.append.column.
-     * AppendedCellFactory#getAppendedCell(org.knime.core.data.DataRow)
-     */
-    public DataCell[] getAppendedCell(final DataRow row) {
-        return new DataCell[] {row.getKey().getId()};
-    }
-
+    
+    
     /**
      * <p>Replaces the row key by the values of the column with the given name
      * and appends a new column with the old key values if the 
@@ -164,7 +147,7 @@ public class RowKeyUtil implements AppendedCellFactory {
             new HashMap<String, MutableInteger>(totalNoOfRows);
         final double progressPerRow = 1.0 / totalNoOfRows;
         //update the progress monitor every percent
-        final int checkPoint = Math.max((totalNoOfRows  / 100), 1);
+        final int checkPoint = Math.max((totalNoOfRows  / 1000), 1);
         int rowCounter = 0;
         exec.setProgress(0.0, "Processing data...");
         m_missingValueCounter = 0;
@@ -229,8 +212,8 @@ public class RowKeyUtil implements AppendedCellFactory {
             final DataCell newKeyVal = new StringCell(key);
             final DefaultRow newRow = new DefaultRow(newKeyVal, cells);
             newContainer.addRowToTable(newRow);
+            exec.checkCanceled();
             if (rowCounter % checkPoint == 0) {
-                exec.checkCanceled();
                 exec.setProgress(progressPerRow * rowCounter, 
                         rowCounter + " rows of " + totalNoOfRows 
                         + " rows processed.");
