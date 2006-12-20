@@ -157,6 +157,8 @@ public class KnnNodeModel extends NodeModel {
             m_settings.classColumn(colSpec.getName());
             setWarningMessage("Auto-selected column '" + colSpec.getName()
                     + "' as class column.");
+            classColIndex =
+                inSpecs[0].findColumnIndex(m_settings.classColumn());
         }
 
         List<Integer> featureColumns = new ArrayList<Integer>();
