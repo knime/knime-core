@@ -9,19 +9,11 @@
 		alt-style="css/root_swt.properties" style="css/root.css" 
 		id="root" style-id="page">
 
-		<!--
-    	<title style-id="intro-header">Welcome to KNIME - the Konstanz Information Miner</title>
-    	-->
     	
 		<group id="links-background">
 		<group id="page-links">
 		<anchor id="beginAnchor"/>
 
-		<!--link label="Overview" url="http://org.eclipse.ui.intro/showPage?id=overview" 
-				id="overview" style-id="left">
-				<img id="overview_img" style-id="content-img" src="css/graphics/icons/etool/overview72.gif" alt="Overview"/>
-          		<text>Display a short overview of the Konstanz Information Miner Workbench</text>
-        	</link-->
 			
 			<link label="KNIME Help Center" url="http://org.eclipse.ui.intro/showHelp" 
 				id="help" style-id="left">
@@ -30,16 +22,17 @@
         	</link>
         	
         	<link label="Install additional features..." url="http://org.eclipse.ui.intro/runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.InvokeInstallSiteAction" 
-				id="newProject" style-id="right">
-				<img id="newProject_img" style-id="content-img" src="css/graphics/icons/etool/overview72.gif" alt="New Project"/>
-          		<text>Opens the install wizard to install additional KNIME features.</text>
+				id="Update" style-id="right">
+				<img id="newProject_img" style-id="content-img" src="css/graphics/icons/update.png" alt="Update"/>
+          		<text>Open the install wizard to install additional KNIME features.
+          		(Weka, R-integration, Chemistry-extension (CDK), ...)</text>
         	</link>
         	
-        	<!--link label="Go to KNIME..." url="http://org.eclipse.ui.intro/runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.CloseIntroPage" 
-				id="newProject" style-id="right">
-				<img id="newProject_img" style-id="content-img" src="css/graphics/icons/etool/overview72.gif" alt="New Project"/>
-          		<text>Closes this intro page and starts KNIME.</text>
-        	</link-->
+        	<link label="Go to KNIME..." url="http://org.eclipse.ui.intro/runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.CloseIntroPage" 
+				id="Launch" style-id="right">
+				<img id="newProject_img" style-id="content-img" src="css/graphics/icons/launch.png" alt="Launch"/>
+          		<text>Close this intro page and go to KNIME workbench.</text>
+        	</link>
 			
 			<!--link label="Create a new project..." 
 

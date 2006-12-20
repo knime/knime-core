@@ -144,7 +144,7 @@ body, .page{
 .page { 
 	min-height : 475px;
 	background-image : url(graphics/contentpage/background.jpg);
-	background-repeat : repeat-x;
+	background-repeat : no-repeat;
 	background-position : top left;
 }
 

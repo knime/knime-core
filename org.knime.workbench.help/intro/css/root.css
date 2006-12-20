@@ -6,28 +6,32 @@
 	font-size : 18pt;
 }
 #page-links a .link-label, #action-links a .link-label {
-	font-size : 13pt;	font-weight : 600;	color : #E5E5E5;
+	font-size : 13pt;	font-weight : 600;	color : #000000;
 }
 #page-links a p .text, #action-links a p .text {
-	font-size : 13pt;	font-weight : 500;	color : #E5E5E5;
+	font-size : 13pt;	font-weight : 500;	color : #000000;
 }
 /*
  * Set up the content for the root page.
  */
 body {
 	min-width : 770px;	/* since IE doesn't support min-width, use expression */
-	width:expression(document.body.clientWidth < 770? "770px": "auto" );	background-image : url(graphics/rootpage/background.jpg);	background-repeat : no-repeat;	background-position : top left;	background-color : #7169D1;
+	width:expression(document.body.clientWidth < 770? "770px": "auto" );	background-image : url(graphics/rootpage/background.jpg);	background-repeat : no-repeat;	background-position : top left;	background-color : #FFD700;
 }
+
 #root {
-	background-image : url(graphics/rootpage/brandmark_new.bmp);	background-repeat : no-repeat;	background-position : bottom left;	min-height : 450px;	height : 100%;	height : expression(document.body.clientHeight < 450? "450px": "100%" );
+	background-image : url(graphics/rootpage/label.jpg);	background-repeat : no-repeat;	background-position : bottom left;	min-height : 560px;	height : 100%;	height : expression(document.body.clientHeight < 560? "560px": "100%" );
 }
+
 /* 
  * Set up the navigation bar.  It should be centered in the middle
  * of the page
- */
-#links-background {
-	background-image : url(graphics/rootpage/dots.gif);	background-repeat : repeat-x;	width : 100%;	height : 177px;	margin-top : 18%;	margin-bottom : auto;	text-align : center;
-}
+ *
+ * #links-background {
+ *	/* background-image : url(graphics/rootpage/dots.gif); */ *	/* background-repeat : repeat-x; */ *	width : 100%;*	height : 177px;*	margin-top : 18%;*	margin-bottom : auto;*	text-align : center;
+*}
+*/
+
 /* specify a width for Moz so we can center.  
  * **Important** If additional links are added, we will have to increase this width 
  * to accomodate them, otherwise they will wrap to a new line 
@@ -36,7 +40,7 @@ body {
 	width : 33em;	margin : 0 auto;
 }
 #page-links {
-	position : relative;	top : 50px;
+	position : relative;	top : 150;
 }
 #page-links a {
 	position : relative;	width : 86px;	margin-left : 1em;	margin-right : 1em;	text-align : center;	vertical-align : top;
