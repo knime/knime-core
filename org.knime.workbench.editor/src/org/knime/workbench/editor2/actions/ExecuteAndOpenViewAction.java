@@ -28,9 +28,9 @@ import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeStateListener;
-import org.knime.core.node.NodeStatus;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowEvent;
+import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -50,8 +50,6 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
      * unique ID for this action.
      */
     public static final String ID = "knime.action.executeandopenview";
-
-    private IAction m_viewAction;
 
     /**
      * @param editor The workflow editor
@@ -146,22 +144,9 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
             return;
         }
 
-        boolean openEmbedded =
-                KNIMEUIPlugin.getDefault().getPreferenceStore().getString(
-                        PreferenceConstants.P_CHOICE_VIEWMODE).equals(
-                        PreferenceConstants.P_CHOICE_VIEWMODE_VIEW);
-
         LOGGER.debug("Executing and opening view for one node");
 
         final NodeContainer cont = nodeParts[0].getNodeContainer();
-
-        // set the appropriate action to open the view (jframe or embedded)
-        m_viewAction = null;
-        if (openEmbedded) {
-            m_viewAction = new OpenViewEmbeddedAction(cont, 0);
-        } else {
-            m_viewAction = new OpenViewAction(cont, 0);
-        }
 
         // for interruptible nodes the view is opened immediatly
         // for all other nodes the view should first opened if the execution is
@@ -171,23 +156,74 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
             // interruptible nodes are always displayed in a jframe
             cont.showView(0);
         } else {
-            cont.addListener(new NodeStateListener() {
-                public void stateChanged(final NodeStatus state, final int id) {
-                    if (state instanceof NodeStatus.EndExecute) {
-                        cont.removeListener(this);
+            // register at the node container to receive the executed event
+            // thus it is time to start the view
+            // in case a cancel event is received the listener is deregistered
+            // cont.addListener(new NodeStateListener() {
+            // public void stateChanged(final NodeStatus state, final int id) {
+            // if (state instanceof NodeStatus.EndExecute) {
+            // cont.removeListener(this);
+            // if (cont.isExecuted()) {
+            // Display.getDefault().syncExec(new Runnable() {
+            // public void run() {
+            // m_viewAction.run();
+            // };
+            //
+            // });
+            //
+            // }
+            // } else if (state instanceof NodeStatus.ExecutionCanceled) {
+            // cont.removeListener(this);
+            // }
+            // }
+            // });
+            // another listener must be registered at the workflow manager
+            // to receive also thos events from nodes that have just
+            // been queued.
+            getManager().addListener(new WorkflowListener() {
+                public void workflowChanged(final WorkflowEvent event) {
+
+                    // check if the node has finished (either executed or
+                    // removed from the queue)
+                    LOGGER.error("Event: " + event.getID() + " Node: "
+                            + cont.getID() + "node Referenz: "
+                            + System.identityHashCode(cont));
+                    if (event.getID() == cont.getID()
+                            && event instanceof WorkflowEvent.NodeFinished) {
+
+                        // if the node was successfully executed
+                        // start the view
                         if (cont.isExecuted()) {
                             Display.getDefault().syncExec(new Runnable() {
                                 public void run() {
-                                    m_viewAction.run();
+                                    // set the appropriate action to open the
+                                    // view (jframe or embedded)
+                                    boolean openEmbedded =
+                                            KNIMEUIPlugin
+                                                    .getDefault()
+                                                    .getPreferenceStore()
+                                                    .getString(
+                                                            PreferenceConstants.P_CHOICE_VIEWMODE)
+                                                    .equals(
+                                                            PreferenceConstants.P_CHOICE_VIEWMODE_VIEW);
+                                    IAction viewAction = null;
+                                    if (openEmbedded) {
+                                        viewAction =
+                                                new OpenViewEmbeddedAction(
+                                                        cont, 0);
+                                    } else {
+                                        viewAction =
+                                                new OpenViewAction(cont, 0);
+                                    }
+                                    viewAction.run();
                                 };
-
                             });
-
                         }
-                    } else if (state instanceof NodeStatus.ExecutionCanceled) {
-                        cont.removeListener(this);
+                        // in every case remove the listener
+                        getManager().removeListener(this);
                     }
                 }
+
             });
             getManager().executeUpToNode(cont.getID(), false);
         }
