@@ -21,13 +21,18 @@
  */
 package org.knime.workbench.editor2;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.mapping.ModelProvider;
 import org.eclipse.core.resources.mapping.ModelStatus;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.part.FileEditorInput;
 
 /**
  * This model provider is registered in the plugin.xml and checks if a KNIIME
@@ -57,14 +62,18 @@ public class MoveModelProvider extends ModelProvider {
      *      validateChange(org.eclipse.core.resources.IResourceDelta,
      *      org.eclipse.core.runtime.IProgressMonitor)
      */
-    public IStatus validateChange(final IResourceDelta delta, 
+    public IStatus validateChange(final IResourceDelta delta,
             final IProgressMonitor monitor) {
 
         try {
+
             // check whether this is a knime project
-            boolean existsworkflow =
+            // boolean existsworkflow =
+            // delta.getAffectedChildren()[1].getResource().getProject()
+            // .exists(new Path("workflow.knime"));
+            IFile workflowFile =
                     delta.getAffectedChildren()[1].getResource().getProject()
-                            .exists(new Path("workflow.knime"));
+                            .getFile("workflow.knime");
 
             // check whether this is a move delta
             IResourceDelta[] deltas = delta.getAffectedChildren();
@@ -77,12 +86,34 @@ public class MoveModelProvider extends ModelProvider {
                 }
             }
 
-            if (existsworkflow && moveAction) {
-                return new ModelStatus(IStatus.WARNING,
-                        ResourcesPlugin.PI_RESOURCES, getModelProviderId(),
-                        "In case the editor for this workflow is opened"
-                                + ", renaming will result in "
-                                + "inconsistant states!");
+            if (workflowFile.exists() && moveAction) {
+
+                // check if an editor is opened on this resource
+                boolean editorOpen = false;
+                IWorkbenchWindow[] windows =
+                        PlatformUI.getWorkbench().getWorkbenchWindows();
+
+                for (IWorkbenchWindow window : windows) {
+                    IWorkbenchPage[] pages = window.getPages();
+                    for (IWorkbenchPage page : pages) {
+                        IEditorPart editorPart =
+                                page.findEditor(new FileEditorInput(
+                                        workflowFile));
+
+                        if (editorPart != null) {
+                            editorOpen = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (editorOpen) {
+                    return new ModelStatus(IStatus.WARNING,
+                            ResourcesPlugin.PI_RESOURCES, getModelProviderId(),
+                            "In case the editor for this workflow is opened"
+                                    + ", renaming will result in "
+                                    + "inconsistant states!");
+                }
             }
         } catch (Throwable t) {
             // do nothing
