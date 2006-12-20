@@ -207,9 +207,14 @@ public class KnnNodeModel extends NodeModel {
                     "Reading row " + currentRow.getKey());
 
             double[] features = createFeatureVector(currentRow, featureColumns);
-            DataCell thisClassCell = currentRow.getCell(classColIndex);
-            // and finally add data
-            treeBuilder.addPattern(features, thisClassCell);
+            if (features == null) {
+                setWarningMessage("Input table contains missing values, the "
+                        + "affected rows are ignored.");
+            } else {
+                DataCell thisClassCell = currentRow.getCell(classColIndex);
+                // and finally add data
+                treeBuilder.addPattern(features, thisClassCell);
+            }
         }
 
         // and now use it to classify the test data...
@@ -333,7 +338,7 @@ public class KnnNodeModel extends NodeModel {
             final Map<Integer, Integer> firstToSecond) {
         double[] features =
                 createQueryVector(row, featureColumns, firstToSecond);
-        if (featureColumns == null) {
+        if (features == null) {
             return DataType.getMissingCell();
         }
 
