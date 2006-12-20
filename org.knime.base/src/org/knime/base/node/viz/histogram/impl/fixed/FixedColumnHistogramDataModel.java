@@ -223,6 +223,7 @@ public class FixedColumnHistogramDataModel extends AbstractHistogramDataModel {
         final int aggrColIdx = getAggregationColumnIdx();
         final AggregationMethod aggrMethod = getAggregationMethod();
         int currentRowIdx = 0;
+        boolean firstBar = true;
         for (int i = 0; i < noOfBars; i++) {
             // I have to use this rounding method to avoid problems with very
             // small intervals. If the interval is very small it could happen
@@ -230,8 +231,9 @@ public class FixedColumnHistogramDataModel extends AbstractHistogramDataModel {
             // borders
             double rightBoundary = BinningUtil.myRoundedBorders(
                     leftBoundary + binInterval, binInterval, INTERVAL_DIGITS);
-            String binCaption = 
-                BinningUtil.createBarName(leftBoundary, rightBoundary);
+            final String binCaption = BinningUtil.createBarName(
+                    firstBar, leftBoundary, rightBoundary);
+            firstBar = false;
             bar = (FixedColumnBarDataModel) getBar(binCaption);
             if (bar == null) {
                 bar = new FixedColumnBarDataModel(binCaption, xCoordColIdx, 

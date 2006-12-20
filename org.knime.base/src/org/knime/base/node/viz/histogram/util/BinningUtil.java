@@ -115,13 +115,22 @@ public final class BinningUtil {
     /**
      * Creates the name of the bin depending on the given boundaries.
      * 
+     * @param firstBar indicates if this is the first bar
      * @param leftBoundary the left boundary of the bin
      * @param rightBoundary the right boundary of the bin
      * @return the bin name
      */
-    public static String createBarName(final double leftBoundary,
-            final double rightBoundary) {
+    public static String createBarName(final boolean firstBar,
+            final double leftBoundary, final double rightBoundary) {
         StringBuffer buf = new StringBuffer();
+        //append the interval border indicator
+        if (firstBar) {
+            //closed interval -> border is included
+            buf.append("[");
+        } else {
+            //open interval -> border is excluded
+            buf.append("(");
+        }
         if ((int)leftBoundary == leftBoundary) {
             buf.append((int)leftBoundary);
         } else {
@@ -133,6 +142,8 @@ public final class BinningUtil {
         } else {
             buf.append(Double.toString(rightBoundary));
         }
+        //the interval is always closed -> border is included
+        buf.append("]");
         return buf.toString();
     }
     /**
