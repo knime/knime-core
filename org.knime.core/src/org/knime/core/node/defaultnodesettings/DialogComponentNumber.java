@@ -106,9 +106,6 @@ public class DialogComponentNumber extends DialogComponent {
             spinnerModel =
                     new SpinnerNumberModel(dblModel.getDoubleValue(), min, max,
                             stepSize);
-            m_spinner.setEditor(
-                    new JSpinner.NumberEditor(m_spinner, 
-                    "#.0################################################"));
         } else if (numberModel instanceof SettingsModelInteger) {
             SettingsModelInteger intModel = (SettingsModelInteger)numberModel;
             Comparable min = null;
@@ -125,6 +122,10 @@ public class DialogComponentNumber extends DialogComponent {
                     + "currently supported by the NumberComponent");
         }
         m_spinner = new JSpinner(spinnerModel);
+        if (numberModel instanceof SettingsModelDouble) {
+            m_spinner.setEditor(new JSpinner.NumberEditor(m_spinner,
+                    "#.0################################################"));
+        }        
         JSpinner.DefaultEditor editor =
                 (JSpinner.DefaultEditor)m_spinner.getEditor();
         editor.getTextField().setColumns(compWidth);
