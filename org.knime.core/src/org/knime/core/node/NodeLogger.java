@@ -294,10 +294,11 @@ public final class NodeLogger {
     /** Write copyright message. */
     private static void copyrightMessage() {
         NodeLogger l = getLogger(NodeLogger.class);
-        l.info("# Copyright, 2003 - 2006                                    #");
+        l.info("# Copyright, 2003 - 2007                                    #");
         l.info("# University of Konstanz, Germany.                          #");
         l.info("# Chair for Bioinformatics and Information Mining           #");
         l.info("# Prof. Dr. Michael R. Berthold                             #");
+        l.info("# and KNIME GmbH, Konstanz, Germany                         #");
         l.info("# website: http://www.knime.org                             #");
         l.info("# email: contact@knime.org                                  #");
     }
