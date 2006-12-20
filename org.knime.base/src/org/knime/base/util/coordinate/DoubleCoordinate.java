@@ -297,6 +297,9 @@ public class DoubleCoordinate extends NumericCoordinate {
                 // the former decimal correspondence
                 domainTickStep = Math.ceil(domainTickStep);
                 domainTickStep = domainTickStep * Math.pow(10, exponent);
+            } else if (domainTickStep == 0) {
+                // this can happen if the domain range is too small
+                return new CoordinateMapping[0];
             } else if (domainTickStep < 1.0) {
                 // if the domain tick step is below 1.0
                 while (domainTickStep < 1.0) {
