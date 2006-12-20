@@ -41,8 +41,8 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.StringValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -179,7 +179,7 @@ public class DomainNodeModel extends NodeModel {
             setWarningMessage(
                     "No configuration available, using auto-configuration.");
             m_minMaxCols = getAllCols(DoubleValue.class, oldSpec);
-            m_possValCols = getAllCols(StringValue.class, oldSpec);
+            m_possValCols = getAllCols(NominalValue.class, oldSpec);
             m_maxPossValues = 60;
         }
         int colCount = oldSpec.getNumColumns();

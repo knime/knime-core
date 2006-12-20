@@ -38,7 +38,7 @@ import javax.swing.SpinnerNumberModel;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.StringValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -96,7 +96,7 @@ public class DomainNodeDialogPane extends NodeDialogPane {
             throw new NotConfigurableException("No data at input.");
         }
         String[] stringCols = 
-            DomainNodeModel.getAllCols(StringValue.class, specs[0]); 
+            DomainNodeModel.getAllCols(NominalValue.class, specs[0]); 
         String[] possCols = settings.getStringArray(
                 DomainNodeModel.CFG_POSSVAL_COLS, stringCols);
         
