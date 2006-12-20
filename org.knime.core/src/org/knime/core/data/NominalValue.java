@@ -26,7 +26,7 @@ package org.knime.core.data;
 
 /**
  * Interface of a {@link org.knime.core.data.def.StringCell}, which does
- * not enforce additional functionality but indicates that cells imlementing
+ * not enforce additional functionality but indicates that cells implementing
  * this value can be used as nominal values. This allows for example to
  * avoid nominal value enumeration for data cells holding smiles.
  * 
