@@ -30,16 +30,13 @@ import java.util.Random;
 import javax.swing.SizeSequence;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
@@ -217,7 +214,24 @@ public class SampleDataNodeModel extends NodeModel {
         if (noiseFrac > 0.0) {
             colNames[overallClusterCount] = new StringCell("Noise");
         }
-        DataTable out2 = new DefaultTable(centerRows, outSpecs[1]);
+        BufferedDataContainer out2Cont = exec.createDataContainer(outSpecs[1]);
+        for (DataRow r : centerRows) {
+            out2Cont.addRowToTable(r);
+        }
+        out2Cont.close();
+        BufferedDataTable out2 = out2Cont.getTable();
+
+        /* first output (data) comes here */
+        DataColumnSpec[] colSpecs = new DataColumnSpec[spec.getNumColumns()];
+        for (int c = 0; c < colSpecs.length - 1; c++) {
+            colSpecs[c] = spec.getColumnSpec(c);
+        }
+        DataColumnSpec last = spec.getColumnSpec(colSpecs.length - 1);
+        DataColumnSpecCreator creator = new DataColumnSpecCreator(last);
+        colSpecs[colSpecs.length - 1] = creator.createSpec();
+        DataTableSpec newSpec = new DataTableSpec(colSpecs);
+        // now create the rows!
+        BufferedDataContainer container = exec.createDataContainer(newSpec);
 
         /*
          * assign attributes to patterns
@@ -226,17 +240,20 @@ public class SampleDataNodeModel extends NodeModel {
         int patternsPerCluster = (m_patCount - noise) / optimalClusters.length;
         int patternCount = patternsPerCluster * optimalClusters.length;
         noise = noiseFrac > 0.0 ? m_patCount - patternCount : 0;
-        double[][] dblData = new double[patternCount + noise][];
-        DataCell[] clusterMembership = new StringCell[patternCount + noise];
 
         int pattern = 0;
+        double totalCount = m_patCount;
         for (int c = 0; c < optimalClusters.length; c++) { // all clusters
             double[] centers = optimalClusters[c];
             // patterns in cluster
             for (int p = 0; p < patternsPerCluster; p++) {
-                dblData[pattern] = fill(rand, centers);
-                clusterMembership[pattern] = (overallClusterCount > 0 ? colNames[c]
-                        : DataType.getMissingCell());
+                double[] d = fill(rand, centers);
+                DataCell cl = (overallClusterCount > 0 
+                        ? colNames[c] : DataType.getMissingCell());
+                DataRow r = createRow("Row_" + pattern, d, cl);
+                container.addRowToTable(r);
+                exec.setProgress(pattern / totalCount, "Added row " + pattern);
+                exec.checkCanceled();
                 pattern++;
             }
         }
@@ -245,43 +262,29 @@ public class SampleDataNodeModel extends NodeModel {
         Arrays.fill(noiseCenter, Double.NaN);
         // draw noise patterns
         for (int i = 0; i < noise; i++) {
-            dblData[pattern + i] = fill(rand, noiseCenter);
-            clusterMembership[pattern + i] = colNames[colNames.length - 1];
+            int index = i + pattern;
+            double[] d = fill(rand, noiseCenter);
+            DataCell cl = colNames[colNames.length - 1];
+            DataRow r = createRow("Row_" + index, d, cl);
+            container.addRowToTable(r);
+            exec.setProgress(index / totalCount, "Added row " + index);
+            exec.checkCanceled();
         }
-
-        // we know all possible values for the cluster membership column:
-        // set it for use in a color manager, e.g.
-        DataColumnSpec[] colSpecs = new DataColumnSpec[spec.getNumColumns()];
-        for (int c = 0; c < colSpecs.length - 1; c++) {
-            colSpecs[c] = spec.getColumnSpec(c);
-        }
-        DataColumnSpec last = spec.getColumnSpec(colSpecs.length - 1);
-        DataColumnSpecCreator creator = new DataColumnSpecCreator(last);
-        creator.setDomain(new DataColumnDomainCreator(colNames).createDomain());
-        colSpecs[colSpecs.length - 1] = creator.createSpec();
-        DataTableSpec newSpec = new DataTableSpec(colSpecs);
-        // now create the rows!
-        BufferedDataContainer container = exec.createDataContainer(newSpec);
-        try {
-            for (int r = 0; r < dblData.length; r++) {
-                DataCell[] cells = new DataCell[dimensions + 1];
-                DataCell key = new StringCell("Row_" + r);
-                for (int d = 0; d < dimensions; d++) {
-                    cells[d] = new DoubleCell(dblData[r][d]);
-                }
-                cells[dimensions] = clusterMembership[r];
-                container.addRowToTable(new DefaultRow(key, cells));
-                exec.setProgress((r + 1) / (double)dblData.length, "Added row "
-                        + (r + 1));
-                exec.checkCanceled();
-            }
-        } finally { // always close the output stream.
-            container.close();
-        }
+        container.close();
         BufferedDataTable outTable = container.getTable();
-        return new BufferedDataTable[]{outTable,
-                exec.createBufferedDataTable(out2, exec)};
+        return new BufferedDataTable[]{outTable, out2};
     } // execute(DataTable[])
+    
+    private static DataRow createRow(final String key, final double[] d,
+            final DataCell cl) {
+        DataCell[] cells = new DataCell[d.length + 1];
+        DataCell rkey = new StringCell(key);
+        for (int i = 0; i < d.length; i++) {
+            cells[i] = new DoubleCell(d[i]);
+        }
+        cells[d.length] = cl;
+        return new DefaultRow(rkey, cells);
+    }
 
     /**
      * @see NodeModel#reset()
