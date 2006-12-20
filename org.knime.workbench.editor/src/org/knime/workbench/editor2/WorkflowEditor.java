@@ -755,7 +755,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             // the static block needs to be executed, access
             // RepositoryManager.INSTANCE
             if (RepositoryManager.INSTANCE == null) {
-                LOGGER.fatal("Dummy line, never printed");
+                LOGGER.fatal("Repository Manager Instance must not be null!");
             }
             assert m_manager == null;
 
