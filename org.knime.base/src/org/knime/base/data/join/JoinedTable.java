@@ -252,7 +252,7 @@ public class JoinedTable implements DataTable {
             for (int i = 0; i < left.getNumColumns(); i++) {
                 leftCols[i] = left.getColumnSpec(i);
             }
-            for (int i = 0; i < right.getNumColumns(); i++) {
+            for (int i = 0; i < newRight.getNumColumns(); i++) {
                 rightCols[i] = newRight.getColumnSpec(i);
             }
         } else if (METHOD_APPEND_SUFFIX.equals(duplicateMethod)) {
