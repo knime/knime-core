@@ -438,8 +438,14 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     
     
     private DataTableSpec createNumericOutputSpec(final DataTableSpec spec) {
+        String name;
+        int i = 0;
+        do {
+            name = "BitVectors" + (i == 0 ? "" : "_" + i); 
+            i++;
+        } while (spec.containsName(name));
         DataColumnSpecCreator creator = new DataColumnSpecCreator(
-                "BitVectors", BitVectorCell.TYPE);
+                name, BitVectorCell.TYPE);
         DataTableSpec newSpec = new DataTableSpec(creator.createSpec()); 
         if (m_replace) {
             return newSpec;
