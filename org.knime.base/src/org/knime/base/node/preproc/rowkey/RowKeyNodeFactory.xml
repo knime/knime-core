@@ -11,48 +11,47 @@
 	<fullDescription>
 		<intro>		
 		<p>This node can be used to replace the RowID of the input data with 
-		the values of another column (by converting the values to String). The 
-		user has additional options to ensure the uniqueness and to handle 
+		the values of another column (by converting the values to a string). The 
+		user has additional options to ensure uniqueness and to handle 
 		missing values.</p>
 		<p>
-		It can also be used to create a new column which contains the RowID
-		as value.</p>
+		It can also be used to create a new column, which contains the RowID
+		as a value.</p>
 		<p>If both options are selected the node appends a new column
 		with the values of the current RowID to the table and replaces the 
 		current RowID with the values of the selected column.</p>
-		<p><b>Notice: Highlighting doesn't work across this node.</b></p>
+		<p><b>Note: Highlighting does not work across this node.</b></p>
 		</intro>
 		<option name="Replace RowID with selected column values">
 		    If selected the node replaces each RowID with the corresponding
-		    String value of the selected column.
+		    string value of the selected column.
 	    </option>
 		<option name="New RowID column: ">
-			The column which should replace the current RowID.
+			The column to replace the current RowID.
 	    </option>
 		<option name="Ensure uniqueness">
-			If checked the node ensures uniqueness by appending to duplicates 
-			a counter (x) where x gets increments for each appearance.
+			If checked the node ensures uniqueness by appending a counter (x) 
+			to duplicates where x is incremented for each appearance.
 	    </option>
 		<option name="Handle missing values">
 			All missing values are replaced with '?' if this check box is ticked.
-			If multiple missing values are found you might want to check the
-			'Ensure uniqueness' check box as well to handle the duplicates.
+			We recommend activating the 'Ensure uniqueness' check box to handle any duplicate missing values.
 	    </option>
 		<option name="Create new column with the RowID values">
-			If selected the node creates a new column with the value of the 
+			If this is selected the node creates a new column with the value of the 
 			current RowID.
 	    </option>
 		<option name="New column name: ">
-			The name of the new column to append.
+			The name of the new column that is being added to the table.
 	    </option>
 	</fullDescription>
 	
 	<ports>
 		<dataIn index="0" name="Data to process">
-			The data table that should be processed.
+			The data table to be processed.
 		</dataIn>
 		<dataOut index="0" name="Processed data">
-			Data with the row ID values as column and/or a new row IDs
+			Data with the replaced RowID and/or a new column with the current RowID values.
 		</dataOut>
 	</ports>	
 </knimeNode>
