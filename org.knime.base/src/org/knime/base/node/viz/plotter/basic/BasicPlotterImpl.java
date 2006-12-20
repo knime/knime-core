@@ -117,6 +117,7 @@ public class BasicPlotterImpl extends BasicPlotter {
      */
     @Override
     public void reset() {
+        super.reset();
         setXAxis(null);
         setYAxis(null);
     }
