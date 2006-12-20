@@ -71,12 +71,6 @@ public final class RepositoryManager {
 
     // set the eclipse class creator into the static global class creator class
     static {
-        try {
-            Platform.getBundle("org.knime.deprecated").start();
-        } catch (Throwable ex) {
-            LOGGER.warn("Could not load org.knime.deprecated plugin. The "
-                    + "deprecated nodes will not be available.", ex);
-        }
         GlobalClassCreator.setClassCreator(new EclipseClassCreator(ID_NODE));
     }
 

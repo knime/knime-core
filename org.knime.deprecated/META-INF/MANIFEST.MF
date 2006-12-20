@@ -7,8 +7,10 @@ Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Ko
 Bundle-Localization: plugin
 Require-Bundle: org.knime.workbench.repository,
  org.knime.core,
- org.knime.base
+ org.knime.base,
+ org.eclipse.core.runtime
 Export-Package: org.knime.base.node.mine.scorer,
  org.knime.base.node.preproc.nominal,
  org.knime.base.node.preproc.normalize
 Eclipse-LazyStart: false
+Bundle-Activator: org.knime.deprecated.DeprecatedPlugin

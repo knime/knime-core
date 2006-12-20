@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IPluginDescriptor;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.eclipseUtil.ClassCreator;
+import org.knime.core.node.NodeLogger;
 import org.osgi.framework.Bundle;
 
 
@@ -48,6 +49,8 @@ import org.osgi.framework.Bundle;
  * @author Florian Georg, University of Konstanz
  */
 public class EclipseClassCreator implements ClassCreator {
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(EclipseClassCreator.class);
 
     private IExtension[] m_extensions;
 
@@ -123,8 +126,24 @@ public class EclipseClassCreator implements ClassCreator {
                 // ignore
             }
         }
-        return clazz;
 
+        if (clazz == null) {
+            // also check the deprecated plugin; this is not contained
+            // in the extensions and thus not covered by the above loop
+            Bundle p;
+            try {
+                p = Platform.getBundle("org.knime.deprecated");                
+            } catch (Throwable ex) {
+                LOGGER.warn("Could not load org.knime.deprecated plugin. The "
+                        + "deprecated nodes will not be available.", ex);
+                return clazz;
+            }
+            try {
+                clazz = p.loadClass(className);
+            } catch (Exception ex) { /* ignore it */ }
+        }
+
+        return clazz;
     }
 
 }
