@@ -185,9 +185,9 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
 
                     // check if the node has finished (either executed or
                     // removed from the queue)
-                    LOGGER.error("Event: " + event.getID() + " Node: "
-                            + cont.getID() + "node Referenz: "
-                            + System.identityHashCode(cont));
+//                    LOGGER.error("Event: " + event.getID() + " Node: "
+//                            + cont.getID() + "node Referenz: "
+//                            + System.identityHashCode(cont));
                     if (event.getID() == cont.getID()
                             && event instanceof WorkflowEvent.NodeFinished) {
 
