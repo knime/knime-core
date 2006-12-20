@@ -71,7 +71,7 @@ public final class KNIMEConstants {
     public static final String WELCOME_MESSAGE =
         "*******************************************************************\n"
       + "*** Welcome to KNIME v1.2.0pre - the Konstanz Information Miner ***\n"
-      + "*** Copyright, 2003 - 2006, University of Konstanz, Germany.    ***\n"
+      + "*** Copyright, 2003-2007, Uni Konstanz and KNIME GmbH, Germany  ***\n"
       + "*******************************************************************\n";
 
     /** Path to the <i>knime.png</i> icon. */
