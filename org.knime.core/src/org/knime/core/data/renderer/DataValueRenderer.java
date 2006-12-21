@@ -28,6 +28,8 @@ import java.awt.Dimension;
 import javax.swing.ListCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
+import org.knime.core.data.DataColumnSpec;
+
 /**
  * General interface for classes that are able to render special derivatives of
  * <code>DataValue</code>. 
@@ -69,5 +71,21 @@ public interface DataValueRenderer extends TableCellRenderer, ListCellRenderer {
      * @return A component displaying the content of <code>val</code>.
      */
     Component getRendererComponent(final Object val);
+    
+    /** Is this renderer instance able to render the content of the column
+     * given by <code>spec</code>. Most implementations will return 
+     * <code>true</code> here but some may require some properties to be
+     * set, for instance a molecule renderer needs to have 2D coordinates
+     * in the column.
+     * 
+     * <p>Note: This method is not used to test whether arbitrary types
+     * can be renderer by this renderer instance but rather if the specific
+     * runtime column spec (containing the type) is appropriate, for instance
+     * contains domain information or certain properties are set.
+     * @param spec The column spec to check.
+     * @return <code>true</code> if this renderer can be chosen to render
+     * the content of the column.
+     */
+    boolean accepts(final DataColumnSpec spec);
 
 }

@@ -31,11 +31,13 @@ import java.util.List;
 import javax.swing.JList;
 import javax.swing.JTable;
 
+import org.knime.core.data.DataColumnSpec;
+
 /**
  * Container for <code>DataValueRendererFamily</code> that is by itself a 
- * renderer family (yes, now it becomes complicated). This class is used in 
- * <code>DataType</code> when all available native renderer are gathered
- * and returned as DataValueRendererFamily. 
+ * renderer family. This class is used in <code>DataType</code> when all 
+ * available native renderer are gathered and returned as 
+ * DataValueRendererFamily. 
  * 
  * <p><strong>Note:</strong>This is a helper class that shouldn't be 
  * any useful for you.
@@ -132,5 +134,27 @@ public class SetOfRendererFamilies implements DataValueRendererFamily {
     public Component getRendererComponent(final Object val) {
         return m_active.getRendererComponent(val);
     }
+
+    /**
+     * @see DataValueRendererFamily#accepts(String, DataColumnSpec)
+     */
+    public boolean accepts(final String desc, final DataColumnSpec spec) {
+        for (DataValueRendererFamily e : m_list) {
+            if (Arrays.asList(e.getRendererDescriptions()).contains(desc)) {
+                return e.accepts(desc, spec);
+            }
+        }
+        throw new IllegalArgumentException(
+                "Invalid renderer description: " + desc);
+    }
+
+    /**
+     * @see DataValueRenderer#accepts(DataColumnSpec)
+     */
+    public boolean accepts(final DataColumnSpec spec) {
+        return m_active.accepts(spec);
+    }
+    
+    
 
 }

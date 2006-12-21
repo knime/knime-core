@@ -424,6 +424,12 @@ public class TableContentView extends JTable {
         aColumn.setHeaderValue(headerValue);
         DataValueRendererFamily renderer = 
             headerValue.getType().getRenderer(headerValue);
+        for (String s : renderer.getRendererDescriptions()) {
+            if (renderer.accepts(s, headerValue)) {
+                renderer.setActiveRenderer(s);
+                break;
+            }
+        }
         aColumn.setCellRenderer(renderer);
         super.addColumn(aColumn);
     }
@@ -496,9 +502,10 @@ public class TableContentView extends JTable {
         // try to figure out the set of available renderers 
         TableCellRenderer curRen = tableColumn.getCellRenderer();
         String renderID = null; 
+        DataValueRendererFamily renFamily = null;
         // should always be true unless someone overrides addColumn
         if (curRen instanceof DataValueRendererFamily) { 
-            DataValueRendererFamily renFamily = (DataValueRendererFamily)curRen;
+            renFamily = (DataValueRendererFamily)curRen;
             renderID = renFamily.getDescription();
         }
         String[] availRender = getAvailableRenderers(column);
@@ -516,6 +523,8 @@ public class TableContentView extends JTable {
             for (int i = 0; i < availRender.length; i++) {
                 String thisID = availRender[i];
                 menuItem = new JRadioButtonMenuItem(thisID);
+                menuItem.setEnabled(renFamily != null 
+                        && renFamily.accepts(thisID, spec));
                 buttonGroup.add(menuItem);
                 menuItem.setActionCommand(thisID);
                 menuItem.addActionListener(actionListener);

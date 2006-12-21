@@ -32,6 +32,7 @@ import javax.swing.JList;
 import javax.swing.JTable;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.NodeLogger;
 
 
@@ -236,5 +237,26 @@ public class DefaultDataValueRendererFamily implements DataValueRendererFamily {
      */
     public Component getRendererComponent(final Object val) {
         return m_active.getRendererComponent(val);
+    }
+    
+    /**
+     * Delegates to renderer.
+     * @see DataValueRendererFamily#accepts(String, DataColumnSpec)
+     */
+    public boolean accepts(final String desc, final DataColumnSpec spec) {
+        for (DataValueRenderer r : m_renderers) {
+            if (r.getDescription().equals(desc)) {
+                return r.accepts(spec);
+            }
+        }
+        throw new IllegalArgumentException(
+                "Unknown renderer description: " + desc);
+    }
+    
+    /**
+     * @see DataValueRenderer#accepts(DataColumnSpec)
+     */
+    public boolean accepts(final DataColumnSpec spec) {
+        return m_active.accepts(spec);
     }
 }
