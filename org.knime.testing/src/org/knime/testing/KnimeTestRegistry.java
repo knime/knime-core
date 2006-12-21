@@ -77,7 +77,10 @@ public class KnimeTestRegistry extends TestSuite {
 
     private static class DirectoryFilter implements FileFilter {
 
-        public boolean accept(File pathname) {
+        /**
+         * @see java.io.FileFilter#accept(java.io.File)
+         */
+        public boolean accept(final File pathname) {
             return pathname.isDirectory();
         }
 
