@@ -49,9 +49,6 @@ public class KnimeTestRegistry extends TestSuite {
      */
     private static String m_pattern = null;
     
-    private static final String TEST_REPOSITORY_DIR = 
-        "../../../testWorkflows";
-
     /**
      * 
      * @return all registered testcases.
@@ -104,9 +101,22 @@ public class KnimeTestRegistry extends TestSuite {
         }
         try {
             
+            // the workflows to run are at the root dir of the project
+            final String TEST_REPOSITORY_DIR = "testWorkflows";
+            final String PROJECT_DIR = "org.knime.testing";
+            
             File testWorkflowsDir =
-                    new File(KnimeTestRegistry.class.getResource(TEST_REPOSITORY_DIR)
-                            .toURI());
+                new File(KnimeTestRegistry.class.getResource(".").toURI());
+            // go down the dir tree until we are at the src root
+            while (!testWorkflowsDir.getName().equalsIgnoreCase(PROJECT_DIR)) {
+                testWorkflowsDir = testWorkflowsDir.getParentFile();
+                assert testWorkflowsDir != null : "Couldn't find the project "
+                    + "dir '" + PROJECT_DIR 
+                    + "' (on my search of the test repository. Did you "
+                    + "rename the project?!?";
+            }
+            testWorkflowsDir = new File(testWorkflowsDir, TEST_REPOSITORY_DIR);
+            
             if (!testWorkflowsDir.isDirectory()) {
                 throw new IllegalStateException(testWorkflowsDir
                         .getAbsolutePath()
