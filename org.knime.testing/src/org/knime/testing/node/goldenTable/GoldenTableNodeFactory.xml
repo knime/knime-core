@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./goldenTable.png" type="Manipulator">
+	<name>Golden Table</name>
+	
+	<shortDescription>
+		Stores the golden DataTable in a regression test.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+		<p>This node is used in regression tests to store the golden output
+		   table of the connected predecessor node. The node just forwards the
+		   table at its input port to its output port. Keep this node executed 
+		   when saving the test flow. Use it to preserve a good/golden/correct
+		   table that you then feed into the table differ node to compare it 
+		   with the table produced during the regression test run.
+		   </p>
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Golden Table In">The table to store for future
+		regression runs</dataIn>
+		<dataOut index="0" name="Preserved Golden Table ">The table preserved 
+		from a good run</dataOut>
+	</ports>	
+</knimeNode>

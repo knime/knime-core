@@ -24,6 +24,8 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.swing.JOptionPane;
+
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.testing.core.KnimeTestCase;
@@ -36,13 +38,19 @@ import junit.framework.TestSuite;
  * @author Fabian Dill, University of Konstanz
  */
 public class KnimeTestRegistry extends TestSuite {
-    
-    private static NodeLogger m_logger = NodeLogger
-        .getLogger(KnimeTestRegistry.class);
+
+    private static NodeLogger m_logger =
+            NodeLogger.getLogger(KnimeTestRegistry.class);
 
     private static Collection<KnimeTestCase> m_registry;
+
+    /**
+     * pattern (regexp) used to select testcases to run 
+     */
+    private static String m_pattern = null;
     
-    private static final String TEST_DIR = "testWorkflows";
+    private static final String TEST_REPOSITORY_DIR = 
+        "../../../testWorkflows";
 
     /**
      * 
@@ -88,18 +96,25 @@ public class KnimeTestRegistry extends TestSuite {
 
     static {
         m_registry = new ArrayList<KnimeTestCase>();
-
+        if ("true".equalsIgnoreCase(System.getProperty("interactive"))) {
+            m_pattern = JOptionPane.showInputDialog(null, 
+                    "Enter name (regular expression) of testcase(s) to run:");
+        } else {
+            m_pattern = System.getProperty("testcase");
+        }
         try {
-            File testWorkflowsDir = new File(KnimeTestRegistry.class
-                    .getResource(TEST_DIR).toURI());
+            
+            File testWorkflowsDir =
+                    new File(KnimeTestRegistry.class.getResource(TEST_REPOSITORY_DIR)
+                            .toURI());
             if (!testWorkflowsDir.isDirectory()) {
                 throw new IllegalStateException(testWorkflowsDir
                         .getAbsolutePath()
                         + " is no directory");
             }
             searchDirectory(testWorkflowsDir);
-//            Collection c = new ArrayList<KnimeTestCase>(m_registry);
-//            System.out.println(c.toString());
+            // Collection c = new ArrayList<KnimeTestCase>(m_registry);
+            // System.out.println(c.toString());
         } catch (URISyntaxException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -114,13 +129,21 @@ public class KnimeTestRegistry extends TestSuite {
      * @param dir - the basedir for the search
      */
     private static void searchDirectory(File dir) {
+
         File[] workflowFile = dir.listFiles(new WorkflowFileFilter());
+
         if (workflowFile != null && workflowFile.length == 1) {
-            KnimeTestCase testCase = new KnimeTestCase(workflowFile[0]);
-            String longName = workflowFile[0].getParent();
-            int idx = longName.lastIndexOf(File.separator);
-            testCase.setName(longName.substring(idx+1, longName.length()));
-            m_registry.add(testCase);
+            String name = workflowFile[0].getParentFile().getName();
+            if ((m_pattern == null) || (m_pattern.length() < 1)
+                    || name.matches(m_pattern)) {
+                KnimeTestCase testCase = new KnimeTestCase(workflowFile[0]);
+                testCase.setName(name);
+                m_registry.add(testCase);
+            } else {
+                m_logger.info("Skipping testcase '" + name + "' (doesn't match"
+                        + "pattern '" + m_pattern + "').");
+            }
+
         } else {
             dir.listFiles();
             File[] fileList = dir.listFiles(new DirectoryFilter());

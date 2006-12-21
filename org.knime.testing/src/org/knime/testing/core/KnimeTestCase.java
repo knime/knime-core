@@ -25,6 +25,7 @@ import java.util.Collection;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
+import org.apache.log4j.Level;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -50,6 +51,9 @@ public class KnimeTestCase extends TestCase {
 
     private WorkflowManager m_manager;
 
+    // stores error messages seen during the run
+    private TestingAppender m_errorAppender;
+    
     /**
      * 
      * @param workflowFile
@@ -73,6 +77,7 @@ public class KnimeTestCase extends TestCase {
     public void setUp() throws InvalidSettingsException,
             CanceledExecutionException, IOException, WorkflowException {
         // start here the workflow
+        m_errorAppender = new TestingAppender(Level.ERROR, Level.ERROR, 100);
         m_manager =
                 new WorkflowManager(m_knimeSettings,
                         new DefaultNodeProgressMonitor());
@@ -141,6 +146,20 @@ public class KnimeTestCase extends TestCase {
      */
     @Override
     public void tearDown() {
+        
+        // disconnect the appender to not catch ny message anymore
+        m_errorAppender.disconnect();
+        
+        if (m_errorAppender.getMessageCount() > 0) {
+            String[] errMsgs = m_errorAppender.getReceivedMessages();
+            for (String msg : errMsgs) {
+                logger.error("Got error: " + msg);
+            }
+            logger.error("Got ERROR messages during run -> FAILING! "
+                    + "Check the log file.");
+        }
+        
+        Assert.assertEquals(m_errorAppender.getMessageCount(), 0); 
     }
 
 }

@@ -16,9 +16,21 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            category-path="/experimental"
+            category-path="/testing"
             factory-class="org.knime.testing.node.differNode.DiffNodeFactory"
             id="org.knime.testing.differNode.DiffNodeFactory"/>
+      <node
+            category-path="/testing"
+            factory-class="org.knime.testing.node.goldenTable.GoldenTableNodeFactory"
+            id="org.knime.testing.node.goldenTable.GoldenTableNodeFactory"/>
+   </extension>
+   <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            icon="icons/testing.png"
+            level-id="testing"
+            name="testing"
+            path="/"/>
    </extension>
    
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+  <entry key="name" type="xstring" value="Diff"/>
+  <entry key="isConfigured" type="xboolean" value="true"/>
+  <entry key="isExecuted" type="xboolean" value="false"/>
+  <config key="model">
+    <entry key="TESTEVALUATOR" type="xstring" value="NegativeDiffer"/>
+  </config>
+  <config key="spec_files"/>
+</config>

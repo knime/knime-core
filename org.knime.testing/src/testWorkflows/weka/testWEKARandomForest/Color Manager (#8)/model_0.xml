@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "de/unikn/knime/core/node/config/XMLConfig.dtd">
+<config key="predictor">
+  <entry key="selected_column" type="xstring" value="Col18"/>
+  <entry key="is_nominal" type="xboolean" value="true"/>
+  <entry key="van" type="xint" value="-65536"/>
+  <entry key="saab" type="xint" value="-8323328"/>
+  <entry key="bus" type="xint" value="-16711681"/>
+  <entry key="opel" type="xint" value="-8388353"/>
+  <config key="values">
+    <entry key="array-size" type="xint" value="4"/>
+    <config key="0">
+      <entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+      <config key="org.knime.core.data.def.StringCell">
+        <entry key="StringCell" type="xstring" value="van"/>
+      </config>
+    </config>
+    <config key="1">
+      <entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+      <config key="org.knime.core.data.def.StringCell">
+        <entry key="StringCell" type="xstring" value="saab"/>
+      </config>
+    </config>
+    <config key="2">
+      <entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+      <config key="org.knime.core.data.def.StringCell">
+        <entry key="StringCell" type="xstring" value="bus"/>
+      </config>
+    </config>
+    <config key="3">
+      <entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+      <config key="org.knime.core.data.def.StringCell">
+        <entry key="StringCell" type="xstring" value="opel"/>
+      </config>
+    </config>
+  </config>
+</config>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+  <entry key="name" type="xstring" value="HyperPipes"/>
+  <entry key="isConfigured" type="xboolean" value="true"/>
+  <entry key="isExecuted" type="xboolean" value="false"/>
+  <config key="model">
+    <entry key="ClassColumn" type="xstring" value="Col16"/>
+    <config key="wekaoptions">
+      <entry key="array-size" type="xint" value="0"/>
+    </config>
+  </config>
+  <config key="spec_files">
+    <entry key="output_0" type="xstring" value="spec_0.xml"/>
+  </config>
+</config>
