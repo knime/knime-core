@@ -21,6 +21,8 @@
  */
 package org.knime.core.data.renderer;
 
+import org.knime.core.data.DataColumnSpec;
+
 /**
  * Container for different
  * {@link org.knime.core.data.renderer.DataValueRenderer}s which can be
@@ -70,4 +72,15 @@ public interface DataValueRendererFamily extends DataValueRenderer {
      * @param description The ID of the renderer to be used.
      */
     void setActiveRenderer(final String description);
+    
+    /** 
+     * Is the renderer with the given description able to render the
+     * content of <code>spec</code>.
+     * @param desc The description of the renderer.
+     * @param spec The column spec to check.
+     * @return If the renderer can render the column with the given spec.
+     * @see DataValueRenderer#accepts(DataColumnSpec)
+     * @throws IllegalArgumentException If the description is unknown.
+     */
+    boolean accepts(final String desc, final DataColumnSpec spec);
 }

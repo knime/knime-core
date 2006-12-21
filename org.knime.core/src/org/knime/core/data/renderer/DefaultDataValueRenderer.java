@@ -108,5 +108,13 @@ public class DefaultDataValueRenderer
     protected DataColumnSpec getColSpec() {
         return m_colSpec;
     }
+
+    /**
+     * Returns always <code>true</code>.
+     * @see DataValueRenderer#accepts(DataColumnSpec)
+     */
+    public boolean accepts(final DataColumnSpec spec) {
+        return true;
+    }
     
 }
