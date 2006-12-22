@@ -107,6 +107,29 @@ public final class RepositoryManager {
         return extensions;
     }
 
+    public static void removeDuplicatesFromCategories(
+            ArrayList<IConfigurationElement> allElements) {
+
+        // brut force search
+        for (int i = 0; i < allElements.size(); i++) {
+            for (int j = allElements.size() - 1; j > i; j--) {
+
+                String pathOuter = allElements.get(i).getAttribute("path");
+                String levelIdOuter =
+                        allElements.get(i).getAttribute("level-id");
+                String pathInner = allElements.get(j).getAttribute("path");
+                String levelIdInner =
+                        allElements.get(j).getAttribute("level-id");
+
+                if (pathOuter.equals(pathInner)
+                        && levelIdOuter.equals(levelIdInner)) {
+                    // remove from the end of the list
+                    allElements.remove(j);
+                }
+            }
+        }
+    }
+
     /**
      * Creates the repository model. This instantiates all contributed
      * category/node extensions found in the global Eclipse PluginRegistry, and
@@ -133,6 +156,9 @@ public final class RepositoryManager {
             IConfigurationElement[] elements = ext.getConfigurationElements();
             allElements.addAll(Arrays.asList(elements));
         }
+
+        // remove duplicated categories
+        removeDuplicatesFromCategories(allElements);
 
         // sort first by path-depth, so that everything is there in the
         // right order
@@ -166,6 +192,9 @@ public final class RepositoryManager {
 
         });
 
+        // holds error string for possibly not instantiable nodes and
+        // categories
+        StringBuffer errorString = new StringBuffer();
         for (int j = 0; j < categoryElements.length; j++) {
             IConfigurationElement e = categoryElements[j];
 
@@ -176,12 +205,14 @@ public final class RepositoryManager {
                 LOGGER.info("Found category: " + category.getID());
 
             } catch (Exception ex) {
-                LOGGER.error(ex); // <=== DON'T PRINT TO SYSTEM.OUT,
-                // PLEASE
-                WorkbenchErrorLogger.error("Could not load contributed "
-                        + "extension, skipped: '" + e.getAttribute("id")
-                        + "' from plugin '"
-                        + e.getDeclaringExtension().getNamespace() + "'", ex);
+                String message =
+                        "Category '" + e.getAttribute("level-id")
+                                + "' from plugin '"
+                                + e.getDeclaringExtension().getNamespace()
+                                + "' could not be created in parent path '"
+                                + e.getAttribute("path") + "'.";
+                LOGGER.error(message, ex);
+                errorString.append(message + "\n");
             }
 
         } // for
@@ -190,8 +221,6 @@ public final class RepositoryManager {
         // Second, process the contributed nodes
         //
 
-        // holds error string for possibly not instantiable nodes
-        StringBuffer errorString = new StringBuffer();
         for (int i = 0; i < nodeExtensions.length; i++) {
 
             IExtension ext = nodeExtensions[i];
@@ -233,9 +262,12 @@ public final class RepositoryManager {
 
                 } catch (Throwable t) {
 
-                    LOGGER.error("Node could not be created:", t);
-                    errorString.append(e.getAttribute("id") + "' from plugin '"
-                            + ext.getNamespace() + "'\n");
+                    String message =
+                            "Node " + e.getAttribute("id") + "' from plugin '"
+                                    + ext.getNamespace()
+                                    + "' could not be created.";
+                    LOGGER.error(message, t);
+                    errorString.append(message + "\n");
 
                 }
 
@@ -283,10 +315,10 @@ public final class RepositoryManager {
                         MessageBox mb =
                                 new MessageBox(dummy, SWT.ICON_WARNING | SWT.OK
                                         | SWT.ON_TOP);
-                        mb.setText("KNIME node(s) could not be loaded!");
-                        mb.setMessage("Some contributed nodes could not be "
-                                + "loaded by KNIME, skipped: \n\n'"
-                                + errorMessage.toString());
+                        mb.setText("KNIME extension(s) could not be created!");
+                        mb.setMessage("Some contributed KNIME extensions"
+                                + " could not be created, they will be "
+                                + "skipped: \n\n'" + errorMessage.toString());
                         mb.open();
                     }
                 });
