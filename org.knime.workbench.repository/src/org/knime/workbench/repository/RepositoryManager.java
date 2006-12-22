@@ -55,19 +55,19 @@ import org.knime.workbench.repository.model.Root;
  * @author Florian Georg, University of Konstanz
  */
 public final class RepositoryManager {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(RepositoryManager.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(RepositoryManager.class);
 
     /** The singleton instance. */
     public static final RepositoryManager INSTANCE = new RepositoryManager();
 
     // ID of "node" extension point
-    private static final String ID_NODE =
-            "org.knime.workbench.repository" + ".nodes";
+    private static final String ID_NODE = "org.knime.workbench.repository"
+            + ".nodes";
 
     // ID of "category" extension point
-    private static final String ID_CATEGORY =
-            "org.knime.workbench." + "repository.categories";
+    private static final String ID_CATEGORY = "org.knime.workbench."
+            + "repository.categories";
 
     // set the eclipse class creator into the static global class creator class
     static {
@@ -108,7 +108,7 @@ public final class RepositoryManager {
     }
 
     private static void removeDuplicatesFromCategories(
-            final ArrayList<IConfigurationElement> allElements, 
+            final ArrayList<IConfigurationElement> allElements,
             final StringBuffer errorString) {
 
         // brut force search
@@ -116,30 +116,42 @@ public final class RepositoryManager {
             for (int j = allElements.size() - 1; j > i; j--) {
 
                 String pathOuter = allElements.get(i).getAttribute("path");
-                String levelIdOuter =
-                        allElements.get(i).getAttribute("level-id");
+                String levelIdOuter = allElements.get(i).getAttribute(
+                        "level-id");
                 String pathInner = allElements.get(j).getAttribute("path");
-                String levelIdInner =
-                        allElements.get(j).getAttribute("level-id");
+                String levelIdInner = allElements.get(j).getAttribute(
+                        "level-id");
 
                 if (pathOuter.equals(pathInner)
                         && levelIdOuter.equals(levelIdInner)) {
-                                                            
-                    String pluginI = allElements.get(i).getDeclaringExtension().getNamespace();
-                    String pluginJ = allElements.get(j).getDeclaringExtension().getNamespace();
+
                     String nameI = allElements.get(i).getAttribute("name");
                     String nameJ = allElements.get(j).getAttribute("name");
-                    String message = "Category '" + pathOuter + "/" + levelIdOuter 
-                        + "' was found twice. Names are '" + nameI 
-                        + "'(Plugin: " + pluginI + ") and '" + nameJ 
-                        + "'(Plugin: " + pluginJ + "). The category with name '" 
-                        + nameJ + "' is ignored."; 
-                    
-                    LOGGER.warn(message);
-                    errorString.append(message + "\n");
+
+                    // the removal is only reported in case the names
+                    // are not equal (if they are equal,the user will not
+                    // notice any difference (except possibly the picture))
+                    if (!nameI.equals(nameJ)) {
+                        String pluginI = allElements.get(i)
+                                .getDeclaringExtension().getNamespace();
+                        String pluginJ = allElements.get(j)
+                                .getDeclaringExtension().getNamespace();
+
+                        String message = "Category '" + pathOuter + "/"
+                                + levelIdOuter
+                                + "' was found twice. Names are '" + nameI
+                                + "'(Plugin: " + pluginI + ") and '" + nameJ
+                                + "'(Plugin: " + pluginJ
+                                + "). The category with name '" + nameJ
+                                + "' is ignored.";
+
+                        LOGGER.warn(message);
+                        errorString.append(message + "\n");
+                    }
+
                     // remove from the end of the list
                     allElements.remove(j);
-                    
+
                 }
             }
         }
@@ -160,8 +172,7 @@ public final class RepositoryManager {
         //
         // First, process the contributed categories
         //
-        ArrayList<IConfigurationElement> allElements =
-                new ArrayList<IConfigurationElement>();
+        ArrayList<IConfigurationElement> allElements = new ArrayList<IConfigurationElement>();
 
         for (int i = 0; i < categoryExtensions.length; i++) {
 
@@ -180,9 +191,8 @@ public final class RepositoryManager {
 
         // sort first by path-depth, so that everything is there in the
         // right order
-        IConfigurationElement[] categoryElements =
-                allElements.toArray(new IConfigurationElement[allElements
-                        .size()]);
+        IConfigurationElement[] categoryElements = allElements
+                .toArray(new IConfigurationElement[allElements.size()]);
 
         Arrays.sort(categoryElements, new Comparator<IConfigurationElement>() {
 
@@ -197,13 +207,11 @@ public final class RepositoryManager {
                     return +1;
                 }
 
-                int countSlashes1 =
-                        element1.length()
-                                - element1.replaceAll("/", "").length();
+                int countSlashes1 = element1.length()
+                        - element1.replaceAll("/", "").length();
 
-                int countSlashes2 =
-                        element2.length()
-                                - element2.replaceAll("/", "").length();
+                int countSlashes2 = element2.length()
+                        - element2.replaceAll("/", "").length();
 
                 return countSlashes1 - countSlashes2;
             }
@@ -220,12 +228,11 @@ public final class RepositoryManager {
                 LOGGER.info("Found category: " + category.getID());
 
             } catch (Exception ex) {
-                String message =
-                        "Category '" + e.getAttribute("level-id")
-                                + "' from plugin '"
-                                + e.getDeclaringExtension().getNamespace()
-                                + "' could not be created in parent path '"
-                                + e.getAttribute("path") + "'.";
+                String message = "Category '" + e.getAttribute("level-id")
+                        + "' from plugin '"
+                        + e.getDeclaringExtension().getNamespace()
+                        + "' could not be created in parent path '"
+                        + e.getAttribute("path") + "'.";
                 LOGGER.error(message, ex);
                 errorString.append(message + "\n");
             }
@@ -251,14 +258,14 @@ public final class RepositoryManager {
                     LOGGER.debug("Found node extension '" + node.getID()
                             + "': " + node.getName());
                     String nodeName = node.getID();
-                    nodeName =
-                            nodeName.substring(nodeName.lastIndexOf('.') + 1);
+                    nodeName = nodeName
+                            .substring(nodeName.lastIndexOf('.') + 1);
                     // LOGGER.info("Found node: " + node.getName());
 
                     // Ask the root to lookup the category-container located at
                     // the given path
-                    IContainerObject parentContainer =
-                            m_root.findContainer(node.getCategoryPath());
+                    IContainerObject parentContainer = m_root
+                            .findContainer(node.getCategoryPath());
 
                     // If parent category is illegal, log an error and append
                     // the node to the repository root.
@@ -277,10 +284,9 @@ public final class RepositoryManager {
 
                 } catch (Throwable t) {
 
-                    String message =
-                            "Node " + e.getAttribute("id") + "' from plugin '"
-                                    + ext.getNamespace()
-                                    + "' could not be created.";
+                    String message = "Node " + e.getAttribute("id")
+                            + "' from plugin '" + ext.getNamespace()
+                            + "' could not be created.";
                     LOGGER.error(message, t);
                     errorString.append(message + "\n");
 
@@ -325,15 +331,17 @@ public final class RepositoryManager {
             public void run() {
                 Display.getDefault().syncExec(new Runnable() {
                     public void run() {
-                        Shell dummy =
-                                new Shell(parent, SWT.DIALOG_TRIM | SWT.ON_TOP);
-                        MessageBox mb =
-                                new MessageBox(dummy, SWT.ICON_WARNING | SWT.OK
-                                        | SWT.ON_TOP);
-                        mb.setText("KNIME extension(s) could not be created or are duplicates!");
-                        mb.setMessage("Some contributed KNIME extensions"
-                                + " could not be created or are duplicates, they will be "
-                                + "skipped: \n\n'" + errorMessage.toString());
+                        Shell dummy = new Shell(parent, SWT.DIALOG_TRIM
+                                | SWT.ON_TOP);
+                        MessageBox mb = new MessageBox(dummy, SWT.ICON_WARNING
+                                | SWT.OK | SWT.ON_TOP);
+                        mb
+                                .setText("KNIME extension(s) could not be created or are duplicates!");
+                        mb
+                                .setMessage("Some contributed KNIME extensions"
+                                        + " could not be created or are duplicates, they will be "
+                                        + "skipped: \n\n'"
+                                        + errorMessage.toString());
                         mb.open();
                     }
                 });
