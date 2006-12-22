@@ -93,11 +93,11 @@ public class KnimeTestRegistry extends TestSuite {
 
     static {
         m_registry = new ArrayList<KnimeTestCase>();
-        if ("true".equalsIgnoreCase(System.getProperty("interactive"))) {
+        m_pattern = System.getProperty("testcase");
+        if ((m_pattern == null) || (m_pattern.length() < 1)) {
             m_pattern = JOptionPane.showInputDialog(null, 
-                    "Enter name (regular expression) of testcase(s) to run:");
-        } else {
-            m_pattern = System.getProperty("testcase");
+            "Enter name (regular expression) of testcase(s) to run: \n"
+                    + "(Cancel runs all.)");
         }
         try {
             
