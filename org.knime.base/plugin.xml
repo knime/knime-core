@@ -73,7 +73,7 @@
             name="Neural Network"/>
       <category
             after="view"
-            icon="icons/category_statistics.png"
+            icon="icons/16x16/category_statistics.png"
             level-id="statistics"
             name="Statistics"
             path="/"/>
