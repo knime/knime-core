@@ -56,7 +56,7 @@ public final class RepositoryFactory {
         String id = element.getAttribute("id");
 
         NodeTemplate node = new NodeTemplate(id);
-        
+
         node.setAfterID(str(element.getAttribute("after"), ""));
 
         // Try to load the node factory class...
@@ -65,8 +65,9 @@ public final class RepositoryFactory {
 
             // this ensures that the class is loaded by the correct eclipse
             // classloaders
-            factory = (NodeFactory)element
-                    .createExecutableExtension("factory-class");
+            factory =
+                    (NodeFactory)element
+                            .createExecutableExtension("factory-class");
 
             node.setFactory(factory.getClass());
         } catch (Throwable e) {
@@ -84,8 +85,9 @@ public final class RepositoryFactory {
         Image icon = ImageRepository.getScaledImage(factory.getIcon(), 16, 16);
         // get default image if null
         if (icon == null) {
-            icon = ImageRepository.getScaledImage(NodeFactory.getDefaultIcon(),
-                    16, 16);
+            icon =
+                    ImageRepository.getScaledImage(
+                            NodeFactory.getDefaultIcon(), 16, 16);
         }
 
         // Load images from declaring plugin
@@ -143,16 +145,16 @@ public final class RepositoryFactory {
         // start at root
         IContainerObject container = root;
         IContainerObject child = null;
+
         for (int i = 0; i < segments.length; i++) {
 
             pathSoFar += "/" + segments[i];
-            // look, if the container already exists. If not, it will be
-            // created with the segment as the ID.
-            // Note that several properties as icon,description are
-            // set to a default.
-            IRepositoryObject obj = container.getChildByID(segments[i], true);
+
+            IRepositoryObject obj = container.getChildByID(segments[i], false);
             if (obj == null) {
-                continue;
+                throw new IllegalArgumentException("The segment '"
+                        + segments[i] + "' in path '" + path
+                        + "' does not exist!");
             }
 
             child = (IContainerObject)obj;
@@ -161,24 +163,30 @@ public final class RepositoryFactory {
             if (child instanceof Category) {
                 Category category = (Category)child;
                 if (category == null) {
-                    // ASSERT: the segment is not empty
-                    assert (segments[i] != null)
-                            && (!segments[i].trim().equals(""));
 
-                    // 
-                    // Create a new category, set all fields to defaults where
-                    // appropriate.
-
-                    // the segment is the id of this new category
-                    category = new Category(segments[i]);
-                    category.setName(segments[i]);
-                    category.setPath(pathSoFar);
-                    // this loads the default icon
-                    category.setIcon(KNIMERepositoryPlugin.getDefault()
-                            .getImage(pluginID, ""));
-
-                    // add this category to the current container
-                    container.addChild(category);
+                    // should not be null. unknown paths are not allowed!!
+                    throw new IllegalArgumentException("The segment '"
+                            + segments[i] + "' in path '" + path
+                            + "' does not exist!");
+                    // // ASSERT: the segment is not empty
+                    // assert (segments[i] != null)
+                    // && (!segments[i].trim().equals(""));
+                    //
+                    // //
+                    // // Create a new category, set all fields to defaults
+                    // where
+                    // // appropriate.
+                    //
+                    // // the segment is the id of this new category
+                    // category = new Category(segments[i]);
+                    // category.setName(segments[i]);
+                    // category.setPath(pathSoFar);
+                    // // this loads the default icon
+                    // category.setIcon(KNIMERepositoryPlugin.getDefault()
+                    // .getImage(pluginID, ""));
+                    //
+                    // // add this category to the current container
+                    // container.addChild(category);
                 }
             }
             // continue at this level
