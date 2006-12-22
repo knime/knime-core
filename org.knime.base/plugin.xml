@@ -92,13 +92,13 @@
             icon="icons/missing.gif"
             level-id="mlp"
             name="MLP"
-            path="/nn"/>
+            path="/mining/nn"/>
       <category
             after="mlp"
             icon="icons/missing.gif"
             level-id="pnn"
             name="PNN"
-            path="/nn"/>
+            path="/mining/nn"/>
       <category
             after="nn"
             icon="icons/missing.gif"
