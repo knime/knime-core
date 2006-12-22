@@ -6,14 +6,14 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:sodipodi="http://inkscape.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="210mm"
    height="297mm"
    id="svg2110"
    sodipodi:version="0.32"
-   inkscape:version="0.44.1"
-   sodipodi:docbase="/home/wiswedel/eclipse/eclipse_workspace/org.knime.product"
+   inkscape:version="0.43"
+   sodipodi:docbase="E:\berthold_EclipseWorkspace_KNIMEv1.2rc\org.knime.product"
    sodipodi:docname="splash.svg"
    inkscape:export-filename="D:\berthold_EclipseWorkspace\org.knime.product\splash.bmp"
    inkscape:export-xdpi="90"
@@ -34,8 +34,8 @@
      inkscape:current-layer="g2137"
      inkscape:window-width="1028"
      inkscape:window-height="753"
-     inkscape:window-x="417"
-     inkscape:window-y="287" />
+     inkscape:window-x="298"
+     inkscape:window-y="222" />
   <metadata
      id="metadata2115">
     <rdf:RDF>
@@ -133,7 +133,7 @@
            style="font-size:24.01224136px">Konstanz Information Miner</tspan></text>
       <text
          xml:space="preserve"
-         style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+         style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
          x="625.12262"
          y="301.99414"
          id="text2163"
@@ -143,14 +143,14 @@
          inkscape:export-ydpi="90"><tspan
            sodipodi:role="line"
            id="tspan2165"
-           x="625.12262"
+           x="625.12261"
            y="301.99414"
-           style="font-size:14.40734577px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold">Version 1.2.0pre</tspan><tspan
+           style="font-size:14.40734577px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold">Version 1.2.0beta</tspan><tspan
            sodipodi:role="line"
            x="625.12262"
            y="315.09449"
            style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
-           id="tspan1986">(Build December 06, 2006)</tspan></text>
+           id="tspan1986">(Build December 22, 2006)</tspan></text>
       <g
          id="g1939"
          inkscape:label="Layer 1"
@@ -183,7 +183,7 @@
            style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
            id="tspan1952">Based on Eclipse 3.2, www.eclipse.org</tspan><tspan
            sodipodi:role="line"
-           x="624.33472"
+           x="624.33471"
            y="464.43382"
            style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
            id="tspan1978">Uses: Java5, GEF, Log4J</tspan></text>
