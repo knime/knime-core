@@ -106,9 +106,10 @@ public final class RepositoryManager {
 
         return extensions;
     }
-
-    public static void removeDuplicatesFromCategories(
-            ArrayList<IConfigurationElement> allElements) {
+    
+    private static void removeDuplicatesFromCategories(
+            final ArrayList<IConfigurationElement> allElements, 
+            final StringBuffer errorString) {
 
         // brut force search
         for (int i = 0; i < allElements.size(); i++) {
@@ -123,8 +124,22 @@ public final class RepositoryManager {
 
                 if (pathOuter.equals(pathInner)
                         && levelIdOuter.equals(levelIdInner)) {
+                                                            
+                    String pluginI = allElements.get(i).getDeclaringExtension().getNamespace();
+                    String pluginJ = allElements.get(j).getDeclaringExtension().getNamespace();
+                    String nameI = allElements.get(i).getAttribute("name");
+                    String nameJ = allElements.get(j).getAttribute("name");
+                    String message = "Category '" + pathOuter + "/" + levelIdOuter 
+                        + "' was found twice. Names are '" + nameI 
+                        + "'(Plugin: " + pluginI + ") and '" + nameJ 
+                        + "'(Plugin: " + pluginJ + "). The category with name '" 
+                        + nameJ + "' is ignored."; 
+                    
+                    LOGGER.warn(message);
+                    errorString.append(message + "\n");
                     // remove from the end of the list
                     allElements.remove(j);
+                    
                 }
             }
         }
@@ -157,8 +172,11 @@ public final class RepositoryManager {
             allElements.addAll(Arrays.asList(elements));
         }
 
+        // holds error string for possibly not instantiable nodes and
+        // categories
+        StringBuffer errorString = new StringBuffer();
         // remove duplicated categories
-        removeDuplicatesFromCategories(allElements);
+        removeDuplicatesFromCategories(allElements, errorString);
 
         // sort first by path-depth, so that everything is there in the
         // right order
@@ -192,9 +210,6 @@ public final class RepositoryManager {
 
         });
 
-        // holds error string for possibly not instantiable nodes and
-        // categories
-        StringBuffer errorString = new StringBuffer();
         for (int j = 0; j < categoryElements.length; j++) {
             IConfigurationElement e = categoryElements[j];
 
@@ -315,9 +330,10 @@ public final class RepositoryManager {
                         MessageBox mb =
                                 new MessageBox(dummy, SWT.ICON_WARNING | SWT.OK
                                         | SWT.ON_TOP);
-                        mb.setText("KNIME extension(s) could not be created!");
+
+                        mb.setText("KNIME extension(s) could not be created or are duplicates!");
                         mb.setMessage("Some contributed KNIME extensions"
-                                + " could not be created, they will be "
+                                + " could not be created or are duplicates, they will be "
                                 + "skipped: \n\n'" + errorMessage.toString());
                         mb.open();
                     }
