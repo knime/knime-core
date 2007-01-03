@@ -408,7 +408,7 @@ class Buffer {
         }
         if (iVersion < IVERSION) {
             LOGGER.debug("Table has been written with a previous version of "
-                    + "KNIME (\"" + version + "\", using compatibility mode.");
+                    + "KNIME (\"" + version + "\"), using compatibility mode.");
         }
         return iVersion;
     }
