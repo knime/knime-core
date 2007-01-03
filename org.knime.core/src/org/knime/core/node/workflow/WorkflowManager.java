@@ -664,7 +664,22 @@ public class WorkflowManager implements WorkflowListener {
      */
     public WorkflowManager() {
         m_parent = null;
-        m_tableRepository = new HashMap<Integer, ContainerTable>();
+        // this is a local workaround: we ran into problems with workflows
+        // that contain (saved) nodes, which have been written with 1.1.x.
+        // Their output tables generally have an id of -1 - which is invalid.
+        m_tableRepository = new HashMap<Integer, ContainerTable>() {
+            @Override
+            public ContainerTable put(
+                    final Integer key, final ContainerTable value) {
+                if (key < 0) {
+                    LOGGER.debug("Table has an invalid ID! " 
+                        + "(This message can be ignored if the flow " 
+                        + "was written with a version prior to 1.2.0.");
+                    return null;
+                }
+                return super.put(key, value);
+            }
+        };
         m_executor = new WorkflowExecutor();
         m_runningConnectionID = new MutableInteger(-1);
         m_runningNodeID = new MutableInteger(0);
