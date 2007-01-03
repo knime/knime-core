@@ -1784,30 +1784,30 @@ public class WorkflowManager implements WorkflowListener {
                 addNodeWithID(newNode);
             } catch (InstantiationException ex) {
                 lastEx =
-                        new WorkflowException("Error while loading node: ",
-                                lastEx, ex);
+                        new WorkflowException("Error while loading node: "
+                                + ex.getMessage(), lastEx, ex);
                 LOGGER.error("Could not create factory object of type "
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
                                 "??") + " for node " + nodeKey, ex);
             } catch (IllegalAccessException ex) {
                 lastEx =
-                        new WorkflowException("Error while loading node: ",
-                                lastEx, ex);
+                        new WorkflowException("Error while loading node: "
+                                + ex.getMessage(), lastEx, ex);
                 LOGGER.error("Could not access factory class "
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
                                 "??") + " for node " + nodeKey, ex);
             } catch (ClassNotFoundException ex) {
                 lastEx =
-                        new WorkflowException("Error while loading node: ",
-                                lastEx, ex);
+                        new WorkflowException("Error while loading node: "
+                                + ex.getMessage(), lastEx, ex);
                 LOGGER.error("Could not find factory class "
                         + nodeSetting.getString(NodeContainer.KEY_FACTORY_NAME,
                                 "??") + " for node " + nodeKey, ex);
             } catch (Throwable t) {
                 LOGGER.error(t.getMessage(), t);
                 lastEx =
-                        new WorkflowException("Error while loading node: ",
-                                lastEx, t);
+                        new WorkflowException("Error while loading node: "
+                                + t.getMessage(), lastEx, t);
             }
         }
 
