@@ -99,7 +99,7 @@ public class DiffNodeModel extends NodeModel {
         } catch (IllegalArgumentException e) {
             throw new InvalidSettingsException("no valid evaluator");
         }
-        if (eval == null || !(eval instanceof Evaluators)) {
+        if (eval == null) {
             throw new InvalidSettingsException("no valid evaluator");
         }
 

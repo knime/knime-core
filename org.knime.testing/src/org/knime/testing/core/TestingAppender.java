@@ -27,6 +27,7 @@ package org.knime.testing.core;
 import java.util.LinkedList;
 
 import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.Category;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
@@ -86,7 +87,7 @@ public class TestingAppender extends AppenderSkeleton {
      * Disconnects this appender from the root logger.
      */
     public void disconnect() {
-        Logger.getRoot().removeAppender(this);
+        Category.getRoot().removeAppender(this);
         
     }
     

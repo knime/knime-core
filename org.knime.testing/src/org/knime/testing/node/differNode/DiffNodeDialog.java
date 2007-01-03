@@ -81,6 +81,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
          * get a DataTableDiffer.
          */
         TableDiffer() {
+            @Override
             public TestEvaluator getInstance() {
                 return new DataTableDiffer();
             }
@@ -89,6 +90,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
          * get a NegativerDataTableDiffer.
          */
         NegativeDiffer() {
+            @Override
             public TestEvaluator getInstance() {
                 return new NegativeDataTableDiffer();
             }
@@ -98,6 +100,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
          */
         LearnerScoreComperator() {
 
+            @Override
             public TestEvaluator getInstance() {
                 return new LearnerScoreComperator();
             }

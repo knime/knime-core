@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -128,8 +129,8 @@ public class DataTableDiffer implements TestEvaluator {
         DataTableSpec spec1 = m_dataTable1.getDataTableSpec();
         DataTableSpec spec2 = m_dataTable2.getDataTableSpec();
         Vector<Integer> diffs = new Vector<Integer>();
-        Iterator specIt1 = spec1.iterator();
-        Iterator specIt2 = spec2.iterator();
+        Iterator<DataColumnSpec> specIt1 = spec1.iterator();
+        Iterator<DataColumnSpec> specIt2 = spec2.iterator();
         int diffpos = 0;
         while (specIt1.hasNext() && specIt2.hasNext()) {
             if (!specIt1.next().equals(specIt2.next())) {

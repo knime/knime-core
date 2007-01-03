@@ -34,6 +34,7 @@ import javax.swing.JLabel;
 
 import junit.extensions.jfcunit.JFCTestHelper;
 import junit.extensions.jfcunit.RobotTestHelper;
+import junit.extensions.jfcunit.TestHelper;
 import junit.extensions.jfcunit.finder.ComponentFinder;
 import junit.extensions.jfcunit.finder.JLabelFinder;
 
@@ -72,6 +73,7 @@ public class TestFileReaderDialog extends GUITestCase {
     /**
      * @see junit.framework.TestCase#setUp()
      */
+    @Override
     public void setUp() {
         if (false) {
             setHelper(new JFCTestHelper());
@@ -106,8 +108,9 @@ public class TestFileReaderDialog extends GUITestCase {
     /**
      * @see junit.framework.TestCase#tearDown()
      */
+    @Override
     public void tearDown() {
-        getHelper().cleanUp(this);
+        TestHelper.cleanUp(this);
 
          try {
          Thread.sleep(2000);
@@ -132,7 +135,7 @@ public class TestFileReaderDialog extends GUITestCase {
                 JLabel lable = (JLabel)lablefinder.find();
                 System.out.println("got it" + lable.getText());
                 assertEquals("valid URL:", lable.getText());
-            };
+            }
         };
         t.start();
 
