@@ -149,7 +149,8 @@ public class AppendedRowsTableTest extends TestCase {
         DataTable ap = new AppendedRowsTable(new DataTable[] {firstTable,
                 firstTableShuffle});
 
-        assertEquals(ap.getDataTableSpec(), firstTable.getDataTableSpec());
+        assertTrue(ap.getDataTableSpec().equalStructure(
+                firstTable.getDataTableSpec()));
     }
 
     /** Test method for getRowIterator(). */
