@@ -26,12 +26,12 @@ import java.util.Collection;
 
 import javax.swing.JOptionPane;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.testing.core.KnimeTestCase;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 /**
  * 
@@ -39,6 +39,10 @@ import junit.framework.TestSuite;
  */
 public class KnimeTestRegistry extends TestSuite {
 
+    private static final String OWNER_FILE = "owner";
+    
+    private static final String PROPERTY_NAME = "testcase";
+    
     private static NodeLogger m_logger =
             NodeLogger.getLogger(KnimeTestRegistry.class);
 
@@ -62,24 +66,6 @@ public class KnimeTestRegistry extends TestSuite {
         return suite;
     }
 
-    /**
-     * Filters workflow.knime files
-     * 
-     * @author ritmeier, University of Konstanz
-     */
-    private static class WorkflowFileFilter implements FileFilter {
-
-        /**
-         * Filters workflow.knime files
-         * 
-         * @see java.io.FileFilter#accept(java.io.File)
-         */
-        public boolean accept(File pathname) {
-            return pathname.getAbsolutePath().endsWith(
-                    WorkflowManager.WORKFLOW_FILE);
-        }
-    }
-
     private static class DirectoryFilter implements FileFilter {
 
         /**
@@ -93,12 +79,12 @@ public class KnimeTestRegistry extends TestSuite {
 
     static {
         m_registry = new ArrayList<KnimeTestCase>();
-        m_pattern = System.getProperty("testcase");
+        m_pattern = System.getProperty(PROPERTY_NAME);
         if ((m_pattern == null) || (m_pattern.length() < 1)) {
             m_pattern = JOptionPane.showInputDialog(null, 
             "Enter name (regular expression) of testcase(s) to run: \n"
                     + "(Cancel runs all.)");
-        }
+        } 
         try {
             
             // the workflows to run are at the root dir of the project
@@ -140,15 +126,24 @@ public class KnimeTestRegistry extends TestSuite {
      */
     private static void searchDirectory(File dir) {
 
-        File[] workflowFile = dir.listFiles(new WorkflowFileFilter());
+        File workflowFile = new File(dir, WorkflowManager.WORKFLOW_FILE);
 
-        if (workflowFile != null && workflowFile.length == 1) {
-            String name = workflowFile[0].getParentFile().getName();
+        if (workflowFile.exists()) {
+            String name = dir.getName();
             if ((m_pattern == null) || (m_pattern.length() < 1)
                     || name.matches(m_pattern)) {
-                KnimeTestCase testCase = new KnimeTestCase(workflowFile[0]);
-                testCase.setName(name);
-                m_registry.add(testCase);
+                File ownerFile = new File(dir, OWNER_FILE);
+                if (ownerFile.exists()) {
+                    // add only tests with owner file!
+                    KnimeTestCase testCase = new KnimeTestCase(workflowFile);
+                    testCase.setName(name);
+                    m_registry.add(testCase);
+                } else {
+                    m_logger.error("Skipping test '" + name + "' due to missing"
+                            + " owner file (add a file called '" + OWNER_FILE
+                            + "' with the email address of the test owner in "
+                            + "the dir of the workflow file)!!");
+                }
             } else {
                 m_logger.info("Skipping testcase '" + name + "' (doesn't match"
                         + "pattern '" + m_pattern + "').");
