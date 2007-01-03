@@ -1355,6 +1355,10 @@ class Buffer {
          */
         FromFileIterator() {
             m_pointer = 0;
+            if (m_binFile == null) {
+                throw new RuntimeException("Unable to read table from file, " 
+                        + "table has been cleared.");
+            }
             try {
                 BufferedInputStream bufferedStream =
                     new BufferedInputStream(new FileInputStream(m_binFile));
