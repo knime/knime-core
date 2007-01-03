@@ -78,9 +78,17 @@ public class KnimeTestCase extends TestCase {
             CanceledExecutionException, IOException, WorkflowException {
         // start here the workflow
         m_errorAppender = new TestingAppender(Level.ERROR, Level.ERROR, 100);
-        m_manager =
-                new WorkflowManager(m_knimeSettings,
-                        new DefaultNodeProgressMonitor());
+        try {
+            m_manager =
+                    new WorkflowManager(m_knimeSettings,
+                            new DefaultNodeProgressMonitor());
+        } catch (WorkflowException ex) {
+            if (ex.getNextException() != null) {
+                throw ex.getNextException();
+            } else {
+                throw ex;
+            }
+        }
     }
 
     /**
