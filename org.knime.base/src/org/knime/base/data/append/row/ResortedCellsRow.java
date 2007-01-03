@@ -31,7 +31,7 @@ import org.knime.core.data.def.DefaultCellIterator;
 
 
 /**
- * A row that takes a base row and re-sorts the cells in it according to and
+ * A row that takes a base row and re-sorts the cells in it according to an
  * <code>int[]</code> parameter passed in the constructor.
  * 
  * @author Bernd Wiswedel, University of Konstanz

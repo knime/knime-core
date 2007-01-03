@@ -253,12 +253,17 @@ public class AppendedRowsIterator extends RowIterator {
                 m_exec.setMessage(message);
             }
         }
-        // no missing cells implies the base row is complete
-        assert (m_curMissingCells.length + baseRow.getNumCells() == m_spec
-                .getNumColumns());
-        DataRow filledBaseRow = // row enlarged by "missing" columns
-        new AppendedColumnRow(baseRow, m_curMissingCells);
-        DataRow nextRow = new ResortedCellsRow(filledBaseRow, m_curMapping);
+        DataRow nextRow;
+        if (m_curMissingCells != null) { 
+            // no missing cells implies the base row is complete
+            assert (m_curMissingCells.length + baseRow.getNumCells() == 
+                m_spec.getNumColumns());
+            DataRow filledBaseRow = // row enlarged by "missing" columns
+            new AppendedColumnRow(baseRow, m_curMissingCells);
+            nextRow = new ResortedCellsRow(filledBaseRow, m_curMapping);
+        } else {
+            nextRow = baseRow;
+        }
         if (keyHasChanged) {
             DataCell[] cells = new DataCell[nextRow.getNumCells()];
             for (int i = 0; i < cells.length; i++) {
@@ -292,6 +297,16 @@ public class AppendedRowsIterator extends RowIterator {
                 missingCounter++;
             }
             m_curMapping[c] = targetCol;
+        }
+        boolean leaveUntouched = missingCounter == 0;
+        for (int i = 0; leaveUntouched && i < m_curMapping.length; i++) {
+            if (m_curMapping[i] != i) {
+                leaveUntouched = false;
+            }
+        }
+        if (leaveUntouched) {
+            m_curMapping = null;
+            m_curMissingCells = null;
         }
         assert missingCounter == missingNumber;
     }
