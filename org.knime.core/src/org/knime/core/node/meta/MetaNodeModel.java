@@ -388,10 +388,13 @@ public class MetaNodeModel extends SpecialNodeModel implements
         m_dataInModels[inPortID].setDataTableSpec(spec);
 
         try {
+            m_resetFromInterior = true;
             internalWFM().resetAndConfigureNode(
                     m_dataInContainer[inPortID].getID());
         } catch (WorkflowInExecutionException ex) {
             LOGGER.error("Could not reset meta input nodes", ex);
+        } finally {
+            m_resetFromInterior = false;
         }
     }
 
@@ -404,6 +407,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
         super.inportWasDisconnected(inPortID);
 
         try {
+            m_resetFromInterior = true;
             if (inPortID < m_dataInModels.length) {
                 m_dataInModels[inPortID].setBufferedDataTable(null);
                 internalWFM().resetAndConfigureNode(
@@ -417,6 +421,8 @@ public class MetaNodeModel extends SpecialNodeModel implements
             }
         } catch (WorkflowInExecutionException ex) {
             LOGGER.error("Could not reset meta input nodes", ex);
+        } finally {
+            m_resetFromInterior = false;
         }
     }
 
