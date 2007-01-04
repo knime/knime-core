@@ -84,7 +84,10 @@ public final class BatchExecutor {
             + "                  if omitted the workflow is only saved in place\n"
             + " -option=nodeID,name,value,type => set the option with name 'name' of the node with\n"
             + "                                   ID 'nodeID' to the given value which has type 'type'\n"
-            + "                                   type can be any of the primitive Java types or String");
+            + "                                   type can be any of the primitive Java types or String\n"
+            + "\n"
+            + "Some KNIME settings can also be adjusted by Java properties:\n"
+            + " -Dorg.knime.core.maxThreads=n => sets the maximum number of threads used by KNIME\n");
     }
 
     /**
