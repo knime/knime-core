@@ -118,7 +118,7 @@ classes/interfaces:</p>
   There are two important issues when defining a new <a href="../DataCell.html">DataCell</a>:
 
   <ul>
-    <li><b>Native value class</b>: A <a href="../DataCell.html">DataCell</a>
+    <li><b>Preferred value class</b>: A <a href="../DataCell.html">DataCell</a>
     may potentially implement more than just one single 
     <a href="../DataValue.html">DataValue</a> interface. There is no natural
     order on the implemented interfaces but one normally desires to have a
@@ -128,9 +128,9 @@ classes/interfaces:</p>
     customized renderer: Which renderer should KNIME use by default?) To
     overcome this situation, KNIME will attempt to call a static method in the 
     <a href="../DataCell.html">DataCell</a> implementation with the following
-    signature and use the returned value as “native” value class. 
+    signature and use the returned value as “preferred” value class. 
     <pre>
-    public static final Class&lt;? extends DataValue&gt; getNativeValueClass()
+    public static final Class&lt;? extends DataValue&gt; getPreferredValueClass()
     </pre>
     Implement this method and return a <a href="../DataValue.html">DataValue</a>
     class that your <a href="../DataCell.html">DataCell</a> is implementing. If
@@ -161,7 +161,7 @@ classes/interfaces:</p>
 </p>
 <pre>public class MyCell extends DataCell implements MyValue, StringValue {
 
-    public static final Class&lt;? extends DataValue&gt; getNativeValueClass() {
+    public static final Class&lt;? extends DataValue&gt; getPreferredValueClass() {
         return MyValue.class;
     }
     
