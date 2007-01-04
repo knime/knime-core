@@ -161,7 +161,7 @@ classes/interfaces:</p>
 </p>
 <pre>public class MyCell extends DataCell implements MyValue, StringValue {
 
-    public static final Class&lt;? extends DataValue&gt; getNativeValueClass() {
+    public static final Class&lt;? extends DataValue&gt; getPreferredValueClass() {
         return MyValue.class;
     }
     
