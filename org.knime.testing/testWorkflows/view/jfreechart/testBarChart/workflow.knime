@@ -2,8 +2,8 @@
 <!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
 <config key="workflow.knime">
 <entry key="version" type="xstring" value="1.2.0"/>
-<entry key="runningNodeID" type="xint" value="2"/>
-<entry key="runningConnectionID" type="xint" value="0"/>
+<entry key="runningNodeID" type="xint" value="5"/>
+<entry key="runningConnectionID" type="xint" value="5"/>
 <config key="nodes">
 <config key="node_1">
 <entry key="node_settings_file" type="xstring" value="File Reader (#1)/settings.xml"/>
@@ -15,8 +15,8 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="18"/>
-<entry key="1" type="xint" value="16"/>
+<entry key="0" type="xint" value="15"/>
+<entry key="1" type="xint" value="85"/>
 <entry key="2" type="xint" value="-1"/>
 <entry key="3" type="xint" value="-1"/>
 </config>
@@ -272,8 +272,73 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="161"/>
-<entry key="1" type="xint" value="16"/>
+<entry key="0" type="xint" value="344"/>
+<entry key="1" type="xint" value="3"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Bar Chart"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings"/>
+<config key="model"/>
+</config>
+<config key="node_3">
+<entry key="node_settings_file" type="xstring" value="Disturber Node (#3)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.testing.node.disturber.DisturberNodeFactory"/>
+<entry key="id" type="xint" value="3"/>
+<entry key="customName" type="xstring" value="Node 3"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="132"/>
+<entry key="1" type="xint" value="85"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Disturber Node"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model"/>
+</config>
+<config key="node_4">
+<entry key="node_settings_file" type="xstring" value="Bar Chart (#4)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.jfreechart.node.BarChartNodeFactory"/>
+<entry key="id" type="xint" value="4"/>
+<entry key="customName" type="xstring" value="Node 4"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="451"/>
+<entry key="1" type="xint" value="108"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Bar Chart"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings"/>
+<config key="model"/>
+</config>
+<config key="node_5">
+<entry key="node_settings_file" type="xstring" value="Bar Chart (#5)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.jfreechart.node.BarChartNodeFactory"/>
+<entry key="id" type="xint" value="5"/>
+<entry key="customName" type="xstring" value="Node 5"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="314"/>
+<entry key="1" type="xint" value="208"/>
 <entry key="2" type="xint" value="-1"/>
 <entry key="3" type="xint" value="-1"/>
 </config>
@@ -285,11 +350,32 @@
 </config>
 </config>
 <config key="connections">
-<config key="connection_0">
-<entry key="ID" type="xint" value="0"/>
+<config key="connection_2">
+<entry key="ID" type="xint" value="2"/>
 <entry key="sourceID" type="xint" value="1"/>
 <entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="3"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_4">
+<entry key="ID" type="xint" value="4"/>
+<entry key="sourceID" type="xint" value="3"/>
+<entry key="sourcePort" type="xint" value="1"/>
+<entry key="targetID" type="xint" value="4"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_3">
+<entry key="ID" type="xint" value="3"/>
+<entry key="sourceID" type="xint" value="3"/>
+<entry key="sourcePort" type="xint" value="0"/>
 <entry key="targetID" type="xint" value="2"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_5">
+<entry key="ID" type="xint" value="5"/>
+<entry key="sourceID" type="xint" value="3"/>
+<entry key="sourcePort" type="xint" value="2"/>
+<entry key="targetID" type="xint" value="5"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
 </config>
