@@ -175,7 +175,7 @@ class IntegerCoordinate extends NumericCoordinate {
                 // this should never happen
                 noOfTicks++;
             }
-            while ((m_minDomainValue + noOfTicks * range) > m_domainRange) {
+            while ((noOfTicks * range) > m_domainRange) {
                 // this should also not happen but happened...
                 noOfTicks--;
             }
