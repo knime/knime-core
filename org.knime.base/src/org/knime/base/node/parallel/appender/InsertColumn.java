@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * -------------------------------------------------------------------
  */
 package org.knime.base.node.parallel.appender;
 

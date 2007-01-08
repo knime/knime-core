@@ -122,7 +122,7 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
             final RowIterator it = m_data[0].iterator();
             BufferedDataContainer container = null;
             int count = 0, chunks = 0;
-            while (true) {
+            while (chunkSize > 0) {
                 try {
                     m_exec.checkCanceled();
                 } catch (CanceledExecutionException ex) {
