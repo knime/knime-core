@@ -14,5 +14,9 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.ext.sun
 Eclipse-RegisterBuddy: org.knime.base
 Eclipse-AutoStart: true
-Export-Package: org.knime.testing
+Export-Package: org.knime.testing,
+ org.knime.testing.algorithms,
+ org.knime.testing.core,
+ org.knime.testing.guiTests,
+ org.knime.testing.node.differNode
 
