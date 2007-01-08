@@ -698,31 +698,46 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * If both <code>DataTableSpec</code>s have equal structure
      * (which is required if you call this method)
      * their domains, Color-, Shape and Size-Handlers are merged.
-     * @param spec1 The first DataTableSpec. 
-     * @param spec2 The second DataTableSpec.
+     * @param specs The DataTableSpecs to merge. 
      * @return a DataTableSpec with merged domain information
      * from both input DataTableSpecs.
      * @throws IllegalArgumentException if the structures of the DataTableSpecs
      * do not match.
      */
-    public static DataTableSpec mergeDataTableSpecs(final DataTableSpec spec1,
-            final DataTableSpec spec2) {
-        // make sure, that both DataTableSpecs have equal strucure
-        if (!spec1.equalStructure(spec2)) {
-            throw new IllegalArgumentException("Cannot merge DataTableSpecs," 
-                   + " they don't have equal structure");
+    public static DataTableSpec mergeDataTableSpecs(
+            final DataTableSpec... specs) {
+        // make sure that all DataTableSpecs have equal strucure
+        for (int i = 0; i < specs.length; i++) {
+            for (int j = i + 1; j < specs.length; j++) {
+                if (!specs[i].equalStructure(specs[j])) {
+                    throw new IllegalArgumentException(
+                            "Cannot merge DataTableSpecs,"
+                                    + " they don't have equal structure");
+                }
+            }
         }
-        
-        // create new ColumnSpecs with merged domains, handlers etc...
-        DataColumnSpec[] mergedColSpecs = new DataColumnSpec[
-                                                  spec1.getNumColumns()];
-        DataColumnSpecCreator colspecCreator = null;
-        for (int i = 0; i < mergedColSpecs.length; i++) {
-            colspecCreator = new DataColumnSpecCreator(spec1.getColumnSpec(i),
-                    spec2.getColumnSpec(i));
-            mergedColSpecs[i] = colspecCreator.createSpec();
+        // initialize with first DataTableSpec
+        DataTableSpec firstSpec = specs[0];
+        DataColumnSpecCreator[] mergedColSpecCreators =
+                new DataColumnSpecCreator[firstSpec.getNumColumns()];
+        for (int i = 0; i < mergedColSpecCreators.length; i++) {
+            mergedColSpecCreators[i] =
+                    new DataColumnSpecCreator(firstSpec.getColumnSpec(i));
         }
-        return new DataTableSpec(mergedColSpecs);
+
+        // merge with ColumnSpecs from other DataTableSpecs
+        for (int i = 1; i < specs.length; i++) {
+            DataTableSpec spec = specs[i];
+            for (int c = 0; c < spec.getNumColumns(); c++) {
+                mergedColSpecCreators[c].merge(spec.getColumnSpec(c));
+            }
+        }
+        DataColumnSpec[] mergedcolspecs =
+                new DataColumnSpec[mergedColSpecCreators.length];
+        for (int i = 0; i < mergedcolspecs.length; i++) {
+            mergedcolspecs[i] = mergedColSpecCreators[i].createSpec();
+        }
+        return new DataTableSpec(mergedcolspecs);
     }
 
     /**
