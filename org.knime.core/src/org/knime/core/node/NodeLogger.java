@@ -134,7 +134,8 @@ public final class NodeLogger {
                 System.err.println("Your log4j-configuration file "
                         + "'log4j-1.1.0.xml' could not be renamed to "
                         + "'log4j.xml'. KNIME now uses 'log4j.xml' as default "
-                        + "configuration file.");
+                        + "configuration file. Please remove the old file "
+                        + "if a 'log4j.xml' already exists.");
             }
         }
 
