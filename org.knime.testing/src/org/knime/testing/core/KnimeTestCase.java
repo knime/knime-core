@@ -127,10 +127,10 @@ public class KnimeTestCase extends TestCase {
                     }
                     Assert.fail(msg);
                 } else {
-                    if (status != null) {
+                    if (status != null && (status instanceof NodeStatus.Error)) {
                         String msg =
                                 "\nNode " + node.getName()
-                                        + " is not executed\n ";
+                                        + " executed with errors: \n ";
                         msg += status.getMessage();
                         Assert.fail(msg);
                     }
