@@ -23,8 +23,8 @@
 package org.knime.base.node.mine.smote;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Map;
@@ -73,7 +73,7 @@ class Smoter {
 
     private final BufferedDataContainer m_container;
 
-    private final Map<DataCell, MutableInt> m_inStats;
+    private final LinkedHashMap<DataCell, MutableInt> m_inStats;
 
     private int m_appendCounter;
     
@@ -103,7 +103,7 @@ class Smoter {
         m_targetCol = col;
         DataTableSpec outSpec = createFinalSpec(in.getDataTableSpec());
         m_container = exec.createDataContainer(outSpec);
-        m_inStats = new HashMap<DataCell, MutableInt>();
+        m_inStats = new LinkedHashMap<DataCell, MutableInt>();
         for (DataRow next : in) {
             checkCanceled(exec);
             DataCell clas = next.getCell(col);
