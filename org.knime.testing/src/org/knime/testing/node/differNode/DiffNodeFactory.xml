@@ -19,6 +19,8 @@
 			<p>
 			In the node's dialog, select the criteria that should be used to 
 			compare the two input tables:</p>
+		</intro>
+			
 		<option name="TableDiffer">The node succeeds if the two input tables are
 		        equal. Each data cell of each row is compared with the corresponding
 		        cell of the other table using the 
@@ -36,7 +38,6 @@
 		        the scorer result. The node succeeds, if the score of the test table is
 		        within the specified range of the golden score.
 		</option>		
-		</intro>
 
 	</fullDescription>
 	
