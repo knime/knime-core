@@ -692,6 +692,38 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         }
         return idx;
     }
+    
+    /**
+     * This method merges two <code>DataTableSpec</code>s. 
+     * If both <code>DataTableSpec</code>s have equal structure
+     * (which is required if you call this method)
+     * their domains, Color-, Shape and Size-Handlers are merged.
+     * @param spec1 The first DataTableSpec. 
+     * @param spec2 The second DataTableSpec.
+     * @return a DataTableSpec with merged domain information
+     * from both input DataTableSpecs.
+     * @throws IllegalArgumentException if the structures of the DataTableSpecs
+     * do not match.
+     */
+    public static DataTableSpec mergeDataTableSpecs(final DataTableSpec spec1,
+            final DataTableSpec spec2) {
+        // make sure, that both DataTableSpecs have equal strucure
+        if (!spec1.equalStructure(spec2)) {
+            throw new IllegalArgumentException("Cannot merge DataTableSpecs," 
+                   + " they don't have equal structure");
+        }
+        
+        // create new ColumnSpecs with merged domains, handlers etc...
+        DataColumnSpec[] mergedColSpecs = new DataColumnSpec[
+                                                  spec1.getNumColumns()];
+        DataColumnSpecCreator colspecCreator = null;
+        for (int i = 0; i < mergedColSpecs.length; i++) {
+            colspecCreator = new DataColumnSpecCreator(spec1.getColumnSpec(i),
+                    spec2.getColumnSpec(i));
+            mergedColSpecs[i] = colspecCreator.createSpec();
+        }
+        return new DataTableSpec(mergedColSpecs);
+    }
 
     /**
      * The string summary of all column specs of this table spec.
