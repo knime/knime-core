@@ -36,8 +36,6 @@ import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 import javax.swing.plaf.basic.BasicLabelUI;
 
-import com.sun.java.swing.SwingUtilities2;
-
 /**
  * Label UI that respects the linebreaks in the label to be rendered. This
  * UI does not support an icon or respects in any kind the alignment of the 
@@ -105,6 +103,7 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
     /**
      * @see BasicLabelUI#paint(Graphics, JComponent)
      */
+    @Override
     public void paint(final Graphics g, final JComponent c) {
         JLabel label = (JLabel)c;
         String text = label.getText();
@@ -113,7 +112,7 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
             return;
         }
 
-        FontMetrics fm = SwingUtilities2.getFontMetrics(label, g);
+        FontMetrics fm = label.getFontMetrics(label.getFont()); 
         Insets insets = c.getInsets(m_viewInsets);
 
         m_paintViewR.x = insets.left;
