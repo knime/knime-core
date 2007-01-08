@@ -26,6 +26,12 @@
  */
 package org.knime.core.data;
 
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
@@ -121,6 +127,159 @@ public class DataColumnSpecCreator {
         // property color
         m_colorHandler = cspec.getColorHandler();
 
+    }
+    
+    /**
+     * Initializes the creator with two DataColumnSpecs. If they have equal
+     * structure, the domain information from both DataColumnSpecs is merged,
+     * Color, Shape and Size-Handlers are compared (must be equal).
+     * 
+     * @param cspec1 the first {@link DataColumnSpec}.
+     * @param cspec2 the second {@link DataColumnSpec}.
+     * 
+     * @see DataTableSpec#mergeDataTableSpecs(DataTableSpec, DataTableSpec)
+     * @throws IllegalArgumentException if the structure (type and name) does
+     * not match, if the domain can not be merged, if the Color-, Shape- or
+     * SizeHandlers are different or if a property with different values exists.
+     */
+    public DataColumnSpecCreator(final DataColumnSpec cspec1,
+            final DataColumnSpec cspec2) {
+        if (!cspec1.equalStructure(cspec2)) {
+            throw new IllegalArgumentException("Structures of DataColumnSpecs"
+                    + " do not match.");
+        }
+        setName(cspec1.getName());
+        setType(cspec1.getType());
+        
+        // Domain
+        DataColumnDomain domain1 = cspec1.getDomain();
+        DataColumnDomain domain2 = cspec2.getDomain();
+        if (domain1.equals(domain2)) {
+            m_domain = domain1;
+        } else {
+            // merge domain information.
+            if ((domain1.hasValues() && (domain2.hasLowerBound() || domain2
+                    .hasUpperBound()))
+                    || (domain2.hasValues()
+                    && (domain1.hasLowerBound() || domain1.hasUpperBound()))) {
+                throw new IllegalArgumentException(
+                        "Will not merge, one ColumnSpec has possible values"
+                             + " and the other has upper and/or lower bounds");
+            }
+            if (domain1.hasValues() || domain2.hasValues()) {
+                Set<DataCell> mergedvals = new HashSet<DataCell>();
+                if (domain1.hasValues()) {
+                    mergedvals.addAll(domain1.getValues());
+                }
+                if (domain2.hasValues()) {
+                    mergedvals.addAll(domain2.getValues());
+                }
+                setDomain(new DataColumnDomain(null, null, mergedvals));
+            } else if (domain1.hasLowerBound() || domain1.hasUpperBound()
+                    || domain2.hasLowerBound() || domain2.hasUpperBound()) {
+                DataValueComparator comparator =
+                        cspec1.getType().getComparator();
+                DataCell lowerBound = domain1.getLowerBound();
+                if (comparator.compare(lowerBound,
+                        domain2.getLowerBound()) > 0) {
+                    lowerBound = domain2.getLowerBound();
+                }
+                DataCell upperBound = domain1.getUpperBound();
+                if (comparator.compare(upperBound, 
+                        domain2.getUpperBound()) < 0) {
+                    upperBound = domain2.getUpperBound();
+                }
+                setDomain(new DataColumnDomain(lowerBound, upperBound, null));
+            } else {
+                setDomain(new DataColumnDomain(null, null, null));
+            }
+        }
+     
+        // ColorHandler
+        ColorHandler color1 = cspec1.getColorHandler();
+        ColorHandler color2 = cspec2.getColorHandler();
+        if (color1 != null && color2 != null) {
+            if (color1.equals(color2)) {
+                setColorHandler(color1);
+            } else {
+                throw new IllegalArgumentException("Will not merge. " 
+                       + "Different color handlers for column: "
+                       + cspec1.getName());
+            }
+        } else {
+            if (color1 != null) {
+                setColorHandler(color1);
+            }
+            if (color2 != null) {
+                setColorHandler(color2);
+            }
+        }
+        
+        // Properties
+        DataColumnProperties prop1 = cspec1.getProperties();
+        DataColumnProperties prop2 = cspec2.getProperties();
+        Map<String, String> mergedProps = new HashMap<String, String>();
+        Enumeration e = prop1.properties();
+        while (e.hasMoreElements()) {
+            String key = (String)e.nextElement();
+            String value = prop1.getProperty(key);
+            mergedProps.put(key, value);
+        }
+        e = prop2.properties();
+        while (e.hasMoreElements()) {
+            String key = (String)e.nextElement();
+            String prop1value = prop1.getProperty(key);
+            String prop2value = prop2.getProperty(key);
+            if (prop1value != null) {
+                if (!prop1value.equals(prop2value)) {
+                    throw new IllegalArgumentException("Will not merge. "
+                            + "Property with key " + key + " has different "
+                            + "values: " + prop1value + ", " + prop2value);
+                }
+            }
+            mergedProps.put(key, prop2value);
+        }
+        setProperties(new DataColumnProperties(mergedProps));
+        
+        // SizeHandler
+        SizeHandler size1 = cspec1.getSizeHandler();
+        SizeHandler size2 = cspec2.getSizeHandler();
+        if (size1 != null && size2 != null) {
+            if (size1.equals(size2)) {
+                setSizeHandler(size1);
+            } else {
+                throw new IllegalArgumentException("Will not merge. " 
+                       + "Different size handlers for column: "
+                       + cspec1.getName());
+            }
+        } else {
+            if (size1 != null) {
+                setSizeHandler(size1);
+            }
+            if (size2 != null) {
+                setSizeHandler(size2);
+            }
+        }
+        
+        // ShapeHandler
+        ShapeHandler shape1 = cspec1.getShapeHandler();
+        ShapeHandler shape2 = cspec2.getShapeHandler();
+        if (shape1 != null && shape2 != null) {
+            if (shape1.equals(shape2)) {
+                setShapeHandler(shape1);
+            } else {
+                throw new IllegalArgumentException("Will not merge. " 
+                       + "Different shape handlers for column: "
+                       + cspec1.getName());
+            }
+        } else {
+            if (shape1 != null) {
+                setShapeHandler(shape1);
+            }
+            if (shape2 != null) {
+                setShapeHandler(shape2);
+            }
+        }
     }
 
     /**
