@@ -126,16 +126,16 @@
 <entry key="StringCell" type="xstring" value="Iris-virginica"/>
 </config>
 </config>
-<config key="Iris-versicolor">
-<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
-<config key="org.knime.core.data.def.StringCell">
-<entry key="StringCell" type="xstring" value="Iris-versicolor"/>
-</config>
-</config>
 <config key="Iris-setosa">
 <entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
 <config key="org.knime.core.data.def.StringCell">
 <entry key="StringCell" type="xstring" value="Iris-setosa"/>
+</config>
+</config>
+<config key="Iris-versicolor">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Iris-versicolor"/>
 </config>
 </config>
 </config>
@@ -146,17 +146,17 @@
 <entry key="2" type="xint" value="255"/>
 <entry key="3" type="xint" value="255"/>
 </config>
-<config key="Iris-versicolor">
-<entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="0"/>
-<entry key="1" type="xint" value="255"/>
-<entry key="2" type="xint" value="0"/>
-<entry key="3" type="xint" value="255"/>
-</config>
 <config key="Iris-setosa">
 <entry key="array-size" type="xint" value="4"/>
 <entry key="0" type="xint" value="255"/>
 <entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="Iris-versicolor">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="255"/>
 <entry key="2" type="xint" value="0"/>
 <entry key="3" type="xint" value="255"/>
 </config>
