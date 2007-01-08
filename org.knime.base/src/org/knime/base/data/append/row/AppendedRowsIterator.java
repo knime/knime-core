@@ -139,8 +139,10 @@ public class AppendedRowsIterator extends RowIterator {
         m_duplicateHash = new HashSet<RowKey>();
         m_exec = exec;
         m_totalRowCount = totalRowCount;
-        initNextTable();
-        initNextRow();
+        if (tables.length > 0) {
+            initNextTable();
+            initNextRow();
+        }
     }
 
     /**

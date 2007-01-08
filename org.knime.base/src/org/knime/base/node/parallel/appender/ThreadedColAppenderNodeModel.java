@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- 
  */
 package org.knime.base.node.parallel.appender;
 
@@ -87,12 +87,12 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
          */
         public void run() {
             final double max = m_data[0].getRowCount();
-            final int chunkSize =
-                    (int)Math.ceil(max / (4.0 * m_workers.getMaxThreads()));
+            final int chunkSize = (int)Math.ceil(max
+                    / (4.0 * m_workers.getMaxThreads()));
             final RowIterator it = m_data[0].iterator();
             BufferedDataContainer container = null;
             int count = 0, chunks = 0;
-            while (true) {
+            while (chunkSize > 0) {
                 try {
                     m_exec.checkCanceled();
                 } catch (CanceledExecutionException ex) {
@@ -114,9 +114,8 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                         break;
                     }
 
-                    container =
-                            m_exec.createDataContainer(m_data[0]
-                                    .getDataTableSpec());
+                    container = m_exec.createDataContainer(m_data[0]
+                            .getDataTableSpec());
                 }
                 container.addRowToTable(it.next());
             }
@@ -134,8 +133,8 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                         for (DataRow r : data) {
                             m_exec.checkCanceled();
                             DataCell[] newCells = m_cellFacs[i].getCells(r);
-                            DataRow newRow =
-                                    new DefaultRow(r.getKey(), newCells);
+                            DataRow newRow = new DefaultRow(r.getKey(),
+                                    newCells);
                             result[i].addRowToTable(newRow);
 
                             int pr = m_processedRows.incrementAndGet();
@@ -156,13 +155,12 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
     }
 
     /** The default maximum number of threads for each threaded node. */
-    public static final int DEFAULT_MAX_THREAD_COUNT =
-            Runtime.getRuntime().availableProcessors() + 1;
+    public static final int DEFAULT_MAX_THREAD_COUNT = Runtime.getRuntime()
+            .availableProcessors() + 1;
 
     /** The execution service that is used. */
-    private final ThreadPool m_workers =
-            KNIMEConstants.GLOBAL_THREAD_POOL
-                    .createSubPool(DEFAULT_MAX_THREAD_COUNT);
+    private final ThreadPool m_workers = KNIMEConstants.GLOBAL_THREAD_POOL
+            .createSubPool(DEFAULT_MAX_THREAD_COUNT);
 
     private BufferedDataTable[] m_additionalTables;
 
@@ -176,8 +174,8 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
      *            {@link org.knime.core.node.ModelContent} elements available as
      *            inputs
      */
-    public ThreadedColAppenderNodeModel(final int nrDataIns, final int nrDataOuts,
-            final int nrPredParamsIns) {
+    public ThreadedColAppenderNodeModel(final int nrDataIns,
+            final int nrDataOuts, final int nrPredParamsIns) {
         super(nrDataIns, nrDataOuts, nrPredParamsIns, 0);
     }
 
@@ -189,7 +187,8 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
      * @param nrDataOuts The number of {@link DataTable} objects expected at the
      *            output.
      */
-    public ThreadedColAppenderNodeModel(final int nrDataIns, final int nrDataOuts) {
+    public ThreadedColAppenderNodeModel(final int nrDataIns,
+            final int nrDataOuts) {
         super(nrDataIns, nrDataOuts);
     }
 
@@ -222,13 +221,11 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                 + "output ports";
 
         exec.setProgress(0, "Processing chunks");
-        m_additionalTables =
-                new BufferedDataTable[Math.max(0, data.length - 1)];
+        m_additionalTables = new BufferedDataTable[Math.max(0, data.length - 1)];
         System.arraycopy(data, 1, m_additionalTables, 0,
                 m_additionalTables.length);
 
-        final List<Future<DataContainer[]>> futures =
-                new ArrayList<Future<DataContainer[]>>();
+        final List<Future<DataContainer[]>> futures = new ArrayList<Future<DataContainer[]>>();
 
         Submitter submitter = new Submitter(data, cellFacs, futures, exec);
 
@@ -240,16 +237,15 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
             submitter.run();
         }
 
-        final AppendedRowsTable[] combinedResults =
-                getCombinedResults(futures, exec);
-        final BufferedDataTable[] resultTables =
-                new BufferedDataTable[getNrDataOuts()];
+        final AppendedRowsTable[] combinedResults = getCombinedResults(futures,
+                exec);
+        final BufferedDataTable[] resultTables = new BufferedDataTable[getNrDataOuts()];
 
         for (int i = 0; i < getNrDataOuts(); i++) {
             final int outTableNr = i;
 
-            ColumnRearranger rea =
-                    new ColumnRearranger(data[0].getDataTableSpec());
+            ColumnRearranger rea = new ColumnRearranger(data[0]
+                    .getDataTableSpec());
 
             ColumnDestination[] dests = cellFacs[i].getColumnDestinations();
             for (int k = 0; k < dests.length; k++) {
@@ -258,8 +254,8 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                 ColumnDestination cd = dests[k];
 
                 CellFactory cf = new CellFactory() {
-                    private final RowIterator m_it =
-                            combinedResults[outTableNr].iterator();
+                    private final RowIterator m_it = combinedResults[outTableNr]
+                            .iterator();
 
                     public DataCell[] getCells(final DataRow row) {
                         DataRow r2 = m_it.next();
@@ -271,15 +267,16 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                     }
 
                     public DataColumnSpec[] getColumnSpecs() {
-                        return new DataColumnSpec[]{combinedResults[outTableNr]
-                                .getDataTableSpec().getColumnSpec(cellIndex)};
+                        return new DataColumnSpec[]{cellFacs[outTableNr]
+                                .getColumnSpecs()[cellIndex]};
                     }
 
                     public void setProgress(final int curRowNr,
                             final int rowCount, final RowKey lastKey,
                             final ExecutionMonitor exek) {
-                        exec.setProgress(curRowNr / (double)rowCount, "Processed row " 
-                                + curRowNr + " (\"" + lastKey + "\")");
+                        exec.setProgress(curRowNr / (double)rowCount,
+                                "Processed row " + curRowNr + " (\"" + lastKey
+                                        + "\")");
                     }
                 };
 
@@ -293,9 +290,8 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
             }
 
             exec.setMessage("Aggregating chunks");
-            resultTables[i] =
-                    exec.createColumnRearrangeTable(data[0], rea, exec
-                            .createSubProgress(0.05));
+            resultTables[i] = exec.createColumnRearrangeTable(data[0], rea,
+                    exec.createSubProgress(0.05));
         }
 
         m_additionalTables = null;
@@ -318,8 +314,8 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
             final List<Future<DataContainer[]>> futures,
             final ExecutionContext exec) throws InterruptedException,
             ExecutionException, CanceledExecutionException {
-        final DataTable[][] tempTables =
-                new DataTable[getNrDataOuts()][futures.size()];
+        final DataTable[][] tempTables = new DataTable[getNrDataOuts()][futures
+                .size()];
         int k = 0;
         for (Future<DataContainer[]> results : futures) {
             try {
@@ -345,8 +341,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
             k++;
         }
 
-        final AppendedRowsTable[] combinedResults =
-                new AppendedRowsTable[getNrDataOuts()];
+        final AppendedRowsTable[] combinedResults = new AppendedRowsTable[getNrDataOuts()];
         for (int i = 0; i < combinedResults.length; i++) {
             combinedResults[i] = new AppendedRowsTable(tempTables[i]);
         }
