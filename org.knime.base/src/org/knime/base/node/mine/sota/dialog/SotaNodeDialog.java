@@ -31,7 +31,10 @@ import java.awt.Insets;
 import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 
+import org.knime.base.node.mine.sota.SotaNodeModel;
+import org.knime.base.node.mine.sota.SotaUtil;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
@@ -117,6 +120,32 @@ public class SotaNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         assert (settings != null && specs != null);
+        
+        int numberCells = 0;
+        int fuzzyCells = 0;
+        for (int i = 0; i < specs[SotaNodeModel.INPORT].getNumColumns(); 
+            i++) {
+                DataType type = specs[SotaNodeModel.INPORT].getColumnSpec(i)
+                        .getType();
+
+                if (SotaUtil.isNumberType(type)) {
+                    numberCells++;
+                } else if (SotaUtil.isFuzzyIntervalType(type)) {
+                    fuzzyCells++;
+                }
+        }
+
+        StringBuffer buffer = new StringBuffer();
+        if (numberCells <= 0 && fuzzyCells <= 0) {
+            buffer.append("No FuzzyIntervalCells or NumberCells found !" 
+                    + " Is the node fully connected ?");
+        }
+
+        // if buffer throw exception
+        if (buffer.length() > 0) {
+            throw new NotConfigurableException(buffer.toString());
+        }
+        
         m_settings.loadSettingsFrom(settings, specs);
         m_filterSettings.loadSettingsFrom(settings, specs);
         m_hierarchicalFuzzyDataSettings.loadSettingsFrom(settings, specs);
