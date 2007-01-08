@@ -28,6 +28,12 @@
 	expression patterns.
 	</p>
 	</intro>
+	<option name="Column filter">
+		Choose only these columns for the clustering process which are 
+		important and interesting. Columns which are not choosen will be
+		ignored. Be aware that columns containing fuzzy cells and columns 
+		containing number cells can not be mixed.
+	</option>
 	<option name="Winner learningrate">
 		Set the winners learning rate which is used to adjust the winning cluster
 		representative to the given data.
@@ -72,18 +78,13 @@
 		Choose the euclidean or cosinus distance metric, to measure the distance
 		between datapoints and cluster representatives.
 	</option>
-	<option name="Column filter">
-		Choose only these columns for the clustering process which are 
-		important and interesting. Columns which are not choosen will be
-		ignored.
-	</option>
 	<option name="Use hierarchical fuzzy data">
 		Check to cluster hierarchical fuzzy rules hierarchically. The column
 		with the fuzzy rule level has to be selected in the drop down menu on 
 		the right. The drop down menu will be enabled when the checkbox is
 		checked.
 	</option>
-	<option name="Set column with hierarchical level">
+	<option name="Hierarchical level">
 		If the checkbox on the left is checked, to cluster hierarchical fuzzy
 		rules, the column with the fuzzy rule level must be choosen by 
 		selecting it in the drop down menu.

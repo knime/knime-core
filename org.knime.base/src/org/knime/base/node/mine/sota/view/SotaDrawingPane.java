@@ -358,7 +358,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
         }
 
         // repaint all the data
-        if (m_data != null && m_root != null && m_cells != null) {
+        if (m_data != null && m_root != null && m_cells != null 
+                && m_originalData != null) {
             drawData(g);
             drawTree(g);
 
@@ -374,6 +375,11 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
      * @param g graphics instance to draw with
      */
     private void drawData(final Graphics g) {
+        
+        if (m_originalData == null || m_data == null) {
+            return;
+        }
+        
         int startX = 0;
         int startY = m_jpHeight - PIXEL_HEIGHT;
         int tmpStartY = startY;

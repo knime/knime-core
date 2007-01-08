@@ -52,32 +52,33 @@ public class SotaNodeView extends NodeView {
 
         if (nodeModel.getSotaManager().getRoot() != null) {
             // get data model, init view
-            m_pane =
-                    new SotaDrawingPane(nodeModel.getSotaManager().getRoot(),
-                            nodeModel.getSotaManager().getInDataContainer(),
-                            nodeModel.getSotaManager().getOriginalData(),
-                            nodeModel.getSotaManager()
-                                    .isUseHierarchicalFuzzyData(), nodeModel
-                                    .getSotaManager()
-                                    .getMaxHierarchicalLevel());
-
-            nodeModel.getInHiLiteHandler(0).addHiLiteListener(m_pane);
-            m_pane.setHiliteHandler(nodeModel.getInHiLiteHandler(0));
-
-            m_panel = new SotaTreeViewPropsPanel(m_pane);
-
-            getJMenuBar().add(m_pane.createHiLiteMenu());
-            getJMenuBar().add(m_panel.createZoomMenu());
-
-            m_outerPanel = new JPanel();
-            m_outerPanel
-                    .setLayout(new BoxLayout(m_outerPanel, BoxLayout.Y_AXIS));
-            m_outerPanel.add(m_panel);
-            super.setShowNODATALabel(false);
-            super.setComponent(m_outerPanel);
+            initialize(nodeModel);
         }
     }
 
+    private void initialize(final SotaNodeModel nodeModel) {
+        m_pane =
+                new SotaDrawingPane(nodeModel.getSotaManager().getRoot(),
+                        nodeModel.getSotaManager().getInDataContainer(),
+                        nodeModel.getSotaManager().getOriginalData(), nodeModel
+                                .getSotaManager().isUseHierarchicalFuzzyData(),
+                        nodeModel.getSotaManager().getMaxHierarchicalLevel());
+
+        nodeModel.getInHiLiteHandler(0).addHiLiteListener(m_pane);
+        m_pane.setHiliteHandler(nodeModel.getInHiLiteHandler(0));
+
+        m_panel = new SotaTreeViewPropsPanel(m_pane);
+
+        getJMenuBar().add(m_pane.createHiLiteMenu());
+        getJMenuBar().add(m_panel.createZoomMenu());
+
+        m_outerPanel = new JPanel();
+        m_outerPanel.setLayout(new BoxLayout(m_outerPanel, BoxLayout.Y_AXIS));
+        m_outerPanel.add(m_panel);
+        super.setShowNODATALabel(false);
+        super.setComponent(m_outerPanel);
+    }
+    
     /**
      * @see org.knime.core.node.NodeView#modelChanged()
      */
@@ -93,9 +94,19 @@ public class SotaNodeView extends NodeView {
 
             m_pane.modelChanged(true);
             m_panel.modelChanged();
+        } else  {
+            initialize(node);
         }
     }
 
+    
+    /**
+     * @see org.knime.core.node.NodeView#updateModel(java.lang.Object)
+     */
+    protected void updateModel(final Object arg) {
+        modelChanged();
+    }
+    
     /**
      * @see org.knime.core.node.NodeView#onClose()
      */
