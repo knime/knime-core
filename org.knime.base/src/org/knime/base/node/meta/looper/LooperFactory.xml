@@ -8,10 +8,10 @@
 	</shortDescription>
 	
 	<fullDescription>
-		<intro>The Looper executes the inner workflow multiple times and collects the results
+		<intro>The Looper executes the inner workflow multiple times and concatenates the results
 			of all loops in its output table. The number of loops can be set in the dialog.
 		</intro>
-		<option name="Number of loops">The number of time the inner workflow should be executed.</option>
+		<option name="Number of loops">The number of times the inner workflow should be executed.</option>
 	</fullDescription>
 	
 	<ports>
