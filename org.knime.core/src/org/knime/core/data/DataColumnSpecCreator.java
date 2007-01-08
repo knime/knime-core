@@ -28,7 +28,7 @@ package org.knime.core.data;
 
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -150,60 +150,80 @@ public class DataColumnSpecCreator {
                     + " do not match.");
         }
 
-        // Domain
         DataColumnDomain domain2 = cspec2.getDomain();
-        if (!m_domain.equals(domain2)) {
-            // merge domain information.
-            if ((m_domain.hasValues() && (domain2.hasLowerBound() || domain2
-                    .hasUpperBound()))
-                    || (domain2.hasValues() 
-                            && (m_domain.hasLowerBound() || m_domain
-                            .hasUpperBound()))) {
-                throw new IllegalArgumentException(
-                        "Will not merge, one ColumnSpec has possible values"
-                              + " and the other has upper and/or lower bounds");
-            }
-            if (m_domain.hasValues() || domain2.hasValues()) {
-                Set<DataCell> mergedvals = new HashSet<DataCell>();
-                if (m_domain.hasValues()) {
-                    mergedvals.addAll(m_domain.getValues());
-                }
-                if (domain2.hasValues()) {
-                    mergedvals.addAll(domain2.getValues());
-                }
-                setDomain(new DataColumnDomain(null, null, mergedvals));
-            } else if (m_domain.hasLowerBound() || m_domain.hasUpperBound()
-                    || domain2.hasLowerBound() || domain2.hasUpperBound()) {
-                DataValueComparator comparator = m_type.getComparator();
-                DataCell lowerBound = m_domain.getLowerBound();
-                if (comparator.compare(
-                        lowerBound, domain2.getLowerBound()) > 0) {
-                    lowerBound = domain2.getLowerBound();
-                }
-                DataCell upperBound = m_domain.getUpperBound();
-                if (comparator.compare(
-                        upperBound, domain2.getUpperBound()) < 0) {
-                    upperBound = domain2.getUpperBound();
-                }
-                setDomain(new DataColumnDomain(lowerBound, upperBound, null));
-            } else {
-                setDomain(new DataColumnDomain(null, null, null));
-            }
+        boolean hasDomainChanged = false;
+        final Set<DataCell> myValues = m_domain.getValues();
+        final Set<DataCell> oValues = m_domain.getValues();
+        Set<DataCell> newValues;
+        if (myValues == null || oValues == null) {
+            newValues = null;
+            hasDomainChanged |= myValues != null;
+        } else if (myValues.equals(oValues)) {
+            newValues = myValues;
+        } else {
+            newValues = new LinkedHashSet<DataCell>(myValues);
+            newValues.addAll(oValues);
+            hasDomainChanged = true;
+        }
+        
+        DataValueComparator comparator = m_type.getComparator();
+
+        final DataCell myLower = m_domain.getLowerBound();
+        final DataCell oLower = domain2.getLowerBound();
+        DataCell newLower;
+        if (myLower == null || oLower == null) {
+            newLower = null;
+            hasDomainChanged |= myLower != null;
+        } else if (myLower.equals(oLower)) {
+            newLower = myLower;
+        } else if (comparator.compare(myLower, oLower) > 0) {
+            newLower = oLower;
+            hasDomainChanged = true;
+        } else {
+            newLower = myLower;
         }
 
-        // ColorHandler
+        final DataCell myUpper = m_domain.getLowerBound();
+        final DataCell oUpper = domain2.getLowerBound();
+        DataCell newUpper;
+        if (myUpper == null || oUpper == null) {
+            newUpper = null;
+            hasDomainChanged |= myUpper != null;
+        } else if (myUpper.equals(oUpper)) {
+            newUpper = myUpper;
+        } else if (comparator.compare(myUpper, oUpper) < 0) {
+            newUpper = oUpper;
+            hasDomainChanged = true;
+        } else {
+            newUpper = myUpper;
+        }
+        
+        
+        if (hasDomainChanged) {
+            setDomain(new DataColumnDomain(newLower, newUpper, newValues));
+        }
+
         ColorHandler colorHandler2 = cspec2.getColorHandler();
-        if (m_colorHandler != null && colorHandler2 != null) {
-            if (!m_colorHandler.equals(colorHandler2)) {
+        if ((m_colorHandler != null && !m_colorHandler.equals(colorHandler2))
+                || (m_colorHandler == null && colorHandler2 != null)) {
                 throw new IllegalArgumentException("Will not merge. "
                         + "Different color handlers for column: " + m_name);
-            }
-        } else {
-            if (colorHandler2 != null) {
-                setColorHandler(colorHandler2);
-            }
+        }
+        
+        ShapeHandler shapeHandler2 = cspec2.getShapeHandler();
+        if ((m_shapeHandler != null && !m_shapeHandler.equals(shapeHandler2))
+                || (m_shapeHandler == null && shapeHandler2 != null)) {
+            throw new IllegalArgumentException("Will not merge. "
+                    + "Different shape handlers for column: " + m_name);
         }
 
+        SizeHandler sizeHandler2 = cspec2.getSizeHandler();
+        if ((m_sizeHandler != null && !m_sizeHandler.equals(sizeHandler2))
+                || (m_sizeHandler == null && sizeHandler2 != null)) {
+            throw new IllegalArgumentException("Will not merge. "
+                    + "Different size handlers for column: " + m_name);
+        }
+        
         // Properties
         DataColumnProperties prop2 = cspec2.getProperties();
         Map<String, String> mergedProps = new HashMap<String, String>();
@@ -218,42 +238,14 @@ public class DataColumnSpecCreator {
             String key = (String)e.nextElement();
             String prop1value = m_properties.getProperty(key);
             String prop2value = prop2.getProperty(key);
-            if (prop1value != null) {
-                if (!prop1value.equals(prop2value)) {
-                    throw new IllegalArgumentException("Will not merge. "
-                            + "Property with key " + key + " has different "
-                            + "values: " + prop1value + ", " + prop2value);
-                }
+            if ((prop1value != null) && prop1value.equals(prop2value)) {
+                mergedProps.put(key, prop2value);
             }
-            mergedProps.put(key, prop2value);
         }
-        setProperties(new DataColumnProperties(mergedProps));
-
-        // SizeHandler
-        SizeHandler sizeHandler2 = cspec2.getSizeHandler();
-        if (m_sizeHandler != null && sizeHandler2 != null) {
-            if (!m_sizeHandler.equals(sizeHandler2)) {
-                throw new IllegalArgumentException("Will not merge. "
-                        + "Different size handlers for column: " + m_name);
-            }
-        } else {
-            if (sizeHandler2 != null) {
-                setSizeHandler(sizeHandler2);
-            }
+        if (mergedProps.size() != m_properties.size()) {
+            setProperties(new DataColumnProperties(mergedProps));
         }
 
-        // ShapeHandler
-        ShapeHandler shapeHandler2 = cspec2.getShapeHandler();
-        if (m_shapeHandler != null && shapeHandler2 != null) {
-            if (!m_shapeHandler.equals(shapeHandler2)) {
-                throw new IllegalArgumentException("Will not merge. "
-                        + "Different shape handlers for column: " + m_name);
-            }
-        } else {
-            if (shapeHandler2 != null) {
-                setShapeHandler(shapeHandler2);
-            }
-        }
     }
 
     /**

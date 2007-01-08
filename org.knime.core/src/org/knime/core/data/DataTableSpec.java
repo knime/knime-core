@@ -694,30 +694,54 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     }
     
     /**
-     * This method merges two <code>DataTableSpec</code>s. 
-     * If both <code>DataTableSpec</code>s have equal structure
+     * This method merges two or more <code>DataTableSpec</code>s. 
+     * If the <code>DataTableSpec</code>s have equal structure
      * (which is required if you call this method)
-     * their domains, Color-, Shape and Size-Handlers are merged.
+     * their domains, Color-, Shape and Size-Handlers are merged. That means:
+     * <ul>
+     * <li>If any of the columns has a color/shape/size handler attached, it
+     * must be the same handler for the respective column in all tables.</li>
+     * <li>If columns have properties attached (defined through 
+     * {@link DataColumnSpec#getProperties()}), they will be merged, the 
+     * merged <code>DataColumnSpec</code> will contain the intersection of all 
+     * properties (key and value must be the same).</li>
+     * <li>The {@link DataColumnSpec#getDomain() domains} will be updated, the 
+     * possible values list will contain the union of all possible values and
+     * the min/max values will be set appropriately. 
+     * </ul>
+     * 
+     * <p>This factory method is used when two or more tables shall be 
+     * (row-wise) concatenated, for instance in
+     * {@link org.knime.core.node.ExecutionContext#createConcatenateTable(
+     * org.knime.core.node.ExecutionMonitor, 
+     * org.knime.core.node.BufferedDataTable[]) 
+     * ExecutionContext#createConcatenateTable}.
      * @param specs The DataTableSpecs to merge. 
      * @return a DataTableSpec with merged domain information
      * from both input DataTableSpecs.
      * @throws IllegalArgumentException if the structures of the DataTableSpecs
-     * do not match.
+     * do not match, the array is empty, or the array is <code>null</code>.
      */
     public static DataTableSpec mergeDataTableSpecs(
             final DataTableSpec... specs) {
-        // make sure that all DataTableSpecs have equal strucure
-        for (int i = 0; i < specs.length; i++) {
-            for (int j = i + 1; j < specs.length; j++) {
-                if (!specs[i].equalStructure(specs[j])) {
-                    throw new IllegalArgumentException(
-                            "Cannot merge DataTableSpecs,"
-                                    + " they don't have equal structure");
-                }
-            }
+        if (specs == null || Arrays.asList(specs).contains(null)) {
+            throw new IllegalArgumentException("Argument array must not " 
+                    + "be null, nor contain null values.");
+        }
+        if (specs.length == 0) {
+            throw new IllegalArgumentException(
+                    "Argument array must not be empty.");
         }
         // initialize with first DataTableSpec
         DataTableSpec firstSpec = specs[0];
+        // make sure that all DataTableSpecs have equal strucure
+        for (int i = 1; i < specs.length; i++) {
+            if (!firstSpec.equalStructure(specs[i])) {
+                throw new IllegalArgumentException(
+                        "Cannot merge DataTableSpecs,"
+                                + " they don't have equal structure");
+            }
+        }
         DataColumnSpecCreator[] mergedColSpecCreators =
                 new DataColumnSpecCreator[firstSpec.getNumColumns()];
         for (int i = 0; i < mergedColSpecCreators.length; i++) {
