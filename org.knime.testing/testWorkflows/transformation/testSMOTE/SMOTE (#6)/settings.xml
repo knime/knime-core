@@ -9,12 +9,17 @@
 </config>
 <config key="model">
 <entry key="method" type="xstring" value="oversample_all"/>
-<entry key="rate" type="xdouble" value="2.0"/>
-<entry key="class" type="xstring" value="Col4"/>
+<entry key="rate" type="xdouble" value="3.0"/>
+<entry key="class" type="xstring" value="class"/>
 <entry key="kNN" type="xint" value="5"/>
-<entry key="seed" type="xstring" value="4605507068431990424"/>
+<entry key="seed" type="xstring" value="4605831097758533803"/>
 </config>
-<config key="spec_files">
-<entry key="output_0" type="xstring" value="spec_0.xml"/>
+<config key="data_meta_file">
+<entry key="data_files_directory" type="xstring" value="data"/>
+<config key="output_0">
+<entry key="data_files_directory" type="xstring" value="data_0"/>
+<entry key="has_output_spec" type="xboolean" value="true"/>
 </config>
+</config>
+<config key="model_files"/>
 </config>
