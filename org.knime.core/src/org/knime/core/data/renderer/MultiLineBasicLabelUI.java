@@ -112,7 +112,7 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
             return;
         }
 
-        FontMetrics fm = sun.swing.SwingUtilities2.getFontMetrics(label, g);
+        FontMetrics fm = label.getFontMetrics(label.getFont()); 
         Insets insets = c.getInsets(m_viewInsets);
 
         m_paintViewR.x = insets.left;
