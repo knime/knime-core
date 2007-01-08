@@ -314,6 +314,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
         jitter(matrixElements);
         ((ScatterMatrixDrawingPane)getDrawingPane()).setScatterMatrixElements(
                 matrixElements);
+        getDrawingPane().repaint();
     }
     
     private void jitter(final ScatterMatrixElement[][] matrixElements) {
