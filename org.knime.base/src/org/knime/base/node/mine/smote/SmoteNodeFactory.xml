@@ -18,7 +18,7 @@
 			classification performance. In case of unbalanced input data,
 			for instance there are only few objects of the &quot;active&quot; but 
 			many of the &quot;inactive&quot; class, this node adjusts the class distribution 
-			by adding artifical rows (in the example by adding rows for the of the &quot;active&quot; class). 
+			by adding artifical rows (in the example by adding rows for the &quot;active&quot; class). 
 			</p>
 			<p>
 			The algorithm works roughly as follows: It creates synthetic rows by extrapolating 
@@ -26,9 +26,6 @@
 			and one of its nearest neighbors (of the same class). It then picks a point
 			along the line between these two objects and determines the attributes (cell values)
 			of the new object based on this randomly chosen point.
-			The paper describing this technique in detail is available online at
-			<a href="http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume16/chawla02a.pdf">
-			http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume16/chawla02a.pdf</a>.
 			</p>
 		</intro>
 		<option name="Class Column">
@@ -56,11 +53,11 @@
 			Check this option if you want to use a seed for the random number 
 			generator. This will cause consecutive runs of the node to produce
 			the same output data. If unchecked, each run of the node generates
-			a new seed.
+			a new seed. Use "Draw new seed" to randomly draw a new seed.
 		</option>
 	</fullDescription>
     <ports>
-        <dataIn index="0" name="Input data">Table containing labeled data for oversampling</dataIn>
+        <dataIn index="0" name="Input data">Table containing labeled data for oversampling.</dataIn>
         <dataOut index="0" name="Oversampled data">Oversampled data (input table with appended rows).</dataOut>
 	</ports>
 </knimeNode>
