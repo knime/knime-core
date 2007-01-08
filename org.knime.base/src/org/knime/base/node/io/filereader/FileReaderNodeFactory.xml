@@ -54,7 +54,9 @@
 	    	opens where column properties can be set: name 
 	    	and type can be changed (and will be fixed then).
 	     	A pattern can be entered that will cause a "missing
-	        cell" to be created when it's read for this column.
+	        cell" to be created when it's read for this column. Additionally,
+	        possible values of the column domain can be updated by selecting
+	        "Domain".
 		    </option>	      	
 	</fullDescription>
 	

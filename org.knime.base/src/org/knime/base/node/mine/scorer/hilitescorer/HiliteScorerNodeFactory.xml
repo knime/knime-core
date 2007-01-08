@@ -6,14 +6,15 @@
     <fullDescription>
         <intro>
 			Compares two columns by their attribute value pairs and shows the 
-		    confusion matrix, i.e. how many rows of which attribute and their classification. 
+		    confusion matrix, i.e. how many rows of which attribute and their 
+		    classification match. 
 		    Additionally, it is possible to hilight cells of this matrix to
-		    determine the data rows that have been predicted wrongly.
-		    The dialog allows you to select two columns to compare;
+		    determine the underlying rows.
+		    The dialog allows you to select two columns for comparison;
 			the values from the first selected column are represented in the 
 			confusion matrix's rows and the values from the second column by the
 			confusion matrix's columns. The output of the node is the confusion 
-			matrix.
+			matrix with the number of matches in each cell.
 		</intro>
 	</fullDescription>
     <ports>
@@ -23,9 +24,9 @@
 	<views>
 		<view index="0" name="Confusion Matrix">
 			Displays the confusion matrix in a table view. It is possible
-			to hilight a cell of the matrix which propagates highlighting
-			to the corresponding rows. Therefore, it is possible to identify
-			wrongly classified predictions.
+			to hilight cells of the matrix which propagates highlighting
+			to the corresponding rows. Therefore, it is possible for example to 
+			identify wrong predictions.
 		</view>
 	</views>
 </knimeNode>
