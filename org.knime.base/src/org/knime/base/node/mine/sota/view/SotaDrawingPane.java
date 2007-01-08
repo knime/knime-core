@@ -277,7 +277,11 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
             }
 
             // compute pixel width of data pixels
-            m_pixelWidth = (int)Math.floor(m_jpWidth / m_data.size());
+            if (m_data.size() == 0) {
+                m_pixelWidth = 0;
+            } else  {
+                m_pixelWidth = (int)Math.floor(m_jpWidth / m_data.size());
+            }
 
             // get all cells
             m_cells = new ArrayList<SotaTreeCell>();
