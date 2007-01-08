@@ -19,6 +19,10 @@
             category-path="/testing"
             factory-class="org.knime.testing.node.differNode.DiffNodeFactory"
             id="org.knime.testing.differNode.DiffNodeFactory"/>
+      <node
+            category-path="/testing"
+            factory-class="org.knime.testing.node.disturber.DisturberNodeFactory"
+            id="org.knime.testing.node.disturber.DisturberNodeFactory"/>
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">
