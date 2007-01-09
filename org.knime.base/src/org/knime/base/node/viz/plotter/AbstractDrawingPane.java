@@ -30,6 +30,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Stroke;
 
 import javax.swing.JPanel;
 
@@ -131,8 +132,12 @@ public abstract class AbstractDrawingPane extends JPanel {
                     RenderingHints.VALUE_ANTIALIAS_OFF);            
         }
         Color backupColor = g2.getColor();
+        Stroke backupStroke = g2.getStroke();
         paintContent(g2);
+        // restore the original color
         g2.setColor(backupColor);
+        // and the original stroke
+        g2.setStroke(backupStroke);
         // paint selection rectangle if mouse is down
         if (m_isMouseDown) {
             paintSelectionRectangle(g2);
