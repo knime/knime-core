@@ -157,7 +157,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
 
         String name = resource.getName();
 
-        if (name.equals("intern")) {
+        if (name.equals("internal")) {
             return true;
         }
 
@@ -165,6 +165,10 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
             if (name.startsWith("model_")) {
                 return true;
             }
+            if (name.equals("data.xml")) {
+                return true;
+            }
+
         }
 
         // get extension to check if this resource is a zip file
