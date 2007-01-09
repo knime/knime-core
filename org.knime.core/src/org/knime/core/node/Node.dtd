@@ -29,8 +29,8 @@
 <!ELEMENT shortDescription (#PCDATA) >
 
 <!ELEMENT fullDescription (intro, option*) >
-<!ELEMENT intro (#PCDATA | p | h | br | b | i | u | a | ul | ol | h3 | h4)* >
-<!ELEMENT option (#PCDATA | p | h | br | b | i | u | tt | a | ul | ol)* >
+<!ELEMENT intro (#PCDATA | p | h | br | b | i | u | a | ul | ol | h3 | h4 | pre)* >
+<!ELEMENT option (#PCDATA | p | h | br | b | i | u | tt | a | ul | ol | pre)* >
 <!ATTLIST option name CDATA #REQUIRED>
 
 <!ELEMENT p (#PCDATA | br | b | i | u | a | tt | ul | ol)* >
@@ -45,6 +45,7 @@
 <!ELEMENT u (#PCDATA) >
 <!ELEMENT a (#PCDATA) >
 <!ELEMENT tt (#PCDATA) >
+<!ELEMENT pre (#PCDATA) >
 <!ELEMENT br EMPTY >
 <!ATTLIST a href CDATA #REQUIRED>
 
