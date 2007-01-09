@@ -79,7 +79,7 @@ public class DBWriterDialogPane extends NodeDialogPane {
 
     private final JPasswordField m_pass = new JPasswordField();
 
-    private final JFileChooser m_chooser = new JFileChooser();
+    private JFileChooser m_chooser = null;
 
     private final HashSet<String> m_driverLoaded = new HashSet<String>();
 
@@ -92,20 +92,17 @@ public class DBWriterDialogPane extends NodeDialogPane {
      */
     DBWriterDialogPane() {
         super();
-        m_chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        m_chooser.setAcceptAllFileFilterUsed(false);
-        m_chooser
-                .setFileFilter(new SimpleFileFilter(DBDriverLoader.EXTENSIONS));
-        Font font = new Font("Courier", Font.PLAIN, 12);
+        Font font = new Font("Monospaced", Font.PLAIN, 12);
         m_driver.setEditable(false);
         m_driver.setFont(font);
         m_driver.setPreferredSize(new Dimension(335, 20));
         m_load.setPreferredSize(new Dimension(60, 20));
         m_load.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                int ret = m_chooser.showOpenDialog(getPanel());
+                JFileChooser chooser = createFileChooser();
+                int ret = chooser.showOpenDialog(getPanel());
                 if (ret == JFileChooser.APPROVE_OPTION) {
-                    File file = m_chooser.getSelectedFile();
+                    File file = chooser.getSelectedFile();
                     try {
                         DBDriverLoader.loadDriver(file);
                         updateDriver();
@@ -171,6 +168,17 @@ public class DBWriterDialogPane extends NodeDialogPane {
         super.addTab("SQL Types", scroll);
     }
 
+    private JFileChooser createFileChooser() {
+        if (m_chooser == null) {
+            m_chooser = new JFileChooser();
+            m_chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            m_chooser.setAcceptAllFileFilterUsed(false);
+            m_chooser.setFileFilter(
+                    new SimpleFileFilter(DBDriverLoader.EXTENSIONS));
+        }
+        return m_chooser;
+    }
+    
     /**
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
