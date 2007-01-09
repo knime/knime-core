@@ -167,8 +167,19 @@ public class Expression implements Serializable {
             c.initCause(mue);
             throw c;
         } catch (ClassNotFoundException cfe) {
+            StringBuilder addInfo = new StringBuilder("(Class file ");
+            addInfo.append(m_classFile.getAbsolutePath());
+            if (m_classFile.exists()) {
+                addInfo.append("does exist - ");
+                addInfo.append(m_classFile.length());
+                addInfo.append(" bytes");
+            } else {
+                addInfo.append("does not exist");
+            }
+            addInfo.append(")");
             CompilationFailedException c = new CompilationFailedException(
-                    "Can't load class file " + classAbsoluteName);
+                    "Can't load class file " + classAbsoluteName
+                    + addInfo.toString());
             c.initCause(cfe);
             throw c;
         }
