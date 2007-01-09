@@ -78,6 +78,7 @@ public final class BatchExecutor {
               "Usage: " + BatchExecutor.class.getName() + " OPTIONS\n"
             + "where OPTIONS can be:\n"
             + " -nosave => do not save the workflow after execution has finished\n"
+            + " -reset => reset workflow prior to execution\n"
             + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root of the ZIP\n"
             + " -workflowDir=... => directory with a ready-to-execute workflow\n"
             + " -destFile=... => ZIP file where the executed workflow should be written to\n"
@@ -111,12 +112,15 @@ public final class BatchExecutor {
 
         File input = null, output = null;
         boolean noSave = false;
+        boolean reset = false;
         List<Option> options = new ArrayList<Option>();
 
         for (String s : args) {
             String[] parts = s.split("=");
             if ("-nosave".equals(parts[0])) {
                 noSave = true;
+            } else if ("-reset".equals(parts[0])) {
+                reset = true;
             } else if ("-workflowFile".equals(parts[0])) {
                 input = new File(parts[1]);
                 if (!input.isFile()) {
@@ -171,6 +175,9 @@ public final class BatchExecutor {
         }
 
         wfm.load(workflowFile, new DefaultNodeProgressMonitor());
+        if (reset) {
+            wfm.resetAndConfigureAll();
+        }
 
         for (Option o : options) {
             NodeContainer cont = wfm.getNodeContainerById(o.m_nodeID);
