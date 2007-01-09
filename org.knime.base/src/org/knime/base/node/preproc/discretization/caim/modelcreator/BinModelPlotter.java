@@ -24,25 +24,22 @@
  */
 package org.knime.base.node.preproc.discretization.caim.modelcreator;
 
-import java.awt.Cursor;
 import java.awt.Point;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.JPopupMenu;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.preproc.discretization.caim.DiscretizationModel;
 import org.knime.base.node.preproc.discretization.caim.DiscretizationScheme;
-import org.knime.base.node.viz.plotter.PlotterMouseListener;
-import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
-import org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixProperties;
+import org.knime.base.node.viz.plotter.AbstractPlotter;
+import org.knime.base.node.viz.plotter.columns.MultiColumnPlotterProperties;
 import org.knime.base.util.coordinate.Coordinate;
-import org.knime.base.util.coordinate.CoordinateMapping;
 import org.knime.base.util.coordinate.DoubleCoordinate;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
@@ -51,6 +48,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.property.hilite.KeyEvent;
 import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
@@ -58,7 +56,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class BinModelPlotter extends ScatterPlotter {
+public class BinModelPlotter extends AbstractPlotter {
 
     private Set<String> m_selectedColumns;
 
@@ -81,11 +79,11 @@ public class BinModelPlotter extends ScatterPlotter {
      * Creates a bin model plotter.
      */
     public BinModelPlotter() {
-        super(new BinModelDrawingPane(), new ScatterMatrixProperties());
+        super(new BinModelDrawingPane(), new MultiColumnPlotterProperties());
         /* ------------- listener ------------ */
         // colunm selection
         final ColumnFilterPanel colFilter =
-                ((ScatterMatrixProperties)getProperties()).getColumnFilter();
+                ((MultiColumnPlotterProperties)getProperties()).getColumnFilter();
         colFilter.addChangeListener(new ChangeListener() {
             /**
              * @see javax.swing.event.ChangeListener#stateChanged(
@@ -97,41 +95,8 @@ public class BinModelPlotter extends ScatterPlotter {
                 repaint();
             }
         });
-        // dot size
-        ((ScatterMatrixProperties)getProperties())
-                .addDotSizeChangeListener(new ChangeListener() {
-                    /**
-                     * @see javax.swing.event.ChangeListener#stateChanged(
-                     *      javax.swing.event.ChangeEvent)
-                     */
-                    public void stateChanged(final ChangeEvent e) {
-                        setDotSize(((ScatterMatrixProperties)getProperties())
-                                .getDotSize());
-                        updatePaintModel();
-                    }
-
-                });
-        // jitter
-        ((ScatterMatrixProperties)getProperties()).getJitterSlider().setValue(
-                getJitterRate() * 10);
-        ((ScatterMatrixProperties)getProperties()).getJitterSlider()
-                .addMouseListener(new MouseAdapter() {
-
-                    /**
-                     * @see java.awt.event.MouseAdapter#mouseReleased(
-                     *      java.awt.event.MouseEvent)
-                     */
-                    @Override
-                    public void mouseReleased(final MouseEvent e) {
-                        int jitter =
-                                ((ScatterMatrixProperties)getProperties())
-                                        .getJitterSlider().getValue();
-                        setJitterRate(jitter / 10);
-                        updatePaintModel();
-                    }
-
-                });
-        addMouseListener(new TransformationMouseListener());
+        setAntialiasing(true);
+        removeMouseListener(AbstractPlotter.SelectionMouseListener.class);
     }
 
     /**
@@ -164,7 +129,6 @@ public class BinModelPlotter extends ScatterPlotter {
      */
     @Override
     public void reset() {
-        super.reset();
         m_selectedColumns = null;
     }
 
@@ -179,7 +143,6 @@ public class BinModelPlotter extends ScatterPlotter {
         }
 
         // clear the drawing pane
-        ((BinModelDrawingPane)getDrawingPane()).setDotInfoArray(null);
         ((BinModelDrawingPane)getDrawingPane()).setBinningSchemes(null);
 
         // get the first columns
@@ -191,7 +154,7 @@ public class BinModelPlotter extends ScatterPlotter {
                 // add them to the selected columns
                 m_selectedColumns.add(binnedColumnNames[i]);
             }
-            ((ScatterMatrixProperties)getProperties()).updateColumnSelection(
+            ((MultiColumnPlotterProperties)getProperties()).updateColumnSelection(
                     m_binnedColumnsSpec, m_selectedColumns);
         }
 
@@ -263,36 +226,16 @@ public class BinModelPlotter extends ScatterPlotter {
         }
 
         ((BinModelDrawingPane)getDrawingPane()).setBinningSchemes(binRulers);
-
-        // reverse list for y axis...
-        // List<DataCell> reverseList =
-        // new ArrayList<DataCell>(selectedColumnCells);
-        // createNominalYCoordinate(new LinkedHashSet<DataCell>(reverseList));
-
+        
         m_hMargin = 10;
         m_vMargin = 10;
         ((BinModelDrawingPane)getDrawingPane()).setHorizontalMargin(m_hMargin);
+        setHeight(
+                binRulers[binRulers.length - 1]
+                        .getLeftStartPoint().y + 40);
 
-        // set the offset for the column axes
-        getXAxis().setStartTickOffset(m_vMargin);
-        getYAxis().setStartTickOffset(m_hMargin);
-
-//        // set the new height of the plotter
-//        setHeight(2 * m_hMargin + selectedSchemes.length
-//                * m_columnDisplayHeight + 40);
     }
 
-//    /**
-//     * Fits to screen. Overrides the method to set an own height.
-//     */
-//    @Override
-//    public void fitToScreen() {
-//        super.fitToScreen();
-//        // set the new height of the plotter
-//        setHeight(2 * m_hMargin + selectedSchemes.length
-//                * m_columnDisplayHeight + 40);
-//        m_drawingPane.repaint();
-//    }
 
     /**
      * Creates an array of {@link DiscretizationScheme}s that contains all
@@ -345,102 +288,58 @@ public class BinModelPlotter extends ScatterPlotter {
         return result;
     }
 
-    /**
+    
+    
+    @Override
+	public void fillPopupMenu(JPopupMenu popupMenu) {
+		// let popup menu empty
+	}
+
+	/**
      * @see org.knime.base.node.viz.plotter.basic.BasicPlotter#updateSize()
      */
     @Override
     public void updateSize() {
-        super.updateSize();
         updatePaintModel();
     }
 
-    /**
-     * Mouse listener for changing the column position.
-     * 
-     * @author Fabian Dill, University of Konstanz
-     */
-    public class TransformationMouseListener extends PlotterMouseListener {
+	@Override
+	public void clearSelection() {
+		// no selection supported
+	}
 
-        private String m_selectedColumn;
+	@Override
+	public void hiLite(KeyEvent event) {
+		// no hilite supported
+	}
 
-        private boolean m_dragged = false;
+	@Override
+	public void hiLiteSelected() {
+		// no hilite supported
+	}
 
-        private final Cursor m_hand = new Cursor(Cursor.HAND_CURSOR);
+	@Override
+	public void selectClickedElement(Point clicked) {
+		// no selection supported
+	}
 
-        private final Cursor m_default = Cursor.getDefaultCursor();
+	@Override
+	public void selectElementsIn(Rectangle selectionRectangle) {
+		// no selection supported
+	}
 
-        /**
-         * 
-         * @see java.lang.Object#toString()
-         */
-        @Override
-        public String toString() {
-            return "Transformation";
-        }
+	@Override
+	public void unHiLite(KeyEvent event) {
+		// no hilite supported
+	}
 
-        /**
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#getCursor()
-         */
-        @Override
-        public Cursor getCursor() {
-            return super.getCursor();
-        }
+	@Override
+	public void unHiLiteSelected() {
+		// no hilite supported
+	}
 
-        /**
-         * @see PlotterMouseListener#mouseDragged(java.awt.event.MouseEvent)
-         */
-        @Override
-        public void mouseDragged(final MouseEvent e) {
-            m_dragged = true;
-            getDrawingPane().setCursor(m_hand);
-        }
-
-        /**
-         * @see java.awt.event.MouseAdapter#mousePressed(
-         *      java.awt.event.MouseEvent)
-         */
-        @Override
-        public void mousePressed(final MouseEvent e) {
-
-            // not used currently
-            if (1 == 1) {
-                return;
-            }
-            // find out which column was clicked
-            CoordinateMapping[] mappings =
-                    getXAxis().getCoordinate().getTickPositions(
-                            getDrawingPaneDimension().width, true);
-            int bucket = (e.getX() - m_vMargin) / m_columnDisplayHeight;
-            m_selectedColumn = mappings[bucket].getDomainValueAsString();
-        }
-
-        /**
-         * @see java.awt.event.MouseAdapter#mouseReleased(
-         *      java.awt.event.MouseEvent)
-         */
-        @Override
-        public void mouseReleased(final MouseEvent e) {
-
-            // not used currently
-            if (1 == 1) {
-                return;
-            }
-            // here change order of selected columns
-            // first get new position
-            if (m_dragged) {
-                int newBucket = (e.getX() - m_vMargin) / m_columnDisplayHeight;
-                List<String> columns = new ArrayList<String>();
-                columns.addAll(m_selectedColumns);
-                columns.remove(m_selectedColumn);
-                columns.add(newBucket, m_selectedColumn);
-                m_selectedColumns = new LinkedHashSet<String>();
-                m_selectedColumns.addAll(columns);
-                updatePaintModel();
-            }
-            m_dragged = false;
-            getDrawingPane().setCursor(m_default);
-        }
-
-    }
+	public void unHiLiteAll() {
+		// no hilite supported
+	}
 
 }

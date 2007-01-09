@@ -65,7 +65,6 @@ public class BinModelNodeView extends NodeView {
                         .getDiscretizationModel());
         plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
         plotter.updatePaintModel();
-        getJMenuBar().add(plotter.getHiLiteMenu());
         setComponent(plotter);
     }
 
@@ -138,6 +137,7 @@ public class BinModelNodeView extends NodeView {
                     .setDiscretizationModel(((CAIMDiscretizationNodeModel)model)
                                 .getDiscretizationModel());
                 plotter.updatePaintModel();
+                plotter.getDrawingPane().repaint();
             }
         }
     }
@@ -154,11 +154,6 @@ public class BinModelNodeView extends NodeView {
      */
     @Override
     protected void onOpen() {
-        if (m_plotters != null) {
-            for (AbstractPlotter plotter : m_plotters) {
-                plotter.fitToScreen();
-            }
-        }
     }
 
 }

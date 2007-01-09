@@ -380,7 +380,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
             // if this cell is hilited, background color is yellow
             // the first column is never hilited
             if (column > 0) {
-                if (m_cellHilited[row][column - 1]) {
+                if (m_cellHilited != null && m_cellHilited[row][column - 1]) {
 
                     if (isSelected) {
                         setBackground(ColorAttr.SELECTED_HILITE);
