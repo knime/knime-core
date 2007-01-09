@@ -132,7 +132,8 @@ final class TransposeTableNodeModel extends NodeModel {
             exec.checkCanceled();
             exec.setProgress(0, "Computing new column type for row: "
                     + row.getKey().getId());
-            DataType type = null;
+            // fallback type if no column is available
+            DataType type = DataType.getType(DataCell.class);
             // and all cells
             for (int i = 0; i < row.getNumCells(); i++) {
                 DataType newType = row.getCell(i).getType();
@@ -175,7 +176,7 @@ final class TransposeTableNodeModel extends NodeModel {
             DataRow row = new DefaultRow(new StringCell(header), data);
             cont.addRowToTable(row);
         }
-        exec.setProgress(1.0, "Finishing, closing buffer...");
+        exec.setProgress(1.0, "Finished, closing buffer...");
         cont.close();
         return new BufferedDataTable[]{cont.getTable()};
 

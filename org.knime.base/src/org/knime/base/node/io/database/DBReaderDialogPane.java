@@ -81,7 +81,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
 
     private final JPasswordField m_pass = new JPasswordField();
 
-    private final JFileChooser m_chooser = new JFileChooser();
+    private JFileChooser m_chooser = null;
 
     private final HashSet<String> m_driverLoaded = new HashSet<String>();
     
@@ -92,10 +92,6 @@ public class DBReaderDialogPane extends NodeDialogPane {
      */
     DBReaderDialogPane() {
         super();
-        m_chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        m_chooser.setAcceptAllFileFilterUsed(false);
-        m_chooser
-                .setFileFilter(new SimpleFileFilter(DBDriverLoader.EXTENSIONS));
         Font font = new Font("Courier", Font.PLAIN, 12);
         JPanel parentPanel = new JPanel(new GridLayout(4, 1));
         m_driver.setEditable(false);
@@ -104,9 +100,10 @@ public class DBReaderDialogPane extends NodeDialogPane {
         m_load.setPreferredSize(new Dimension(60, 20));
         m_load.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                int ret = m_chooser.showOpenDialog(getPanel());
+                JFileChooser chooser = createFileChooser();
+                int ret = chooser.showOpenDialog(getPanel());
                 if (ret == JFileChooser.APPROVE_OPTION) {
-                    File file = m_chooser.getSelectedFile();
+                    File file = chooser.getSelectedFile();
                     try {
                         DBDriverLoader.loadDriver(file);
                         updateDriver();
@@ -167,6 +164,17 @@ public class DBReaderDialogPane extends NodeDialogPane {
         scrollPane.setPreferredSize(new Dimension(400, 100));
         allPanel.add(scrollPane, BorderLayout.CENTER);
         super.addTab("Settings", allPanel);
+    }
+    
+    private JFileChooser createFileChooser() {
+        if (m_chooser == null) {
+            m_chooser = new JFileChooser();
+            m_chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            m_chooser.setAcceptAllFileFilterUsed(false);
+            m_chooser.setFileFilter(
+                    new SimpleFileFilter(DBDriverLoader.EXTENSIONS));
+        }
+        return m_chooser;
     }
 
     /**

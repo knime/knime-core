@@ -95,13 +95,20 @@ class DBReaderNodeModel extends DBReaderConnectionNodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-        File specFile = new File(nodeInternDir, "spec.xml");
+        File specFile = null;
+        specFile = new File(nodeInternDir, "spec.xml");
+        if (!specFile.exists()) {
+            IOException ioe = new IOException("Spec file (\"" 
+                    + specFile.getAbsolutePath() + "\") does not exist "
+                    + "(node may have been saved by an older version!)");
+            throw ioe;
+        }
         NodeSettingsRO specSett = 
             NodeSettings.loadFromXML(new FileInputStream(specFile));
         try {
             m_lastSpec = DataTableSpec.load(specSett);
         } catch (InvalidSettingsException ise) {
-            IOException ioe = new IOException("Could not read spec.");
+            IOException ioe = new IOException("Could not read output spec.");
             ioe.initCause(ise);
             throw ioe;
         }
