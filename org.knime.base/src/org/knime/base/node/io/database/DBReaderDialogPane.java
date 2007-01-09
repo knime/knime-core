@@ -92,7 +92,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
      */
     DBReaderDialogPane() {
         super();
-        Font font = new Font("Courier", Font.PLAIN, 12);
+        Font font = new Font("Monospaced", Font.PLAIN, 12);
         JPanel parentPanel = new JPanel(new GridLayout(4, 1));
         m_driver.setEditable(false);
         m_driver.setFont(font);
