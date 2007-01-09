@@ -4,20 +4,45 @@
 	<name>Difference Checker</name>
 	
 	<shortDescription>
-		Checks if the two input tables are the same.
+		Compares the two input tables.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>
-			This node is used for the testing and compares the output of the workflow
-            with a stored persistent "golden" file and thrwos an exception if the two 
-            tables are not equal.
+			<p>
+			Used in regression tests to test the created data table with a 
+			previously stored golden data table. The node will compare (depending
+			on the dialog settings) the incoming tables during execute and 
+			fails with an exception if the tables are not equal (or do not meet
+			the expectations). In that case the node stays not executed and the 
+			test will fail.</p>
+			<p>
+			In the node's dialog, select the criteria that should be used to 
+			compare the two input tables:</p>
 		</intro>
+			
+		<option name="TableDiffer">The node succeeds if the two input tables are
+		        equal. Each data cell of each row is compared with the corresponding
+		        cell of the other table using the 
+		        <tt>DataCell.equalsDataCell()</tt> method.
+		</option>		
+		<option name="NegativeDiffer">A useless and not working option. To be 
+				removed soon!
+		</option>		
+		<option name="LearnerScoreComperator">Compares two tables from a Scorer
+		        node. Can be used to ensure the classification error of a 
+		        learner/predictor is within a certain range. The predecessor
+		        must be a scorer, the golden table should also be generated
+		        by a scorer (probably by the same in a previous run). This option
+		        allows specifying the upper and lower tolerance (in percent) for 
+		        the scorer result. The node succeeds, if the score of the test table is
+		        within the specified range of the golden score.
+		</option>		
 
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Datatable with the output of the workflow">Datatable with the output of the workflow</dataIn>
-		<dataIn index="1" name="The 'golden' datatable">The "golden" datatable.</dataIn>
+		<dataIn index="0" name="Test Table">Datatable with the output of the node to test</dataIn>
+		<dataIn index="1" name="Golden Table">The "golden" (i.e. correct) datatable.</dataIn>
 	</ports>	
 </knimeNode>

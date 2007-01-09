@@ -78,9 +78,17 @@ public class KnimeTestCase extends TestCase {
             CanceledExecutionException, IOException, WorkflowException {
         // start here the workflow
         m_errorAppender = new TestingAppender(Level.ERROR, Level.ERROR, 100);
-        m_manager =
-                new WorkflowManager(m_knimeSettings,
-                        new DefaultNodeProgressMonitor());
+        try {
+            m_manager =
+                    new WorkflowManager(m_knimeSettings,
+                            new DefaultNodeProgressMonitor());
+        } catch (WorkflowException ex) {
+            if (ex.getNextException() != null) {
+                throw ex.getNextException();
+            } else {
+                throw ex;
+            }
+        }
     }
 
     /**
@@ -119,10 +127,10 @@ public class KnimeTestCase extends TestCase {
                     }
                     Assert.fail(msg);
                 } else {
-                    if (status != null) {
+                    if (status != null && (status instanceof NodeStatus.Error)) {
                         String msg =
                                 "\nNode " + node.getName()
-                                        + " is not executed\n ";
+                                        + " executed with errors: \n ";
                         msg += status.getMessage();
                         Assert.fail(msg);
                     }
