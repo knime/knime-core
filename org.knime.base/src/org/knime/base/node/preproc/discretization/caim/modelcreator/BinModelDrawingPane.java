@@ -28,8 +28,11 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 
+import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 
 /**
@@ -38,7 +41,7 @@ import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class BinModelDrawingPane extends ScatterPlotterDrawingPane {
+public class BinModelDrawingPane extends AbstractDrawingPane {
 
     private static final int TICK_SIZE = 4;
 
@@ -79,6 +82,12 @@ public class BinModelDrawingPane extends ScatterPlotterDrawingPane {
      */
     @Override
     public void paintContent(final Graphics g) {
+    	if (m_binningSchemes == null) {
+    		return;
+    	}
+    	// set text antialias on
+    	((Graphics2D)g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+    			RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         // set the preferred size to the needed height
         int width = getPreferredSize().width;
@@ -87,7 +96,6 @@ public class BinModelDrawingPane extends ScatterPlotterDrawingPane {
                         .getLeftStartPoint().y + 40;
         setPreferredSize(new Dimension(width, height));
 
-        super.paintContent(g);
         if (m_binningSchemes == null) {
             return;
         }
@@ -136,24 +144,9 @@ public class BinModelDrawingPane extends ScatterPlotterDrawingPane {
             g.setFont(tempFont);
         }
 
-        super.paintContent(g);
 
     }
 
-    /**
-     * Not supported yet.
-     * 
-     * @param x1 left corner x
-     * @param y1 left corner y
-     * @param x2 right corner x
-     * @param y2 right corner y
-     */
-    @Override
-    public void selectElementsIn(final int x1, final int y1, final int x2,
-            final int y2) {
-
-        // no selection supported yet
-    }
 
     /**
      * No tool tips yet.
