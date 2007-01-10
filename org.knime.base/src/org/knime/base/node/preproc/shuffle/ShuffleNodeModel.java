@@ -113,6 +113,10 @@ public class ShuffleNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
+        if (inData[0].getRowCount() == 0) {
+            // empty table? do nothing.
+            return inData;
+        }
         Random random;
         if (m_seed != null) {
             random = new Random(m_seed.longValue());
@@ -132,7 +136,7 @@ public class ShuffleNodeModel extends NodeModel {
             tmpKeys.add(r.next().getKey());
             subExec1.checkCanceled();
         }
-
+        
         m_shuffleArr = tmpKeys.toArray(new RowKey[]{});
 
         if (nrRows < containersize) {
