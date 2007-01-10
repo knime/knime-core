@@ -132,7 +132,11 @@ public class ShuffleNodeModel extends NodeModel {
             tmpKeys.add(r.next().getKey());
             subExec1.checkCanceled();
         }
-
+        
+        if (nrRows == 0) {
+            // empty table? do nothing.
+            return inData;
+        }
         m_shuffleArr = tmpKeys.toArray(new RowKey[]{});
 
         if (nrRows < containersize) {
