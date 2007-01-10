@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="table_meta_info">
+<entry key="table_ID" type="xint" value="128"/>
+<entry key="table_type" type="xstring" value="new_spec_table"/>
+<entry key="table_reference" type="xstring" isnull="true" value=""/>
+<config key="meta_internal">
+<entry key="table_reference_ID" type="xint" value="127"/>
+</config>
+<entry key="table_file_name" type="xstring" value="data.zip"/>
+</config>
