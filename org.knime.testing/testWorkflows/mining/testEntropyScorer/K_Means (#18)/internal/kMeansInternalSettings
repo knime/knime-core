@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="kMeans">
+<entry key="nrOfClusters" type="xint" value="6"/>
+<entry key="dimensions" type="xint" value="5"/>
+<entry key="ignoredColumns" type="xint" value="1"/>
+<config key="clusterCoverage">
+<entry key="array-size" type="xint" value="6"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="100"/>
+<entry key="2" type="xint" value="42"/>
+<entry key="3" type="xint" value="0"/>
+<entry key="4" type="xint" value="8"/>
+<entry key="5" type="xint" value="0"/>
+</config>
+<config key="kMeansCluster0">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xdouble" value="5.8"/>
+<entry key="1" type="xdouble" value="1.2"/>
+<entry key="2" type="xdouble" value="0.2"/>
+<entry key="3" type="xdouble" value="0.0"/>
+</config>
+<config key="kMeansCluster1">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xdouble" value="5.901"/>
+<entry key="1" type="xdouble" value="3.209000000000001"/>
+<entry key="2" type="xdouble" value="4.033"/>
+<entry key="3" type="xdouble" value="1.1099999999999997"/>
+</config>
+<config key="kMeansCluster2">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xdouble" value="4.895238095238095"/>
+<entry key="1" type="xdouble" value="2.9380952380952383"/>
+<entry key="2" type="xdouble" value="1.1404761904761904"/>
+<entry key="3" type="xdouble" value="0.1547619047619048"/>
+</config>
+<config key="kMeansCluster3">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xdouble" value="4.575"/>
+<entry key="1" type="xdouble" value="1.675"/>
+<entry key="2" type="xdouble" value="0.5"/>
+<entry key="3" type="xdouble" value="0.075"/>
+</config>
+<config key="kMeansCluster4">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xdouble" value="5.2375"/>
+<entry key="1" type="xdouble" value="3.2"/>
+<entry key="2" type="xdouble" value="0.175"/>
+<entry key="3" type="xdouble" value="0.0"/>
+</config>
+<config key="kMeansCluster5">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xdouble" value="3.9"/>
+<entry key="1" type="xdouble" value="1.7"/>
+<entry key="2" type="xdouble" value="0.4"/>
+<entry key="3" type="xdouble" value="0.0"/>
+</config>
+</config>
