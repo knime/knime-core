@@ -120,6 +120,12 @@
 <entry key="color_model_class" type="xstring" value="org.knime.core.data.property.ColorModelNominal"/>
 <config key="color_model">
 <config key="keys">
+<config key="Iris-virginica">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Iris-virginica"/>
+</config>
+</config>
 <config key="Iris-setosa">
 <entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
 <config key="org.knime.core.data.def.StringCell">
@@ -132,12 +138,13 @@
 <entry key="StringCell" type="xstring" value="Iris-versicolor"/>
 </config>
 </config>
+</config>
 <config key="Iris-virginica">
-<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
-<config key="org.knime.core.data.def.StringCell">
-<entry key="StringCell" type="xstring" value="Iris-virginica"/>
-</config>
-</config>
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
 </config>
 <config key="Iris-setosa">
 <entry key="array-size" type="xint" value="4"/>
@@ -151,13 +158,6 @@
 <entry key="0" type="xint" value="0"/>
 <entry key="1" type="xint" value="255"/>
 <entry key="2" type="xint" value="0"/>
-<entry key="3" type="xint" value="255"/>
-</config>
-<config key="Iris-virginica">
-<entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="0"/>
-<entry key="1" type="xint" value="0"/>
-<entry key="2" type="xint" value="255"/>
 <entry key="3" type="xint" value="255"/>
 </config>
 </config>
