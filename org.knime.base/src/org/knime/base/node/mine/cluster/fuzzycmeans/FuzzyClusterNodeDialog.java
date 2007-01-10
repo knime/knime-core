@@ -21,14 +21,18 @@
  */
 package org.knime.base.node.mine.cluster.fuzzycmeans;
 
-import java.awt.BorderLayout;
 import java.awt.Checkbox;
-import java.awt.GridLayout;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -36,6 +40,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.border.Border;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -117,33 +122,64 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
     /**
      * Constructor - set name of fuzzy c-means cluster node.
      */
+    @SuppressWarnings("unchecked")
     public FuzzyClusterNodeDialog() {
         super();
-
+        JPanel all = new JPanel();
+        BoxLayout bl = new BoxLayout(all, BoxLayout.Y_AXIS);
+        all.setLayout(bl);
+        
         // create panel content for special property-tab
         JPanel clusterPropPane = new JPanel();
-        clusterPropPane.setLayout(new GridLayout(4, 2));
+        Border border = BorderFactory.createTitledBorder("Fuzzy c-means");
+        clusterPropPane.setBorder(border);
+        GridBagLayout gbl = new GridBagLayout();
+        clusterPropPane.setLayout(gbl);
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(10, 10, 10, 10);
+        JLabel nrClustersLabel = new JLabel("Number of clusters: ");
+        c.gridx = 0;                      
+        c.gridy = 0;             
+        gbl.setConstraints(nrClustersLabel, c); 
         SpinnerNumberModel nrclustersmodel = new SpinnerNumberModel(3, 1,
                 MAXNRCLUSTERS, 1);
         m_nrClustersSpinner = new JSpinner(nrclustersmodel);
-        JLabel nrClustersLabel = new JLabel("Number of clusters: ");
+        c.gridx = 1;                      
+        c.gridy = 0;                      
+        gbl.setConstraints(m_nrClustersSpinner, c);   
         clusterPropPane.add(nrClustersLabel);
         clusterPropPane.add(m_nrClustersSpinner);
+        JLabel maxNrIterationsLabel = new JLabel("Max. number of iterations: ");
+        c.gridx = 0;                      
+        c.gridy = 1;                      
+        gbl.setConstraints(maxNrIterationsLabel, c); 
+        
         SpinnerNumberModel nrmaxiterationsmodel = new SpinnerNumberModel(99, 1,
                 9999, 1);
         m_maxNrIterationsSpinner = new JSpinner(nrmaxiterationsmodel);
-        JLabel maxNrIterationsLabel = new JLabel("Max. number of iterations: ");
+        c.gridx = 1;                      
+        c.gridy = 1;                      
+        gbl.setConstraints(m_maxNrIterationsSpinner, c); 
         clusterPropPane.add(maxNrIterationsLabel);
         clusterPropPane.add(m_maxNrIterationsSpinner);
         JLabel fuzzifierLabel = new JLabel("Fuzzifier: ");
+        c.gridx = 0;                      
+        c.gridy = 2;                      
+        gbl.setConstraints(fuzzifierLabel, c);
         SpinnerNumberModel fuzzifiermodel = new SpinnerNumberModel(2.0, 1.0,
                 10.0, .1);
         m_fuzzifierSpinner = new JSpinner(fuzzifiermodel);
+        c.gridx = 1;                      
+        c.gridy = 2;                      
+        gbl.setConstraints(m_fuzzifierSpinner, c);
         clusterPropPane.add(fuzzifierLabel);
         clusterPropPane.add(m_fuzzifierSpinner);
-
-        JPanel noisepanel = new JPanel();
-        noisepanel.setLayout(new GridLayout(3, 2));
+        JPanel noisePropPane = new JPanel();
+        noisePropPane.setLayout(gbl);
+        Border border2 = BorderFactory.createTitledBorder("Noise Clustering");
+        noisePropPane.setBorder(border2);
+        
         // RadioButtons for choosing delta
         ButtonGroup group = new ButtonGroup();
         group.add(m_providedeltaRB);
@@ -165,7 +201,6 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                 m_lambdaSpinner.setEnabled(state);
             }
         });
-        
         m_noisecheck.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
                 boolean state = m_noisecheck.getState();
@@ -183,26 +218,41 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                 }
             }
         });
-        noisepanel.add(m_noisecheck);
-        noisepanel.add(new JLabel());
-        noisepanel.add(m_providedeltaRB, BorderLayout.WEST);
+        c.gridx = 0;                      
+        c.gridy = 0;                      
+        gbl.setConstraints(m_noisecheck, c);
+        noisePropPane.add(m_noisecheck);
+        c.gridx = 0;                      
+        c.gridy = 1;                      
+        gbl.setConstraints(m_providedeltaRB, c);
+        noisePropPane.add(m_providedeltaRB);
         SpinnerNumberModel deltaSpinnermodel = new SpinnerNumberModel(.2, .0,
                 1.0, .01);
         m_deltaSpinner = new JSpinner(deltaSpinnermodel);
         m_deltaSpinner.setEnabled(false);
-        noisepanel.add(m_deltaSpinner);
-        noisepanel.add(m_notprovidedeltaRB, BorderLayout.WEST);
+        m_deltaSpinner.setPreferredSize(new Dimension(60, 20));
+        c.gridx = 1;                      
+        c.gridy = 1;                      
+        gbl.setConstraints(m_deltaSpinner, c);
+        noisePropPane.add(m_deltaSpinner);
+        c.gridx = 0;                      
+        c.gridy = 2;                      
+        gbl.setConstraints(m_notprovidedeltaRB, c);
+        noisePropPane.add(m_notprovidedeltaRB);
         SpinnerNumberModel lambdaSpinnermodel = new SpinnerNumberModel(.1, .0,
                 1.0, .01);
         m_lambdaSpinner = new JSpinner(lambdaSpinnermodel);
         m_lambdaSpinner.setEnabled(false);
-        noisepanel.add(m_lambdaSpinner);
-        clusterPropPane.add(noisepanel);
-        
+        m_lambdaSpinner.setPreferredSize(new Dimension(60, 20));
+        c.gridx = 1;                      
+        c.gridy = 2;    
+        gbl.setConstraints(m_lambdaSpinner, c);
+        noisePropPane.add(m_lambdaSpinner);
         m_memoryCB = new JCheckBox("Perform the clustering in memory");
-        clusterPropPane.add(m_memoryCB);
-
-        super.addTab(TAB, clusterPropPane);
+        all.add(clusterPropPane);
+        all.add(noisePropPane);
+        all.add(m_memoryCB);
+        super.addTab(TAB, all);
         m_filterpanel = new ColumnFilterPanel(DoubleValue.class);
         super.addTab(TAB2, m_filterpanel);
     }
