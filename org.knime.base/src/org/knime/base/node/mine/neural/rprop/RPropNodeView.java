@@ -24,8 +24,10 @@
  */
 package org.knime.base.node.mine.neural.rprop;
 
-import javax.swing.JPanel;
+import java.awt.Color;
 
+import org.knime.base.node.viz.plotter.basic.BasicPlotter;
+import org.knime.base.node.viz.plotter.basic.BasicPlotterImpl;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
@@ -36,11 +38,16 @@ import org.knime.core.node.NodeView;
  * @author Nicolas Cebron, University of Konstanz
  */
 public class RPropNodeView extends NodeView {
+
+    private BasicPlotter m_errorplotter;
+
     /**
      * @param model Underlying NodeModel
      */
     public RPropNodeView(final NodeModel model) {
         super(model);
+        m_errorplotter = new BasicPlotterImpl();
+        setComponent(m_errorplotter);
     }
 
     /**
@@ -49,9 +56,10 @@ public class RPropNodeView extends NodeView {
     @Override
     protected void modelChanged() {
         RPropNodeModel model = (RPropNodeModel)getNodeModel();
-        if (model.getErrorPlot() != null) {
-            JPanel show = model.getErrorPlot();
-            super.setComponent(show);
+        if (model.getErrors() != null) {
+            m_errorplotter.reset();
+            double[] errors = model.getErrors();
+            m_errorplotter.addLine(errors, Color.BLACK, null);
         }
     }
 
