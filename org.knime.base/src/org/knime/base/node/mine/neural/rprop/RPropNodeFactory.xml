@@ -17,6 +17,7 @@
 	This node provides a view of the error plot. 
 	</intro>
 	<option name="Maximum number of iterations">
+	The number of learning iterations.
     </option>
     <option name="Number of hidden layers">
 	Specifies the number of hidden layers in the architecture of the neural
