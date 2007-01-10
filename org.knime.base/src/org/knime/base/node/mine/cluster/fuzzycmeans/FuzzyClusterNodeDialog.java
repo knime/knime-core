@@ -23,7 +23,11 @@ package org.knime.base.node.mine.cluster.fuzzycmeans;
 
 import java.awt.BorderLayout;
 import java.awt.Checkbox;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.HashSet;
@@ -117,28 +121,62 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
     /**
      * Constructor - set name of fuzzy c-means cluster node.
      */
+    @SuppressWarnings("unchecked")
     public FuzzyClusterNodeDialog() {
         super();
 
         // create panel content for special property-tab
         JPanel clusterPropPane = new JPanel();
-        clusterPropPane.setLayout(new GridLayout(4, 2));
+        GridBagLayout gbl = new GridBagLayout();
+        clusterPropPane.setLayout(gbl);
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(10, 10, 10, 10);
+        
+        JLabel nrClustersLabel = new JLabel("Number of clusters: ");
+        c.gridx = 0;                      
+        c.gridy = 0;             
+        gbl.setConstraints(nrClustersLabel, c); 
+        
         SpinnerNumberModel nrclustersmodel = new SpinnerNumberModel(3, 1,
                 MAXNRCLUSTERS, 1);
         m_nrClustersSpinner = new JSpinner(nrclustersmodel);
-        JLabel nrClustersLabel = new JLabel("Number of clusters: ");
+        m_nrClustersSpinner.setMaximumSize(new Dimension(30, 30));
+        c.gridx = 1;                      
+        c.gridy = 0;                      
+        gbl.setConstraints(m_nrClustersSpinner, c);   
+       
+        
         clusterPropPane.add(nrClustersLabel);
         clusterPropPane.add(m_nrClustersSpinner);
+        
+        JLabel maxNrIterationsLabel = new JLabel("Max. number of iterations: ");
+        c.gridx = 0;                      
+        c.gridy = 1;                      
+        gbl.setConstraints(maxNrIterationsLabel, c); 
+        
         SpinnerNumberModel nrmaxiterationsmodel = new SpinnerNumberModel(99, 1,
                 9999, 1);
         m_maxNrIterationsSpinner = new JSpinner(nrmaxiterationsmodel);
-        JLabel maxNrIterationsLabel = new JLabel("Max. number of iterations: ");
+        c.gridx = 1;                      
+        c.gridy = 1;                      
+        gbl.setConstraints(m_maxNrIterationsSpinner, c); 
+        
         clusterPropPane.add(maxNrIterationsLabel);
         clusterPropPane.add(m_maxNrIterationsSpinner);
+
         JLabel fuzzifierLabel = new JLabel("Fuzzifier: ");
+        c.gridx = 0;                      
+        c.gridy = 2;                      
+        gbl.setConstraints(fuzzifierLabel, c);
+        
         SpinnerNumberModel fuzzifiermodel = new SpinnerNumberModel(2.0, 1.0,
                 10.0, .1);
         m_fuzzifierSpinner = new JSpinner(fuzzifiermodel);
+        c.gridx = 1;                      
+        c.gridy = 2;                      
+        gbl.setConstraints(m_fuzzifierSpinner, c);
+        
         clusterPropPane.add(fuzzifierLabel);
         clusterPropPane.add(m_fuzzifierSpinner);
 
@@ -197,9 +235,16 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         m_lambdaSpinner = new JSpinner(lambdaSpinnermodel);
         m_lambdaSpinner.setEnabled(false);
         noisepanel.add(m_lambdaSpinner);
+        
+        c.gridx = 0;                      
+        c.gridy = 3;                      
+        gbl.setConstraints(noisepanel, c);
         clusterPropPane.add(noisepanel);
         
         m_memoryCB = new JCheckBox("Perform the clustering in memory");
+        c.gridx = 0;                      
+        c.gridy = 4;                      
+        gbl.setConstraints(m_memoryCB, c);
         clusterPropPane.add(m_memoryCB);
 
         super.addTab(TAB, clusterPropPane);
