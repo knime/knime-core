@@ -14,7 +14,9 @@
 			Fuzzy clustering allows each data point to belong to several clusters, with
 			a degree of membership to each one.<br />
 			<b>Make sure that the input data is normalized to obtain better clustering
-			results.</b><br />
+			results.</b><br/>
+			The list of attributes to use can be set in the second tab of the
+			dialog.<br/>
 			The first output datatable provides the original datatable with the 
 			cluster memberships to each cluster. The second datatable provides 
 			the values of the cluster prototypes.<br />
@@ -24,6 +26,7 @@
 		</p>
 	</intro>
 	<option name="Number of clusters">
+	Number of clusters to use for the algorithm.
     </option>
     <option name="Maximum number of iterations">
     This is the maximum number of iterations to be performed.
