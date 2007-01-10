@@ -24,7 +24,6 @@
  */
 package org.knime.base.node.mine.neural.rprop;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -35,12 +34,9 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.Vector;
 
-import javax.swing.JPanel;
-
 import org.knime.base.data.neural.Architecture;
 import org.knime.base.data.neural.MultiLayerPerceptron;
 import org.knime.base.data.neural.methods.RProp;
-import org.knime.base.node.viz.plotter.basic.BasicPlotterImpl;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -381,6 +377,14 @@ public class RPropNodeModel extends NodeModel {
                         }
                     }
                 } else {
+                    if (row.getCell(i).isMissing()) {
+                        add = false;
+                        if (!m_ignoreMV.getBooleanValue()) {
+                            throw new Exception("Missing value in class"
+                                    + " column");
+                        }
+                        break;
+                    }
                     if (m_regression) {
                         DoubleValue dc = (DoubleValue)row.getCell(i);
                         output[0] = dc.getDoubleValue();
@@ -496,13 +500,8 @@ public class RPropNodeModel extends NodeModel {
     /**
      * @return error plot.
      */
-    public JPanel getErrorPlot() {
-        if (m_errors == null) {
-            return new JPanel();
-        }
-        BasicPlotterImpl bpi = new BasicPlotterImpl();
-        bpi.addLine(m_errors, Color.BLACK, null);
-        return bpi;
+    public double[] getErrors() {
+        return m_errors;
     }
 
      /**
