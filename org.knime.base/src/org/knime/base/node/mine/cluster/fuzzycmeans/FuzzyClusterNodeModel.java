@@ -462,7 +462,10 @@ public class FuzzyClusterNodeModel extends NodeModel {
         if (m_clusters != null) {
             return m_clusters;
         }
-        return m_fcmAlgo.getClusterCentres();
+        if (m_fcmAlgo != null) {
+            return m_fcmAlgo.getClusterCentres();
+        }
+        return null;
     }
 
     /**
