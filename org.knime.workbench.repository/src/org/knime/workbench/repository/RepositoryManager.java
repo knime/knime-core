@@ -33,6 +33,7 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Plugin;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
@@ -90,7 +91,8 @@ public final class RepositoryManager {
     /**
      * Returns the extensions for a given extension point.
      * 
-     * @param pointID The extension point ID
+     * @param pointID
+     *            The extension point ID
      * 
      * @return The extensions
      */
@@ -290,10 +292,19 @@ public final class RepositoryManager {
                     LOGGER.error(message, t);
                     errorString.append(message + "\n");
 
+                    Plugin plugin = Platform.getPlugin(ext
+                            .getNamespaceIdentifier());
+
+                    if (plugin == null) {
+                        // if the plugin is null, the plugin could not
+                        // be activated maybe due to a not
+                        // activateable plugin (plugin class can not be found)
+                        errorString.append("\tThe corresponding plugin could"
+                                + " not be activated!\n");
+                    }
                 }
 
             } // for
-
         }
 
         // if errors occured show an information box
@@ -362,7 +373,8 @@ public final class RepositoryManager {
     /**
      * Loads a WFM from a config object.
      * 
-     * @param settings NodeSettings to load from.
+     * @param settings
+     *            NodeSettings to load from.
      * @return The workflow manager.s
      */
     // public WorkflowManager loadWorkflowFromConfig(final NodeSettings
