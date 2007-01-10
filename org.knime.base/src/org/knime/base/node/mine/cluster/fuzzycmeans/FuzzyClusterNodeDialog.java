@@ -117,7 +117,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
     /*
      * The tab2's name.
      */
-    private static final String TAB2 = "Included Columns";
+    private static final String TAB2 = "Used Attributes";
 
     /**
      * Constructor - set name of fuzzy c-means cluster node.
