@@ -252,13 +252,13 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         for (String includedColumnName : m_includedColumnNames) {
 
             LOGGER.debug("Process column: " + includedColumnName);
-            exec.setProgress("Discretizing column '" + includedColumnName
+            exec.setProgress(0.0, "Discretizing column '" + includedColumnName
                     + "'");
-            ExecutionContext subExecPerColumn =
+            ExecutionContext subExec =
                     exec
                             .createSubExecutionContext(1.0D / (
                                     double)m_includedColumnNames.length);
-            subExecPerColumn.checkCanceled();
+            subExec.checkCanceled();
             // never discretize the column index (should never happen)
             if (m_classColumnName.equals(includedColumnName)) {
                 continue;
@@ -281,25 +281,19 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             // find all distinct values of the column and create
             // a table with all possible interval boundaries (midpoint value of
             // adjacent values)
-            subExecPerColumn.setProgress("Find possible boundaries.");
+            subExec.setProgress("Find possible boundaries.");
             BoundaryScheme boundaryScheme = null;
-            
-            // create subExec for sorting
-            ExecutionContext subExecSort = subExecPerColumn
-                    .createSubExecutionContext(0.1);
 
             // long t1 = System.currentTimeMillis();
             if (m_classOptimizedVersion) {
                 boundaryScheme =
                         createAllIntervalBoundaries(inData, columnIndex,
-                                subExecSort);
+                                subExec);
             } else {
                 boundaryScheme =
                         createAllIntervalBoundaries2(inData, columnIndex,
-                                subExecSort);
+                                subExec);
             }
-            
-            subExecSort.setProgress(1.0D);
             // long t2 = System.currentTimeMillis() - t1;
             // LOGGER.error("Create boundaries time: " + (t2 / 1000.0)
             // + " optimized: " + m_classOptimizedVersion);
@@ -317,17 +311,10 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             // performe the iterative search for the best intervals
             int numInsertedBounds = 0;
             double currentCAIM = 0;
-            // create subExec for inserted bounds
-            ExecutionContext subExecBounds = subExecPerColumn
-                    .createSubExecutionContext(0.9);
+
             while (currentCAIM > globalCAIM
                     || numInsertedBounds < m_classValues.length) {
-                subExecPerColumn.checkCanceled();
-                
-                // create subExec for counting
-                ExecutionContext subExecCount = subExecBounds
-                        .createSubExecutionContext(1.0D
-                                / m_classValues.length);
+                subExec.checkCanceled();
 
                 // LOGGER.debug("Inserted bounds: " + numInsertedBounds);
                 // LOGGER.debug("intervall boundaries: " +
@@ -339,18 +326,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                 LinkedDouble intervalBoundary = allIntervalBoundaries.m_next;
                 currentCAIM = 0;
                 LinkedDouble bestBoundary = null;
-                
-                long currentCountedBoundaries = 0;
                 while (intervalBoundary != null) {
-                    subExecPerColumn.checkCanceled();
-                    
-                    // set progress
-                    currentCountedBoundaries++;
-                    subExecCount.setProgress((double) currentCountedBoundaries
-                            / (double) boundaryScheme.getNumBoundaries(),
-                            "Count for possible boundary "
-                                    + currentCountedBoundaries + " of "
-                                    + boundaryScheme.getNumBoundaries());
+                    subExec.checkCanceled();
 
                     // LOGGER.debug("current caim: " + currentCAIM);
                     DiscretizationScheme tentativeDS =
@@ -398,7 +375,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                     if (numIntervals < discretizationScheme.getNumIntervals()) {
                         numInsertedBounds++;
 
-                        subExecPerColumn.setProgress("Inserted bound "
+                        subExec.setProgress(numInsertedBounds
+                                / m_classValues.length, "Inserted bound "
                                 + numInsertedBounds);
 
                         // LOGGER.debug("Inserted boundary: "
@@ -409,15 +387,12 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                                         + bestBoundary.m_value);
                     }
                 }
-                
-                subExecCount.setProgress(1.0D);
             }
 
             resultSchemes[currentColumn] = discretizationScheme;
 
-            subExecBounds.setProgress(1.0D);
             // ensure the full progress is set for this iteration
-            subExecPerColumn.setProgress(1.0D);
+            subExec.setProgress(1.0D);
 
             currentColumn++;
 

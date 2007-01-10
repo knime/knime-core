@@ -50,6 +50,7 @@ Uses: Java5, GEF, Log4J
       </win>
    </launcher>
 
+
    <plugins>
       <plugin id="org.apache.lucene"/>
       <plugin id="org.eclipse.ant.core"/>
@@ -97,13 +98,6 @@ Uses: Java5, GEF, Log4J
       <feature id="org.eclipse.platform" version="3.2.0.v20060609m-AgOexn6hlEUsvBO"/>
       <feature id="org.eclipse.rcp" version="3.2.0.v20060609m-SVDNgVrNoh-MeGG"/>
       <feature id="org.knime.features.base" version="1.2.0"/>
-      <feature id="org.knime.features.chem" version="1.2.0"/>
-      <feature id="org.knime.features.ext.birt" version="1.2.0"/>
-      <feature id="org.knime.features.ext.cdk" version="1.2.0"/>
-      <feature id="org.knime.features.ext.moss" version="1.2.0"/>
-      <feature id="org.knime.features.ext.r" version="1.2.0"/>
-      <feature id="org.knime.features.ext.sun" version="1.2.0"/>
-      <feature id="org.knime.features.ext.weka" version="1.2.0"/>
    </features>
 
 </product>

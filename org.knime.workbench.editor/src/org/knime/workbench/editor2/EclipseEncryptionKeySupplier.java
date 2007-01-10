@@ -41,8 +41,8 @@ import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
- * This class implements a {@link EncryptionKeySupplier} that is registered at
- * the {@link org.knime.core.util.KnimeEncryption} static class for encryption
+ * This class implements a decryption key supplier that is registered at the
+ * {@link org.knime.core.util.KnimeEncryption} static class for encryption
  * purpose. The class asks the user to input a key to encrypt and decrypt
  * passwords, keys, etc. If a decryption should take place the key given by the
  * user must be the same that was used for encryption.
@@ -53,24 +53,6 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
 
     private String m_pw;
 
-    private final static String SHELL_HEADER = "KNIME encryption key";
-
-    private final static String SHELL_TEXT = "KNIME requires an encryption "
-            + "key to encrypt/decrypt passwords, e.g. database passwords "
-            + "in database reader/writer nodes.\n"
-            + "This is for convenience reasons, avoiding to enter passwords"
-            + " for each new session. As passwords are not stored as"
-            + " plain text, encryption is necessary.\n"
-            + "Up to now there has no key been supplied which can be used "
-            + "to encrypt/decrypt the passwords.\n"
-            + "Please type in a key that is at least 8 characters long.\n"
-            + "Note: if you have entered a key in a previous session which "
-            + "has been used to encrypt passwords,\n"
-            + " those passwords can only be decrypted with the same key.\n"
-            + "If you use different keys, KNIME will ask you to enter "
-            + "another key if the one provided can not be used to decrypt"
-            + " a password.";
-
     /**
      * This method opens a window to which the user can input the encryption
      * key. The key is then returned to the invoker (which is normaly the
@@ -80,8 +62,15 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
      */
     public String getEncryptionKey() {
 
-        final KeyReaderShell keyReaderShell = new KeyReaderShell(SHELL_HEADER,
-                SHELL_TEXT);
+        final KeyReaderShell keyReaderShell =
+                new KeyReaderShell("KNIME encryption key",
+                        "An encryption/decryption key is needed but "
+                                + "not available for this session.\nPlease "
+                                + "type in your encryption key.\nNote: "
+                                + "Previously encrypted strings can only be "
+                                + "decrypted with the former key.\n"
+                                + "The key must be at least 8 "
+                                + "characters long.");
 
         m_pw = keyReaderShell.readPW();
 
@@ -295,17 +284,16 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
                 if (!display.readAndDispatch())
                     display.sleep();
             }
-            if (!shell.isDisposed()) {
-                shell.close();
-                shell.dispose();
-            }
+            shell.close();
+            shell.dispose();
 
             return m_key;
         }
     }
 
     public static void main(String[] args) {
-        EclipseEncryptionKeySupplier supplier = new EclipseEncryptionKeySupplier();
+        EclipseEncryptionKeySupplier supplier =
+                new EclipseEncryptionKeySupplier();
         String key = supplier.getEncryptionKey();
         System.out.println("Key: " + key);
     }

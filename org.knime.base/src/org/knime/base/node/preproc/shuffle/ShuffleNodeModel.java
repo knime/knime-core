@@ -136,7 +136,6 @@ public class ShuffleNodeModel extends NodeModel {
             tmpKeys.add(r.next().getKey());
             subExec1.checkCanceled();
         }
-        
         m_shuffleArr = tmpKeys.toArray(new RowKey[]{});
 
         if (nrRows < containersize) {

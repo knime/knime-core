@@ -6,10 +6,10 @@
 	font-size : 18pt;
 }
 #page-links a .link-label, #action-links a .link-label {
-	font-size : 13pt;	font-weight : 600;	color : #000000;
+	font-size : 13pt;	/*font-weight : 600; */	color : #000000;
 }
 #page-links a p .text, #action-links a p .text {
-	font-size : 13pt;	font-weight : 500;	color : #000000;
+	font-size : 13pt;	/*font-weight : 500; */	color : #000000;
 }
 /*
  * Set up the content for the root page.
@@ -50,7 +50,7 @@ body {
 	float : left;	position : relative;
 }
 #page-links a img {
-	height : 82px;	width : 82px;	vertical-align : middle;
+	height : 250px;	width : 212px;	vertical-align : middle;
 }
 /* remove the hover image from the flow of the document,
    so it doesn't take up space and change the position
