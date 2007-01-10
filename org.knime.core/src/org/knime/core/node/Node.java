@@ -1527,28 +1527,20 @@ public final class Node {
             m_status = null;
     
             NodeStatus localStatus = null;
-            // need to init here as there may be an exception being thrown
-            // and then we copy the null elements of this array to their destin.
+            // need to init here as there may be an exception being thrown and
+            // then we copy the null elements of this array to their destination
             DataTableSpec[] newOutSpec = new DataTableSpec[getNrDataOutPorts()];
             // configure
             try {
-                String errorMsg = "";
                 // get inspecs and check them against null
                 DataTableSpec[] inSpecs = new DataTableSpec[getNrDataInPorts()];
                 for (int i = 0; i < inSpecs.length; i++) {
                     inSpecs[i] = m_inDataPorts[i].getDataTableSpec();
                     if (inSpecs[i] == null) {
-                        if (errorMsg.length() > 0) {
-                            errorMsg += ",";
-                        }
-                        errorMsg += i;
+                        throw new InvalidSettingsException(
+                                "Node is not executable until all predecessors "
+                                + "are configured and/or executed.");
                     }
-                }
-                // if an in spec is null
-                if (errorMsg.length() > 0) {
-                    throw new InvalidSettingsException(
-                            "Node can't be configured due to missing " 
-                            + "input spec(s): " + errorMsg);
                 }
     
                 // call configure model to create output table specs
