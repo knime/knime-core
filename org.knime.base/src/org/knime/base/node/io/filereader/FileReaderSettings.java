@@ -905,14 +905,14 @@ public class FileReaderSettings extends FileTokenizerSettings {
         if (!m_fileHasRowHeaders) {
             // we tell them when we would use the default row header.
             if (m_rowHeaderPrefix == null) {
-                status.addInfo("The default row header ('" + DEF_ROWPREFIX
-                        + "+RowIdx') will be used as no row header prefix"
+                status.addInfo("The default row ID ('" + DEF_ROWPREFIX
+                        + "+RowIdx') will be used as no row ID prefix"
                         + " is specified and the file doesn't contain row"
-                        + " headers.");
+                        + " IDs.");
             }
         } else {
             if (m_rowHeaderPrefix != null) {
-                status.addInfo("The specified row header will be used"
+                status.addInfo("The specified row ID will be used"
                         + " overriding the ones in the data file.");
             }
         }

@@ -260,7 +260,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                     public DataCell[] getCells(final DataRow row) {
                         DataRow r2 = m_it.next();
 
-                        assert r2.getKey().equals(row.getKey()) : "row keys do not match: "
+                        assert r2.getKey().equals(row.getKey()) : "row IDs do not match: "
                                 + r2.getKey() + " <=> " + row.getKey();
 
                         return new DataCell[]{r2.getCell(cellIndex)};

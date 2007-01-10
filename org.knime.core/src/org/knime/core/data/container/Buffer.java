@@ -540,7 +540,7 @@ class Buffer {
         }
         if (row.getKey().getId() instanceof BlobDataCell) {
             throw new IllegalArgumentException(
-                    "Row keys must not wrap blob data cells (of class \""
+                    "Row IDs must not wrap blob data cells (of class \""
                         + row.getKey().getId().getClass().getName() + "\"");
         }
         return cellCopies == null ? (BlobSupportDataRow)row 

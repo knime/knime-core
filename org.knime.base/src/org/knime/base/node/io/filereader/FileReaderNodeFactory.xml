@@ -27,7 +27,7 @@
 			You can also choose a previously read file from the drop-down list,
 			or select a file from the "Browse..." dialog.
 			</option>		
-		<option name="Read row headers">If checked, the first column in the file
+		<option name="Read row IDs">If checked, the first column in the file
 			is used as row IDs. If not checked, default row headers are
 			created.</option>
 		<option name="Read column headers">If checked, the items in the first 

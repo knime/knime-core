@@ -96,7 +96,7 @@ public class CSVWriterNodeDialog extends NodeDialogPane {
         m_colHeaderChecker.addItemListener(l);
         m_colHeaderWriteSkipOnAppend = new JCheckBox(
                 "Skip column header when appended");
-        m_rowHeaderChecker = new JCheckBox("Write row header");
+        m_rowHeaderChecker = new JCheckBox("Write row ID");
         m_appendChecker = new JCheckBox("Append to output file");
         m_appendChecker.addItemListener(l);
         m_missingField = new JTextField(3);

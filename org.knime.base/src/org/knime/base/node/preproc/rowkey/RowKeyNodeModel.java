@@ -220,7 +220,7 @@ public class RowKeyNodeModel extends NodeModel {
             if (warningMsg.length() > 0) {
                 setWarningMessage(warningMsg.toString());
             }
-            LOGGER.debug("Row key replaced successfully");
+            LOGGER.debug("Row ID replaced successfully");
 
         } else if (m_appendRowKeyCol.getBooleanValue()) {
             LOGGER.debug("The user only wants to append a new column with "
@@ -240,7 +240,7 @@ public class RowKeyNodeModel extends NodeModel {
             //the user doesn't want to do anything at all so we simply return
             //the given data
             outData = data;
-            LOGGER.debug("The user hasn't selected a new row key column"
+            LOGGER.debug("The user hasn't selected a new row ID column"
                     + " and hasn't entered a new column name.");
         }
         LOGGER.debug("Exiting execute(inData, exec) of class RowKeyNodeModel.");

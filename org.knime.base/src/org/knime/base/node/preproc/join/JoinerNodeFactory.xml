@@ -2,7 +2,7 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./joiner.png" type="Manipulator">
     <name>Joiner</name>
-    <shortDescription>Joins two tables based on their row keys.</shortDescription>
+    <shortDescription>Joins two tables based on their row IDs.</shortDescription>
     <fullDescription>
         <intro>
 	        This node joins two tables (database join-like). The join on the two tables

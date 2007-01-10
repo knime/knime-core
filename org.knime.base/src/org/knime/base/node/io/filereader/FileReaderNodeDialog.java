@@ -353,8 +353,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     private JPanel createSettingsPanel() {
         JButton advanced = new JButton("Advanced...");
         int buttonHeight = advanced.getPreferredSize().height;
-        m_hasRowHeaders = new JCheckBox("read row headers");
-        m_hasRowHeaders.setToolTipText("Check if the file contains row headers"
+        m_hasRowHeaders = new JCheckBox("read row IDs");
+        m_hasRowHeaders.setToolTipText("Check if the file contains row IDs"
                 + " in the first column");
         m_hasColHeaders = new JCheckBox("read column headers");
         m_hasColHeaders.setToolTipText("Check if the file contains column"

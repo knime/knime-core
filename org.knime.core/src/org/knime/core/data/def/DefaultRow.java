@@ -60,7 +60,7 @@ public class DefaultRow implements DataRow {
     public DefaultRow(final RowKey rowKey, final DataCell... row) {
         // check row key
         if (rowKey == null) {
-            throw new NullPointerException("Row Key must not be null!");
+            throw new NullPointerException("Row ID must not be null!");
         }
 
         // check row array
@@ -209,7 +209,7 @@ public class DefaultRow implements DataRow {
      */
     public DefaultRow(final RowKey key, final DataRow row) {
         if (key == null) {
-            throw new IllegalArgumentException("Row key can't be null.");
+            throw new IllegalArgumentException("Row ID can't be null.");
         }
         m_rowKey = key;
         m_row = new DataCell[row.getNumCells()];

@@ -522,13 +522,13 @@ public class TableView extends JScrollPane {
         item.addPropertyChangeListener(new EnableListener(this, true, false));
         item.setEnabled(hasData());
         result.add(item);
-//        item = new JMenuItem("Search Row Key...");
+//        item = new JMenuItem("Search Row ID...");
 //        item.setMnemonic('S');
 //        item.addActionListener(new ActionListener() {
 //            public void actionPerformed(final ActionEvent e) {
 //                String in = JOptionPane.showInputDialog(
 //                        m_tableView, "Search Key ( \"*\" = any string, " 
-//                        + "\"?\" = any character): ", "Search for Row Key", 
+//                        + "\"?\" = any character): ", "Search for Row ID", 
 //                        JOptionPane.QUESTION_MESSAGE);
 //                if (in == null) { // cancelled
 //                     return;
