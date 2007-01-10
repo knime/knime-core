@@ -304,6 +304,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
     public void reset() {
         m_betweenClusterVariation = Double.NaN;
         m_withinClusterVariation = null;
+        m_fcmAlgo = null;
         m_clusters = null;
     }
 
@@ -459,17 +460,23 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * @return the cluster centres in a 2-dimensional double matrix
      */
     public double[][] getClusterCentres() {
+        if (m_fcmAlgo != null) {
+            return m_fcmAlgo.getClusterCentres();
+        }
         if (m_clusters != null) {
             return m_clusters;
         }
-        return m_fcmAlgo.getClusterCentres();
+        return null;
     }
 
     /**
      * @return the 2-dimensional weight matrix
      */
     public double[][] getweightMatrix() {
-        return m_fcmAlgo.getweightMatrix();
+        if (m_fcmAlgo != null) {
+            return m_fcmAlgo.getweightMatrix();
+        }
+        return null;
     }
 
     /**
@@ -481,7 +488,10 @@ public class FuzzyClusterNodeModel extends NodeModel {
         if (!Double.isNaN(m_betweenClusterVariation)) {
             return m_betweenClusterVariation;
         }
-        return m_fcmAlgo.getBetweenClusterVariation();
+        if (m_fcmAlgo != null) {
+            return m_fcmAlgo.getBetweenClusterVariation();
+        }
+        return Double.NaN;
     }
 
     /**
