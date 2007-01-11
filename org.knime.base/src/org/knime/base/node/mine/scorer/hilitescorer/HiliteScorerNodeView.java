@@ -21,9 +21,11 @@
  */
 package org.knime.base.node.mine.scorer.hilitescorer;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -31,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Vector;
 
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -95,36 +96,37 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
                 new AttributiveCellRenderer());
         m_scrollPane = new JScrollPane(m_tableView);
 
-        JPanel outerPanel = new JPanel();
-        outerPanel.setLayout(new BoxLayout(outerPanel, BoxLayout.Y_AXIS));
-        outerPanel.add(m_scrollPane);
+        JPanel summary = new JPanel(new GridLayout(4, 1));
         
-        
-        JPanel summary = new JPanel(new FlowLayout());
-        summary.add(new JLabel("Correct classified:"));
+        JPanel labelPanel = new JPanel(new FlowLayout());
+        labelPanel.add(new JLabel("Correct classified:"));
         m_correct = new JLabel("n/a");
-        summary.add(m_correct);
-        outerPanel.add(summary);
+        labelPanel.add(m_correct);
+        summary.add(labelPanel);
 
-        summary = new JPanel(new FlowLayout());
-        summary.add(new JLabel("Wrong classified:"));
+        labelPanel = new JPanel(new FlowLayout());
+        labelPanel.add(new JLabel("Wrong classified:"));
         m_wrong = new JLabel("n/a");
-        summary.add(m_wrong);
-        outerPanel.add(summary);
+        labelPanel.add(m_wrong);
+        summary.add(labelPanel);
 
-        summary = new JPanel(new FlowLayout());
-        summary.add(new JLabel("Error:"));
+        labelPanel = new JPanel(new FlowLayout());
+        labelPanel.add(new JLabel("Error:"));
         m_error = new JLabel("n/a");
-        summary.add(m_error);
-        summary.add(new JLabel("%"));
-        outerPanel.add(summary);
+        labelPanel.add(m_error);
+        labelPanel.add(new JLabel("%"));
+        summary.add(labelPanel);
 
-        summary = new JPanel(new FlowLayout());
-        summary.add(new JLabel("Accuracy:"));
+        labelPanel = new JPanel(new FlowLayout());
+        labelPanel.add(new JLabel("Accuracy:"));
         m_accuracy = new JLabel("n/a");
-        summary.add(m_accuracy);
-        summary.add(new JLabel("%"));
-        outerPanel.add(summary);
+        labelPanel.add(m_accuracy);
+        labelPanel.add(new JLabel("%"));
+        summary.add(labelPanel);
+        
+        JPanel outerPanel = new JPanel(new BorderLayout());
+        outerPanel.add(m_scrollPane, BorderLayout.CENTER);        
+        outerPanel.add(summary, BorderLayout.SOUTH);
 
 //        summary = new JPanel(new FlowLayout());
 //        summary.add(new JLabel("Recall:"));
