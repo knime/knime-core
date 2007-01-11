@@ -225,9 +225,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        m_clusters = null;
-        m_betweenClusterVariation = Double.NaN;
-        m_withinClusterVariation = null;
+
         if (m_noise) {
             if (m_calculateDelta) {
                 if (m_memory) {
@@ -364,15 +362,6 @@ public class FuzzyClusterNodeModel extends NodeModel {
         if ((1 <= tempfuzzifier) && (tempfuzzifier > MAXFUZZIFIER)) {
             throw new InvalidSettingsException("Value out of range "
                     + "for fuzzifier, must be in " + "[>1,10]");
-        }
-        if (settings.containsKey(INCLUDELIST_KEY)) {
-            // get list of included columns
-            String[] columns = settings.getStringArray(INCLUDELIST_KEY);
-            if (columns.length < 1) {
-                throw new InvalidSettingsException("No attributes set to work" 
-                      + " on. Please check the second tab " 
-                          + "\'Used Attributes\' in the dialog");
-            }
         }
     }
 
@@ -597,20 +586,10 @@ public class FuzzyClusterNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
-        double[][] clusters = null;
-        if (m_fcmAlgo != null) {
-            clusters = m_fcmAlgo.getClusterCentres();
-        } else {
-            clusters = m_clusters;
-        }
-        if (clusters == null) {
-            assert (clusters != null);
-            return;
-        }
         File f = new File(internDir, "FuzzyCMeans");
-        ObjectOutputStream out =
-                new ObjectOutputStream(new FileOutputStream(f));
-
+        ObjectOutputStream out = 
+            new ObjectOutputStream(new FileOutputStream(f));
+        double[][] clusters = m_fcmAlgo.getClusterCentres();
         int nrClusters = clusters.length;
         int nrDimensions = clusters[0].length;
         out.writeInt(nrClusters);
@@ -626,6 +605,5 @@ public class FuzzyClusterNodeModel extends NodeModel {
         out.writeDouble(getBetweenClusterVariation());
         out.close();
         exec.setProgress(1.0);
-
     }
 }
