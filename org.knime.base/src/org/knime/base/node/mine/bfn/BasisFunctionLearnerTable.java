@@ -104,6 +104,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * @param data the training data from which are all {@link DoubleCell}
      *            columns are used for training and the last the specified
      *            <code>target</code> column for classification
+     * @param target name of the classification column
      * @param factory the factory used to generate
      *            {@link BasisFunctionLearnerRow}s
      * @param missing the missing values replacement function
@@ -114,13 +115,14 @@ public final class BasisFunctionLearnerTable implements DataTable {
      *             is started.
      */
     public BasisFunctionLearnerTable(final BufferedDataTable data,
+            final String target,
             final BasisFunctionFactory factory,
             final MissingValueReplacementFunction missing,
             final boolean shrinkAfterCommit, 
             final int maxEpochs, 
             final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        this(data, factory, missing, shrinkAfterCommit, maxEpochs, 
+        this(data, target, factory, missing, shrinkAfterCommit, maxEpochs, 
                 new int[]{1}, exec);
     }
 
@@ -132,9 +134,10 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * used to automatically generate new prototypes of a certain basisfuntion
      * type.
      * 
-     * @param data The trainings data from which are all {@link DoubleCell}
+     * @param data The training data from which are all {@link DoubleCell}
      *            columns are used for training and the last the specified
      *            <code>target</code> column for classification.
+     * @param target name of the classification column            
      * @param factory the factory used to generate
      *            {@link BasisFunctionLearnerRow}s
      * @param missing the missing values replacement function
@@ -146,6 +149,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
      *             is started
      */
     public BasisFunctionLearnerTable(final BufferedDataTable data,
+            final String target,
             final BasisFunctionFactory factory,
             final MissingValueReplacementFunction missing,
             final boolean shrinkAfterCommit, 
@@ -161,7 +165,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
         // correct max epochs
         final int maxNrEpochs = (maxEpochs > 0 ? maxEpochs : Integer.MAX_VALUE);
         // index of the class info column which is the last one here
-        int classColumn = data.getDataTableSpec().getNumColumns() - 1;
+        int classColumn = data.getDataTableSpec().findColumnIndex(target);
         // number of training pattern per class, count from table
         m_numPatPerClass = new LinkedHashMap<DataCell, int[]>();
         for (DataRow row : data) {
@@ -212,7 +216,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
                         + " at #epoch=" + (m_cycles + 1);
                 exec.setMessage(progMsg + " \"" + oRow.getKey().getId() + "\"");
                 final FilteredClassRow row = 
-                    new FilteredClassRow(oRow, missing);
+                    new FilteredClassRow(oRow, classColumn, missing);
                 // get current class label of current bf
                 final DataCell classInfo = row.getClassInfo();
 
@@ -317,14 +321,15 @@ public final class BasisFunctionLearnerTable implements DataTable {
 
     /**
      * Assigns all explained examples to to basis functions.
-     * 
+     * @param classColumnIdx index of the classification column
      * @param data the data to explain
      */
-    public final void explain(final BufferedDataTable data) {
+    public final void explain(final BufferedDataTable data, 
+            final int classColumnIdx) {
         // overall training rows
         for (RowIterator rowIt = data.iterator(); rowIt.hasNext();) {
             final FilteredClassRow row = new FilteredClassRow(rowIt.next(),
-                    m_missing);
+                    classColumnIdx, m_missing);
             // overall basisfunctions in the model
             for (BasisFunctionIterator it = getBasisFunctionIterator(); it
                     .hasNext();) {
@@ -352,19 +357,26 @@ public final class BasisFunctionLearnerTable implements DataTable {
 
         /**
          * @param row the row to filter in data and class label
+         * @param classColumn index of the classification column
          * @param missing the missing value replacement function
          */
-        FilteredClassRow(final DataRow row,
+        FilteredClassRow(final DataRow row, final int classColumn,
                 final MissingValueReplacementFunction missing) {
             m_key = row.getKey();
-            m_data = new DataCell[row.getNumCells() - 1]; // exclude class
-            for (int i = 0; i < m_data.length; i++) {
-                m_data[i] = row.getCell(i);
+            m_class = row.getCell(classColumn);
+            int numCells = row.getNumCells() - 1; // exclude class column
+            // init entire data array
+            m_data = new DataCell[numCells];
+            int idx = 0;
+            for (int i = 0; i < row.getNumCells(); i++) {
+                if (i != classColumn) {
+                    m_data[idx] = row.getCell(i);
+                    idx++;
+                }
             }
-            m_class = row.getCell(row.getNumCells() - 1); // last is class
             // replace missing values
-            DataCell[] newCells = new DataCell[m_data.length];
-            for (int i = 0; i < newCells.length; i++) {
+            DataCell[] newCells = new DataCell[numCells];
+            for (int i = 0; i < numCells; i++) {
                 if (m_data[i].isMissing()) {
                     newCells[i] = missing.getMissing(this, i,
                             BasisFunctionLearnerTable.this);
@@ -633,38 +645,36 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * @param pp the object to write result strings to
      */
     public void saveInfos(final ModelContentWO pp) {
-        ModelContentWO statisticsContent = pp.addModelContent("learner_info");
-        statisticsContent.addString("Number of rules learned: ", ""
-                + getNumBasisFunctions());
-        statisticsContent.addString("Number of epochs: ", "" + m_cycles);
-        // basisfunctions per class
-        statisticsContent.addString("Number of classes: ", ""
-                + m_bfs.keySet().size());
-
-        int cnt = 0;
-        for (DataCell classLabel : m_numPatPerClass.keySet()) {
-            int value = m_numPatPerClass.get(classLabel)[0];
-            statisticsContent.addString("\t" + classLabel + "->", "" + value);
-            cnt += value;
-        }
-        statisticsContent.addString("Number of training instances per class: ", 
-            cnt + "");
-
+        pp.addString("Number of epochs: ", "" + m_cycles);
+        pp.addString("Number of classes: ", "" + m_bfs.keySet().size());
+        pp.addString("Number of rules learned per class: ", "(in total "
+                + getNumBasisFunctions() + ")");
         ModelContentWO classContent = pp.addModelContent("class_info");
         for (DataCell classInfo : m_bfs.keySet()) {
             classContent.addString(classInfo.toString() + ": ", ""
                     + getNumBasisFunctions(classInfo));
         }
-        // save model spec
-        DataTableSpec modelSpec = m_factory.getModelSpec();
-        ModelContentWO specContent = pp.addModelContent("column_info");
-        specContent.addString("Number of columns: ", ""
-                + modelSpec.getNumColumns());
-        for (int i = 0; i < modelSpec.getNumColumns(); i++) {
-            DataColumnSpec spec = modelSpec.getColumnSpec(i);
-            specContent.addString(spec.getName() + ": ", spec.getType()
-                    .toString());
+        pp.addString("Number of training instances per class: ", "(in total)");
+        ModelContentWO statisticsContent = pp.addModelContent("learner_info");
+        int cnt = 0;
+        for (DataCell classLabel : m_numPatPerClass.keySet()) {
+            int value = m_numPatPerClass.get(classLabel)[0];
+            statisticsContent.addString("\t" + classLabel + ": ", "" + value);
+            cnt += value;
         }
+        pp.addString("Number of training instances per class: ", 
+                "(in total " + cnt + ")");
+        
+//        // save model spec
+//        DataTableSpec modelSpec = m_factory.getModelSpec();
+//        ModelContentWO specContent = pp.addModelContent("column_info");
+//        specContent.addString("Number of columns: ", ""
+//                + modelSpec.getNumColumns());
+//        for (int i = 0; i < modelSpec.getNumColumns(); i++) {
+//            DataColumnSpec spec = modelSpec.getColumnSpec(i);
+//            specContent.addString(spec.getName() + ": ", spec.getType()
+//                    .toString());
+//        }
     }
 
     /**

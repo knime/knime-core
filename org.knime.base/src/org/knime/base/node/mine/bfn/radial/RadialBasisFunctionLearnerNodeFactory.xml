@@ -9,63 +9,71 @@
 	
 	<fullDescription>
 		<intro>		
-	 		Generates a Probabilistic Neural Network (PNN) based on DDA 
+	 		Generates a Probabilistic Neural Network (PNN) based on the DDA 
 	 		(Dynamic Decay Adjustment) algorithm on labeled data using
 			<a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers1998/BeDi98_dda_neurocomp.pdf">
-			Constructive Training of Probabilistic Neural Networks</a> as 
+			Constructive Training of Probabilistic Neural Networks</a> as the
 			underlying algorithm.<br />
-			All numeric columns are used as input columns for training. One 
-		   	additional column is used as a classification target.
-		   	The input port contains the training data, the data output port 
+			All numeric columns are used as input columns for training and one 
+		   	additional column is used as the classification target.
+		   	The input port contains the training data and the data output port 
 		   	contains the center vectors of the PNN rules.
-		   	The algorithm uses high-dimensional Gaussian functions to cover 
-		   	instances that are adjusted by two thresholds, theta minus and plus, 
-		   	during the learning process. New prototypes are commited until all
-		   	examples have been correctly covered.
+		   	During the learning process the algorithm uses high-dimensional 
+		   	Gaussian functions to cover instances that are adjusted by two 
+		   	thresholds, theta minus and theta plus, to avoid conflicts with
+		   	rules of different classes.
 		</intro>
 		
-		<option name="Target Column">
-			Select column to be used as classification attribute.
-		</option>
-		<option name="Missing Values">
-		    Select method to handle missing values.
-		</option>
-		<option name="Properties">
-		    Check, if a shrink should be performed immediately after a new rule
-		    has been introduced. Shrink means the new rule is reduced so that a
-		    conflict with all other rules is avoided.
-		</option>
-	    <option name="Maximum #Epochs">
-	    	If checked, set the maximum number of epochs the algorithm has to 
-	    	cycle over the entire data set, otherwise it trains until the rule
-	    	model is stable, that is, no commit and/or shrink has been executed.
-		</option>
+	<option name="Target Column">
+		Select the target to be used as the classification attribute.
+	</option>
+	<option name="Missing Values">
+	    Select one method to handle missing values: "Incorp" may generate fuzzy 
+	    rules with missing values if no replacement value has been 
+	    found during the learning process. "Best Guess" computes the optimal
+	    replacement value by projecting the fuzzy rule (with missing value(s))
+	    to the missing dimension(s) of all other rules. "Mean", "Min", and "Max"
+	    replace the missing value with each column's statistical property. 
+	    "Zero" and "One" perform a constant replacement by inserting either zero
+	    or one.
+	</option>
+	<option name="Properties">
+	    If this is selected, a shrink should be performed immediately after a 
+	    new rule has been introduced, i.e. the new rule is reduced so that 
+	    conflicts with all other rules of different classes are avoided.
+	</option>
+    <option name="Maximum #Epochs">
+    	If this is selected, this option defines the maximum number of epochs 
+    	the algorithm has to process the entire data set, otherwise it repeats 
+    	this process until this rule model is stable, i.e. no new rule has been 
+    	commited and/or no shrink has been executed.
+	</option>
 		<option name="Theta Minus">
-		    Default theta minus value is 0.2. This is the upper bound of
-			activation for conflicting rules.
+			This defines the upper boundary on activation for conflicting rules:
+			default value is 0.2. 
 		</option>
 		<option name="Theta Plus">
-		    Default theta plus value is 0.4. This is the lower bound of
-			activation for non-conflicting rules.
+			This defines the lower boundary on activation for non-conflicting 
+			rules: default value is 0.4.
 		</option>
 	</fullDescription>
 	
 	<ports>
 		<dataIn index="0" name="Training Data">
-			Data used for training. Should contain numeric data, as well as one 
-			target attribute for classification.
+			Data used for training. This should contain numeric data and
+			one target attribute for classification.
 		</dataIn>
 		<dataOut index="0" name="PNN Rule Table">
-			Table with generated center vectors and a classification attribute.
+			Table with generated center vectors and one classification attribute.
 		</dataOut>
 		<modelOut index="0" name="PNN Rule Model" type="PNNModel">
-			Generated PNN model can be used for prediction.
+			The generated PNN model can be used for prediction.
 		</modelOut>
 	</ports>
 	
 	<views>
 		<view index="0" name="PNN Rule Model View">
-			Shows a summary of the generated PNN rule model.
+			Displays a summary of the generated PNN rule model.
 		</view>
 	</views>
 	

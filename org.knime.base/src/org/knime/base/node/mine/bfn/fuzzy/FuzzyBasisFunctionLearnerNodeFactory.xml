@@ -9,63 +9,82 @@
 	
 	<fullDescription>
 		<intro>		
-    	Generates a Fuzzy Rule Model (RecBF-DDA) on labeled data using 
+    	Generates fuzzy rules on labeled data using 
     	<a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2003/Bert03_mixedFR_ijar.pdf">
-    	Mixed Fuzzy Rule Formation</a> as underlying training algorithm based
-    	(see <a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2004/GaBe04_mixedFRappendix_ijar.pdf">
+    	Mixed Fuzzy Rule Formation</a> as the underlying training algorithm 
+    	(also known as RecBF-DDA algorithm).
+    	See <a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2004/GaBe04_mixedFRappendix_ijar.pdf">
     	Influence of fuzzy norms and other heuristics on 
     	"Mixed Fuzzy Rule Formation"</a> for an extension.<br />
-    	All numeric columns are used as input columns for training. One 
-    	(additional) column is used as a classification target.<br />
-    	The input port contains the training data, the data output port, which 
-    	the trained fuzzy rules as table, and the model output of the Fuzzy Rule
-    	Model, which can be used for prediction.<br />
+    	All numeric columns of the input data are used as input columns for 
+    	training and one (additional) column is used as a classification 
+    	target.<br />
+    	The data output port contains one fuzzy interval for each dimension plus
+    	the target classification. The model outport contains the Fuzzy Rule
+    	Model, which can be used for classification in the Fuzzy Rule Predictor 
+    	node.<br />
     	The algorithm generates rules based on input data, which can be 
     	described as fuzzy intervals in higher dimensional spaces. These 
     	hyper-rectangles are defined by trapezoid fuzzy membership functions for
     	each dimension.
 		</intro>
 	<option name="Target Column">
-		Select the target to be used as a classification attribute.
+		Select the target to be used as the classification attribute.
 	</option>
 	<option name="Missing Values">
-	    Select method to handle missing values.
+	    Select one method to handle missing values: "Incorp" may generate fuzzy 
+	    rules with missing values if no replacement value has been 
+	    found during the learning process. "Best Guess" computes the optimal
+	    replacement value by projecting the fuzzy rule (with missing value(s))
+	    to the missing dimension(s) of all other rules. "Mean", "Min", and "Max"
+	    replace the missing value with each column's statistical property. 
+	    "Zero" and "One" perform a constant replacement by inserting either zero
+	    or one.
 	</option>
 	<option name="Properties">
-	    Check, if a shrink should be performed immediately after a new rule
-	    has been introduced. Shrink means the new rule is reduced so that the
-	    conflict with all other conflicting rules is avoided.
+	    If this is selected, a shrink should be performed immediately after a 
+	    new rule has been introduced, i.e. the new rule is reduced so that 
+	    conflicts with all other rules of different classes are avoided.
 	</option>
     <option name="Maximum #Epochs">
-	    	If checked, set the maximum number of epochs the algorithm has to 
-	    	cycle over the entire data set, otherwise it trains until the rule
-	    	model is stable, that is, no commit and/or shrink has been executed.
+    	If this is selected, this option defines the maximum number of epochs 
+    	the algorithm has to process the entire data set, otherwise it repeats 
+    	this process until this rule model is stable, i.e. no new rule has been 
+    	commited and/or no shrink has been executed.
 	</option>
 	<option name="Fuzzy Norm">
-	    Choice of fuzzy norm used to compute the rules' fulfillment across all
-	    dimensions and rules. 
+	    Select one fuzzy norm to compute the rules' fulfillment across all
+	    dimensions and rules. Fuzzy norms are important, because they combine 
+	    the membership values of each fuzzy interval for one rule and compute a
+	    final output across all rules. Different choices of fuzzy norms are 
+	    available: minimum/maximum, product, Lukasiewicz, and Yager norm.
 	</option>
 	<option name="Shrink Function">
-	    Shrink procedure which reduces rules to avoid conflict between
-	     rules of different classes based on the defined loss value.
+	    Select one shrink method to reduce rules in order to avoid conflicts 
+	    between rules of different classes. There are three volume-based shrink
+	    method available to normalize the loss in volume: the border-based 
+	    shrink applies the volume loss in terms of the support or core region 
+	    borders; the anchor-based shrink uses the anchor value border; and the 
+	    rule-based shrink uses the entire rule volume.
 	</option>
 	</fullDescription>
 	
 	<ports>
 		<dataIn index="0" name="Training Data">
-			Data used for training. Should contain numeric data, as well as one
-			target attribute for classification.
+			Uses all numeric attributes plus one selected target attribute for 
+			training.
 		</dataIn>
 		<dataOut index="0" name="Fuzzy Rule Table">
-			Table with generated fuzzy rules, each dimension as fuzzy interval.
+			Table with rules as fuzzy intervals in each dimension plus the
+			target attribute.
 		</dataOut>
 		<modelOut index="0" name="Fuzzy Rule Model" type="FuzzyRuleModel">
-			Generated fuzzy rule model can be used for prediction.
+			The generated Fuzzy Rule Model can be used for prediction.
 		</modelOut>
 	</ports>	
 	<views>
 		<view index="0" name="Fuzzy Rule Model View">
-			Shows a summary of the generated fuzzy rule model.
+			Displays a summary of the generated Fuzzy Rule Model.
 		</view>
 	</views>
 	

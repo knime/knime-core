@@ -245,7 +245,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         BasisFunctionFactory factory = getFactory(trainData.getDataTableSpec());
         // start training
         BasisFunctionLearnerTable table = new BasisFunctionLearnerTable(
-                trainData, factory,
+                trainData, m_target, factory,
                 BasisFunctionLearnerTable.MISSINGS[m_missing],
                 m_shrinkAfterCommit, m_maxEpochs, exec);
         m_modelSpec = table.getDataTableSpec();
