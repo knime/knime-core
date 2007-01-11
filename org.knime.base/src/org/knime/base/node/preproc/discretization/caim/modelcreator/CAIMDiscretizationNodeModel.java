@@ -824,40 +824,52 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-
         // if no columns are defined to discretize, return the input spec
         if (m_includedColumnNames == null 
                 || m_includedColumnNames.length == 0) {
             setWarningMessage(WARNING_NO_COLS_SELECTED);
             return inSpecs;
-        } else {
-            // else replace for each included column the attribute type to
-            // string
-            DataColumnSpec[] newColumnSpecs =
-                    new DataColumnSpec[inSpecs[DATA_INPORT].getNumColumns()];
-
-            int counter = 0;
-            for (DataColumnSpec originalColumnSpec : inSpecs[DATA_INPORT]) {
-
-                // if the column is included for discretizing, change the spec
-                if (isIncluded(originalColumnSpec, m_includedColumnNames) 
-                        > -1) {
-                    // creat a nominal string column spec
-                    newColumnSpecs[counter] =
-                            new DataColumnSpecCreator(originalColumnSpec
-                                    .getName(), StringCell.TYPE).createSpec();
-                } else {
-                    // add it as is
-                    newColumnSpecs[counter] = originalColumnSpec;
-                }
-
-                counter++;
+        }
+        // first check if the in specs correspond to the settings
+        // i.e. check if the selected columns for binning are
+        // contained in the in data table
+        for (String includedColName : m_includedColumnNames) {
+            if (!inSpecs[DATA_INPORT].containsName(includedColName)) {
+                throw new InvalidSettingsException(
+                        "The selected column to bin '" + includedColName
+                                + "' does not exist in the input data "
+                                + "table. Reconfigure this node!");
             }
 
-            DataTableSpec[] newSpecs = new DataTableSpec[1];
-            newSpecs[0] = new DataTableSpec(newColumnSpecs);
-            return newSpecs;
         }
+
+        // else replace for each included column the attribute type to
+        // string
+        DataColumnSpec[] newColumnSpecs = 
+            new DataColumnSpec[inSpecs[DATA_INPORT]
+                .getNumColumns()];
+
+        int counter = 0;
+        for (DataColumnSpec originalColumnSpec : inSpecs[DATA_INPORT]) {
+
+            // if the column is included for discretizing, change the spec
+            if (isIncluded(originalColumnSpec, m_includedColumnNames) > -1) {
+                // creat a nominal string column spec
+                newColumnSpecs[counter] = new DataColumnSpecCreator(
+                        originalColumnSpec.getName(), StringCell.TYPE)
+                        .createSpec();
+            } else {
+                // add it as is
+                newColumnSpecs[counter] = originalColumnSpec;
+            }
+
+            counter++;
+        }
+
+        DataTableSpec[] newSpecs = new DataTableSpec[1];
+        newSpecs[0] = new DataTableSpec(newColumnSpecs);
+        return newSpecs;
+
     }
 
     /**
