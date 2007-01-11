@@ -401,6 +401,10 @@ public final class BufferedDataTable implements DataTable {
         File file;
         if (fileName != null) {
             file = new File(dir, fileName);
+            if (!file.exists()) {
+                throw new IOException("No such data file: " 
+                        + file.getAbsolutePath());
+            }
             if (!file.isFile() || !file.canRead()) {
                 throw new IOException("Can not read file "
                         + file.getAbsolutePath());
@@ -491,7 +495,7 @@ public final class BufferedDataTable implements DataTable {
      * @param dataOwner The owner of the tables. If 
      * getOwner() != dataOwner, we return immediately.
      */
-    void clear(final Node dataOwner) {
+    synchronized void clear(final Node dataOwner) {
         // only take responsibilty for our data tables
         if (dataOwner != getOwner()) {
             return;
