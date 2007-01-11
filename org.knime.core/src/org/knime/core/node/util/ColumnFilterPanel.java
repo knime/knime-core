@@ -624,10 +624,12 @@ public class ColumnFilterPanel extends JPanel {
         }
         final String searchStr = searchField.getText().trim();
         if (model.isEmpty() || searchStr.equals("")) {
+            list.clearSelection();
             return;
         }
         if (markAllHits) {
             int[] searchHits = getAllSearchHits(list, searchStr);
+            list.clearSelection();
             if (searchHits.length > 0) {
                 list.setSelectedIndices(searchHits);
                 list.scrollRectToVisible(list.getCellBounds(searchHits[0],
