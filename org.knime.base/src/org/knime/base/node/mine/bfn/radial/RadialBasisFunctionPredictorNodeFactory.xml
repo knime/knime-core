@@ -9,21 +9,21 @@
 	
 	<fullDescription>
 		<intro>		
-	    Applies unknown data to a Probabilistic Neural Network (PNN). The first 
-	    input port contains the test data, the second one contains the PNN Model
-	    to which the data are applied. The output data has one additional column
-	    with the predicted class attribute.
+	    The first input port contains the test data while the second one 
+	    contains the PNN Model to which the data is applied. The output data has one additional column
+	    containing the predicted class attribute.
 		</intro>
 		
-    <option name="Choose Name">
-	    The name of the predicted column, appended at the end to the test data.
-    </option>
-    <option name="Don't Know Class">
-	    A probability between 0.0 and 1.0. Instances whose activation lies above
-	    this threshold are classified with an unknown missing class. This is 
-	    useful in cases where the feature space is not completely covered by
-	    rules.
-    </option>
+	    <option name="Choose Name">
+			The name of the predicted column appended to the end of the test 
+			data.    
+		</option>
+	    <option name="Don't Know Class">
+		    A probability between 0.0 and 1.0. Instances where the activation lies 
+		    above this threshold are classified as a missing (unknown) class. 
+		    This is useful in cases where the feature space is not completely 
+		    covered by rules.
+	    </option>
 	</fullDescription>
 	
 	<ports>
@@ -31,10 +31,10 @@
 			Test data must have same column names and types as the PNN model.
 		</dataIn>
     	<dataOut index="0" name="Classified Test Data">
-    		Test data with one additional column.
+    		Test data with one additional column appended.
     	</dataOut>
 		<modelIn index="0" name="PNN Model" type="PNNModel">
-			PNN model used to classify test data.
+			PNN model used to classify the test data.
 		</modelIn>
 	</ports>
 </knimeNode>

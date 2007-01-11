@@ -72,43 +72,33 @@ public class BasisFunctionLearnerNodeView extends NodeView {
         if (pp == null) {
             m_content.setText("");
         } else {
-            try {
-                StringBuffer buf = new StringBuffer();
-                buf.append("<html>\n");
-                buf.append("<body>\n");
-                buf.append("<h2>Learner Statistics</h2>");
-                buf.append("<ul>");
-                ModelContentRO statisticsContent = 
-                    pp.getModelContent("learner_info");
-                for (String key : statisticsContent.keySet()) {
-                     buf.append("<li>");
-                     buf.append(key + statisticsContent.getString(key) + "\n");
-                     buf.append("</li>");
+            StringBuilder buf = new StringBuilder();
+            buf.append("<html>\n");
+            buf.append("<body>\n");
+            buf.append("<h2>Learner Statistics</h2>");
+            getNextValue(pp, buf);
+            buf.append("</body>\n");
+            buf.append("</html>\n");
+            m_content.setText(buf.toString());
+        }
+    }
+    
+    private void getNextValue(final ModelContentRO pp, 
+            final StringBuilder buf) {
+        for (String key : pp.keySet()) {
+            String value = pp.getString(key, null);
+            if (value == null) {
+                try {
+                    ModelContentRO nextCont = pp.getModelContent(key);
+                    buf.append("<ul>");
+                    getNextValue(nextCont, buf);
+                    buf.append("</ul>");
+                } catch (InvalidSettingsException ise) {
+                    LOGGER.coding("Could not find model content for key: " 
+                            + key, ise);
                 }
-                buf.append("<ul>");
-                ModelContentRO classContent = pp.getModelContent("class_info");
-                for (String key : classContent.keySet()) {
-                    buf.append("<li>");
-                    buf.append(key + classContent.getString(key) + "\n");
-                    buf.append("</li>");
-                }
-                buf.append("</ul>");
-                buf.append("</ul>");
-                buf.append("<h2>Model Spec</h2>");
-                buf.append("<ul>");
-                ModelContentRO specContent = pp.getModelContent("column_info");
-                for (String key : specContent.keySet()) {
-                    buf.append("<li>");
-                    buf.append(key + specContent.getString(key) + "\n");
-                    buf.append("</li>");
-                }
-                buf.append("<ul>");
-                buf.append("</body>\n");
-                buf.append("</html>\n");
-                m_content.setText(buf.toString());
-            } catch (InvalidSettingsException ise) {
-                LOGGER.coding("Basisfunction model info wrong", ise);
-                m_content.setText("");
+            } else {
+                buf.append("<li>" + key + " " + value + "\n</li>");
             }
         }
     }
