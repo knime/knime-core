@@ -352,6 +352,9 @@ public class ScatterPlotter extends TwoColumnPlotter {
                 || getDataProvider().getDataArray(0) == null) {
             return;
         }
+        if (getSelectedXColumnIndex() == -1 || getSelectedYColumnIndex() == -1) {
+        	return;
+        }
 //        getScatterPlotterDrawingPane().clearSelection();
         // get the rowInfo from the model
         DataArray rowsCont = getDataProvider().getDataArray(0);

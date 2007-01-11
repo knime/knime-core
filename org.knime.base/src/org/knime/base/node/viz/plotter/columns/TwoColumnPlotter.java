@@ -317,6 +317,12 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
     /**
      * This method is called whenever the column selection has changed and
      * the view model has to be adapted to the currently selected columns.
+     * There might occur a problem with the selected indices if the 
+     * underlying data spec was changed and both, the x and the y, indices
+     * are changed, then this method is called for the changed x index although
+     * the y index is still obsolete. Thus, one have to check that the
+     * {@link #getSelectedXColumnIndex()} and the 
+     * {@link #getSelectedYColumnIndex()} are both > -1.
      *
      */
     @Override
