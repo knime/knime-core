@@ -31,6 +31,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.JLabel;
@@ -41,6 +43,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteListener;
@@ -74,6 +77,8 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
 //    private JLabel m_precision;
 
     private boolean[][] m_cellHilited;
+    
+    private Set<DataCell> m_hilitedKeys = new HashSet<DataCell>();
 
     /**
      * Creates a new ScorerNodeView displaying the table with the score.
@@ -168,6 +173,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
 //            m_precision.setText(" n/a ");
 //            m_recall.setText(" n/a ");
             model.getInHiLiteHandler(0).removeHiLiteListener(this);
+            m_hilitedKeys.clear();
             return;
         }
 
@@ -406,9 +412,12 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      * @see HiLiteListener#hiLite(KeyEvent)
      */
     public void hiLite(final KeyEvent event) {
+        
+        // add the hilited keys to the set
+        m_hilitedKeys.addAll(event.keys());
 
         Point[] completeHilitedCells = ((HiliteScorerNodeModel)getNodeModel())
-                .getCompleteHilitedCells(event.keys());
+                .getCompleteHilitedCells(m_hilitedKeys);
 
         // hilite all cells given by the points
         for (Point cell : completeHilitedCells) {
@@ -426,6 +435,9 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      * @see HiLiteListener#unHiLite(KeyEvent)
      */
     public void unHiLite(final KeyEvent event) {
+        
+        // update the key set
+        m_hilitedKeys.removeAll(event.keys());
 
         for (int i = 0; i < m_cellHilited.length; i++) {
             for (int j = 0; j < m_cellHilited[i].length; j++) {
@@ -446,6 +458,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      * 
      */
     public void unHiLiteAll() {
+        m_hilitedKeys.clear();
         clearHiliteBackgroundColor();
     }
 
