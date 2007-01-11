@@ -140,34 +140,15 @@ final class DataOutPortView extends NodeOutPortView {
      * @param spec The new spec.
      */
     void update(final DataTable table, final DataTableSpec spec) {
-        /* Thread that executes the setDataTable method in the TableView.
-         * The reason for that is that setting the table may require some time
-         * as sometimes the entire data needs to be extracted from a workspace
-         * archive to the temp directory. During that time, this view will 
-         * show label "Getting data..." and be more responsive.
-         */
-        Thread updateThread = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    updateDataTable(m_table);
-                    updateDataTableSpec(m_tableSpec);
-                    showComponent(m_tabs);
-                } catch (Exception ite) {
-                    LOGGER.warn("Exception while setting table", ite);
-                    showComponent(new JLabel(ite.getClass().getSimpleName()
-                            + " while setting table, "
-                            + "see log file for details"));
-                }
+        synchronized (m_updateLock) {
+            m_table = table;
+            m_tableSpec = spec;
+        
+            if (isVisible()) {
+                showComponent(m_busyLabel);
+                updateAll();
             }
-        };
-
-        m_table = table;
-        m_tableSpec = spec;
-        showComponent(m_busyLabel);
-        // this updates the table view and table spec view in a background 
-        // process and replaces the busy label with the table views.
-        updateThread.start();
+        }
     }
     
     private void showComponent(final JComponent p) {
@@ -513,4 +494,54 @@ final class DataOutPortView extends NodeOutPortView {
         return result.toString();
     }
     
+    private void updateAll() {
+        /* Thread that executes the setDataTable method in the TableView.
+         * The reason for that is that setting the table may require some
+         * time as sometimes the entire data needs to be extracted from a
+         * workspace archive to the temp directory. During that time, this
+         * view will show label "Getting data..." and be more responsive.
+         */
+        Thread updateThread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    synchronized (m_updateLock) {
+                        if (m_table != null) {
+                            synchronized (m_table) {
+                                updateDataTable(m_table);
+                                updateDataTableSpec(m_tableSpec);
+                                showComponent(m_tabs);
+                            }
+                        } else {
+                            updateDataTable(null);
+                            updateDataTableSpec(null);
+                            showComponent(m_tabs);                        
+                        }
+                    }
+                } catch (Exception ite) {
+                    LOGGER.warn("Exception while setting table", ite);
+                    showComponent(new JLabel(ite.getClass().getSimpleName()
+                            + " while setting table, "
+                            + "see log file for details"));
+                }
+            }
+        };
+
+        // this updates the table view and table spec view in a background 
+        // process and replaces the busy label with the table views.
+        updateThread.start();        
+    }
+
+    /**
+     * @see java.awt.Component#setVisible(boolean)
+     */
+    @Override
+    public void setVisible(final boolean b) {
+        super.setVisible(b);
+        if (b) {
+            showComponent(m_busyLabel);
+            updateAll();
+        }
+        
+    }
 }
