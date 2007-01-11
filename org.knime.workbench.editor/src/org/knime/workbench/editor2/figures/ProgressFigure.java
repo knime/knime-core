@@ -28,6 +28,7 @@ import java.util.Vector;
 
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.DelegatingLayout;
+import org.eclipse.draw2d.FigureUtilities;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
@@ -52,8 +53,8 @@ import org.knime.core.node.NodeProgressListener;
 public class ProgressFigure extends RectangleFigure implements
         NodeProgressListener, MouseMotionListener {
 
-//    private static final NodeLogger LOGGER =
-//            NodeLogger.getLogger(ProgressFigure.class);
+    // private static final NodeLogger LOGGER =
+    // NodeLogger.getLogger(ProgressFigure.class);
 
     /** absolute width of this figure. * */
     public static final int WIDTH = 32;
@@ -67,8 +68,10 @@ public class ProgressFigure extends RectangleFigure implements
 
     private static final Font QUEUED_FONT;
 
-    private static final Color PROGRESS_BAR_BACKGROUND_COLOR =
-            new Color(null, 220, 220, 220);
+    private static final Font QUEUED_FONT_SMALL;
+
+    private static final Color PROGRESS_BAR_BACKGROUND_COLOR = new Color(null,
+            220, 220, 220);
 
     private static final Color PROGRESS_BAR_COLOR = ColorConstants.darkBlue;
 
@@ -95,6 +98,7 @@ public class ProgressFigure extends RectangleFigure implements
         }
         PROGRESS_FONT = new Font(current, name, height, SWT.NORMAL);
         QUEUED_FONT = new Font(current, name, 7, SWT.NORMAL);
+        QUEUED_FONT_SMALL = new Font(current, name, 6, SWT.NORMAL);
 
         // instantiate and start the unkown progress timer
         unknownProgressTimer = new UnknownProgressTimer();
@@ -247,9 +251,8 @@ public class ProgressFigure extends RectangleFigure implements
 
                     // calculate the progress bar width from the percentage
                     // current worked value
-                    int barWidth =
-                            (int)Math.round((double)(WIDTH - 2) / 100.0D
-                                    * (double)m_currentWorked);
+                    int barWidth = (int) Math.round((double) (WIDTH - 2)
+                            / 100.0D * (double) m_currentWorked);
 
                     graphics.fillRectangle(x + 1, y + 1, barWidth, h - 2);
 
@@ -262,7 +265,7 @@ public class ProgressFigure extends RectangleFigure implements
                     graphics.setXORMode(true);
                     graphics.setForegroundColor(ColorConstants.white);
                     graphics.drawString(progressString, x + w / 2
-                            - (int)(progressString.length() * 4), y - 1);
+                            - (int) (progressString.length() * 4), y - 1);
                 } else {
 
                     graphics.setForegroundColor(ColorConstants.darkBlue);
@@ -279,14 +282,21 @@ public class ProgressFigure extends RectangleFigure implements
                             + m_unknownProgressBarRenderingPosition, y + 1,
                             UNKNOW_PROGRESS_BAR_WIDTH, h - 2);
 
-                    m_unknownProgressBarRenderingPosition +=
-                            m_unknownProgressBarDirection;
+                    m_unknownProgressBarRenderingPosition += m_unknownProgressBarDirection;
 
                 }
             } else {
                 // draw "Queued"
                 String queuedString = "queued";
                 graphics.setFont(QUEUED_FONT);
+                Dimension dim = FigureUtilities.getStringExtents(queuedString,
+                        QUEUED_FONT);
+
+                // if the string is to big for the progress bar
+                // reduce the font size
+                if (dim.width > 30) {
+                    graphics.setFont(QUEUED_FONT_SMALL);
+                }
                 graphics.drawString(queuedString, x + 1, y);
             }
         }
@@ -352,8 +362,9 @@ public class ProgressFigure extends RectangleFigure implements
     /**
      * Sets the mode of this progress bar. The modes are executing or queued
      * 
-     * @param executing if true the mode is executing otherwise the progress
-     *            should be displayed as queued.
+     * @param executing
+     *            if true the mode is executing otherwise the progress should be
+     *            displayed as queued.
      */
     public void setExecuting(final boolean executing) {
         m_executing = executing;
@@ -384,8 +395,8 @@ public class ProgressFigure extends RectangleFigure implements
         int newWorked = m_currentWorked;
         if (pe.hasProgress()) {
             double progress = pe.getProgress().doubleValue();
-            newWorked =
-                    (int)Math.round(Math.max(0, Math.min(progress * 100, 100)));
+            newWorked = (int) Math.round(Math.max(0, Math.min(progress * 100,
+                    100)));
         }
 
         // if something changed, change the values and repaint
@@ -416,8 +427,8 @@ public class ProgressFigure extends RectangleFigure implements
         if (!m_currentProgressMessage.equals(message)) {
 
             String meString = m_currentProgressMessage;
-            m_currentProgressMessage =
-                    message == null ? "" : m_stateMessage + " - " + message;
+            m_currentProgressMessage = message == null ? "" : m_stateMessage
+                    + " - " + message;
 
             // LOGGER.debug("current progress message after if: " +
             // m_currentProgressMessage);
@@ -461,7 +472,8 @@ public class ProgressFigure extends RectangleFigure implements
      * Waiting or Queued, etc. The message is always appended before the
      * progress message.
      * 
-     * @param stateMessage the state message to show
+     * @param stateMessage
+     *            the state message to show
      */
     public void setStateMessage(final String stateMessage) {
         m_stateMessage = stateMessage;
@@ -488,7 +500,8 @@ public class ProgressFigure extends RectangleFigure implements
     /**
      * To set the current display. Null display is not set.
      * 
-     * @param currentDisplay the dipsplay to set
+     * @param currentDisplay
+     *            the dipsplay to set
      */
     public void setCurrentDisplay(final Display currentDisplay) {
 
@@ -542,8 +555,8 @@ public class ProgressFigure extends RectangleFigure implements
         IFigure parent = getParent();
         if (parent != null) {
 
-            WorkflowFigure workflowFigure =
-                    (WorkflowFigure)getParent().getParent();
+            WorkflowFigure workflowFigure = (WorkflowFigure) getParent()
+                    .getParent();
             if (workflowFigure != null) {
 
                 m_toolTipHelper = workflowFigure.getProgressToolTipHelper();
@@ -577,8 +590,7 @@ public class ProgressFigure extends RectangleFigure implements
      */
     private static class UnknownProgressTimer extends Thread {
 
-        private Vector<ProgressFigure> m_figuresToPaint =
-                new Vector<ProgressFigure>();
+        private Vector<ProgressFigure> m_figuresToPaint = new Vector<ProgressFigure>();
 
         /**
          * Creats an unknown progress timer for cycling progress bar rendering.
@@ -632,7 +644,8 @@ public class ProgressFigure extends RectangleFigure implements
          * Add a progress figure that should be rendered regularly. (Intended
          * for cycling progress bars)
          * 
-         * @param figure The figure to render regularly
+         * @param figure
+         *            The figure to render regularly
          */
         public void addFigure(final ProgressFigure figure) {
 
@@ -649,7 +662,8 @@ public class ProgressFigure extends RectangleFigure implements
         /**
          * Remove a figure that is no longer intended to be rendered regulary.
          * 
-         * @param figure the figure to remove
+         * @param figure
+         *            the figure to remove
          */
         public void removeFigure(final ProgressFigure figure) {
 
