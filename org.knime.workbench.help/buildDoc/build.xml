@@ -31,6 +31,7 @@
     <target name="init">
         <mkdir dir="${build.path}" />
         <mkdir dir="${build.html.path}" />
+        <mkdir dir="${build.xhtml.path}" />
         <mkdir dir="${build.pdf.path}" />
         <mkdir dir="${build.hh.path}" />
         <mkdir dir="${build.eclipse.path}" />
@@ -81,6 +82,33 @@
 
 
     </target>
+	
+	<!-- - - - - - - - - - - - - - - - - - 
+	          Create xhtml from docbook sources                      
+	         - - - - - - - - - - - - - - - - - -->
+	    <target name="docbook2xhtml" depends="init">
+
+	        <java classname="com.icl.saxon.StyleSheet" fork="true">
+
+	            <classpath refid="transformer.classpath" />
+
+	            <arg value="-x" />
+	            <arg value="org.apache.xml.resolver.tools.ResolvingXMLReader" />
+	            <arg value="-y" />
+	            <arg value="org.apache.xml.resolver.tools.ResolvingXMLReader" />
+	            <arg value="-r" />
+	            <arg value="org.apache.xml.resolver.tools.CatalogResolver" />
+
+	            <arg value="-o" />
+	            <arg value="${build.html.file}" />
+
+	            <arg value="${source.book}" />
+	            <arg value="${xslt.html}" />
+
+	        </java>
+
+
+	    </target>
 
 
     <!-- - - - - - - - - - - - - - - - - - 

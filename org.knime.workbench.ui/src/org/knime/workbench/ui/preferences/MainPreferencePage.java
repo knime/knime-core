@@ -69,8 +69,8 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         setDescription("Konstanz Information Miner global preferences");
 
         // get the preference store for the UI plugin
-        IPreferenceStore store = KNIMEUIPlugin.getDefault()
-                .getPreferenceStore();
+        IPreferenceStore store =
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
         m_tempPath = store.getString(PreferenceConstants.P_TEMP_DIR);
     }
 
@@ -119,16 +119,17 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         }
 
         // get the preference store for the UI plugin
-        IPreferenceStore store = KNIMEUIPlugin.getDefault()
-                .getPreferenceStore();
+        IPreferenceStore store =
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
         String currentTmpDir = store.getString(PreferenceConstants.P_TEMP_DIR);
         boolean tempDirChanged = !m_tempPath.equals(currentTmpDir);
         if (tempDirChanged) {
 
             // reset the directory
             m_tempPath = currentTmpDir;
-            MessageBox mb = new MessageBox(Display.getDefault()
-                    .getActiveShell(), SWT.ICON_QUESTION | SWT.YES | SWT.NO);
+            MessageBox mb =
+                    new MessageBox(Display.getDefault().getActiveShell(),
+                            SWT.ICON_QUESTION | SWT.YES | SWT.NO);
             mb.setText("Restart workbench...");
             mb.setMessage("Changes of the temporary directory become "
                     + "first available after restarting the workbench.\n"
@@ -154,53 +155,51 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         // TODO realize this !
         addField(new RadioGroupFieldEditor(
                 PreferenceConstants.P_CHOICE_VIEWMODE,
-                "Select the mode how &views are opened", 1, new String[][] {
-                        { "External &JFrame",
-                                PreferenceConstants.P_CHOICE_VIEWMODE_JFRAME },
-                        { "Eclipse &view (embedded)",
-                                PreferenceConstants.P_CHOICE_VIEWMODE_VIEW } },
+                "Select the mode how &views are opened", 1, new String[][]{
+                        {"External &JFrame",
+                                PreferenceConstants.P_CHOICE_VIEWMODE_JFRAME},
+                        {"Eclipse &view (embedded)",
+                                PreferenceConstants.P_CHOICE_VIEWMODE_VIEW}},
                 parent));
 
         // Specify the minimum log level for the console
         addField(new RadioGroupFieldEditor(
                 PreferenceConstants.P_LOGLEVEL_CONSOLE, "Console Log Level", 4,
-                new String[][] {
-                        { "&DEBUG", PreferenceConstants.P_LOGLEVEL_DEBUG },
+                new String[][]{
+                        {"&DEBUG", PreferenceConstants.P_LOGLEVEL_DEBUG},
 
-                        { "&INFO", PreferenceConstants.P_LOGLEVEL_INFO },
+                        {"&INFO", PreferenceConstants.P_LOGLEVEL_INFO},
 
-                        { "&WARN", PreferenceConstants.P_LOGLEVEL_WARN },
+                        {"&WARN", PreferenceConstants.P_LOGLEVEL_WARN},
 
-                        { "&ERROR", PreferenceConstants.P_LOGLEVEL_ERROR } },
+                        {"&ERROR", PreferenceConstants.P_LOGLEVEL_ERROR}},
                 parent));
 
         // Specify the minimum log level
         addField(new RadioGroupFieldEditor(
                 PreferenceConstants.P_LOGLEVEL_LOG_FILE, "Log File Log Level",
-                4, new String[][] {
-                        { "&DEBUG", PreferenceConstants.P_LOGLEVEL_DEBUG },
+                4, new String[][]{
+                        {"&DEBUG", PreferenceConstants.P_LOGLEVEL_DEBUG},
 
-                        { "&INFO", PreferenceConstants.P_LOGLEVEL_INFO },
+                        {"&INFO", PreferenceConstants.P_LOGLEVEL_INFO},
 
-                        { "&WARN", PreferenceConstants.P_LOGLEVEL_WARN },
+                        {"&WARN", PreferenceConstants.P_LOGLEVEL_WARN},
 
-                        { "&ERROR", PreferenceConstants.P_LOGLEVEL_ERROR } },
+                        {"&ERROR", PreferenceConstants.P_LOGLEVEL_ERROR}},
                 parent));
 
-        IntegerFieldEditor maxThreadEditor = new IntegerFieldEditor(
-                PreferenceConstants.P_MAXIMUM_THREADS,
-                "Maximum working threads for all nodes", parent, 3);
+        IntegerFieldEditor maxThreadEditor =
+                new IntegerFieldEditor(PreferenceConstants.P_MAXIMUM_THREADS,
+                        "Maximum working threads for all nodes", parent, 3);
         maxThreadEditor.setValidRange(1, Math.max(100, Runtime.getRuntime()
                 .availableProcessors() * 4));
         maxThreadEditor.setTextLimit(3);
         addField(maxThreadEditor);
 
-        DirectoryFieldEditor tempDirEditor = new TempDirFieldEditor(
-                PreferenceConstants.P_TEMP_DIR,
-                "Directory for temporary files\n(you should restart KNIME after"
-                        + " changing this value)", parent);
-        tempDirEditor.setEmptyStringAllowed(false);
-        
+        DirectoryFieldEditor tempDirEditor =
+                new DirectoryFieldEditor(PreferenceConstants.P_TEMP_DIR,
+                        "Directory for temporary files\n(you should restart KNIME after"
+                                + " changing this value)", parent);
         addField(tempDirEditor);
     }
 
