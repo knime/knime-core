@@ -56,20 +56,26 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
     private final static String SHELL_HEADER = "KNIME encryption key";
 
     private final static String SHELL_TEXT = "KNIME requires an encryption "
-            + "key to encrypt/decrypt passwords, e.g. database passwords "
-            + "in database reader/writer nodes.\n"
-            + "This is for convenience reasons, avoiding to enter passwords"
-            + " for each new session. As passwords are not stored as"
-            + " plain text, encryption is necessary.\n"
+            + "key to encrypt/decrypt passwords, mainly for "
+            + "database passwords in nodes connecting to databases "
+            + "(e.g. database "
+            + "reader/writer nodes).\n"
+            + "This avoids having to enter passwords for each"
+            + " new session "
+            + "and each node individually.\nTo avoid storing those"
+            + "passwords in plain text, the central encryption key is used.\n\n"
+
             + "Up to now there has no key been supplied which can be used "
-            + "to encrypt/decrypt the passwords.\n"
-            + "Please type in a key that is at least 8 characters long.\n"
-            + "Note: if you have entered a key in a previous session which "
-            + "has been used to encrypt passwords,\n"
-            + " those passwords can only be decrypted with the same key.\n"
-            + "If you use different keys, KNIME will ask you to enter "
-            + "another key if the one provided can not be used to decrypt"
-            + " a password.";
+            + "to encrypt/decrypt "
+            + "the passwords. Please type in a key that is at least 8 "
+            + "characters long.\n\n"
+
+            + "Note: if you have entered a key in a previous session "
+            + "which has been "
+            + "used to encrypt passwords, those passwords can obviously "
+            + "only be "
+            + "decrypted with the same key. If you enter a different key,"
+            + " KNIME will " + "ask you to enter another key. ";
 
     /**
      * This method opens a window to which the user can input the encryption
