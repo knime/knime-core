@@ -333,8 +333,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         if (totalNumberDataSets == 0) {
             error = Float.NaN;
         } else {
-            float ratio = 100.0f / totalNumberDataSets;
-            error = ratio * getFalseCount();
+            error = 100.0f * getFalseCount() / totalNumberDataSets;
         }
         return error;
     }
