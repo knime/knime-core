@@ -53,9 +53,9 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
 
     private String m_pw;
 
-    private final static String SHELL_HEADER = "KNIME encryption key";
+    private static final String SHELL_HEADER = "KNIME encryption key";
 
-    private final static String SHELL_TEXT = "KNIME requires an encryption "
+    private static final String SHELL_TEXT = "KNIME requires an encryption "
             + "key to encrypt/decrypt passwords, mainly for "
             + "database passwords in nodes connecting to databases "
             + "(e.g. database "

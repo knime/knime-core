@@ -1,11 +1,3 @@
-This plugin project provides nodes and functionality as an extension for KNIME,
-the Konstanz Information Miner.
-
-It is released under the terms of the Aladdin free public license (see the file 
-LICENSE.TXT, which should be located in the same directory as this file). 
-If you didn't receive a copy of the license file, please contact us: 
-contact@knime.org
-
  This plugin contains an implementation of an eigenvalue decomposition.
  Most of the code of the implementing class "EigenvalueDecomposition" is taken 
  from the corresponding "JMathTools" class and is under the BSD licence with the 

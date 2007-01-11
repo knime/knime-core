@@ -6,7 +6,7 @@
 <chapter id="quickstart">
   <title>KNIME Quickstart Guide</title>
 
-  <sect1 id="quickstart_1">
+  <section id="quickstart_1">
     <title>License</title>
 
     <para> KNIME is released under the <link linkend="???"><ulink
@@ -14,9 +14,9 @@
     Free Public License</ulink></link>. If you need another license, please
     contact us at <email>contact@knime.org</email>.</para>
 
-  </sect1>
+  </section>
 
-  <sect1>
+  <section>
     <title>Requirements</title>
 
     <para>Linux operating system with Java 5.0 RTE (or any later version)
@@ -27,24 +27,24 @@
     update from this website: <ulink
     url="http://java.sun.com/j2se/1.5.0/download.jsp"><link
     linkend="???">http://java.sun.com/j2se/1.5.0/download.jsp</link></ulink></para>
-  </sect1>
+  </section>
 
-  <sect1 id="quickstart_2">
+  <section id="quickstart_2">
     <title>Installing KNIME</title>
 
     <para>The installation procedure is illustrated for the standalone version
     of KNIME.</para>
 
-    <sect2 id="quickstart_2_1">
+    <section id="quickstart_2_1">
       <title>Windows users</title>
 
       <para>Download the standalone version of KNIME from <ulink
       url="http://www.knime.org/download/win32/knime_win32_1.1.2.zip">http://www.knime.org/download/win32/knime_win32_1.1.2.zip</ulink>.
       Extract the downloaded zip file knime_win32_1.1.2.zip, to any directory
       for which you have write permissions.</para>
-    </sect2>
+    </section>
 
-    <sect2 id="quickstart_2_2">
+    <section id="quickstart_2_2">
       <title>Linux users</title>
 
       <para>Download the standalone version of KNIME from <ulink
@@ -56,9 +56,9 @@
       execute a Setup application or set any variables. KNIME will not leave
       many traces in your system. It will create a .knime sub-directory in
       your home directory to store its local settings. </para>
-    </sect2>
+    </section>
 
-    <sect2>
+    <section>
       <title>Sample data sets</title>
 
       <para>After installation, in the root directory of KNIME (knime_1.1.2)
@@ -71,10 +71,10 @@
       to know to the basics of KNIME. More example datasets can be downloaded
       from our web site at <ulink
       url="???">http://www.knime.org/download/datasets.zip</ulink>. </para>
-    </sect2>
-  </sect1>
+    </section>
+  </section>
 
-  <sect1>
+  <section>
     <title>Starting the Application</title>
 
     <para>In the KNIME root directory (knime_1.1.2) the application is started
@@ -109,5 +109,5 @@
     <para>KNIME is implemented as an Eclipse Plugin. For details on using the
     Eclipse workbench we refer to the User Guide at <ulink
     url="http://www.eclipse.org/documentation/main.html">http://www.eclipse.org/documentation/main.html</ulink>.</para>
-  </sect1>
+  </section>
 </chapter>

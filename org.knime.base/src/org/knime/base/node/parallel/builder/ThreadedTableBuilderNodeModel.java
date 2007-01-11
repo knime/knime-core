@@ -30,13 +30,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.knime.base.data.append.row.AppendedRowsTable;
-import org.knime.base.node.parallel.appender.ThreadedColAppenderNodeModel;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.RowAppender;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -49,8 +46,8 @@ import org.knime.core.util.ThreadPool;
 /**
  * This model is an extension of the {@link NodeModel} that allows you to easily
  * process data in parallel. In contrast to the
- * {@link ThreadedColAppenderNodeModel}, this model is suitable for creating
- * completely new output tables.
+ * {@link org.knime.base.node.parallel.appender.ThreadedColAppenderNodeModel}, 
+ * this model is suitable for creating completely new output tables.
  * 
  * All you have to do is create the output table specs in the
  * {@link #prepareExecute(DataTable[])} method and then implement the
@@ -67,14 +64,14 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
 
         private final ExecutionContext m_exec;
 
-        private final List<Future<DataContainer[]>> m_futures;
+        private final List<Future<BufferedDataContainer[]>> m_futures;
 
         final AtomicInteger m_processedRows = new AtomicInteger();
 
         private final DataTableSpec[] m_specs;
 
         Submitter(final BufferedDataTable[] inData,
-                final List<Future<DataContainer[]>> futures,
+                final List<Future<BufferedDataContainer[]>> futures,
                 final DataTableSpec[] outSpecs, final ExecutionContext exec) {
             m_data = inData;
             m_exec = exec;
@@ -86,12 +83,13 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
             }
         }
 
-        private Callable<DataContainer[]> createCallable(
+        private Callable<BufferedDataContainer[]> createCallable(
                 final BufferedDataTable data, final int chunkSize,
                 final double max) {
-            return new Callable<DataContainer[]>() {
-                public DataContainer[] call() throws Exception {
-                    DataContainer[] result = new DataContainer[m_specs.length];
+            return new Callable<BufferedDataContainer[]>() {
+                public BufferedDataContainer[] call() throws Exception {
+                    BufferedDataContainer[] result = 
+                        new BufferedDataContainer[m_specs.length];
                     for (int i = 0; i < result.length; i++) {
                         result[i] = m_exec.createDataContainer(m_specs[i]);
                     }
@@ -146,8 +144,7 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
                         break;
                     }
 
-                    container =
-                            m_exec.createDataContainer(m_data[0]
+                    container = m_exec.createDataContainer(m_data[0]
                                     .getDataTableSpec());
                 }
                 container.addRowToTable(it.next());
@@ -241,8 +238,8 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
             }
         }
 
-        final List<Future<DataContainer[]>> futures =
-                new ArrayList<Future<DataContainer[]>>();
+        final List<Future<BufferedDataContainer[]>> futures =
+                new ArrayList<Future<BufferedDataContainer[]>>();
         final BufferedDataTable[] additionalTables =
                 new BufferedDataTable[Math.max(0, data.length - 1)];
         System.arraycopy(data, 1, additionalTables, 0, additionalTables.length);
@@ -257,20 +254,20 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
             submitter.run();
         }
 
-        final DataTable[][] tempTables =
-                new DataTable[outSpecs.length][futures.size()];
+        final BufferedDataTable[][] tempTables =
+                new BufferedDataTable[outSpecs.length][futures.size()];
         int k = 0;
-        for (Future<DataContainer[]> results : futures) {
+        for (Future<BufferedDataContainer[]> results : futures) {
             try {
                 exec.checkCanceled();
             } catch (CanceledExecutionException ex) {
-                for (Future<DataContainer[]> cancel : futures) {
+                for (Future<BufferedDataContainer[]> cancel : futures) {
                     cancel.cancel(true);
                 }
                 throw ex;
             }
 
-            final DataContainer[] temp = results.get();
+            final BufferedDataContainer[] temp = results.get();
 
             if ((temp == null) || (temp.length != getNrDataOuts())) {
                 throw new IllegalStateException("Invalid result. Execution "
@@ -284,13 +281,12 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
             k++;
         }
 
-        final AppendedRowsTable[] resultTables =
-                new AppendedRowsTable[outSpecs.length];
+        final BufferedDataTable[] resultTables =
+                new BufferedDataTable[outSpecs.length];
         for (int i = 0; i < resultTables.length; i++) {
-            resultTables[i] = new AppendedRowsTable(tempTables[i]);
+            resultTables[i] = exec.createConcatenateTable(exec, tempTables[i]);
         }
-
-        return exec.createBufferedDataTables(resultTables, exec);
+        return resultTables;
     }
 
     /**
