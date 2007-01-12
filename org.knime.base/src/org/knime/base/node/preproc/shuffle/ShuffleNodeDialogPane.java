@@ -79,27 +79,30 @@ public class ShuffleNodeDialogPane extends NodeDialogPane {
                 return value == null ? null : value.toString();
             }
         });
-        m_seedField.setColumns(8);
+        m_seedField.setColumns(16);
         
         m_drawNewSeedButton = new JButton("Draw new seed");
         m_drawNewSeedButton.addActionListener(new ActionListener() {
            public void actionPerformed(final ActionEvent e) {
-               long l = Double.doubleToLongBits(Math.random());
+               long l1 = Double.doubleToLongBits(Math.random());
+               long l2 = Double.doubleToLongBits(Math.random());
+               long l = ((0xFFFFFFFFL & l1) << 32)
+                   + (0xFFFFFFFFL & l2);
                m_seedField.setText(Long.toString(l));
             } 
         });
         
-        m_enableStaticSeedChecker = new JCheckBox("Enable static seed");
+        m_enableStaticSeedChecker = new JCheckBox("Use seed");
         m_enableStaticSeedChecker.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
                 checkEnableState();
             }
         });
         JPanel p = new JPanel(new GridLayout(0, 1));
-        JPanel flow = new JPanel(new FlowLayout());
+        JPanel flow = new JPanel(new FlowLayout(FlowLayout.LEADING));
         flow.add(m_enableStaticSeedChecker);
         p.add(flow);
-        flow = new JPanel(new FlowLayout());
+        flow = new JPanel(new FlowLayout(FlowLayout.LEADING));
         flow.add(m_seedField);
         flow.add(m_drawNewSeedButton);
         p.add(flow);
