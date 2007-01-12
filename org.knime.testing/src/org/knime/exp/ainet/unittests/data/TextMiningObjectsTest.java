@@ -28,21 +28,23 @@ package org.knime.exp.ainet.unittests.data;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.knime.exp.ainet.data.document.DocumentAuthorFactory;
-import org.knime.exp.ainet.data.document.DocumentFactory;
-import org.knime.exp.ainet.data.document.TermDocumentFrequenceSetFactory;
-import org.knime.exp.ainet.data.document.TermFactory;
+import junit.framework.TestCase;
+
+import org.knime.exp.ainet.data.textmining.DocumentAuthorFactory;
+import org.knime.exp.ainet.data.textmining.DocumentFactory;
+import org.knime.exp.ainet.data.textmining.ProcessingInfoFactory;
+import org.knime.exp.ainet.data.textmining.TermDocumentFrequenceSetFactory;
+import org.knime.exp.ainet.data.textmining.TermFactory;
 import org.knime.exp.textmining.data.Document;
 import org.knime.exp.textmining.data.DocumentAuthor;
 import org.knime.exp.textmining.data.DocumentCategory;
 import org.knime.exp.textmining.data.DocumentSource;
 import org.knime.exp.textmining.data.DocumentType;
 import org.knime.exp.textmining.data.PartOfSpeechTag;
+import org.knime.exp.textmining.data.ProcessingInfo;
 import org.knime.exp.textmining.data.PublicationDate;
 import org.knime.exp.textmining.data.Term;
 import org.knime.exp.textmining.data.TermDocumentFrequencySet;
-
-import junit.framework.TestCase;
 
 /**
  * 
@@ -66,7 +68,7 @@ public class TextMiningObjectsTest extends TestCase {
 
     /**
      * Test method for Document creation
-     * {@link org.knime.exp.ainet.data.document.DocumentFactory#create(
+     * {@link org.knime.exp.ainet.data.textmining.DocumentFactory#create(
      * org.knime.exp.textmining.data.Document)}.
      */
     public final void testCreateDocument() {
@@ -92,10 +94,10 @@ public class TextMiningObjectsTest extends TestCase {
         Document expectedDoc = DocumentFactory.create(title, fullText, 
                 fullText, file, authors, date, DocumentType.UNKNOWN,
                 m_testSources, m_testCategories);
-        Document doc = DocumentFactory.create(title, fullText, 
+        Document retrievedDoc = DocumentFactory.create(title, fullText, 
                 fullText, file, authors, date, DocumentType.UNKNOWN,
                 m_testSources, m_testCategories);
-        assertEquals(expectedDoc, doc);
+        assertEquals(expectedDoc, retrievedDoc);
         //test a document with no authors
         file = "noAuthorTestFile";
         authors.clear();
@@ -105,20 +107,40 @@ public class TextMiningObjectsTest extends TestCase {
         expectedDoc = DocumentFactory.create(title, fullText, 
                 fullText, file, authors, date, DocumentType.UNKNOWN,
                 m_testSources, m_testCategories);
-        doc = DocumentFactory.create(title, fullText, 
+        retrievedDoc = DocumentFactory.create(title, fullText, 
                 fullText, file, authors, date, DocumentType.UNKNOWN,
                 m_testSources, m_testCategories);
-        assertEquals(expectedDoc, doc);
+        assertEquals(expectedDoc, retrievedDoc);
+        
+        //test a document with none db objects
+        file = "noDBObjectsTestFile";
+        authors.clear();
+        authors.add(
+                new DocumentAuthor("junitLast1", "junitFirst1"));
+        authors.add(
+                new DocumentAuthor("junitLast3", "junitFirst3"));
+        date = new PublicationDate(2007, 1);
+         fullText = 
+            "JUnit test with none db objects ";
+        title = "Junit document title3 - None db objects";
+        Document doc = new Document(title, fullText, 
+                fullText, file, authors, date, DocumentType.UNKNOWN,
+                m_testSources, m_testCategories);
+        expectedDoc = DocumentFactory.create(doc);
+        retrievedDoc = DocumentFactory.create(title, fullText, 
+                fullText, file, authors, date, DocumentType.UNKNOWN,
+                m_testSources, m_testCategories);
+        assertEquals(expectedDoc, retrievedDoc);
     }
 
     /**
      * Test method for Document creation
-     * {@link org.knime.exp.ainet.data.document.
+     * {@link org.knime.exp.ainet.data.textmining.
      * TermDocumentFrequencySetFactory#create(
      * org.knime.exp.textmining.data.TermDocumentFrequencySet)}.
      */
     public final void testCreateTermDocumentFrequenceSet() {
-        String file = "noAuthorTestFile";
+        String file = "termDocumentFrequenceTestFile";
         Set<DocumentAuthor> authors = 
             new HashSet<DocumentAuthor>(2);
         authors.add(
@@ -133,10 +155,33 @@ public class TextMiningObjectsTest extends TestCase {
                 fullText, file, authors, date, DocumentType.UNKNOWN,
                 m_testSources, m_testCategories);
         Term term = TermFactory.create("junitTerm", PartOfSpeechTag.UNKNOWN);
-        final TermDocumentFrequencySet expectedSet = 
-            TermDocumentFrequenceSetFactory.create(term, doc, 123);
+        ProcessingInfo info = 
+            ProcessingInfoFactory.create("junitTest", "junit test cases");
+        TermDocumentFrequencySet expectedSet = 
+            TermDocumentFrequenceSetFactory.create(term, doc, 123, info);
         TermDocumentFrequencySet retrievedSet = 
-            TermDocumentFrequenceSetFactory.create(term, doc, 123);
+            TermDocumentFrequenceSetFactory.create(term, doc, 123, info);
+        assertEquals(expectedSet, retrievedSet);
+        //test it with none db document and terms
+        file = "noDBObjectsTestFile";
+        authors.clear();
+        authors.add(
+                new DocumentAuthor("junitLast1", "junitFirst1"));
+        authors.add(
+                new DocumentAuthor("junitLast3", "junitFirst3"));
+        date = new PublicationDate(2007, 1);
+         fullText = 
+            "JUnit test with none db objects ";
+        title = "Junit document title3 - None db objects";
+        doc = new Document(title, fullText, 
+                fullText, file, authors, date, DocumentType.UNKNOWN,
+                m_testSources, m_testCategories);
+        term = new Term("junitTerm", PartOfSpeechTag.UNKNOWN);
+        info = new ProcessingInfo("junitTest", "junit test cases");
+        expectedSet = 
+            TermDocumentFrequenceSetFactory.create(term, doc, 123, info);
+        retrievedSet = 
+            TermDocumentFrequenceSetFactory.create(term, doc, 123, info);
         assertEquals(expectedSet, retrievedSet);
     }
 }
