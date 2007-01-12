@@ -53,33 +53,28 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
 
     private String m_pw;
 
-    private static final String SHELL_HEADER = "KNIME encryption key";
+    private static final String SHELL_HEADER = "KNIME Encryption Key";
 
-    private static final String SHELL_TEXT = "KNIME requires an encryption "
-            + "key to encrypt/decrypt passwords, mainly for "
-            + "database passwords in nodes connecting to databases "
-            + "(e.g. database "
-            + "reader/writer nodes).\n"
-            + "This avoids having to enter passwords for each"
-            + " new session "
-            + "and each node individually.\nTo avoid storing those"
-            + "passwords in plain text, the central encryption key is used.\n\n"
+    private static final String SHELL_TEXT = 
+              "KNIME requires an encryption key to encrypt/decrypt passwords,\n"
+            + "mainly for database passwords in nodes connecting to databases\n"
+            + "(e.g. database reader/writer nodes).\n"
+            + "This avoids having to enter passwords for each new session\n"
+            + "and each node individually. To avoid storing those passwords\n"
+            + "in plain text, the central encryption key is used.\n\n"
 
-            + "Up to now there has no key been supplied which can be used "
-            + "to encrypt/decrypt "
-            + "the passwords. Please type in a key that is at least 8 "
-            + "characters long.\n\n"
+            + "Up to now no key has been supplied which can be used to\n"
+            + "encrypt/decrypt the passwords. Please type in a key that is\n"
+            + "at least 8 characters long.\n\n"
 
-            + "Note: if you have entered a key in a previous session "
-            + "which has been "
-            + "used to encrypt passwords, those passwords can obviously "
-            + "only be "
-            + "decrypted with the same key. If you enter a different key,"
-            + " KNIME will " + "ask you to enter another key. ";
+            + "Note: if you have entered a key in a previous session which\n"
+            + "has been used to encrypt passwords, those passwords can\n"
+            + "obviously only be decrypted with the same key. If you enter a\n"
+            + "different key, KNIME will ask you to enter another key.";
 
     /**
      * This method opens a window to which the user can input the encryption
-     * key. The key is then returned to the invoker (which is normaly the
+     * key. The key is then returned to the invoker (which is normally the
      * {@link org.knime.core.util.KnimeEncryption} static class).
      * 
      * @see org.knime.core.util.EncryptionKeySupplier#getEncryptionKey()
@@ -167,20 +162,20 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
 
             final Label label = new Label(shell, SWT.NONE);
             label.setText(m_text + "\n\n");
-            label.setBounds(20, 15, 380, 260);
+            label.setBounds(20, 15, 300, 260);
             label.setLayoutData(gridData);
 
             gridData = new GridData();
             gridData.horizontalAlignment = GridData.FILL;
             gridData.horizontalSpan = 1;
             final Label keyLable = new Label(shell, SWT.NONE);
-            keyLable.setText("Encryption key:");
+            keyLable.setText("Encryption Key:");
             keyLable.setLayoutData(gridData);
 
             gridData = new GridData();
             gridData.horizontalAlignment = GridData.HORIZONTAL_ALIGN_BEGINNING;
             gridData.horizontalSpan = 1;
-            gridData.widthHint = 280;
+            gridData.widthHint = 200;
             final Text text = new Text(shell, SWT.PASSWORD | SWT.BORDER);
             // text.setBounds(140, 270, 200, 20);
             text.setSize(200, 20);
@@ -200,7 +195,7 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
             final Button button = new Button(shell, SWT.PUSH);
             button.setText("OK");
             // button.setBounds(20, 270, 180, 20);
-            button.setSize(180, 20);
+            button.setSize(150, 20);
             button.setLayoutData(gridData);
 
             gridData = new GridData();
@@ -210,7 +205,7 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
             final Button cancel = new Button(shell, SWT.PUSH);
             cancel.setText("Cancel");
             // cancel.setBounds(20, 270, 180, 20);
-            cancel.setSize(180, 20);
+            cancel.setSize(150, 20);
             cancel.setLayoutData(gridData);
 
             gridData = new GridData();
@@ -225,10 +220,10 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
             Composite parent = shell.getParent();
             if (parent != null) {
                 shell.setBounds(parent.getBounds().width / 2, parent
-                        .getBounds().height / 2, 400, 200);
+                        .getBounds().height / 2, 300, 200);
             } else {
                 shell.setBounds(display.getBounds().width / 2, display
-                        .getBounds().height / 2, 400, 200);
+                        .getBounds().height / 2, 300, 200);
             }
 
             shell.pack();
