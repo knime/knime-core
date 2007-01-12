@@ -514,7 +514,7 @@ final class DataOutPortView extends NodeOutPortView {
                             }
                         } else {
                             updateDataTable(null);
-                            updateDataTableSpec(null);
+                            updateDataTableSpec(m_tableSpec);
                             showComponent(m_tabs);                        
                         }
                     }
