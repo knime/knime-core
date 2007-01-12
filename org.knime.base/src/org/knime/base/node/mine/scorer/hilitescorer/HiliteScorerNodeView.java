@@ -98,7 +98,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         m_tableView.setCellSelectionEnabled(true);
         m_tableView.setDefaultRenderer(Object.class,
                 new AttributiveCellRenderer());
-        // m_tableView.setAutoResizeMode(mode)
+        m_tableView.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         m_scrollPane = new JScrollPane(m_tableView);
 
         JPanel summary = new JPanel(new GridLayout(4, 1));
