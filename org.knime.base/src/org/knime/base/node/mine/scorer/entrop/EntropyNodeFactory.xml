@@ -15,6 +15,10 @@
 		    <a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers2006/WiBe06_fcum_ijar.pdf">
 		      Fuzzy Clustering in Parallel Universes</a>, section 6: "Experimental results").
 		</intro>
+		<option name="Reference column">Column containing the reference clustering. 
+		This column is provided by the first input table.</option>
+		<option name="Clustering column">Column containing the cluster IDs to evaluate.
+				This column is provided by the second input table.</option>
 	</fullDescription>
     <ports>
         <dataIn index="0" name="Reference clustering">Table containing reference clustering.</dataIn>
