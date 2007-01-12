@@ -30,8 +30,6 @@ import org.eclipse.draw2d.PopUpHelper;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Control;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -159,15 +157,21 @@ public class ProgressToolTipHelper extends PopUpHelper {
         return preferredLocation;
     }
 
+    // This method does not seem to be necessary at all. Even worse it prevents
+    // a closed workflow to get garbage collected, because the created anonymous
+    // inner class has a reference chain up to the workflow manager. The object
+    // itself is registered at some global UI objects and stays alive until
+    // Eclipse is closed.
     /**
      * @see PopUpHelper#hookShellListeners()
      */
+    @Override
     protected void hookShellListeners() {
-        // Close the tooltip window if the mouse enters the tooltip
-        getShell().addMouseTrackListener(new MouseTrackAdapter() {
-            public void mouseEnter(final MouseEvent e) {
-                hide();
-            }
-        });
+//        // Close the tooltip window if the mouse enters the tooltip
+//        getShell().addMouseTrackListener(new MouseTrackAdapter() {
+//            public void mouseEnter(final MouseEvent e) {
+//                hide();
+//            }
+//        });
     }
 }

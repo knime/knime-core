@@ -45,7 +45,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -157,9 +156,6 @@ public class SampleDataNodeModel extends NodeModel {
         DataTableSpec spec = outSpecs[0];
 
         Random rand = new Random(m_randomSeed);
-        NodeLogger.getLogger(getClass()).info("Using '" 
-                + m_randomSeed + "' as seed for random data generation.");
-        
         int dimensions = spec.getNumColumns() - 1;
 
         SizeSequence uniSizes = new SizeSequence(m_uniSize);
@@ -342,8 +338,7 @@ public class SampleDataNodeModel extends NodeModel {
         creator.setProperties(new DataColumnProperties(annot));
         colSpecs[currentDim] = creator.createSpec();
 
-        DataColumnSpec[] centerColSpec = 
-            new DataColumnSpec[colSpecs.length - 1];
+        DataColumnSpec[] centerColSpec = new DataColumnSpec[colSpecs.length - 1];
         System.arraycopy(colSpecs, 0, centerColSpec, 0, centerColSpec.length);
         return new DataTableSpec[]{new DataTableSpec(colSpecs),
                 new DataTableSpec(centerColSpec)};
