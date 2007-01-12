@@ -289,9 +289,7 @@ public final class RepositoryManager {
                     String message = "Node " + e.getAttribute("id")
                             + "' from plugin '" + ext.getNamespace()
                             + "' could not be created.";
-                    LOGGER.error(message, t);
-                    errorString.append(message + "\n");
-
+                    
                     Plugin plugin = Platform.getPlugin(ext
                             .getNamespaceIdentifier());
 
@@ -299,9 +297,12 @@ public final class RepositoryManager {
                         // if the plugin is null, the plugin could not
                         // be activated maybe due to a not
                         // activateable plugin (plugin class can not be found)
-                        errorString.append("\tThe corresponding plugin could"
-                                + " not be activated!\n");
+                        message = message + " The corresponding plugin "
+                                + "bundle could not be activated!";
                     }
+                    
+                    LOGGER.error(message, t);
+                    errorString.append(message + "\n");
                 }
 
             } // for
