@@ -132,8 +132,7 @@ final class TransposeTableNodeModel extends NodeModel {
             exec.checkCanceled();
             exec.setProgress(0, "Computing new column type for row: "
                     + row.getKey().getId());
-            // fallback type if no column is available
-            DataType type = DataType.getType(DataCell.class);
+            DataType type = null;
             // and all cells
             for (int i = 0; i < row.getNumCells(); i++) {
                 DataType newType = row.getCell(i).getType();
@@ -142,6 +141,9 @@ final class TransposeTableNodeModel extends NodeModel {
                 } else {
                     type = DataType.getCommonSuperType(type, newType);
                 }
+            }
+            if (type == null) {
+                type = DataType.getType(DataCell.class);
             }
             colNames.add(row.getKey().getId().toString());
             colTypes.add(type);
