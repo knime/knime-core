@@ -24,6 +24,7 @@
  */
 package org.knime.workbench.editor2;
 
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -119,6 +120,10 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
                 for (Shell posShell : shells) {
                     if (posShell.getData() != null
                             && posShell.getData() instanceof WrappedNodeDialog) {
+                        dialogShell = posShell;
+                        break;
+                    } else if (posShell.getData() != null
+                            && posShell.getData() instanceof ProgressMonitorDialog) {
                         dialogShell = posShell;
                         break;
                     }
