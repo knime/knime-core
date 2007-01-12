@@ -384,6 +384,12 @@ public final class BufferedDataTable implements DataTable {
         // an external data.xml (directly in the node dir)
         boolean isVersion11x; 
         File dataXML = new File(dir, TABLE_DESCRIPTION_FILE);
+        // no xml file present and no settings passed in method: 
+        // loading an exported worflow without data
+        if (!dataXML.exists() && settings == null) {
+            throw new IOException("No such data file: "
+                    + dataXML.getAbsolutePath());
+        }
         DataTableSpec spec;
         if (dataXML.exists()) { // version 1.2.0 and later
             s = NodeSettings.loadFromXML(
