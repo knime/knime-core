@@ -507,6 +507,10 @@ final class DataOutPortView extends NodeOutPortView {
                 try {
                     synchronized (m_updateLock) {
                         if (m_table != null) {
+                            // although a data table is by definition is
+                            // read only, the buffered data table may be clear
+                            // when the node is reset; we acquire a lock here
+                            // to block the intermediate clear() 
                             synchronized (m_table) {
                                 updateDataTable(m_table);
                                 updateDataTableSpec(m_tableSpec);
