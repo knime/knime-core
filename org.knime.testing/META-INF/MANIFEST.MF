@@ -11,7 +11,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.editor,
  org.knime.workbench.repository,
  org.knime.base,
- org.knime.ext.sun
+ org.knime.ext.sun,
+ org.knime.exp
 Eclipse-RegisterBuddy: org.knime.base
 Eclipse-AutoStart: true
 Export-Package: org.knime.testing,
