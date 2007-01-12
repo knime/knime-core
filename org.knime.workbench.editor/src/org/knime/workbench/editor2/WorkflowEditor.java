@@ -126,6 +126,7 @@ import org.knime.workbench.editor2.figures.ProgressFigure;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
+import org.knime.workbench.ui.wizards.imports.WizardProjectsImportPage;
 
 /**
  * This is the implementation of the Eclipse Editor used for editing a
@@ -493,8 +494,10 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // shutdown is only performed if this is not a meta-workflow editor
         if (!(this instanceof MetaWorkflowEditor)) {
-            m_manager.shutdown();
-            m_manager.waitUntilFinished();
+            if (m_manager != null) {
+                m_manager.shutdown();
+                m_manager.waitUntilFinished();
+            }
         }
 
         // remove appender listener from "our" NodeLogger
@@ -753,6 +756,21 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
             assert m_manager == null;
 
+            // before loading the workflow, change the log level in case
+            // this project was previously imported, this is done
+            // to avoid error messages due to missing input data
+            // -------------- Import Checking ----------------------
+            // KNIME code (dirty fix to avoid error logs during
+            // editor opening)
+
+            IFile markerFile = m_fileResource.getProject().getFile(
+                    WizardProjectsImportPage.IMPORT_MARKER_FILE_NAME);
+            // the file will be removed in the doSave method
+            if (markerFile.exists()) {
+                NodeLogger.setIgnoreLoadDataError(true);
+            }
+            // -------------- Import Checking End -----------------
+
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
             LoadWorflowRunnable loadWorflowRunnable = new LoadWorflowRunnable(
@@ -776,6 +794,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             LOGGER.fatal("Workflow loading thread interrupted", ie);
         } catch (InvocationTargetException e) {
             LOGGER.fatal("Workflow could not be loaded.", e);
+        } finally {
+            NodeLogger.setIgnoreLoadDataError(false);
         }
 
         // Editor name (title)
@@ -958,6 +978,24 @@ public class WorkflowEditor extends GraphicalEditor implements
             SaveWorflowRunnable saveWorflowRunnable = new SaveWorflowRunnable(
                     this, file, exceptionMessage, monitor);
             ps.busyCursorWhile(saveWorflowRunnable);
+
+            // after saving the workflow, check for the import marker
+            // and delete it
+            // -------------- Import Checking ----------------------
+            // KNIME code (dirty fix to avoid error logs during
+            // editor opening)
+
+            IFile markerFile = m_fileResource.getProject().getFile(
+                    WizardProjectsImportPage.IMPORT_MARKER_FILE_NAME);
+
+            if (markerFile.exists()) {
+                try {
+                    markerFile.delete(true, null);
+                } catch (Exception e) {
+                    LOGGER.warn("Import maker file could not be deleted", e);
+                }
+            }
+            // -------------- Import Checking End -----------------
 
             // mark command stack (no undo beyond this point)
             getCommandStack().markSaveLocation();
