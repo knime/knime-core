@@ -31,7 +31,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
 
@@ -42,6 +41,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.property.ColorAttr;
@@ -69,16 +69,14 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
     private JLabel m_wrong;
 
     private JLabel m_error;
-    
+
     private JLabel m_accuracy;
-    
-//    private JLabel m_recall;
-//    
-//    private JLabel m_precision;
+
+    // private JLabel m_recall;
+    //    
+    // private JLabel m_precision;
 
     private boolean[][] m_cellHilited;
-    
-    private Set<DataCell> m_hilitedKeys = new HashSet<DataCell>();
 
     /**
      * Creates a new ScorerNodeView displaying the table with the score.
@@ -87,7 +85,8 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      * scoring in the upper part and the summary of correct and wrong classified
      * examples in the lower part.
      * 
-     * @param nodeModel the underlying <code>NodeModel</code>
+     * @param nodeModel
+     *            the underlying <code>NodeModel</code>
      */
     public HiliteScorerNodeView(final HiliteScorerNodeModel nodeModel) {
         super(nodeModel);
@@ -99,10 +98,11 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         m_tableView.setCellSelectionEnabled(true);
         m_tableView.setDefaultRenderer(Object.class,
                 new AttributiveCellRenderer());
+        // m_tableView.setAutoResizeMode(mode)
         m_scrollPane = new JScrollPane(m_tableView);
 
         JPanel summary = new JPanel(new GridLayout(4, 1));
-        
+
         JPanel labelPanel = new JPanel(new FlowLayout());
         labelPanel.add(new JLabel("Correct classified:"));
         m_correct = new JLabel("n/a");
@@ -128,26 +128,25 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         labelPanel.add(m_accuracy);
         labelPanel.add(new JLabel("%"));
         summary.add(labelPanel);
-        
+
         JPanel outerPanel = new JPanel(new BorderLayout());
-        outerPanel.add(m_scrollPane, BorderLayout.CENTER);        
+        outerPanel.add(m_scrollPane, BorderLayout.CENTER);
         outerPanel.add(summary, BorderLayout.SOUTH);
 
-//        summary = new JPanel(new FlowLayout());
-//        summary.add(new JLabel("Recall:"));
-//        m_recall = new JLabel("n/a");
-//        summary.add(m_recall);
-//        summary.add(new JLabel("%"));
-//        outerPanel.add(summary);
-//        
-//        summary = new JPanel(new FlowLayout());
-//        summary.add(new JLabel("Precision:"));
-//        m_precision = new JLabel("n/a");
-//        summary.add(m_precision);
-//        summary.add(new JLabel("%"));
-//        outerPanel.add(summary);
-        
-        
+        // summary = new JPanel(new FlowLayout());
+        // summary.add(new JLabel("Recall:"));
+        // m_recall = new JLabel("n/a");
+        // summary.add(m_recall);
+        // summary.add(new JLabel("%"));
+        // outerPanel.add(summary);
+        //        
+        // summary = new JPanel(new FlowLayout());
+        // summary.add(new JLabel("Precision:"));
+        // m_precision = new JLabel("n/a");
+        // summary.add(m_precision);
+        // summary.add(new JLabel("%"));
+        // outerPanel.add(summary);
+
         setComponent(outerPanel);
     }
 
@@ -158,7 +157,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      */
     @Override
     public void modelChanged() {
-        HiliteScorerNodeModel model = (HiliteScorerNodeModel)getNodeModel();
+        HiliteScorerNodeModel model = (HiliteScorerNodeModel) getNodeModel();
 
         /*
          * get the new scorer table and compute the numbers we display
@@ -170,38 +169,40 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
             m_wrong.setText(" n/a ");
             m_error.setText(" n/a ");
             m_accuracy.setText(" n/a ");
-//            m_precision.setText(" n/a ");
-//            m_recall.setText(" n/a ");
+            // m_precision.setText(" n/a ");
+            // m_recall.setText(" n/a ");
             model.getInHiLiteHandler(0).removeHiLiteListener(this);
-            m_hilitedKeys.clear();
+            m_tableView.setModel(new DefaultTableModel());
             return;
         }
 
         // now set the values in the components to get them displayed
         String[] headerNames = model.getValues();
-        ConfusionTableModel dataModel = 
-            new ConfusionTableModel(scoreCount, headerNames);
+
+        // init the boolean array determining which cell is selected
+        m_cellHilited = new boolean[scoreCount.length][scoreCount.length];
+        updateHilitedCells();
+
+        ConfusionTableModel dataModel = new ConfusionTableModel(scoreCount,
+                headerNames);
 
         m_tableView.setModel(dataModel);
-        
+
         m_correct.setText(String.valueOf(model.getCorrectCount()));
         m_wrong.setText(String.valueOf(model.getFalseCount()));
         m_error.setText(String.valueOf(model.getError()));
         m_accuracy.setText(String.valueOf(100.0 * model.getCorrectCount()
                 / (model.getCorrectCount() + model.getFalseCount())));
 
-//        if (scoreCount.length == 2) { // binary classification problem
-//            m_precision.setText(String.valueOf(100.0 * scoreCount[0][0]
-//               / (scoreCount[0][0] + scoreCount[1][0])));
-//            m_recall.setText(String.valueOf(100.0 * scoreCount[0][0]
-//               / (scoreCount[0][0] + scoreCount[0][1])));
-//        } else {
-//            m_precision.setText(" n/a ");
-//            m_recall.setText(" n/a ");
-//        }
-        
-        // init the boolean array determining which cell is selected
-        m_cellHilited = new boolean[scoreCount.length][scoreCount.length];
+        // if (scoreCount.length == 2) { // binary classification problem
+        // m_precision.setText(String.valueOf(100.0 * scoreCount[0][0]
+        // / (scoreCount[0][0] + scoreCount[1][0])));
+        // m_recall.setText(String.valueOf(100.0 * scoreCount[0][0]
+        // / (scoreCount[0][0] + scoreCount[0][1])));
+        // } else {
+        // m_precision.setText(" n/a ");
+        // m_recall.setText(" n/a ");
+        // }
 
         // register the hilite handler
         model.getInHiLiteHandler(0).addHiLiteListener(this);
@@ -306,7 +307,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         // get the row keys from the model and put them into the hilite handler
         if (getNodeModel().getInHiLiteHandler(0) != null) {
             getNodeModel().getInHiLiteHandler(0).fireHiLiteEvent(
-                    ((HiliteScorerNodeModel)getNodeModel())
+                    ((HiliteScorerNodeModel) getNodeModel())
                             .getSelectedSet(selectedCells));
         }
 
@@ -327,7 +328,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         // get the row keys from the model and put them into the hilite handler
         if (getNodeModel().getInHiLiteHandler(0) != null) {
             getNodeModel().getInHiLiteHandler(0).fireUnHiLiteEvent(
-                    ((HiliteScorerNodeModel)getNodeModel())
+                    ((HiliteScorerNodeModel) getNodeModel())
                             .getSelectedSet(selectedCells));
         }
 
@@ -412,37 +413,38 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      * @see HiLiteListener#hiLite(KeyEvent)
      */
     public void hiLite(final KeyEvent event) {
-        
-        // add the hilited keys to the set
-        m_hilitedKeys.addAll(event.keys());
 
-        Point[] completeHilitedCells = ((HiliteScorerNodeModel)getNodeModel())
-                .getCompleteHilitedCells(m_hilitedKeys);
+        updateHilitedCells();
+
+        m_tableView.repaint();
+    }
+
+    private void updateHilitedCells() {
+        Set<DataCell> hilitedKeys = getNodeModel().getInHiLiteHandler(0)
+                .getHiLitKeys();
+
+        Point[] completeHilitedCells = ((HiliteScorerNodeModel) getNodeModel())
+                .getCompleteHilitedCells(hilitedKeys);
 
         // hilite all cells given by the points
         for (Point cell : completeHilitedCells) {
             m_cellHilited[cell.x][cell.y] = true;
         }
-
-        m_tableView.repaint();
     }
 
     /**
-     * Checks for all hilit cells the model. If a key noted as unhilit in
-     * the event occurs in a hilit cell the cell is unhilit (principle of
+     * Checks for all hilit cells the model. If a key noted as unhilit in the
+     * event occurs in a hilit cell the cell is unhilit (principle of
      * correctness!!)
      * 
      * @see HiLiteListener#unHiLite(KeyEvent)
      */
     public void unHiLite(final KeyEvent event) {
-        
-        // update the key set
-        m_hilitedKeys.removeAll(event.keys());
 
         for (int i = 0; i < m_cellHilited.length; i++) {
             for (int j = 0; j < m_cellHilited[i].length; j++) {
                 if (m_cellHilited[i][j]) {
-                    if (((HiliteScorerNodeModel)getNodeModel())
+                    if (((HiliteScorerNodeModel) getNodeModel())
                             .containsConfusionMatrixKeys(i, j, event.keys())) {
                         m_cellHilited[i][j] = false;
                     }
@@ -458,7 +460,6 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      * 
      */
     public void unHiLiteAll() {
-        m_hilitedKeys.clear();
         clearHiliteBackgroundColor();
     }
 

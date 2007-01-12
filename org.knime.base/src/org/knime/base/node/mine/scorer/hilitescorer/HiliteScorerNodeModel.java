@@ -242,6 +242,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      */
     @Override
     protected void reset() {
+        m_scorerCount = null;
         m_correctCount = -1;
         m_falseCount = -1;
         m_keyStore = null;
@@ -270,6 +271,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        
         if (inSpecs[INPORT].getNumColumns() < 2) {
             throw new InvalidSettingsException(
                     "The input table must have at least two colums to compare");
