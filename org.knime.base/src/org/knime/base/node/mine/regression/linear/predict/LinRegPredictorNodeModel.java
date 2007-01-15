@@ -142,10 +142,10 @@ public class LinRegPredictorNodeModel extends NodeModel implements
         Map<String, Double> map = m_parameters == null ? null : m_parameters
                 .getMap();
         if (map == null || map.isEmpty()) {
-            throw new InvalidSettingsException("No parameters set.");
+            throw new InvalidSettingsException("No model available.");
         }
         if (map.size() == 1) {
-            throw new InvalidSettingsException("Not enough parameters.");
+            throw new InvalidSettingsException("Model is empty..");
         }
         boolean isFirst = true;
         for (Map.Entry<String, Double> entry : map.entrySet()) {
