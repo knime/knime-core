@@ -295,6 +295,9 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                     boolean hilite = delegateIsHiLit(row.getKey().getId());
                     if (!hilite && isHideMode()) {
                         continue;
+                    } 
+                    if (isHideMode() && hilite) {
+                        hilite = false;
                     }
                     DotInfo dot = new DotInfo(x, y, row.getKey(),
                             hilite, data

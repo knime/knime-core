@@ -369,6 +369,9 @@ public class ScatterPlotter extends TwoColumnPlotter {
                 .getRowColor(row);
                 boolean isHilite = delegateIsHiLit(row.getKey().getId());
                 if ((isHilite && m_hide) || !m_hide) {
+                    if (m_hide) {
+                        isHilite = false;
+                    }
                     DotInfo dot = new DotInfo(0, 0, row.getKey(), isHilite, 
                             colorAttr, size, rowNr);
                     dot.setShape(rowsCont.getDataTableSpec().getRowShape(row));

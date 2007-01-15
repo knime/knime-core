@@ -149,8 +149,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
         int y = dot.getYCoord();
         int size = (int)(m_dotSize 
                 + (m_dotSize * dot.getSize()));
-        shape.paint(g, x, y, size, c, isHilite, isSelected, 
-                (m_fade && !isHilite));
+        shape.paint(g, x, y, size, c, isHilite, isSelected, m_fade);
     }
     
     /**
