@@ -327,7 +327,7 @@ class IntegerCoordinate extends NumericCoordinate {
      */
     private int createDomainRange(final int minValue, final int maxValue) {
         int range = Math.abs(maxValue - minValue);
-        return roundRange(range);
+        return range;
     }
 
 
