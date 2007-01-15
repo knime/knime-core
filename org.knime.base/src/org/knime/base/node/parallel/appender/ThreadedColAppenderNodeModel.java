@@ -141,7 +141,8 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                             if (pr % 10 == 0) {
                                 // 5% of the progress are reserved for combining
                                 // the partial results lateron
-                                m_exec.setProgress(0.95 * pr / max);
+                                m_exec.setProgress(0.95 * pr / max,
+                                        "Processed " + pr + " rows");
                             }
                         }
                         result[i].close();
