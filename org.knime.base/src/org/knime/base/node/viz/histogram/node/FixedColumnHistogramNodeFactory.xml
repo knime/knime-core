@@ -22,7 +22,7 @@
 			The bars are colored according to the number of rows per color 
 			attribute.
 		</p>
-		<p>All automatically created bins, with exception to the first one, are
+		<p>All automatically created bins, except the first one, are
 		left open intervals (a,b] where a is excluded and b is included in 
 		the interval. To cover all values the first interval is a closed 
 		interval [a,b] where a and b are included.</p>
@@ -33,16 +33,16 @@
 		<option name="Display all rows">
 		    If selected the histogram view displays all rows of the incoming data.
 	    </option>
-	    <option name="No. of rows to display: ">
+	    <option name="No. of rows to display">
 		    Defines the number of rows to be displayed in the histogram.
 		    This option is disabled if the 'Display all rows' option is selected.
 	    </option>
-	    <option name="X column: ">
+	    <option name="X column">
 	     	This is the column to be shown on the x axis of the histogram view.
 	     	For numerical values the number of bars can be adjusted later 
 	     	in the 'Bar settings' section of view properties.
    	    </option>
-   	  	<option name="Aggregation column: ">
+   	  	<option name="Aggregation column">
    	  		This is the column to be used as the bar value and displayed on the
    	  		y axis. Only numerical values are allowed. The aggregation method
    	  		can be adjusted later in the 'Aggregation setting' section of view 
