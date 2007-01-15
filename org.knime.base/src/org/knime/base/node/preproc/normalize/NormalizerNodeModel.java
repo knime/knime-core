@@ -142,6 +142,12 @@ public class NormalizerNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        // no normalization? Issue a warning and return original
+        // DataTableSpec
+        if (m_mode == NONORM_MODE) {
+            setWarningMessage("No normalization mode set.");
+            return new DataTableSpec[]{inSpecs[0]};
+        }
         if (inSpecs[0].getNumColumns() > 0) {
             if (m_columns != null) {
                 // sanity check: selected columns in actual spec?
@@ -276,11 +282,17 @@ public class NormalizerNodeModel extends NodeModel {
             throws InvalidSettingsException {
         int mode = settings.getInt(MODE_KEY);
         switch (mode) {
-        case NONORM_MODE:
-        case MINMAX_MODE:
-        case ZSCORE_MODE:
-        case DECIMALSCALING_MODE:
-            break;
+        case NONORM_MODE: break;
+        case MINMAX_MODE: double min = settings.getDouble(NEWMIN_KEY);
+                          double max = settings.getDouble(NEWMAX_KEY);
+                          if (min > max) {
+                              throw new InvalidSettingsException("New minimum" 
+                                   + " value should be smaller than new " 
+                                   + " maximum value.");
+                          }
+                          break;
+        case ZSCORE_MODE: break;
+        case DECIMALSCALING_MODE: break;
         default:
             throw new InvalidSettingsException("INVALID MODE");
         }
