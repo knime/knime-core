@@ -27,6 +27,7 @@ package org.knime.base.node.preproc.rename;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -110,7 +111,8 @@ public class RenameNodeModel extends NodeModel {
     private RenameColumnSetting[] load(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         NodeSettingsRO subSettings = settings.getNodeSettings(CFG_SUB_CONFIG);
-        ArrayList<RenameColumnSetting> result = new ArrayList<RenameColumnSetting>();
+        ArrayList<RenameColumnSetting> result = 
+            new ArrayList<RenameColumnSetting>();
         for (String identifier : subSettings) {
             NodeSettingsRO col = subSettings.getNodeSettings(identifier);
             result.add(RenameColumnSetting.createFrom(col));
@@ -203,6 +205,7 @@ public class RenameNodeModel extends NodeModel {
             throws InvalidSettingsException {
         DataTableSpec inSpec = inSpecs[0];
         DataColumnSpec[] colSpecs = new DataColumnSpec[inSpec.getNumColumns()];
+        HashMap<String, Integer> duplicateHash = new HashMap<String, Integer>();
         for (int i = 0; i < colSpecs.length; i++) {
             DataColumnSpec current = inSpec.getColumnSpec(i);
             String name = current.getName();
@@ -214,6 +217,19 @@ public class RenameNodeModel extends NodeModel {
                 newColSpec = current;
             } else {
                 newColSpec = set.configure(current);
+            }
+            String newName = newColSpec.getName();
+            if (newName == null || newName.length() == 0) {
+                String warnMessage = "Column name at index " + i + " is empty.";
+                setWarningMessage(warnMessage);
+                throw new InvalidSettingsException(warnMessage);
+            }
+            Integer duplIndex = duplicateHash.put(newName, i);
+            if (duplIndex != null) {
+                String warnMessage = "Duplicate column name \"" + newName 
+                    + "\" at index " + duplIndex + " and " + i;
+                setWarningMessage(warnMessage);
+                throw new InvalidSettingsException(warnMessage);
             }
             colSpecs[i] = newColSpec;
         }

@@ -33,6 +33,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
 
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -152,9 +153,24 @@ public class RenameNodeDialogPane extends NodeDialogPane {
             throws InvalidSettingsException {
         NodeSettingsWO subSettings = settings
                 .addNodeSettings(RenameNodeModel.CFG_SUB_CONFIG);
-        for (RenameColumnSetting colSet : m_colSettings) {
-            String id = colSet.getName().toString();
-            NodeSettingsWO subSub = subSettings.addNodeSettings(id);
+        HashMap<String, Integer> duplicateHash = new HashMap<String, Integer>();
+        for (int i = 0; i < m_colSettings.length; i++) {
+            RenameColumnSetting colSet = m_colSettings[i];
+            String newName = colSet.getNewColumnName();
+            if (newName == null) {
+                newName = colSet.getName();
+            }
+            if (newName == null || newName.length() == 0) {
+                String warnMessage = "Column name at index " + i + " is empty.";
+                throw new InvalidSettingsException(warnMessage);
+            }
+            Integer duplIndex = duplicateHash.put(newName, i);
+            if (duplIndex != null) {
+                String warnMessage = "Duplicate column name \"" + newName 
+                + "\" at index " + duplIndex + " and " + i;
+                throw new InvalidSettingsException(warnMessage);
+            }
+            NodeSettingsWO subSub = subSettings.addNodeSettings(newName);
             colSet.saveSettingsTo(subSub);
         }
     }
@@ -190,10 +206,6 @@ public class RenameNodeDialogPane extends NodeDialogPane {
 
             public void focusLost(final FocusEvent e) {
                 String newText = newNameField.getText();
-                if (newText.length() == 0) {
-                    newText = oldColName;
-                    newNameField.setText(oldColName);
-                }
                 colSet.setNewColumnName(newText);
             }
         });
