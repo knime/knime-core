@@ -129,12 +129,13 @@ public class EntropyView extends JSplitPane {
         buffer.append("</body>\n");
         buffer.append("</html>\n");
         m_editorPane.setText(buffer.toString());
-        // we reserve some more space to avoid the scroll bars to pop up
-        int preferredEditorSize = m_editorPane.getPreferredSize().height + 10;
+        // Do not call m_editorPane.getPreferredSize, bug in java:
+        // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4839118
+        int preferredEditorSize =
+                m_editorPaneScroller.getPreferredSize().height + 10;
         if (getSize().height > preferredEditorSize) {
             setDividerLocation(preferredEditorSize);
         }
-        m_editorPane.setSize(m_editorPane.getPreferredSize());
     }
 
     /**
