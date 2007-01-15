@@ -19,14 +19,14 @@
  * History
  *   12.06.2006 (koetter): created
  */
-package org.knime.exp.ainet.unittests;
+package org.knime.ext.ainet.unittests;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import junit.framework.TestCase;
 
-import org.knime.exp.ainet.agents.geneontology.GOTerm;
+import org.knime.ext.ainet.agents.geneontology.GOTerm;
 
 /**
  * 
@@ -84,7 +84,7 @@ public class GOTermTest extends TestCase {
     }
 
     /*
-     * Test method for 'org.knime.exp.ainet.goParser.GOTerm.GOTerm(
+     * Test method for 'org.knime.ext.ainet.goParser.GOTerm.GOTerm(
      * String, String, String, String, Collection<String>)'
      */
     public void testGOTerm() {
@@ -132,28 +132,28 @@ public class GOTermTest extends TestCase {
     }
 
     /*
-     * Test method for 'org.knime.exp.ainet.goParser.GOTerm.getGOID()'
+     * Test method for 'org.knime.ext.ainet.goParser.GOTerm.getGOID()'
      */
     public void testGetGOID() {
         assertEquals(this.m_term.getGOID(), this.m_copyOfTerm.getGOID());
     }
 
     /*
-     * Test method for 'org.knime.exp.ainet.goParser.GOTerm.getID()'
+     * Test method for 'org.knime.ext.ainet.goParser.GOTerm.getID()'
      */
     public void testGetID() {
         assertEquals(this.m_term.getID(), this.m_copyOfTerm.getID());
     }
 
     /*
-     * Test method for 'org.knime.exp.ainet.goParser.GOTerm.getName()'
+     * Test method for 'org.knime.ext.ainet.goParser.GOTerm.getName()'
      */
     public void testGetName() {
         assertEquals(this.m_term.getName(), this.m_copyOfTerm.getName());
     }
 
     /*
-     * Test method for 'org.knime.exp.ainet.goParser.GOTerm.getFunction()'
+     * Test method for 'org.knime.ext.ainet.goParser.GOTerm.getFunction()'
      */
     public void testGetFunction() {
         assertEquals(this.m_term.getFunction(), 
@@ -161,7 +161,7 @@ public class GOTermTest extends TestCase {
     }
 
     /*
-     * Test method for 'org.knime.exp.ainet.goParser.GOTerm.getComment()'
+     * Test method for 'org.knime.ext.ainet.goParser.GOTerm.getComment()'
      */
     public void testGetComment() {
         assertEquals(this.m_term.getComment(), this.m_copyOfTerm.getComment());
@@ -170,7 +170,7 @@ public class GOTermTest extends TestCase {
     }
 
     /*
-     * Test method for 'org.knime.exp.ainet.goParser.GOTerm.getParents()'
+     * Test method for 'org.knime.ext.ainet.goParser.GOTerm.getParents()'
      */
     public void testGetParents() {
         assertEquals(this.m_term.getParents(), this.m_copyOfTerm.getParents());
@@ -179,7 +179,7 @@ public class GOTermTest extends TestCase {
     }
 
     /*
-     * Test method for 'org.knime.exp.ainet.goParser.GOTerm.validGOID(
+     * Test method for 'org.knime.ext.ainet.goParser.GOTerm.validGOID(
      * String)'
      */
     public void testValidGOID() {
@@ -189,7 +189,7 @@ public class GOTermTest extends TestCase {
     }
 
     /*
-     * Test method for 'org.knime.exp.ainet.goParser.GOTerm.equals(Object)'
+     * Test method for 'org.knime.ext.ainet.goParser.GOTerm.equals(Object)'
      */
     public void testEqualsObject() {
         assertEquals(true, this.m_term.equals(this.m_copyOfTerm));
@@ -232,7 +232,7 @@ public class GOTermTest extends TestCase {
     }
 
     /*
-     * Test method for 'org.knime.exp.ainet.goParser.GOTerm.hashCode()'
+     * Test method for 'org.knime.ext.ainet.goParser.GOTerm.hashCode()'
      */
     public void testHashCode() {
         assertEquals(this.m_term.hashCode(), this.m_copyOfTerm.hashCode());
@@ -241,7 +241,7 @@ public class GOTermTest extends TestCase {
     }
 
     /*
-     * Test method for 'org.knime.exp.ainet.goParser.GOTerm.toString()'
+     * Test method for 'org.knime.ext.ainet.goParser.GOTerm.toString()'
      */
     public void testToString() {
         assertEquals(this.m_term.toString(), this.m_copyOfTerm.toString());

@@ -22,7 +22,7 @@
  * History
  *    16.10.2006 (Tobias Koetter): created
  */
-package org.knime.exp.ainet.unittests;
+package org.knime.ext.ainet.unittests;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,27 +32,27 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.exp.ainet.agents.geneontology.GOTerm;
-import org.knime.exp.ainet.core.AnnotationType;
-import org.knime.exp.ainet.core.AssociationLink;
-import org.knime.exp.ainet.core.AssociationNet;
-import org.knime.exp.ainet.core.AssociationNode;
-import org.knime.exp.ainet.core.LinkAnnotation;
-import org.knime.exp.ainet.core.NodeAnnotation;
-import org.knime.exp.ainet.core.exceptions.NetConfigurationException;
-import org.knime.exp.ainet.core.netimpl.AssociationNetFactory;
-import org.knime.exp.ainet.data.geneontology.GOEntry;
-import org.knime.exp.ainet.data.geneontology.GOEntryFactory;
-import org.knime.exp.ainet.data.genesubgroup.GeneExprSubgroupEntry;
-import org.knime.exp.ainet.data.hibernateresources.AnnotHibernateUtil;
-import org.knime.exp.ainet.data.textmining.DocumentAuthorFactory;
-import org.knime.exp.ainet.data.textmining.DocumentFactory;
-import org.knime.exp.ainet.data.textmining.TermFactory;
-import org.knime.exp.textmining.data.Document;
-import org.knime.exp.textmining.data.DocumentAuthor;
-import org.knime.exp.textmining.data.DocumentType;
-import org.knime.exp.textmining.data.PartOfSpeechTag;
-import org.knime.exp.textmining.data.PublicationDate;
+import org.knime.ext.ainet.agents.geneontology.GOTerm;
+import org.knime.ext.ainet.core.AnnotationType;
+import org.knime.ext.ainet.core.AssociationLink;
+import org.knime.ext.ainet.core.AssociationNet;
+import org.knime.ext.ainet.core.AssociationNode;
+import org.knime.ext.ainet.core.LinkAnnotation;
+import org.knime.ext.ainet.core.NodeAnnotation;
+import org.knime.ext.ainet.core.exceptions.NetConfigurationException;
+import org.knime.ext.ainet.core.netimpl.AssociationNetFactory;
+import org.knime.ext.ainet.data.geneontology.GOEntry;
+import org.knime.ext.ainet.data.geneontology.GOEntryFactory;
+import org.knime.ext.ainet.data.genesubgroup.GeneExprSubgroupEntry;
+import org.knime.ext.ainet.data.hibernateresources.AnnotHibernateUtil;
+import org.knime.ext.ainet.data.textmining.DocumentAuthorFactory;
+import org.knime.ext.ainet.data.textmining.DocumentFactory;
+import org.knime.ext.ainet.data.textmining.TermFactory;
+import org.knime.ext.textmining.data.Document;
+import org.knime.ext.textmining.data.DocumentAuthor;
+import org.knime.ext.textmining.data.DocumentType;
+import org.knime.ext.textmining.data.PartOfSpeechTag;
+import org.knime.ext.textmining.data.PublicationDate;
 
 /**
  * Tests if the network handles the link and node annotations correct.

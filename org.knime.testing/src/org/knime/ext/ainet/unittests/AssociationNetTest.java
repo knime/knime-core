@@ -22,7 +22,7 @@
  * History
  *    17.11.2006 (Tobias Koetter): created
  */
-package org.knime.exp.ainet.unittests;
+package org.knime.ext.ainet.unittests;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -30,12 +30,12 @@ import java.util.Iterator;
 import junit.framework.TestCase;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.exp.ainet.core.AssociationLink;
-import org.knime.exp.ainet.core.AssociationNet;
-import org.knime.exp.ainet.core.AssociationNetType;
-import org.knime.exp.ainet.core.AssociationNode;
-import org.knime.exp.ainet.core.exceptions.NetConfigurationException;
-import org.knime.exp.ainet.core.netimpl.AssociationNetFactory;
+import org.knime.ext.ainet.core.AssociationLink;
+import org.knime.ext.ainet.core.AssociationNet;
+import org.knime.ext.ainet.core.AssociationNetType;
+import org.knime.ext.ainet.core.AssociationNode;
+import org.knime.ext.ainet.core.exceptions.NetConfigurationException;
+import org.knime.ext.ainet.core.netimpl.AssociationNetFactory;
 
 /**
  * Tests all functions of the association network. The type of the network to
@@ -103,7 +103,7 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
      * nodeExists(java.lang.String)}.
      */
     public final void testNodeExists() {
@@ -113,9 +113,9 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
      * createNode(java.lang.String, 
-     * org.knime.exp.ainet.core.AssociationNodeType)}.
+     * org.knime.ext.ainet.core.AssociationNodeType)}.
      */
     public final void testCreateNode() {
         try {
@@ -134,10 +134,10 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
-     * createLink(org.knime.exp.ainet.core.AssociationNode, 
-     * org.knime.exp.ainet.core.AssociationNode, 
-     * org.knime.exp.ainet.core.AssociationLinkType)}.
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
+     * createLink(org.knime.ext.ainet.core.AssociationNode, 
+     * org.knime.ext.ainet.core.AssociationNode, 
+     * org.knime.ext.ainet.core.AssociationLinkType)}.
      */
     public final void testCreateLink() {
         //create two different links between the same nodes one exists already
@@ -174,7 +174,7 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
      * getNodes()}.
      */
     public final void testGetNodes() {
@@ -198,7 +198,7 @@ public class AssociationNetTest extends TestCase {
         }
     }
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
      * getLinks()}.
      */
     public final void testGetLinks() {
@@ -223,7 +223,7 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
      * getNodeByName(java.lang.String)}.
      */
     public final void testGetNodeByName() {
@@ -234,7 +234,7 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
      * getNodeByID(long)}.
      */
     public final void testGetNodeByID() {
@@ -243,7 +243,7 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
      * getNodeByUnderOrOverExprName(java.lang.String)}.
      */
     public final void testGetNodeByUnderOrOverExprName() {
@@ -251,8 +251,8 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
-     * getOutgoingLinksForNode(org.knime.exp.ainet.core.AssociationNode)}.
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
+     * getOutgoingLinksForNode(org.knime.ext.ainet.core.AssociationNode)}.
      */
     public final void testGetOutgoingLinksForNode() {
         Collection<? extends AssociationLink> outgoingLinksForNode = 
@@ -270,10 +270,10 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
-     * getLink(org.knime.exp.ainet.core.AssociationNode, 
-     * org.knime.exp.ainet.core.AssociationNode, 
-     * org.knime.exp.ainet.core.AssociationLinkType)}.
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
+     * getLink(org.knime.ext.ainet.core.AssociationNode, 
+     * org.knime.ext.ainet.core.AssociationNode, 
+     * org.knime.ext.ainet.core.AssociationLinkType)}.
      */
     public final void testGetLink() {
         AssociationLink link = 
@@ -294,7 +294,7 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
      * getNoOfNodes()}.
      */
     public final void testGetNoOfNodes() {
@@ -311,7 +311,7 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
      * getNoOfLinks()}.
      */
     public final void testGetNoOfLinks() {
@@ -327,8 +327,8 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
-     * removeNode(org.knime.exp.ainet.core.AssociationNode)}.
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
+     * removeNode(org.knime.ext.ainet.core.AssociationNode)}.
      */
     public final void testRemoveNode() {
         try {
@@ -342,8 +342,8 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
-     * removeLink(org.knime.exp.ainet.core.AssociationLink)}.
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
+     * removeLink(org.knime.ext.ainet.core.AssociationLink)}.
      */
     public final void testRemoveLink() {
         try {
@@ -358,7 +358,7 @@ public class AssociationNetTest extends TestCase {
     }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.AssociationNet#
+     * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
      * getRandomNode()}.
      */
     public final void testGetRandomNode() {

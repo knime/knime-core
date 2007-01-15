@@ -22,7 +22,7 @@
  * History
  *    16.10.2006 (Tobias Koetter): created
  */
-package org.knime.exp.ainet.unittests;
+package org.knime.ext.ainet.unittests;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -30,15 +30,15 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.exp.ainet.agents.geneontology.GOTerm;
-import org.knime.exp.ainet.core.AnnotationType;
-import org.knime.exp.ainet.core.AssociationLink;
-import org.knime.exp.ainet.core.AssociationNet;
-import org.knime.exp.ainet.core.AssociationNode;
-import org.knime.exp.ainet.core.exceptions.NetConfigurationException;
-import org.knime.exp.ainet.core.netimpl.AssociationNetFactory;
-import org.knime.exp.ainet.data.geneontology.GOEntry;
-import org.knime.exp.ainet.data.geneontology.GOEntryFactory;
+import org.knime.ext.ainet.agents.geneontology.GOTerm;
+import org.knime.ext.ainet.core.AnnotationType;
+import org.knime.ext.ainet.core.AssociationLink;
+import org.knime.ext.ainet.core.AssociationNet;
+import org.knime.ext.ainet.core.AssociationNode;
+import org.knime.ext.ainet.core.exceptions.NetConfigurationException;
+import org.knime.ext.ainet.core.netimpl.AssociationNetFactory;
+import org.knime.ext.ainet.data.geneontology.GOEntry;
+import org.knime.ext.ainet.data.geneontology.GOEntryFactory;
 
 /**
  * Test the performance of the network by adding the specified no of

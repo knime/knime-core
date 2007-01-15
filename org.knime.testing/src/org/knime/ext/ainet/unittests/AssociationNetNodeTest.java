@@ -22,16 +22,16 @@
  * History
  *    16.10.2006 (Tobias Koetter): created
  */
-package org.knime.exp.ainet.unittests;
+package org.knime.ext.ainet.unittests;
 
 import junit.framework.TestCase;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.exp.ainet.core.AssociationNet;
-import org.knime.exp.ainet.core.AssociationNode;
-import org.knime.exp.ainet.core.exceptions.NetConfigurationException;
-import org.knime.exp.ainet.core.exceptions.PersistenceException;
-import org.knime.exp.ainet.core.netimpl.AssociationNetFactory;
+import org.knime.ext.ainet.core.AssociationNet;
+import org.knime.ext.ainet.core.AssociationNode;
+import org.knime.ext.ainet.core.exceptions.NetConfigurationException;
+import org.knime.ext.ainet.core.exceptions.PersistenceException;
+import org.knime.ext.ainet.core.netimpl.AssociationNetFactory;
 
 /**
  * Tests the adding and finding of nodes.

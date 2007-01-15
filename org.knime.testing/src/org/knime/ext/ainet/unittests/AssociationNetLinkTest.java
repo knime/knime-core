@@ -22,19 +22,19 @@
  * History
  *    16.10.2006 (Tobias Koetter): created
  */
-package org.knime.exp.ainet.unittests;
+package org.knime.ext.ainet.unittests;
 
 import java.util.Collection;
 
 import junit.framework.TestCase;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.exp.ainet.core.AnnotationType;
-import org.knime.exp.ainet.core.AssociationLink;
-import org.knime.exp.ainet.core.AssociationNet;
-import org.knime.exp.ainet.core.AssociationNode;
-import org.knime.exp.ainet.core.exceptions.NetConfigurationException;
-import org.knime.exp.ainet.core.netimpl.AssociationNetFactory;
+import org.knime.ext.ainet.core.AnnotationType;
+import org.knime.ext.ainet.core.AssociationLink;
+import org.knime.ext.ainet.core.AssociationNet;
+import org.knime.ext.ainet.core.AssociationNode;
+import org.knime.ext.ainet.core.exceptions.NetConfigurationException;
+import org.knime.ext.ainet.core.netimpl.AssociationNetFactory;
 
 /**
  * Tests the creation and getting of links.

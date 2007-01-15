@@ -22,7 +22,7 @@
  * History
  *    07.11.2006 (Tobias Koetter): created
  */
-package org.knime.exp.ainet.unittests;
+package org.knime.ext.ainet.unittests;
 
 import java.io.File;
 import java.util.HashSet;
@@ -31,19 +31,19 @@ import java.util.Set;
 import junit.framework.TestCase;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.exp.ainet.agents.geneontology.GOTerm;
-import org.knime.exp.ainet.core.AnnotationType;
-import org.knime.exp.ainet.core.AssociationLink;
-import org.knime.exp.ainet.core.AssociationNet;
-import org.knime.exp.ainet.core.AssociationNetType;
-import org.knime.exp.ainet.core.AssociationNetUtil;
-import org.knime.exp.ainet.core.AssociationNode;
-import org.knime.exp.ainet.core.XMLPersistenceManager;
-import org.knime.exp.ainet.core.exceptions.NetConfigurationException;
-import org.knime.exp.ainet.core.netimpl.AssociationNetFactory;
-import org.knime.exp.ainet.data.geneontology.GOEntry;
-import org.knime.exp.ainet.data.geneontology.GOEntryFactory;
-import org.knime.exp.ainet.data.genesubgroup.GeneExprSubgroupEntry;
+import org.knime.ext.ainet.agents.geneontology.GOTerm;
+import org.knime.ext.ainet.core.AnnotationType;
+import org.knime.ext.ainet.core.AssociationLink;
+import org.knime.ext.ainet.core.AssociationNet;
+import org.knime.ext.ainet.core.AssociationNetType;
+import org.knime.ext.ainet.core.AssociationNetUtil;
+import org.knime.ext.ainet.core.AssociationNode;
+import org.knime.ext.ainet.core.XMLPersistenceManager;
+import org.knime.ext.ainet.core.exceptions.NetConfigurationException;
+import org.knime.ext.ainet.core.netimpl.AssociationNetFactory;
+import org.knime.ext.ainet.data.geneontology.GOEntry;
+import org.knime.ext.ainet.data.geneontology.GOEntryFactory;
+import org.knime.ext.ainet.data.genesubgroup.GeneExprSubgroupEntry;
 
 /**
  * Tests the {@link XMLPersistenceManager} and {@link XMLPersistenceParser} if
@@ -98,7 +98,7 @@ public class XMLPersistenceManagerTest extends TestCase {
     }
 
 //    /**
-//     * Test method for {@link org.knime.exp.ainet.core.XMLPersistenceManager#
+//     * Test method for {@link org.knime.ext.ainet.core.XMLPersistenceManager#
 //     * save(org.knime.core.node.ExecutionMonitor)}.
 //     */
 //    public final void testSave() {
@@ -113,7 +113,7 @@ public class XMLPersistenceManagerTest extends TestCase {
 //    }
 
     /**
-     * Test method for {@link org.knime.exp.ainet.core.XMLPersistenceManager#
+     * Test method for {@link org.knime.ext.ainet.core.XMLPersistenceManager#
      * load(org.knime.core.node.ExecutionMonitor)}.
      */
     public final void testLoad() {

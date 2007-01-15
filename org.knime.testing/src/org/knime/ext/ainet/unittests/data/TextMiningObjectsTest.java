@@ -23,28 +23,28 @@
  *    11.01.2007 (Tobias Koetter): created
  */
 
-package org.knime.exp.ainet.unittests.data;
+package org.knime.ext.ainet.unittests.data;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import junit.framework.TestCase;
 
-import org.knime.exp.ainet.data.textmining.DocumentAuthorFactory;
-import org.knime.exp.ainet.data.textmining.DocumentFactory;
-import org.knime.exp.ainet.data.textmining.ProcessingInfoFactory;
-import org.knime.exp.ainet.data.textmining.TermDocumentFrequenceSetFactory;
-import org.knime.exp.ainet.data.textmining.TermFactory;
-import org.knime.exp.textmining.data.Document;
-import org.knime.exp.textmining.data.DocumentAuthor;
-import org.knime.exp.textmining.data.DocumentCategory;
-import org.knime.exp.textmining.data.DocumentSource;
-import org.knime.exp.textmining.data.DocumentType;
-import org.knime.exp.textmining.data.PartOfSpeechTag;
-import org.knime.exp.textmining.data.ProcessingInfo;
-import org.knime.exp.textmining.data.PublicationDate;
-import org.knime.exp.textmining.data.Term;
-import org.knime.exp.textmining.data.TermDocumentFrequencySet;
+import org.knime.ext.ainet.data.textmining.DocumentAuthorFactory;
+import org.knime.ext.ainet.data.textmining.DocumentFactory;
+import org.knime.ext.ainet.data.textmining.ProcessingInfoFactory;
+import org.knime.ext.ainet.data.textmining.TermDocumentFrequenceSetFactory;
+import org.knime.ext.ainet.data.textmining.TermFactory;
+import org.knime.ext.textmining.data.Document;
+import org.knime.ext.textmining.data.DocumentAuthor;
+import org.knime.ext.textmining.data.DocumentCategory;
+import org.knime.ext.textmining.data.DocumentSource;
+import org.knime.ext.textmining.data.DocumentType;
+import org.knime.ext.textmining.data.PartOfSpeechTag;
+import org.knime.ext.textmining.data.ProcessingInfo;
+import org.knime.ext.textmining.data.PublicationDate;
+import org.knime.ext.textmining.data.Term;
+import org.knime.ext.textmining.data.TermDocumentFrequencySet;
 
 /**
  * 
@@ -68,8 +68,8 @@ public class TextMiningObjectsTest extends TestCase {
 
     /**
      * Test method for Document creation
-     * {@link org.knime.exp.ainet.data.textmining.DocumentFactory#create(
-     * org.knime.exp.textmining.data.Document)}.
+     * {@link org.knime.ext.ainet.data.textmining.DocumentFactory#create(
+     * org.knime.ext.textmining.data.Document)}.
      */
     public final void testCreateDocument() {
         //test a document with a fulltext longer than 4000 character
@@ -135,9 +135,9 @@ public class TextMiningObjectsTest extends TestCase {
 
     /**
      * Test method for Document creation
-     * {@link org.knime.exp.ainet.data.textmining.
+     * {@link org.knime.ext.ainet.data.textmining.
      * TermDocumentFrequencySetFactory#create(
-     * org.knime.exp.textmining.data.TermDocumentFrequencySet)}.
+     * org.knime.ext.textmining.data.TermDocumentFrequencySet)}.
      */
     public final void testCreateTermDocumentFrequenceSet() {
         String file = "termDocumentFrequenceTestFile";

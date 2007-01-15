@@ -12,7 +12,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.repository,
  org.knime.base,
  org.knime.ext.sun,
- org.knime.exp
+ org.knime.ext.ainet
 Eclipse-RegisterBuddy: org.knime.base
 Eclipse-AutoStart: true
 Export-Package: org.knime.testing,

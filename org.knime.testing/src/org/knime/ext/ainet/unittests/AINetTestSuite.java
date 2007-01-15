@@ -22,15 +22,15 @@
  * History
  *    18.10.2006 (Tobias Koetter): created
  */
-package org.knime.exp.ainet.unittests;
+package org.knime.ext.ainet.unittests;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.exp.ainet.core.AssociationNet;
-import org.knime.exp.ainet.core.AssociationNetType;
-import org.knime.exp.ainet.core.netimpl.DBAssociationNet;
+import org.knime.ext.ainet.core.AssociationNet;
+import org.knime.ext.ainet.core.AssociationNetType;
+import org.knime.ext.ainet.core.netimpl.DBAssociationNet;
 
 /**
  * Performs all aiNet test in a row.
@@ -59,7 +59,7 @@ public class AINetTestSuite {
      */
     public static Test suite() {
         TestSuite suite = new TestSuite(
-                "Test for org.knime.exp.ainet.unittests");
+                "Test for org.knime.ext.ainet.unittests");
         //set the network type you want to test or it uses the default type
         networkType = AssociationNetType.DB_NET;
         //$JUnit-BEGIN$

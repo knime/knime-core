@@ -19,17 +19,17 @@
  * History
  *   09.06.2006 (koetter): created
  */
-package org.knime.exp.ainet.unittests;
+package org.knime.ext.ainet.unittests;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import junit.framework.TestCase;
 
-import org.knime.exp.ainet.agents.geneontology.GOTerm;
-import org.knime.exp.ainet.core.AnnotationType;
-import org.knime.exp.ainet.data.geneontology.GOEntry;
-import org.knime.exp.ainet.data.geneontology.GOEntryFactory;
+import org.knime.ext.ainet.agents.geneontology.GOTerm;
+import org.knime.ext.ainet.core.AnnotationType;
+import org.knime.ext.ainet.data.geneontology.GOEntry;
+import org.knime.ext.ainet.data.geneontology.GOEntryFactory;
 
 /**
  * 
@@ -87,7 +87,7 @@ public class GOEntryTest extends TestCase {
     }*/
     
     /**
-     * Test method for 'org.knime.exp.ainet.GOEntry.hashCode()'.
+     * Test method for 'org.knime.ext.ainet.GOEntry.hashCode()'.
      */
     public final void testHashCode() {
         assertEquals(this.m_entry.hashCode(), this.m_entry.hashCode());
@@ -96,7 +96,7 @@ public class GOEntryTest extends TestCase {
     }
 
     /**
-     * Test method for 'org.knime.exp.ainet.GOEntry.equals(Object)'.
+     * Test method for 'org.knime.ext.ainet.GOEntry.equals(Object)'.
      */
     public final void testEqualsObject() {
         assertEquals(false, this.m_anotherEntry.equals(this.m_entry));
@@ -106,7 +106,7 @@ public class GOEntryTest extends TestCase {
     }
 
     /**
-     * Test method for 'org.knime.exp.ainet.GOEntry.toString()'.
+     * Test method for 'org.knime.ext.ainet.GOEntry.toString()'.
      */
     public final void testToString() {
         this.m_entry.toString();
