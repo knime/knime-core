@@ -1100,7 +1100,11 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     @Override
     public void selectClickedElement(final Point clicked) {
         final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
-        final Collection<BarVisModel> bars = drawingPane.getVisBars().values();
+        final Hashtable<String, BarVisModel> visBars = drawingPane.getVisBars();
+        if (visBars == null) {
+            return;
+        }
+        final Collection<BarVisModel> bars = visBars.values();
         if (bars == null) {
             return;
         }
