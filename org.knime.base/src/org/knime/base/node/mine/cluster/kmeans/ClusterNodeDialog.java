@@ -62,7 +62,7 @@ public class ClusterNodeDialog extends NodeDialogPane {
         JLabel nrClustersLabel = new JLabel("number of clusters: ");
         nrClustersLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         box1.add(nrClustersLabel);
-        m_nrClustersTextField = new JTextField("____");
+        m_nrClustersTextField = new JTextField("___");
         m_nrClustersTextField.setAlignmentX(Component.LEFT_ALIGNMENT);
         box1.add(m_nrClustersTextField);
         box1.add(Box.createHorizontalGlue());
@@ -97,7 +97,7 @@ public class ClusterNodeDialog extends NodeDialogPane {
         int nrClusters = config.getInt("nrClusters", 0);
         m_nrClustersTextField.setText("" + nrClusters);
         int maxIterations = config.getInt("maxNrIterations", 0);
-        m_maxNrIterationsTextField.setText("" + maxIterations);
+        m_maxNrIterationsTextField.setText("   " + maxIterations);
     }
 
     /**

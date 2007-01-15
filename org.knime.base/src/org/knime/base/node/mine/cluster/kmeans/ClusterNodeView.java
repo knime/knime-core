@@ -303,8 +303,9 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
                                     + myModel.getClusterCoverage(c) + ")",
                             new StringCell(ClusterNodeModel.CLUSTER + c));
                     for (int i = 0; i < myModel.getNrUsedColumns(); i++) {
-                        clusterParent.add(new DefaultMutableTreeNode("x[" + i
-                                + "]= " + myModel.getClusterCenter(c)[i]));
+                        clusterParent.add(new DefaultMutableTreeNode(
+                                  myModel.getFeatureName(i) + " = "
+                                + myModel.getClusterCenter(c)[i]));
                     }
                     root.add(clusterParent);
                 }
