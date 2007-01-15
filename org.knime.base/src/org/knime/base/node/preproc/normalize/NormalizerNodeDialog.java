@@ -178,6 +178,8 @@ public class NormalizerNodeDialog extends NodeDialogPane {
             public void itemStateChanged(final ItemEvent e) {
                 if (m_noNormButton.isSelected()) {
                     m_filterpanel.setEnabled(false);
+                    m_newminTextField.setEnabled(false);
+                    m_newmaxTextField.setEnabled(false);
                 }
             }
         });
@@ -185,6 +187,8 @@ public class NormalizerNodeDialog extends NodeDialogPane {
             public void itemStateChanged(final ItemEvent e) {
                 if (m_minmaxButton.isSelected()) {
                     m_filterpanel.setEnabled(true);
+                    m_newminTextField.setEnabled(true);
+                    m_newmaxTextField.setEnabled(true);
                 }
             }
         });
@@ -192,6 +196,8 @@ public class NormalizerNodeDialog extends NodeDialogPane {
             public void itemStateChanged(final ItemEvent e) {
                 if (m_zscoreButton.isSelected()) {
                     m_filterpanel.setEnabled(true);
+                    m_newminTextField.setEnabled(false);
+                    m_newmaxTextField.setEnabled(false);
                 }
             }
         });
@@ -199,6 +205,8 @@ public class NormalizerNodeDialog extends NodeDialogPane {
             public void itemStateChanged(final ItemEvent e) {
                 if (m_decButton.isSelected()) {
                     m_filterpanel.setEnabled(true);
+                    m_newminTextField.setEnabled(false);
+                    m_newmaxTextField.setEnabled(false);
                 }
             }
         });
