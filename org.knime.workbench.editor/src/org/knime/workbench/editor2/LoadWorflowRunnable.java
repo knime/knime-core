@@ -83,8 +83,8 @@ class LoadWorflowRunnable extends PersistWorflowRunnable {
             checkThread.start();
 
             WorkflowManager manager = new WorkflowManager();
-            manager.load(m_workflowFile, progressMonitor);
             m_editor.setWorkflowManager(manager);
+            manager.load(m_workflowFile, progressMonitor);
             pm.subTask("Finished.");
             pm.done();
 
