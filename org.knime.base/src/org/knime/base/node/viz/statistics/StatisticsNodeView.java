@@ -24,6 +24,9 @@
  */
 package org.knime.base.node.viz.statistics;
 
+import java.text.NumberFormat;
+import java.util.Locale;
+
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
@@ -42,6 +45,14 @@ public class StatisticsNodeView extends NodeView {
      * Output is printed in a JTExtArea
      */
     private JEditorPane m_output;
+    
+    /* Used to get a string representation of the double value. */
+    private final NumberFormat m_format;
+    
+    /** disable grouping in renderer */
+    static {
+        NumberFormat.getNumberInstance(Locale.US).setGroupingUsed(false);
+    }
 
     /**
      * Constructs a <code>NodeView</code> consisting of statistical values.
@@ -54,6 +65,7 @@ public class StatisticsNodeView extends NodeView {
         m_output = new JEditorPane("text/html", "");
         m_output.setEditable(false);
         JScrollPane scroller = new JScrollPane(m_output);
+        m_format = NumberFormat.getNumberInstance(Locale.US);
         setComponent(scroller);
     }
 
@@ -85,7 +97,11 @@ public class StatisticsNodeView extends NodeView {
         if (myModel.getMin() != null) {
             double[] mins = myModel.getMin();
             for (double min : mins) {
-                buffer.append("<td>" + min + "</td>");
+                if (Double.isNaN(min)) {
+                    buffer.append("<td> - </td>");
+                } else {
+                    buffer.append("<td>" + m_format.format(min) + "</td>");
+                }
             }
         }
         buffer.append("</tr>");
@@ -95,7 +111,11 @@ public class StatisticsNodeView extends NodeView {
         if (myModel.getMax() != null) {
             double[] maxs = myModel.getMax();
             for (double max : maxs) {
-                buffer.append("<td>" + max + "</td>");
+                if (Double.isNaN(max)) {
+                    buffer.append("<td> - </td>");
+                } else {
+                    buffer.append("<td>" + m_format.format(max) + "</td>");
+                }
             }
         }
         buffer.append("</tr>");
@@ -106,7 +126,11 @@ public class StatisticsNodeView extends NodeView {
             double[] means = myModel.getMean();
 
             for (double mean : means) {
-                buffer.append("<td>" + mean + "</td>");
+                if (Double.isNaN(mean)) {
+                    buffer.append("<td> - </td>");
+                } else {
+                    buffer.append("<td>" + m_format.format(mean) + "</td>");
+                }
             }
         }
         buffer.append("</tr>");
@@ -116,7 +140,11 @@ public class StatisticsNodeView extends NodeView {
         if (myModel.getStddev() != null) {
             double[] stddevs = myModel.getStddev();
             for (double stddev : stddevs) {
-                buffer.append("<td>" + stddev + "</td>");
+                if (Double.isNaN(stddev)) {
+                    buffer.append("<td> - </td>");
+                } else {
+                    buffer.append("<td>" + m_format.format(stddev) + "</td>");
+                }
             }
         }
         buffer.append("</tr>");
@@ -126,7 +154,11 @@ public class StatisticsNodeView extends NodeView {
         if (myModel.getVariance() != null) {
             double[] variances = myModel.getVariance();
             for (double variance : variances) {
-                buffer.append("<td>" + variance + "</td>");
+                if (Double.isNaN(variance)) {
+                    buffer.append("<td> - </td>");
+                } else {
+                    buffer.append("<td>" + m_format.format(variance) + "</td>");
+                }
             }
         }
         buffer.append("</tr>");
