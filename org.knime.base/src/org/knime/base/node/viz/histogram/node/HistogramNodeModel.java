@@ -205,6 +205,18 @@ public class HistogramNodeModel extends NodeModel {
         }
         // create the data object
         m_data = inData[0];
+        final DataTableSpec spec = inData[0].getDataTableSpec();
+        // if we have nominal columns without possible values
+        for (DataColumnSpec colSpec : spec) {
+
+            if (!colSpec.getType().isCompatible(DoubleValue.class) 
+                    && colSpec.getDomain().getValues() == null) {
+                throw new InvalidSettingsException(
+                        "Found nominal column without possible values: "
+                        + colSpec.getName() 
+                        + " Please use DomainCalculator or ColumnFilter node!");
+            }
+        }
         final int rowCount = inData[0].getRowCount();
         if (m_allRows.getBooleanValue()) {
             //set the actual number of rows in the selected number of rows
@@ -305,17 +317,7 @@ public class HistogramNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "Input table should have at least 2 columns.");
         }
-        // if we have nominal columns without possible values
-        for (DataColumnSpec colSpec : spec) {
 
-            if (!colSpec.getType().isCompatible(DoubleValue.class) 
-                    && colSpec.getDomain().getValues() == null) {
-                throw new InvalidSettingsException(
-                        "Found nominal column without possible values: "
-                        + colSpec.getName() 
-                        + " Please use DomainCalculator or ColumnFilter node!");
-            }
-        }
         final String xCol = m_xColName.getStringValue();
         if (!spec.containsName(xCol)) {
             if (spec.getNumColumns() > 0) {
