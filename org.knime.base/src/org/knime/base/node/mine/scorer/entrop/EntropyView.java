@@ -28,10 +28,9 @@ import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 
+import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.tableview.TableView;
-
-import org.knime.base.node.util.DoubleFormat;
 
 /**
  * This panel is the view to a EntropyCalculator. SplitPane that shows on top
@@ -46,7 +45,9 @@ public class EntropyView extends JSplitPane {
 
     /** The text pane that holds the information. */
     private final JEditorPane m_editorPane;
-
+    /** Scrollpane containing m_editorPane. */
+    private final JScrollPane m_editorPaneScroller;
+    
     /** Constructs new panel. */
     public EntropyView() {
         super(VERTICAL_SPLIT);
@@ -54,7 +55,8 @@ public class EntropyView extends JSplitPane {
         m_editorPane.setEditable(false);
         m_tableView = new TableView();
         m_tableView.setShowColorInfo(false);
-        setTopComponent(new JScrollPane(m_editorPane));
+        m_editorPaneScroller = new JScrollPane(m_editorPane);
+        setTopComponent(m_editorPaneScroller);
         setBottomComponent(m_tableView);
     }
 
@@ -71,12 +73,13 @@ public class EntropyView extends JSplitPane {
         }
         m_tableView.setDataTable(calculator.getScoreTable());
         StringBuffer buffer = new StringBuffer();
-        buffer.append("<html>\n");
+        buffer.append("<html>");
         buffer.append("<body>\n");
         buffer.append("<h1>Clustering statistics</h1>");
         buffer.append("<hr>\n");
         buffer.append("<table>\n");
-        buffer.append("<caption align=\"left\">Data Statistics</caption>");
+        buffer.append("<caption style=\"text-align: left\">");
+        buffer.append("Data Statistics</caption>");
         buffer.append("<tr>");
         buffer.append("<th>Statistics</th>");
         buffer.append("<th>Value</th>");
@@ -100,7 +103,8 @@ public class EntropyView extends JSplitPane {
         }
         buffer.append("</table>\n");
         buffer.append("<table>\n");
-        buffer.append("<caption align=\"left\">Data Statistics</caption>");
+        buffer.append("<caption style=\"text-align: left\">");
+        buffer.append("Data Statistics</caption>");
         buffer.append("<tr>");
         buffer.append("<th>Score</th>");
         buffer.append("<th>Value</th>");
@@ -125,6 +129,12 @@ public class EntropyView extends JSplitPane {
         buffer.append("</body>\n");
         buffer.append("</html>\n");
         m_editorPane.setText(buffer.toString());
+        // we reserve some more space to avoid the scroll bars to pop up
+        int preferredEditorSize = m_editorPane.getPreferredSize().height + 10;
+        if (getSize().height > preferredEditorSize) {
+            setDividerLocation(preferredEditorSize);
+        }
+        m_editorPane.setSize(m_editorPane.getPreferredSize());
     }
 
     /**
