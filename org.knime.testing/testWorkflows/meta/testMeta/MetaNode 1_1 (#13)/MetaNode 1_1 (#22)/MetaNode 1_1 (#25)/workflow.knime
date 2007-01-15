@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="workflow.knime">
+<entry key="version" type="xstring" value="1.2.0"/>
+<entry key="runningNodeID" type="xint" value="66"/>
+<entry key="runningConnectionID" type="xint" value="60"/>
+<config key="nodes">
+<config key="node_26">
+<entry key="node_settings_file" type="xstring" value="Meta Data Input Node (#26)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.core.node.meta.DataInputNodeFactory"/>
+<entry key="id" type="xint" value="26"/>
+<entry key="customName" type="xstring" value="External data input 0"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="false"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="40"/>
+<entry key="3" type="xint" value="40"/>
+</config>
+<entry key="name" type="xstring" value="Meta Data Input Node"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model"/>
+</config>
+<config key="node_27">
+<entry key="node_settings_file" type="xstring" value="Meta Data Output Node (#27)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.core.node.meta.DataOutputNodeFactory"/>
+<entry key="id" type="xint" value="27"/>
+<entry key="customName" type="xstring" value="Data collector 0"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="false"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="360"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="40"/>
+<entry key="3" type="xint" value="40"/>
+</config>
+<entry key="name" type="xstring" value="Meta Data Output Node"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings"/>
+<config key="model"/>
+</config>
+<config key="node_31">
+<entry key="node_settings_file" type="xstring" value="MetaNode 1_2 (#31)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.meta.MetaNodeFactory12"/>
+<entry key="id" type="xint" value="31"/>
+<entry key="customName" type="xstring" value="Node 31"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="149"/>
+<entry key="1" type="xint" value="101"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="MetaNode 1:2"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model"/>
+</config>
+<config key="node_35">
+<entry key="node_settings_file" type="xstring" value="MetaNode 2_1 (#35)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.meta.MetaNodeFactory21"/>
+<entry key="id" type="xint" value="35"/>
+<entry key="customName" type="xstring" value="Node 35"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="274"/>
+<entry key="1" type="xint" value="100"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="MetaNode 2:1"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model"/>
+</config>
+</config>
+<config key="connections">
+<config key="connection_51">
+<entry key="ID" type="xint" value="51"/>
+<entry key="sourceID" type="xint" value="31"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="35"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_53">
+<entry key="ID" type="xint" value="53"/>
+<entry key="sourceID" type="xint" value="26"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="31"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_52">
+<entry key="ID" type="xint" value="52"/>
+<entry key="sourceID" type="xint" value="31"/>
+<entry key="sourcePort" type="xint" value="1"/>
+<entry key="targetID" type="xint" value="35"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_54">
+<entry key="ID" type="xint" value="54"/>
+<entry key="sourceID" type="xint" value="35"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="27"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+</config>
+</config>
