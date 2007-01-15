@@ -222,7 +222,7 @@ public final class ShapeFactory {
                 final boolean hilited, final boolean selected, 
                 final boolean faded) {
             Color backupColor = g.getColor();
-            if (faded) {
+            if (faded && !hilited) {
                 if (!selected) {
                     g.setColor(ColorAttr.INACTIVE);
                 } else {
@@ -232,7 +232,7 @@ public final class ShapeFactory {
                 g.setColor(color);
             }
             paintShape(g, x, y, size, selected, hilited);
-            if (hilited || selected) {
+            if (hilited && !faded || selected) {
                 paintBorder(g, x, y, size, hilited, selected);
             }
             g.setColor(backupColor);
