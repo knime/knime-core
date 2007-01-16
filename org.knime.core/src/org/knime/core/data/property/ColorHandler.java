@@ -35,7 +35,8 @@ import org.knime.core.node.config.ConfigWO;
 /**
  * Final <code>ColorHandler</code> implementation as container which forwards 
  * color requests for a {@link org.knime.core.data.DataCell} to its underlying 
- * {@link ColorModel}. The <code>ColorModel</code> can be loaded and saved
+ * {@link org.knime.core.data.property.ColorHandler.ColorModel}. 
+ * The <code>ColorModel</code> can be loaded and saved
  * from <code>Config</code> object. 
  * 
  * @author Thomas Gabriel, University of Konstanz
@@ -88,7 +89,9 @@ public final class ColorHandler implements PropertyHandler {
     /**
      * Saves the underlying <code>ColorModel</code> to the given
      * <code>Config</code> by adding the <code>ColorModel</code> class as 
-     * String and calling {@link ColorModel#save(ConfigWO)} within the model.
+     * String and calling 
+     * {@link org.knime.core.data.property.ColorHandler.ColorModel#
+     * save(ConfigWO)} within the model.
      * @param config color settings are saved to
      * @throws NullPointerException if the <i>config</i> is <code>null</code>
      */
@@ -127,7 +130,8 @@ public final class ColorHandler implements PropertyHandler {
     }
     
     /**
-     * Returns a String summary of the underlying {@link ColorModel}.
+     * Returns a String summary of the underlying 
+     * {@link org.knime.core.data.property.ColorHandler.ColorModel}.
      * 
      * @return a String summary of the <code>ColorModel</code>
      */

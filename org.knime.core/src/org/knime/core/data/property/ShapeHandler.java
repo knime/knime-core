@@ -109,7 +109,8 @@ public final class ShapeHandler implements PropertyHandler {
     }
     
     /**
-     * Returns a string summary of the underlying {@link ShapeModel}.
+     * Returns a string summary of the underlying 
+     * {@link org.knime.core.data.property.ShapeHandler.ShapeModel}.
      * 
      * @return a string summary
      */

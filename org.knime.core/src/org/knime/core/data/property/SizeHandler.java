@@ -112,7 +112,8 @@ public final class SizeHandler implements PropertyHandler {
     }
     
     /**
-     * Returns a string summary of the underlying {@link SizeModel}.
+     * Returns a string summary of the underlying 
+     * {@link org.knime.core.data.property.SizeHandler.SizeModel}.
      * 
      * @return a string summary
      */
