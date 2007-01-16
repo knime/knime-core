@@ -126,7 +126,7 @@ public class KnimeTestCase extends TestCase {
         logger.info("<Start> Test: '"
                 + m_knimeSettings.getParentFile().getName()
                 + " ---------------------------------------------------------");
-        String owner = "<unknown>";
+        String owner = "";
         if (m_owners.size() > 0) {
             StringBuilder owns = new StringBuilder();
             boolean sep = false;
@@ -139,7 +139,7 @@ public class KnimeTestCase extends TestCase {
             }
             owner = owns.toString();
         }
-        logger.info("TestOwners: " + owner);
+        logger.info("TestOwners=" + owner);
         // Collection<NodeView> views = new ArrayList<NodeView>();
         for (NodeContainer nodeCont : m_manager.getNodes()) {
             for (int i = 0; i < nodeCont.getNumViews(); i++) {
