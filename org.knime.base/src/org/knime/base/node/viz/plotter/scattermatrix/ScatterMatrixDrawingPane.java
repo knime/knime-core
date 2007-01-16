@@ -232,10 +232,11 @@ public class ScatterMatrixDrawingPane extends ScatterPlotterDrawingPane {
         }
         for (CoordinateMapping mapping : mappings) {
             int value = (int)mapping.getMappingValue();
-            int y = element.getCorner().y + value;
+            int y = element.getCorner().y + (element.getHeight() - value);
             g.drawLine(x - TICK_SIZE / 2, y, x + TICK_SIZE / 2, y);
             String label = mapping.getDomainValueAsString();
-            int labelY = y; //+ g.getFontMetrics().getHeight() / 4;
+            int labelY = y; 
+            	//+ g.getFontMetrics().getHeight() / 4;
             int rectHeight = (int)element.getYCoordinate()
             .getUnusedDistBetweenTicks(element.getHeight());
             if (left) {
