@@ -4,9 +4,9 @@
 <entry key="spec_name" type="xstring" value="default"/>
 <entry key="number_columns" type="xint" value="5"/>
 <config key="column_spec_0">
-<entry key="column_name" type="xstring" value="SMILES:"/>
+<entry key="column_name" type="xstring" value="Smiles:"/>
 <config key="column_type">
-<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<entry key="cell_class" type="xstring" value="org.knime.chem.types.SmilesCell"/>
 </config>
 <config key="column_domain"/>
 <config key="column_properties"/>
@@ -68,7 +68,7 @@
 <config key="upper_bound">
 <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
 <config key="org.knime.core.data.def.IntCell">
-<entry key="IntCell" type="xint" value="127"/>
+<entry key="IntCell" type="xint" value="128"/>
 </config>
 </config>
 </config>
@@ -89,7 +89,7 @@
 <config key="upper_bound">
 <entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
 <config key="org.knime.core.data.def.IntCell">
-<entry key="IntCell" type="xint" value="137"/>
+<entry key="IntCell" type="xint" value="145"/>
 </config>
 </config>
 </config>
