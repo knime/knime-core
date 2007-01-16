@@ -73,6 +73,11 @@
 				</ul>
 			</p>
 		</intro>
+		<option name="Nr. of rows to display">Enter the maximum number of rows
+		the plotter should display. Setting a higher value than the default value 
+		might dramatically decrease performance.</option>
+		<option name="Enable Anti-aliasing">Check if the view should enable anti-aliasing
+		(make a smoother drawing). This will slow down performance as well.</option>
 	</fullDescription>
 	
 	<ports>
