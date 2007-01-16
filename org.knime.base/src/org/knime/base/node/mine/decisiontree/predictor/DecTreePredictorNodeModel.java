@@ -207,7 +207,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
         }
         LOGGER.info("Decision Tree Predictor: Loading predictor...");
         m_decTree = new DecisionTree(predParams);
-        LOGGER.info("Decision Tree Predictor: Loading predictor succesful.");
+        LOGGER.info("Decision Tree Predictor: Loading predictor successful.");
     }
 
     /**
@@ -224,10 +224,15 @@ public class DecTreePredictorNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        if (m_decTree == null) {
+            throw new InvalidSettingsException("No Predictor (DecTree) "
+                    + "available!");
+        }
         return new DataTableSpec[]{createOutTableSpec(inSpecs[INDATAPORT])};
     }
 
-    private static DataTableSpec createOutTableSpec(final DataTableSpec inSpec) {
+    private static DataTableSpec createOutTableSpec(
+            final DataTableSpec inSpec) {
         DataColumnSpec newCol =
                 new DataColumnSpecCreator("Prediction (DecTree)",
                         StringCell.TYPE).createSpec();
