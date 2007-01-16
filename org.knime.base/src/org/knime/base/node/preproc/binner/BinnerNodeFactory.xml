@@ -4,37 +4,43 @@
 	<name>Numeric Binner</name>
 	
 	<shortDescription>
-	    Groups values of numeric columns into string-type categories.
+	    Group values of numeric columns categorized string type.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
-	    Groups values of numeric columns into string-type categories. 
-	    For each column a number of intervals (bins) can be defined. Each of 
-	    these bins has a unique name 
-	    (for this column), a range, and open or closed interval 
-	    borders. It automatically ensures that the ranges are defined 
-	    in descending order and that interval borders are consistent.
-	    In addition, each column can be either replaced with the binned, 
-	    string-type column or a new binned, string-type column is appended.
+	    For each column a number of intervals - known as bins - can be defined. 
+	    Each of these bins is given a unique name (for this column), a defined 
+	    range, and open or closed interval borders. They automatically ensure 
+	    that the ranges are defined in descending order and that interval 
+	    borders are consistent. In addition, each column is either replaced with
+	    the binned, string-type column, or a new binned, string-type column 
+	    is appended.
 		</intro>
 		
 		<option name="Select Column: ">
-		First select a column and then use the "Add" button to create the 
-		desired number of bins. Each bin can be modified in the lower part of 
-		the panel once it has been selected.
+		First select a column (left side) and then use the "Add" button (right 
+		side) to create the desired number of bins. Each bin can be modified in 
+		the lower part of this panel once it has been selected.
         Each interval has to be defined independently or can be removed using
-        the "Removed" button. Note that the range as well as bin 
-	    borders are automatically adjusted, if necessary.
+        the "Remove" button. Note that the range as well as the bin borders can
+        be automatically adjusted, if necessary.
+        The first bin's left and the last bin's right value are 
+        automatically defined to infinitely cover the entire numeric axes in 
+        this direction. Furthermore, each bin's left and right value can be 
+        included or excluded from this bin by selecting the desired bracket:
+        '[' or ']'.
+        
 		</option>
-		<option name="Append new Column: ">
-		If selected, a new column name can be specified. This name is used to
-		append a new binned column. The input column is kept.
+		<option name="Append new column: ">
+		If selected, a new column name can be specified. This name is given to 
+		the new binned column that is appended to the table; the input column 
+		remains unchanged in the data.
 		</option>
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Input Data">Data with the columns to bin</dataIn>
-		<dataOut index="0" name="Binned Data Columns">Data with the binned columns</dataOut>
+		<dataIn index="0" name="Input Data">Data to define bins</dataIn>
+		<dataOut index="0" name="Binned Data">Data with bins defined</dataOut>
 	</ports>	
 </knimeNode>

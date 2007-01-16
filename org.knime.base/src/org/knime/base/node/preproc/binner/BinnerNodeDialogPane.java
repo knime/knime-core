@@ -28,6 +28,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -71,6 +72,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 
@@ -239,6 +241,8 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             setBorder(BorderFactory.createTitledBorder(" " + column + " "));
             m_intervalMdl = new DefaultListModel();
             m_intervalList = new JList(m_intervalMdl);
+            Font font = new Font("Monospaced", Font.PLAIN, 12);
+            m_intervalList.setFont(font);
             final JButton addButton = new JButton("Add");
             addButton.addActionListener(new ActionListener() {
                 /**
@@ -367,13 +371,12 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             if (appendColumn == null) {
                 m_appendName = new JTextField(column.toString() + "_binned");
                 m_appendName.setEnabled(false);
-                m_appendColumn = new JCheckBox("Append new Column", false);
+                m_appendColumn = new JCheckBox("Append new column", false);
             } else {
                 m_appendName = new JTextField(appendColumn);
                 m_appendName.setEnabled(true);
-                m_appendColumn = new JCheckBox("Append new Column", true);
+                m_appendColumn = new JCheckBox("Append new column", true);
             }
-            // TODO update node description!
             m_appendColumn.setEnabled(true);
             m_appendColumn.setToolTipText("Check this to append a column "
                     + "instead of replacing the input column.");
@@ -870,10 +873,11 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
      * @param settings to read intervals from
      * @param specs The input table spec
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     * @throws NotConfigurableException if the spec contains no columns
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) {
+            final DataTableSpec[] specs) throws NotConfigurableException {
         // numeric columns' settings
         m_intervals.clear();
         m_numMdl.removeAllElements();
@@ -882,6 +886,11 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             if (cspec.getType().isCompatible(DoubleValue.class)) {
                 m_numMdl.addElement(cspec);
             }
+        }
+        // no column found for binning
+        if (m_numMdl.getSize() == 0) {
+            throw new NotConfigurableException(
+                    "No column found to define intervals.");
         }
         String[] columns = settings.getStringArray(
                 BinnerNodeModel.NUMERIC_COLUMNS, (String[])null);

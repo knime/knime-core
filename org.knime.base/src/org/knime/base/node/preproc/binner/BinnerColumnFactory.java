@@ -25,6 +25,8 @@
 package org.knime.base.node.preproc.binner;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -64,8 +66,20 @@ final class BinnerColumnFactory implements CellFactory {
             final String name, final boolean append) {
         m_columnIdx = columnIdx;
         m_bins = bins;
-        m_columnSpec = new DataColumnSpecCreator(name, StringCell.TYPE)
-                .createSpec();
+        // ensures that all bin names are available as possible values 
+        // in the column spec, the buffereddatatable will iterate all values
+        // (and hence determine the possible values) but some of the names 
+        // might not be used in the table (no value for this bin)
+        StringCell[] binNames = new StringCell[bins.length];
+        for (int i = 0; i < binNames.length; i++) {
+            binNames[i] = new StringCell(bins[i].getBinName());
+        }
+        DataColumnDomain dom = 
+            new DataColumnDomainCreator(binNames).createDomain();
+        DataColumnSpecCreator specCreator = 
+            new DataColumnSpecCreator(name, StringCell.TYPE);
+        specCreator.setDomain(dom);
+        m_columnSpec = specCreator.createSpec();
         m_append = append;
     }
 
