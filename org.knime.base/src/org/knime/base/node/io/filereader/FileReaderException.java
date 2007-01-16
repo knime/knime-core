@@ -28,7 +28,7 @@ import org.knime.core.data.DataRow;
 
 /**
  * The exception the {@link java.io.FileReader} (more specificaly the
- * {@link FileRowIterator}) throws if
+ * {@link org.knime.base.node.io.filereader.FileRowIterator}) throws if
  * something goes wrong.
  * 
  * This is a runtime exception for now.
