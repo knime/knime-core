@@ -39,7 +39,10 @@ import org.knime.testing.core.KnimeTestCase;
  */
 public class KnimeTestRegistry extends TestSuite {
 
-    private static final String OWNER_FILE = "owner";
+    /**
+     * name of the file containing the testowner's email address.
+     */
+    public static final String OWNER_FILE = "owner";
     
     private static final String PROPERTY_NAME = "testcase";
     
