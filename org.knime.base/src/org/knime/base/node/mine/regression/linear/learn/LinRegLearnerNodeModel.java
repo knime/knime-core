@@ -144,7 +144,9 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        String[] includes = settings.getStringArray(CFG_VARIATES);
+        // we check for null in the line below, improved error message
+        String[] includes = 
+            settings.getStringArray(CFG_VARIATES, (String[])null);
         if (includes == null || includes.length == 0) {
             throw new InvalidSettingsException(
                     "No columns for regression have been set.");
