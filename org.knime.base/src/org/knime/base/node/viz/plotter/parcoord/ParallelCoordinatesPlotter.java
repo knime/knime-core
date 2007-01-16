@@ -641,9 +641,11 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         @Override
         public void mouseDragged(final MouseEvent e) {
             m_dragged = true;
-            m_axis.setXPosition(e.getX());
-            calculateLines();
-            getDrawingPane().repaint();
+            if (m_axis != null) {
+            	m_axis.setXPosition(e.getX());
+            	calculateLines();
+            	getDrawingPane().repaint();
+            }
         }
 
         /**
@@ -680,6 +682,10 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
             if (!m_dragged) {
                 m_axis.setSelected(false);
                 return;
+            }
+            // no axis was selected
+            if (m_axis == null) {
+            	return;
             }
             // update x axis and axis xpos
             m_axis.setXPosition(e.getX());
