@@ -4,13 +4,11 @@
 	<name>Parallel Coordinates</name>
 	
 	<shortDescription>
-	    Plots the numeric columns as lines.
+	   Plots the data in Parallel Coordinates.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>
-	    <p>Plots the data in parallel coordinates.
-		</p>
 		<p>During the 1980’s and early 90’s, Inselberg and
 		Dimsdale (A. Inselberg and B. Dimsdale, "Parallel Coordinates: A Tool
 		for Visualizing Multidimensional Geometry," Proc. IEEE
@@ -35,7 +33,7 @@
 		a rectangle with the mouse over the points on the parallel axes or 
 		by clicking on points or connecting line segments 
 		(if curves are drawn, selection works only on the datapoints). Hold 
-		control pressed for multiple selection. 
+		control pressed for multiple selections. 
 		The selected datapoints may be 
 		hilited by either right-click to get the context menu or via the hilite
 		menu in the menu bar.</p>
@@ -75,7 +73,7 @@
 		<p>Appearance:
 			<ul>
 			<li>"Show/Hide dots": Check if the points on the parallel axes should
-			be displayed explicitely as dots, uncheck if you want to hide the dots.</li>
+			be displayed explicitly as dots; uncheck if you want to hide the dots.</li>
 			<li>"Draw curves instead of lines": Connects the datapoints not with linear
 			interpolated line segments but with cubic curves. In this way it is easier
 			to see one sample (row) since the continuation of the line after a common 
@@ -92,7 +90,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Display data">Datatable with data to display</dataIn>
+		<dataIn index="0" name="Display data">Data to display</dataIn>
 	</ports>	
 	<views>
 		<view index="0" name="Parallel Coordinates">

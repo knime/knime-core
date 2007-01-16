@@ -20,7 +20,7 @@
 		by clicking on points 
 		(if the dots are not displayed you won't see the selection or hilite since
 		only data points can be selected or hilited). 
-		Hold control pressed for multiple selection. 
+		Hold control pressed for multiple selections. 
 		The selected datapoints may be 
 		hilited by either right-click to get the context menu or via the hilite
 		menu in the menu bar.</p>
@@ -28,7 +28,7 @@
 		<h3>Tooltip</h3>
 		<p>
 		Move the mouse over the data points to get detailed information about 
-		the data point (Row ID, and the x and y value).
+		the data point (Row ID, the x and y values).
 		</p>
 		
 		<h3>Properties: </h3>
@@ -49,7 +49,7 @@
 		<p>Legend: 
 		Since the colors of the lines do not depend on the colors of the rows
 		(since not the rows, but the columns are displayed as lines) the colors are created
-		automatically. Click "Change.." in the legend to change the color of the referring line.
+		automatically. Click "Change..." in the legend to change the color of the referring line.
 		</p>
 		<p>Missing Values:
 			Per default missing values will interrupt the line. Check "Interpolate" to 
@@ -73,7 +73,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Display data">Datatable with data to display</dataIn>
+		<dataIn index="0" name="Display data">Data to display</dataIn>
 	</ports>	
 	<views>
 		<view index="0" name="Lineplot">

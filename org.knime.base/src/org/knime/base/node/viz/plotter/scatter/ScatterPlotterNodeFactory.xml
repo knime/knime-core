@@ -4,15 +4,16 @@
 	<name>Scatter Plot</name>
 	
 	<shortDescription>
-	    Creates a scatterplot of two selectable attributes.
+	    Creates a scatterplot of two selected attributes.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
 	    <p>Creates a scatterplot of two selectable attributes. Then each datapoint is
-	    displayed as a dot at it's corresponding place, dependend on it's values
+	    displayed as a dot at its corresponding place, dependent on it's values
 	    of the selected attributes. The dots are displayed in the color defined by
-	     the color manager and the size defined by the size manager.
+        the Color Manager, the size defined by the Size Manager, and the shape
+        defined by the Shape Manager.
 		</p>
 		
 		<h3>HiLiting:</h3>
@@ -50,7 +51,7 @@
 			<ul>
 			<li>"Dot Size" lets you define the size of the dots.</li>
 			<li>"Jitter": if a nominal column is selected you may adjust how much
-			the values are jittered (scattered around there original value).</li>
+			the values are jittered (scattered around there origin).</li>
 			</ul>
 		</p>
 		</intro>

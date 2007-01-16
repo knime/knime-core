@@ -4,26 +4,23 @@
 	<name>Scatter Matrix</name>
 	
 	<shortDescription>
-	    Plots a scatter matrix.
+	    Plots a scatter matrix where each column is compared to all others.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
-	    	<p>
-	    		Plots a scatter matrix where each column is compared with each column.
-			</p>
 			<p>
 				In a scatter matrix each matrix element Eij is a scatterplot of the columns
 				i and j, where the values of the i-th column are displayed at the x axis 
-				and the values of the j-th column at the y axis. At the sides of the matrix
-				the coordinates are displayed.
+				and the values of the j-th column at the y axis while the coordinates
+				are displayed alternating on all sides of the plot.
 			</p>
 		
 			<h3>HiLiting:</h3>
 			<p> 
 				The data points may be selected by either dragging
 				a rectangle with the mouse over the points or clicking directly on them.
-				Hold control pressed for multiple selection. 
+				Hold control pressed for multiple selections. 
 				The selected datapoints may be 
 				hilited by either right-click to get the context menu or via the hilite
 				menu in the menu bar.
@@ -67,8 +64,8 @@
 						"Dot Size" lets you define the size of the dots.
 					</li>
 					<li>
-						"Jitter": if a nominal column is selected you may adjust how much
-						the values are jittered (scattered around there original value).
+						"Jitter": if a nominal column is selected, you may adjust how much
+						the values are jittered (scattered around there origin).
 					</li>
 				</ul>
 			</p>
@@ -81,7 +78,7 @@
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Display data">Datatable with data to display</dataIn>
+		<dataIn index="0" name="Display data">Data to display</dataIn>
 	</ports>	
 	<views>
 		<view index="0" name="Scatter Matrix">
