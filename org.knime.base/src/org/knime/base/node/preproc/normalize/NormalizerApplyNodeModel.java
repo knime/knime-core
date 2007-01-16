@@ -75,9 +75,11 @@ public class NormalizerApplyNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         AffineTransTable t = AffineTransTable.load(inData[0], m_content);
-        return new BufferedDataTable[]{
-                exec.createBufferedDataTable(t, exec)
-        };
+        BufferedDataTable bdt = exec.createBufferedDataTable(t, exec);
+        if (t.getErrorMessage() != null) {
+            setWarningMessage(t.getErrorMessage());
+        }
+        return new BufferedDataTable[]{bdt};
     }
     
     /**

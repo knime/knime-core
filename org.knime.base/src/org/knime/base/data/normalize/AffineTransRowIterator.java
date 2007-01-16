@@ -24,12 +24,9 @@
  */
 package org.knime.base.data.normalize;
 
-import java.util.Arrays;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
+import org.knime.core.data.DataTable;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.def.DefaultRow;
@@ -44,82 +41,37 @@ import org.knime.core.data.def.DoubleCell;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class AffineTransRowIterator extends RowIterator {
+   
+    private final AffineTransTable m_transtable;
+    
     private final RowIterator m_it;
-
-    private final double[] m_scales;
-
-    private final double[] m_translations;
-
-    /**
-     * Convenience constructor for package scope classes that make sure that all
-     * sanity checks are met.
+    
+    private final double[] m_min;
+    
+    private final double[] m_max;
+    
+    private double[] m_scales;
+    
+    private double[] m_translations;
+    
+     /**
+     * Creates new row iterator given an AffineTransTable with its informations.
      * 
-     * @param it the row iterator to wrap
-     * @param scales the scales for each dimension, make sure that it has the
-     *            same length as a row has cells, non double columns MUST have
-     *            {@link Double#NaN} as value in this argument
-     * @param translations the translation operator, similar to
-     *            <code>scales</code>
+     * @param originalTable the original table that will be normalized.
+     * @param table the AffineTransformTable containing the information to 
+     * normalize the input data.
      */
-    AffineTransRowIterator(final RowIterator it, final double[] scales,
-            final double[] translations) {
-        m_it = it;
-        m_scales = scales;
-        m_translations = translations;
-    }
-
-    /**
-     * Creates new row iterator given "some" parameters.
-     * 
-     * @param it the row iterator to wrap
-     * @param spec the spec from the iterators table (need for type check)
-     * @param names the names of the column to scale
-     * @param scales the scale parameters (same order as <code>names</code>)
-     * @param translations the translation parameters
-     * @throws NullPointerException if any argument is <code>null</code>
-     * @throws IllegalArgumentException if the arrays don't have the same
-     *             length, the names are not contained in the spec, the double
-     *             arrays contain NaN, the target columns are not
-     *             {@link DoubleValue} compatible
-     */
-    public AffineTransRowIterator(final RowIterator it,
-            final DataTableSpec spec, final String[] names,
-            final double[] scales, final double[] translations) {
-        if (it == null) {
-            throw new NullPointerException("Argument must not be null.");
+    AffineTransRowIterator(final DataTable originalTable,
+            final AffineTransTable table) {
+        if (table == null || table == null) {
+            throw new NullPointerException("Arguments must not be null.");
         }
-        if (names.length != scales.length
-                || names.length != translations.length) {
-            throw new IllegalArgumentException("Lengths must match: "
-                    + names.length + " vs. " + scales.length + " vs. "
-                    + translations.length);
-        }
-        for (int i = 0; i < scales.length; i++) {
-            if (Double.isNaN(scales[i]) || Double.isNaN(translations[i])) {
-                throw new IllegalArgumentException("Cannot transform with NaN");
-            }
-        }
-        double[] myScales = new double[spec.getNumColumns()];
-        double[] myTrans = new double[spec.getNumColumns()];
-        Arrays.fill(myScales, Double.NaN);
-        Arrays.fill(myTrans, Double.NaN);
-        for (int i = 0; i < names.length; i++) {
-            int index = spec.findColumnIndex(names[i]);
-            if (index < 0) {
-                throw new IllegalArgumentException("No such column: "
-                        + names[i]);
-            }
-            DataType type = spec.getColumnSpec(index).getType();
-            // do we need to support IntValue also?
-            if (!type.isCompatible(DoubleValue.class)) {
-                throw new IllegalArgumentException("Not supported: " + type);
-            }
-            myScales[index] = scales[i];
-            myTrans[index] = translations[i];
-        }
-        m_it = it;
-        m_scales = myScales;
-        m_translations = myTrans;
+       m_transtable = table;
+       m_min = m_transtable.getMin();
+       m_max = m_transtable.getMax();
+       m_scales = m_transtable.getScales();
+       m_translations = m_transtable.getTranslations();
+       m_it = originalTable.iterator();
     }
 
     /**
@@ -142,8 +94,44 @@ public class AffineTransRowIterator extends RowIterator {
             if (oldCell.isMissing() || Double.isNaN(m_scales[i])) {
                 cells[i] = oldCell;
             } else {
+                double interval = m_max[i] - m_min[i];
                 double oldDouble = ((DoubleValue)oldCell).getDoubleValue();
                 double newDouble = m_scales[i] * oldDouble + m_translations[i];
+                if (!Double.isNaN(m_min[i])) {
+                    if (newDouble < m_min[i]) {
+                        if ((m_min[i] - newDouble) 
+                                / interval < AffineTransTable.VERY_SMALL) {
+                            newDouble = m_min[i];
+                        } else {
+                            m_transtable
+                                    .setErrorMessage(
+                                            "Normalized value is out of bounds."
+                                            + " Original value: "
+                                            + oldDouble
+                                            + " Transformed value: "
+                                            + newDouble
+                                            + " Lower Bound: "
+                                            + m_min[i]);
+                        }
+                    }
+                }
+                if (!Double.isNaN(m_max[i])) {
+                    if (newDouble > m_max[i]) {
+                        if ((newDouble - m_max[i]) 
+                                / interval < AffineTransTable.VERY_SMALL) {
+                            newDouble = m_max[i];
+                        } else {
+                            m_transtable.setErrorMessage(
+                                    "Normalized value is out of bounds."
+                                            + " Original value: "
+                                            + oldDouble
+                                            + " Transformed value: "
+                                            + newDouble
+                                            + " Upper Bound: "
+                                            + m_max[i]);
+                        }
+                    }
+                }
                 cells[i] = new DoubleCell(newDouble);
             }
         }

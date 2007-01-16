@@ -171,7 +171,9 @@ public final class Normalizer {
         DataCell[] min = st.getMin();
         final double[] scales = new double[m_colindices.length];
         final double[] transforms = new double[m_colindices.length];
-
+        final double[] mins = new double[m_colindices.length];
+        final double[] maxs = new double[m_colindices.length];
+        
         for (int i = 0; i < transforms.length; i++) {
             DataColumnSpec cSpec = spec.getColumnSpec(m_colindices[i]);
             boolean isDouble = cSpec.getType().isCompatible(DoubleValue.class);
@@ -179,6 +181,8 @@ public final class Normalizer {
                 assert (!isDouble || min[m_colindices[i]].isMissing());
                 scales[i] = Double.NaN;
                 transforms[i] = Double.NaN;
+                mins[i] = Double.NaN;
+                maxs[i] = Double.NaN;
             } else {
                 // scales and translation to [0,1]
                 double maxI = ((DoubleValue)max[m_colindices[i]])
@@ -191,10 +195,13 @@ public final class Normalizer {
                 scales[i] *= (newmax - newmin);
                 transforms[i] *= (newmax - newmin);
                 transforms[i] += newmin;
+                mins[i] = newmin;
+                maxs[i] = newmax;
             }
         }
         String[] includes = getNames();
-        return new AffineTransTable(m_table, includes, scales, transforms);
+        return new AffineTransTable(m_table, includes, scales, transforms,
+                mins, maxs);
     }
 
     /**
@@ -214,19 +221,26 @@ public final class Normalizer {
 
         final double[] scales = new double[m_colindices.length];
         final double[] transforms = new double[m_colindices.length];
+        final double[] mins = new double[m_colindices.length];
+        final double[] maxs = new double[m_colindices.length];
 
         for (int i = 0; i < m_colindices.length; i++) {
             if (Double.isNaN(mean[m_colindices[i]])) {
                 scales[i] = Double.NaN;
                 transforms[i] = Double.NaN;
             } else {
-                scales[i] = (stddev[m_colindices[i]] == 0.0 ? 1.0
-                        : 1.0 / stddev[m_colindices[i]]);
+                scales[i] =
+                        (stddev[m_colindices[i]] == 0.0 ? 1.0
+                                : 1.0 / stddev[m_colindices[i]]);
                 transforms[i] = -mean[m_colindices[i]] * scales[i];
             }
+            mins[i] = Double.NaN;
+            maxs[i] = Double.NaN;
         }
+        
         String[] includes = getNames();
-        return new AffineTransTable(m_table, includes, scales, transforms);
+        return new AffineTransTable(m_table, includes, scales, transforms,
+                mins, maxs);
     }
 
     /**
@@ -245,11 +259,13 @@ public final class Normalizer {
         double[] min = st.getdoubleMin();
         double[] scales = new double[m_colindices.length];
         double[] transforms = new double[m_colindices.length];
+        double[] mins = new double[m_colindices.length];
+        double[] maxs = new double[m_colindices.length];
         for (int i = 0; i < m_colindices.length; i++) {
             int trueIndex = m_colindices[i];
             double absMax = Math.abs(max[trueIndex]);
             double absMin = Math.abs(min[trueIndex]);
-            double maxvalue = absMax > absMin ? absMax : absMin; 
+            double maxvalue = absMax > absMin ? absMax : absMin;
             int exp = 0;
             while (Math.abs(maxvalue) > 1) {
                 maxvalue = maxvalue / 10;
@@ -257,8 +273,11 @@ public final class Normalizer {
             }
             scales[i] = 1.0 / Math.pow(10, exp);
             transforms[i] = 0.0;
+            mins[i] = -1.0;
+            maxs[i] = 1.0;
         }
-        return new AffineTransTable(m_table, includes, scales, transforms);
+        return new AffineTransTable(m_table, includes, scales, transforms,
+                mins, maxs);
     }
 
     /* Get the names for all included columns. */

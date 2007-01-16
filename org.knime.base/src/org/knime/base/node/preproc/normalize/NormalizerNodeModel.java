@@ -203,9 +203,12 @@ public class NormalizerNodeModel extends NodeModel {
         default:
             throw new Exception("No mode set");
         }
-        
         outTable.save((ModelContent)m_content);
         BufferedDataTable bft = exec.createBufferedDataTable(outTable, exec);
+        if (outTable.getErrorMessage() != null) {
+            // something went wrong, report and throw an exception
+            throw new Exception(outTable.getErrorMessage());
+        }
         return new BufferedDataTable[]{bft};
     }
     
