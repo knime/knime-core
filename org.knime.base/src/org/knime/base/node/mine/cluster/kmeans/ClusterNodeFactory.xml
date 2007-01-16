@@ -9,7 +9,7 @@
 			clusters (no dynamic number of clusters).
 			K-means performs a crisp clustering that assigns a data
 			vector to exactly one cluster. The algorithm terminates when the
-			cluster assignements do not change anymore.
+			cluster assignments do not change anymore.
 			The node can be configured as follows:
 		</intro>
 		<option name="number of clusters">
@@ -17,7 +17,7 @@
 	    </option>
 		<option name="max number of iterations">
 		    The number of iterations after which the algorithm terminates,
-			independant of the accuracy improvement of the cluster centers.
+			independent of the accuracy improvement of the cluster centers.
 		</option>
 	</fullDescription>
 	

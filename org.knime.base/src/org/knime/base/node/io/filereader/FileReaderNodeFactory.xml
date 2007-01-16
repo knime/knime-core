@@ -19,7 +19,7 @@
 		settings manually (see below).<br />
 		When the node is executed it reads in the entire file and caches it in a
 		temporary file for faster access by the connected successor nodes. It 
-		also stores all possibles values it came accross for each column.
+		also stores all possible values it came across for each column.
 		</intro>
 		
 		<option name="ASCII file location">Enter a valid file name or URL. When

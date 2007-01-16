@@ -42,7 +42,7 @@
 		</p>
 		<p>
 		In order to measure the distance between two points a distance measure is necessary. 
-		You can choose between the manhattan distance and the euclidean distance, 
+		You can choose between the Manhattan distance and the Euclidean distance, 
 		which corresponds to the L1 and the L2 norm.
 		</p>
 		<p>
@@ -55,7 +55,7 @@
 			Views:
 			<ul>
 			<li>Dendrogram:
-			The view shows a dendrogram which displayes the whole cluster 
+			The view shows a dendrogram which displays the whole cluster 
 			hierarchy. At the bottom are all datapoints. The closest data points are connected 
 			where the height of the connection shows the distance between them. 
 			Each cluster can be selected and hilited. All contained subclusters will be hilited, too.
@@ -81,7 +81,7 @@
 			Only numeric columns are considered, nominal columns are ignored.
 	</dataIn>
 	<dataOut index="0" name="Clustered data">
-		The input data with an extra column with the cluster name where the data point is assinged to.
+		The input data with an extra column with the cluster name where the data point is assigned to.
 	</dataOut>
 	</ports>	
 	<views>

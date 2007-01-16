@@ -18,7 +18,7 @@
 			classification performance. In case of unbalanced input data,
 			for instance there are only few objects of the &quot;active&quot; but 
 			many of the &quot;inactive&quot; class, this node adjusts the class distribution 
-			by adding artifical rows (in the example by adding rows for the &quot;active&quot; class). 
+			by adding artificial rows (in the example by adding rows for the &quot;active&quot; class). 
 			</p>
 			<p>
 			The algorithm works roughly as follows: It creates synthetic rows by extrapolating 
