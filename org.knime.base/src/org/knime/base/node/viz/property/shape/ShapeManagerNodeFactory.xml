@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Visualizer" icon="./shapemanager.gif">
+<knimeNode type="Visualizer" icon="./shapemanager.png">
 	<name>Shape Manager</name>
 	
 	<shortDescription>
@@ -9,24 +9,37 @@
 	
 	<fullDescription>
 		<intro>
-        Shapes can be assigned to one selected nominal column. All possible
-        for one column are shown in the table in values are shown in the table 
-	    and maximum value. The values are then computed during execute.
+		<p>
+		Assigns (different) shapes for each attribute value of one nominal column, 
+		i.e. for each possible value. Supporting views then render datapoints 
+		with the shape associated with the corresponding attribute value. 
+		If there is for example a dataset with two different 
+		classes ("class1" and "class2"), "class1" may have a circle and 
+		"class2" a triangle assigned. When looking at the dataset the values 
+		can easily be distinguished through their shape.
+        </p>
+        <p>
+        In the dialog the nominal column with the possible values may be selected.
+        The possible values appear in the left column and the shape can be set
+        in the right column of the table by clicking on it and selecting the 
+        desired shape.
+        </p>
 		</intro>
 		
-    <option name="Column(s): ">
-	    Select the column whose possible values should be used for shape
-	    selection.
+    <option name="Select nominal column: ">
+		Select the nominal column whose possible values should be associated 
+		with shapes.  
     </option>
-    <option name="Shape Selection: ">
-    	Clicking on the second column allows to change the shape per
-    	column value.
+    <option name="Shape Mapping:Shape">
+    	The possible values of the selected nominal column are listed in the 
+    	left column. In order to associate a shape with that value click on the 
+    	shape displayed in the right column and select the desired shape.
     </option>
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Table">Table to which shape settings should be applied</dataIn>
-		<dataOut index="0" name="Table with Shapes">Same table with shape information appended to one attribute</dataOut>
+		<dataIn index="0" name="Table">Table to which shape settings should be applied to</dataIn>
+		<dataOut index="0" name="Table with Shapes">Same table with shape information applied to one column</dataOut>
 		<modelOut index="0" name="Shape Settings">Shape settings applied to the input table</modelOut>
 	</ports>	
 </knimeNode>

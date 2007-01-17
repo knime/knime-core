@@ -84,7 +84,7 @@ final class ShapeManagerNodeDialogPane extends NodeDialogPane implements
         m_columns.setRenderer(new DataColumnSpecListCellRenderer());
         JPanel columnPanel = new JPanel(new BorderLayout());
         columnPanel.setBorder(BorderFactory
-                .createTitledBorder(" Select one Column "));
+                .createTitledBorder(" Select nominal column: "));
         columnPanel.add(m_columns);
 
         // panel keep the table with the column value to  shape mapping
