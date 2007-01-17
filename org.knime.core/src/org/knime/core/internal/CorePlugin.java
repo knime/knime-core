@@ -27,26 +27,26 @@ package org.knime.core.internal;
 import java.io.File;
 import java.net.URL;
 
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Plugin;
 import org.knime.core.node.NodeLogger;
-import org.osgi.framework.BundleContext;
 
 /**
  * Plugin class that is initialized when the plugin project is started. It will
  * set the workspace path as KNIME home dir in the KNIMEConstants utility class.
  * @author wiswedel, University of Konstanz
  */
-public class CorePlugin extends Plugin {
+public class CorePlugin extends org.eclipse.core.runtime.Plugin {
 
     /**
-     * @see Plugin#start(BundleContext)
+     * @see org.eclipse.core.runtime.Plugin
+     *      #start(org.osgi.framework.BundleContext)
      */
     @Override
-    public void start(final BundleContext context) throws Exception {
+    public void start(final org.osgi.framework.BundleContext context) 
+        throws Exception {
         super.start(context);
         try {
-            URL workspaceURL = Platform.getInstanceLocation().getURL();
+            URL workspaceURL = 
+               org.eclipse.core.runtime.Platform.getInstanceLocation().getURL();
             if (workspaceURL.getProtocol().equalsIgnoreCase("file")) {
                 // we can create our home only in local workspaces
                 File workspaceDir = new File(workspaceURL.getPath());
