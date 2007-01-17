@@ -90,8 +90,7 @@ public final class ColorHandler implements PropertyHandler {
      * Saves the underlying <code>ColorModel</code> to the given
      * <code>Config</code> by adding the <code>ColorModel</code> class as 
      * String and calling 
-     * {@link org.knime.core.data.property.ColorHandler.ColorModel#
-     * save(ConfigWO)} within the model.
+     * {@link ColorModel#save(ConfigWO)} within the model.
      * @param config color settings are saved to
      * @throws NullPointerException if the <i>config</i> is <code>null</code>
      */
