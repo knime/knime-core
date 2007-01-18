@@ -113,6 +113,11 @@ public class ScatterMatrixDrawingPane extends ScatterPlotterDrawingPane {
         List<DotInfo>dotList = new ArrayList<DotInfo>();
         for (int i = 0; i < m_matrixElements.length; i++) {
             for (int j = 0; j < m_matrixElements[i].length; j++) {
+            	// matrix element might be null (if no rows available) since 
+            	// the array is initialized with column length
+            	if (m_matrixElements[i][j] == null) {
+            		continue;
+            	}            	
                 dotList.addAll(m_matrixElements[i][j].getDots());
             }
         }
@@ -161,6 +166,11 @@ public class ScatterMatrixDrawingPane extends ScatterPlotterDrawingPane {
         for (int i = 0; i < m_matrixElements.length; i++) {
             for (int j = 0; j < m_matrixElements[i].length; j++) {
                 ScatterMatrixElement element = m_matrixElements[i][j];
+            	// matrix element might be null (if no rows available) since 
+            	// the array is initialized with column length
+            	if (element == null) {
+            		continue;
+            	}                   
                 g.drawRect(element.getCorner().x, element.getCorner().y, 
                         element.getWidth(), element.getHeight());
                 // paint the background color of the matrix elements

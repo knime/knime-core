@@ -264,7 +264,6 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
         int height = (getDrawingPaneDimension().height 
                 - (nrOfColumns * GAP) - (2 * m_hMargin)) / nrOfColumns;
         int rowNr = 0;
-//        List<DotInfo> dotList = new ArrayList<DotInfo>();
         ScatterMatrixElement[][] matrixElements 
             = new ScatterMatrixElement[nrOfColumns][nrOfColumns];
         for (DataRow row : data) {

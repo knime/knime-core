@@ -149,6 +149,13 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
                     excludedCols.add(currColIdx);
                 }
             }
+            // for numeric columns check if the lower and upper bounds are 
+            // available
+            if (colSpec.getType().isCompatible(DoubleValue.class)){
+            	if (!colSpec.getDomain().hasBounds()){
+            		excludedCols.add(currColIdx);
+            	}
+            }
             currColIdx++;
         }
         m_excludedColumns = new int[excludedCols.size()];
@@ -159,6 +166,11 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
             setWarningMessage("Some columns are ignored! Not compatible " 
                     + "with DoubleValue or NominalValue or no or too many" 
                     + " possible values");   
+        }
+        // check for empty table
+        if (inSpecs[0].getNumColumns() - excludedCols.size() <= 0){
+        	throw new InvalidSettingsException(
+        			"No columns to visualize are available!");
         }
         return new DataTableSpec[0];
     }

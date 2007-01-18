@@ -346,6 +346,9 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
         }
         if (yIdx == -1) {
             yIdx = 1;
+            if (spec.getNumColumns() <= 1){
+            	yIdx = 0;
+            }
         }
         update(spec, xIdx, yIdx);
     }
