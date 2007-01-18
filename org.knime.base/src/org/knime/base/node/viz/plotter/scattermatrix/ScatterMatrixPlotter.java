@@ -326,6 +326,11 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
         for (int i = 0; i < matrixElements.length; i++) {
             for (int j = 0; j < matrixElements[i].length; j++) {
                 ScatterMatrixElement element = matrixElements[i][j];
+            	// matrix element might be null (if no rows available) since 
+            	// the array is initialized with column length
+            	if (element == null) {
+            		continue;
+            	}                
                 Coordinate xCoordinate = element.getXCoordinate();
                 Coordinate yCoordinate = element.getYCoordinate();
                 if ((xCoordinate.isNominal() || yCoordinate.isNominal())) {
