@@ -184,11 +184,11 @@ public class AffineTransTable implements DataTable {
                 if (oldUp != null && !oldUp.isMissing()) {
                     double oldVal = ((DoubleValue)oldUp).getDoubleValue();
                     double newVal = scales[i] * oldVal + translations[i];
-                    if (!Double.isNaN(newmin[i])) {
-                        if (newVal < newmin[i]
-                                && ((newmin[i] - newVal) 
+                    if (!Double.isNaN(newmax[i])) {
+                        if (newVal > newmax[i]
+                                && ((newVal - newmax[i]) 
                                         / interval) < VERY_SMALL) {
-                            newVal = newmin[i];
+                            newVal = newmax[i];
                         }
                     }
                     up = new DoubleCell(newVal);
@@ -198,11 +198,11 @@ public class AffineTransTable implements DataTable {
                 if (oldLow != null && !oldLow.isMissing()) {
                     double oldVal = ((DoubleValue)oldLow).getDoubleValue();
                     double newVal = scales[i] * oldVal + translations[i];
-                    if (!Double.isNaN(newmax[i])) {
-                        if (newVal > newmax[i]
-                                && ((newVal - newmax[i]) 
+                    if (!Double.isNaN(newmin[i])) {
+                        if (newVal < newmin[i]
+                                && ((newmin[i] - newVal) 
                                         / interval) < VERY_SMALL) {
-                            newVal = newmax[i];
+                            newVal = newmin[i];
                         }
                     }
                     low = new DoubleCell(newVal);
