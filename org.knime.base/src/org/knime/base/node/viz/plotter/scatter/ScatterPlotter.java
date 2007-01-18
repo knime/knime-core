@@ -689,6 +689,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
         if (isScatterPlotterDrawingPane()) {
             calculateCoordinates(getScatterPlotterDrawingPane()
                     .getDotInfoArray());
+            getDrawingPane().repaint();
         }
     }
     
