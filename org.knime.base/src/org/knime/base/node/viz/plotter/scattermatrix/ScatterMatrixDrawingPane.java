@@ -145,7 +145,7 @@ public class ScatterMatrixDrawingPane extends ScatterPlotterDrawingPane {
      * Paints the rectangles of the scatter matrix elements and the vertical and
      * horizontal coordinates at the border of the drawing pane. The painting 
      * of the dots is inherited from the 
-     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}.
+     *{@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}.
      * 
      * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane
      * #paintContent(java.awt.Graphics)
@@ -236,7 +236,6 @@ public class ScatterMatrixDrawingPane extends ScatterPlotterDrawingPane {
             g.drawLine(x - TICK_SIZE / 2, y, x + TICK_SIZE / 2, y);
             String label = mapping.getDomainValueAsString();
             int labelY = y; 
-            	//+ g.getFontMetrics().getHeight() / 4;
             int rectHeight = (int)element.getYCoordinate()
             .getUnusedDistBetweenTicks(element.getHeight());
             if (left) {
