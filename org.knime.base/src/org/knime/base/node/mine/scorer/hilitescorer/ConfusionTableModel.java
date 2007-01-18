@@ -46,15 +46,32 @@ public class ConfusionTableModel extends AbstractTableModel {
     private String[] m_headers;
 
     /**
+     * The column name (description) of the scored attributes for the row
+     * header.
+     */
+    private String m_rowHeaderDescription;
+
+    /**
+     * The column name (description) of the scored attributes for the column
+     * header.
+     */
+    private String m_columnHeaderDescription;
+
+    /**
      * Constructs confusion table model from the score count and the headers.
      * 
-     * @param scoreCount a 2-D int array representing the confusion matrix.
-     * @param headers the names of the attributes to display in the table
+     * @param scoreCount
+     *            a 2-D int array representing the confusion matrix.
+     * @param headers
+     *            the names of the attributes to display in the table
      */
-    public ConfusionTableModel(final int[][] scoreCount, 
-            final String[] headers) {
+    public ConfusionTableModel(final int[][] scoreCount,
+            final String[] headers, final String rowHeaderDescription,
+            final String columnHeaderDescription) {
         m_scoreCount = scoreCount;
         m_headers = headers;
+        m_rowHeaderDescription = rowHeaderDescription;
+        m_columnHeaderDescription = columnHeaderDescription;
     }
 
     /**
@@ -102,7 +119,8 @@ public class ConfusionTableModel extends AbstractTableModel {
      * Returns the column names, i.e. the attribute names of the confusion
      * matrix.
      * 
-     * @param column the index of the column in the table to display
+     * @param column
+     *            the index of the column in the table to display
      * @return the column (attribute) name for the given column index
      */
     @Override
@@ -112,7 +130,7 @@ public class ConfusionTableModel extends AbstractTableModel {
         int realColumnIndex = column - 1;
         if (realColumnIndex < 0) {
             // return the column header for the first column
-            return "Class values";
+            return m_rowHeaderDescription + " \\ " + m_columnHeaderDescription;
         }
         return m_headers[realColumnIndex];
     }

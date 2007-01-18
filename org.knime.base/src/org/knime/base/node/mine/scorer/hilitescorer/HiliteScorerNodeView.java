@@ -179,12 +179,15 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         // now set the values in the components to get them displayed
         String[] headerNames = model.getValues();
 
+        String rowHeaderDescription = model.getFirstCompareColumn();
+        String columnHeaderDescription = model.getSecondCompareColumn();
+
         // init the boolean array determining which cell is selected
         m_cellHilited = new boolean[scoreCount.length][scoreCount.length];
         updateHilitedCells();
 
         ConfusionTableModel dataModel = new ConfusionTableModel(scoreCount,
-                headerNames);
+                headerNames,rowHeaderDescription, columnHeaderDescription);
 
         m_tableView.setModel(dataModel);
 

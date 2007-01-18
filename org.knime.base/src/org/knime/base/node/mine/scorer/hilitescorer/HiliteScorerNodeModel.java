@@ -109,7 +109,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     private List<DataCell>[][] m_keyStore;
 
     /**
-     * The confusion matrix as int 2-D array. 
+     * The confusion matrix as int 2-D array.
      */
     private int[][] m_scorerCount;
 
@@ -132,10 +132,13 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     /**
      * Starts the scoring in the scorer.
      * 
-     * @param data the input data of length one
-     * @param exec the execution monitor
+     * @param data
+     *            the input data of length one
+     * @param exec
+     *            the execution monitor
      * @return the confusion matrix
-     * @throws CanceledExecutionException if user canceled execution
+     * @throws CanceledExecutionException
+     *             if user canceled execution
      * 
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
@@ -167,7 +170,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         m_keyStore = new List[m_values.length][m_values.length];
         // the scorerCount counts the confusions
         m_scorerCount = new int[m_values.length][m_values.length];
-        
+
         // init the matrix
         for (int i = 0; i < m_keyStore.length; i++) {
             for (int j = 0; j < m_keyStore[i].length; j++) {
@@ -178,7 +181,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         int rowNr = 0;
         for (Iterator<DataRow> it = in.iterator(); it.hasNext(); rowNr++) {
             DataRow row = it.next();
-            exec.setProgress(rowNr / (double)in.getRowCount(),
+            exec.setProgress(rowNr / (double) in.getRowCount(),
                     "Computing score, row " + rowNr + " (\"" + row.getKey()
                             + "\") of " + in.getRowCount());
             try {
@@ -193,7 +196,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                 continue;
             }
             boolean areEqual = cell1.equals(cell2);
-            
+
             // need to cast to string (column keys are strings!)
             int i1 = valuesList.indexOf(cell1.toString());
             int i2 = areEqual ? i1 : valuesList.indexOf(cell2.toString());
@@ -214,8 +217,8 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         m_nrRows = rowNr;
         DataType[] colTypes = new DataType[m_values.length];
         Arrays.fill(colTypes, IntCell.TYPE);
-        BufferedDataContainer container =
-                exec.createDataContainer(new DataTableSpec(m_values, colTypes));
+        BufferedDataContainer container = exec
+                .createDataContainer(new DataTableSpec(m_values, colTypes));
         for (int i = 0; i < m_values.length; i++) {
             // need to make a datacell for the row key
             container.addRowToTable(new DefaultRow(new StringCell(m_values[i]),
@@ -233,7 +236,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                 + incorrect + ", #rows=" + nrRows + ", #missing=" + missing);
         // our view displays the table - we must keep a reference in the model.
         BufferedDataTable result = container.getTable();
-        return new BufferedDataTable[]{result};
+        return new BufferedDataTable[] { result };
 
     } // execute(DataTable[],ExecutionMonitor)
 
@@ -251,10 +254,12 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     /**
      * Sets the columns that will be compared during execution.
      * 
-     * @param first the first column
-     * @param second the second column
-     * @throws NullPointerException if one of the parameters is
-     *             <code>null</code>
+     * @param first
+     *            the first column
+     * @param second
+     *            the second column
+     * @throws NullPointerException
+     *             if one of the parameters is <code>null</code>
      */
     void setCompareColumn(final String first, final String second) {
         if ((first == null || second == null)) {
@@ -271,7 +276,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        
+
         if (inSpecs[INPORT].getNumColumns() < 2) {
             throw new InvalidSettingsException(
                     "The input table must have at least two colums to compare");
@@ -378,8 +383,9 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      * Determines the row keys (as DataCells) which belong to the given cell of
      * the confution matrix.
      * 
-     * @param cells the cells of the confusion matrix for which the keys should
-     *            be returned
+     * @param cells
+     *            the cells of the confusion matrix for which the keys should be
+     *            returned
      * 
      * @return a set of DataCells containing the row keys
      */
@@ -409,12 +415,17 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      * Called to determine all possible values in the respective columns. This
      * method will "stringify" all values as they show up as row and column key.
      * 
-     * @param in the input table
-     * @param index1 the first column to compare
-     * @param index2 the second column to compare
-     * @param exec object to check with if user canceled
+     * @param in
+     *            the input table
+     * @param index1
+     *            the first column to compare
+     * @param index2
+     *            the second column to compare
+     * @param exec
+     *            object to check with if user canceled
      * @return the order of rows and columns in the confusion matrix
-     * @throws CanceledExecutionException if user canceled operation
+     * @throws CanceledExecutionException
+     *             if user canceled operation
      */
     protected String[] determineColValues(final DataTable in, final int index1,
             final int index2, final ExecutionMonitor exec)
@@ -487,12 +498,13 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      * Finds the position where key is located in source. It must be ensured
      * that the key is indeed in the argument array.
      * 
-     * @param source the source array
-     * @param key the key to find
+     * @param source
+     *            the source array
+     * @param key
+     *            the key to find
      * @return the index in source where key is located
      */
-    protected static int findValue(final DataCell[] source, 
-            final DataCell key) {
+    protected static int findValue(final DataCell[] source, final DataCell key) {
         for (int i = 0; i < source.length; i++) {
             if (source[i].equals(key)) {
                 return i;
@@ -505,9 +517,12 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      * Checks if the specified confusion matrix cell contains at least one of
      * the given keys.
      * 
-     * @param x the x value to specify the matrix cell
-     * @param y the y value to specify the matrix cell
-     * @param keys the keys to check
+     * @param x
+     *            the x value to specify the matrix cell
+     * @param y
+     *            the y value to specify the matrix cell
+     * @param keys
+     *            the keys to check
      * 
      * @return true if at least one key is contained in the specified cell
      */
@@ -531,7 +546,8 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      * Returns all cells of the confusion matrix (as Points) if the given key
      * set contains all keys of that cell.
      * 
-     * @param keys the keys to check for
+     * @param keys
+     *            the keys to check for
      * 
      * @return the cells that fullfill the above condition
      */
@@ -544,7 +560,6 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
             for (int j = 0; j < m_keyStore[i].length; j++) {
                 // for all keys to check
                 boolean allKeysIncluded = true;
-                
 
                 for (DataCell key : m_keyStore[i][j]) {
 
@@ -557,7 +572,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                         if (key.equals(keyToCheck)) {
                             // if the keys equal remove it, as it can only
                             // occure in one cell
-                            //keysToCheckIterator.remove();
+                            // keysToCheckIterator.remove();
 
                             // remember that the key was found
                             wasKeyFound = true;
@@ -576,10 +591,10 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                 }
             }
         }
-        
+
         return result.toArray(new Point[result.size()]);
     }
-    
+
     /**
      * @see org.knime.core.node.NodeModel
      *      #loadInternals(java.io.File,ExecutionMonitor)
@@ -633,14 +648,16 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
             NodeSettingsWO subSub = sub.addNodeSettings("hilightMap");
             for (int j = 0; j < m_values.length; j++) {
                 NodeSettingsWO sub3 = subSub.addNodeSettings(m_values[j]);
-                DataCell[] cells = m_keyStore[i][j].toArray(
-                        new DataCell[m_keyStore[i][j].size()]);
+                DataCell[] cells = m_keyStore[i][j]
+                        .toArray(new DataCell[m_keyStore[i][j].size()]);
                 sub3.addDataCellArray("keyStore", cells);
             }
         }
 
-        set.saveToXML(new GZIPOutputStream(new BufferedOutputStream(
-              new FileOutputStream(new File(internDir, "internals.xml.gz")))));
+        set
+                .saveToXML(new GZIPOutputStream(new BufferedOutputStream(
+                        new FileOutputStream(new File(internDir,
+                                "internals.xml.gz")))));
     }
 
     /**
@@ -654,7 +671,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      * Returns a bit set with data for the ROC curve. A set bit means a correct
      * classified example, an unset bit is a wrong classified example. The
      * number of interesting bits is {@link BitSet#length()} - 1, i.e. the last
-     * set bit must be ignored, it is just the end marker. 
+     * set bit must be ignored, it is just the end marker.
      * 
      * @return a bit set
      */
@@ -662,7 +679,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         // disabled
         return new BitSet();
     }
-        
+
     /**
      * @return the attribute names of the confusion matrix
      */
@@ -671,11 +688,28 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.DataProvider
-     *  #getDataArray(int)
+     * @see org.knime.base.node.viz.plotter.DataProvider #getDataArray(int)
      */
     public DataArray getDataArray(final int index) {
         // only to make the Plotter happy
         return null;
+    }
+
+    /**
+     * Returns the first column to compare.
+     * 
+     * @return the first column to compare
+     */
+    public String getFirstCompareColumn() {
+        return m_firstCompareColumn;
+    }
+
+    /**
+     * Returns the second column to compare.
+     * 
+     * @return the second column to compare
+     */
+    public String getSecondCompareColumn() {
+        return m_secondCompareColumn;
     }
 }
