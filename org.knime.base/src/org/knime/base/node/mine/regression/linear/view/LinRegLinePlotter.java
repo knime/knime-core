@@ -23,15 +23,12 @@
  */
 package org.knime.base.node.mine.regression.linear.view;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-
 import org.knime.base.node.mine.regression.linear.LinearRegressionParams;
-import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 import org.knime.base.util.coordinate.NumericCoordinate;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.def.DoubleCell;
 
 /**
  * A scatter plot with a regression line. The
@@ -43,10 +40,6 @@ import org.knime.core.data.DataTableSpec;
  * 
  */
 public class LinRegLinePlotter extends ScatterPlotter {
-
-    private double[] m_xCoords;
-
-    private double[] m_yCoords;
 
     /**
      * 
@@ -94,31 +87,59 @@ public class LinRegLinePlotter extends ScatterPlotter {
             double xMax =
                     ((NumericCoordinate)getXAxis().getCoordinate())
                             .getMaxDomainValue();
-
             String xName = getSelectedXColumn().getName();
             if (!xName.equals(params.getTargetColumnName())) {
                 double yMin = params.getApproximationFor(xName, xMin);
                 double yMax = params.getApproximationFor(xName, xMax);
-                m_xCoords = new double[]{xMin, xMax};
-                m_yCoords = new double[]{yMin, yMax};
-                int strokeSize =
-                        Math.max(1,
-                                ((ScatterPlotterDrawingPane)getDrawingPane())
-                                        .getDotSize() / 3);
-                ((BasicDrawingPane)getDrawingPane()).clearPlot();
-                addLine(m_xCoords, m_yCoords, Color.BLACK, new BasicStroke(
-                        strokeSize));
+                ((LinRegLineDrawingPane)getDrawingPane()).setLineFirstPoint(
+                        getMappedXValue(new DoubleCell(xMin)),
+                        getMappedYValue(new DoubleCell(yMin)));
+                ((LinRegLineDrawingPane)getDrawingPane()).setLineLastPoint(
+                        getMappedXValue(new DoubleCell(xMax)),
+                        getMappedYValue(new DoubleCell(yMax)));
                 getDrawingPane().repaint();
             }
         }
     }
 
     /**
-     * Same as {@link #updatePaintModel()}.
+     * First calls super then adapts the regression line.
      */
     @Override
     public void updateSize() {
-        updatePaintModel();
+        if (getXAxis() == null || getXAxis().getCoordinate() == null
+                || getYAxis() == null || getYAxis().getCoordinate() == null) {
+            return;
+        }
+        super.updateSize();
+        if (getDataProvider() == null
+                || getDataProvider().getDataArray(0) == null) {
+            return;
+        }
+        LinearRegressionParams params =
+                ((LinRegDataProvider)getDataProvider()).getParams();
+        if (params == null) {
+            return;
+        }
+        if (params != null) {
+            double xMin =
+                    ((NumericCoordinate)getXAxis().getCoordinate())
+                            .getMinDomainValue();
+            double xMax =
+                    ((NumericCoordinate)getXAxis().getCoordinate())
+                            .getMaxDomainValue();
+            String xName = getSelectedXColumn().getName();
+            if (!xName.equals(params.getTargetColumnName())) {
+                double yMin = params.getApproximationFor(xName, xMin);
+                double yMax = params.getApproximationFor(xName, xMax);
+                ((LinRegLineDrawingPane)getDrawingPane()).setLineFirstPoint(
+                        getMappedXValue(new DoubleCell(xMin)),
+                        getMappedYValue(new DoubleCell(yMin)));
+                ((LinRegLineDrawingPane)getDrawingPane()).setLineLastPoint(
+                        getMappedXValue(new DoubleCell(xMax)),
+                        getMappedYValue(new DoubleCell(yMax)));
+            }
+        }
     }
 
 }

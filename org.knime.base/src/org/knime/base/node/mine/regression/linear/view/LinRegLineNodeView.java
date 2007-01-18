@@ -25,7 +25,6 @@
 package org.knime.base.node.mine.regression.linear.view;
 
 import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
-import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 import org.knime.core.node.NodeModel;
 
 /**
@@ -43,7 +42,7 @@ public class LinRegLineNodeView extends DefaultVisualizationNodeView {
      * @param nodeModel the model to look at
      */
     public LinRegLineNodeView(final NodeModel nodeModel) {
-        super(nodeModel, new LinRegLinePlotter(new ScatterPlotterDrawingPane(),
+        super(nodeModel, new LinRegLinePlotter(new LinRegLineDrawingPane(),
                 new LinRegLinePlotterProperties()));
     }
 

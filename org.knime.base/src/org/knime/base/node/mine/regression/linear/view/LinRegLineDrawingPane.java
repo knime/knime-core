@@ -24,17 +24,22 @@
  */
 package org.knime.base.node.mine.regression.linear.view;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 
-import org.knime.base.node.viz.scatterplot.ScatterPlotDrawingPane;
+import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
+
+
 
 /**
  * DrawingPane that also draws the regression line.
  * 
  * @author Bernd Wiswedel, University of Konstanz
+ * @author Fabian Dill, University of Konstanz
  */
-public class LinRegLineDrawingPane extends ScatterPlotDrawingPane {
+public class LinRegLineDrawingPane extends ScatterPlotterDrawingPane {
     private int m_x1;
 
     private int m_y1;
@@ -43,20 +48,19 @@ public class LinRegLineDrawingPane extends ScatterPlotDrawingPane {
 
     private int m_y2;
 
+
     /**
-     * Paints first the regression line, then calls super.
      * 
-     * @see ScatterPlotDrawingPane#paintPlotDrawingPane(Graphics)
+     * @param g
      */
     @Override
-    protected void paintPlotDrawingPane(final Graphics g) {
+    public void paintContent(Graphics g) {
         g.setColor(Color.BLACK);
         // bug fix#481, minimum thickness 1
         final int hDotSize = Math.max(1, getDotSize() / 3);
-        for (int i = -hDotSize; i < hDotSize; i++) {
-            g.drawLine(m_x1, m_y1 + i, m_x2, m_y2 + i);
-        }
-        super.paintPlotDrawingPane(g);
+        ((Graphics2D)g).setStroke(new BasicStroke(hDotSize));
+        g.drawLine(m_x1, m_y1, m_x2, m_y2);
+        super.paintContent(g);
     }
 
     /**
