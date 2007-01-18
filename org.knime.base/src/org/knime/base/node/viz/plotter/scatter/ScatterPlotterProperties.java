@@ -29,6 +29,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.plotter.columns.TwoColumnProperties;
 import org.knime.base.node.viz.plotter.props.ScatterPlotterAppearanceTab;
+import org.knime.core.data.DataValue;
 
 /**
  * In addition to the 
@@ -54,7 +55,20 @@ public class ScatterPlotterProperties extends TwoColumnProperties {
      *
      */
     public ScatterPlotterProperties() {
-        super();
+        this(new Class[]{DataValue.class}, new Class[]{DataValue.class});
+    }
+    
+    /**
+     * A constructor to restrict the column selection boxes to certain 
+     * {@link org.knime.core.data.DataType}s.
+     * 
+     * @param allowedXTypes
+     * @param allowedYTypes
+     */
+    @SuppressWarnings("unchecked")
+    public ScatterPlotterProperties(final Class[] allowedXTypes,
+    		final Class[] allowedYTypes) {
+    	super(allowedXTypes, allowedYTypes);
         m_appearance = new ScatterPlotterAppearanceTab();
         addTab(m_appearance.getDefaultName(), m_appearance);
     }

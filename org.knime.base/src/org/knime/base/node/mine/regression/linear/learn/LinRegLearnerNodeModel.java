@@ -536,6 +536,21 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     public DataArray getRowContainer() {
         return m_rowContainer;
     }
+    
+    
+    /**
+     * @see org.knime.base.node.viz.plotter.DataProvider#getDataArray(int)
+     */
+    public DataArray getDataArray(final int index) {
+        return m_rowContainer;
+    }
+
+    /**
+     * @see LinRegDataProvider#getIncludedColumns()
+     */
+    public String[] getIncludedColumns() {
+        return m_includes;
+    }
 
     /**
      * @return the error

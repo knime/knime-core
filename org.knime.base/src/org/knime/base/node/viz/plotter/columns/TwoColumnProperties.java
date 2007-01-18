@@ -81,9 +81,10 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             TwoColumnProperties.class);
     
-    private ColumnSelectionComboxBox m_xSelector;
-    
-    private ColumnSelectionComboxBox m_ySelector;
+    /** The x column selection box. */
+    protected ColumnSelectionComboxBox m_xSelector;
+    /** The y column selection box. */
+    protected ColumnSelectionComboxBox m_ySelector;
    
     
     private JSpinner m_xMinSpinner;

@@ -26,6 +26,7 @@ package org.knime.base.node.mine.regression.linear.view;
 
 import org.knime.base.node.mine.regression.linear.LinearRegressionParams;
 import org.knime.base.node.util.DataArray;
+import org.knime.base.node.viz.plotter.DataProvider;
 
 /**
  * An interface that both the learner node model and the predictor node model
@@ -33,7 +34,7 @@ import org.knime.base.node.util.DataArray;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public interface LinRegDataProvider {
+public interface LinRegDataProvider extends DataProvider {
     /**
      * Get the parameters for the regression line.
      * 
@@ -47,4 +48,12 @@ public interface LinRegDataProvider {
      * @return the rows to paint
      */
     public DataArray getRowContainer();
+    
+    
+    /**
+     * 
+     * @return those columns which were used to calculate the model
+     */
+    public String[] getIncludedColumns();
+    
 }

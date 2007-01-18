@@ -24,14 +24,9 @@
  */
 package org.knime.base.node.mine.regression.linear.view;
 
-import java.util.ArrayList;
-
-import org.knime.base.node.mine.regression.linear.LinearRegressionParams;
-import org.knime.base.node.util.DataArray;
-import org.knime.base.node.viz.scatterplot.ScatterProps;
-import org.knime.core.data.property.ColorAttr;
+import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
+import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * 2D plot showing the linear regression line. The plot allows to choose one
@@ -40,85 +35,17 @@ import org.knime.core.node.NodeView;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class LinRegLineNodeView extends NodeView {
-    // the scoll and drawing pane
-    private LinRegLineScatterPlotter m_plot;
-
-    // the pane holding the always visible controls
-    private ScatterProps m_properties;
-
-    private final int m_initialWIDTH = 300; // the width at zoom 1x
+public class LinRegLineNodeView extends DefaultVisualizationNodeView {
 
     /**
-     * Create new view.
+     * Create new view with a scatter plot an the regression line.
      * 
      * @param nodeModel the model to look at
      */
     public LinRegLineNodeView(final NodeModel nodeModel) {
-        super(nodeModel);
-        if (!(nodeModel instanceof LinRegDataProvider)) {
-            throw new IllegalArgumentException(
-                    "NodeModel not instance of LinRegDataProvider");
-        }
-        m_properties = new ScatterProps();
-
-        DataArray container = getLinRegDataProvider().getRowContainer();
-        m_plot = new LinRegLineScatterPlotter(container, m_initialWIDTH,
-                m_properties);
-        m_plot.setBackground(ColorAttr.getBackground());
-        getJMenuBar().add(m_plot.getHiLiteMenu());
-        setComponent(m_plot);
+        super(nodeModel, new LinRegLinePlotter(new ScatterPlotterDrawingPane(),
+                new LinRegLinePlotterProperties()));
     }
 
-    /* Get the data provider interface that the model implements. */
-    private LinRegDataProvider getLinRegDataProvider() {
-        return (LinRegDataProvider)getNodeModel();
-    }
 
-    /**
-     * @see org.knime.core.node.NodeView#modelChanged()
-     */
-    @Override
-    protected void modelChanged() {
-        LinRegDataProvider provider = getLinRegDataProvider();
-
-        // update the x/y col selectors, this should trigger
-        DataArray rows = provider.getRowContainer();
-        if (rows != null) {
-            m_properties.setSelectables(rows.getDataTableSpec());
-        } else {
-            m_properties.setSelectables(null);
-        }
-        LinearRegressionParams params = provider.getParams();
-        if (params != null) {
-            m_properties.fixYColTo(params.getTargetColumnName());
-            ArrayList<String> variables = new ArrayList<String>(params.getMap()
-                    .keySet());
-            // remove the target attribute from the variables list
-            variables.remove(params.getTargetColumnName());
-            m_properties.fixXColTo(variables.toArray(new String[0]));
-        }
-        // clear the plot
-        m_plot.clear();
-        // could be the property handler,
-        m_plot.setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
-        // or the data table.
-        m_plot.modelDataChanged(rows, provider.getParams());
-    }
-
-    /**
-     * @see org.knime.core.node.NodeView#onClose()
-     */
-    @Override
-    protected void onClose() {
-        m_plot.shutDown();
-    }
-
-    /**
-     * @see org.knime.core.node.NodeView#onOpen()
-     */
-    @Override
-    protected void onOpen() {
-        m_plot.setHiLiteHandler(getNodeModel().getInHiLiteHandler(0));
-    }
 }

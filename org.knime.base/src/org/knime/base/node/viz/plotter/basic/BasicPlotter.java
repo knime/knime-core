@@ -282,7 +282,6 @@ public abstract class BasicPlotter extends AbstractPlotter {
                 new DoubleCell(value)));
         }
         ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);
-        fitToScreen();
     }
     
     

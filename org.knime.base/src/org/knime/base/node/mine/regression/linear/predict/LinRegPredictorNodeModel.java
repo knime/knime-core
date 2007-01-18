@@ -58,8 +58,7 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class LinRegPredictorNodeModel extends NodeModel implements
-        LinRegDataProvider {
+public class LinRegPredictorNodeModel extends NodeModel {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(LinRegPredictorNodeModel.class);
@@ -272,6 +271,13 @@ public class LinRegPredictorNodeModel extends NodeModel implements
     public DataArray getRowContainer() {
         return null;
     }
+    
+    /**
+     * @see org.knime.base.node.viz.plotter.data.DataProvider#getDataArray(int)
+     */
+    public DataArray getDataArray(int index) {
+		return null;
+	}
 
     /**
      * @see NodeModel#loadInternals(File, ExecutionMonitor)
