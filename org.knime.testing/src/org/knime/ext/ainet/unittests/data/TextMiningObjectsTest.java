@@ -25,11 +25,15 @@
 
 package org.knime.ext.ainet.unittests.data;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
 import junit.framework.TestCase;
 
+import org.knime.ext.ainet.core.netimpl.hibernateresources.AiNetHibernateUtil;
 import org.knime.ext.ainet.data.textmining.DocumentAuthorFactory;
 import org.knime.ext.ainet.data.textmining.DocumentFactory;
 import org.knime.ext.ainet.data.textmining.ProcessingInfoFactory;
@@ -52,6 +56,9 @@ import org.knime.ext.textmining.data.TermDocumentFrequencySet;
  */
 public class TextMiningObjectsTest extends TestCase {
     
+    private static final String CHARACTER_TESTFILE_URL = 
+        "org/knime/ext/ainet/unittests/data/moreThan4000CharacterTestFile.txt";
+    
     private final Set<DocumentCategory> m_testCategories = 
         new HashSet<DocumentCategory>();
 
@@ -62,35 +69,42 @@ public class TextMiningObjectsTest extends TestCase {
      * 
      */
     public TextMiningObjectsTest() {
-        m_testCategories.add(new DocumentCategory("junitTestCategory"));
-        m_testSources.add(new DocumentSource("junitTestSource"));
+        m_testCategories.add(new DocumentCategory("junitTestCategory12"));
+        m_testSources.add(new DocumentSource("junitTestSource1"));
     }
 
     /**
      * Test method for Document creation
      * {@link org.knime.ext.ainet.data.textmining.DocumentFactory#create(
      * org.knime.ext.textmining.data.Document)}.
+     * @throws IOException If the test file couldn't be read
      */
-    public final void testCreateDocument() {
+    public final void testCreateDocument() throws IOException {
         //test a document with a fulltext longer than 4000 character
-        String file = "Fulltext > 4000 character TestFile";
+        String file = "Fulltext > 4000 character TestFile1";
         Set<DocumentAuthor> authors = 
             new HashSet<DocumentAuthor>(2);
         authors.add(
-                DocumentAuthorFactory.create("junitLast1", "junitFirst1"));
+                DocumentAuthorFactory.create("junitLast11", "junitFirst11"));
         authors.add(
-                DocumentAuthorFactory.create("junitLast2", "junitFirst2"));
-        String fullText = "In der einfachen Suche können Sie in die Suchmaske ein oder mehrere beliebige Suchworte (z. Bsp. Nachname des Autors, Titelwort, Schlagwort) eingeben. Über das Index Pull-Down-Menü kann ein bestimmtes Suchfeld fest eingestellt werden. Sie können direkt suchen oder sich mit dem Button Index aufblättern eine alphabetische Liste der Suchbegriffe anzeigen lassen. Dies ist dann sinnvoll, wenn Sie sich zum Beispiel bei der Schreibweise eines Namens oder Begriffes nicht sicher sind. Mit einem * hinter Ihrem Suchbegriff können Sie beliebige Wortendungen mitsuchen.\r\n" + 
-                "In der einfachen Suche können Sie in die Suchmaske ein oder mehrere beliebige Suchworte (z. Bsp. Nachname des Autors, Titelwort, Schlagwort) eingeben. Über das Index Pull-Down-Menü kann ein bestimmtes Suchfeld fest eingestellt werden. Sie können direkt suchen oder sich mit dem Button Index aufblättern eine alphabetische Liste der Suchbegriffe anzeigen lassen. Dies ist dann sinnvoll, wenn Sie sich zum Beispiel bei der Schreibweise eines Namens oder Begriffes nicht sicher sind. Mit einem * hinter Ihrem Suchbegriff können Sie beliebige Wortendungen mitsuchen.\r\n" + 
-                "In der einfachen Suche können Sie in die Suchmaske ein oder mehrere beliebige Suchworte (z. Bsp. Nachname des Autors, Titelwort, Schlagwort) eingeben. Über das Index Pull-Down-Menü kann ein bestimmtes Suchfeld fest eingestellt werden. Sie können direkt suchen oder sich mit dem Button Index aufblättern eine alphabetische Liste der Suchbegriffe anzeigen lassen. Dies ist dann sinnvoll, wenn Sie sich zum Beispiel bei der Schreibweise eines Namens oder Begriffes nicht sicher sind. Mit einem * hinter Ihrem Suchbegriff können Sie beliebige Wortendungen mitsuchen.\r\n" + 
-                "In der einfachen Suche können Sie in die Suchmaske ein oder mehrere beliebige Suchworte (z. Bsp. Nachname des Autors, Titelwort, Schlagwort) eingeben. Über das Index Pull-Down-Menü kann ein bestimmtes Suchfeld fest eingestellt werden. Sie können direkt suchen oder sich mit dem Button Index aufblättern eine alphabetische Liste der Suchbegriffe anzeigen lassen. Dies ist dann sinnvoll, wenn Sie sich zum Beispiel bei der Schreibweise eines Namens oder Begriffes nicht sicher sind. Mit einem * hinter Ihrem Suchbegriff können Sie beliebige Wortendungen mitsuchen.\r\n" + 
-                "In der einfachen Suche können Sie in die Suchmaske ein oder mehrere beliebige Suchworte (z. Bsp. Nachname des Autors, Titelwort, Schlagwort) eingeben. Über das Index Pull-Down-Menü kann ein bestimmtes Suchfeld fest eingestellt werden. Sie können direkt suchen oder sich mit dem Button Index aufblättern eine alphabetische Liste der Suchbegriffe anzeigen lassen. Dies ist dann sinnvoll, wenn Sie sich zum Beispiel bei der Schreibweise eines Namens oder Begriffes nicht sicher sind. Mit einem * hinter Ihrem Suchbegriff können Sie beliebige Wortendungen mitsuchen.\r\n" + 
-                "In der einfachen Suche können Sie in die Suchmaske ein oder mehrere beliebige Suchworte (z. Bsp. Nachname des Autors, Titelwort, Schlagwort) eingeben. Über das Index Pull-Down-Menü kann ein bestimmtes Suchfeld fest eingestellt werden. Sie können direkt suchen oder sich mit dem Button Index aufblättern eine alphabetische Liste der Suchbegriffe anzeigen lassen. Dies ist dann sinnvoll, wenn Sie sich zum Beispiel bei der Schreibweise eines Namens oder Begriffes nicht sicher sind. Mit einem * hinter Ihrem Suchbegriff können Sie beliebige Wortendungen mitsuchen.\r\n" + 
-                "In der einfachen Suche können Sie in die Suchmaske ein oder mehrere beliebige Suchworte (z. Bsp. Nachname des Autors, Titelwort, Schlagwort) eingeben. Über das Index Pull-Down-Menü kann ein bestimmtes Suchfeld fest eingestellt werden. Sie können direkt suchen oder sich mit dem Button Index aufblättern eine alphabetische Liste der Suchbegriffe anzeigen lassen. Dies ist dann sinnvoll, wenn Sie sich zum Beispiel bei der Schreibweise eines Namens oder Begriffes nicht sicher sind. Mit einem * hinter Ihrem Suchbegriff können Sie beliebige Wortendungen mitsuchen.\r\n" + 
-                "In der einfachen Suche können Sie in die Suchmaske ein oder mehrere beliebige Suchworte (z. Bsp. Nachname des Autors, Titelwort, Schlagwort) eingeben. Über das Index Pull-Down-Menü kann ein bestimmtes Suchfeld fest eingestellt werden. Sie können direkt suchen oder sich mit dem Button Index aufblättern eine alphabetische Liste der Suchbegriffe anzeigen lassen. Dies ist dann sinnvoll, wenn Sie sich zum Beispiel bei der Schreibweise eines Namens oder Begriffes nicht sicher sind. Mit einem * hinter Ihrem Suchbegriff können Sie beliebige Wortendungen mitsuchen.\r\n" + 
-                "In der einfachen Suche können Sie in die Suchmaske ein oder mehrere beliebige Suchworte (z. Bsp. Nachname des Autors, Titelwort, Schlagwort) eingeben. Über djetzt Suchworte (z. Bsp. Nachname des Autors, Titelwort, Schlagwort) eingeben. Über djetzt Suchworte (z. Bsp. Nachname des Autors, Titelwort, Schlagwort) eingeben. Über djetztENDEENDEENDEENDE!!!";
+                DocumentAuthorFactory.create("junitLast21", "junitFirst21"));
+        //get the more then 4000 character test file
+        java.net.URL configFile = 
+            AiNetHibernateUtil.class.getClassLoader().getResource(
+                    CHARACTER_TESTFILE_URL);
+        final FileReader r = new FileReader(configFile.getFile());
+        final BufferedReader br = new BufferedReader(r);
+        StringBuilder builder = new StringBuilder();
+        String line = br.readLine();
+        while(line != null) {
+            builder.append(line);
+            line = br.readLine();
+        }
+        br.close();
+        r.close();
+        String fullText = builder.toString();
         PublicationDate date = new PublicationDate();
-        String title = "Junit document title";
+        String title = "Junit document title12";
         Document expectedDoc = DocumentFactory.create(title, fullText, 
                 fullText, file, authors, date, DocumentType.UNKNOWN,
                 m_testSources, m_testCategories);
@@ -103,7 +117,7 @@ public class TextMiningObjectsTest extends TestCase {
         authors.clear();
         fullText = 
             "In der einfachen Suche können Sie in die Suchmaske ein oder ";
-        title = "Junit document title2";
+        title = "Junit document title21";
         expectedDoc = DocumentFactory.create(title, fullText, 
                 fullText, file, authors, date, DocumentType.UNKNOWN,
                 m_testSources, m_testCategories);
@@ -122,7 +136,7 @@ public class TextMiningObjectsTest extends TestCase {
         date = new PublicationDate(2007, 1);
          fullText = 
             "JUnit test with none db objects ";
-        title = "Junit document title3 - None db objects";
+        title = "Junit document title3 - None db objects1";
         Document doc = new Document(title, fullText, 
                 fullText, file, authors, date, DocumentType.UNKNOWN,
                 m_testSources, m_testCategories);
@@ -144,13 +158,13 @@ public class TextMiningObjectsTest extends TestCase {
         Set<DocumentAuthor> authors = 
             new HashSet<DocumentAuthor>(2);
         authors.add(
-                DocumentAuthorFactory.create("junitLast1", "junitFirst1"));
+                DocumentAuthorFactory.create("junitLast11", "junitFirst11"));
         authors.add(
-                DocumentAuthorFactory.create("junitLast2", "junitFirst2"));
+                DocumentAuthorFactory.create("junitLast21", "junitFirst21"));
         PublicationDate date = new PublicationDate(2007);
          String fullText = 
             "In der einfachen Suche können Sie in die Suchmaske ein oder ";
-        String title = "Junit document title2";
+        String title = "Junit document title21";
         Document doc = DocumentFactory.create(title, fullText, 
                 fullText, file, authors, date, DocumentType.UNKNOWN,
                 m_testSources, m_testCategories);
@@ -172,11 +186,11 @@ public class TextMiningObjectsTest extends TestCase {
         date = new PublicationDate(2007, 1);
          fullText = 
             "JUnit test with none db objects ";
-        title = "Junit document title3 - None db objects";
+        title = "Junit document - None db objects1";
         doc = new Document(title, fullText, 
                 fullText, file, authors, date, DocumentType.UNKNOWN,
                 m_testSources, m_testCategories);
-        term = new Term("junitTerm", PartOfSpeechTag.UNKNOWN);
+        term = new Term("junitTerm2", PartOfSpeechTag.UNKNOWN);
         info = new ProcessingInfo("junitTest", "junit test cases");
         expectedSet = 
             TermDocumentFrequenceSetFactory.create(term, doc, 123, info);
