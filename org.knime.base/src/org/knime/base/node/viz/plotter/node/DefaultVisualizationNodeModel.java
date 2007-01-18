@@ -165,7 +165,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         if (excludedCols.size() > 0) {
             setWarningMessage("Some columns are ignored! Not compatible " 
                     + "with DoubleValue or NominalValue or no or too many" 
-                    + " possible values");   
+                    + " possible values or no lower and upper bound provided.");   
         }
         // check for empty table
         if (inSpecs[0].getNumColumns() - excludedCols.size() <= 0){
