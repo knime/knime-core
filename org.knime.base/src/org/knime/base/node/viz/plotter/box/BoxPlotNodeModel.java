@@ -132,11 +132,15 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
         List<DataColumnSpec>numericCols = new ArrayList<DataColumnSpec>();
         for (DataColumnSpec colSpec : inSpecs[0]) {
             if (colSpec.getType().isCompatible(DoubleValue.class)) {
-                numericCols.add(colSpec);
+            	if (colSpec.getDomain().hasBounds()){
+            		numericCols.add(colSpec);
+            	}
             }
         }
         if (numericCols.size() == 0) {
-            setWarningMessage("Only numeric columns are displayed!");
+            throw new InvalidSettingsException(
+            		"Only numeric columns can be displayed! " 
+        			+"Found no numeric column or only some without bounds.");
         } 
         return new DataTableSpec[]{createOutputSpec(numericCols)};
     }
