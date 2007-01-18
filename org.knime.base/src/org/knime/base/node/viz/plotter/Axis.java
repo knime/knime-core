@@ -30,6 +30,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.event.MouseEvent;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.swing.JComponent;
 
@@ -107,7 +110,10 @@ public class Axis extends JComponent {
 //    private int m_nrOfTicks;
     private int m_tickDist;
     
-    private String[] m_complLabels;
+    private List<Integer>m_tickPositions;
+    
+    private CoordinateMapping[] m_coordMap;
+   
 
     /**
      * Creates a new ruler in either horizontal or vertical orientation.
@@ -122,41 +128,46 @@ public class Axis extends JComponent {
                     + " be either Header.HORIZONTAL or Header.VERTICAL.");
         }
         m_fullLength = length;
-
+        m_tickPositions = new LinkedList<Integer>();
         m_horizontal = (orientation == HORIZONTAL);
-//        setToolTipText("complete label");
+        setToolTipText("complete label");
     }
     
 
     /*
      * 
      * @see javax.swing.JComponent#getToolTipText(java.awt.event.MouseEvent)
-     *
+     */
     @Override
     public String getToolTipText(final MouseEvent event) {
-        if (m_complLabels == null || m_tickDist == 0) {
+        if (m_coordMap == null || m_coordMap.length == 0 
+        		|| m_tickDist == 0 || !m_coordinate.isNominal()) {
             return "";
         }
-        Point p = event.getPoint();
-        int halfTickDist = (m_tickDist / 2);
-        int bucket;
+        int pivot;
         if (m_horizontal) {
-            bucket = (int)Math.ceil((p.x  + halfTickDist) / m_tickDist);
+        	pivot = event.getX() - m_startTickOffset;
+            for (int i = 0; i < m_coordMap.length; i++) {
+            	CoordinateMapping mapping = m_coordMap[i];
+            	if (pivot > mapping.getMappingValue() - m_tickDist / 3
+            			&& pivot < mapping.getMappingValue() + m_tickDist / 3) {
+            		return mapping.getDomainValueAsString();
+            	}
+            }        	
         } else {
-            bucket = (int)Math.ceil(((getHeight() - p.y)) 
-                    / m_tickDist);
+        	// map the y value to screen coordinates
+        	pivot = getHeight() - event.getY();
+            for (CoordinateMapping mapping : m_coordMap) {
+            	if (pivot > mapping.getMappingValue() - m_tickDist / 3
+            			&& pivot < mapping.getMappingValue() + m_tickDist / 3) {
+            		return mapping.getDomainValueAsString();
+            	}
+            }
         }
-            if (bucket > m_complLabels.length - 1) {
-                bucket = m_complLabels.length - 1;
-            }
-            if (bucket < 0) {
-                bucket = 0;
-            }
-        String tooltip = m_complLabels[bucket];
-        setToolTipText(tooltip);
-        return tooltip;
+
+        return "";
     }
-    */
+    
 
     /**
      * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
@@ -168,6 +179,8 @@ public class Axis extends JComponent {
         if (g.getClipBounds() == null) {
             return;
         }
+        
+        m_tickPositions.clear();
 
         Graphics2D g2 = (Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
@@ -212,29 +225,25 @@ public class Axis extends JComponent {
         if (m_coordinate == null) {
             return;
         }
-        CoordinateMapping[] mappings = m_coordinate.getTickPositions(
+        m_coordMap = m_coordinate.getTickPositions(
                 length - 2 * m_startTickOffset, true);
-        if (mappings.length == 0) {
+        if (m_coordMap.length == 0) {
             return;
         }
         
-        m_tickDist = length / mappings.length;
+        m_tickDist = length / m_coordMap.length;
         
         if (m_horizontal) {
         // check the distance between the ticks
-            m_rotateXLabels = LabelPaintUtil.rotateLabels(mappings, m_tickDist, 
+            m_rotateXLabels = LabelPaintUtil.rotateLabels(m_coordMap, m_tickDist, 
                 g.getFontMetrics());
         } else {
-            m_rotateYLabels = LabelPaintUtil.rotateLabels(mappings, 
+            m_rotateYLabels = LabelPaintUtil.rotateLabels(m_coordMap, 
                     SIZE - TICKLENGTH, g.getFontMetrics());
         }
         if (m_coordinate.isNominal()) {
             // store the complete labels to avoid "..." in the tooltip
-            m_complLabels = new String[mappings.length];
-            for (int i = 0; i < mappings.length; i++) {
-                m_complLabels[i] = mappings[i].getDomainValueAsString();
-            }
-            mappings = ((NominalCoordinate)m_coordinate)
+            m_coordMap = ((NominalCoordinate)m_coordinate)
                 .getReducedTickPositions(length - 2 * m_startTickOffset);
             
         }
@@ -246,8 +255,8 @@ public class Axis extends JComponent {
         boolean useOffset = false;
         
         // draw all ticks except the last
-        for (int i = 0; i < mappings.length; i++) {
-            CoordinateMapping mapping = mappings[i];
+        for (int i = 0; i < m_coordMap.length; i++) {
+            CoordinateMapping mapping = m_coordMap[i];
             String label = mapping.getDomainValueAsString();
             drawTick(g, (long)mapping.getMappingValue() + m_startTickOffset,
                     label, useOffset);
@@ -292,11 +301,13 @@ public class Axis extends JComponent {
                     x -= lablePixelLength / 2;
                 }
                 if (x + lablePixelLength > m_fullLength) {
-                    // if the lable woulb be printed beyond the right border
+                    // if the lable would be printed beyond the right border
                     x = m_fullLength - lablePixelLength - 1;
                 }
             }
-
+            
+            // store the tick position for later tooltip retrieval
+            m_tickPositions.add(x);
             int labelY = SIZE - TICKLENGTH - 3;
             if (useOffset) {
                 labelY -= HORIZ_OFFSET;
@@ -329,7 +340,9 @@ public class Axis extends JComponent {
             }
 
             g.drawLine(SIZE - TICKLENGTH - 1, y, SIZE - 1, y);
-
+            
+            m_tickPositions.add(y);
+            
             if (!m_coordinate.isNominal()) {
                 // for the label we adjust the coordinates
                 int lablePixelHeight = g.getFontMetrics().getHeight();
