@@ -177,14 +177,16 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                         .getUpperBound()).getDoubleValue();
                 outputColSpecs.add(colSpec);
                 double progress = currColumn++ * subProgress;
+                
                 exec.setProgress(progress, "sorting: " + table
                         .getDataTableSpec().getColumnSpec(colIdx).getName());
-//                System.out.println("progress: " + subProgress);
                 List<String> col = new ArrayList<String>();
                 col.add(colSpec.getName());
+                ExecutionContext exec2 = exec.createSubExecutionContext(
+                        subProgress);
                 SortedTable sorted = new SortedTable(table, 
                         col, new boolean[]{true}, 
-                        exec);
+                        exec2);
                 int currRow = 0;
                 double lastValue = 1;
                 for (DataRow row : sorted) {
