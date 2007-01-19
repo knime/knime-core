@@ -77,6 +77,9 @@ public class ScatterPlotter extends TwoColumnPlotter {
     
     private int m_jitterRate = 1;
     
+    /**
+     * Flag whether to show or hide the unhilited dots.
+     */
     private boolean m_hide;
    
     
@@ -262,6 +265,14 @@ public class ScatterPlotter extends TwoColumnPlotter {
      */
     protected boolean isHideMode() {
         return m_hide;
+    }
+    
+    /**
+     * 
+     * @param hide flag whether to hide unhilited dots.
+     */
+    public void setHideMode(final boolean hide) {
+        m_hide = hide;
     }
     
     /**

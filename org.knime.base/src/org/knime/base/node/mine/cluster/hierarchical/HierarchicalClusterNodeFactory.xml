@@ -16,8 +16,8 @@
 			<li>
 			Top-down or divisive, i.e. the algorithm starts with all data 
 			points in one huge cluster and the most dissimilar datapoints are 
-			divided into subclusters until every data point is in exactly one 
-			cluster.
+			divided into subclusters until each cluster consists of exactly one 
+			data point.
 			</li>
 			<li>
 			Bottom-up or agglomerative, i.e. the algorithm starts with every 
@@ -51,22 +51,6 @@
 		clustering algorithm produces a series of cluster results, the number of 
 		clusters for the output has to be defined in the dialog.
 		</p>
-		<p>
-			Views:
-			<ul>
-			<li>Dendrogram:
-			The view shows a dendrogram which displays the whole cluster 
-			hierarchy. At the bottom are all datapoints. The closest data points are connected 
-			where the height of the connection shows the distance between them. 
-			Each cluster can be selected and hilited. All contained subclusters will be hilited, too.
-			</li>
-			<li>Distance plot:
-			The distance plot displays the distances between the cluster for each
-			number of clusters. This view can help to determine a "good" number of clusters, since 
-			there will be sudden jumps in the level of similarity as dissimilar groups are fused.
-			</li>
-			</ul>
-			</p>
 		</intro>
 		<option name="Number output cluster">Which level of the hierarchy to use 
 			for the output column.</option>
@@ -86,6 +70,30 @@
 	</ports>	
 	<views>
 		<view index="0" name="Dendrogram/Distance View">
+			<ul>
+			<li>Dendrogram:
+			The view shows a dendrogram which displays the whole cluster 
+			hierarchy. At the bottom are all datapoints. The closest data points are connected, 
+			where the height of the connection shows the distance between them. 
+			Thus, the y coordinate displays the distance of the fusions and thereby 
+			also the hierarchy level. The x axis is nominal and displays the single data points
+			with their row ID.
+			Each cluster can be selected and hilited. All contained subclusters will be hilited, too.
+			</li>
+			<li>Distance plot:
+			The distance plot displays the distances between the cluster for each
+			number of clusters. This view can help to determine a "good" number of clusters, since 
+			there will be sudden jumps in the level of similarity as dissimilar groups are fused.
+			The y coordinate is the distance of the fusion, the x axis the number of the fusion, 
+			i.e. the hierarchy level.
+			The tooltip over the datapoints provides detailed information about that point,
+			where "x" is the hierarchy level and "y" the distance of that fusion.
+			The points can not be hilited, since the distances correspond to the height of
+			the dendrogram not to any data points. 
+			The appearance tab let you adjust the view by hiding or displaying the dots, 
+			change the line thickness and the dot size.
+			</li>
+			</ul>		
 		</view>
 	</views>
 	

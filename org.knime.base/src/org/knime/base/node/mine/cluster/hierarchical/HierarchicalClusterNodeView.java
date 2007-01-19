@@ -23,14 +23,22 @@
 
 package org.knime.base.node.mine.cluster.hierarchical;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 
+import javax.swing.JPopupMenu;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.base.node.util.DataArray;
+import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.DataProvider;
+import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
 import org.knime.base.node.viz.plotter.dendrogram.ClusterNode;
 import org.knime.base.node.viz.plotter.dendrogram.DendrogramPlotter;
 import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
+import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.NodeModel;
 
@@ -45,6 +53,10 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
     private DendrogramPlotter m_dendroPlotter;
     
     private ScatterPlotter m_distancePlotter;
+    
+    private DistancePlotProperties m_properties;
+    
+    private int m_thickness = 1;
 
     /**
      * creates a new ScorerNodeView with scroll bars.
@@ -60,7 +72,59 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
             final DendrogramPlotter dendrogramPlotter) { 
         super(nodeModel, dendrogramPlotter, "Dendrogram");
         m_dendroPlotter = dendrogramPlotter;
-        m_distancePlotter = new ScatterPlotter();
+        m_properties = new DistancePlotProperties();
+        m_distancePlotter = new ScatterPlotter(new ScatterPlotterDrawingPane(),
+                m_properties) {
+
+            @Override
+            public void fillPopupMenu(JPopupMenu popupMenu) {
+                // nothing: no hiliting supported
+            }
+
+            @Override
+            public void hiLiteSelected() {
+                // nothing: no hilite supported
+            }
+
+            @Override
+            public void unHiLiteSelected() {
+                // nothing: no hilite supported
+            }
+            
+        };
+        // no selection should be possible so remove the selection listener 
+        m_distancePlotter.removeMouseListener(
+                AbstractPlotter.SelectionMouseListener.class);
+        
+        m_properties.getDotSizeSpinner().addChangeListener(
+                new ChangeListener() {
+                    public void stateChanged(ChangeEvent e) {
+                        ((ScatterPlotterDrawingPane)m_distancePlotter
+                                .getDrawingPane()).setDotSize((Integer)
+                                m_properties.getDotSizeSpinner().getValue());
+                        m_distancePlotter.getDrawingPane().repaint();
+                    }
+            
+        });
+        m_properties.getThicknessSpinner().addChangeListener(
+                new ChangeListener() {
+                    public void stateChanged(ChangeEvent e) {
+                        m_thickness = (Integer)m_properties
+                            .getThicknessSpinner().getValue();
+                        modelChanged();
+                    }
+            
+        });
+        m_properties.getShowHideCheckbox().addChangeListener(
+                new ChangeListener() {
+                    public void stateChanged(ChangeEvent e) {
+                        m_distancePlotter.setHideMode(
+                                !m_properties.getShowHideCheckbox()
+                                .isSelected());
+                        m_distancePlotter.updatePaintModel();
+                    }
+            
+        });        
         addVisualization(m_distancePlotter, "Distance");
     }
 
@@ -100,7 +164,9 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
                         ((DoubleValue)distanceTable.getDataTableSpec()
                                 .getColumnSpec(1).getDomain().getUpperBound())
                                 .getDoubleValue());
-        m_distancePlotter.addLine(distanceTable, 1, Color.BLACK, null);
+        ((BasicDrawingPane)m_distancePlotter.getDrawingPane()).clearPlot();
+        m_distancePlotter.addLine(distanceTable, 1, Color.BLACK, 
+                new BasicStroke(m_thickness));
         
         m_distancePlotter.updatePaintModel();
         m_dendroPlotter.updatePaintModel();
