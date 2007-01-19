@@ -45,10 +45,10 @@ public class DiffNodeModel extends NodeModel {
     public static final String CFGKEY_EVALUATORKEY = "TESTEVALUATOR";
 
     /** Config key for the lower tolerance. */
-    public static final String CFGKEY_LOWERTOLERANCEKEY = "LOWERTOLERANCE";
+    public static final String CFGKEY_LOWERTOLERANCEKEY = "LOWERTOLLERANCE";
 
     /** Config key for the upper tolerance. */
-    public static final String CFGKEY_UPPERERTOLERANCEKEY = "UPPERTOLERANCE";
+    public static final String CFGKEY_UPPERERTOLERANCEKEY = "UPPERTOLLERANCE";
 
     private DataTable m_diffTable;
 
