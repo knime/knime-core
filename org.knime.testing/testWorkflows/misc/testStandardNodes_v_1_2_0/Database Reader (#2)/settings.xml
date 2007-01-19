@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="Database Reader"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="driver" type="xstring" value="org.postgresql.Driver"/>
+<entry key="statement" type="xstring" value="SELECT * FROM iris"/>
+<entry key="database" type="xstring" value="jdbc:postgresql://merkur99.inf.uni-konstanz.de:5432/knime"/>
+<entry key="user" type="xstring" value="dbuser"/>
+<config key="loaded_driver">
+<entry key="array-size" type="xint" value="1"/>
+<entry key="0" type="xstring" value="S:\Datenbanken\PostgreSQL\postgresql-8.1-407.jdbc3.jar"/>
+</config>
+<entry key="password" type="xstring" value="6xIpHfBpNZ4="/>
+</config>
+<config key="data_meta_file">
+<entry key="data_files_directory" type="xstring" value="data"/>
+<config key="output_0">
+<entry key="data_files_directory" type="xstring" value="data_0"/>
+</config>
+</config>
+<config key="model_files"/>
+</config>
