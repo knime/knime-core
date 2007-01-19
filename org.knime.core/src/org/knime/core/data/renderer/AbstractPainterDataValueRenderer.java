@@ -35,6 +35,8 @@ import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
+import org.knime.core.data.DataColumnSpec;
+
 /**
  * Abstract implementation of a {@link DataValueRenderer} that renders more
  * complex scenes than just ordinary text. This abstract already supplies 
@@ -93,6 +95,14 @@ public abstract class AbstractPainterDataValueRenderer
      */
     public String getDescription() {
         return "Default";
+    }
+    
+    /**
+     * Returns always <code>true</code>.
+     * @see DataValueRenderer#accepts(DataColumnSpec)
+     */
+    public boolean accepts(final DataColumnSpec spec) {
+        return true;
     }
 
     /**
