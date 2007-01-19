@@ -113,7 +113,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
 
         m_stringColumn = new DialogComponentColumnSelection(
                 BitVectorGeneratorNodeModel.CFG_STRING_COLUMN,
-                "String column containing the items", 0, false,
+                "String column to be parsed", 0, false,
                 StringValue.class);
         m_stringColumn.setEnabled(false);
         m_threshold = new JSpinner(new SpinnerNumberModel(1.0, 0.0,

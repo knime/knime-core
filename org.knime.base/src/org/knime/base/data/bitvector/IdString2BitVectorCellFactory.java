@@ -37,7 +37,7 @@ import org.knime.core.node.NodeLogger;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class IdString2BitVectorCellFactory extends BitVectorCellFactory {
+public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
     
     /** 
      * Create new cell factory that provides one column given by newColSpec.
@@ -55,13 +55,11 @@ public class IdString2BitVectorCellFactory extends BitVectorCellFactory {
 
     private int m_nrOfSetBits = 0;
     
-    private int m_processedRows = 0;
-    
     private int m_maxPos = Integer.MIN_VALUE;
     
     private boolean m_hasPrintedWarning = false;
     
-    private boolean m_wasSuccessful;
+    private boolean m_wasSuccessful = false;
 
 
     /**
@@ -71,43 +69,56 @@ public class IdString2BitVectorCellFactory extends BitVectorCellFactory {
      */
     @Override
     public DataCell getCell(final DataRow row) {
+        incrementNrOfRows();
         if (!row.getCell(getColumnIndex()).getType().isCompatible(
                 StringValue.class)) {
-            LOGGER.warn(row.getCell(getColumnIndex()) + " is not a String value!"
+            LOGGER.warn(row.getCell(getColumnIndex())
+                    + " is not a String value!"
                     + " Replacing it with missing value!");
             return DataType.getMissingCell();
         }
-        m_processedRows++;
-        BitSet currBitSet = new BitSet();
-        String toParse = ((StringValue)row.getCell(getColumnIndex()))
-            .getStringValue();
-        String[] numbers = toParse.split("\\s");
-        for (int i = 0; i < numbers.length; i++) {
-            try {
+        if (row.getCell(getColumnIndex()).isMissing()) {
+            return DataType.getMissingCell();
+        }
+        String toParse =
+            ((StringValue)row.getCell(getColumnIndex()))
+                    .getStringValue();
+        try {
+            int newlySetBits = 0;
+            BitSet currBitSet = new BitSet();
+            String[] numbers = toParse.split("\\s");
+            for (int i = 0; i < numbers.length; i++) {
                 int pos = Integer.parseInt(numbers[i].trim());
                 m_maxPos = Math.max(m_maxPos, pos);
-                currBitSet.set(pos);
-            } catch (NumberFormatException nfe) {
-                String message = "Unable to convert \"" + toParse + "\" to "
-                + "bit vector: " + nfe.getMessage();
-                if (m_hasPrintedWarning) {
-                    LOGGER.debug(message);
-                } else {
-                    LOGGER.warn(message + " (Suppress further warnings!)", nfe);
-                    m_hasPrintedWarning = true;
+                if (pos < 0) {
+                    return DataType.getMissingCell(); 
                 }
-                return DataType.getMissingCell();
-            }            
+                if (!currBitSet.get(pos)) {
+                    currBitSet.set(pos);
+                    newlySetBits++;
+                }
+            }
+            m_nrOfSetBits += newlySetBits;
+            m_wasSuccessful = true;
+            return new BitVectorCell(currBitSet, m_maxPos);
+        } catch (NumberFormatException nfe) {
+            String message =
+                    "Unable to convert \"" + toParse + "\" to "
+                            + "bit vector: " + nfe.getMessage();
+            if (m_hasPrintedWarning) {
+                LOGGER.debug(message);
+            } else {
+                LOGGER.warn(message + " (Suppress further warnings!)", nfe);
+                m_hasPrintedWarning = true;
+            }
+            return DataType.getMissingCell();
         }
-        m_nrOfSetBits += numbers.length;
-        m_wasSuccessful = true;
-        return new BitVectorCell(currBitSet, m_maxPos);
     }
 
     
     /**
      * 
-     * @see org.knime.base.data.bitvector.BitVectorCellFactory#wasSuccessful()
+     * @see org.knime.base.data.bitvector.BitVectorColumnCellFactory#wasSuccessful()
      */
     @Override
     public boolean wasSuccessful() {
@@ -128,8 +139,7 @@ public class IdString2BitVectorCellFactory extends BitVectorCellFactory {
      */
     @Override
     public int getNumberOfNotSetBits() {
-        // processedrows * m_maxPos = all possible positions
-        int allPositions = m_processedRows * m_maxPos;
+        int allPositions = getNrOfProcessedRows() * m_maxPos;
         return allPositions - m_nrOfSetBits;
     }
 }

@@ -37,7 +37,7 @@ import org.knime.core.node.NodeLogger;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class BitString2BitVectorCellFactory extends BitVectorCellFactory {
+public class BitString2BitVectorCellFactory extends BitVectorColumnCellFactory {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(BitString2BitVectorCellFactory.class);
@@ -66,24 +66,29 @@ public class BitString2BitVectorCellFactory extends BitVectorCellFactory {
      */
     @Override
     public DataCell getCell(final DataRow row) {
+        incrementNrOfRows();
         BitSet bitSet = new BitSet();
         DataCell cell = row.getCell(getColumnIndex());
         if (!cell.getType().isCompatible(StringValue.class)) {
             LOGGER.warn(cell + " is not a String! "
                     + "Replacing it with missing value");
             return DataType.getMissingCell();
+        } else if (cell.isMissing()) {
+            return DataType.getMissingCell();
         } else {
             String bitString = ((StringValue)cell).getStringValue();
             bitSet = new BitSet(bitString.length());
             int pos = 0;
+            int numberOf0s = 0;
+            int numberOf1s = 0;
             for (int i = 0; i < bitString.length(); i++) {
                 char c = bitString.charAt(i);
                 if (c == '0') {
                     pos++;
-                    m_nrOfNotSetBits++;
+                    numberOf0s++;
                 } else if (c == '1') {
                     bitSet.set(pos++);
-                    m_nrOfSetBits++;
+                    numberOf1s++;
                 } else {
                     LOGGER.warn("Found invalid character: " + c
                             + ". Returning missing cell!");
@@ -91,6 +96,8 @@ public class BitString2BitVectorCellFactory extends BitVectorCellFactory {
 
                 }
             }
+            m_nrOfNotSetBits += numberOf0s;
+            m_nrOfSetBits += numberOf1s;
         }
         m_wasSuccessful = true;
         return new BitVectorCell(bitSet, bitSet.size());
@@ -98,7 +105,7 @@ public class BitString2BitVectorCellFactory extends BitVectorCellFactory {
 
     /**
      * 
-     * @see org.knime.base.data.bitvector.BitVectorCellFactory#wasSuccessful()
+     * @see org.knime.base.data.bitvector.BitVectorColumnCellFactory#wasSuccessful()
      */
     @Override
     public boolean wasSuccessful() {

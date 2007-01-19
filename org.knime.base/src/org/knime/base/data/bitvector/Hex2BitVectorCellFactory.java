@@ -41,7 +41,7 @@ import org.knime.core.node.NodeLogger;
  * @see org.knime.base.data.replace.ReplacedColumnsTable
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class Hex2BitVectorCellFactory extends BitVectorCellFactory {
+public class Hex2BitVectorCellFactory extends BitVectorColumnCellFactory {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(Hex2BitVectorCellFactory.class);
 
@@ -76,6 +76,7 @@ public class Hex2BitVectorCellFactory extends BitVectorCellFactory {
      */
     @Override
     public DataCell getCell(final DataRow row) {
+        incrementNrOfRows();
         DataCell old = row.getCell(getColumnIndex());
         if (old.isMissing()) {
             return DataType.getMissingCell();

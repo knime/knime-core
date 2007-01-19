@@ -64,7 +64,7 @@ public class BitVectorGeneratorView extends NodeView {
     protected void modelChanged() {
         BitVectorGeneratorNodeModel model = 
             (BitVectorGeneratorNodeModel)getNodeModel();
-        if (model.getNumberOfProcessedRows() > 0) {
+        if (model != null) {
             setTextArea();
         }
     }
@@ -81,9 +81,9 @@ public class BitVectorGeneratorView extends NodeView {
      */
     @Override
     protected void onOpen() {
-        int nrOfRows = ((BitVectorGeneratorNodeModel)getNodeModel())
-                .getNumberOfProcessedRows();
-        if (nrOfRows > 0) {
+        BitVectorGeneratorNodeModel model = ((BitVectorGeneratorNodeModel)
+                getNodeModel());
+        if (model != null) {
             setTextArea();
         }
     }
@@ -98,18 +98,18 @@ public class BitVectorGeneratorView extends NodeView {
         buffer.append("<tr><td>Number of processed rows: </td>"
                 + "<td align=\"right\">" + model.getNumberOfProcessedRows()
                 + " </td></tr>");
-        buffer.append("<tr><td>Resulting BitVector length: </td>"
-                + "<td align=\"right\">" + model.getBitVectorLength()
-                + "</td></tr>");
         buffer.append("<tr><td>Total number of 0s: </td>"
                 + "<td align=\"right\">" + model.getTotalNrOf0s()
                 + " </td></tr>");
         buffer.append("<tr><td>Total number of 1s: </td>"
                 + "<td align=\"right\">" + model.getTotalNrOf1s()
                 + "</td></tr>");
-        double ratio = (int)(((double)model.getTotalNrOf1s() / (double)model
+        double ratio = 0.0;
+        if (model.getTotalNrOf0s() > 0) {
+            ratio = (int)(((double)model.getTotalNrOf1s() / (double)model
                 .getTotalNrOf0s()) * ROUNDING_CONSTANT);
-        ratio = ratio / ROUNDING_CONSTANT;
+            ratio = ratio / ROUNDING_CONSTANT;
+        }
         buffer.append("<tr><td>Ratio of 1s to 0s: </td>"
                 + "<td align=\"right\">" + ratio + "</td></tr></table>");
         buffer.append("</body></html>");
