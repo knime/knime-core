@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="MultiLayer Perceptron"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="model">
+<entry key="ClassColumn" type="xstring" value="Cluster Membership"/>
+<config key="wekaoptions">
+<entry key="array-size" type="xint" value="21"/>
+<entry key="0" type="xstring" value="-L"/>
+<entry key="1" type="xstring" value="0.3"/>
+<entry key="2" type="xstring" value="-M"/>
+<entry key="3" type="xstring" value="0.2"/>
+<entry key="4" type="xstring" value="-N"/>
+<entry key="5" type="xstring" value="500"/>
+<entry key="6" type="xstring" value="-V"/>
+<entry key="7" type="xstring" value="0"/>
+<entry key="8" type="xstring" value="-S"/>
+<entry key="9" type="xstring" value="0"/>
+<entry key="10" type="xstring" value="-E"/>
+<entry key="11" type="xstring" value="20"/>
+<entry key="12" type="xstring" value="-H"/>
+<entry key="13" type="xstring" value="a"/>
+<entry key="14" type="xstring" value=""/>
+<entry key="15" type="xstring" value=""/>
+<entry key="16" type="xstring" value=""/>
+<entry key="17" type="xstring" value=""/>
+<entry key="18" type="xstring" value=""/>
+<entry key="19" type="xstring" value=""/>
+<entry key="20" type="xstring" value=""/>
+</config>
+</config>
+<config key="spec_files">
+<entry key="output_0" type="xstring" value="spec_0.xml"/>
+</config>
+<entry key="data_meta_file" type="xstring" value="data.xml"/>
+<config key="model_files"/>
+</config>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="bitVectorParams">
+<entry key="nrOfRows" type="xint" value="150"/>
+<entry key="bitVectorLength" type="xint" value="4"/>
+<entry key="nrOfZeros" type="xint" value="1406"/>
+<entry key="nrOfOnes" type="xint" value="994"/>
+</config>
