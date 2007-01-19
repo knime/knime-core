@@ -102,7 +102,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     public static final String MAX_EPOCHS = "max_epochs";
     
     /** Maximum number of epochs to train. */
-    private int m_maxEpochs;
+    private int m_maxEpochs = -1;
 
     /** Contains model info after training. */
     private ModelContent m_modelInfo;
@@ -326,7 +326,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         // shrink after commit
         m_shrinkAfterCommit = settings.getBoolean(SHRINK_AFTER_COMMIT);
         // maximum epochs
-        m_maxEpochs = settings.getInt(MAX_EPOCHS);
+        m_maxEpochs = settings.getInt(MAX_EPOCHS, -1);
     }
 
     /**
