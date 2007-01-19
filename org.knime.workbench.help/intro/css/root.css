@@ -44,7 +44,7 @@ body {
 	position : relative;	top : 150;
 }
 #page-links a {
-	position : relative;	width : 86px;	margin-left : 1em;	margin-right : 1em;	text-align : center;	vertical-align : top;
+	position : relative;	width : 212px;	margin-left : 1em;	margin-right : 1em;	text-align : center;	vertical-align : top;
 }
 /* float left for Moz so the items all appear inline */
 #page-links > a {
@@ -76,7 +76,7 @@ body {
 #page-links a.left:hover .link-label,
 #page-links a.left:focus .link-label,
 #page-links a.left:active .link-label {
-	text-align: left;	display: block;	position: absolute;	top : 120 %;	left : 1.2em;
+	text-align: left;	display: block;	position: absolute;	top : 260px;	left : 1.2em;
 	width : 180px;
 }
 /* hide description and remove it from static HTML flow, until user hovers over link */
@@ -87,7 +87,7 @@ body {
 #page-links a.left:hover .text,
 #page-links a.left:focus .text,
 #page-links a.left:active .text {
-	text-align: left;	display: block;	position: absolute;	left : 1.2em;	top: 145%;
+	text-align: left;	display: block;	position: absolute;	left : 1.2em;	top: 320px;
 	width : 180px;
 }
 /* Set up right links orientation now. */
@@ -140,7 +140,7 @@ a#news .background-image {
 }
 #action-links a .background-image,
 #action-links a #workbench_img {
-	height : 53px;	width : 53px;	text-align : center;	vertical-align : top;
+	height : 250px;	width : 212px;	text-align : center;	vertical-align : top;
 }
 /* special case for mozilla */
 #action-links a > .background-image,
