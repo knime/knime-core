@@ -375,7 +375,7 @@ public class AnalyzeLogFile {
         BufferedReader logReader = new BufferedReader(new FileReader(logFile));
 
         File ownerlessFile = new File(m_tmpDir, 
-                "OwnerlessTests" + m_startTime + ".txt");
+                "_OwnerlessTests" + m_startTime + ".txt");
         
         FileWriter olfWriter = new FileWriter(ownerlessFile);
 
