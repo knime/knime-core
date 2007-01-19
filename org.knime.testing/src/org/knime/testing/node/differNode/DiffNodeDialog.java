@@ -52,23 +52,23 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
 
     private JPanel m_content;
 
-    private JPanel m_tollerancePanel;
+    private JPanel m_tolerancePanel;
 
-    private static final int m_defaultLowerTollerance = 5;
+    private static final int m_defaultLowerTolerance = 5;
 
-    private static final int m_defaultUpperTollerance = 0;
+    private static final int m_defaultUpperTolerance = 0;
 
-    private JSpinner m_lowerTolleranceSpinner;
+    private JSpinner m_lowerToleranceSpinner;
 
-    private JSpinner m_upperTolleranceSpinner;
+    private JSpinner m_upperToleranceSpinner;
 
-    private int m_loadedLowerTollerance = -1;
+    private int m_loadedLowerTolerance = 0;
 
-    private int m_loadedUpperTollerance = -1;
+    private int m_loadedUpperTolerance = 0;
 
-    private JLabel m_lowerTolleranceLable;
+    private JLabel m_lowerToleranceLable;
 
-    private JLabel m_upperTolleranceLable;
+    private JLabel m_upperToleranceLable;
 
     /**
      * enumeration of differnd evaluators for the test results
@@ -133,40 +133,40 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
     private Component buildContentPanel() {
         m_content = new JPanel();
         m_content.setLayout(new BorderLayout());
-        m_tollerancePanel = buildTollerancePanel();
+        m_tolerancePanel = buildTolerancePanel();
         JComboBox combo = getEvalCombo();
         m_content.add(combo, BorderLayout.NORTH);
-        m_content.add(m_tollerancePanel, BorderLayout.SOUTH);
+        m_content.add(m_tolerancePanel, BorderLayout.SOUTH);
 
         return m_content;
     }
 
-    private JPanel buildTollerancePanel() {
+    private JPanel buildTolerancePanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(2, 2));
 
-        m_lowerTolleranceLable = new JLabel("lower Tollerance");
-        panel.add(m_lowerTolleranceLable);
+        m_lowerToleranceLable = new JLabel("lower tolerance (error%)");
+        panel.add(m_lowerToleranceLable);
         SpinnerModel smin = null;
-        if (m_loadedLowerTollerance > 0) {
-            smin = new SpinnerNumberModel(m_loadedLowerTollerance, 0, 100, 1);
+        if (m_loadedLowerTolerance > 0) {
+            smin = new SpinnerNumberModel(m_loadedLowerTolerance, 0, 100, 1);
         } else {
-            smin = new SpinnerNumberModel(m_defaultLowerTollerance, 0, 100, 1);
+            smin = new SpinnerNumberModel(m_defaultLowerTolerance, 0, 100, 1);
         }
-        m_lowerTolleranceSpinner = new JSpinner(smin);
-        panel.add(m_lowerTolleranceSpinner);
+        m_lowerToleranceSpinner = new JSpinner(smin);
+        panel.add(m_lowerToleranceSpinner);
 
-        m_upperTolleranceLable = new JLabel("upper Tollerance");
-        panel.add(m_upperTolleranceLable);
+        m_upperToleranceLable = new JLabel("upper tolerance (error%)");
+        panel.add(m_upperToleranceLable);
 
         SpinnerModel smax = null;
-        if (m_loadedUpperTollerance > 0) {
-            smax = new SpinnerNumberModel(m_loadedUpperTollerance, 0, 100, 1);
+        if (m_loadedUpperTolerance > 0) {
+            smax = new SpinnerNumberModel(m_loadedUpperTolerance, 0, 100, 1);
         } else {
-            smax = new SpinnerNumberModel(m_defaultUpperTollerance, 0, 100, 1);
+            smax = new SpinnerNumberModel(m_defaultUpperTolerance, 0, 100, 1);
         }
-        m_upperTolleranceSpinner = new JSpinner(smax);
-        panel.add(m_upperTolleranceSpinner);
+        m_upperToleranceSpinner = new JSpinner(smax);
+        panel.add(m_upperToleranceSpinner);
 
         showSpinners(getEvalCombo().getSelectedItem().equals(
                 Evaluators.LearnerScoreComperator));
@@ -176,10 +176,10 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
 
     private void showSpinners(boolean b) {
         
-        m_lowerTolleranceLable.setVisible(b);
-        m_upperTolleranceLable.setVisible(b);
-        m_lowerTolleranceSpinner.setVisible(b);
-        m_upperTolleranceSpinner.setVisible(b);
+        m_lowerToleranceLable.setVisible(b);
+        m_upperToleranceLable.setVisible(b);
+        m_lowerToleranceSpinner.setVisible(b);
+        m_upperToleranceSpinner.setVisible(b);
     }
 
     private JComboBox getEvalCombo() {
@@ -191,26 +191,27 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
     }
 
     private int getLowerTollerance() {
-        if (m_lowerTolleranceSpinner != null) {
-            Object valueObject = m_lowerTolleranceSpinner.getValue();
+        if (m_lowerToleranceSpinner != null) {
+            Object valueObject = m_lowerToleranceSpinner.getValue();
             if (valueObject instanceof Integer)
                 return ((Integer)valueObject).intValue();
         }
-        return m_defaultLowerTollerance;
+        return m_defaultLowerTolerance;
     }
 
     private int getUpperTollerance() {
-        if (m_upperTolleranceSpinner != null) {
-            Object valueObject = m_upperTolleranceSpinner.getValue();
+        if (m_upperToleranceSpinner != null) {
+            Object valueObject = m_upperToleranceSpinner.getValue();
             if (valueObject instanceof Integer)
                 return ((Integer)valueObject).intValue();
         }
-        return m_defaultUpperTollerance;
+        return m_defaultUpperTolerance;
     }
 
     /**
-     * @see org.knime.core.node.NodeDialogPane#loadSettingsFrom(org.knime.core.node.NodeSettings,
-     *      org.knime.core.data.DataTableSpec[])
+     * @see org.knime.core.node.NodeDialogPane#loadSettingsFrom(
+     * org.knime.core.node.NodeSettings,
+     * org.knime.core.data.DataTableSpec[])
      */
     @Override
     protected void loadSettingsFrom(NodeSettingsRO settings, DataTableSpec[] specs)
@@ -224,13 +225,13 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
 
             getEvalCombo().setSelectedItem(eval);
             if (eval.equals(Evaluators.LearnerScoreComperator)) {
-                m_loadedLowerTollerance = settings
-                        .getInt(DiffNodeModel.CFGKEY_LOWERTOLLERANCEKEY);
-                m_loadedUpperTollerance = settings
-                        .getInt(DiffNodeModel.CFGKEY_UPPERERTOLLERANCEKEY);
+                m_loadedLowerTolerance = settings
+                        .getInt(DiffNodeModel.CFGKEY_LOWERTOLERANCEKEY);
+                m_loadedUpperTolerance = settings
+                        .getInt(DiffNodeModel.CFGKEY_UPPERERTOLERANCEKEY);
             }
-            m_lowerTolleranceSpinner.setValue(new Integer(m_loadedLowerTollerance));
-            m_upperTolleranceSpinner.setValue(new Integer(m_loadedUpperTollerance));
+            m_lowerToleranceSpinner.setValue(new Integer(m_loadedLowerTolerance));
+            m_upperToleranceSpinner.setValue(new Integer(m_loadedUpperTolerance));
         } catch (IllegalArgumentException e) {
             eval = Evaluators.TableDiffer;
         } catch (InvalidSettingsException e) {
@@ -240,7 +241,8 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
     }
 
     /**
-     * @see org.knime.core.node.NodeDialogPane#saveSettingsTo(org.knime.core.node.NodeSettings)
+     * @see org.knime.core.node.NodeDialogPane#saveSettingsTo(
+     * org.knime.core.node.NodeSettings)
      */
     @Override
     protected void saveSettingsTo(NodeSettingsWO settings)
@@ -250,13 +252,18 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
                         .name());
         if (getEvalCombo().getSelectedItem().equals(
                 Evaluators.LearnerScoreComperator)) {
-            settings.addInt(DiffNodeModel.CFGKEY_LOWERTOLLERANCEKEY,
+            settings.addInt(DiffNodeModel.CFGKEY_LOWERTOLERANCEKEY,
                     getLowerTollerance());
-            settings.addInt(DiffNodeModel.CFGKEY_UPPERERTOLLERANCEKEY,
+            settings.addInt(DiffNodeModel.CFGKEY_UPPERERTOLERANCEKEY,
                     getUpperTollerance());
         }
     }
 
+    /**
+     * 
+     * @see java.awt.event.ActionListener#actionPerformed(
+     * java.awt.event.ActionEvent)
+     */
     public void actionPerformed(ActionEvent e) {
         showSpinners(getEvalCombo().getSelectedItem().equals(
                 Evaluators.LearnerScoreComperator));
