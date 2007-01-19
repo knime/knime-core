@@ -123,9 +123,9 @@ public class KnimeTestCase extends TestCase {
      */
     @Override
     public void runTest() {
-        logger.info("<Start> Test: '"
+        logger.info("<Start> Test='"
                 + m_knimeSettings.getParentFile().getName()
-                + " ---------------------------------------------------------");
+                + "' --------------------------------------------------------");
         String owner = "";
         if (m_owners.size() > 0) {
             StringBuilder owns = new StringBuilder();
@@ -206,9 +206,9 @@ public class KnimeTestCase extends TestCase {
 
             Assert.assertEquals(m_errorAppender.getMessageCount(), 0);
         } finally {
-            logger.info("<End> Test: '"
+            logger.info("<End> Test='"
                     + m_knimeSettings.getParentFile().getName()
-                    + " -----------------------------------------------------");
+                    + "' ----------------------------------------------------");
 
         }
     }
