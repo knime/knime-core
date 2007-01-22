@@ -43,7 +43,6 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
-
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewConnectionComponentEditPolicy;
@@ -56,14 +55,15 @@ import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
  * @author Florian Georg, University of Konstanz
  */
 public class ConnectionContainerEditPart extends AbstractConnectionEditPart
-        implements WorkflowListener {
+        implements WorkflowListener {//, ZoomListener {
     private final boolean m_isModelPortConnection;
 
     /**
      * The constructor.
      * 
-     * @param isModelConn a flag telling if this is a connection between model
-     *            ports or not.
+     * @param isModelConn
+     *            a flag telling if this is a connection between model ports or
+     *            not.
      */
     public ConnectionContainerEditPart(final boolean isModelConn) {
         m_isModelPortConnection = isModelConn;
@@ -72,19 +72,21 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     /**
      * Creates a GEF command to shift the connections bendpoints.
      * 
-     * @param request the underlying request holding information about the shift
+     * @param request
+     *            the underlying request holding information about the shift
      * @return the command to change the bendpoint locations
      */
     public Command getBendpointAdaptionCommand(final Request request) {
 
-        ChangeBoundsRequest boundsRequest = (ChangeBoundsRequest)request;
+        ChangeBoundsRequest boundsRequest = (ChangeBoundsRequest) request;
 
-        ZoomManager zoomManager = (ZoomManager)(getRoot().getViewer()
-                .getProperty(ZoomManager.class.toString()));
+        ZoomManager zoomManager =
+                (ZoomManager) (getRoot().getViewer()
+                        .getProperty(ZoomManager.class.toString()));
 
         Point moveDelta = boundsRequest.getMoveDelta();
         return new ChangeBendPointLocationCommand(
-                (ConnectionContainer)getModel(), moveDelta, zoomManager);
+                (ConnectionContainer) getModel(), moveDelta, zoomManager);
     }
 
     /**
@@ -93,7 +95,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     @Override
     public void activate() {
         super.activate();
-        ((ConnectionContainer)getModel()).addWorkflowListener(this);
+        ((ConnectionContainer) getModel()).addWorkflowListener(this);
     }
 
     /**
@@ -102,7 +104,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     @Override
     public void deactivate() {
         super.deactivate();
-        ((ConnectionContainer)getModel()).removeWorkflowListener(this);
+        ((ConnectionContainer) getModel()).removeWorkflowListener(this);
     }
 
     /**
@@ -129,15 +131,16 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     @Override
     protected IFigure createFigure() {
 
-        PolylineConnection conn = (PolylineConnection)super.createFigure();
+        PolylineConnection conn = (PolylineConnection) super.createFigure();
 
         // Bendpoints
-        SnapOffBendPointConnectionRouter router = new SnapOffBendPointConnectionRouter();
+        SnapOffBendPointConnectionRouter router =
+                new SnapOffBendPointConnectionRouter();
         conn.setConnectionRouter(router);
         conn.setRoutingConstraint(new ArrayList());
 
         // Decorations
-        //PolygonDecoration pD = new PolygonDecoration();
+        // PolygonDecoration pD = new PolygonDecoration();
         if (m_isModelPortConnection) {
             // pD.setScale(9, 5);
             conn.setForegroundColor(Display.getCurrent().getSystemColor(
@@ -145,7 +148,17 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
             conn.setLineWidth(1);
         }
 
-        //conn.setTargetDecoration(pD);
+//        // register as zoom listener to adapt the line width
+//        ZoomManager zoomManager =
+//                (ZoomManager) getRoot().getViewer().getProperty(
+//                        ZoomManager.class.toString());
+//
+//        zoomManager.addZoomListener(this);
+//
+//        conn.setLineWidth(calculateLineWidthFromZoomLevel(zoomManager
+//                        .getZoom()));
+
+        // conn.setTargetDecoration(pD);
 
         return conn;
     }
@@ -165,16 +178,18 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     protected void refreshVisuals() {
         super.refreshVisuals();
         ModellingConnectionExtraInfo ei = null;
-        ei = (ModellingConnectionExtraInfo)((ConnectionContainer)getModel())
-                .getExtraInfo();
+        ei =
+                (ModellingConnectionExtraInfo) ((ConnectionContainer) getModel())
+                        .getExtraInfo();
         if (ei == null) {
             return;
         }
 
-        Connection fig = (Connection)getFigure();
+        Connection fig = (Connection) getFigure();
         // recreate list of bendpoints
         int[][] p = ei.getAllBendpoints();
-        ArrayList<AbsoluteBendpoint> constraint = new ArrayList<AbsoluteBendpoint>();
+        ArrayList<AbsoluteBendpoint> constraint =
+                new ArrayList<AbsoluteBendpoint>();
         for (int i = 0; i < p.length; i++) {
             AbsoluteBendpoint bp = new AbsoluteBendpoint(p[i][0], p[i][1]);
             constraint.add(bp);
@@ -182,4 +197,29 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 
         fig.setRoutingConstraint(constraint);
     }
+
+//    private int calculateLineWidthFromZoomLevel(final double zoom) {
+//        double newZoomValue = zoom;
+//        // if the zoom level is larger than 100% the width
+//        // is adapted accordingly
+//        if (zoom < 1.0) {
+//            newZoomValue = 1.0;
+//        }
+//
+//        double connectinWidth = Math.round(newZoomValue);
+//
+//        return (int) connectinWidth;
+//    }
+//
+//    /**
+//     * Adapts the line width according to the zoom level.
+//     * 
+//     * @param zoom
+//     *            the zoom level from the zoom manager
+//     */
+//    public void zoomChanged(final double zoom) {
+//
+//        ((PolylineConnection) getFigure())
+//                .setLineWidth(calculateLineWidthFromZoomLevel(zoom));
+//    }
 }
