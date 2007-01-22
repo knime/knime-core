@@ -1,5 +1,4 @@
-This plugin project provides nodes and functionality as an extension for KNIME,
-the Konstanz Information Miner.
+This plugin project provides nodes and functionality as an extension for KNIME.
 
 It is released under the terms of the Aladdin free public license (see the file 
 LICENSE.TXT, which should be located in the same directory as this file). 

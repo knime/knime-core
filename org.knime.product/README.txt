@@ -1,5 +1,5 @@
 
-KNIME - the Konstanz Information Miner, version 1.2.0pre,
+KNIME - version 1.2.0pre,
 (including WEKA and the WEKA integration plugin).
 ============================================================
 

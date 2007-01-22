@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <welcomePage
-   title="Welcome to the Konstanz Information Miner"
+   title="Welcome to the KNIME"
    format="wrap">
   
   <intro>
   This page will help familarize you with the 
-  <b>Konstanz Information Miner</b> - an integrated environment for
+  <b>KNIME</b> - an integrated environment for
   intelligent data analysis, information mining and visualization.
   </intro>
    

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.knime.features.base"
-      label="Konstanz Information Miner"
+      label="KNIME"
       version="1.2.0"
       provider-name="Chair for Bioinformatics and Information Mining, Prof. Berthold, University of Konstanz, Germany"
       plugin="org.knime.core"
       image="icons/knime64.gif">
 
    <description url="http://www.knime.org/">
-      This features containes KNIME, the Konstanz Information Miner. All plugins needed to run the information mining workbench are included. Note that there are additional plugins available.
+      This features containes KNIME. All plugins needed to run the information mining workbench are included. Note that there are additional plugins available.
    </description>
 
    <copyright>

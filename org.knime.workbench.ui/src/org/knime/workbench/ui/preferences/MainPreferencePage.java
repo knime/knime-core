@@ -66,7 +66,7 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         // we use the pref store of the UI plugin
         setPreferenceStore(KNIMEUIPlugin.getDefault().getPreferenceStore());
 
-        setDescription("Konstanz Information Miner global preferences");
+        setDescription("KNIME global preferences");
 
         // get the preference store for the UI plugin
         IPreferenceStore store = KNIMEUIPlugin.getDefault()
