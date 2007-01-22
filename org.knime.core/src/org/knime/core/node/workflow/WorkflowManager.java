@@ -1675,6 +1675,19 @@ public class WorkflowManager implements WorkflowListener {
                 NodeSettings.loadFromXML(new FileInputStream(workflowFile));
         m_loadedVersion =
                 settings.getString(CFG_VERSION, KNIMEConstants.VERSION);
+        if (!KNIMEConstants.VERSION.equalsIgnoreCase(m_loadedVersion)) {
+            if (m_parent == null) {
+                LOGGER.warn(
+                        "The current KNIME version (" + KNIMEConstants.VERSION 
+                        + ") is different from the one that created the"
+                        + " workflow (" + m_loadedVersion 
+                        + ") you are loading. In some rare cases, it"
+                        + " might not be possible to load all data"
+                        + " or some nodes can't be configured."
+                        + " Please re-configure and/or re-execute these"
+                        + " nodes.");
+            }
+        }
         load(settings);
 
         File parentDir = workflowFile.getParentFile();
