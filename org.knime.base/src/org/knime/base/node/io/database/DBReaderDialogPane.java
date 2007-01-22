@@ -96,8 +96,8 @@ public class DBReaderDialogPane extends NodeDialogPane {
         JPanel parentPanel = new JPanel(new GridLayout(4, 1));
         m_driver.setEditable(false);
         m_driver.setFont(font);
-        m_driver.setPreferredSize(new Dimension(335, 20));
-        m_load.setPreferredSize(new Dimension(60, 20));
+        m_driver.setPreferredSize(new Dimension(320, 20));
+        m_load.setPreferredSize(new Dimension(75, 20));
         m_load.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 JFileChooser chooser = createFileChooser();
