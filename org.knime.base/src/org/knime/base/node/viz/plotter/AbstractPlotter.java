@@ -49,6 +49,7 @@ import javax.swing.JMenu;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
 
 import org.knime.base.util.coordinate.Coordinate;
 import org.knime.base.util.coordinate.NumericCoordinate;
@@ -904,7 +905,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
                 m_listenedPane.repaint();
             }
             if (!m_isDragged) {
-                if (e.isPopupTrigger()) {
+                // On linux, e.isPopupTrigger never returns true, apparently
+                if (e.isPopupTrigger() 
+                        || SwingUtilities.isRightMouseButton(e)) {
                     showPopupMenu(e.getPoint());
                     return;
                 } else {
@@ -990,7 +993,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         @Override
         public void mouseReleased(final MouseEvent e) {
             if (!m_isDragged) {
-                if (e.isPopupTrigger()) {
+                // On linux, e.isPopupTrigger never returns true, apparently
+                if (e.isPopupTrigger() 
+                        || SwingUtilities.isRightMouseButton(e)) {
                     showPopupMenu(e.getPoint());
                     return;
                 } else {
@@ -1086,7 +1091,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
          */
         @Override
         public void mouseReleased(final MouseEvent e) {
-            if (!m_isDragged && e.isPopupTrigger()) {
+            // On linux, e.isPopupTrigger never returns true, apparently
+            if (!m_isDragged && e.isPopupTrigger() 
+                    || SwingUtilities.isRightMouseButton(e)) {
                 showPopupMenu(e.getPoint());
             }
             m_drawingPane.setMouseDown(false);
