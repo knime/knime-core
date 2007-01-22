@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="SOTA"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings"/>
+<config key="model">
+<entry key="LrWinner" type="xdouble" value="0.1"/>
+<entry key="LrAncestor" type="xdouble" value="0.05"/>
+<entry key="LrSister" type="xdouble" value="0.01"/>
+<entry key="MinError" type="xdouble" value="0.1"/>
+<entry key="Resource" type="xdouble" value="0.01"/>
+<entry key="Variability" type="xdouble" value="0.0"/>
+<entry key="UseVar" type="xboolean" value="false"/>
+<entry key="UseDist" type="xstring" value="Euclidean"/>
+<config key="Include">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xstring" value="sepal length"/>
+<entry key="1" type="xstring" value="sepal width"/>
+<entry key="2" type="xstring" value="petal length"/>
+<entry key="3" type="xstring" value="petal width"/>
+</config>
+<config key="Exclude">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<entry key="HFD" type="xboolean" value="false"/>
+<entry key="HFL" type="xstring" isnull="true" value=""/>
+</config>
+<config key="data_meta_file">
+<entry key="data_files_directory" type="xstring" value="data"/>
+</config>
+<config key="model_files"/>
+</config>
