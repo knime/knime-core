@@ -136,7 +136,7 @@ public class KDTree<T> {
 
         PriorityQueue<NearestNeighbour<T>> pq =
                 new PriorityQueue<NearestNeighbour<T>>();
-        pq.add(new NearestNeighbour<T>(null, maxDist));
+        pq.add(new NearestNeighbour<T>(null, maxDist * maxDist));
 
         double[] lowerBounds = new double[m_k];
         double[] upperBounds = new double[m_k];
