@@ -61,6 +61,12 @@ public class WorkflowLayout extends FreeformLayout {
 
         // determine constraint from figures bounds
         Rectangle currentBounds = child.getBounds();
-        return new Rectangle(currentBounds.x, currentBounds.y, -1, -1);
+        int width = currentBounds.width;
+        int height = currentBounds.height;
+        if (width <= 0 || height <= 0) {
+            width = -1;
+            height = -1;
+        }
+        return new Rectangle(currentBounds.x, currentBounds.y, width, height);
     }
 }
