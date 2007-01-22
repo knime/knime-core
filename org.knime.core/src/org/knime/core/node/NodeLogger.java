@@ -132,11 +132,14 @@ public final class NodeLogger {
         File legacyFile = new File(knimeDir, "log4j-1.1.0.xml");
         if (legacyFile.exists()) {
             if (!legacyFile.renameTo(log4j)) {
-                System.err.println("Your log4j-configuration file "
-                        + "'log4j-1.1.0.xml' could not be renamed to "
-                        + "'log4j.xml'. KNIME now uses 'log4j.xml' as default "
-                        + "configuration file. Please remove the old file "
-                        + "if a 'log4j.xml' already exists.");
+                System.err.println("There are two log4j configuration files"
+                        + " in your KNIME home directory ('" 
+                        + knimeDir.getAbsolutePath()
+                        + " ') - or this directory is write-protected.");
+                System.err.println("The 'log4j.xml' is the one actually used."
+                        + " Merge changes you may have made"
+                        + " to 'log4j-1.1.0.xml' and remove"
+                        + " 'log4j-1.1.0.xml' to get rid of this message.");
             }
         }
 
