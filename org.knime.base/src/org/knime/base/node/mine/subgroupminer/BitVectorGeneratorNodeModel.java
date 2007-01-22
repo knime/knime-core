@@ -210,7 +210,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                     "A String column must be specified!");
         }
         settings.getString(CFG_STRING_TYPE);
-        settings.getBoolean(CFG_REPLACE);
+        settings.getBoolean(CFG_REPLACE, false);
     }
 
     /**
