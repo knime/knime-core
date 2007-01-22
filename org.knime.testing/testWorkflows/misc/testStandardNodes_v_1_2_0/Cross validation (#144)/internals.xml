@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
-<config key="XValInternals">
-<entry key="partitionerNodeID" type="xint" value="148"/>
-<entry key="aggregateNodeID" type="xint" value="149"/>
-</config>
