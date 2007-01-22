@@ -30,8 +30,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.knime.base.node.mine.regression.linear.LinearRegressionParams;
-import org.knime.base.node.mine.regression.linear.view.LinRegDataProvider;
-import org.knime.base.node.util.DataArray;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -257,27 +255,6 @@ public class LinRegPredictorNodeModel extends NodeModel {
         c.append(fac);
         return c;
     }
-
-    /**
-     * @see LinRegDataProvider#getParams()
-     */
-    public LinearRegressionParams getParams() {
-        return null;
-    }
-
-    /**
-     * @see LinRegDataProvider#getRowContainer()
-     */
-    public DataArray getRowContainer() {
-        return null;
-    }
-    
-    /**
-     * @see org.knime.base.node.viz.plotter.data.DataProvider#getDataArray(int)
-     */
-    public DataArray getDataArray(int index) {
-		return null;
-	}
 
     /**
      * @see NodeModel#loadInternals(File, ExecutionMonitor)
