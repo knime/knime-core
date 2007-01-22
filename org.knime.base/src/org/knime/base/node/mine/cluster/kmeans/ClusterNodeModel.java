@@ -119,6 +119,10 @@ public class ClusterNodeModel extends NodeModel {
     private static final String CFG_PROTOTYPE = "prototype";
 
     private static final String CFG_USED_COLS = "usedColumns";
+    
+    private static final String CFG_FEATURE_NAMES = "FeatureNames";
+    
+    private static final String CFG_HILITEMAPPING = "HiLiteMapping";
 
     /**
      * Constructor, remember parent and initialize status.
@@ -589,9 +593,17 @@ public class ClusterNodeModel extends NodeModel {
             possibleValues[i] = key;
         }
         // create the domain
+        // 1) guess an unused name for the new column (fixes bug #1022)
+        String colNameGuess = "Cluster";
+        int uniqueNr = 0;
+        while (m_spec.getColumnSpec(colNameGuess) != null) {
+            uniqueNr++;
+            colNameGuess = "Cluster_" + uniqueNr;
+        }
+        // 2) create spec
         DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(
                 possibleValues);
-        DataColumnSpecCreator creator = new DataColumnSpecCreator("Cluster",
+        DataColumnSpecCreator creator = new DataColumnSpecCreator(colNameGuess,
                 StringCell.TYPE);
         creator.setDomain(domainCreator.createDomain());
         // create the appended column spec
@@ -620,10 +632,18 @@ public class ClusterNodeModel extends NodeModel {
             for (int i = 0; i < m_nrClusters; i++) {
                 m_clusters[i] = settings.getDoubleArray(CFG_CLUSTER + i);
             }
-            m_featureNames = settings.getStringArray("FeatureNames");
-            NodeSettingsRO mapSet = settings.getNodeSettings("HiLiteMapping");
-            m_mapper = DefaultHiLiteMapper.load(mapSet);
-            m_translator.setMapper(m_mapper);
+            try {
+                // loading the HiLite Mapper is a new (v1.2) feature
+                // ignore and set mapper to null if info is not available.
+                // (fixes bug #1016)
+                m_featureNames = settings.getStringArray(CFG_FEATURE_NAMES);
+                NodeSettingsRO mapSet = settings.getNodeSettings(CFG_HILITEMAPPING);
+                m_mapper = DefaultHiLiteMapper.load(mapSet);
+                m_translator.setMapper(m_mapper);
+            } catch (InvalidSettingsException e) {
+                m_mapper = null;
+                m_translator.setMapper(m_mapper);
+            }
         } catch (InvalidSettingsException e) {
             throw new IOException(e.getMessage());
         }
@@ -645,9 +665,9 @@ public class ClusterNodeModel extends NodeModel {
         for (int i = 0; i < m_nrClusters; i++) {
             internalSettings.addDoubleArray(CFG_CLUSTER + i, m_clusters[i]);
         }
-        internalSettings.addStringArray("FeatureNames", m_featureNames);
+        internalSettings.addStringArray(CFG_FEATURE_NAMES, m_featureNames);
         NodeSettingsWO mapSet = 
-            internalSettings.addNodeSettings("HiLiteMapping");
+            internalSettings.addNodeSettings(CFG_HILITEMAPPING);
         m_mapper.save(mapSet);
         File f = new File(internDir, SETTINGS_FILE_NAME);
         FileOutputStream out = new FileOutputStream(f);
