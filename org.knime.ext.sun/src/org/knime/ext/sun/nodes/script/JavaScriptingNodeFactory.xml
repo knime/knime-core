@@ -5,16 +5,43 @@
     <shortDescription>Calculates a new column based on java code snippets.</shortDescription>
     <fullDescription>
         <intro>
-			This node allows you to execute arbitrary java code to create
-			a new column or to replace an existing one. Enter the java code in 
-			the text area. To address certain input values of the table 
-			use <i>$name_of_col$</i>. For instance, the sum of the first two 
-			columns is <i>$col_1$ + $col_2$</i> (replace col_1 and col_2 by the 
-			name of the columns). Please also specify the return type with one 
-			of the radio buttons. The final value will be the result of your
-	        last statement (<b>after</b> last ';'). Note, you can also use static 
-	        methods of java utility classes, e.g. to get a column with random
-	        values, simply enter Math.random() and check the double return type.
+	        <p>
+				This node allows you to execute arbitrary java code to create
+				a new column or to replace an existing one. Enter the java code in 
+				the text area. To address certain input values of the table 
+				use <tt>$name_of_col$</tt>. For instance, the sum of the first two 
+				columns is <tt>$col_1$ + $col_2$</tt> (replace col_1 and col_2 by the 
+				name of the columns). Please also specify the return type with one 
+				of the radio buttons. The final value will be the result of your
+		        last statement (<b>after</b> last ';'). You can also use more complex 
+		        statements such as <i>if-else</i> switches. For instance, to bin a numeric
+		        column you could enter code as follows and check the String return type:
+	        </p>
+<pre>
+  String bin;
+  if ($col_1$ &lt; 0.5) {
+    bin  = "Very small";
+  } else if ($col_1$ &lt; 2.0) {
+    bin  = "Small";
+  } else if ($col_1$ &lt; 10.0) {
+    bin  = "Medium";
+  } else if ($col_1$ &lt; 20) {
+    bin  = "Large";
+  } else {
+    bin  = "Very Large";
+  };
+  bin 
+</pre>
+             <p>
+               It is advisable to use a designated return variable (<tt>bin</tt> in the example) that
+               gets assigned the actual return value. Note also that the last closing '}' character is followed
+               by an explicit ';'!
+             </p>
+		     <p>
+		        You can also use static methods of java utility classes, e.g. to get a 
+		        column with random values, simply enter <tt>Math.random()</tt> and 
+		        check the double return type.
+	        </p>
 		</intro>
 		<option name="Text Area">
 		  Enter your java code here (the entire source will be wrapped in a 
@@ -23,9 +50,9 @@
 		  for instance loops, enter a (potentially unnecessary) '<b>;</b>' 
 		  right before the return statement. You can add the name of a column 
 		  by clicking its name in the left list. Note that numeric 
-		  (double-compatible) columns will be handled as generic <i>double</i>,
-		  int-compatible columns as <i>int</i> and any other column type as 
-		  <i>String</i>.
+		  (double-compatible) columns will be handled as generic <tt>double</tt>,
+		  int-compatible columns as <tt>int</tt> and any other column type as 
+		  <tt>String</tt>.
 		</option>
 		<option name="Return type">
 		  Specify here the resulting type of your code snippet. Unfortunately
