@@ -1043,6 +1043,7 @@ public class WizardProjectsImportPage extends WizardPage implements
                         // -------------- Import Marking ----------------------
                         // KNIME code (dirty fix to avoid error logs during
                         // editor opening)
+                        // also possible to put it to the KNIME subclass
                         final IWorkspace workspace = ResourcesPlugin
                                 .getWorkspace();
                         String projectName = ((ProjectRecord) selected[i]).projectName;
