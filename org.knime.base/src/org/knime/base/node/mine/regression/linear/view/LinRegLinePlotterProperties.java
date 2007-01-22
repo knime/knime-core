@@ -86,6 +86,7 @@ public class LinRegLinePlotterProperties extends ScatterPlotterProperties {
      * 
      * @param spec the new {@link org.knime.core.data.DataTableSpec}
      */
+    @Override
     public void update(final DataTableSpec spec) {
         int xIdx = -1;
         int yIdx = -1;
@@ -117,6 +118,7 @@ public class LinRegLinePlotterProperties extends ScatterPlotterProperties {
      * @param xPreSelect the x column index (-1 if unknown)
      * @param yPreSelect the y column (-1 if unknown)
      */
+    @Override
     public void update(final DataTableSpec spec, final int xPreSelect,
             final int yPreSelect) {
         try {
@@ -131,19 +133,21 @@ public class LinRegLinePlotterProperties extends ScatterPlotterProperties {
             for (ItemListener listener : listeners) {
                 m_xSelector.removeItemListener(listener);
             }
-            // cleanup -> remove all items and add only the included
-            m_xSelector.removeAllItems();
-            List<String> survivors = Arrays.asList(m_includs);
-            for (DataColumnSpec colSpec : spec) {
-                if (!colSpec.getName().equals(m_targetColumn)
-                        && survivors.contains(colSpec.getName())) {
-                    m_xSelector.addItem(colSpec);
+            if (m_includs != null) {              
+                // cleanup -> remove all items and add only the included
+                m_xSelector.removeAllItems();
+                List<String> survivors = Arrays.asList(m_includs);
+                for (DataColumnSpec colSpec : spec) {
+                    if (!colSpec.getName().equals(m_targetColumn)
+                            && survivors.contains(colSpec.getName())) {
+                        m_xSelector.addItem(colSpec);
+                    }
                 }
-            }
-            // restore the previously selected
-            m_xSelector.setSelectedItem(oldSelected);
-            for (ItemListener listener : listeners) {
-                m_xSelector.addItemListener(listener);
+                // restore the previously selected
+                m_xSelector.setSelectedItem(oldSelected);
+                for (ItemListener listener : listeners) {
+                    m_xSelector.addItemListener(listener);
+                }
             }
         } catch (NotConfigurableException e) {
             LOGGER.warn(e.getMessage(), e);

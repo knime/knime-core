@@ -23,6 +23,9 @@
  */
 package org.knime.base.node.mine.regression.linear.view;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.knime.base.node.mine.regression.linear.LinearRegressionParams;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
@@ -88,7 +91,11 @@ public class LinRegLinePlotter extends ScatterPlotter {
                     ((NumericCoordinate)getXAxis().getCoordinate())
                             .getMaxDomainValue();
             String xName = getSelectedXColumn().getName();
-            if (!xName.equals(params.getTargetColumnName())) {
+            
+            List<String>includedList = Arrays.asList(includedCols);
+            
+            if (!xName.equals(params.getTargetColumnName())
+                    && includedList.contains(xName)) {
                 double yMin = params.getApproximationFor(xName, xMin);
                 double yMax = params.getApproximationFor(xName, xMax);
                 ((LinRegLineDrawingPane)getDrawingPane()).setLineFirstPoint(
@@ -129,7 +136,12 @@ public class LinRegLinePlotter extends ScatterPlotter {
                     ((NumericCoordinate)getXAxis().getCoordinate())
                             .getMaxDomainValue();
             String xName = getSelectedXColumn().getName();
-            if (!xName.equals(params.getTargetColumnName())) {
+            List<String>includedCols = Arrays.asList(
+                    ((LinRegDataProvider)getDataProvider())
+                .getIncludedColumns());
+            
+            if (!xName.equals(params.getTargetColumnName()) 
+                    && includedCols.contains(xName)) {
                 double yMin = params.getApproximationFor(xName, xMin);
                 double yMax = params.getApproximationFor(xName, xMax);
                 ((LinRegLineDrawingPane)getDrawingPane()).setLineFirstPoint(
