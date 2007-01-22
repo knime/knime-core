@@ -196,7 +196,15 @@ final class FileRowIterator extends RowIterator {
         int createdCols = 0;
 
         // first, create a row header. This will also read it from file, if any.
-        rowHeader = createRowHeader(m_rowNumber);
+        try {
+            rowHeader = createRowHeader(m_rowNumber);
+        } catch (FileTokenizerException fte) {
+            throw prepareForException(fte.getMessage() + " (line: "
+                    + m_tokenizer.getLineNumber() 
+                    + " source: '" + m_frSettings.getDataFileLocation()
+                    + "')", m_tokenizer.getLineNumber(), new StringCell("ERR"), 
+                    row);
+        }
 
         // we made sure before that there is at least one token in the stream
         assert rowHeader != null;
@@ -364,7 +372,8 @@ final class FileRowIterator extends RowIterator {
     private StringCell createRowHeader(final int rowNumber) {
 
         // the constructor sets m_rowHeaderPrefix if the file doesn't have one
-        assert (m_frSettings.getFileHasRowHeaders() || (m_rowHeaderPrefix != null));
+        assert (m_frSettings.getFileHasRowHeaders() 
+                || (m_rowHeaderPrefix != null));
 
         // if there is a row header in the file we must read it - independend
         // of if we are going to use it or not.
@@ -419,27 +428,35 @@ final class FileRowIterator extends RowIterator {
             // haven't seen the rowID so far.
             return newRowHeader;
         }
-
-        // we have seen this rowID before!
-        int idx = oldSuffix.intValue();
-
-        assert idx >= NOSUFFIX.intValue();
-
-        idx++;
-
-        if (oldSuffix == NOSUFFIX) {
-            // until now the NOSUFFIX placeholder was in the hash
-            assert idx - 1 == NOSUFFIX.intValue();
-            m_rowIDhash.put(newRowHeader, new MutableInteger(idx));
-        } else {
-            assert oldSuffix instanceof MutableInteger;
-            ((MutableInteger)oldSuffix).inc();
-            assert idx == oldSuffix.intValue();
-            // put back the old (incr.) suffix (overriden with NOSUFFIX).
-            m_rowIDhash.put(newRowHeader, oldSuffix);
+        
+        String result = newRowHeader;
+        while (oldSuffix != null) {
+            
+            // we have seen this rowID before!
+            int idx = oldSuffix.intValue();
+            
+            assert idx >= NOSUFFIX.intValue();
+            
+            idx++;
+            
+            if (oldSuffix == NOSUFFIX) {
+                // until now the NOSUFFIX placeholder was in the hash
+                assert idx - 1 == NOSUFFIX.intValue();
+                m_rowIDhash.put(result, new MutableInteger(idx));
+            } else {
+                assert oldSuffix instanceof MutableInteger;
+                ((MutableInteger)oldSuffix).inc();
+                assert idx == oldSuffix.intValue();
+                // put back the old (incr.) suffix (overriden with NOSUFFIX).
+                m_rowIDhash.put(result, oldSuffix);
+            }
+            
+            result = result + "_" + idx;
+            oldSuffix = m_rowIDhash.put(result, NOSUFFIX);
+            
         }
 
-        return newRowHeader + "_" + idx;
+        return result;
     }
 
     /*
