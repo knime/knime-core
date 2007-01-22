@@ -22,6 +22,7 @@
 package org.knime.core.node.util;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -137,6 +138,19 @@ public class ColumnFilterPanel extends JPanel {
         new HashSet<DataColumnSpec>();
     
     private List<ChangeListener>m_listeners;
+    
+    /**
+     * Line border for include columns.
+     */
+    private static final Border INCLUDE_BORDER = 
+        BorderFactory.createLineBorder(new Color(0, 221, 0), 2);
+    
+    /**
+     * Line border for exclude columns.
+     */
+    private static final Border EXCLUDE_BORDER = 
+        BorderFactory.createLineBorder(new Color(240, 0, 0), 2);
+
 
     /**
      * Creates a new filter column panel with three component which are the
@@ -188,7 +202,7 @@ public class ColumnFilterPanel extends JPanel {
         buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
         buttonPan.add(new JPanel());
 
-        m_remButton = new JButton("remove >>");
+        m_remButton = new JButton("<< remove");
         m_remButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(m_remButton);
         m_remButton.addActionListener(new ActionListener() {
@@ -198,7 +212,7 @@ public class ColumnFilterPanel extends JPanel {
         });
         buttonPan.add(new JPanel());
 
-        m_remAllButton = new JButton("remove all >>");
+        m_remAllButton = new JButton("<< remove all");
         m_remAllButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(m_remAllButton);
         m_remAllButton.addActionListener(new ActionListener() {
@@ -208,7 +222,7 @@ public class ColumnFilterPanel extends JPanel {
         });
         buttonPan.add(new JPanel());
 
-        m_addButton = new JButton("<< add");
+        m_addButton = new JButton("add >>");
         m_addButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(m_addButton);
         m_addButton.addActionListener(new ActionListener() {
@@ -218,7 +232,7 @@ public class ColumnFilterPanel extends JPanel {
         });
         buttonPan.add(new JPanel());
 
-        m_addAllButton = new JButton("<< add all");
+        m_addAllButton = new JButton("add all >>");
         m_addAllButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(m_addAllButton);
         m_addAllButton.addActionListener(new ActionListener() {
@@ -263,7 +277,8 @@ public class ColumnFilterPanel extends JPanel {
         m_markAllHitsIncl.addActionListener(actionListenerAllIncl);
         inclSearchPanel.add(m_markAllHitsIncl, BorderLayout.PAGE_END);
         JPanel includePanel = new JPanel(new BorderLayout());
-        m_includeBorder = BorderFactory.createTitledBorder(" Include ");
+        m_includeBorder = BorderFactory.createTitledBorder(
+                INCLUDE_BORDER, " Include ");
         includePanel.setBorder(m_includeBorder);
         includePanel.add(inclSearchPanel, BorderLayout.NORTH);
         includePanel.add(jspIncl, BorderLayout.CENTER);
@@ -304,7 +319,8 @@ public class ColumnFilterPanel extends JPanel {
         m_markAllHitsExcl.addActionListener(actionListenerAllExcl);
         exclSearchPanel.add(m_markAllHitsExcl, BorderLayout.PAGE_END);
         JPanel excludePanel = new JPanel(new BorderLayout());
-        m_excludeBorder = BorderFactory.createTitledBorder(" Exclude ");
+        m_excludeBorder = BorderFactory.createTitledBorder(
+                EXCLUDE_BORDER, " Exclude ");
         excludePanel.setBorder(m_excludeBorder);
         excludePanel.add(exclSearchPanel, BorderLayout.NORTH);
         excludePanel.add(jspExcl, BorderLayout.CENTER);
@@ -317,10 +333,10 @@ public class ColumnFilterPanel extends JPanel {
         // adds include, button, exclude component
         JPanel center = new JPanel(new BorderLayout());
         super.setLayout(new BorderLayout());
-        center.add(includePanel, BorderLayout.CENTER);
+        center.add(excludePanel, BorderLayout.CENTER);
         center.add(buttonPan2, BorderLayout.EAST);
         super.add(center, BorderLayout.WEST);
-        super.add(excludePanel, BorderLayout.CENTER);
+        super.add(includePanel, BorderLayout.CENTER);
     } // ColumnFilterPanel()
     
     /**
