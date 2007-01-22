@@ -57,8 +57,8 @@ import org.knime.core.node.util.ColumnFilterPanel;
  * passes these 
  * {@link org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixElement}s 
  * to the 
- * {@link org.knime.base.node.viz.plotter.scattermatrix.
- * ScatterMatrixDrawingPane}.
+ * {@link 
+ * org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixDrawingPane}.
  * The x and y axis of the plotter axes are nominal with the column names as 
  * values.
  * 
@@ -174,13 +174,13 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
      * then maps the points to the screen coordinates, associates the 
      * {@link org.knime.base.node.viz.plotter.scatter.DotInfo}s with the 
      * referring
-     * {@link org.knime.base.node.viz.plotter.scattermatrix.
-     * ScatterMatrixElement}
+     * {@link 
+     * org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixElement}
      * and passes them to the 
-     * {@link org.knime.base.node.viz.plotter.scattermatrix.
-     * ScatterMatrixDrawingPane}.
-     * The {@link org.knime.base.node.viz.plotter.scattermatrix.
-     * ScatterMatrixDrawingPane}
+     * {@link 
+     * org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixDrawingPane}.
+     * The {@link 
+     * org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixDrawingPane}
      * then extracts the dots from the 
      *{@link org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixElement}
      * and stores them in a 
