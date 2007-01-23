@@ -900,7 +900,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
          */
         @Override
         public void mouseReleased(final MouseEvent e) {
-            if (!e.isControlDown() && !e.isPopupTrigger()) {
+            if (!e.isControlDown() && !e.isPopupTrigger()
+                    && !SwingUtilities.isRightMouseButton(e)) {
                 clearSelection();
                 m_listenedPane.repaint();
             }
