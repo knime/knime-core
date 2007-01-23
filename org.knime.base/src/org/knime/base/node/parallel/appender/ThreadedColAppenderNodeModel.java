@@ -28,7 +28,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.knime.base.data.append.row.AppendedRowsTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -238,7 +237,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
             submitter.run();
         }
 
-        final AppendedRowsTable[] combinedResults = getCombinedResults(futures,
+        final CombinedTable[] combinedResults = getCombinedResults(futures,
                 exec);
         final BufferedDataTable[] resultTables = new BufferedDataTable[getNrDataOuts()];
 
@@ -311,7 +310,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
         return m_additionalTables;
     }
 
-    private AppendedRowsTable[] getCombinedResults(
+    private CombinedTable[] getCombinedResults(
             final List<Future<DataContainer[]>> futures,
             final ExecutionContext exec) throws InterruptedException,
             ExecutionException, CanceledExecutionException {
@@ -342,9 +341,9 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
             k++;
         }
 
-        final AppendedRowsTable[] combinedResults = new AppendedRowsTable[getNrDataOuts()];
+        final CombinedTable[] combinedResults = new CombinedTable[getNrDataOuts()];
         for (int i = 0; i < combinedResults.length; i++) {
-            combinedResults[i] = new AppendedRowsTable(tempTables[i]);
+            combinedResults[i] = new CombinedTable(tempTables[i]);
         }
 
         return combinedResults;
