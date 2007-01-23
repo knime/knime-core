@@ -77,6 +77,8 @@ final class ShapeManagerNodeDialogPane extends NodeDialogPane implements
         
         // table with column value to shape mapping
         m_valueTable = new JTable();
+        m_valueTable.setRowHeight(Math.min(m_valueTable.getRowHeight(), 
+                m_columns.getPreferredSize().height));
         
         // map for key to shape mapping
         m_map = new LinkedHashMap<String, LinkedHashMap<DataCell, Shape>>();
