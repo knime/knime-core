@@ -125,9 +125,7 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
             final Class<? extends DataValue>[]allowedYTypes) {
         super();
         m_xSelector = new ColumnSelectionComboxBox("X Column:", allowedXTypes);
-        m_xSelector.setBackground(this.getBackground());
         m_ySelector = new ColumnSelectionComboxBox("Y Column:", allowedYTypes);
-        m_ySelector.setBackground(this.getBackground());
         Box compositeBox = Box.createHorizontalBox();
         compositeBox.add(m_xSelector);
         compositeBox.add(m_ySelector);
@@ -136,6 +134,8 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
         JPanel panel = new JPanel();
         panel.add(compositeBox);
         panel.add(createRangeBox());
+        m_xSelector.setBackground(panel.getBackground());
+        m_ySelector.setBackground(panel.getBackground());
         addTab("Column Selection", panel);
     }
     
@@ -347,8 +347,8 @@ public class TwoColumnProperties extends AbstractPlotterProperties {
         }
         if (yIdx == -1) {
             yIdx = 1;
-            if (spec.getNumColumns() <= 1){
-            	yIdx = 0;
+            if (spec.getNumColumns() <= 1) {
+                yIdx = 0;
             }
         }
         update(spec, xIdx, yIdx);
