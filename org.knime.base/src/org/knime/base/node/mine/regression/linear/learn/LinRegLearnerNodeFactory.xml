@@ -9,7 +9,7 @@
 			target column (combo box on top), i.e. the response. The two
 			lists in the center of the dialog allow you to include only certain 
 			(numeric) columns which represent the (independent) variables.
-			Make sure the columns you want to have included being in the left
+			Make sure the columns you want to have included being in the right
 			"include" list. The checkbox at the bottom controls whether or not the error
 			on the training data should be computed. The error value is then 
 			available in the view. Calculating the error requires performing one extra scan on
