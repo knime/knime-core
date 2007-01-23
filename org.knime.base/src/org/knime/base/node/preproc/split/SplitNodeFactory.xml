@@ -6,22 +6,22 @@
     <fullDescription>
         <intro>
 			This node splits the columns of the input table into two output tables. Specify in the
-		    dialog which columns should occur in the top table (the left list), 
-		    and the bottom table (the right list). Use the buttons to move columns 
+		    dialog which columns should occur in the top table (left list), 
+		    and the bottom table (right list). Use the buttons to move columns 
 		    from one list to the other.
 		</intro>
-		<option name="Left list">
+		<option name="Top">
 			A list of column names that make up the first output table (top 
 			output port).
 		</option>
-		<option name="Right list">
+		<option name="Bottom">
 			A list of column names that make up the second output table (bottom 
 			output port).
 		</option>
 	</fullDescription>
     <ports>
         <dataIn index="0" name="Table to split">Table to split.</dataIn>
-        <dataOut index="0" name="Splitted table, 1st partition">Input table with the columns from the dialog's left list.</dataOut>
-        <dataOut index="1" name="Splitted table, 2nd partition">Input table with the columns from the dialog's right list.</dataOut>
+        <dataOut index="0" name="Splitted table, Top partition">Input table with the columns as defined in the dialog's left list.</dataOut>
+        <dataOut index="1" name="Splitted table, Bottom partition">Input table with the columns as defined in the dialog's right list.</dataOut>
 	</ports>
 </knimeNode>

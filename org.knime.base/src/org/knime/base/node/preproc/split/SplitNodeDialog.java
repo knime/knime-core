@@ -44,12 +44,12 @@ public class SplitNodeDialog extends NodeDialogPane {
      */
     public SplitNodeDialog() {
         m_filterPanel = new ColumnFilterPanel();
-        m_filterPanel.setIncludeTitle(" Top ");
-        m_filterPanel.setExcludeTitle(" Bottom ");
-        m_filterPanel.setRemoveAllButtonText(">>");
-        m_filterPanel.setRemoveButtonText(">");
-        m_filterPanel.setAddAllButtonText("<<");
-        m_filterPanel.setAddButtonText("<");
+        m_filterPanel.setIncludeTitle(" Bottom ");
+        m_filterPanel.setExcludeTitle(" Top ");
+        m_filterPanel.setRemoveAllButtonText("<<");
+        m_filterPanel.setRemoveButtonText("<");
+        m_filterPanel.setAddAllButtonText(">>");
+        m_filterPanel.setAddButtonText(">");
         addTab("Settings", m_filterPanel);
     }
 
@@ -63,12 +63,12 @@ public class SplitNodeDialog extends NodeDialogPane {
             throw new NotConfigurableException(
                     "No columns available for selection.");
         }
-        String[] includes = null;
-        includes = settings.getStringArray(SplitNodeModel.CFG_TOP,
-                new String[0]);
+        String[] includes = 
+            settings.getStringArray(SplitNodeModel.CFG_TOP, new String[0]);
+        
         // we don't use the CFG_BOTTOM here as the remainder of the columns
         // must be the bottom table list.
-        m_filterPanel.update(specs[0], false, includes);
+        m_filterPanel.update(specs[0], true, includes);
     }
 
     /**
@@ -77,9 +77,9 @@ public class SplitNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        String[] top = m_filterPanel.getIncludedColumnSet().toArray(
+        String[] bottom = m_filterPanel.getIncludedColumnSet().toArray(
                 new String[0]);
-        String[] bottom = m_filterPanel.getExcludedColumnSet().toArray(
+        String[] top = m_filterPanel.getExcludedColumnSet().toArray(
                 new String[0]);
         settings.addStringArray(SplitNodeModel.CFG_TOP, top);
         settings.addStringArray(SplitNodeModel.CFG_BOTTOM, bottom);
