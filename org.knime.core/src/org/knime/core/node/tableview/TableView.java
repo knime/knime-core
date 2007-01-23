@@ -41,7 +41,6 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -139,6 +138,12 @@ public class TableView extends JScrollPane {
                 }
             }
         });
+        getContentModel().addPropertyChangeListener(
+                TableContentModel.PROPERTY_DATA, new PropertyChangeListener() {
+           public void propertyChange(final PropertyChangeEvent evt) {
+               
+           }         
+        });
     } // TableView(TableContentView)
     
     /** 
@@ -222,24 +227,31 @@ public class TableView extends JScrollPane {
         return (TableRowHeaderView)getRowHeader().getView();
     }
     
-    /** Sets an empty panel as column header if the table view does not
-     * contain any column. This makes sure that header of the row header
-     * column is displayed.
-     * @see javax.swing.JScrollPane#setColumnHeaderView(java.awt.Component)
+    /** Delegates to super implementation but sets an appropriate preferred
+     * size before returning. If the table has no columns (but more than 0 
+     * rows), the corner was not shown (because of 0,0 preferred dimension).
+     * @see javax.swing.JScrollPane#getColumnHeader()
      */
     @Override
-    public void setColumnHeaderView(final Component view) {
-        // bug fix #934: header of row header column was not shown when
-        // table contains no columns
-        if (getContentTable().getColumnCount() == 0) {
-            JPanel p = new JPanel();
-            p.setPreferredSize(getCorner(UPPER_LEFT_CORNER).getPreferredSize());
-            super.setColumnHeaderView(p);
-        } else {
-            super.setColumnHeaderView(view);
+    public JViewport getColumnHeader() {
+        JViewport viewPort = super.getColumnHeader();
+        if (viewPort != null && viewPort.getView() != null) { 
+            Component view = viewPort.getView();
+            int viewHeight = view.getPreferredSize().height;
+            boolean hasData = hasData();
+            // bug fix #934: header of row header column was not shown when
+            // table contains no columns
+            if (hasData && viewHeight == 0) {
+                view.setPreferredSize(
+                        getCorner(UPPER_LEFT_CORNER).getPreferredSize());
+            } else if (!hasData && viewHeight > 0) {
+                // null is perfectly ok, it seems
+                view.setPreferredSize(null);
+            }
         }
+        return viewPort;
     }
-    
+
     /** 
      * Checks if a property handler is registered.
      * 
