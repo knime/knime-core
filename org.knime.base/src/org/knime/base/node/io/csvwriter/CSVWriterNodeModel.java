@@ -138,7 +138,8 @@ public class CSVWriterNodeModel extends NodeModel {
         }
         settings.getString(CFGKEY_FILE);
         settings.getBoolean(CFGKEY_COLHEADER);
-        settings.getBoolean(CFGKEY_COLHEADER_SKIP_ON_APPEND);
+        // setting was not available in KNIME 1.1.x
+        settings.getBoolean(CFGKEY_COLHEADER_SKIP_ON_APPEND, false);
         settings.getBoolean(CFGKEY_ROWHEADER);
     }
 
@@ -157,8 +158,9 @@ public class CSVWriterNodeModel extends NodeModel {
             forhistory = null;
         }
         m_writeColHeader = settings.getBoolean(CFGKEY_COLHEADER);
+        // setting was not available in KNIME 1.1.x
         m_writeColHeaderSkipOnAppend = 
-            settings.getBoolean(CFGKEY_COLHEADER_SKIP_ON_APPEND);
+            settings.getBoolean(CFGKEY_COLHEADER_SKIP_ON_APPEND, false);
         m_writeRowHeader = settings.getBoolean(CFGKEY_ROWHEADER);
         m_isAppend = settings.getBoolean(CFGKEY_APPEND);
         m_missingPattern = settings.getString(CFGKEY_MISSING, "");

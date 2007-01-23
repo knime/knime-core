@@ -266,7 +266,8 @@ public class ShuffleNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings) 
         throws InvalidSettingsException {
-        String seedText = settings.getString(CFG_SEED);
+        // seed was not available in knime 1.1.2, backward compatibility
+        String seedText = settings.getString(CFG_SEED, null);
         if (seedText != null) {
             try {
                 Long.parseLong(seedText);
@@ -283,7 +284,8 @@ public class ShuffleNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(
             final NodeSettingsRO settings) throws InvalidSettingsException {
-        String seedText = settings.getString(CFG_SEED);
+        // seed was not available in knime 1.1.2, backward compatibility
+        String seedText = settings.getString(CFG_SEED, null);
         if (seedText != null) {
             try {
                 m_seed = Long.parseLong(seedText);

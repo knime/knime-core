@@ -122,7 +122,8 @@ public class SmoteNodeModel extends NodeModel {
         String method = settings.getString(CFG_METHOD);
         double rate = 1.0;
         String clas = settings.getString(CFG_CLASS);
-        String seedString = settings.getString(CFG_SEED);
+        // seed was not available in knime 1.1.2, backward compatibility
+        String seedString = settings.getString(CFG_SEED, null);
         Long seed;
         int kNN = settings.getInt(CFG_KNN);
         if (METHOD_ALL.equals(method)) {
