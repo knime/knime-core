@@ -201,6 +201,26 @@ public class ColumnFilterPanel extends JPanel {
         buttonPan.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
         buttonPan.add(new JPanel());
+        
+        m_addButton = new JButton("add >>");
+        m_addButton.setMaximumSize(new Dimension(125, 25));
+        buttonPan.add(m_addButton);
+        m_addButton.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent ae) {
+                onAddIt();
+            }
+        });
+        buttonPan.add(new JPanel());
+
+        m_addAllButton = new JButton("add all >>");
+        m_addAllButton.setMaximumSize(new Dimension(125, 25));
+        buttonPan.add(m_addAllButton);
+        m_addAllButton.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent ae) {
+                onAddAll();
+            }
+        });
+        buttonPan.add(new JPanel());
 
         m_remButton = new JButton("<< remove");
         m_remButton.setMaximumSize(new Dimension(125, 25));
@@ -218,26 +238,6 @@ public class ColumnFilterPanel extends JPanel {
         m_remAllButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 onRemAll();
-            }
-        });
-        buttonPan.add(new JPanel());
-
-        m_addButton = new JButton("add >>");
-        m_addButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(m_addButton);
-        m_addButton.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent ae) {
-                onAddIt();
-            }
-        });
-        buttonPan.add(new JPanel());
-
-        m_addAllButton = new JButton("add all >>");
-        m_addAllButton.setMaximumSize(new Dimension(125, 25));
-        buttonPan.add(m_addAllButton);
-        m_addAllButton.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent ae) {
-                onAddAll();
             }
         });
         buttonPan.add(new JPanel());
