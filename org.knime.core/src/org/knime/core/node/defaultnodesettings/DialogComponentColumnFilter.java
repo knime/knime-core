@@ -52,6 +52,9 @@ public class DialogComponentColumnFilter extends DialogComponent {
     private final int m_inPortIndex;
 
     private ColumnFilterPanel m_columnFilter;
+    
+    // the table spec that was sent last into the filter component
+    private DataTableSpec m_specInFilter;
 
     /**
      * Creates a new filter column panel with three components which are the
@@ -87,7 +90,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
         super(model);
 
         m_inPortIndex = inPortIndex;
-
+        m_specInFilter = null;
+        
         m_columnFilter = new ColumnFilterPanel(allowedTypes);
         getComponentPanel().add(m_columnFilter);
 
@@ -119,10 +123,20 @@ public class DialogComponentColumnFilter extends DialogComponent {
         Set<String> compExcl = m_columnFilter.getExcludedColumnSet();
         List<String> modelIncl = filterModel.getIncludeList();
         List<String> modelExcl = filterModel.getExcludeList();
-
-         boolean update = (compIncl.size() != modelIncl.size())
+        
+        boolean update = (compIncl.size() != modelIncl.size())
                         || (compExcl.size() != modelExcl.size());
 
+        if (!update) {
+            // update if the current spec and the spec we last updated with 
+            // are different
+            DataTableSpec currSpec = getLastTableSpec(m_inPortIndex);
+            if (currSpec == null) {
+                update = (m_specInFilter != null);
+            } else {
+                update = (!currSpec.equalStructure(m_specInFilter));
+            }
+        }
         if (!update) {
             for (String s : compIncl) {
                 if (!modelIncl.contains(s)) {
@@ -140,7 +154,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
             }
         }
         if (update) {
-            m_columnFilter.update(getLastTableSpec(m_inPortIndex), true,
+            m_specInFilter = getLastTableSpec(m_inPortIndex);
+            m_columnFilter.update(m_specInFilter, true, 
                     filterModel.getExcludeList());
         }
     }
@@ -176,8 +191,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
     @Override
     void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
-        // currently we open the dialog even with spec - causing the panel
-        // to be empty.
+        // currently we open the dialog even with an emtpy spec - causing the 
+        // panel to be empty.
     }
 
     /**
