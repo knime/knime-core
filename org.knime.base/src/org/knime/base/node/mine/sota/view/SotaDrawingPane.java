@@ -869,6 +869,13 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     }
 
     /**
+     * @param data the original data to set.
+     */
+    public void setOriginalData(final DataArray data) {
+        m_originalData = data;
+    }
+    
+    /**
      * @return the data
      */
     public DataArray getData() {

@@ -75,7 +75,6 @@ public class SotaNodeView extends NodeView {
         m_outerPanel = new JPanel();
         m_outerPanel.setLayout(new BoxLayout(m_outerPanel, BoxLayout.Y_AXIS));
         m_outerPanel.add(m_panel);
-        super.setShowNODATALabel(false);
         super.setComponent(m_outerPanel);
     }
     
@@ -89,6 +88,7 @@ public class SotaNodeView extends NodeView {
         if (m_pane != null) {
             m_pane.setRoot(node.getSotaManager().getRoot());
             m_pane.setData(node.getSotaManager().getInDataContainer());
+            m_pane.setOriginalData(node.getSotaManager().getOriginalData());
             m_pane.setMaxHLevel(node.getSotaManager()
                     .getMaxHierarchicalLevel());
 
@@ -99,13 +99,6 @@ public class SotaNodeView extends NodeView {
         }
     }
 
-    
-    /**
-     * @see org.knime.core.node.NodeView#updateModel(java.lang.Object)
-     */
-    protected void updateModel(final Object arg) {
-        modelChanged();
-    }
     
     /**
      * @see org.knime.core.node.NodeView#onClose()

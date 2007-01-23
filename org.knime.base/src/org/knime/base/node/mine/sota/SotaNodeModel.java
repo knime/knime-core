@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -44,7 +45,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -54,8 +54,6 @@ import org.knime.core.node.NodeSettingsWO;
  * @author Kilian Thiel, University of Konstanz
  */
 public class SotaNodeModel extends NodeModel {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(SotaNodeModel.class);
 
     /**
      * The input port used here.
@@ -150,9 +148,6 @@ public class SotaNodeModel extends NodeModel {
 
         m_sota.initializeTree(dataTableToUse, origRowContainer, exec);
         m_sota.doTraining();
-
-        // notify Views that training is done and repaint has to be done
-        this.notifyViews(new Object());
 
         return new BufferedDataTable[]{};
     }
@@ -317,10 +312,13 @@ public class SotaNodeModel extends NodeModel {
             origDataSize = ((Integer)s.readObject()).intValue();
             numberOfCells = ((Integer)s.readObject()).intValue();
         } catch (ClassNotFoundException e) {
-            LOGGER.debug("Class not found when loading internal settings !");
-            e.printStackTrace();
+            IOException ioe = new IOException("Could not load internal settings"
+                    + " due to missing class!");
+            ioe.initCause(e);
+            throw ioe;
+        } finally {
+            in.close();
         }
-        in.close();
 
         // Load in data
         DataTable table = DataContainer.readFromZip(new File(internDir,
@@ -345,10 +343,23 @@ public class SotaNodeModel extends NodeModel {
             m_sota.setRoot((SotaTreeCell)root);
 
         } catch (ClassNotFoundException e) {
-            LOGGER.debug("Could not load cells !");
-            e.printStackTrace();
+            IOException ioe = new IOException("Could not load internal cell "
+                    + "data due to missing class!");
+            ioe.initCause(e);
+            throw ioe;
+        } catch (InvalidClassException e) {
+            IOException ioe = new IOException("Could not load internal cell "
+                    + "data due to a version conflict!");
+            ioe.initCause(e);
+            throw ioe;
+        } catch (IOException e) {
+            IOException ioe = new IOException("Could not load internal cell "
+                    + "data due to a io problem!");
+            ioe.initCause(e);
+            throw ioe;
+        } finally {
+            in.close();
         }
-        in.close();
     }
 
     /**
@@ -357,28 +368,20 @@ public class SotaNodeModel extends NodeModel {
      */
     @Override
     protected void saveInternals(final File internDir,
-            final ExecutionMonitor exec) throws IOException {
-        FileOutputStream out;
-        ObjectOutputStream s;
+            final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
 
         // Save in data container
-        try {
-            DataContainer.writeToZip(m_sota.getInDataContainer(), new File(
+        DataContainer.writeToZip(m_sota.getInDataContainer(), new File(
                     internDir, IN_DATA_FILE), exec);
-        } catch (CanceledExecutionException e) {
-            LOGGER.debug("Saving of in data was canceled !");
-            e.printStackTrace();
-        }
 
         // Save original Data
-        try {
-            DataContainer.writeToZip(m_sota.getOriginalData(), new File(
+        DataContainer.writeToZip(m_sota.getOriginalData(), new File(
                     internDir, ORIG_DATA_FILE), exec);
-        } catch (CanceledExecutionException e) {
-            LOGGER.debug("Saving of original data was canceled !");
-            e.printStackTrace();
-        }
 
+        FileOutputStream out;
+        ObjectOutputStream s;
+        
         // Save tree
         out = new FileOutputStream(new File(internDir, TREE_FILE));
         s = new ObjectOutputStream(out);
