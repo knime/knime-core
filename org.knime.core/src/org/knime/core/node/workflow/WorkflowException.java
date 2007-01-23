@@ -39,6 +39,7 @@ public class WorkflowException extends Exception {
      * @param predecessor the predecessor exception, must not be
      * <code>null</code>
      * @param cause the real cause of the exception
+     * @throws NullPointerException if predecessor is <code>null</code>
      */
     public WorkflowException(final String message,
             final WorkflowException predecessor, final Throwable cause) {

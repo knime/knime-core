@@ -446,25 +446,38 @@ public class WorkflowEditor extends GraphicalEditor implements
         // add this editor as a listener to WorkflowEvents
         m_manager.addListener(this);
 
-        // in case there occured exceptions during loading the workflow
+        // in case there occurred exceptions during loading the workflow
         // display them
         if (m_workflowException != null) {
 
             StringBuilder sb = new StringBuilder();
+            sb.append("Exceptions occurred during workflow loading!\n\n");
 
-            sb.append("Exceptions occured during workflow loading!\n\n");
-
-            WorkflowException we = m_workflowException.getNextException();
+            WorkflowException we = m_workflowException;
             int counter = 1;
-            while (we != null) {
-
+            do {
                 sb.append(counter + ". Exception:\n");
-                sb.append(we.getMessage()).append(we.getCause().getMessage());
+                String weMsg = we.getMessage();
+                String tMsg = null;
+                Throwable t = we.getCause();
+                if (t != null) {
+                    tMsg = t.getMessage();
+                }
+                if (weMsg == null && tMsg == null) {
+                    sb.append("no details available");
+                } else {
+                    if (weMsg != null) {
+                        sb.append(weMsg + " ");
+                    }
+                    if (tMsg != null) {
+                        sb.append(tMsg);
+                    }
+                }
+                
                 sb.append("\n");
-
                 we = we.getNextException();
                 counter++;
-            }
+            } while (we != null);
 
             // show message
             showInfoMessage("Workflow could not be loaded ...", sb.toString());
@@ -778,7 +791,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             ps.busyCursorWhile(loadWorflowRunnable);
 
             // check if the editor should be disposed
-            // TODO: At the moment the editor is opended with an error message
+            // TODO: At the moment the editor is opened with an error message
             // should be closed instead!!
             if (m_manager == null) {
                 if (m_loadingCanceled) {

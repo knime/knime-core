@@ -1673,15 +1673,50 @@ public class WorkflowManager implements WorkflowListener {
         // load workflow topology
         NodeSettingsRO settings =
                 NodeSettings.loadFromXML(new FileInputStream(workflowFile));
-        m_loadedVersion =
-                settings.getString(CFG_VERSION, KNIMEConstants.VERSION);
+        if (settings.containsKey(CFG_VERSION)) {
+            m_loadedVersion = settings.getString(CFG_VERSION);
+            // first version was only labeled with 1.0 instead of 1.0.0 
+            if (m_loadedVersion == "1.0") {
+                m_loadedVersion = "1.0.0";
+            }
+        } else {
+            m_loadedVersion = "0.9.0"; // CeBIT 2006 version without version id
+        }
+        LOGGER.debug("Trying to parse version: " + m_loadedVersion);
+        String[] versionStrArray = m_loadedVersion.split("\\.");
+        int[] versionIntArray = new int[]{
+                KNIMEConstants.MAJOR, KNIMEConstants.MINOR, KNIMEConstants.REV};
+        if (versionStrArray.length != versionIntArray.length) {
+            throw new WorkflowException("Refuse to load workflow: Unknown"
+                    + " workflow version \"" + m_loadedVersion + "\".");
+        }
+        for (int i = 0; i < versionIntArray.length; i++) {
+            int value = -1;
+            try {
+                value = Integer.parseInt(versionStrArray[i]);
+            } catch (NumberFormatException nfe) {
+                throw new WorkflowException(
+                        "Refuse to load workflow: Unknown workflow version "
+                        + "\"" + m_loadedVersion + "\".");
+            }
+            if (value < versionIntArray[i]) {
+                break;
+            } else if (value > versionIntArray[i]) {
+                throw new WorkflowException(
+                        "Refuse to load workflow: "
+                        + "The current KNIME version (" + KNIMEConstants.VERSION
+                        + ") is older than the workflow (" + m_loadedVersion 
+                        + ") you are trying to load.\n"
+                        + "Please get a newer version of KNIME.");
+            }
+        }
         if (!KNIMEConstants.VERSION.equalsIgnoreCase(m_loadedVersion)) {
             if (m_parent == null) {
                 LOGGER.warn(
                         "The current KNIME version (" + KNIMEConstants.VERSION 
                         + ") is different from the one that created the"
                         + " workflow (" + m_loadedVersion 
-                        + ") you are loading. In some rare cases, it"
+                        + ") you are trying to load. In some rare cases, it"
                         + " might not be possible to load all data"
                         + " or some nodes can't be configured."
                         + " Please re-configure and/or re-execute these"
