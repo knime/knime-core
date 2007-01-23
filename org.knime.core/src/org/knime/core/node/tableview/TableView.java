@@ -41,6 +41,7 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -219,6 +220,24 @@ public class TableView extends JScrollPane {
      */
     public TableRowHeaderView getHeaderTable() {
         return (TableRowHeaderView)getRowHeader().getView();
+    }
+    
+    /** Sets an empty panel as column header if the table view does not
+     * contain any column. This makes sure that header of the row header
+     * column is displayed.
+     * @see javax.swing.JScrollPane#setColumnHeaderView(java.awt.Component)
+     */
+    @Override
+    public void setColumnHeaderView(final Component view) {
+        // bug fix #934: header of row header column was not shown when
+        // table contains no columns
+        if (getContentTable().getColumnCount() == 0) {
+            JPanel p = new JPanel();
+            p.setPreferredSize(getCorner(UPPER_LEFT_CORNER).getPreferredSize());
+            super.setColumnHeaderView(p);
+        } else {
+            super.setColumnHeaderView(view);
+        }
     }
     
     /** 
