@@ -47,6 +47,7 @@ import javax.swing.WindowConstants;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -65,8 +66,19 @@ public final class ColPropertyDialog extends JDialog {
     private static final int TYPE_INT = 1;
 
     private static final int TYPE_STRING = 2;
+    
+    private static final int TYPE_SMILES = 3;
 
-    private static final String[] TYPES = {"Double", "Integer", "String"};
+    private static final String[] TYPES;
+    
+    static {
+        if (SmilesTypeHelper.INSTANCE.isSmilesAvailable()) {
+            TYPES = new String[] {"Double", "Integer", "String", "Smiles"};
+        } else {
+            TYPES = new String[] {"Double", "Integer", "String"};
+        }
+    }
+    
 
     // the index of the column to change settings for
     private int m_colIdx;
@@ -220,7 +232,7 @@ public final class ColPropertyDialog extends JDialog {
                     .getReadPossibleValuesFromFile());
 
         }
-        DomainDialog domDlg = new DomainDialog(domainProperty);
+        DomainDialog domDlg = new DomainDialog(this, domainProperty);
         ColProperty newSettings = domDlg.showDialog();
         if (newSettings != null) {
             m_userDomainSettings = newSettings;
@@ -251,7 +263,8 @@ public final class ColPropertyDialog extends JDialog {
              * the one above (the domain dialog already supports int types).
              * Also, somehow, tell the data container about the user's decision.
              */
-            if (selectedType.isCompatible(StringValue.class)) {
+            if (selectedType.isCompatible(StringValue.class) 
+                    && selectedType.isCompatible(NominalValue.class)) {
                 m_domainButton.setEnabled(true);
             } else {
                 m_domainButton.setEnabled(false);
@@ -402,8 +415,10 @@ public final class ColPropertyDialog extends JDialog {
                                     this,
                                     "Specified column name ('"
                                             + newName
-                                            + "') is already in use for another column."
-                                            + " Enter unique name or press cancel.",
+                                            + "') is already in use for "
+                                            + "another column."
+                                            + " Enter unique name or press "
+                                            + "cancel.",
                                     "Duplicate column names",
                                     JOptionPane.ERROR_MESSAGE);
                     return null;
@@ -422,7 +437,8 @@ public final class ColPropertyDialog extends JDialog {
                                 this,
                                 "Unexpected and invalid type (looks like an "
                                         + "internal error!). "
-                                        + "Try selecting another type or press cancel.",
+                                        + "Try selecting another type "
+                                        + "or press cancel.",
                                 "Internal Error: Unexpected type",
                                 JOptionPane.ERROR_MESSAGE);
                 return null;
@@ -468,6 +484,8 @@ public final class ColPropertyDialog extends JDialog {
             return IntCell.TYPE;
         case TYPE_DOUBLE:
             return DoubleCell.TYPE;
+        case TYPE_SMILES:
+            return SmilesTypeHelper.INSTANCE.getSmilesType();
         default:
             return null;
         }
@@ -478,6 +496,8 @@ public final class ColPropertyDialog extends JDialog {
             return TYPE_INT;
         } else if (type.equals(DoubleCell.TYPE)) {
             return TYPE_DOUBLE;
+        } else if (type.equals(SmilesTypeHelper.INSTANCE.getSmilesType())) {
+            return TYPE_SMILES;
         } else {
             assert (type.equals(StringCell.TYPE));
             return TYPE_STRING;

@@ -92,12 +92,14 @@ public class DomainDialog extends JDialog {
      * {@link #showDialog} method to get user input. After {@link #showDialog}
      * returns the method getDomainSettings will return the new settings.
      * 
+     * @param parent the owner of this dialog
      * @param colProp current column settings. The column type will be used to
      *            determine required settings, values in the domain will be used
      *            as default settings.
      */
-    DomainDialog(final ColProperty colProp) {
-
+    DomainDialog(final JDialog parent, final ColProperty colProp) {
+        super(parent);
+        
         assert colProp != null;
 
         m_colProp = colProp;
@@ -178,8 +180,8 @@ public class DomainDialog extends JDialog {
         panel.add(Box.createVerticalStrut(5));
         panel.add(new JLabel("Values found in the table will be added "
                 + "automatically."));
-        panel.add(new JLabel("Enter values you want additional in the list "
-                + "here only"));
+        panel.add(new JLabel("Enter only additional values here that you want " 
+                + "to be in the domain"));
 
         return panel;
     }
@@ -528,8 +530,9 @@ public class DomainDialog extends JDialog {
     private ColProperty takeOverSettings() {
 
         ColProperty result = new ColProperty();
-        DataColumnSpecCreator dcsc = new DataColumnSpecCreator(m_colProp
-                .getColumnSpec().getName(), m_colProp.getColumnSpec().getType());
+        DataColumnSpecCreator dcsc = new DataColumnSpecCreator(
+                m_colProp.getColumnSpec().getName(), 
+                m_colProp.getColumnSpec().getType());
 
         if (m_containsVals != null) {
             result.setReadPossibleValuesFromFile(m_containsVals.isSelected());
@@ -548,8 +551,8 @@ public class DomainDialog extends JDialog {
             }
 
             if (pVals.size() > 0) {
-                DataColumnDomainCreator domainCreator = new DataColumnDomainCreator(
-                        pVals);
+                DataColumnDomainCreator domainCreator = 
+                    new DataColumnDomainCreator(pVals);
                 dcsc.setDomain(domainCreator.createDomain());
             }
         }

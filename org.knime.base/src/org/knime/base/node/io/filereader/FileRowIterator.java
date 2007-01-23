@@ -325,9 +325,15 @@ final class FileRowIterator extends RowIterator {
                 int val = Integer.parseInt(data);
                 return new IntCell(val);
             } catch (NumberFormatException nfe) {
+                int col = 0;
+                while (col < row.length && row[col] != null) {
+                    col++;
+                }
                 throw prepareForException("Wrong data format. In line "
-                        + m_tokenizer.getLineNumber() + " read '" + data
-                        + "' for an integer", m_tokenizer.getLineNumber(),
+                        + m_tokenizer.getLineNumber() + " (" + rowHeader 
+                        + ") read '" + data
+                        + "' for an integer (in column #" + col 
+                        + ")." , m_tokenizer.getLineNumber(),
                         rowHeader, row);
             }
         } else if (type.equals(DoubleCell.TYPE)) {
@@ -335,10 +341,16 @@ final class FileRowIterator extends RowIterator {
             if (m_customDecimalSeparator) {
                 // we must reject tokens with a '.'.
                 if (data.indexOf('.') >= 0) {
+                    int col = 0;
+                    while (col < row.length && row[col] != null) {
+                        col++;
+                    }
                     throw prepareForException("Wrong data format. In line "
-                            + m_tokenizer.getLineNumber() + " read '" + data
-                            + "' for a floating point.", m_tokenizer
-                            .getLineNumber(), rowHeader, row);
+                            + m_tokenizer.getLineNumber() + " (" + rowHeader
+                            + ") read '" + data
+                            + "' for a floating point (in column #" + col 
+                            + ").", m_tokenizer.getLineNumber(), rowHeader, 
+                            row);
                 }
                 dblData = data.replace(m_decSeparator, '.');
             }
@@ -346,10 +358,37 @@ final class FileRowIterator extends RowIterator {
                 double val = Double.parseDouble(dblData);
                 return new DoubleCell(val);
             } catch (NumberFormatException nfe) {
+                int col = 0;
+                while (col < row.length && row[col] != null) {
+                    col++;
+                }
                 throw prepareForException("Wrong data format. In line "
-                        + m_tokenizer.getLineNumber() + " read '" + data
-                        + "' for a floating point.", m_tokenizer
+                        + m_tokenizer.getLineNumber() + " (" + rowHeader 
+                        + ") read '" + data
+                        + "' for a floating point (in column #" + col
+                        + ").", m_tokenizer
                         .getLineNumber(), rowHeader, row);
+            }
+        } else if (type.equals(SmilesTypeHelper.INSTANCE.getSmilesType())) {
+            try {
+                
+                return SmilesTypeHelper.INSTANCE.newInstance(data);
+            
+            } catch (Throwable t) {
+                int col = 0;
+                while (col < row.length && row[col] != null) {
+                    col++;
+                }
+                String msg = "Error during SMILES cell creation: ";
+                if (t.getMessage() != null) {
+                    msg += t.getMessage();
+                } else {
+                    msg += "<no details available>";
+                }
+                msg += " (line: " + m_tokenizer.getLineNumber() + "("
+                                + rowHeader + "), column #" + col + ").";
+                throw prepareForException(msg, m_tokenizer.getLineNumber(), 
+                        rowHeader, row);
             }
         } else {
             throw prepareForException("Cannot create DataCell of type "
