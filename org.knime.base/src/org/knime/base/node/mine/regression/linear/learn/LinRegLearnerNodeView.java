@@ -39,6 +39,7 @@ import org.knime.core.node.NodeView;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class LinRegLearnerNodeView extends NodeView {
+    
     /** The text pane that holds the information. */
     private final JEditorPane m_pane;
 
@@ -78,7 +79,7 @@ public class LinRegLearnerNodeView extends NodeView {
         Map<String, Double> parameter = model.getParametersMap();
         int nrRows = model.getNrRows();
         int nrSkipped = model.getNrRowsSkipped();
-        StringBuilder buffer = new StringBuilder();
+        final StringBuilder buffer = new StringBuilder();
         buffer.append("<html>\n");
         buffer.append("<body>\n");
         buffer.append("<h1>Statistics on Linear Regression</h1>");
@@ -170,6 +171,7 @@ public class LinRegLearnerNodeView extends NodeView {
         buffer.append("</body>\n");
         buffer.append("</html>\n");
         m_pane.setText(buffer.toString());
+        m_pane.revalidate();
     }
 
     /**
