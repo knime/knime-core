@@ -96,7 +96,7 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
                 .getEditor();
         editor.getTextField().setColumns(8);
         JPanel temp = new JPanel(new FlowLayout());
-        temp.add(new JLabel("First: "));
+        temp.add(new JLabel("First row: "));
         temp.add(m_firstSpinner);
         southPanel.add(temp);
         m_countSpinner = new JSpinner(new SpinnerNumberModel(10000, 1,
@@ -104,7 +104,7 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
         editor = (JSpinner.DefaultEditor)m_countSpinner.getEditor();
         editor.getTextField().setColumns(8);
         temp = new JPanel(new FlowLayout());
-        temp.add(new JLabel("Count: "));
+        temp.add(new JLabel("Row count: "));
         temp.add(m_countSpinner);
         southPanel.add(temp);
 
