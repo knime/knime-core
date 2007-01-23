@@ -550,15 +550,18 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 && m_hasRowHeaders.isSelected()) {
             // somebody checked the hasRowheader box - that removes one column
             m_frSettings.setFileHasRowHeaders(true);
-            m_frSettings
-                    .setNumberOfColumns(m_frSettings.getNumberOfColumns() - 1);
-            Vector<ColProperty> colProps = m_frSettings.getColumnProperties();
-            // save the first colProp in case user changes his mind...
-            m_firstColProp = colProps.remove(0);
-            m_frSettings.setColumnProperties(colProps);
-            if (!m_frSettings.getFileHasColumnHeaders()) {
-                // re-generate the column names
-                recreateColNames(false);
+            if (m_frSettings.getNumberOfColumns() > 0) {
+                m_frSettings.setNumberOfColumns(
+                        m_frSettings.getNumberOfColumns() - 1);
+                Vector<ColProperty> colProps =
+                        m_frSettings.getColumnProperties();
+                // save the first colProp in case user changes his mind...
+                m_firstColProp = colProps.remove(0);
+                m_frSettings.setColumnProperties(colProps);
+                if (!m_frSettings.getFileHasColumnHeaders()) {
+                    // re-generate the column names
+                    recreateColNames(false);
+                }
             }
             analyzeDataFileAndUpdatePreview(true);
         }
