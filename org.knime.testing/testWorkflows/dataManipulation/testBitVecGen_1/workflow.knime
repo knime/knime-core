@@ -3,7 +3,7 @@
 <config key="workflow.knime">
 <entry key="version" type="xstring" value="1.2.0"/>
 <entry key="runningNodeID" type="xint" value="31"/>
-<entry key="runningConnectionID" type="xint" value="77"/>
+<entry key="runningConnectionID" type="xint" value="90"/>
 <config key="nodes">
 <config key="node_1">
 <entry key="node_settings_file" type="xstring" value="File Reader (#1)/settings.xml"/>
@@ -454,111 +454,38 @@
 <entry key="replace" type="xboolean" value="false"/>
 </config>
 </config>
-<config key="node_30">
-<entry key="node_settings_file" type="xstring" value="Bitvector Generator (#30)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"/>
-<entry key="id" type="xint" value="30"/>
-<entry key="customName" type="xstring" value="String"/>
-<entry key="customDescription" type="xstring" value=""/>
-<entry key="isDeletable" type="xboolean" value="true"/>
-<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
-<config key="extrainfo.node.bounds">
-<entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="369"/>
-<entry key="1" type="xint" value="488"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
-</config>
-<entry key="name" type="xstring" value="Bitvector Generator"/>
-<entry key="isConfigured" type="xboolean" value="true"/>
-<entry key="isExecuted" type="xboolean" value="false"/>
-<config key="internal_node_subsettings">
-<entry key="memory_policy" type="xstring" value="CacheInMemory"/>
-</config>
-<config key="model">
-<entry key="THRESHOLD" type="xdouble" value="3.1"/>
-<entry key="FROM_STRING" type="xboolean" value="true"/>
-<entry key="STRING_COLUMN" type="xstring" value="class"/>
-<entry key="useMean" type="xboolean" value="true"/>
-<entry key="meanThreshold" type="xint" value="100"/>
-<entry key="stringType" type="xstring" value="ID"/>
-<entry key="replace" type="xboolean" value="false"/>
-</config>
-</config>
 </config>
 <config key="connections">
-<config key="connection_68">
-<entry key="ID" type="xint" value="68"/>
-<entry key="sourceID" type="xint" value="1"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="4"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_75">
-<entry key="ID" type="xint" value="75"/>
-<entry key="sourceID" type="xint" value="4"/>
-<entry key="sourcePort" type="xint" value="1"/>
-<entry key="targetID" type="xint" value="27"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_72">
-<entry key="ID" type="xint" value="72"/>
-<entry key="sourceID" type="xint" value="26"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="24"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_67">
-<entry key="ID" type="xint" value="67"/>
-<entry key="sourceID" type="xint" value="4"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="22"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_66">
-<entry key="ID" type="xint" value="66"/>
-<entry key="sourceID" type="xint" value="23"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="26"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_76">
-<entry key="ID" type="xint" value="76"/>
+<config key="connection_83">
+<entry key="ID" type="xint" value="83"/>
 <entry key="sourceID" type="xint" value="22"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="targetID" type="xint" value="25"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_71">
-<entry key="ID" type="xint" value="71"/>
+<config key="connection_90">
+<entry key="ID" type="xint" value="90"/>
 <entry key="sourceID" type="xint" value="4"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="21"/>
+<entry key="targetID" type="xint" value="12"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_73">
-<entry key="ID" type="xint" value="73"/>
+<config key="connection_79">
+<entry key="ID" type="xint" value="79"/>
 <entry key="sourceID" type="xint" value="4"/>
-<entry key="sourcePort" type="xint" value="2"/>
-<entry key="targetID" type="xint" value="30"/>
+<entry key="sourcePort" type="xint" value="1"/>
+<entry key="targetID" type="xint" value="27"/>
 <entry key="targetPort" type="xint" value="0"/>
-<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo"/>
-<entry key="extrainfo.conn.bendpoints_size" type="xint" value="1"/>
-<config key="extrainfo.conn.bendpoints_0">
-<entry key="array-size" type="xint" value="2"/>
-<entry key="0" type="xint" value="269"/>
-<entry key="1" type="xint" value="514"/>
 </config>
-</config>
-<config key="connection_77">
-<entry key="ID" type="xint" value="77"/>
-<entry key="sourceID" type="xint" value="12"/>
+<config key="connection_82">
+<entry key="ID" type="xint" value="82"/>
+<entry key="sourceID" type="xint" value="23"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="23"/>
+<entry key="targetID" type="xint" value="26"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_65">
-<entry key="ID" type="xint" value="65"/>
+<config key="connection_87">
+<entry key="ID" type="xint" value="87"/>
 <entry key="sourceID" type="xint" value="4"/>
 <entry key="sourcePort" type="xint" value="1"/>
 <entry key="targetID" type="xint" value="28"/>
@@ -571,25 +498,53 @@
 <entry key="1" type="xint" value="421"/>
 </config>
 </config>
-<config key="connection_70">
-<entry key="ID" type="xint" value="70"/>
-<entry key="sourceID" type="xint" value="4"/>
-<entry key="sourcePort" type="xint" value="2"/>
-<entry key="targetID" type="xint" value="29"/>
+<config key="connection_80">
+<entry key="ID" type="xint" value="80"/>
+<entry key="sourceID" type="xint" value="26"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="24"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_74">
-<entry key="ID" type="xint" value="74"/>
+<config key="connection_81">
+<entry key="ID" type="xint" value="81"/>
+<entry key="sourceID" type="xint" value="4"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="22"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_86">
+<entry key="ID" type="xint" value="86"/>
+<entry key="sourceID" type="xint" value="12"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="23"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_89">
+<entry key="ID" type="xint" value="89"/>
 <entry key="sourceID" type="xint" value="25"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="targetID" type="xint" value="24"/>
 <entry key="targetPort" type="xint" value="1"/>
 </config>
-<config key="connection_69">
-<entry key="ID" type="xint" value="69"/>
+<config key="connection_84">
+<entry key="ID" type="xint" value="84"/>
 <entry key="sourceID" type="xint" value="4"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="12"/>
+<entry key="targetID" type="xint" value="21"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_78">
+<entry key="ID" type="xint" value="78"/>
+<entry key="sourceID" type="xint" value="1"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="4"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_88">
+<entry key="ID" type="xint" value="88"/>
+<entry key="sourceID" type="xint" value="4"/>
+<entry key="sourcePort" type="xint" value="2"/>
+<entry key="targetID" type="xint" value="29"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
 </config>
