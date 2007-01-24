@@ -55,8 +55,8 @@
   
   <chapter id="localdocu">
     <title>KNIME local documentation</title>
-    The local documentation shipped with this installation can be found 
-    in the installation directory of KNIME under doc/index.html
+    The Quick Start Guide for KNIME can be found 
+    in the installation directory of KNIME.
   </chapter>
   
   
