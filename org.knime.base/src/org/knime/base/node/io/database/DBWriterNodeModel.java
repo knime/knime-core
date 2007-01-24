@@ -26,13 +26,9 @@ package org.knime.base.node.io.database;
 
 import java.io.File;
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -76,8 +72,6 @@ class DBWriterNodeModel extends NodeModel {
 
     private String m_table = "<table_name>";
 
-    private final Set<String> m_driverLoaded = new HashSet<String>();
-
     private final Map<String, String> m_types = 
         new LinkedHashMap<String, String>();
 
@@ -93,19 +87,6 @@ class DBWriterNodeModel extends NodeModel {
     /** Config key for column to SQL-type mapping. */
     static final String CFG_SQL_TYPES = "sql_types";
     
-    static {        
-        try {
-            Class<?> driverClass = Class.forName(
-                    "sun.jdbc.odbc.JdbcOdbcDriver");
-            Driver theDriver = new WrappedDriver((Driver)driverClass
-                    .newInstance());
-            DriverManager.registerDriver(theDriver);
-        } catch (Exception e) {
-            LOGGER.warn("Could not load 'sun.jdbc.odbc.JdbcOdbcDriver'.");
-            LOGGER.debug("", e);
-        }
-    }
-
     /**
      * Creates a new model with one data outport.
      */
@@ -123,8 +104,6 @@ class DBWriterNodeModel extends NodeModel {
         settings.addString("database", m_url);
         settings.addString("user", m_user);
         settings.addString("password", m_pass);
-        settings.addStringArray("loaded_driver", m_driverLoaded
-                .toArray(new String[0]));
         settings.addString("table", m_table);
         // save sql type mapping
         NodeSettingsWO typeSett = settings.addNodeSettings(CFG_SQL_TYPES);
@@ -159,8 +138,9 @@ class DBWriterNodeModel extends NodeModel {
         String table = settings.getString("table");
         // password
         String password = settings.getString("password", "");
-        // loaded driver
-        String[] loadedDriver = settings.getStringArray("loaded_driver");
+        // loaded driver: need to load settings before 1.2
+        String[] loadedDriver = settings.getStringArray("loaded_driver",
+                new String[0]);
         // write settings or skip it
         if (write) {
             m_driver = driver;
@@ -168,13 +148,12 @@ class DBWriterNodeModel extends NodeModel {
             m_user = user;
             m_pass = password;
             m_table = table;
-            m_driverLoaded.clear();
-            m_driverLoaded.addAll(Arrays.asList(loadedDriver));
-            for (String fileName : m_driverLoaded) {
+            for (String fileName : loadedDriver) {
                 try {
                     DBDriverLoader.loadDriver(new File(fileName));
                 } catch (Exception e) {
-                    LOGGER.info("Could not load driver from: " + loadedDriver);
+                    LOGGER.warn("Could not load driver from: " + loadedDriver, 
+                            e);
                 }
             }
             // load SQL type for each column

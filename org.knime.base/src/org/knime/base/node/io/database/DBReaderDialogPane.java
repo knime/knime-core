@@ -32,8 +32,6 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -83,10 +81,8 @@ public class DBReaderDialogPane extends NodeDialogPane {
 
     private JFileChooser m_chooser = null;
 
-    private final HashSet<String> m_driverLoaded = new HashSet<String>();
-    
     private boolean m_passwordChanged = false;
-
+    
     /**
      * Creates new dialog.
      */
@@ -107,10 +103,8 @@ public class DBReaderDialogPane extends NodeDialogPane {
                     try {
                         DBDriverLoader.loadDriver(file);
                         updateDriver();
-                        m_driverLoaded.add(file.getAbsolutePath());
                     } catch (Exception exc) {
-                        LOGGER.warn("No driver loaded from: " + file);
-                        LOGGER.debug("", exc);
+                        LOGGER.warn("No driver loaded from: " + file, exc);
                     }
                 }
             }
@@ -198,15 +192,14 @@ public class DBReaderDialogPane extends NodeDialogPane {
         String password = settings.getString("password", null);
         m_pass.setText(password == null ? "" : password);
         m_passwordChanged = false;
-        // save loaded driver
-        m_driverLoaded.clear();
-        m_driverLoaded.addAll(Arrays.asList(settings.getStringArray(
-                "loaded_driver", new String[0])));
-        for (String loadedDriver : m_driverLoaded) {
+        // loaded driver: need to load settings before 1.2
+        String[] loadedDriver = settings.getStringArray("loaded_driver",
+                new String[0]);
+        for (String driver : loadedDriver) {
             try {
-                DBDriverLoader.loadDriver(new File(loadedDriver));
+                DBDriverLoader.loadDriver(new File(driver));
             } catch (Exception e) {
-                LOGGER.info("Could not load driver from: " + loadedDriver);
+                LOGGER.warn("Could not load driver from: " + driver, e);
             }
         }
         updateDriver();
@@ -244,8 +237,5 @@ public class DBReaderDialogPane extends NodeDialogPane {
             settings.addString("password", new String(m_pass.getPassword()));
         }
         settings.addString("statement", m_statmnt.getText().trim());
-        // save loaded driver
-        settings.addStringArray("loaded_driver", m_driverLoaded
-                .toArray(new String[0]));
     }
 }

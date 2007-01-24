@@ -39,6 +39,7 @@ import java.util.zip.ZipFile;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.StringHistory;
 
 /**
  * Utility class to load additional drivers from jar and zip to the
@@ -68,6 +69,15 @@ final class DBDriverLoader {
      */
     static final String JDBC_ODBC_DRIVER = "sun.jdbc.odbc.JdbcOdbcDriver";
     
+    /**
+     * Keeps history of loaded driver libraries.
+     */
+    private static final StringHistory DRIVER_LIBRARY_HISTORY =
+        StringHistory.getInstance("database_library_files");
+    
+    /**
+     * Register Java's jdbc-odbc bridge.
+     */
     static {
         try {
             Class<?> driverClass = Class.forName(JDBC_ODBC_DRIVER);
@@ -76,11 +86,29 @@ final class DBDriverLoader {
             // DriverManager.registerDriver(d);
             DRIVER_MAP.put(d.toString(), d);
         } catch (Exception e) {
-            LOGGER.warn("Could not load driver class: " + JDBC_ODBC_DRIVER);
-            LOGGER.debug("", e);
+            LOGGER.warn("Could not load driver class: " + JDBC_ODBC_DRIVER, e);
         }
     }
+    
+    /**
+     * Init driver history on start-up.
+     */
+    static {
+        for (String hist : DRIVER_LIBRARY_HISTORY.getHistory()) {
+            try {
+                File histFile = new File(hist);
+                loadDriver(histFile);
+            } catch (Exception e) {
+                LOGGER.warn("Could not load driver library: " + hist, e);
+            }
+        }
 
+    }
+
+    /**
+     * Hide (empty) constructor.
+     *
+     */
     private DBDriverLoader() {
 
     }
@@ -113,6 +141,7 @@ final class DBDriverLoader {
         if (file.isDirectory()) {
             // not yet supported
         } else if (fileName.endsWith(".jar") || fileName.endsWith(".zip")) {
+            DRIVER_LIBRARY_HISTORY.add(fileName);
             readZip(file, new JarFile(file));
         }
     }
