@@ -274,10 +274,15 @@ public class StatisticsTable implements DataTable {
         for (int c = 0; c < nrCols; c++) {
             DataColumnSpec s = m_table.getDataTableSpec().getColumnSpec(c);
             // we create domains with our bounds.
-            Set<DataCell> values = (s.getDomain() == null ? null : s
-                    .getDomain().getValues());
-            DataColumnDomain newDomain = new DataColumnDomainCreator(values,
-                    m_minValues[c], m_maxValues[c]).createDomain();
+            Set<DataCell> values =
+                    (s.getDomain() == null ? null : s.getDomain().getValues());
+            DataColumnDomain newDomain =
+                    new DataColumnDomainCreator(values,
+                            (m_minValues[c] == null || m_minValues[c]
+                                    .isMissing()) ? null : m_minValues[c],
+                            (m_maxValues[c] == null || m_maxValues[c]
+                                    .isMissing()) ? null : m_maxValues[c])
+                            .createDomain();
             DataColumnSpecCreator creator = new DataColumnSpecCreator(s);
             creator.setDomain(newDomain);
             cSpec[c] = creator.createSpec();
