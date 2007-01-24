@@ -378,7 +378,7 @@ public abstract class NodeView {
         } finally {
             // repaint and pack if the view has not been opened or the 
             // underlying view component was added
-            repaint(!m_wasOpened || m_componentSet);
+            relayoutFrame(!m_wasOpened || m_componentSet);
         }
     }
 
@@ -583,7 +583,7 @@ public abstract class NodeView {
             m_componentSet = true;
         }
         m_comp = comp;
-        repaint(false); // repaint without pack
+        relayoutFrame(false); // repaint without pack
     }
 
     /**
@@ -611,7 +611,7 @@ public abstract class NodeView {
      * @param doPack if <code>true</code> the dialog is packed, otherwise
      *        just validated and repainted
      */
-    private void repaint(final boolean doPack) {
+    private void relayoutFrame(final boolean doPack) {
         if (doPack) {
             m_frame.pack();
         } else {
