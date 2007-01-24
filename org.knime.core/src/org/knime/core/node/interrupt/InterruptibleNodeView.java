@@ -49,7 +49,6 @@ import org.knime.core.node.NodeView;
  * here, that is the status of he InterruptibleNodeModel is set from here to
  * paused or not or finished.
  * 
- * 
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class InterruptibleNodeView extends NodeView implements
@@ -180,7 +179,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
 
     /**
      * This method returns the control panel, which provides control elements
-     * over the underlying model. It also realises a lazy initialisation of the
+     * over the underlying model. It also realizes a lazy initialization of the
      * control panel.
      * 
      * @return - the controlPanel which itself provides getters to its
@@ -237,17 +236,16 @@ public abstract class InterruptibleNodeView extends NodeView implements
     }
 
     /**
-     * Overrides the setComponent method in order to guarantee that the control
-     * panel is always added and at the very top of the view. The passed
-     * component will be set below the control panel.
+     * Guarantees that the control panel is always added at the very top of the
+     * view. The passed component will be set below the control panel.
      * 
-     * @see org.knime.core.node.NodeView#setComponent(java.awt.Component)
-     * @param toBeSet - the panel to be set below the control panel, mind that
+     * @param toBeSet the panel to be set below the control panel, mind that
      *            all view components necessary for the underlying model have to
-     *            be packed in one component.
+     *            be packed in one component
+     *            
+     * @see org.knime.core.node.NodeView#setComponent(java.awt.Component)
      */
-    @Override
-    public void setComponent(final Component toBeSet) {
+    public void setEmbeddedComponent(final Component toBeSet) {
         JPanel packPanel = new JPanel();
         packPanel.setLayout(new BorderLayout());
         packPanel.add(getControlPanel(), BorderLayout.NORTH);

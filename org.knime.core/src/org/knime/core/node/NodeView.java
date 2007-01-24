@@ -241,6 +241,19 @@ public abstract class NodeView {
      * Exports the current view to an image file.
      */
     private void exportAsImage() {
+        
+        // create an image from the view component
+        Container cont = m_frame.getContentPane();
+        int width = cont.getWidth();
+        int height = cont.getHeight();
+        if (width <= 0 || height <= 0) {
+            String msg = "View is too small to be exported.";
+            JOptionPane.showConfirmDialog(m_frame, msg, "Warning", 
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
+
+            m_logger.warn(msg);
+            return;
+        }
 
         // get a possible previous save location
         // get the location to export the view
@@ -284,14 +297,13 @@ public abstract class NodeView {
             return;
         }
         
-        // create an image from the view component
-        BufferedImage image = new BufferedImage(m_comp.getWidth(), m_comp
-                .getHeight(), BufferedImage.TYPE_INT_RGB);
+        BufferedImage image = new BufferedImage(width, height,
+                    BufferedImage.TYPE_INT_RGB);
 
         // create graphics object to paint in
         Graphics2D graphics = image.createGraphics();
 
-        m_comp.paint(graphics);
+        cont.paint(graphics);
 
         // write image to file
         try {
@@ -363,6 +375,10 @@ public abstract class NodeView {
             throw new IllegalStateException("Error during notification "
                     + "of a changed model (in NodeView.modelChanged()). "
                     + "Reason: " + e.getMessage(), e);
+        } finally {
+            // repaint and pack if the view has not been opened or the 
+            // underlying view component was added
+            repaint(!m_wasOpened || m_componentSet);
         }
     }
 
@@ -558,18 +574,16 @@ public abstract class NodeView {
      * 
      * @param comp Component to set in the center of the view.
      */
-    protected void setComponent(final Component comp) {
+    protected final void setComponent(final Component comp) {
         if (!m_nodeModel.isExecuted() && m_noDataComp != null) {
-            setComponentIntern(m_noDataComp, false);
+            setComponentIntern(m_noDataComp);
+            m_componentSet = false;
         } else {
-            if (!m_componentSet) {
-                setComponentIntern(comp, true);
-                m_componentSet = true;
-            } else {
-                setComponentIntern(comp, false);
-            }
+            setComponentIntern(comp);
+            m_componentSet = true;
         }
         m_comp = comp;
+        repaint(false); // repaint without pack
     }
 
     /**
@@ -577,9 +591,8 @@ public abstract class NodeView {
      * update m_comp (which setComponent does).
      * 
      * @param cmp The new component to show (might be m_noDataComp)
-     * @param doPack if true, the frame is packed which results in resizing the
      */
-    private void setComponentIntern(final Component cmp, final boolean doPack) {
+    private void setComponentIntern(final Component cmp) {
         if (m_activeComp == cmp || cmp == null) {
             return;
         }
@@ -590,16 +603,22 @@ public abstract class NodeView {
         }
 
         m_activeComp = cmp;
-//        cmp.setBackground(COLOR_BACKGROUND);
         cont.add(m_activeComp, BorderLayout.CENTER);
-
+    }
+    
+    /**
+     * Repaints or pack this frame depending on <code>doPack</code> flag.
+     * @param doPack if <code>true</code> the dialog is packed, otherwise
+     *        just validated and repainted
+     */
+    private void repaint(final boolean doPack) {
         if (doPack) {
             m_frame.pack();
         } else {
             m_frame.invalidate();
             m_frame.validate();
             m_frame.repaint();
-        }
+        }   
     }
 
     /**
