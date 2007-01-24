@@ -13,7 +13,7 @@ email: contact@knime.org
 
 This version of KNIME is licensed under the Aladdin Open Source 
 Licence. Please see the license file in the installation directory and 
-contact us if you can not locate it. More details can be found at
+contact us if you cannot locate it. More details can be found at
 http://www.knime.org
 
 Based on Eclipse 3.2, www.eclipse.org 
@@ -49,6 +49,7 @@ Uses: Java5, GEF, Log4J
             winLargeLow="/org.knime.product/icons/knime48x48_8bit.bmp"/>
       </win>
    </launcher>
+
 
    <plugins>
       <plugin id="org.apache.lucene"/>

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <welcomePage
-   title="Welcome to the KNIME"
+   title="Welcome to KNIME"
    format="wrap">
   
   <intro>
-  This page will help familarize you with the 
+  This page will help familarize you with
   <b>KNIME</b> - an integrated environment for
   intelligent data analysis, information mining and visualization.
   </intro>

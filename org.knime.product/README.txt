@@ -1,6 +1,5 @@
 
-KNIME - version 1.2.0pre,
-(including WEKA and the WEKA integration plugin).
+KNIME - version 1.2.0BETA
 ============================================================
 
 Quickstart guide:
@@ -8,35 +7,40 @@ Quickstart guide:
 - Under Windows launch knime.exe, for Linux use knime.sh (either double
   click in a file browser or execute it in a shell)
 - KNIME will open and you can start assembling a workflow (KNIME will use 
-  the folder 'workspace' contained in this directory to put the project
-  files).
+  the folder 'workspace' contained in this directory to store the project
+  files in).
 
 
-How to use additional plugins:
-  KNIME allows to easily integrate new plugins. These often come under a
+How to get additional features:
+  KNIME allows to easily integrate new features. These often come under a
   different license and therefore are not included in this archive. Please
-  see http://www.knime.org for any available third-party plugin. For
-  example an R plugin (http://www.r-project.org) and a chemistry plugin
-  (using the chemistry development kit, CDK, http://cdk.sf.net/) are
-  available.
+  see http://www.knime.org for any available extension. For
+  example an R integration feature (http://www.r-project.org) and a 
+  chemistry feature (using the chemistry development kit, CDK, http://cdk.sf.net/) 
+  are available.
 
-  To include a new plugin, extract the plugin archive into your KNIME
-  installation directory. For instance, if you download the
-  chemistry plugin and extract the zip file, it will create a folder
-  hierarchy similiar to:
+  A convenient way to download new KNIME features is via the KNIME 
+  update site. In your current KNIME installation select 
+  "Help", "Software Updates", "Find and Install...". The Update Wizard opens. 
+  Select "Search for new features to install" and click "Next". 
+  Select "New Remote Site..." located on the right-hand side. 
+  A window opens into which you can enter the name and location of the 
+  new update site. Enter "KNIME" as name and "http://www.knime.org/update" as URL.
+  Close the dialog by clicking "OK". On the left-hand side of the remaining 
+  window, you can see the KNIME site included in the list of 
+  "Sites to include in the search". Make sure it's checked. Click "Finish". 
+  A new window appears displaying the root of the KNIME update site. 
+  If you expand it you see three main categories: KNIME Base Package, 
+  KNIME Development Wizard, KNIME Extensions.
+  You may now select the features you want to install. If you select a 
+  feature and receive an error message stating that the selected feature 
+  requires a certain plug-in, subsequently click the "Select Required" button. 
+  This automatically selects all required features.
+  You need to restart KNIME after installing new extensions in order to get
+  them activated in the GUI.
 
-   - plugins
-       |
-       - org.knime.chem_1.1.2pre
-            |
-            - ...
-       - ...
-   - features
-       |
-       - org.knime.chem_1.1.2pre
-            |
-            - ...
-  Copy the folders contained in the plugin archive to their destination
-  or directly extract the archive/zip-file to the knime-directory.
-
-  Restart KNIME to register the newly added plugins.
+  Another way to install new features is to download the extension in an archive
+  file. Unpack the file into your KNIME installation directory (so that all files
+  of the archive's plugin directory are stored in KNIME's plugin dir and the files
+  of the feature directory are stored in KNIME's feature dir).
+  Restart KNIME to register the newly added features.

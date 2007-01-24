@@ -14,3 +14,4 @@ Export-Package: org.knime.base.node.mine.scorer,
  org.knime.base.node.preproc.normalize
 Eclipse-LazyStart: false
 Bundle-Activator: org.knime.deprecated.DeprecatedPlugin
+Bundle-ClassPath: knime-deprecated.jar
