@@ -24,14 +24,18 @@
  */
 package org.knime.ext.ainet.unittests;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import junit.framework.TestCase;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.ext.ainet.core.AnnotationType;
 import org.knime.ext.ainet.core.AssociationNet;
 import org.knime.ext.ainet.core.AssociationNode;
-import org.knime.ext.ainet.core.exceptions.NetConfigurationException;
 import org.knime.ext.ainet.core.exceptions.PersistenceException;
 import org.knime.ext.ainet.core.netimpl.AssociationNetFactory;
+import org.knime.ext.ainet.core.netimpl.DBAssociationNet;
 
 /**
  * Tests the adding and finding of nodes.
@@ -48,34 +52,31 @@ public class AssociationNetNodeTest extends TestCase {
 
     private static AssociationNet netInstance;
     
+    private static boolean isSetup = false;
+    
     /**
      * @see junit.framework.TestCase#setUp()
      */
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        if (isSetup) {
+            return;
+        }
         try {
             netInstance =  AssociationNetFactory.createNet(
                     AINetTestSuite.getNetType(), AINetTestSuite.getNetName());
+            if (netInstance instanceof DBAssociationNet) {
+                DBAssociationNet dbNet = (DBAssociationNet) netInstance;
+                dbNet.deleteNet();
+            }
+            netInstance =  AssociationNetFactory.createNet(
+                    AINetTestSuite.getNetType(), AINetTestSuite.getNetName());
+            isSetup = true;
             LOGGER.debug("Using network of type: " + netInstance.getNetType());
-        } catch (NetConfigurationException e) {
-            e.printStackTrace();
-            fail("SetUp failed. Error: " + e.getMessage()
-                    + "\nNetwork type: " 
-                    + netInstance.getNetType().toString());
-        }
-    }
-    
-    /**
-     * @see junit.framework.TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        try {
-            AINetTestSuite.networkTearDown(netInstance);
         } catch (Exception e) {
-            fail("cleanUp failed exception: " + e.getMessage()
+            e.printStackTrace();
+            fail("Constructor failed. Error: " + e.getMessage()
                     + "\nNetwork type: " 
                     + netInstance.getNetType().toString());
         }
@@ -96,7 +97,16 @@ public class AssociationNetNodeTest extends TestCase {
             AssociationNode actual = netInstance.createNode(m_node1Name);
             //they must be the same object
             assertEquals(expected, actual);
-            
+            final Collection<String> sourceIDS = new ArrayList<String>(3);
+            sourceIDS.add("ID1");
+            sourceIDS.add("ID2");
+            sourceIDS.add("ID3");
+            LOGGER.debug("Adding annotation");
+            expected.addAnnotation(sourceIDS, AnnotationType.DUMMY);
+            LOGGER.debug("Annotation added");
+            LOGGER.debug("Retrieve the annotations");
+            expected.getAnnotations().size();
+            LOGGER.debug("Annotations retrieved");
             //test the different get functions
             actual = netInstance.getNodeByID(expected.getId());
             assertEquals(expected, actual);

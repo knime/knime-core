@@ -26,33 +26,18 @@ package org.knime.ext.ainet.unittests;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 import junit.framework.TestCase;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.ext.ainet.agents.geneontology.GOTerm;
 import org.knime.ext.ainet.core.AnnotationType;
 import org.knime.ext.ainet.core.AssociationLink;
 import org.knime.ext.ainet.core.AssociationNet;
 import org.knime.ext.ainet.core.AssociationNode;
 import org.knime.ext.ainet.core.LinkAnnotation;
 import org.knime.ext.ainet.core.NodeAnnotation;
-import org.knime.ext.ainet.core.exceptions.NetConfigurationException;
 import org.knime.ext.ainet.core.netimpl.AssociationNetFactory;
-import org.knime.ext.ainet.data.geneontology.GOEntry;
-import org.knime.ext.ainet.data.geneontology.GOEntryFactory;
-import org.knime.ext.ainet.data.genesubgroup.GeneExprSubgroupEntry;
-import org.knime.ext.ainet.data.hibernateresources.AnnotHibernateUtil;
-import org.knime.ext.ainet.data.textmining.DocumentAuthorFactory;
-import org.knime.ext.ainet.data.textmining.DocumentFactory;
-import org.knime.ext.ainet.data.textmining.TermFactory;
-import org.knime.ext.textmining.data.Document;
-import org.knime.ext.textmining.data.DocumentAuthor;
-import org.knime.ext.textmining.data.DocumentType;
-import org.knime.ext.textmining.data.PartOfSpeechTag;
-import org.knime.ext.textmining.data.PublicationDate;
+import org.knime.ext.ainet.core.netimpl.DBAssociationNet;
 
 /**
  * Tests if the network handles the link and node annotations correct.
@@ -65,6 +50,9 @@ public class AssociationNetAnnotationTest extends TestCase {
 //test values
     private final String m_node1Name = 
         AINetTestSuite.UNIT_NODE_PREFIX + "Node1";
+
+    private final String m_node2Name = 
+        AINetTestSuite.UNIT_NODE_PREFIX + "Node2";
     
 //    private final double m_link1Weight = 0.9;
     
@@ -78,35 +66,32 @@ public class AssociationNetAnnotationTest extends TestCase {
     private final AnnotationType m_anno4Type = AnnotationType.SYNONYM;
     
     private static AssociationNet netInstance;
-
+    
+    private static boolean isSetup = false;
+    
     /**
      * @see junit.framework.TestCase#setUp()
      */
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        if (isSetup) {
+            return;
+        }
         try {
             netInstance =  AssociationNetFactory.createNet(
                     AINetTestSuite.getNetType(), AINetTestSuite.getNetName());
+            if (netInstance instanceof DBAssociationNet) {
+                DBAssociationNet dbNet = (DBAssociationNet) netInstance;
+                dbNet.deleteNet();
+            }
+            netInstance =  AssociationNetFactory.createNet(
+                    AINetTestSuite.getNetType(), AINetTestSuite.getNetName());
+            isSetup = true;
             LOGGER.debug("Using network of type: " + netInstance.getNetType());
-        } catch (NetConfigurationException e) {
-            e.printStackTrace();
-            fail("SetUp failed. Error: " + e.getMessage()
-                    + "\nNetwork type: " 
-                    + netInstance.getNetType().toString());
-        }
-    }
-    
-    /**
-     * @see junit.framework.TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        try {
-            AINetTestSuite.networkTearDown(netInstance);
         } catch (Exception e) {
-            fail("cleanUp failed exception: " + e.getMessage()
+            e.printStackTrace();
+            fail("Constructor failed. Error: " + e.getMessage()
                     + "\nNetwork type: " 
                     + netInstance.getNetType().toString());
         }
@@ -123,23 +108,21 @@ public class AssociationNetAnnotationTest extends TestCase {
         try {
             final AssociationNode node1 = 
                 netInstance.createNode(m_node1Name);
-    //test the go entry annotation        
-            final Set<String> termParents = new HashSet<String>(2);
-            termParents.add("GO:0002506");
-            termParents.add("GO:0004806");
-            final GOTerm term1 = new GOTerm("GO:0001709", "GO name 1", "C", 
-                    "This could be a comment", termParents);
-            final GOEntry goEntry1 = GOEntryFactory.create(term1);
-            AnnotHibernateUtil.saveObject(goEntry1);
-            termParents.add("GO:0002506");
-            termParents.add("GO:0001709");
-            final GOTerm term = new GOTerm("GO:0004806", "GO name 2", "P", 
-                    "This is a comment", termParents);
-            final GOEntry goEntry2 = GOEntryFactory.create(term);
-            AnnotHibernateUtil.saveObject(goEntry2);
+            LOGGER.debug("Adding annotation");
             NodeAnnotation expectedNodeAnnot = 
-                node1.addAnnotation(m_anno1Type, goEntry1.getSourceID());
-            expectedNodeAnnot.addSourceID(goEntry2.getSourceID());
+                node1.addAnnotation(m_anno1Type, "Test annotation source id");
+            LOGGER.debug("Annotation added");
+            
+            LOGGER.debug("Adding annotation source id");
+            expectedNodeAnnot.addSourceID("Test annotation source id2");
+            LOGGER.debug("SourceID added");
+            LOGGER.debug("Retrieving annotation source id");
+            expectedNodeAnnot.getSourceIds().size();
+            LOGGER.debug("SourceID retrieved");
+            LOGGER.debug("Removing annotation source id");
+            expectedNodeAnnot.removeSourceID("Test annotation source id2");
+            LOGGER.debug("SourceID removed");
+            
             //expected.addAnnotationEntry(goEntry);
             NodeAnnotation foundNodeAnnotation = 
                 node1.getAnnotation(m_anno1Type);
@@ -147,49 +130,43 @@ public class AssociationNetAnnotationTest extends TestCase {
     
             //node2
             final AssociationNode node2 = 
-                netInstance.createNode(m_node1Name);
-    //test the gene expression sub group annotation        
-            final GeneExprSubgroupEntry geneEntry = new GeneExprSubgroupEntry();
-            geneEntry.setOrganism("GeneExprSubgroupEntry.CFG_ORGANISM");
-            geneEntry.setPlatform("GeneExprSubgroupEntry.CFG_PLATFORM");
-            geneEntry.setThresholdType(
-                    GeneExprSubgroupEntry.ThresholdType.CHANGE_P_VALUE);
-            geneEntry.setOverExprVal(0.9);
-            geneEntry.setUnderExprVal(0.1);
-            geneEntry.setSupport(0.8);
-            geneEntry.setRemarks("remarks");
-            AnnotHibernateUtil.saveObject(geneEntry);
+                netInstance.createNode(m_node2Name);
             expectedNodeAnnot = 
-                node2.addAnnotation(m_anno2Type, geneEntry.getSourceID());
+                node2.addAnnotation(m_anno2Type, "Test annotation source id3");
             foundNodeAnnotation = node2.getAnnotation(m_anno2Type);
             assertEquals(expectedNodeAnnot, foundNodeAnnotation);
 //test link annotation using node1 and node2
+            Collection<String> sourceIDs = new ArrayList<String>(3);
+            sourceIDs.add("Test annotation sourceIDs1");
+            sourceIDs.add("Test annotation sourceIDs2");
+            sourceIDs.add("Test annotation sourceIDs3");
             final AssociationLink link = 
                 netInstance.createLink(node1, node2);
-//test the term annotation            
-            final String file = "junitTestFile";
-            final Set<DocumentAuthor> authors = 
-                new HashSet<DocumentAuthor>(2);
-            authors.add(
-                    DocumentAuthorFactory.create("junitLast1", "junitFirst1"));
-            authors.add(
-                    DocumentAuthorFactory.create("junitLast2", "junitFirst2"));
-            final String fullText = "In der einfachen Suche können Sie in die";
-            final PublicationDate date = new PublicationDate();
-            final String title = "Junit document title";
-            final Document testDoc = DocumentFactory.create(title,fullText, 
-                    fullText,file, authors, date, DocumentType.UNKNOWN, null, 
-                    null);
-            final Collection<String> docIds = new ArrayList<String>(1);
-            docIds.add(testDoc.getTitle());
+            LOGGER.debug("Adding source ids");
             final LinkAnnotation expectedLinkAnnotation = link.addAnnotation(
-                    testDoc.getTitle(), m_anno3Type, 1.0, docIds);
+                    "Link annotation label", m_anno3Type, 1.0, sourceIDs);
+            LOGGER.debug("Source ids added");
+            
             LinkAnnotation foundAnnotation = link.getAnnotation(m_anno3Type);
             assertEquals(expectedLinkAnnotation, foundAnnotation);
-            //test the document term
-            TermFactory.create("testTerm", PartOfSpeechTag.MD);
-//            AnnotHibernateUtil.removeObject(docTerm);
-//test a synonym annotation with no sourceID
+            
+            LOGGER.debug("Removing all source ids");
+            expectedLinkAnnotation.removeSourceIDs(sourceIDs);
+            LOGGER.debug("All source ids removed");
+            
+            LOGGER.debug("Removing all but one source ids");
+            LOGGER.debug("\tAdding source ids");
+            expectedLinkAnnotation.addSourceIDs(sourceIDs);
+            LOGGER.debug("\tSource ids added");
+            LOGGER.debug("Retrieving annotation source ids");
+            expectedLinkAnnotation.getSourceIds().size();
+            LOGGER.debug("SourceIDs retrieved");
+            LOGGER.debug("\tAdding Not2remove source id ");
+            expectedLinkAnnotation.addSourceID("not removed source id");
+            LOGGER.debug("\tNot2remove source id added");
+            expectedLinkAnnotation.removeSourceIDs(sourceIDs);
+            LOGGER.debug("All source ids but one removed");
+            
             final LinkAnnotation expectedLinkAnnotation1 = 
                 link.addAnnotation(null, m_anno4Type, null, 1.0);
             foundAnnotation = link.getAnnotation(m_anno4Type);

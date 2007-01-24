@@ -33,8 +33,8 @@ import org.knime.ext.ainet.core.AnnotationType;
 import org.knime.ext.ainet.core.AssociationLink;
 import org.knime.ext.ainet.core.AssociationNet;
 import org.knime.ext.ainet.core.AssociationNode;
-import org.knime.ext.ainet.core.exceptions.NetConfigurationException;
 import org.knime.ext.ainet.core.netimpl.AssociationNetFactory;
+import org.knime.ext.ainet.core.netimpl.DBAssociationNet;
 
 /**
  * Tests the creation and getting of links.
@@ -57,34 +57,31 @@ public class AssociationNetLinkTest extends TestCase {
 
     private static AssociationNet netInstance;
     
+    private static boolean isSetup = false;
+    
     /**
      * @see junit.framework.TestCase#setUp()
      */
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        if (isSetup) {
+            return;
+        }
         try {
             netInstance =  AssociationNetFactory.createNet(
                     AINetTestSuite.getNetType(), AINetTestSuite.getNetName());
+            if (netInstance instanceof DBAssociationNet) {
+                DBAssociationNet dbNet = (DBAssociationNet) netInstance;
+                dbNet.deleteNet();
+            }
+            netInstance =  AssociationNetFactory.createNet(
+                    AINetTestSuite.getNetType(), AINetTestSuite.getNetName());
+            isSetup = true;
             LOGGER.debug("Using network of type: " + netInstance.getNetType());
-        } catch (NetConfigurationException e) {
-            e.printStackTrace();
-            fail("SetUp failed. Error: " + e.getMessage()
-                    + "\nNetwork type: " 
-                    + netInstance.getNetType().toString());
-        }
-    }
-    
-    /**
-     * @see junit.framework.TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        try {
-            AINetTestSuite.networkTearDown(netInstance);
         } catch (Exception e) {
-            fail("cleanUp failed exception: " + e.getMessage()
+            e.printStackTrace();
+            fail("Constructor failed. Error: " + e.getMessage()
                     + "\nNetwork type: " 
                     + netInstance.getNetType().toString());
         }
@@ -101,7 +98,12 @@ public class AssociationNetLinkTest extends TestCase {
             final AssociationNode node2 = netInstance.createNode(m_node2Name);
             final AssociationLink expected = netInstance.createLink(node1, 
                     node2);
+            LOGGER.debug("Adding annotation");
             expected.addAnnotation(null, m_annot1Type, null, m_link1Weight);
+            LOGGER.debug("Annotation added");
+            LOGGER.debug("Retrieve the annotations");
+            expected.getAnnotations().size();
+            LOGGER.debug("Annotations retrieved");
             AssociationLink actual = netInstance.createLink(node1, node2);
             actual.addAnnotation(null, m_annot1Type, null, m_link1Weight);
             assertEquals(expected, actual);

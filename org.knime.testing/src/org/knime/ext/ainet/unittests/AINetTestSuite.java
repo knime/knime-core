@@ -63,8 +63,8 @@ public class AINetTestSuite {
         //set the network type you want to test or it uses the default type
         networkType = AssociationNetType.DB_NET;
         //$JUnit-BEGIN$
-        suite.addTestSuite(GOEntryTest.class);
-        suite.addTestSuite(GOTermTest.class);
+//        suite.addTestSuite(GOEntryTest.class);
+//        suite.addTestSuite(GOTermTest.class);
         suite.addTestSuite(AssociationNetNodeTest.class);
         suite.addTestSuite(AssociationNetLinkTest.class);
         suite.addTestSuite(AssociationNetAnnotationTest.class);
@@ -91,7 +91,7 @@ public class AINetTestSuite {
     protected static void networkTearDown(final AssociationNet net) 
     throws Exception {
         LOGGER.debug("Start networkTearDown");
-        if (cleanUp) {
+        if (!cleanUp) {
             return;
         }
 //        return;

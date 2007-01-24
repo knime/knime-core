@@ -35,8 +35,8 @@ import org.knime.ext.ainet.core.AnnotationType;
 import org.knime.ext.ainet.core.AssociationLink;
 import org.knime.ext.ainet.core.AssociationNet;
 import org.knime.ext.ainet.core.AssociationNode;
-import org.knime.ext.ainet.core.exceptions.NetConfigurationException;
 import org.knime.ext.ainet.core.netimpl.AssociationNetFactory;
+import org.knime.ext.ainet.core.netimpl.DBAssociationNet;
 import org.knime.ext.ainet.data.geneontology.GOEntry;
 import org.knime.ext.ainet.data.geneontology.GOEntryFactory;
 
@@ -80,39 +80,37 @@ public class AssociationNetPerformanceTest extends TestCase {
     protected static void setNoOfLinks(final int noOfLinks) {
         AssociationNetPerformanceTest.noOfLinks = noOfLinks;
     }
+    
+    private static boolean isSetup = false;
+    
     /**
      * @see junit.framework.TestCase#setUp()
      */
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        if (isSetup) {
+            return;
+        }
         try {
             netInstance =  AssociationNetFactory.createNet(
                     AINetTestSuite.getNetType(), AINetTestSuite.getNetName());
+            if (netInstance instanceof DBAssociationNet) {
+                DBAssociationNet dbNet = (DBAssociationNet) netInstance;
+                dbNet.deleteNet();
+            }
+            netInstance =  AssociationNetFactory.createNet(
+                    AINetTestSuite.getNetType(), AINetTestSuite.getNetName());
+            isSetup = true;
             LOGGER.debug("Using network of type: " + netInstance.getNetType());
-        } catch (NetConfigurationException e) {
-            e.printStackTrace();
-            fail("SetUp failed. Error: " + e.getMessage()
-                    + "\nNetwork type: " 
-                    + netInstance.getNetType().toString());
-        }
-    }
-    
-    /**
-     * @see junit.framework.TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        try {
-            AINetTestSuite.networkTearDown(netInstance);
         } catch (Exception e) {
-            fail("cleanUp failed exception: " + e.getMessage()
+            e.printStackTrace();
+            fail("Constructor failed. Error: " + e.getMessage()
                     + "\nNetwork type: " 
                     + netInstance.getNetType().toString());
         }
     }
-    
+
     /**
      * Adds several nodes and links into the network to test the performance.
      * After adding a node or a link it also retrieve it again to test the 
@@ -144,6 +142,7 @@ public class AssociationNetPerformanceTest extends TestCase {
                         "B", "This could be a comment", termParents);
                 GOEntry goEntry = GOEntryFactory.create(term); 
                 node.addAnnotation(m_annoTypeGO, goEntry.getSourceID());
+                LOGGER.debug("Node " + i + " of " + noOfNodes + " created");
             }
             final long nodeEnd = System.currentTimeMillis();
             //LOGGER.info("No of nodes: " + netInstance.getNoOfNodes());
@@ -158,18 +157,9 @@ public class AssociationNetPerformanceTest extends TestCase {
                         AINetTestSuite.UNIT_NODE_PREFIX + (2 * i));
                 final AssociationLink link = netInstance.createLink(node1, 
                         node2);
-    //                final GeneExprSubgroupEntry geneEntry = 
-    //                    new GeneExprSubgroupEntry();
-    //        geneEntry.setOrganism("GeneExprSubgroupEntry.CFG_ORGANISM" + i);
-    //        geneEntry.setPlatform("GeneExprSubgroupEntry.CFG_PLATFORM" + i);
-    //        geneEntry.setThresholdType(
-    //                     GeneExprSubgroupEntry.ThresholdType.CHANGE_P_VALUE);
-    //             geneEntry.setOverExprVal(0.9);
-    //             geneEntry.setUnderExprVal(0.1);
-    //             geneEntry.setSupport(0.8);
-    //             geneEntry.setRemarks("remarks");
-               link.addAnnotation("Loop: " + i, m_annoTypeGeneExpr, null, 
-                       weightPerLoop * i);
+               link.addAnnotation("Loop: " + i, m_annoTypeGeneExpr, 
+                       "AnnotID of Loop " + i, weightPerLoop * i);
+               LOGGER.debug("Link " + i + " of " + noOfLinks + " created");
             }
             final long linkEnd = System.currentTimeMillis();
             final long nodeTime = nodeEnd - nodeStart;
@@ -206,6 +196,94 @@ public class AssociationNetPerformanceTest extends TestCase {
             fail(e.getMessage());
         }
         //LOGGER.info("No of links: " + netInstance.getNoOfLinks());
+    }
+    
+    /**
+     * This test case is used to test the Hibernate generated SQL
+     */
+    public void testSQL() {
+        LOGGER.debug("\n\n****Start SQL Test\n\n");
+        //repeat the test several times
+        for(int i = 1; i <= 500; i++){
+            try {
+                LOGGER.debug("Creating Node");
+                final long node1Start = System.currentTimeMillis();
+                AssociationNode node1 = netInstance.createNode(
+                        AINetTestSuite.UNIT_NODE_PREFIX + "SQL1" + i);
+                final long node1End = System.currentTimeMillis();
+                LOGGER.debug("Node created");
+                
+                LOGGER.debug("Adding node annotation");
+                final long node1AnnotStart = System.currentTimeMillis();
+                node1.addAnnotation(m_annoTypeGO, 
+                        "Fake annotation id 4711 Loop: " + i);
+                final long node1AnnotEnd = System.currentTimeMillis();
+                LOGGER.debug("Node annotation added");
+                
+                LOGGER.debug("Creating second node");
+                final long node2Start = System.currentTimeMillis();
+                AssociationNode node2 = netInstance.createNode(
+                        AINetTestSuite.UNIT_NODE_PREFIX + "SQL2" + i);
+                final long node2End = System.currentTimeMillis();
+                LOGGER.debug("Second node created");
+                
+                LOGGER.debug("Adding second node annotation");
+                final long node2AnnotStart = System.currentTimeMillis();
+                node2.addAnnotation(m_annoTypeGO, 
+                        "Fake annotation id 4712 Loop: " + i);
+                final long node2AnnotEnd = System.currentTimeMillis();
+                LOGGER.debug("Second node annotation added");
+                LOGGER.debug("Retrieving annotations");
+                node2.getAnnotations().size();
+                LOGGER.debug("Annotations retrieved");
+                
+                LOGGER.debug("Creating link");
+                final long linkStart = System.currentTimeMillis();
+                final AssociationLink link = netInstance.createLink(node1, 
+                        node2);
+                final long linkEnd = System.currentTimeMillis();
+                LOGGER.debug("Link created");
+                
+                LOGGER.debug("Adding link annotation");
+                final long linkAnnotStart = System.currentTimeMillis();
+                link.addAnnotation("Performance test annotation" + i, 
+                        m_annoTypeGeneExpr, 
+                        "Fake annotation source id 4713 Loop: " + i, 0.7);
+                LOGGER.debug("Link annotation added");
+                LOGGER.debug("Retrieving annotations");
+                link.getAnnotations().size();
+                LOGGER.debug("Annotations retrieved");
+                final long linkAnnotEnd = System.currentTimeMillis();
+                final long node1Time = node1End - node1Start;
+                final long node1AnnotTime = node1AnnotEnd - node1AnnotStart;
+                final long node2Time = node2End - node2Start;
+                final long node2AnnotTime = node2AnnotEnd - node2AnnotStart;
+                final long linkTime = linkEnd - linkStart;
+                final long linkAnnotTime = linkAnnotEnd - linkAnnotStart;
+                final long totalTime = node1Time + node1AnnotTime + node2Time 
+                    + node2AnnotTime + linkTime + linkAnnotTime;
+                LOGGER.info("End of sqlTest (NetType: " 
+                        + netInstance.getNetType().toString() + ") Round:" + i);
+                LOGGER.info("\tTime for node1 creation: " 
+                        + node1Time + "(millis.)\n");
+                LOGGER.info("\tTime for node1 annotation creation: " 
+                        + node1AnnotTime + "(millis.)\n");
+                LOGGER.info("\tTime for node2 creation: " 
+                        + node2Time + "(millis.)\n");
+                LOGGER.info("\tTime for node2 annotation creation: " 
+                        + node2AnnotTime + "(millis.)\n");
+                LOGGER.info("\tTime for link creation: " 
+                        + linkTime + "(millis.)\n");
+                LOGGER.info("\tTime for link annotation creation: " 
+                        + linkAnnotTime + "(millis.)\n");
+                LOGGER.info("\tTotal time: "
+                        + totalTime + "(millis.) or "
+                        + (totalTime / 1000) + "(sec) or " 
+                        + (totalTime / 1000 / 60) + "(min)");
+            } catch (Exception e) {
+                fail(e.getMessage());
+            }
+        }
     }
     
     private static long usedMemory() {

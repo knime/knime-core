@@ -34,8 +34,8 @@ import org.knime.ext.ainet.core.AssociationLink;
 import org.knime.ext.ainet.core.AssociationNet;
 import org.knime.ext.ainet.core.AssociationNetType;
 import org.knime.ext.ainet.core.AssociationNode;
-import org.knime.ext.ainet.core.exceptions.NetConfigurationException;
 import org.knime.ext.ainet.core.netimpl.AssociationNetFactory;
+import org.knime.ext.ainet.core.netimpl.DBAssociationNet;
 
 /**
  * Tests all functions of the association network. The type of the network to
@@ -56,15 +56,19 @@ public class AssociationNetTest extends TestCase {
     
     private final String m_node1Name = UNIT_NODE_PREFIX + "Node1";
 
-    private AssociationNode m_node1;
+    private static AssociationNode m_node1;
     
     private final String m_node2Name = UNIT_NODE_PREFIX + "Node2";
     
-    private AssociationNode m_node2;
+    private final String m_node3Name = UNIT_NODE_PREFIX + "Node3";
+    
+    private static AssociationNode m_node2;
 
-    private AssociationLink m_link1;
+    private static AssociationLink m_link1;
     
     private static AssociationNet netInstance;
+    
+    private static boolean isSetup = false;
     
     /**
      * @see junit.framework.TestCase#setUp()
@@ -72,44 +76,41 @@ public class AssociationNetTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        if (isSetup) {
+            return;
+        }
         try {
             netInstance =  AssociationNetFactory.createNet(NET_TYPE, 
                     AINetTestSuite.getNetName());
+            if (netInstance instanceof DBAssociationNet) {
+                DBAssociationNet dbNet = (DBAssociationNet) netInstance;
+                dbNet.deleteNet();
+            }
+            netInstance =  AssociationNetFactory.createNet(NET_TYPE, 
+                    AINetTestSuite.getNetName());
+            m_node1 = netInstance.createNode(m_node1Name);
+            m_node2 = netInstance.createNode(m_node2Name);
+            m_link1 = netInstance.createLink(m_node1, m_node2);
+            isSetup = true;
             LOGGER.debug("Using network of type: " + netInstance.getNetType());
-        } catch (NetConfigurationException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             fail("Constructor failed. Error: " + e.getMessage()
                     + "\nNetwork type: " 
                     + netInstance.getNetType().toString());
         }
-        m_node1 = netInstance.createNode(m_node1Name);
-        m_node2 = netInstance.createNode(m_node2Name);
-        m_link1 = netInstance.createLink(m_node1, m_node2);
     }
-
-    /**
-     * @see junit.framework.TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        try {
-            AINetTestSuite.networkTearDown(netInstance);
-        } catch (Exception e) {
-            fail("cleanUp failed exception: " + e.getMessage()
-                    + "\nNetwork type: " 
-                    + netInstance.getNetType().toString());
-        }
-    }
-
+    
     /**
      * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
      * nodeExists(java.lang.String)}.
      */
     public final void testNodeExists() {
+        LOGGER.info("Entering testNodeExists() of class AssociationNetTest.");
         assertFalse(netInstance.nodeExists(""));
         assertFalse(netInstance.nodeExists(null));
         assertTrue(netInstance.nodeExists(m_node1Name));
+        LOGGER.info("Exiting testNodeExists() of class AssociationNetTest.");
     }
 
     /**
@@ -118,19 +119,31 @@ public class AssociationNetTest extends TestCase {
      * org.knime.ext.ainet.core.AssociationNodeType)}.
      */
     public final void testCreateNode() {
+        LOGGER.info("Entering testCreateNode() of class AssociationNetTest.");
+        //try to create an existing node
         try {
             final AssociationNode expected = 
                 netInstance.createNode(m_node2Name);
+            assertEquals(expected, m_node2);
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+        //create a new node
+        try {
+            final AssociationNode expected = 
+                netInstance.createNode(m_node3Name);
             assertNotNull(expected);
         } catch (Exception e) {
             fail(e.getMessage());
         }
+        //create a node with name null
         try {
             netInstance.createNode(null);
             fail("Node name null should create exception");
         } catch (final Exception e) {
             //nothing to do
         }
+        LOGGER.info("Exiting testCreateNode() of class AssociationNetTest.");
     }
 
     /**
@@ -140,13 +153,15 @@ public class AssociationNetTest extends TestCase {
      * org.knime.ext.ainet.core.AssociationLinkType)}.
      */
     public final void testCreateLink() {
+        LOGGER.info("Entering testCreateLink() of class AssociationNetTest.");
         //create two different links between the same nodes one exists already
         //and between the same link but other direction
         try {
-            netInstance.createLink(m_node1, m_node2);
-            netInstance.createLink(m_node1, m_node2);
-            //test same type but other direction
-            netInstance.createLink(m_node2, m_node1);
+            AssociationLink link = netInstance.createLink(m_node1, m_node2);
+            assertNotNull(link);
+            AssociationLink link2 = netInstance.createLink(m_node2, m_node1);
+            assertNotNull(link2);
+            assertTrue(!link.equals(link2));
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -171,6 +186,7 @@ public class AssociationNetTest extends TestCase {
         } catch (Exception e) {
             //nothing to do
         }
+        LOGGER.info("Exiting testCreateLink() of class AssociationNetTest.");
     }
 
     /**
@@ -178,6 +194,7 @@ public class AssociationNetTest extends TestCase {
      * getNodes()}.
      */
     public final void testGetNodes() {
+        LOGGER.info("Entering testGetNodes() of class AssociationNetTest.");
         final Iterator<? extends AssociationNode> nodes = 
             netInstance.getNodes();
         boolean found = false;
@@ -196,12 +213,14 @@ public class AssociationNetTest extends TestCase {
         if (noOfNodes != nodeCounter) {
             fail("Either no of nodes or getNodes wrong implemented");
         }
+        LOGGER.info("Exiting testGetNodes() of class AssociationNetTest.");
     }
     /**
      * Test method for {@link org.knime.ext.ainet.core.AssociationNet#
      * getLinks()}.
      */
     public final void testGetLinks() {
+        LOGGER.info("Entering testGetLinks() of class AssociationNetTest.");
         final Iterator<? extends AssociationLink> links = 
             netInstance.getLinks();
         boolean found = false;
@@ -220,6 +239,7 @@ public class AssociationNetTest extends TestCase {
         if (noOfLinks != linkCounter) {
             fail("Either noOfLinks or getLinks is wrong implemented");
         }
+        LOGGER.info("Exiting testGetLinks() of class AssociationNetTest.");
     }
 
     /**
@@ -227,10 +247,15 @@ public class AssociationNetTest extends TestCase {
      * getNodeByName(java.lang.String)}.
      */
     public final void testGetNodeByName() {
-        AssociationNode nodeByName = netInstance.getNodeByName(m_node1Name);
+        LOGGER.info(
+                "Entering testGetNodeByName() of class AssociationNetTest.");
+        AssociationNode nodeByName = 
+            netInstance.getNodeByName(m_node1.getName());
         assertEquals(nodeByName, m_node1);
         assertNull(netInstance.getNodeByName(null));
         assertNull(netInstance.getNodeByName(""));
+        LOGGER.info(
+                "Exiting testGetNodeByName() of class AssociationNetTest.");
     }
 
     /**
@@ -238,8 +263,11 @@ public class AssociationNetTest extends TestCase {
      * getNodeByID(long)}.
      */
     public final void testGetNodeByID() {
+        LOGGER.info("Entering testGetNodeByID() of class AssociationNetTest.");
         AssociationNode nodeByID = netInstance.getNodeByID(m_node1.getId());
         assertEquals(nodeByID, m_node1);
+        assertNull(netInstance.getNodeByID(-1));
+        LOGGER.info("Exiting testGetNodeByID() of class AssociationNetTest.");
     }
 
     /**
@@ -255,6 +283,8 @@ public class AssociationNetTest extends TestCase {
      * getOutgoingLinksForNode(org.knime.ext.ainet.core.AssociationNode)}.
      */
     public final void testGetOutgoingLinksForNode() {
+        LOGGER.info("Entering testGetOutgoingLinksForNode() " 
+                + "of class AssociationNetTest.");
         Collection<? extends AssociationLink> outgoingLinksForNode = 
             netInstance.getOutgoingLinksForNode(m_node1);
         boolean found = false;
@@ -267,6 +297,8 @@ public class AssociationNetTest extends TestCase {
         if (!found) {
             fail("At least the one link we added in setUp should be present");
         }
+        LOGGER.info("Exiting testGetOutgoingLinksForNode() of " 
+                + "class AssociationNetTest.");
     }
 
     /**
@@ -276,12 +308,14 @@ public class AssociationNetTest extends TestCase {
      * org.knime.ext.ainet.core.AssociationLinkType)}.
      */
     public final void testGetLink() {
+        LOGGER.info("Entering testGetLink() of class AssociationNetTest.");
         AssociationLink link = 
             netInstance.getLink(m_node1, m_node2);
         assertEquals(link, m_link1);
         try {
             netInstance.getLink(null, m_node2);
             fail("Node1 = null should fail");
+            
         } catch (IllegalArgumentException e) {
             //nothing to do
         }
@@ -291,6 +325,7 @@ public class AssociationNetTest extends TestCase {
         } catch (IllegalArgumentException e) {
             //nothing to do
         }
+        LOGGER.info("Exiting testGetLink() of class AssociationNetTest.");
     }
 
     /**
@@ -298,7 +333,9 @@ public class AssociationNetTest extends TestCase {
      * getNoOfNodes()}.
      */
     public final void testGetNoOfNodes() {
+        LOGGER.info("Entering testGetNoOfNodes() of class AssociationNetTest.");
         netInstance.getNoOfNodes();
+        LOGGER.info("Exiting testGetNoOfNodes() of class AssociationNetTest.");
 //        try {
 //            AssociationNode node = netInstance.createNode(
 //                    UNIT_NODE_PREFIX + "noOfNodesTest", 
@@ -315,7 +352,9 @@ public class AssociationNetTest extends TestCase {
      * getNoOfLinks()}.
      */
     public final void testGetNoOfLinks() {
-//        long before = netInstance.getNoOfLinks();
+        LOGGER.info("Entering testGetNoOfLinks() of class AssociationNetTest.");
+        netInstance.getNoOfLinks();
+        LOGGER.info("Exiting testGetNoOfLinks() of class AssociationNetTest.");
 //        try {
 //            AssociationNode node = netInstance.createNode("noOflinks");
 //            netInstance.createLink(node, m_node2);
@@ -331,11 +370,13 @@ public class AssociationNetTest extends TestCase {
      * removeNode(org.knime.ext.ainet.core.AssociationNode)}.
      */
     public final void testRemoveNode() {
+        LOGGER.info("Entering testRemoveNode() of class AssociationNetTest.");
         try {
             AssociationNode node = 
                 netInstance.createNode(UNIT_NODE_PREFIX + "removeTest");
             assertTrue(netInstance.removeNode(node));
             assertFalse(netInstance.removeNode(node));
+            LOGGER.info("Exiting testRemoveNode() of class AssociationNetTest.");
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -346,12 +387,15 @@ public class AssociationNetTest extends TestCase {
      * removeLink(org.knime.ext.ainet.core.AssociationLink)}.
      */
     public final void testRemoveLink() {
+        LOGGER.info("Entering testRemoveLink() of class AssociationNetTest.");
         try {
             AssociationNode node = 
                 netInstance.createNode(UNIT_NODE_PREFIX + "removeLinkTest");
             AssociationLink link = netInstance.createLink(node, m_node2);
             assertTrue(netInstance.removeLink(link));
             assertFalse(netInstance.removeLink(link));
+            LOGGER.info(
+                    "Exiting testRemoveLink() of class AssociationNetTest.");
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -362,6 +406,10 @@ public class AssociationNetTest extends TestCase {
      * getRandomNode()}.
      */
     public final void testGetRandomNode() {
+        LOGGER.info(
+                "Entering testGetRandomNode() of class AssociationNetTest.");
         assertNotNull(netInstance.getRandomNode());
+        LOGGER.info(
+                "Exiting testGetRandomNode() of class AssociationNetTest.");
     }
 }
