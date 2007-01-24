@@ -75,8 +75,10 @@ blank workflow</h2>
 	<li>start the product in via &quot;knime.exe&quot; (&quot;knime.sh&quot; on Linux)</li>
 	<li>close the welcome window </li>
 	<li>create a new workflow (as usual) </li>
-	<li>open the preference (&quot;File&quot;--&gt;&quot;Preferences...&quot; and select
-	     &quot;Show Heap Status&quot; in the &quot;General&quot; tab. </li>
+	<li>open the preferences (&quot;File&quot;--&gt;&quot;Preferences...&quot;) and select
+	     &quot;Show Heap Status&quot; in the &quot;General&quot; page, do <b>not</b> for any 
+	     reason open the KNIME preference page as that will set default values for the 
+	     temporary directory and the number of threads being used </li>
 	<li>close KNIME </li>
 	<li>in the root directory should now be a directory &quot;workspace&quot; </li>
 </ul>
@@ -95,7 +97,8 @@ welcome window</h2>
 <p> </p>
 <h2><a name="Add_the_Iris_sample_data" />Add the Iris sample data</h2>
 <ul>
-	<li>create a directory in the KNIME root dir called &quot;IrisDataset&quot; </li>
+	<li>create a directory in the KNIME root dir called &quot;IrisDataset&quot; (the quickstart guide references
+	the Iris dataset, so we need to include that)</li>
 	<li>copy to this directory the &quot;data.all&quot;, &quot;data.trn&quot;, &quot;data.tst&quot;
 	and &quot;readme.txt&quot; file from the Iris dataset </li>
 </ul>
@@ -107,19 +110,14 @@ environment</h2>
 	runtime environment (JRE) on the destination computer, it is necessary
 	to supply the product with its own JRE </li>
 	<li>create a directory &quot;jre&quot; in the root directory </li>
-	<li>copy into this directory any JRE version 1.5 or higher </li>
+	<li>copy into this directory any JRE version 1.5 or higher (we use 1.5.0_10 for the 1.2.0 release)</li>
 </ul>
 <p> </p>
 <h2><a name="Add_the_example_workflow" />Add the example workflow</h2>
 <ul>
-	<li>create a directory &quot;ExampleFlow&quot; in the root directory and
-	copy in the example flow which can be imported from an exported archive
-	file 
-	<ul>
-		<li>The example flow to use can be found at
-		&quot;&lt;shared&gt;\KNIME\KNIME_CDs\ExampleFlow&quot;</li>
-	</ul>
-	</li>
+	<li>copy the &quot;&lt;shared&gt;\KNIME\KNIME_CDs\ExampleFlow&quot;
+	directory to the knime root directory. (This directory contains an exported
+	knime workflow that people can play with).</li>
 </ul>
 <p> </p>
 <h2><a name="Add_the_README.txt_and_LICENSE.txt_files" />Add the
