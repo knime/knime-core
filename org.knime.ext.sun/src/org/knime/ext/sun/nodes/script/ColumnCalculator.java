@@ -178,10 +178,10 @@ public class ColumnCalculator implements CellFactory {
             }
         } catch (EvaluationFailedException ee) {
             LOGGER.warn("Evaluation of expression failed for row \""
-                    + row.getKey().getId() + "\"", ee);
+                    + row.getKey().getId() + "\": " + ee.getMessage());
         } catch (IllegalPropertyException ipe) {
             LOGGER.warn("Evaluation of expression failed for row \""
-                    + row.getKey().getId() + "\"", ipe);
+                    + row.getKey().getId() + "\": " + ipe.getMessage());
         }
         DataCell result;
         if (m_returnType.equals(Integer.class)) {
