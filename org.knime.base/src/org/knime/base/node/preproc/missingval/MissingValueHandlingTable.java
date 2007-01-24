@@ -231,12 +231,16 @@ public final class MissingValueHandlingTable implements DataTable {
                 DataCell fixCell = sets[i].getFixCell();
                 boolean changed = false;
                 DataCell l = dom.getLowerBound();
-                if (l != null && (comp.compare(fixCell, l) < 0)) {
+                // lower and upper bound should not contain missing values
+                // (but rather be null). It may happen anyway, we catch it here
+                if (l != null && !l.isMissing() 
+                        && (comp.compare(fixCell, l) < 0)) {
                     changed = true;
                     l = fixCell;
                 }
                 DataCell u = dom.getUpperBound();
-                if (u != null && (comp.compare(fixCell, u) > 0)) {
+                if (u != null && !u.isMissing() 
+                        && (comp.compare(fixCell, u) > 0)) {
                     changed = true;
                     u = fixCell;
                 }
