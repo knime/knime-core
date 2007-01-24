@@ -24,10 +24,15 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
+import java.awt.Color;
 import java.io.File;
+import java.util.Iterator;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
+import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.HistogramDataRow;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -75,7 +80,9 @@ public class HistogramNodeModel extends NodeModel {
     private DataTable m_data;
 
     /**The histogram data model which holds all information.*/
-    private InteractiveHistogramDataModel m_model;
+    private HistogramDataModel m_model;
+    
+    private DataTableSpec m_tableSpec;
     
     /** The name of the x column. */
     private final SettingsModelString m_xColName = new SettingsModelString(
@@ -219,26 +226,46 @@ public class HistogramNodeModel extends NodeModel {
         return new BufferedDataTable[0];
     }
 
-    /**
-     * @param inData
-     * @param exec
-     * @param tableSpec
-     * @param selectedXCol
-     * @throws CanceledExecutionException
-     */
     private void createHistogramModel(final DataTable dataTable, 
             final int noOfRows, final ExecutionContext exec, 
             final String selectedXCol) 
     throws CanceledExecutionException {
-        final DataTableSpec tableSpec = dataTable.getDataTableSpec();
-        // create the properties panel
-//        m_properties = 
-//            new InteractiveHistogramProperties(AggregationMethod.COUNT);
-//        m_plotter = new InteractiveHistogramPlotter(tableSpec, m_properties, 
-//                getInHiLiteHandler(0), selectedXCol);
-//        m_plotter.setBackground(ColorAttr.getBackground());
-        m_model = new InteractiveHistogramDataModel(tableSpec, selectedXCol, 
-                    null, AggregationMethod.COUNT);
+        m_tableSpec = dataTable.getDataTableSpec();
+        if (m_tableSpec == null) {
+            throw new IllegalArgumentException(
+                    "Table specification shouldn't be null");
+        }
+        final int xColIdx = m_tableSpec.findColumnIndex(selectedXCol);
+        if (xColIdx < 0) {
+            throw new IllegalArgumentException(
+                    "Selected x column not found: " + selectedXCol);
+        }
+        final DataColumnSpec xColSpec = m_tableSpec.getColumnSpec(xColIdx);
+        if (xColSpec == null) {
+            throw new IllegalArgumentException(
+                    "No column specification found for selected x column:" 
+                    + selectedXCol);
+        }
+        //get the column specification for the first numerical column 
+        //as aggregation column
+        final int numColumns = m_tableSpec.getNumColumns();
+        
+        ColorColumn aggrColumn = null;
+        for (int i = 0; i < numColumns; i++) {
+            final DataColumnSpec spec = m_tableSpec.getColumnSpec(i);
+            if (spec.getType().isCompatible(DoubleValue.class)) {
+                aggrColumn = new ColorColumn(Color.CYAN, i, spec.getName());
+                break;
+            }
+        }
+        if (aggrColumn == null) {
+            throw new IllegalArgumentException(
+                    "No numeric column found in table specification");
+        }
+        final int aggrColIdx = aggrColumn.getColumnIndex();
+        m_model = new HistogramDataModel(HistogramDataModel.DEFAULT_NO_OF_BINS,
+                AggregationMethod.getDefaultMethod(), 
+                HistogramLayout.getDefaultLayout(), xColSpec, aggrColumn);
         if (dataTable != null) {
             final int selectedNoOfRows = m_noOfRows.getIntValue();
             //final int noOfRows = inData[0].getRowCount();
@@ -253,14 +280,17 @@ public class HistogramNodeModel extends NodeModel {
             for (int i = 0; i < selectedNoOfRows && rowIterator.hasNext();
                 i++) {
                 final DataRow row = rowIterator.next();
-//                m_plotter.addDataRow(row);
-                m_model.addDataRow(row);
+                final Color color = 
+                    m_tableSpec.getRowColor(row).getColor(false, false);
+                final HistogramDataRow histoRow = new HistogramDataRow(
+                        row.getKey(), color, row.getCell(xColIdx),
+                        row.getCell(aggrColIdx));
+                m_model.addDataRow(histoRow);
                 progress += progressPerRow;
                 exec.setProgress(progress, "Adding data rows to histogram...");
                 exec.checkCanceled();
             }
             exec.setProgress(1.0, "Histogram finished.");
-//            m_plotter.lastDataRowAdded();
         }
     }
 
@@ -283,11 +313,24 @@ public class HistogramNodeModel extends NodeModel {
     /**
      * @return the histogram data model
      */
-    protected InteractiveHistogramDataModel getHistogramModelClone() {
+    protected HistogramDataModel getHistogramModelClone() {
         if (m_model == null) {
             return null;
         }
-        return (InteractiveHistogramDataModel)m_model.clone();
+        return m_model.clone();
+    }
+    /**
+     * @return the {@link DataTableSpec} of the input table
+     */
+    protected DataTableSpec getTableSpec() {
+        return m_tableSpec;
+    }
+
+    protected Iterator<DataRow> getRows(){
+        if (m_data == null) {
+            return null;
+        }
+        return m_data.iterator();
     }
     
     /**

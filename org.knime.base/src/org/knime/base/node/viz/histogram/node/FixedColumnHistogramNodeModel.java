@@ -24,10 +24,14 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
+import java.awt.Color;
 import java.io.File;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramDataModel;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
+import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.HistogramDataRow;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -85,18 +89,11 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_allRows = new SettingsModelBoolean(
             CFGKEY_ALL_ROWS, false);
-//    
-//    /** The Rule2DPlotter is the core of the view. */
-//    private FixedColumnHistogramPlotter m_plotter;
-//
-//    /**
-//     * The <code>HistogramProps</code> class which holds the properties dialog
-//     * elements.
-//     */
-//    private FixedColumnHistogramProperties m_properties;
 
     /**The data model on which the plotter based on.*/
-    private FixedColumnHistogramDataModel m_model;
+    private HistogramDataModel m_model;
+    
+    private DataTableSpec m_tableSpec;
 
     /**
      * The constructor.
@@ -212,17 +209,30 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
                 + "FixedColumnHistogramNodeModel.");
         // create the data object
         BufferedDataTable data = inData[0];
-        // create the properties panel
-//        m_properties = 
-//            new FixedColumnHistogramProperties(AggregationMethod.COUNT);
         final String xCol = m_xColName.getStringValue();
-        final String aggrCol = m_aggrColName.getStringValue();
-        // create the plotter
-//        m_plotter = new FixedColumnHistogramPlotter(data.getDataTableSpec(), 
-//                m_properties, getInHiLiteHandler(0), xCol, aggrCol);
-//        m_plotter.setBackground(ColorAttr.getBackground());
-        m_model = new FixedColumnHistogramDataModel(data.getDataTableSpec(), 
-                xCol, aggrCol, AggregationMethod.COUNT);
+        m_tableSpec = data.getDataTableSpec();
+        if (m_tableSpec == null) {
+            throw new IllegalArgumentException(
+                    "No table specification found.");
+        }
+        final DataColumnSpec xColSpec = m_tableSpec.getColumnSpec(xCol);
+        if (xColSpec == null) {
+            throw new Exception("No column specification found for x column");
+        }
+        final int xColIdx = m_tableSpec.findColumnIndex(xCol);
+        if (xColIdx < 0) {
+            throw new IllegalArgumentException("Selected X column not found");
+        }
+        final String aggrColName = m_aggrColName.getStringValue();
+        final int aggrColIdx = m_tableSpec.findColumnIndex(aggrColName);
+        if (aggrColIdx < 0) {
+            throw new IllegalArgumentException("Aggregation column not found.");
+        }
+        final ColorColumn aggrColumns = 
+            new ColorColumn(Color.CYAN, aggrColIdx, aggrColName);
+        m_model = new HistogramDataModel(HistogramDataModel.DEFAULT_NO_OF_BINS,
+                AggregationMethod.getDefaultMethod(), 
+                HistogramLayout.getDefaultLayout(), xColSpec, aggrColumns);
         final int rowCount = data.getRowCount();
         if (m_allRows.getBooleanValue()) {
             //set the actual number of rows in the selected number of rows
@@ -240,7 +250,12 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         final RowIterator rowIterator = data.iterator();
         for (int i = 0; i < selectedNoOfRows && rowIterator.hasNext(); i++) {
             final DataRow row = rowIterator.next();
-            m_model.addDataRow(row);
+            final Color color = 
+                m_tableSpec.getRowColor(row).getColor(false, false);
+            final HistogramDataRow histoRow = new HistogramDataRow(
+                    row.getKey(), color, row.getCell(xColIdx),
+                    row.getCell(aggrColIdx));
+            m_model.addDataRow(histoRow);
             progress += progressPerRow;
             exec.setProgress(progress, "Adding data rows to histogram...");
             exec.checkCanceled();
@@ -256,19 +271,25 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-//        m_plotter = null;
-//        m_properties = null;
         m_model = null;
+        m_tableSpec = null;
     }
 
     /**
      * @return the histogram data model 
      */
-    protected FixedColumnHistogramDataModel getHistogramModelClone() {
+    protected HistogramDataModel getHistogramModelClone() {
         if (m_model == null) {
             return null;
         }
-        return (FixedColumnHistogramDataModel)m_model.clone();
+        return m_model.clone();
+    }
+
+    /**
+     * @return the {@link DataTableSpec} of the input table
+     */
+    protected DataTableSpec getTableSpec() {
+        return m_tableSpec;
     }
     
     /** 
