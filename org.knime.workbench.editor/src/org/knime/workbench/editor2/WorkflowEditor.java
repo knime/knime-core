@@ -458,22 +458,13 @@ public class WorkflowEditor extends GraphicalEditor implements
             do {
                 sb.append(counter + ". Exception:\n");
                 String weMsg = we.getMessage();
-                String tMsg = null;
-                Throwable t = we.getCause();
-                if (t != null) {
-                    tMsg = t.getMessage();
-                }
-                if (weMsg == null && tMsg == null) {
+
+                if (weMsg == null) {
                     sb.append("no details available");
                 } else {
-                    if (weMsg != null) {
-                        sb.append(weMsg + " ");
-                    }
-                    if (tMsg != null) {
-                        sb.append(tMsg);
-                    }
+                    sb.append(weMsg);
                 }
-                
+
                 sb.append("\n");
                 we = we.getNextException();
                 counter++;
