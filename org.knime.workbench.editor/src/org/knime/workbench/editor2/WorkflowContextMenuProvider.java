@@ -39,7 +39,6 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.meta.MetaNodeModel;
 import org.knime.core.node.workflow.NodeContainer;
-
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.EditMetaWorkflowAction;
@@ -52,8 +51,6 @@ import org.knime.workbench.editor2.actions.OpenViewEmbeddedAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * Provider for the Workflow editor's context menus.
@@ -170,12 +167,15 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 LOGGER.debug("adding open node-view action(s) "
                         + "to context menu...");
                 int numNodeViews = container.getNumViews();
-                // FG: if global setting is true, then open embedded views.
-                //
-                boolean openEmbedded = KNIMEUIPlugin.getDefault()
-                        .getPreferenceStore().getString(
-                                PreferenceConstants.P_CHOICE_VIEWMODE).equals(
-                                PreferenceConstants.P_CHOICE_VIEWMODE_VIEW);
+                /* BW: disabled this feature, no embedded eclipse views
+                 * available (to enable them uncomment the following lines
+                 * and also change the settings in MainPreferencePage.
+                 */
+                boolean openEmbedded = false;
+//                boolean openEmbedded = KNIMEUIPlugin.getDefault().
+//                      getPreferenceStore().getString(
+//                          PreferenceConstants.P_CHOICE_VIEWMODE).equals(
+//                          PreferenceConstants.P_CHOICE_VIEWMODE_VIEW);
                 for (int i = 0; i < numNodeViews; i++) {
                     if (openEmbedded) {
                         action = new OpenViewEmbeddedAction(container, i);

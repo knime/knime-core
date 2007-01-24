@@ -151,15 +151,18 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         Composite parent = getFieldEditorParent();
 
         // Open views as JFrame or embedded in an eclipse view
-        // TODO realize this !
-        addField(new RadioGroupFieldEditor(
-                PreferenceConstants.P_CHOICE_VIEWMODE,
-                "Select the mode how &views are opened", 1, new String[][] {
-                        { "External &JFrame",
-                                PreferenceConstants.P_CHOICE_VIEWMODE_JFRAME },
-                        { "Eclipse &view (embedded)",
-                                PreferenceConstants.P_CHOICE_VIEWMODE_VIEW } },
-                parent));
+        /* BW: disabled this feature as the eclipse embedded views do not
+         * have a menu associated. 
+         * NOTE: If you enable this option again, also undo my changes
+         * in WorkflowContextMenuProvider*/
+//        addField(new RadioGroupFieldEditor(
+//                PreferenceConstants.P_CHOICE_VIEWMODE,
+//                "Select the mode how &views are opened", 1, new String[][] {
+//                        { "External &JFrame",
+//                          PreferenceConstants.P_CHOICE_VIEWMODE_JFRAME },
+//                        { "Eclipse &view (embedded)",
+//                          PreferenceConstants.P_CHOICE_VIEWMODE_VIEW } },
+//                parent));
 
         // Specify the minimum log level for the console
         addField(new RadioGroupFieldEditor(
