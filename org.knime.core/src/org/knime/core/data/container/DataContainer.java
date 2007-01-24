@@ -574,19 +574,15 @@ public class DataContainer implements RowAppender {
         }
         DataCell value = cell instanceof BlobWrapperDataCell 
         ? ((BlobWrapperDataCell)cell).getCell() : cell;
-        if (m_minCells[col].isMissing()) {
-            assert (m_maxCells[col].isMissing());
+        DataType colType = m_spec.getColumnSpec(col).getType();
+        Comparator<DataCell> comparator = colType.getComparator();
+        if (m_minCells[col].isMissing()
+                || comparator.compare(value, m_minCells[col]) < 0) {
             m_minCells[col] = value;
+        }
+        if (m_maxCells[col].isMissing() 
+                || comparator.compare(value, m_maxCells[col]) > 0) {
             m_maxCells[col] = value;
-        } else {
-            DataType colType = m_spec.getColumnSpec(col).getType();
-            Comparator<DataCell> comparator = colType.getComparator();
-            if (comparator.compare(value, m_minCells[col]) < 0) {
-                m_minCells[col] = value;
-            }
-            if (comparator.compare(value, m_maxCells[col]) > 0) {
-                m_maxCells[col] = value;
-            }
         }
     }
     
