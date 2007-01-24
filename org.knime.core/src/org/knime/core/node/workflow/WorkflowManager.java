@@ -1675,8 +1675,12 @@ public class WorkflowManager implements WorkflowListener {
                 NodeSettings.loadFromXML(new FileInputStream(workflowFile));
         if (settings.containsKey(CFG_VERSION)) {
             m_loadedVersion = settings.getString(CFG_VERSION);
+            if (m_loadedVersion == null) {
+                throw new WorkflowException(
+                    "Refuse to load workflow: Workflow version not available.");
+            }
             // first version was only labeled with 1.0 instead of 1.0.0 
-            if (m_loadedVersion == "1.0") {
+            if (m_loadedVersion.equals("1.0")) {
                 m_loadedVersion = "1.0.0";
             }
         } else {
