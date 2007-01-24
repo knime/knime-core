@@ -62,9 +62,9 @@ class DBWriterNodeModel extends NodeModel {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DBWriterNodeModel.class);
 
-    private String m_driver = DBDriverLoader.JDBC_ODBC_DRIVER;
+    private String m_driver;
 
-    private String m_url = "jdbc:odbc:<database_name>";
+    private String m_url;
 
     private String m_user = "<user>";
 
@@ -92,7 +92,21 @@ class DBWriterNodeModel extends NodeModel {
      */
     DBWriterNodeModel() {
         super(1, 0);
-        reset();
+        // init default driver with the first from the driver list
+        // or use Java JDBC-ODBC as default
+        m_driver = DBDriverLoader.JDBC_ODBC_DRIVER;
+        String[] history = DBReaderDialogPane.DRIVER_ORDER.getHistory();
+        if (history != null && history.length > 0) {
+            m_driver = history[0];
+        }
+        // create database name from driver class
+        int lastIdx = m_driver.lastIndexOf('.');
+        m_url = "<database_name>";
+        if (lastIdx > 0) {
+            String url = m_driver.substring(0, lastIdx);
+            url = url.replace('.', ':');
+            m_url = url + ":" + m_url;
+        }
     }
 
     /**
@@ -144,6 +158,7 @@ class DBWriterNodeModel extends NodeModel {
         // write settings or skip it
         if (write) {
             m_driver = driver;
+            DBReaderDialogPane.DRIVER_ORDER.add(m_driver);
             m_url = database;
             m_user = user;
             m_pass = password;

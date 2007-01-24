@@ -57,11 +57,9 @@ class DBReaderConnectionNodeModel extends NodeModel {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DBReaderConnectionNodeModel.class);
 
-    private String m_driver = DBDriverLoader.JDBC_ODBC_DRIVER;
-
+    private String m_driver;
+    private String m_name;
     private String m_query = null;
-
-    private String m_name = null;
     private String m_user = null;
     private String m_pass = null;
 
@@ -81,6 +79,21 @@ class DBReaderConnectionNodeModel extends NodeModel {
     DBReaderConnectionNodeModel(final int dataIn, final int dataOut,
             final int modelIn, final int modelOut) {
         super(dataIn, dataOut, modelIn, modelOut);
+        // init default driver with the first from the driver list
+        // or use Java JDBC-ODBC as default
+        m_driver = DBDriverLoader.JDBC_ODBC_DRIVER;
+        String[] history = DBReaderDialogPane.DRIVER_ORDER.getHistory();
+        if (history != null && history.length > 0) {
+            m_driver = history[0];
+        }
+        // create database name from driver class
+        int lastIdx = m_driver.lastIndexOf('.');
+        m_name = "<database_name>";
+        if (lastIdx > 0) {
+            String url = m_driver.substring(0, lastIdx);
+            url = url.replace('.', ':');
+            m_name = url + ":" + m_name;
+        }
     }
 
     /**
@@ -143,6 +156,7 @@ class DBReaderConnectionNodeModel extends NodeModel {
         // write settings or skip it
         if (write) {
             m_driver = driver;
+            DBReaderDialogPane.DRIVER_ORDER.add(m_driver);
             m_query = statement;
             boolean changed = false;
             if (m_user != null && m_name != null && m_pass != null) { 

@@ -32,6 +32,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -54,6 +55,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.core.util.SimpleFileFilter;
 
@@ -82,6 +84,12 @@ public class DBReaderDialogPane extends NodeDialogPane {
     private JFileChooser m_chooser = null;
 
     private boolean m_passwordChanged = false;
+    
+    /**
+     * Keeps the history of all loaded driver and its order.
+     */
+    static final StringHistory DRIVER_ORDER = StringHistory.getInstance(
+            "database_drivers");
     
     /**
      * Creates new dialog.
@@ -203,12 +211,21 @@ public class DBReaderDialogPane extends NodeDialogPane {
             }
         }
         updateDriver();
-        m_driver.setSelectedItem(settings.getString("driver", ""));
+        String select = settings.getString("driver", 
+                m_driver.getSelectedItem().toString());
+        m_driver.setSelectedItem(select);
     }
 
     private void updateDriver() {
         m_driver.removeAllItems();
-        Set<String> driverNames = DBDriverLoader.getLoadedDriver();
+        Set<String> driverNames = new HashSet<String>(
+                DBDriverLoader.getLoadedDriver());
+        for (String driverName : DRIVER_ORDER.getHistory()) {
+            if (driverNames.contains(driverName)) {
+                m_driver.addItem(driverName);
+                driverNames.remove(driverName);
+            }
+        }
         for (String driverName : driverNames) {
             m_driver.addItem(driverName);
         }
