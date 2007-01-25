@@ -16,6 +16,7 @@
     </appender>
 
     <appender name="logfile" class="org.knime.core.util.LogfileAppender">
+        <param name="Threshold" value="WARN" />
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d{ISO8601} %-5p %t %c{1} : %m%n" />
         </layout>
