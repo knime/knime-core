@@ -628,11 +628,11 @@ public abstract class NodeView {
      * @return Default "no label" component.
      */
     private Component createNoDataComp() {
-        JLabel noData = new JLabel("<html><center>No data in<br>"
-                + getViewName() + "</center></html>", SwingConstants.CENTER);
-        noData
-                .setPreferredSize(new Dimension(INIT_COMP_WIDTH,
-                        INIT_COMP_HEIGTH));
+        JLabel noData = 
+            new JLabel("<html><center>No data to display</center></html>", 
+                    SwingConstants.CENTER);
+        noData.setPreferredSize(new Dimension(INIT_COMP_WIDTH,
+                INIT_COMP_HEIGTH));
         return noData;
     }
 }
