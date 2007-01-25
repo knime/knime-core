@@ -204,7 +204,7 @@ public class AssociationNetPerformanceTest extends TestCase {
     public void testSQL() {
         LOGGER.debug("\n\n****Start SQL Test\n\n");
         //repeat the test several times
-        for(int i = 1; i <= 500; i++){
+        for(int i = 1; i <= 5; i++){
             try {
                 LOGGER.debug("Creating Node");
                 final long node1Start = System.currentTimeMillis();
