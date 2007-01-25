@@ -7,7 +7,7 @@
 <config key="nodes">
 <config key="node_1">
 <entry key="node_settings_file" type="xstring" value="SMILES ___ SLN (#1)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.translate.SmilesSlnTranslatorNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.translate.SmilesSlnTranslatorNodeFactory"/>
 <entry key="id" type="xint" value="1"/>
 <entry key="customName" type="xstring" value="Node 1"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -169,7 +169,7 @@
 </config>
 <config key="node_4">
 <entry key="node_settings_file" type="xstring" value="SMILES ___ SLN (#4)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.translate.SmilesSlnTranslatorNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.translate.SmilesSlnTranslatorNodeFactory"/>
 <entry key="id" type="xint" value="4"/>
 <entry key="customName" type="xstring" value="Node 4"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -218,7 +218,7 @@
 </config>
 <config key="node_6">
 <entry key="node_settings_file" type="xstring" value="SMILES ___ SLN (#6)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.translate.SmilesSlnTranslatorNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.translate.SmilesSlnTranslatorNodeFactory"/>
 <entry key="id" type="xint" value="6"/>
 <entry key="customName" type="xstring" value="Node 6"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -244,7 +244,7 @@
 </config>
 <config key="node_7">
 <entry key="node_settings_file" type="xstring" value="SMILES ___ SLN (#7)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.translate.SmilesSlnTranslatorNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.translate.SmilesSlnTranslatorNodeFactory"/>
 <entry key="id" type="xint" value="7"/>
 <entry key="customName" type="xstring" value="Node 7"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -316,7 +316,7 @@
 </config>
 <config key="node_10">
 <entry key="node_settings_file" type="xstring" value="SMILES ___ SLN (#10)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.translate.SmilesSlnTranslatorNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.translate.SmilesSlnTranslatorNodeFactory"/>
 <entry key="id" type="xint" value="10"/>
 <entry key="customName" type="xstring" value="Node 10"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -342,7 +342,7 @@
 </config>
 <config key="node_11">
 <entry key="node_settings_file" type="xstring" value="SMILES ___ SLN (#11)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.translate.SmilesSlnTranslatorNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.translate.SmilesSlnTranslatorNodeFactory"/>
 <entry key="id" type="xint" value="11"/>
 <entry key="customName" type="xstring" value="Node 11"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -391,7 +391,7 @@
 </config>
 <config key="node_13">
 <entry key="node_settings_file" type="xstring" value="SMILES ___ SLN (#13)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.translate.SmilesSlnTranslatorNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.translate.SmilesSlnTranslatorNodeFactory"/>
 <entry key="id" type="xint" value="13"/>
 <entry key="customName" type="xstring" value="Node 13"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -417,7 +417,7 @@
 </config>
 <config key="node_14">
 <entry key="node_settings_file" type="xstring" value="SMILES ___ SLN (#14)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.translate.SmilesSlnTranslatorNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.translate.SmilesSlnTranslatorNodeFactory"/>
 <entry key="id" type="xint" value="14"/>
 <entry key="customName" type="xstring" value="Node 14"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -466,7 +466,7 @@
 </config>
 <config key="node_16">
 <entry key="node_settings_file" type="xstring" value="SMILES ___ SLN (#16)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.translate.SmilesSlnTranslatorNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.translate.SmilesSlnTranslatorNodeFactory"/>
 <entry key="id" type="xint" value="16"/>
 <entry key="customName" type="xstring" value="Node 16"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -538,7 +538,7 @@
 </config>
 <config key="node_19">
 <entry key="node_settings_file" type="xstring" value="SMILES ___ SLN (#19)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.translate.SmilesSlnTranslatorNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.translate.SmilesSlnTranslatorNodeFactory"/>
 <entry key="id" type="xint" value="19"/>
 <entry key="customName" type="xstring" value="Node 19"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -564,7 +564,7 @@
 </config>
 <config key="node_20">
 <entry key="node_settings_file" type="xstring" value="SMILES ___ SLN (#20)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.translate.SmilesSlnTranslatorNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.translate.SmilesSlnTranslatorNodeFactory"/>
 <entry key="id" type="xint" value="20"/>
 <entry key="customName" type="xstring" value="Node 20"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -590,7 +590,7 @@
 </config>
 <config key="node_21">
 <entry key="node_settings_file" type="xstring" value="SMILES ___ SLN (#21)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.translate.SmilesSlnTranslatorNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.translate.SmilesSlnTranslatorNodeFactory"/>
 <entry key="id" type="xint" value="21"/>
 <entry key="customName" type="xstring" value="Node 21"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>

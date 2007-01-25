@@ -14,7 +14,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.ext.sun,
  org.knime.ext.jfreechart,
  org.knime.ext.cdk,
- org.knime.ext.moss,
+ org.knime.ext.chem.moss,
  org.junit,
  org.knime.ext.weka,
  org.knime.deprecated

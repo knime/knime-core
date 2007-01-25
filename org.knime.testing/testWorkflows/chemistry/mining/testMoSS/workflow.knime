@@ -143,7 +143,7 @@
 </config>
 <config key="node_3">
 <entry key="node_settings_file" type="xstring" value="MoSS (#3)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.node.MoSSNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.node.MoSSNodeFactory"/>
 <entry key="id" type="xint" value="3"/>
 <entry key="customName" type="xstring" value="Node 3"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -195,7 +195,7 @@
 </config>
 <config key="node_5">
 <entry key="node_settings_file" type="xstring" value="MoSS (#5)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.node.MoSSNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.node.MoSSNodeFactory"/>
 <entry key="id" type="xint" value="5"/>
 <entry key="customName" type="xstring" value="Node 5"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -316,7 +316,7 @@
 </config>
 <config key="node_9">
 <entry key="node_settings_file" type="xstring" value="MoSS (#9)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.node.MoSSNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.node.MoSSNodeFactory"/>
 <entry key="id" type="xint" value="9"/>
 <entry key="customName" type="xstring" value="Node 9"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -368,7 +368,7 @@
 </config>
 <config key="node_10">
 <entry key="node_settings_file" type="xstring" value="MoSS (#10)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.node.MoSSNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.node.MoSSNodeFactory"/>
 <entry key="id" type="xint" value="10"/>
 <entry key="customName" type="xstring" value="Node 10"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -443,7 +443,7 @@
 </config>
 <config key="node_12">
 <entry key="node_settings_file" type="xstring" value="MoSS (#12)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.node.MoSSNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.node.MoSSNodeFactory"/>
 <entry key="id" type="xint" value="12"/>
 <entry key="customName" type="xstring" value="Node 12"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -495,7 +495,7 @@
 </config>
 <config key="node_13">
 <entry key="node_settings_file" type="xstring" value="MoSS (#13)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.ext.moss.node.MoSSNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.node.MoSSNodeFactory"/>
 <entry key="id" type="xint" value="13"/>
 <entry key="customName" type="xstring" value="Node 13"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
