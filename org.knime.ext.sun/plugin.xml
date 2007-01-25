@@ -5,6 +5,7 @@
          point="org.knime.workbench.repository.categories">
       <category
             after="meta"
+            description="miscellaneous nodes"
             icon="icons/missing.gif"
             level-id="misc"
             name="Misc"
