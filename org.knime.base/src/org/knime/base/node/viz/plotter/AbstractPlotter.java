@@ -1233,8 +1233,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
                 actualMax = Math.max(max, ((NumericCoordinate)getXAxis()
                         .getCoordinate()).getMaxDomainValue());
             }
-            xDomainCreator.setLowerBound(new IntCell((int)actualMin));
-            xDomainCreator.setUpperBound(new IntCell((int)actualMax));
+            xDomainCreator.setLowerBound(new DoubleCell(actualMin));
+            xDomainCreator.setUpperBound(new DoubleCell(actualMax));
             DataColumnSpecCreator xSpecCreator = new DataColumnSpecCreator("X",
                     DoubleCell.TYPE);
             xSpecCreator.setDomain(xDomainCreator.createDomain());
