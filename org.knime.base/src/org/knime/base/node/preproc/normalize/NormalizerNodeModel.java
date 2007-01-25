@@ -142,12 +142,7 @@ public class NormalizerNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        // no normalization? Issue a warning and return original
-        // DataTableSpec
-        if (m_mode == NONORM_MODE) {
-            setWarningMessage("No normalization mode set.");
-            return new DataTableSpec[]{inSpecs[0]};
-        }
+        
         if (inSpecs[0].getNumColumns() > 0) {
             if (m_columns != null) {
                 // sanity check: selected columns in actual spec?
@@ -170,6 +165,12 @@ public class NormalizerNodeModel extends NodeModel {
                 m_columns = new String[poscolumns.size()];
                 m_columns = poscolumns.toArray(m_columns);
             }
+            // no normalization? Issue a warning and return original
+            // DataTableSpec
+            if (m_mode == NONORM_MODE) {
+                setWarningMessage("No normalization mode set.");
+                return new DataTableSpec[]{inSpecs[0]};
+            }
             return new DataTableSpec[]{Normalizer.generateNewSpec(inSpecs[0],
                     m_columns)};
         }
@@ -185,6 +186,10 @@ public class NormalizerNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        if (m_columns == null) {
+            throw new InvalidSettingsException(
+                    "Columns to work on not defined.");
+        }
         Normalizer ntable = new Normalizer(inData[0], m_columns);
         AffineTransTable outTable;
         m_content = new ModelContent(CFG_MODEL_NAME);
