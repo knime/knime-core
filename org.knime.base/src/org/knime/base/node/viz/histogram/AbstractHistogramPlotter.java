@@ -37,6 +37,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedSet;
 
+import javax.swing.JSlider;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
@@ -96,6 +100,13 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     private final AbstractHistogramProperties m_histoProps;
     /** The current basic width of the bars. */
     private int m_binWidth = -1;
+    
+    /**If the user changes the layout to side-by-side we automatically
+     * set the bin width to maximum. If he goes back to stacked layout
+     * show the bars with the original bar width. Thats what this variable
+     * stores.*/
+    private int m_lastStackedBinWidth = -1;
+    
     /**
      *The plotter will show all bars empty or not when set to <code>true</code>.
      */
@@ -169,6 +180,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                                 e.getStateChange() == ItemEvent.SELECTED);
                     }
                 });
+        
         m_histoProps.addShowBarOutlineChangedListener(
                 new ItemListener() {
                     public void itemStateChanged(final ItemEvent e) {
@@ -180,6 +192,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                         }
                     }
                 });
+        
         m_histoProps.addLabelOrientationListener(
                 new ActionListener() {
                     public void actionPerformed(final ActionEvent e) {
@@ -193,6 +206,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                         }                       
                     }
                 });
+        
         m_histoProps.addLabelDisplayListener(
             new ActionListener() {
                 public void actionPerformed(final ActionEvent e) {
@@ -204,9 +218,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                         histoDrawingPane.setLabelDisplayPolicy(
                                 histoProps.getLabelDisplayPolicy());
                     }
-                    
                 }
-                
             });
 
         m_histoProps.addLayoutListener(new ActionListener() {
@@ -216,10 +228,22 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     if (histoProps != null) {
                         setHistogramLayout(histoProps.getHistogramLayout());
                     }
-                    
                 }
-                
             });
+        
+        m_histoProps.addBarWidthChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                final JSlider source = (JSlider)e.getSource();
+                //react only when the user has set the value and not during
+                //moving the slider
+//                if (!source.getValueIsAdjusting()) {
+                    final int barWidth = source.getValue();
+                    if (setPreferredBarWidth(barWidth)) {
+                        updatePaintModel();
+                    }
+//                }
+            }
+        });
     }
 
     /**
@@ -230,14 +254,14 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (histoModel == null) {
             throw new IllegalStateException("HistogramModel shouldn't be null");
         }
-        boolean hasChange = setPreferredBarWidth(m_histoProps.getBarWidth());
+//        boolean hasChange = setPreferredBarWidth(m_histoProps.getBarWidth());
+        boolean hasChange = 
+            setAggregationMethod(m_histoProps.getSelectedAggrMethod());
         if (!histoModel.isBinNominal()) {
             // this is only available for none nominal x axis properties
             hasChange = hasChange 
             || setNumberOfBars(m_histoProps.getNoOfBars());
         }
-        hasChange = hasChange 
-        || setAggregationMethod(m_histoProps.getSelectedAggrMethod());
         hasChange = hasChange 
         || setShowEmptyBins(m_histoProps.isShowEmptyBars());
         hasChange = hasChange 
@@ -256,6 +280,14 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      */
     @Override
     public void updateSize() {
+        final HistogramDataModel dataModel = getHistogramDataModel();
+        if (dataModel != null
+                && HistogramLayout.SIDE_BY_SIDE.equals(
+                        dataModel.getHistogramLayout())) {
+            //set the bin with to the maximum bin if the layout
+            //is side-by-side
+            m_binWidth = getMaxBinWidth();
+        }
         updatePaintModel();
     }
     
@@ -493,13 +525,14 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (getHistogramDataModel().setNoOfBins(noOfBins)) {
             setXCoordinates();
             setYCoordinates();
-//            // reset the vis bars
-//            getHistogramDrawingPane().setHistogramData(null);
-            // and we have to set the new max value for the y axis
-//            DataColumnSpec yColSpec = getAggregationColSpec();
-//            Coordinate yCoordinate = Coordinate.createCoordinate(yColSpec);
-//            getYAxis().setCoordinate(yCoordinate);
-            // updatePaintModel();
+            final HistogramDataModel dataModel = getHistogramDataModel();
+            if (dataModel != null
+                    && HistogramLayout.SIDE_BY_SIDE.equals(
+                            dataModel.getHistogramLayout())) {
+                //set the bin with to the maximum bin if the layout
+                //is side-by-side
+                m_binWidth = getMaxBinWidth();
+            }
             return true;
         }
         return false;
@@ -821,9 +854,16 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 //          if the layout has changed we have to update the y coordinates
             setYCoordinates();
             if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
-                //set the bin width to the maximum bin with by changing to the
-                //side by side layout
+                //save the current bin width to restore it after changing the
+                //layout again
+                m_lastStackedBinWidth = getBinWidth();
+                //... and set the bin width to the maximum bin 
+                //with by changing to the side by side layout
                 m_binWidth = getMaxBinWidth();
+                
+            } else if (HistogramLayout.STACKED.equals(layout)) {
+                //set the previous used bin width
+                m_binWidth = m_lastStackedBinWidth;
             }
             updatePaintModel();
         }

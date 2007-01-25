@@ -294,14 +294,14 @@ public abstract class AbstractHistogramProperties extends
      */
     private JPanel createVizSettingsPanel() {
         final JPanel vizPanel = new JPanel();
+//visualisation box
         final Box vizBox = Box.createVerticalBox();
         vizBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Display option"));
         vizBox.add(Box.createVerticalGlue());
         vizBox.add(m_showGrid);
         vizBox.add(Box.createVerticalGlue());
-        vizBox.add(m_showBarOutline);
-        vizBox.add(Box.createVerticalGlue());
+//label layout box  
         final Box labelBox = Box.createHorizontalBox();
         labelBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Labels"));
@@ -315,25 +315,45 @@ public abstract class AbstractHistogramProperties extends
                         LABEL_ORIENTATION_LABEL);
         labelBox.add(labelOrientationBox);
         labelBox.add(Box.createHorizontalGlue());
-        final Box layoutBox = Box.createHorizontalBox();
-        layoutBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
-                .createEtchedBorder(), "Bar Layout"));
-        layoutBox.add(Box.createHorizontalGlue());
+//bar layout box                
         final Box layoutDisplayBox = AbstractHistogramProperties
-                .createButtonGroupBox(m_layoutDisplayPolicy, true, null);
-        layoutBox.add(layoutDisplayBox);
-        layoutBox.add(Box.createHorizontalGlue());
+        .createButtonGroupBox(m_layoutDisplayPolicy, true, null);
+        final Box barWidthBox = Box.createVerticalBox();
+        // barWidthBox.setBorder(BorderFactory
+        // .createEtchedBorder(EtchedBorder.RAISED));
+        final Box barWidthLabelBox = Box.createHorizontalBox();
+        final JLabel barWidthLabel = new JLabel(
+                AbstractHistogramProperties.BAR_SIZE_LABEL);
+        barWidthLabelBox.add(Box.createHorizontalGlue());
+        barWidthLabelBox.add(barWidthLabel);
+        barWidthLabelBox.add(Box.createHorizontalGlue());
+        barWidthBox.add(barWidthLabelBox);
+        // the bar width slider box
+        final Box barWidthSliderBox = Box.createHorizontalBox();
+        barWidthSliderBox.add(Box.createHorizontalGlue());
+        barWidthSliderBox.add(m_barWidth);
+        barWidthSliderBox.add(Box.createHorizontalGlue());
+        barWidthBox.add(barWidthSliderBox);
+        barWidthBox.add(Box.createVerticalGlue());
+        barWidthBox.add(m_showBarOutline);
+        final Box barLayoutBox = Box.createHorizontalBox();
+        barLayoutBox.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), "Bar Layout"));
+        barLayoutBox.add(Box.createHorizontalGlue());
+        barLayoutBox.add(layoutDisplayBox);
+        barLayoutBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+        barLayoutBox.add(barWidthBox);
+        barLayoutBox.add(Box.createHorizontalGlue());
 
         final Box rootBox = Box.createHorizontalBox();
-        rootBox
-                .setBorder(BorderFactory
-                        .createEtchedBorder(EtchedBorder.RAISED));
+        rootBox.setBorder(
+                BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
         rootBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
         rootBox.add(vizBox);
         rootBox.add(Box.createHorizontalGlue());
         rootBox.add(labelBox);
         rootBox.add(Box.createHorizontalGlue());
-        rootBox.add(layoutBox);
+        rootBox.add(barLayoutBox);
         rootBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
         vizPanel.add(rootBox);
         return vizPanel;
@@ -430,22 +450,6 @@ public abstract class AbstractHistogramProperties extends
      */
     private JPanel createBarSettingsPanel() {
         final JPanel barPanel = new JPanel();
-        final Box barWidthBox = Box.createVerticalBox();
-        // barWidthBox.setBorder(BorderFactory
-        // .createEtchedBorder(EtchedBorder.RAISED));
-        final Box barWidthLabelBox = Box.createHorizontalBox();
-        final JLabel barWidthLabel = new JLabel(
-                AbstractHistogramProperties.BAR_SIZE_LABEL);
-        barWidthLabelBox.add(Box.createHorizontalGlue());
-        barWidthLabelBox.add(barWidthLabel);
-        barWidthLabelBox.add(Box.createHorizontalGlue());
-        barWidthBox.add(barWidthLabelBox);
-        // the bar width slider box
-        final Box barWidthSliderBox = Box.createHorizontalBox();
-        barWidthSliderBox.add(Box.createHorizontalGlue());
-        barWidthSliderBox.add(m_barWidth);
-        barWidthSliderBox.add(Box.createHorizontalGlue());
-        barWidthBox.add(barWidthSliderBox);
         final Box barNoBox = Box.createVerticalBox();
         // barNoBox.setBorder(BorderFactory
         // .createEtchedBorder(EtchedBorder.RAISED));
@@ -486,8 +490,8 @@ public abstract class AbstractHistogramProperties extends
         buttonBox.add(m_applyBarSettingsButton);
         barSelButtonBox.add(buttonBox);
         final Box barBox = Box.createHorizontalBox();
-        barBox.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
-        barBox.add(barWidthBox);
+        barBox.setBorder(
+                BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
         barBox.add(Box.createHorizontalGlue());
         barBox.add(barNoBox);
         barBox.add(Box.createHorizontalGlue());
@@ -909,6 +913,13 @@ public abstract class AbstractHistogramProperties extends
     protected void addShowBarOutlineChangedListener(
             final ItemListener listener) {
         m_showBarOutline.addItemListener(listener);
+    }
+    
+    /**
+     * @param listener adds the listener to the bar width slider
+     */
+    protected void addBarWidthChangeListener(final ChangeListener listener) {
+        m_barWidth.addChangeListener(listener);
     }
 
     /**

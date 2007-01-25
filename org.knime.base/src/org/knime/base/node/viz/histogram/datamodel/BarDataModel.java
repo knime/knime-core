@@ -155,7 +155,7 @@ public class BarDataModel {
             return getAggregationValue(method);
         } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
             final Collection<BarElementDataModel> elements = getElements();
-            double maxAggrValue = Double.MIN_VALUE;
+            double maxAggrValue = -Double.MAX_VALUE;
             for (BarElementDataModel element : elements) {
                 final double value = element.getAggregationValue(method);
                 if (value > maxAggrValue) {
@@ -260,9 +260,9 @@ public class BarDataModel {
         final int totalHeight = (int)m_barRectangle.getHeight();
         final double maxAggrVal = getMaxAggregationValue(aggrMethod, layout);
         final double minAggrVal = getMinAggregationValue(aggrMethod, layout);
-        double valRange = maxAggrVal;
+        double valRange = Math.max(Math.abs(maxAggrVal), Math.abs(minAggrVal));
         if (minAggrVal < 0 && maxAggrVal > 0) {
-            valRange = maxAggrVal - minAggrVal;
+            valRange = maxAggrVal + Math.abs(minAggrVal);
         }
         if (HistogramLayout.STACKED.equals(layout)) {
             //if the current layout is staked we have to be care full with
@@ -281,7 +281,7 @@ public class BarDataModel {
                 }
             }  
         }
-        valRange = Math.abs(valRange);
+        
         final double heightPerVal = totalHeight / valRange;
         final int startX = (int)m_barRectangle.getX();
         final int startY = (int)m_barRectangle.getY();
@@ -318,8 +318,14 @@ public class BarDataModel {
                         final double diff = totalHeight - elementHeightSum;
                         elementHeight = 
                             (int)Math.round(elementHeight + diff);
-                        LOGGER.debug("Height diff. in stacked visualization: " 
+                        LOGGER.debug("Height diff. on last element in "
+                                + " stacked visualization because "
+                                + "of rounding errors: " 
                                 + diff);
+                        LOGGER.debug("Bar height: " + totalHeight
+                                + " Height sum without adjustment: " 
+                                + elementHeightSum 
+                                + " No of elements: " + m_elements.size());
                     }
                 }
                 final Rectangle elementRect =  
@@ -329,9 +335,6 @@ public class BarDataModel {
                 //the next element below the current one
                 yCoord += elementHeight;
             }
-            LOGGER.debug("Bar height: " + totalHeight
-                    + " Height sum without adjustment: " + elementHeightSum 
-                    + " No of elements: " + m_elements.size());
         } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
             //the user wants the elements next to each other
             //so we have to change the x coordinate
@@ -344,9 +347,15 @@ public class BarDataModel {
                     final double aggrVal = 
                         element.getAggregationValue(aggrMethod);
                     //calculate the bar height
-                    final int barHeight = Math.max((int)(
+                    int barHeight = Math.max((int)(
                             heightPerVal * Math.abs(aggrVal)), 1);
-    //                }
+                    if (barHeight > totalHeight) {
+                        final int diff = barHeight - totalHeight;
+                        barHeight -= diff;
+                        LOGGER.debug("Height diff. in side-by-side layout."
+                                + " Element(Bar) higher than surrounding bar: " 
+                                + diff);
+                    }
                     //calculate the position of the y coordinate
                     int yCoord = 0;
                     if (aggrVal >= 0) {

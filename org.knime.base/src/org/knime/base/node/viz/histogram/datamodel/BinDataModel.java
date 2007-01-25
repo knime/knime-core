@@ -36,6 +36,7 @@ import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.NodeLogger;
 
 /**
  * This class holds the information of a histogram bin. A bin consists of at 
@@ -45,6 +46,8 @@ import org.knime.core.data.DoubleValue;
  */
 public class BinDataModel {
     
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(BinDataModel.class);
     /**
      * The space between to bars in pixel.
      */
@@ -342,11 +345,12 @@ public class BinDataModel {
         final int totalHeight = (int)m_binRectangle.getHeight();
         final double maxBinAggrVal = getMaxAggregationValue(aggrMethod, layout);
         final double minBinAggrVal = getMinAggregationValue(aggrMethod, layout);
-        double valRange = maxBinAggrVal;
+        double valRange = 
+            Math.max(Math.abs(maxBinAggrVal), Math.abs(minBinAggrVal));
         if (minBinAggrVal < 0 && maxBinAggrVal > 0) {
-            valRange = maxBinAggrVal - minBinAggrVal;
+            valRange = maxBinAggrVal + Math.abs(minBinAggrVal);
         }
-        valRange = Math.abs(valRange);
+        
         if (valRange <= 0) {
             return;
         }
@@ -359,15 +363,28 @@ public class BinDataModel {
             if (bar != null) {
                 final double maxBarAggrVal = 
                     bar.getMaxAggregationValue(aggrMethod, layout);
-                double barVal = Math.abs(maxBarAggrVal);
-                if (minBinAggrVal < 0 && barVal >= 0) {
-                    //add the minimum aggregation value to the real value
-                    //if it's negative
-                    barVal += Math.abs(minBinAggrVal);
+                final double minBarAggrVal = 
+                    bar.getMinAggregationValue(aggrMethod, layout);
+                double barVal = 
+                    Math.max(Math.abs(maxBarAggrVal), Math.abs(minBarAggrVal));
+                if (minBinAggrVal < 0 && maxBarAggrVal >= 0) {
+                    //add the other aggregation value to the real value
+                    //if the min value is negative and the max is positive
+                    if (Math.abs(minBarAggrVal) > maxBarAggrVal) {
+                        barVal += maxBinAggrVal;
+                    } else {
+                        barVal += Math.abs(minBinAggrVal);
+                    }
                 }
-                final int barMaxHeight = 
-                    Math.max((int)(heightPerVal * Math.abs(barVal)), 1);
+                int barMaxHeight = 
+                    Math.max((int)(heightPerVal * barVal), 1);
                 final int yCoord = startY + (totalHeight - barMaxHeight);
+                if (barMaxHeight > totalHeight) {
+                    final int diff = barMaxHeight - totalHeight;
+                    barMaxHeight -= diff;
+                    LOGGER.debug("Height diff. bar higher than bin: " 
+                            + diff);
+                }
                 final Rectangle barRect = 
                     new Rectangle(xCoord, yCoord, barWidth, barMaxHeight);
                 bar.setBarRectangle(barRect, aggrMethod, layout, baseLine,

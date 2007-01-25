@@ -388,18 +388,22 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     }
                 }
                 //draw the outline of the bar to debug in side by side modus
-//                if (HistogramLayout.SIDE_BY_SIDE.equals(
-//                        m_histoData.getHistogramLayout())) {
+                if (HistogramLayout.SIDE_BY_SIDE.equals(
+                        m_histoData.getHistogramLayout())) {
                     final Color barColor = bar.getColor();
                     final Rectangle barRectangle = bar.getBarRectangle();
                     drawRectangle(g2, barRectangle, barColor, 
                             ELEMENT_OUTLINE_STROKE);
-//                }
+                }
                 
             } //end of bar loop
-//            final Rectangle binRectangle = bin.getBinRectangle();
-//            drawRectangle(g2, binRectangle, Color.GREEN, 
-//                    GRID_LINE_STROKE);
+            //draw the outline of the bin to debug in multiple 
+            //aggregation column mode
+            if (m_histoData.getAggrColumns().length > 1) {
+                final Rectangle binRectangle = bin.getBinRectangle();
+                drawRectangle(g2, binRectangle, Color.ORANGE, 
+                        GRID_LINE_STROKE);
+            }
         } // end of the bin loop
         return;
     }
