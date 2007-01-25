@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>All-In-One creation guide</title>
+</head>
+<body>
+<h1><a name="All-In-Onecreationguide" />All-In-One creation guide</h1>
+<p> </p>
+<h2><a name="Installthefeatures" />Install the features</h2>
+<ul>
+	<li>unzip a Eclipse SDK 3.2 or higher</li>
+	<li>change the default workspace location
+		<ul>
+			<li>open the file ECLIPSE_ROOT/configuration/config.ini</li>
+			<li>set the property osgi.instance.area.default=workspace</li>
+		</ul>
+	</li>
+	<li>install GEF
+		<ul>
+			<li>GEF SDK 3.2 can be found at SHARED/KNIME/KNIME_CDs/KNIME_1.2.0/GEF_SDK3.2</li>
+			<li>restart Eclipse after the installation if it was running</li>
+		</ul>
+	</li>
+	<li>install the &quot;org.knime.features.base&quot; feature and the
+	&quot;org.knime.features.wizard&quot; feature
+	<ul>
+		<li> the features can also be installed via the update site
+		&quot;www.knime.org/update&quot;
+		</li>
+		<li>restart Eclipse after the installation if it was running</li>
+	</ul>
+	
+	</li>
+	
+</ul>
+<p> </p>
+<h2><a name="OpenTheKNIMEPerspective" />Open the KNIME perspective</h2>
+<ul>
+	<li>open the KNIME perspective</li>
+</ul>
+<p> </p>
+<h2><a name="Add_the_README.txtfile" />Add the
+README.txt file</h2>
+<ul>
+	<li>copy the README.txt file into the Eclipse
+	root directory 
+	<ul>
+		<li>The file can be found in the root directory of the
+		&quot;org.knime.product&quot; plugin </li>
+	</ul>
+	</li>
+</ul>
+<p> </p>
+<h2><a name="Documentation" />Add the
+documentation</h2>
+<ul>
+	<li>create a directory &quot;doc&quot; in the Eclipse root directory</li>
+	<li>copy the whole PDF documentation from the web project &quot;knime.org/WebContent/docs&quot;
+	to &quot;doc&quot;</li>
+</ul>
+<p> </p>
+<h2 class="Heading2"><a name="Zip_the_KNIME_AllInOne" />Zip the
+KNIME All-In-One</h2>
+<ul>
+	<li>finally create another zip (tar.gz) archive from the Eclipse root directory
+	naming it &quot;knime_win32_ALL_in_ONE_1.2.0&quot; or &quot;knime_linux_ALL_in_ONE_1.2.0.tar.gz&quot;</li>
+</ul>
+</body>
+</html>
