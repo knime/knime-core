@@ -1670,139 +1670,143 @@ public class WorkflowManager implements WorkflowListener {
         }
         // ==================================================================
         try {
-        // load workflow topology
-        NodeSettingsRO settings =
-                NodeSettings.loadFromXML(new FileInputStream(workflowFile));
-        if (settings.containsKey(CFG_VERSION)) {
-            m_loadedVersion = settings.getString(CFG_VERSION);
-            if (m_loadedVersion == null) {
-                throw new WorkflowException(
-                    "Refuse to load workflow: Workflow version not available.");
-            }
-            // first version was only labeled with 1.0 instead of 1.0.0 
-            if (m_loadedVersion.equals("1.0")) {
-                m_loadedVersion = "1.0.0";
-            }
-        } else {
-            m_loadedVersion = "0.9.0"; // CeBIT 2006 version without version id
-        }
-        LOGGER.debug("Trying to parse version: " + m_loadedVersion);
-        String[] versionStrArray = m_loadedVersion.split("\\.");
-        int[] versionIntArray = new int[]{
-                KNIMEConstants.MAJOR, KNIMEConstants.MINOR, KNIMEConstants.REV};
-        if (versionStrArray.length != versionIntArray.length) {
-            throw new WorkflowException("Refuse to load workflow: Unknown"
-                    + " workflow version \"" + m_loadedVersion + "\".");
-        }
-        for (int i = 0; i < versionIntArray.length; i++) {
-            int value = -1;
-            try {
-                value = Integer.parseInt(versionStrArray[i]);
-            } catch (NumberFormatException nfe) {
-                throw new WorkflowException(
-                        "Refuse to load workflow: Unknown workflow version "
-                        + "\"" + m_loadedVersion + "\".");
-            }
-            if (value < versionIntArray[i]) {
-                break;
-            } else if (value > versionIntArray[i]) {
-                throw new WorkflowException(
-                        "Refuse to load workflow: "
-                        + "The current KNIME version (" + KNIMEConstants.VERSION
-                        + ") is older than the workflow (" + m_loadedVersion 
-                        + ") you are trying to load.\n"
-                        + "Please get a newer version of KNIME.");
-            }
-        }
-        if (!KNIMEConstants.VERSION.equalsIgnoreCase(m_loadedVersion)) {
-            if (m_parent == null) {
-                LOGGER.warn(
-                        "The current KNIME version (" + KNIMEConstants.VERSION 
-                        + ") is different from the one that created the"
-                        + " workflow (" + m_loadedVersion 
-                        + ") you are trying to load. In some rare cases, it"
-                        + " might not be possible to load all data"
-                        + " or some nodes can't be configured."
-                        + " Please re-configure and/or re-execute these"
-                        + " nodes.");
-            }
-        }
-        load(settings);
-
-        File parentDir = workflowFile.getParentFile();
-
-        // data files are loaded using a repository of reference tables;
-        // these lines serves to init the repository so nodes can put their data
-        // into this map, the repository is deleted when the loading is done
-
-        // meta workflows must use their grand*-parent editor's id
-        // and only the grand-parent may initialize the repository with the id
-        WorkflowManager wfm = this;
-        while (wfm.m_parent != null) {
-            wfm = wfm.m_parent;
-        }
-        int loadID = System.identityHashCode(wfm);
-        if (wfm == this) {
-            BufferedDataTable.initRepository(loadID);
-        }
-        ArrayList<NodeContainer> failedNodes = new ArrayList<NodeContainer>();
-        // get all keys in there
-        try {
-            double nodeCounter = 1.0;
-            ExecutionMonitor execMon = new ExecutionMonitor(progMon);
-            for (int i = 0; i < topSortNodes().size(); i++) {
-                NodeContainer newNode = topSortNodes().get(i);
-                execMon.checkCanceled();
-                execMon.setMessage("Loading node: " + newNode.getNameWithID());
-                try {
-                    NodeSettingsRO nodeSetting =
-                            settings.getNodeSettings(KEY_NODES)
-                                    .getNodeSettings("node_" + newNode.getID());
-                    String nodeFileName =
-                            nodeSetting.getString(KEY_NODE_SETTINGS_FILE);
-                    File nodeFile = new File(parentDir, nodeFileName);
-                    NodeProgressMonitor subProgMon =
-                            execMon.createSubProgress(
-                                    1.0 / topSortNodes().size())
-                                    .getProgressMonitor();
-                    newNode.load(loadID, nodeFile, subProgMon);
-                } catch (IOException ioe) {
-                    String msg =
-                            "Unable to load node: " + newNode.getNameWithID()
-                                    + " -> reset and configure.";
-                    LOGGER.error(msg, ioe);
-                    failedNodes.add(newNode);
-                } catch (InvalidSettingsException ise) {
-                    String msg =
-                            "Unable to load node: " + newNode.getNameWithID()
-                                    + " -> reset and configure.";
-                    LOGGER.error(msg, ise);
-                    failedNodes.add(newNode);
-                } catch (Throwable e) {
-                    String msg =
-                            "Unable to load node: " + newNode.getNameWithID()
-                                    + " -> reset and configure.";
-                    LOGGER.error(msg, e);
-                    failedNodes.add(newNode);
+            // load workflow topology
+            NodeSettingsRO settings =
+                    NodeSettings.loadFromXML(new FileInputStream(workflowFile));
+            if (settings.containsKey(CFG_VERSION)) {
+                m_loadedVersion = settings.getString(CFG_VERSION);
+                if (m_loadedVersion == null) {
+                    throw new WorkflowException(
+                        "Refuse to load workflow: Workflow version not available.");
                 }
-                progMon.setProgress(nodeCounter / topSortNodes().size());
-                // progMon.setMessage("Prog: " + nodeCounter
-                // / topSortNodes().size());
-                nodeCounter += 1.0;
+                // first version was only labeled with 1.0 instead of 1.0.0 
+                if (m_loadedVersion.equals("1.0")) {
+                    m_loadedVersion = "1.0.0";
+                }
+            } else {
+                m_loadedVersion = "0.9.0"; // CeBIT 2006 version without version id
             }
-        } finally {
-            // put into a finally block because that may release much of memory
-
-            // only the wfm that create the repos may clear it, otherwise
-            // the meta workflow clears it and not-yet-loaded nodes
-            // in the parent cannot be loaded
-            if (wfm == this) {
-                BufferedDataTable.clearRepository(loadID);
+            LOGGER.debug("Trying to parse version: " + m_loadedVersion);
+            String[] versionStrArray = m_loadedVersion.split("\\.");
+            int[] versionIntArray = new int[]{
+                    KNIMEConstants.MAJOR, KNIMEConstants.MINOR, KNIMEConstants.REV};
+            if (versionStrArray.length != versionIntArray.length) {
+                throw new WorkflowException("Refuse to load workflow: Unknown"
+                        + " workflow version \"" + m_loadedVersion + "\".");
             }
-        }
-        for (NodeContainer newNode : failedNodes) {
-            resetAndConfigureNode(newNode.getID());
-        }
+            for (int i = 0; i < versionIntArray.length; i++) {
+                int value = -1;
+                try {
+                    value = Integer.parseInt(versionStrArray[i]);
+                } catch (NumberFormatException nfe) {
+                    throw new WorkflowException(
+                            "Refuse to load workflow: Unknown workflow version "
+                            + "\"" + m_loadedVersion + "\".");
+                }
+                if (value < versionIntArray[i]) {
+                    break;
+                } else if (value > versionIntArray[i]) {
+                    throw new WorkflowException(
+                            "Refuse to load workflow: "
+                            + "The current KNIME version (" + KNIMEConstants.VERSION
+                            + ") is older than the workflow (" + m_loadedVersion 
+                            + ") you are trying to load.\n"
+                            + "Please get a newer version of KNIME.");
+                }
+            }
+            if (!KNIMEConstants.VERSION.equalsIgnoreCase(m_loadedVersion)) {
+                if (m_parent == null) {
+                    LOGGER.warn(
+                            "The current KNIME version (" + KNIMEConstants.VERSION 
+                            + ") is different from the one that created the"
+                            + " workflow (" + m_loadedVersion 
+                            + ") you are trying to load. In some rare cases, it"
+                            + " might not be possible to load all data"
+                            + " or some nodes can't be configured."
+                            + " Please re-configure and/or re-execute these"
+                            + " nodes.");
+                }
+            }
+            
+            try {
+                load(settings);
+            } finally {
+    
+                File parentDir = workflowFile.getParentFile();
+        
+                // data files are loaded using a repository of reference tables;
+                // these lines serves to init the repository so nodes can put their data
+                // into this map, the repository is deleted when the loading is done
+        
+                // meta workflows must use their grand*-parent editor's id
+                // and only the grand-parent may initialize the repository with the id
+                WorkflowManager wfm = this;
+                while (wfm.m_parent != null) {
+                    wfm = wfm.m_parent;
+                }
+                int loadID = System.identityHashCode(wfm);
+                if (wfm == this) {
+                    BufferedDataTable.initRepository(loadID);
+                }
+                ArrayList<NodeContainer> failedNodes = new ArrayList<NodeContainer>();
+                // get all keys in there
+                try {
+                    double nodeCounter = 1.0;
+                    ExecutionMonitor execMon = new ExecutionMonitor(progMon);
+                    for (int i = 0; i < topSortNodes().size(); i++) {
+                        NodeContainer newNode = topSortNodes().get(i);
+                        execMon.checkCanceled();
+                        execMon.setMessage("Loading node: " + newNode.getNameWithID());
+                        try {
+                            NodeSettingsRO nodeSetting =
+                                    settings.getNodeSettings(KEY_NODES)
+                                            .getNodeSettings("node_" + newNode.getID());
+                            String nodeFileName =
+                                    nodeSetting.getString(KEY_NODE_SETTINGS_FILE);
+                            File nodeFile = new File(parentDir, nodeFileName);
+                            NodeProgressMonitor subProgMon =
+                                    execMon.createSubProgress(
+                                            1.0 / topSortNodes().size())
+                                            .getProgressMonitor();
+                            newNode.load(loadID, nodeFile, subProgMon);
+                        } catch (IOException ioe) {
+                            String msg =
+                                    "Unable to load node: " + newNode.getNameWithID()
+                                            + " -> reset and configure.";
+                            LOGGER.error(msg, ioe);
+                            failedNodes.add(newNode);
+                        } catch (InvalidSettingsException ise) {
+                            String msg =
+                                    "Unable to load node: " + newNode.getNameWithID()
+                                            + " -> reset and configure.";
+                            LOGGER.error(msg, ise);
+                            failedNodes.add(newNode);
+                        } catch (Throwable e) {
+                            String msg =
+                                    "Unable to load node: " + newNode.getNameWithID()
+                                            + " -> reset and configure.";
+                            LOGGER.error(msg, e);
+                            failedNodes.add(newNode);
+                        }
+                        progMon.setProgress(nodeCounter / topSortNodes().size());
+                        // progMon.setMessage("Prog: " + nodeCounter
+                        // / topSortNodes().size());
+                        nodeCounter += 1.0;
+                    }
+                } finally {
+                    // put into a finally block because that may release much of memory
+        
+                    // only the wfm that create the repos may clear it, otherwise
+                    // the meta workflow clears it and not-yet-loaded nodes
+                    // in the parent cannot be loaded
+                    if (wfm == this) {
+                        BufferedDataTable.clearRepository(loadID);
+                    }
+                }
+                for (NodeContainer newNode : failedNodes) {
+                    resetAndConfigureNode(newNode.getID());
+                }
+            }
         } finally {
             // ===============================================================
             // FIXME The following linesand the one line above are just hacks
