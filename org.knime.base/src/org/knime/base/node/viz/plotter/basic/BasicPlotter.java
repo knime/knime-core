@@ -38,6 +38,7 @@ import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
+import org.knime.base.util.coordinate.NumericCoordinate;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
@@ -271,18 +272,20 @@ public abstract class BasicPlotter extends AbstractPlotter {
         createYCoordinate(yMin, yMax);
         for (int i = 0; i < y.length; i++) {
         double value = y[i];
+        System.out.println(((NumericCoordinate)getXAxis().getCoordinate()).getMinDomainValue());
+        System.out.println(((NumericCoordinate)getXAxis().getCoordinate()).getMaxDomainValue());
         double mappedValue = getYAxis().getCoordinate().calculateMappedValue(
                 new DoubleCell(value), getDrawingPaneDimension().height,
                 true);
         int mappedX = (int)getXAxis().getCoordinate().calculateMappedValue(
-                new IntCell((int)x[i]), getDrawingPaneDimension().width, true);
+                new DoubleCell(x[i]), getDrawingPaneDimension().width, true);
         Point p = new Point(mappedX, (int)getScreenYCoordinate(mappedValue));
         line.addPoint(p);
         line.addDomainValue(new DataCellPoint(new DoubleCell(x[i]), 
                 new DoubleCell(value)));
         }
         ((BasicDrawingPane)getDrawingPane()).addDrawingElement(line);
-        fitToScreen();
+//        fitToScreen();
     }
     
     
