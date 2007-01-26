@@ -108,7 +108,7 @@ public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
             if (m_hasPrintedWarning) {
                 LOGGER.debug(message);
             } else {
-                LOGGER.warn(message + " (Suppress further warnings!)", nfe);
+                LOGGER.warn(message + " (Suppress further warnings!)");
                 m_hasPrintedWarning = true;
             }
             return DataType.getMissingCell();
