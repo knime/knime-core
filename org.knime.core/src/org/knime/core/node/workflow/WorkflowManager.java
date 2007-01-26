@@ -1838,7 +1838,7 @@ public class WorkflowManager implements WorkflowListener {
         }
 
         final WorkflowException workflowException =
-                new WorkflowException("Error while loading workflow: ");
+                new WorkflowException("Error while loading workflow");
         WorkflowException lastEx = workflowException;
 
         // Node-Subconfig
@@ -1897,8 +1897,8 @@ public class WorkflowManager implements WorkflowListener {
                 addConnection(cc);
             } catch (Exception ex) {
                 lastEx =
-                        new WorkflowException("Error while adding connection: ",
-                                lastEx, ex);
+                        new WorkflowException("Error while adding connection: "
+                                + ex.getMessage(), lastEx, ex);
                 LOGGER.error("Could not create connection: " + connectionKey
                         + " reason: " + ex.getMessage());
                 LOGGER.debug(connectionConfig, ex);
@@ -1906,7 +1906,7 @@ public class WorkflowManager implements WorkflowListener {
         }
 
         if (lastEx != workflowException) {
-            throw workflowException;
+            throw workflowException.getNextException();
         }
     }
 
