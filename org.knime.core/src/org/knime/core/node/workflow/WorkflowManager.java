@@ -67,7 +67,7 @@ import org.knime.core.util.MutableInteger;
  * Manager for a workflow holding Nodes and the connecting edge information. The
  * information is stored in a graph based data structure and allows to access
  * predecessors and successors. For performance reasons this implementation is
- * specific to vertices being of type <code>org.knime.dev.node.Node</code> and
+ * specific to vertices being of type {@link org.knime.core.node.Node} and
  * (directed) edges connecting ports indicated by indices.
  * 
  * @author M. Berthold, University of Konstanz
