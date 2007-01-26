@@ -101,6 +101,28 @@ welcome window</h2>
 	<li>save and close the file </li>
 </ul>
 <p> </p>
+<h2><a name="HistoryStore" />Settings for the Local History Store</h2>
+<ul>
+	<li>Eclipse maintains a local history to enable local compares and
+	so on </li>
+	<li>As KNIME stores large data files and other big workflow files,
+	it can happen that the local history store gets huge as well </li>
+	<li>To avoid this, the settings for the KNIME product are set
+	manually to values that avoid a huge local history (i.e. switch it
+	off) </li>
+	<li>Open the file
+	&quot;&lt;workspace&gt;\.metadata\.plugins\org.eclipse.core.runtime\.settings\
+	org.eclipse.core.resources.prefs&quot;</li>
+	<li>Adapt the following properties as stated
+	<ul>
+		<li>description.maxfilestatesize=0 </li>
+		<li>description.maxfilestates=0 </li>
+		<li>description.filestatelongevity=0 </li>
+	</ul>
+	</li>
+	<li>Note: these changes only apply to the given initial workspace!</li>
+</ul>
+<p> </p>
 <h2><a name="Add_the_Iris_sample_data" />Add the Iris sample data</h2>
 <ul>
 	<li>create a directory in the KNIME root dir called &quot;IrisDataset&quot; (the quickstart guide references
@@ -127,9 +149,9 @@ environment</h2>
 </ul>
 <p> </p>
 <h2><a name="Add_the_README.txt_and_LICENSE.txt_files" />Add the
-README.txt, LICENSE.txt and LICENSE.html files</h2>
+README.txt  and LICENSE files</h2>
 <ul>
-	<li>copy the README.txt, the LICENSE.txt and  the LICENSE.html files into the product
+	<li>copy the README.txt, the LICENSE.txt, the LICENSE.html, and gs.css files into the product
 	root directory 
 	<ul>
 		<li>The files can be found in the root directory of the
@@ -141,34 +163,12 @@ README.txt, LICENSE.txt and LICENSE.html files</h2>
 <h2><a name="QuickstartGuide" />Add the
 Quick Start Guide</h2>
 <ul>
-	<li>Copy the Quick Start Guide &quot;quickstartguide.pdf&quot; to the KNIME root directory 
+	<li>Copy the Quick Start Guide &quot;quickstart1.2.pdf&quot; to the KNIME root directory 
 	<ul>
-		<li>The files can be found in the web contennt project 
+		<li>The files can be found in the web content project 
 		&quot;knime.org&quot; in the directory &quot;WebContent/docs&quot; </li>
 	</ul>
 	</li>
-</ul>
-<p> </p>
-<h2><a name="HistoryStore" />Settings for the Local History Store</h2>
-<ul>
-	<li>Eclipse maintains a local history to enable local compares and
-	so on </li>
-	<li>As KNIME stores large data files and other big workflow files,
-	it can happen that the local history store gets huge as well </li>
-	<li>To avoid this, the settings for the KNIME product are set
-	manually to values that avoid a huge local history (i.e. switch it
-	off) </li>
-	<li>Open the file
-	&quot;&lt;workspace&gt;\.metadata\.plugins\org.eclipse.core.runtime\.settings\
-	org.eclipse.core.resources.prefs&quot;</li>
-	<li>Adapt the following properties as stated
-	<ul>
-		<li>description.maxfilestatesize=0 </li>
-		<li>description.maxfilestates=0 </li>
-		<li>description.filestatelongevity=0 </li>
-	</ul>
-	</li>
-	<li>Note: these changes only apply to the given initial workspace!</li>
 </ul>
 <p> </p>
 <h2 class="Heading2"><a name="Zip_the_KNIME_product" />Zip the

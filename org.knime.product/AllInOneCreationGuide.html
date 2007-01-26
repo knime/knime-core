@@ -9,14 +9,18 @@
 <h1><a name="All-In-Onecreationguide" />All-In-One creation guide</h1>
 <p> </p>
 <h2><a name="Installthefeatures" />Install the features</h2>
-<ul>
-	<li>unzip a Eclipse SDK 3.2 or higher</li>
-	<li>change the default workspace location
+	<ul>
+	<li>unzip a Eclipse SDK 3.2 or higher (we have used 3.2.0 for KNIME 1.2.0)</li>
+	<li>(On Windows only: change the default workspace location
 		<ul>
 			<li>open the file ECLIPSE_ROOT/configuration/config.ini</li>
 			<li>set the property osgi.instance.area.default=workspace</li>
-		</ul>
+		</ul>)
 	</li>
+	<li>(On Linux only: Start eclipse always from commandline using
+	the command line switch &quot;-data workspace&quot;, this will prevent 
+	eclipse from writing a config file containing a workspace history, the windows trick 
+	mentioned above does not work)</li>
 	<li>install GEF
 		<ul>
 			<li>GEF SDK 3.2 can be found at SHARED/KNIME/KNIME_CDs/KNIME_1.2.0/GEF_SDK3.2</li>
@@ -26,19 +30,19 @@
 	<li>install the &quot;org.knime.features.base&quot; feature and the
 	&quot;org.knime.features.wizard&quot; feature
 	<ul>
-		<li> the features can also be installed via the update site
-		&quot;www.knime.org/update&quot;
+		<li> Go to &quot;Help&quot; &quot;Software Updates&quot; &quot;Find and Install&quot; and
+		enter the new update site &quot;www.knime.org/update&quot; and give it the name
+		&quot;KNIME&quot;, in the following select base and the wizard feature to be installed.
 		</li>
-		<li>restart Eclipse after the installation if it was running</li>
 	</ul>
-	
 	</li>
 	
 </ul>
 <p> </p>
-<h2><a name="OpenTheKNIMEPerspective" />Open the KNIME perspective</h2>
+<h2><a name="InitPerspectives" />Init Perspectives</h2>
 <ul>
-	<li>open the KNIME perspective</li>
+	<li>open the KNIME perspective, make sure it is visible in the upper right corner of the eclipse
+	window, switch back to the java perspective and close the window</li>
 </ul>
 <p> </p>
 <h2><a name="Add_the_README.txtfile" />Add the
@@ -65,7 +69,7 @@ documentation</h2>
 KNIME All-In-One</h2>
 <ul>
 	<li>finally create another zip (tar.gz) archive from the Eclipse root directory
-	naming it &quot;knime_win32_ALL_in_ONE_1.2.0&quot; or &quot;knime_linux_ALL_in_ONE_1.2.0.tar.gz&quot;</li>
+	naming it &quot;eclipse_knime_win32_ALL-in-ONE_1.2.0&quot; or &quot;eclipse_knime_linux_ALL-in-ONE_1.2.0.tar.gz&quot;</li>
 </ul>
 </body>
 </html>
