@@ -6,7 +6,7 @@
 <config key="column_spec_0">
 <entry key="column_name" type="xstring" value="Molecules"/>
 <config key="column_type">
-<entry key="cell_class" type="xstring" value="org.knime.ext.cdk.type.CDKCell"/>
+<entry key="cell_class" type="xstring" value="org.knime.ext.chem.cdk.type.CDKCell"/>
 </config>
 <config key="column_domain"/>
 <config key="column_properties"/>
