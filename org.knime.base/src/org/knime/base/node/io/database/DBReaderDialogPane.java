@@ -207,7 +207,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
             try {
                 DBDriverLoader.loadDriver(new File(driver));
             } catch (Exception e) {
-                LOGGER.warn("Could not load driver from: " + driver, e);
+                LOGGER.warn("Could not load driver: " + driver, e);
             }
         }
         updateDriver();

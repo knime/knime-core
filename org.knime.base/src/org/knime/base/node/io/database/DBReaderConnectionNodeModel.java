@@ -172,8 +172,7 @@ class DBReaderConnectionNodeModel extends NodeModel {
                 try {
                     DBDriverLoader.loadDriver(new File(fileName));
                 } catch (Exception e2) {
-                    LOGGER.info("Could not load driver from: "
-                            + loadedDriver, e2);
+                    LOGGER.info("Could not load driver: " + fileName, e2);
                 }
             }
             if (changed) {
