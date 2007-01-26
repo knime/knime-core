@@ -13,8 +13,11 @@
    id="svg2"
    sodipodi:version="0.32"
    inkscape:version="0.44.1"
-   sodipodi:docbase="C:\Dokumente und Einstellungen\gabriel\Desktop"
-   sodipodi:docname="splash.svg">
+   sodipodi:docbase="C:\UniKN\KNIME\branch_1.2.x\org.knime.product"
+   sodipodi:docname="splash.svg"
+   inkscape:export-filename="C:\Dokumente und Einstellungen\gabriel\Desktop\splash.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -25,14 +28,14 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="476.80987"
+     inkscape:cx="418.94052"
      inkscape:cy="538.77173"
      inkscape:document-units="px"
      inkscape:current-layer="g2137"
      inkscape:window-width="1272"
      inkscape:window-height="848"
-     inkscape:window-x="259"
-     inkscape:window-y="146" />
+     inkscape:window-x="224"
+     inkscape:window-y="101" />
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -146,12 +149,12 @@
              y="301.99414"
              x="625.12261"
              id="tspan2165"
-             sodipodi:role="line">Version 1.2.0beta</tspan><tspan
+             sodipodi:role="line">Version 1.2.0 BETA</tspan><tspan
              id="tspan1986"
              style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
              y="315.92474"
              x="625.12262"
-             sodipodi:role="line">(Build 25 Jan 2007)</tspan></text>
+             sodipodi:role="line">(Build January 27, 2007)</tspan></text>
         <g
            inkscape:export-ydpi="90"
            inkscape:export-xdpi="90"
