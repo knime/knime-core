@@ -738,7 +738,8 @@ public abstract class NodeFactory {
      */
     protected final String getViewDescription(final int index) {
         Element e;
-        if ((m_views == null) || ((e = m_views.get(index)) == null)) {
+        if ((m_views == null) || (index >= m_views.size())
+                || ((e = m_views.get(index)) == null)) {
             return "No description available";
         } else {
             return e.getFirstChild().getNodeValue().trim().replaceAll(
@@ -790,7 +791,8 @@ public abstract class NodeFactory {
      */
     protected final String getNodeViewName(final int index) {
         Element e;
-        if ((m_views == null) || ((e = m_views.get(index)) == null)) {
+        if ((m_views == null) || (index >= m_views.size())
+                || ((e = m_views.get(index)) == null)) {
             return "NoName";
         } else {
             return e.getAttribute("name");
