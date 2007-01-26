@@ -1,9 +1,9 @@
-/* Created on Nov 11, 2006 1:40:47 PM by thor
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2006
+ * Copyright, 2003 - 2007
  * University of Konstanz, Germany.
  * Chair for Bioinformatics and Information Mining
  * Prof. Dr. Michael R. Berthold
