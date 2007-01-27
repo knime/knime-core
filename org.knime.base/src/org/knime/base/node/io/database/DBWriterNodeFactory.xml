@@ -11,7 +11,7 @@
 		<intro>		
 	     Establishes and opens a database access connection to which the entire input data can be written. 
 	     Make sure you have your personal database driver registered. The sun.jdbc.odbc.JdbcOdbcDriver is available
-	     by default only but you can use the load button to register additional drivers from Zip or Jar.
+	     by default only but you can use the load button to register additional drivers from Zip or Jar archives.
 		</intro>
 		
 	<option name="Database Driver: ">
