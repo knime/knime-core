@@ -88,7 +88,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     /**
      * Adds the filters to the viewer.
      * 
-     * @param viewer the viewer
+     * @param viewer
+     *            the viewer
      * @since 2.0
      */
     @Override
@@ -101,7 +102,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     /**
      * Sets the label provider for the viewer.
      * 
-     * @param viewer the viewer
+     * @param viewer
+     *            the viewer
      * @since 2.0
      */
     @Override
@@ -115,13 +117,14 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      * Handles an open event from the viewer. Opens an editor on the selected
      * knime project.
      * 
-     * @param event the open event
+     * @param event
+     *            the open event
      */
     @Override
     protected void handleOpen(final OpenEvent event) {
 
         IStructuredSelection selection =
-                (IStructuredSelection)event.getSelection();
+                (IStructuredSelection) event.getSelection();
 
         Iterator<Object> elements = selection.iterator();
         while (elements.hasNext()) {
@@ -130,7 +133,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
                 // get the workflow file of the project
                 // must be "workflow.knime"
-                IProject project = (IProject)element;
+                IProject project = (IProject) element;
 
                 IFile workflowFile = project.getFile("workflow.knime");
 
@@ -297,7 +300,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      * for the kinme projects. Note: Projects which are closed in the default
      * navigator are not shown in the knime navigator any more.
      * 
-     * @param menu the context menu
+     * @param menu
+     *            the context menu
      */
     @Override
     public void fillContextMenu(final IMenuManager menu) {
@@ -313,7 +317,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
             if (item instanceof ActionContributionItem) {
 
-                ActionContributionItem aItem = (ActionContributionItem)item;
+                ActionContributionItem aItem = (ActionContributionItem) item;
                 // remove the gointo item
                 if (aItem.getAction() instanceof GoIntoAction) {
 
@@ -330,7 +334,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         // that invokes the knime export wizard directly
         menu.remove("import");
         menu.insertBefore("export", new ImportKnimeWorkflowAction(Workbench
-                .getInstance()));
+                .getInstance().getActiveWorkbenchWindow()));
 
         menu.remove("export");
         menu.insertAfter(ImportKnimeWorkflowAction.ID,
@@ -354,7 +358,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         for (IContributionItem item : items) {
             menu.remove(item);
         }
-        menu.add(new NewKnimeWorkflowAction(Workbench.getInstance()));
+        menu.add(new NewKnimeWorkflowAction(Workbench.getInstance()
+                .getActiveWorkbenchWindow()));
         for (int i = 1; i < items.length; i++) {
             menu.add(items[i]);
         }
