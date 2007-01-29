@@ -24,8 +24,17 @@
  */
 package org.knime.workbench.help.intro;
 
+import java.net.URL;
+
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
-import org.eclipse.ui.internal.ide.update.InstallWizardAction;
+import org.eclipse.update.internal.search.SiteSearchCategory;
+import org.eclipse.update.internal.ui.UpdateUI;
+import org.eclipse.update.internal.ui.UpdateUIMessages;
+import org.eclipse.update.internal.ui.wizards.InstallWizardOperation;
+import org.eclipse.update.search.UpdateSearchRequest;
+import org.eclipse.update.search.UpdateSearchScope;
+import org.eclipse.update.ui.UpdateJob;
 
 /**
  * Custom action to open the install wizard.
@@ -33,6 +42,8 @@ import org.eclipse.ui.internal.ide.update.InstallWizardAction;
  * @author Christoph, University of Konstanz
  */
 public class InvokeInstallSiteAction extends Action {
+
+    private final static String ID = "INVOKE_INSTALL_SITE_ACTION";
 
     /**
      * Constructor.
@@ -48,8 +59,57 @@ public class InvokeInstallSiteAction extends Action {
         openInstaller();
     }
 
+    private InstallWizardOperation getOperation() {
+        return new InstallWizardOperation();
+    }
+
     private void openInstaller() {
-        InstallWizardAction installWizardAction = new InstallWizardAction();
-        installWizardAction.run();
+
+        try {
+            SiteSearchCategory category = new SiteSearchCategory();
+            category.setId("org.eclipse.update.core.unified-search");
+            category.setLiteFeaturesAreOK(true);
+
+            UpdateSearchScope scope = new UpdateSearchScope();
+            scope.setFeatureProvidedSitesEnabled(true);
+            scope.addSearchSite("KNIME",
+                    new URL("http://www.knime.org/update"), new String[0]);
+
+            UpdateSearchRequest searchRequest =
+                    new UpdateSearchRequest(category, scope);
+            UpdateJob job =
+                    new UpdateJob(UpdateUIMessages.InstallWizard_jobName,
+                            searchRequest);
+            job.setUser(true);
+            job.setPriority(Job.INTERACTIVE);
+
+            getOperation().run(UpdateUI.getActiveWorkbenchShell(), job);
+            
+            // OLD WAY: Started to early (user had to select update or install)
+            // InstallWizardAction installWizardAction = new
+            // InstallWizardAction();
+            // installWizardAction.run();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public String getDescription() {
+        return "Opens the KNIME update site to install "
+                + "additional KNIMIE features.";
+    }
+
+    @Override
+    public String getText() {
+        return "Update KNIME...";
+    }
+
+    /**
+     * Returns the id of this action
+     */
+    @Override
+    public String getId() {
+        return ID;
     }
 }

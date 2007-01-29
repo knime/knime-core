@@ -13,7 +13,11 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui,
  org.eclipse.ui.intro,
  org.knime.workbench.ui,
- org.eclipse.ui.ide
+ org.eclipse.ui.ide,
+ org.eclipse.update.configurator,
+ org.eclipse.update.core,
+ org.eclipse.update.scheduler,
+ org.eclipse.update.ui
 Eclipse-AutoStart: true
 Bundle-ManifestVersion: 2
 Export-Package: org.knime.workbench.help,
