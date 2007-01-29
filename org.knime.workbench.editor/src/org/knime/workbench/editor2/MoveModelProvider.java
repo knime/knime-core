@@ -26,6 +26,7 @@
 package org.knime.workbench.editor2;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.mapping.ModelProvider;
@@ -75,9 +76,17 @@ public class MoveModelProvider extends ModelProvider {
             // boolean existsworkflow =
             // delta.getAffectedChildren()[1].getResource().getProject()
             // .exists(new Path("workflow.knime"));
-            IFile workflowFile =
-                    delta.getAffectedChildren()[1].getResource().getProject()
-                            .getFile("workflow.knime");
+            IProject project = null;
+            IFile workflowFile = null;
+            for (IResourceDelta affectedChild : delta.getAffectedChildren()) {
+                project = affectedChild.getResource().getProject();
+                workflowFile = project.getFile("workflow.knime");
+
+                // break if we found the project with a knime workflow
+                if (workflowFile.exists()) {
+                    break;
+                }
+            }
 
             // check whether this is a move delta
             IResourceDelta[] deltas = delta.getAffectedChildren();
@@ -112,11 +121,19 @@ public class MoveModelProvider extends ModelProvider {
                 }
 
                 if (editorOpen) {
-                    return new ModelStatus(IStatus.WARNING,
-                            ResourcesPlugin.PI_RESOURCES, getModelProviderId(),
-                            "In case the editor for this workflow is opened"
-                                    + ", renaming will result in "
-                                    + "inconsistant states!");
+                    return new ModelStatus(
+                            IStatus.WARNING,
+                            ResourcesPlugin.PI_RESOURCES,
+                            getModelProviderId(),
+                            "Renaming "
+                                    + project.getName()
+                                    + " may have undesirable side effects "
+                                    + "since this workflow is currently open."
+                                    + " You may loose some or all of your "
+                                    + "data if you continue (although the "
+                                    + "settings will"
+                                    + " not be affected). Consider closing the "
+                                    + "workflow before renaming it.");
                 }
             }
         } catch (Throwable t) {
