@@ -83,7 +83,7 @@ public class ImportKnimeWorkflowAction extends Action {
      * 
      * @param workbench the workbench
      * @deprecated use the constructor
-     *             <code>ImportResourcesAction(IWorkbenchWindow)</code>
+     *             <code>ImportKnimeWorkflowAction(IWorkbenchWindow)</code>
      */
     public ImportKnimeWorkflowAction(final IWorkbench workbench) {
         this(workbench.getActiveWorkbenchWindow());
