@@ -25,6 +25,7 @@
 package org.knime.product.rcp;
 
 import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.ICoolBarManager;
 import org.eclipse.jface.action.IMenuManager;
@@ -42,6 +43,7 @@ import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.ide.IDEActionFactory;
+import org.knime.workbench.help.intro.InvokeInstallSiteAction;
 
 /**
  * This advisor is resposible for creating the workbench actions and fills them
@@ -83,6 +85,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     private IWorkbenchAction m_saveAllAction;
     
     private IWorkbenchAction m_changeWorkspaceAction;
+    
+    private IAction m_updateKnimeAction;
 
     // private IAction m_openOutlineViewAction;
     //    
@@ -135,6 +139,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         m_changeWorkspaceAction =
                 IDEActionFactory.OPEN_WORKSPACE.create(window);
         register(m_changeWorkspaceAction);
+        m_updateKnimeAction = new InvokeInstallSiteAction();
+        register(m_updateKnimeAction);
         m_preferencesAction = ActionFactory.PREFERENCES.create(window);
         register(m_preferencesAction);
 
@@ -223,6 +229,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         fileMenu.add(m_changeWorkspaceAction);
         fileMenu.add(new Separator());
         fileMenu.add(m_preferencesAction);
+        fileMenu.add(m_updateKnimeAction);
         fileMenu.add(new Separator());
         fileMenu.add(m_exitAction);
 
