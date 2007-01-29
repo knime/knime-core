@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="workflow.knime">
+<entry key="version" type="xstring" value="1.2.0"/>
+<entry key="runningNodeID" type="xint" value="27"/>
+<entry key="runningConnectionID" type="xint" value="52"/>
+<config key="nodes">
+<config key="node_1">
+<entry key="node_settings_file" type="xstring" value="CAIM Applier (#1)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"/>
+<entry key="id" type="xint" value="1"/>
+<entry key="customName" type="xstring" value="Node 1"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="429"/>
+<entry key="1" type="xint" value="511"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="CAIM Applier"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model"/>
+</config>
+<config key="node_2">
+<entry key="node_settings_file" type="xstring" value="CAIM Binner (#2)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.discretization.caim.modelcreator.CAIMDiscretizationNodeFactory"/>
+<entry key="id" type="xint" value="2"/>
+<entry key="customName" type="xstring" value="Node 2"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="296"/>
+<entry key="1" type="xint" value="492"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="CAIM Binner"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="classColumn" type="xstring" value="class"/>
+<config key="includedColumns">
+<entry key="array-size" type="xint" value="2"/>
+<entry key="0" type="xstring" value="sepal length"/>
+<entry key="1" type="xstring" value="petal length"/>
+</config>
+<entry key="classOptimized" type="xboolean" value="true"/>
+<entry key="sortInMemory" type="xboolean" value="true"/>
+</config>
+</config>
+<config key="node_4">
+<entry key="node_settings_file" type="xstring" value="Normalizer (#4)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.normalize.NormalizerNodeFactory"/>
+<entry key="id" type="xint" value="4"/>
+<entry key="customName" type="xstring" value="Node 4"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="195"/>
+<entry key="1" type="xint" value="130"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Normalizer"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="mode" type="xint" value="1"/>
+<entry key="newmin" type="xdouble" value="0.0"/>
+<entry key="newmax" type="xdouble" value="1.0"/>
+<config key="columns">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xstring" value="sepal length"/>
+<entry key="1" type="xstring" value="sepal width"/>
+<entry key="2" type="xstring" value="petal length"/>
+<entry key="3" type="xstring" value="petal width"/>
+</config>
+</config>
+</config>
+<config key="node_5">
+<entry key="node_settings_file" type="xstring" value="Normalizer _Apply_ (#5)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.normalize.NormalizerApplyNodeFactory"/>
+<entry key="id" type="xint" value="5"/>
+<entry key="customName" type="xstring" value="Node 5"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="340"/>
+<entry key="1" type="xint" value="149"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Normalizer (Apply)"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model"/>
+</config>
+<config key="node_7">
+<entry key="node_settings_file" type="xstring" value="HiLite Filter (#7)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.filter.hilite.HiliteFilterNodeFactory"/>
+<entry key="id" type="xint" value="7"/>
+<entry key="customName" type="xstring" value="Node 7"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="462"/>
+<entry key="1" type="xint" value="312"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="HiLite Filter"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model"/>
+</config>
+<config key="node_8">
+<entry key="node_settings_file" type="xstring" value="RowID (#8)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.rowkey.RowKeyNodeFactory"/>
+<entry key="id" type="xint" value="8"/>
+<entry key="customName" type="xstring" value="Node 8"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="359"/>
+<entry key="1" type="xint" value="312"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="RowID"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<config key="replaceRowKey_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="replaceRowKey" type="xboolean" value="true"/>
+<config key="ensureUniqueness_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="ensureUniqueness" type="xboolean" value="true"/>
+<config key="replaceMissingValues_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="replaceMissingValues" type="xboolean" value="true"/>
+<config key="newRowKeyColumnName_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="newRowKeyColumnName" type="xstring" value="sepal length"/>
+<config key="appendRowKeyCol_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="appendRowKeyCol" type="xboolean" value="false"/>
+<config key="newColumnName4RowKeyValues_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="newColumnName4RowKeyValues" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+<config key="node_9">
+<entry key="node_settings_file" type="xstring" value="Shape Manager (#9)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory"/>
+<entry key="id" type="xint" value="9"/>
+<entry key="customName" type="xstring" value="Node 9"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="467"/>
+<entry key="1" type="xint" value="149"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Shape Manager"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="selected_column" type="xstring" value="class"/>
+<entry key="Iris-setosa" type="xstring" value="Reverse Triangle"/>
+<entry key="Iris-versicolor" type="xstring" value="Triangle"/>
+<entry key="Iris-virginica" type="xstring" value="Rectangle"/>
+<config key="values">
+<entry key="array-size" type="xint" value="3"/>
+<config key="0">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Iris-setosa"/>
+</config>
+</config>
+<config key="1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Iris-versicolor"/>
+</config>
+</config>
+<config key="2">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Iris-virginica"/>
+</config>
+</config>
+</config>
+</config>
+</config>
+<config key="node_13">
+<entry key="node_settings_file" type="xstring" value="MetaNode 0_1 (#13)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.meta.MetaNodeFactory01"/>
+<entry key="id" type="xint" value="13"/>
+<entry key="customName" type="xstring" value="Node 13"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="68"/>
+<entry key="1" type="xint" value="130"/>
+<entry key="2" type="xint" value="80"/>
+<entry key="3" type="xint" value="95"/>
+</config>
+<entry key="name" type="xstring" value="MetaNode 0:1"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model"/>
+</config>
+<config key="node_14">
+<entry key="node_settings_file" type="xstring" value="Box Plot (#14)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.viz.plotter.box.BoxPlotNodeFactory"/>
+<entry key="id" type="xint" value="14"/>
+<entry key="customName" type="xstring" value="Node 14"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="630"/>
+<entry key="1" type="xint" value="345"/>
+<entry key="2" type="xint" value="80"/>
+<entry key="3" type="xint" value="95"/>
+</config>
+<entry key="name" type="xstring" value="Box Plot"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model"/>
+</config>
+<config key="node_16">
+<entry key="node_settings_file" type="xstring" value="Histogram (#16)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.viz.histogram.node.FixedColumnHistogramNodeFactory"/>
+<entry key="id" type="xint" value="16"/>
+<entry key="customName" type="xstring" value="Node 16"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="630"/>
+<entry key="1" type="xint" value="245"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Histogram"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings"/>
+<config key="model">
+<config key="allRows_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="allRows" type="xboolean" value="false"/>
+<config key="noOfRows_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_integer"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="noOfRows" type="xint" value="5000"/>
+<config key="xColumn_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="xColumn" type="xstring" value="class"/>
+<config key="aggrColumn_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="aggrColumn" type="xstring" value="petal width"/>
+</config>
+</config>
+<config key="node_17">
+<entry key="node_settings_file" type="xstring" value="Scatter Matrix (#17)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.viz.plotter.scattermatrix.ScatterMatrixNodeFactory"/>
+<entry key="id" type="xint" value="17"/>
+<entry key="customName" type="xstring" value="Node 17"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="629"/>
+<entry key="1" type="xint" value="139"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Scatter Matrix"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings"/>
+<config key="model">
+<entry key="end" type="xint" value="2500"/>
+<entry key="antialias" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="node_18">
+<entry key="node_settings_file" type="xstring" value="Line Plot (#18)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.viz.plotter.line.LinePlotterNodeFactory"/>
+<entry key="id" type="xint" value="18"/>
+<entry key="customName" type="xstring" value="Node 18"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="630"/>
+<entry key="1" type="xint" value="450"/>
+<entry key="2" type="xint" value="80"/>
+<entry key="3" type="xint" value="95"/>
+</config>
+<entry key="name" type="xstring" value="Line Plot"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings"/>
+<config key="model">
+<entry key="end" type="xint" value="2500"/>
+<entry key="antialias" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="node_19">
+<entry key="node_settings_file" type="xstring" value="Hierarchical Clustering (#19)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"/>
+<entry key="id" type="xint" value="19"/>
+<entry key="customName" type="xstring" value="Node 19"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="533"/>
+<entry key="1" type="xint" value="21"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Hierarchical Clustering"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="numberClusters" type="xint" value="3"/>
+<entry key="distFunction" type="xstring" value="Euclidean"/>
+<entry key="linkageType" type="xstring" value="SINGLE"/>
+</config>
+</config>
+<config key="node_20">
+<entry key="node_settings_file" type="xstring" value="K_Means (#20)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.mine.cluster.kmeans.ClusterNodeFactory"/>
+<entry key="id" type="xint" value="20"/>
+<entry key="customName" type="xstring" value="Node 20"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="669"/>
+<entry key="1" type="xint" value="21"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="K-Means"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="nrClusters" type="xint" value="7"/>
+<entry key="maxNrIterations" type="xint" value="88"/>
+</config>
+</config>
+<config key="node_24">
+<entry key="node_settings_file" type="xstring" value="File Reader (#24)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.io.filereader.FileReaderNodeFactory"/>
+<entry key="id" type="xint" value="24"/>
+<entry key="customName" type="xstring" value="Node 24"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="219"/>
+<entry key="1" type="xint" value="245"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="File Reader"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<config key="Delimiters">
+<config key="Delim0">
+<entry key="pattern" type="xstring" value="&#10;"/>
+<entry key="combineMultiple" type="xboolean" value="true"/>
+<entry key="includeInToken" type="xboolean" value="false"/>
+<entry key="returnAsToken" type="xboolean" value="true"/>
+</config>
+<config key="Delim1">
+<entry key="pattern" type="xstring" value=" "/>
+<entry key="combineMultiple" type="xboolean" value="true"/>
+<entry key="includeInToken" type="xboolean" value="false"/>
+<entry key="returnAsToken" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="Quotes">
+<config key="Quote0">
+<entry key="left" type="xstring" value="&quot;"/>
+<entry key="right" type="xstring" value="&quot;"/>
+<entry key="EscChar" type="xchar" value="\"/>
+<entry key="DontRem" type="xboolean" value="false"/>
+</config>
+<config key="Quote1">
+<entry key="left" type="xstring" value="'"/>
+<entry key="right" type="xstring" value="'"/>
+<entry key="EscChar" type="xchar" value="\"/>
+<entry key="DontRem" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="Comments">
+<config key="Comment0">
+<entry key="begin" type="xstring" value="//"/>
+<entry key="end" type="xstring" value="&#10;"/>
+<entry key="includeInToken" type="xboolean" value="false"/>
+<entry key="returnAsToken" type="xboolean" value="false"/>
+</config>
+<config key="Comment1">
+<entry key="begin" type="xstring" value="/*"/>
+<entry key="end" type="xstring" value="*/"/>
+<entry key="includeInToken" type="xboolean" value="false"/>
+<entry key="returnAsToken" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="WhiteSpaces">
+<entry key="WhiteSpace0" type="xstring" value=" "/>
+<entry key="WhiteSpace1" type="xstring" value="&#9;"/>
+</config>
+<entry key="CombineMultDelims" type="xboolean" value="false"/>
+<entry key="DataURL" type="xstring" value="file:/C:/UniKN/KNIME/workspace/benchmarks/iris/data_someMissing.all"/>
+<entry key="TableName" type="xstring" value="data_someMissing.all"/>
+<entry key="hasColHdr" type="xboolean" value="true"/>
+<entry key="hasRowHdr" type="xboolean" value="false"/>
+<entry key="ignoreEmptyLines" type="xboolean" value="true"/>
+<entry key="rowPrefix" type="xstring" value="Row"/>
+<config key="RowDelims">
+<entry key="RDelim0" type="xstring" value="&#10;"/>
+<entry key="SkipEmptyLine0" type="xboolean" value="true"/>
+</config>
+<config key="MissingPatterns"/>
+<entry key="DecimalSeparator" type="xchar" value="."/>
+<entry key="ignEmtpyTokensAtEOR" type="xboolean" value="true"/>
+<entry key="numOfColumns" type="xint" value="5"/>
+<config key="ColumnProperties">
+<config key="0">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="sepal length"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="1">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="sepal width"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="2">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="petal length"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="3">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="petal width"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="4">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="class"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+</config>
+</config>
+</config>
+</config>
+<config key="connections">
+<config key="connection_38">
+<entry key="ID" type="xint" value="38"/>
+<entry key="sourceID" type="xint" value="9"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="20"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_39">
+<entry key="ID" type="xint" value="39"/>
+<entry key="sourceID" type="xint" value="13"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="2"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_37">
+<entry key="ID" type="xint" value="37"/>
+<entry key="sourceID" type="xint" value="9"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="19"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_42">
+<entry key="ID" type="xint" value="42"/>
+<entry key="sourceID" type="xint" value="4"/>
+<entry key="sourcePort" type="xint" value="1"/>
+<entry key="targetID" type="xint" value="5"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_43">
+<entry key="ID" type="xint" value="43"/>
+<entry key="sourceID" type="xint" value="24"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="5"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_40">
+<entry key="ID" type="xint" value="40"/>
+<entry key="sourceID" type="xint" value="24"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="1"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_41">
+<entry key="ID" type="xint" value="41"/>
+<entry key="sourceID" type="xint" value="2"/>
+<entry key="sourcePort" type="xint" value="1"/>
+<entry key="targetID" type="xint" value="1"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_46">
+<entry key="ID" type="xint" value="46"/>
+<entry key="sourceID" type="xint" value="5"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="9"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_47">
+<entry key="ID" type="xint" value="47"/>
+<entry key="sourceID" type="xint" value="9"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="16"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_44">
+<entry key="ID" type="xint" value="44"/>
+<entry key="sourceID" type="xint" value="13"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="4"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_45">
+<entry key="ID" type="xint" value="45"/>
+<entry key="sourceID" type="xint" value="9"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="17"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_51">
+<entry key="ID" type="xint" value="51"/>
+<entry key="sourceID" type="xint" value="24"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="8"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_50">
+<entry key="ID" type="xint" value="50"/>
+<entry key="sourceID" type="xint" value="8"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="7"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_49">
+<entry key="ID" type="xint" value="49"/>
+<entry key="sourceID" type="xint" value="9"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="14"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_48">
+<entry key="ID" type="xint" value="48"/>
+<entry key="sourceID" type="xint" value="9"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="18"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+</config>
+</config>
