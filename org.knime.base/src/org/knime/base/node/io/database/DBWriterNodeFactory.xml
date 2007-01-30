@@ -4,14 +4,17 @@
 	<name>Database Writer</name>
 	
 	<shortDescription>
-	    Establishes and opens a database access connection to which data can be written.
+	    Establishes and opens a database access connection to which data can 
+	    be written.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
-	     Establishes and opens a database access connection to which the entire input data can be written. 
-	     Make sure you have your personal database driver registered. The sun.jdbc.odbc.JdbcOdbcDriver is available
-	     by default only but you can use the load button to register additional drivers from Zip or Jar archives.
+	     Establishes and opens a database access connection to which the entire 
+	     input data can be written. Make sure you have your personal database 
+	     driver registered. The sun.jdbc.odbc.JdbcOdbcDriver is available
+	     by default only but you can use the load button to register additional 
+	     drivers from Zip or Jar archives.
 		</intro>
 		
 	<option name="Database Driver: ">
@@ -34,12 +37,24 @@
         stored inside the settings.
 	</option>
 	<option name="Table Name: ">
-        Enter the name of the table to which data should be written. Note, if this table
-        exists, the table is dropped before writing.
+        Enter the name of the table to which data should be written. Note, if 
+        this table exists, the table is dropped before writing.
+	</option>
+	<option name="SQL Types: ">
+		Enter the SQL types here to write integer-, double-, or string-valued 
+		columns to the database. By default integers are defined as type 
+		"integer", doubles as "numeric(10,30)", and all other columns, including
+		strings are written as "varchar(255)". Some databases such as MS Access
+		and Firebird do not allow this numeric precision, therefore you must
+		select "numeric" as the SQL type. If your database allows strings 
+		longer than 255 chars, you can change this value in order to write 
+		long strings such as SLNs or Smiles.
 	</option>
 	</fullDescription>
 	
 	<ports>
-		<dataIn index="0" name="Data to Database">Table with data to write into database</dataIn>
+		<dataIn index="0" name="Data to Database">
+			Table with data to write into database
+		</dataIn>
 	</ports>	
 </knimeNode>
