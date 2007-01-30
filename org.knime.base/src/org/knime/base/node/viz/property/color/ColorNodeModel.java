@@ -136,11 +136,19 @@ class ColorNodeModel {
             }
             colorHdl = createRangeColorHandler(lower, upper, m_map);
         }
-        DataColumnSpec[] newColSpecs = new DataColumnSpec[inSpec
-                .getNumColumns()];
+        BufferedDataTable changedSpecTable = exec.createSpecReplacerTable(
+                data[INPORT], createNewSpec(inSpec, columnIndex, colorHdl));
+        // return original table with ColorHandler
+        return new BufferedDataTable[]{changedSpecTable};
+    }
+    
+    private DataTableSpec createNewSpec(final DataTableSpec inSpec,
+            final int columnIndex, final ColorHandler colorHdl) {
+        DataColumnSpec[] newColSpecs = 
+            new DataColumnSpec[inSpec.getNumColumns()];
         for (int i = 0; i < newColSpecs.length; i++) {
-            DataColumnSpecCreator dtsCont = new DataColumnSpecCreator(inSpec
-                    .getColumnSpec(i));
+            DataColumnSpecCreator dtsCont = 
+                new DataColumnSpecCreator(inSpec.getColumnSpec(i));
             if (i == columnIndex) {
                 dtsCont.setColorHandler(colorHdl);
             } else {
@@ -148,13 +156,9 @@ class ColorNodeModel {
             }
             newColSpecs[i] = dtsCont.createSpec();
         }
-        final DataTableSpec newSpec = new DataTableSpec(newColSpecs);
-        BufferedDataTable changedSpecTable = exec.createSpecReplacerTable(
-                data[INPORT], newSpec);
-        // return original table with ColorHandler
-        return new BufferedDataTable[]{changedSpecTable};
+        return new DataTableSpec(newColSpecs);
     }
-
+    
     /**
      * @return the selected column or <code>null</code> if none
      */
@@ -207,15 +211,38 @@ class ColorNodeModel {
                         + "possible values in spec.");
             }
         } else { // range
-            // check if double column is selcted
+            // check if double column is selected
             if (!inSpecs[INPORT].getColumnSpec(m_column).getType()
                     .isCompatible(DoubleValue.class)) {
                 throw new InvalidSettingsException("Column is not valid for"
                         + " range color settings: "
                         + inSpecs[INPORT].getColumnSpec(m_column).getType());
             }
+            // check map
+            if (m_map.size() != 2) {
+                throw new InvalidSettingsException(
+                        "Color settings not yet available.");
+            }   
         }
-        return new DataTableSpec[]{inSpecs[INPORT]};
+        int columnIndex = inSpecs[INPORT].findColumnIndex(m_column);
+        // create new column spec based on color settings
+        DataColumnSpec cspec = inSpecs[INPORT].getColumnSpec(m_column);
+        // will be set in final table
+        ColorHandler colorHdl;
+        if (m_isNominal) {
+            colorHdl = createNominalColorHandler(m_map);
+        } else {
+            DataColumnDomain dom = cspec.getDomain();
+            DataCell lower = null;
+            DataCell upper = null;
+            if (dom.hasBounds()) {
+                lower = dom.getLowerBound();
+                upper = dom.getUpperBound();
+            }
+            colorHdl = createRangeColorHandler(lower, upper, m_map);
+        }
+        return new DataTableSpec[]{
+                createNewSpec(inSpecs[INPORT], columnIndex, colorHdl)};
     }
 
     /**
@@ -329,12 +356,12 @@ class ColorNodeModel {
         Color c0 = map.get(MIN_VALUE).getColor();
         Color c1 = map.get(MAX_VALUE).getColor();
         double d0 = Double.NaN;
-        if (!lower.isMissing() 
+        if (lower != null && !lower.isMissing() 
                 && lower.getType().isCompatible(DoubleValue.class)) {
             d0 = ((DoubleValue)lower).getDoubleValue();
         }
         double d1 = Double.NaN;
-        if (!upper.isMissing() 
+        if (upper != null && !upper.isMissing() 
                 && upper.getType().isCompatible(DoubleValue.class)) {
             d1 = ((DoubleValue)upper).getDoubleValue();
         }
