@@ -266,7 +266,7 @@ public final class NodeLogger {
         NodeLogger l = getLogger(NodeLogger.class);
         l.info("#############################################################");
         l.info("#                                                           #");
-        l.info("# Welcome to KNIME v1.2pre (Build January 26, 2007)         #");
+        l.info("# Welcome to KNIME v1.2.0 BETA (Build XXX, 2007)            #");
         l.info("# the Konstanz Information Miner                            #");
         l.info("# Based on Eclipse 3.2, www.eclipse.org                     #");
         l.info("# Uses: Java5, GEF, Log4J                                   #");
@@ -277,8 +277,8 @@ public final class NodeLogger {
         l.info("#                                                           #");
         l.info("#############################################################");
         if (FILE_APPENDER instanceof LogfileAppender) {
-            l.info("# For more details see:"
-                    + "                                     #");
+            l.info("# For more details see the KNIME log file:"
+                    + "                  #");
             l.info("# " + ((LogfileAppender)FILE_APPENDER).getFile());
             l.info("#-----------------------------------------------"
                     + "------------#");
