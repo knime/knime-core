@@ -1063,7 +1063,7 @@ public final class Node {
      * order to reset the underlying model. The <code>#isExecuted()</code>
      * method will return <code>false</code> after this call.
      * 
-     * @see #reset(boolean)
+     * @see #resetAndConfigure()
      * @see #configure()
      */
     public void resetAndConfigure() {

@@ -104,7 +104,7 @@ classes/interfaces:</p>
   interface to which your new type should be compatible to (for instance our new
   molecule type should also be able to return a simple string representation of
   the molecule – it needs therefore to implement 
-  <a href="../def/StringValue.html">StringValue</a>). The first time the new 
+  <a href="../StringValue.html">StringValue</a>). The first time the new 
   <a href="../DataCell.html">DataCell</a> is instantiated, KNIME will parse the
   list of implemented <a href="../DataValue.html">DataValue</a> interfaces and
   make the list of compatible <a href="../DataValue.html">DataValue</a>s
@@ -124,7 +124,7 @@ classes/interfaces:</p>
     order on the implemented interfaces but one normally desires to have a
     “preferred” value class. (Think of the new molecule type from before, which
     is compatible to the new MyDataValue interface but also to 
-    <a href="../def/StringValue.html">StringValue</a> – both values support a
+    <a href="../StringValue.html">StringValue</a> – both values support a
     customized renderer: Which renderer should KNIME use by default?) To
     overcome this situation, KNIME will attempt to call a static method in the 
     <a href="../DataCell.html">DataCell</a> implementation with the following
