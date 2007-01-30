@@ -32,6 +32,7 @@ import java.beans.PropertyChangeListener;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
@@ -119,6 +120,27 @@ public final class TableRowHeaderView extends JTable {
         }
         super.setModel(tableModel);
     } 
+    
+    /**
+     * Resets all individual row heights as the super implementation
+     * deletes the private SizeSequence field.
+     * @see JTable#tableChanged(TableModelEvent)
+     */
+    @Override
+    public void tableChanged(final TableModelEvent e) {
+        // for all the cases in the following if-statement the super 
+        // implementation will delete the private field "rowModel", causing
+        // the individual row heights to be forgotten
+        if (e == null || e.getFirstRow() == TableModelEvent.HEADER_ROW
+                || e.getLastRow() == Integer.MAX_VALUE) {
+            // row height is less than 1 when view has not been opened yet
+            int oldRowHeight = getRowHeight();
+            if (oldRowHeight >= 1) {
+                setRowHeight(oldRowHeight);
+            }
+        }
+        super.tableChanged(e);
+    }
     
     /**
      * Delegating method to model. It sets the column header name which is,

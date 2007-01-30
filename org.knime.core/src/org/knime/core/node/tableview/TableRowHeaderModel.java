@@ -179,6 +179,9 @@ public class TableRowHeaderModel extends AbstractTableModel {
      * @param newName the new name or <code>null</code> to have no column name
      */
     public void setColumnName(final String newName) {
+        if (newName != null && newName.equals(m_columnName)) {
+            return;
+        }
         m_columnName = newName;
         fireTableCellUpdated(TableModelEvent.HEADER_ROW, 0);
     }
