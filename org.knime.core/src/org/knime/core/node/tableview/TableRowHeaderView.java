@@ -136,6 +136,8 @@ public final class TableRowHeaderView extends JTable {
             // row height is less than 1 when view has not been opened yet
             int oldRowHeight = getRowHeight();
             if (oldRowHeight >= 1) {
+                // this will reset all individual row heights, all rows
+                // will have the same height.
                 setRowHeight(oldRowHeight);
             }
         }
