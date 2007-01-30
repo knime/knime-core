@@ -84,8 +84,12 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
 
         final KeyReaderShell keyReaderShell = new KeyReaderShell(SHELL_HEADER,
                 SHELL_TEXT);
-
-        m_pw = keyReaderShell.readPW();
+        
+        Display.getDefault().syncExec(new Runnable() {
+            public void run() {
+                m_pw = keyReaderShell.readPW();                
+            }
+        });
 
         return m_pw;
     }
