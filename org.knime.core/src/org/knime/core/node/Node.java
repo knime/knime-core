@@ -165,8 +165,8 @@ public final class Node {
     private final Object m_configureLock = new Object();
     
     /**
-     * Store when the current output data has been stored (to avoid uneccesary
-     * re-save). Will be set when saved, will be unset upon reset.
+     * Store when the current output data has been stored (to avoid unnecessary
+     * re-save). Will be set when saved, will be negated upon reset.
      */
     private boolean m_isCurrentlySaved = false;
 
