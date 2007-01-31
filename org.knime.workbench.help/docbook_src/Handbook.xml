@@ -56,9 +56,9 @@
   <chapter id="localdocu">
     <title>KNIME local documentation</title>
     In the KNIME product, the Quick Start Guide can be found 
-    in the installation directory.<br/>
+    in the installation directory.
     In the ALL-in-ONE developer distribution, the whole documentation can
-    be found in the directory doc of the root directory.
+    be found in the "doc" directory of the root directory.
   </chapter>
   
   
