@@ -14,24 +14,25 @@
 		<group id="page-links">
 		<anchor id="beginAnchor"/>
 
-			
+			<!--
 			<link label="KNIME Help Center" url="http://org.eclipse.ui.intro/showHelp" 
 				id="help" style-id="left">
 				<img id="help_img" style-id="content-img" src="css/graphics/icons/help.png" alt="Help"/>
           		<text>Open the Help Center for more information.</text>
         	</link>
+        	-->
         	
         	<link label="Install additional features" url="http://org.eclipse.ui.intro/runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.InvokeInstallSiteAction" 
 				id="Update" style-id="left">
 				<img id="newProject_img" style-id="content-img" src="css/graphics/icons/update.png" alt="Update"/>
-          		<text>Open the install wizard to install additional KNIME features.
-          		(Weka, R-integration, Chemistry-extension (CDK), ...)</text>
+          		<text>Opens the install wizard to install additional KNIME features. </text>
+          		<!--(Weka, R-integration, Chemistry-extension (CDK), ...)</text>-->
         	</link>
       	
         	<link label="Go to KNIME" url="http://org.eclipse.ui.intro/switchToLaunchBar" 
         		id="Launch" style-id="left">
 				<img id="newProject_img" style-id="content-img" src="css/graphics/icons/launch.png" alt="Launch"/>
-          		<text>Close this intro page and go to KNIME workbench.</text>
+          		<text>Closes this intro page and go to KNIME workbench.</text>
         	</link>
 			
 			<!--link label="Create a new project..." 
