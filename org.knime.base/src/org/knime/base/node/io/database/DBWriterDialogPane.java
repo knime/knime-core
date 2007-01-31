@@ -118,7 +118,8 @@ public class DBWriterDialogPane extends NodeDialogPane {
         JPanel settPanel = new JPanel(new GridLayout(5, 1));
         settPanel.add(driverPanel);
         JPanel dbPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        dbPanel.setBorder(BorderFactory.createTitledBorder(" Database Name "));
+        dbPanel.setBorder(BorderFactory.createTitledBorder(
+                " Database URL "));
         m_db.setEditable(true);
         m_db.setFont(font);
         m_db.setPreferredSize(new Dimension(400, 20));
@@ -182,9 +183,8 @@ public class DBWriterDialogPane extends NodeDialogPane {
             final DataTableSpec[] specs) throws NotConfigurableException {
         // database driver and name
         m_driver.removeAllItems();
-        m_db.setText(settings.getString("database", ""));
         // user
-        m_user.setText(settings.getString("user", ""));
+        m_user.setText(settings.getString("user", "<user>"));
         // password
         m_pass.setText(settings.getString("password", ""));
         m_passwordChanged = false;
@@ -202,8 +202,10 @@ public class DBWriterDialogPane extends NodeDialogPane {
         String select = settings.getString("driver", 
                 m_driver.getSelectedItem().toString());
         m_driver.setSelectedItem(select);
+        m_db.setText(settings.getString("database", 
+                DBDriverLoader.getURLForDriver(select)));
         // table name
-        m_table.setText(settings.getString("table", ""));
+        m_table.setText(settings.getString("table", "<table_name>"));
         
         // load sql type for each column
         try {
@@ -237,8 +239,21 @@ public class DBWriterDialogPane extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         String driverName = m_driver.getSelectedItem().toString();
+        String url = m_db.getText().trim();
+        try {
+            if (!DBDriverLoader.getWrappedDriver(driverName).acceptsURL(url)) {
+                throw new InvalidSettingsException("Driver \"" + driverName 
+                        + "\" does not accept URL: " + url);
+            }
+        } catch (Exception e) {
+            InvalidSettingsException ise = new InvalidSettingsException(
+                    "Couldn't test connection to URL \"" + url + "\" "
+                            + " with driver: " + driverName);
+            ise.initCause(e);
+            throw ise;
+        }
         settings.addString("driver", driverName);
-        settings.addString("database", m_db.getText().trim());
+        settings.addString("database", url);
         settings.addString("user", m_user.getText().trim());
         settings.addString("table", m_table.getText().trim());
         if (m_passwordChanged) {

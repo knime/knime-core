@@ -92,6 +92,12 @@ public class DBReaderDialogPane extends NodeDialogPane {
             "database_drivers");
     
     /**
+     * Keeps the history of all URL used to create a Database connection.
+     */
+    static final StringHistory DRIVER_URLS = StringHistory.getInstance(
+            "driver_urls");
+    
+    /**
      * Creates new dialog.
      */
     DBReaderDialogPane() {
@@ -124,7 +130,8 @@ public class DBReaderDialogPane extends NodeDialogPane {
         driverPanel.add(m_load, BorderLayout.EAST);
         parentPanel.add(driverPanel);
         JPanel dbPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        dbPanel.setBorder(BorderFactory.createTitledBorder(" Database Name "));
+        dbPanel.setBorder(BorderFactory.createTitledBorder(
+                " Database URL "));
         m_db.setEditable(true);
         m_db.setFont(font);
         m_db.setPreferredSize(new Dimension(400, 20));
@@ -239,7 +246,20 @@ public class DBReaderDialogPane extends NodeDialogPane {
             throws InvalidSettingsException {
         String driverName = m_driver.getSelectedItem().toString();
         settings.addString("driver", driverName);
-        settings.addString("database", m_db.getText().trim());
+        String url = m_db.getText().trim();
+        settings.addString("database", url);
+        try {
+            if (!DBDriverLoader.getWrappedDriver(driverName).acceptsURL(url)) {
+                throw new InvalidSettingsException("Driver \"" + driverName 
+                        + "\" does not accept URL: " + url);
+            }
+        } catch (Exception e) {
+            InvalidSettingsException ise = new InvalidSettingsException(
+                    "Couldn't test connection to URL \"" + url + "\" "
+                            + " with driver: " + driverName);
+            ise.initCause(e);
+            throw ise;
+        }        
         settings.addString("user", m_user.getText().trim());
         if (m_passwordChanged) {
             try {

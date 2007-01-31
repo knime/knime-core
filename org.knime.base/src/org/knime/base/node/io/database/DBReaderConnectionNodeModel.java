@@ -87,13 +87,7 @@ class DBReaderConnectionNodeModel extends NodeModel {
             m_driver = history[0];
         }
         // create database name from driver class
-        int lastIdx = m_driver.lastIndexOf('.');
-        m_name = "<database_name>";
-        if (lastIdx > 0) {
-            String url = m_driver.substring(0, lastIdx);
-            url = url.replace('.', ':');
-            m_name = url + ":" + m_name;
-        }
+        m_name = DBDriverLoader.getURLForDriver(m_driver);
     }
 
     /**
@@ -166,6 +160,7 @@ class DBReaderConnectionNodeModel extends NodeModel {
                 }
             }
             m_name = database;
+            DBReaderDialogPane.DRIVER_URLS.add(m_name);
             m_user = user;
             m_pass = password;
             for (String fileName : loadedDriver) {
@@ -220,6 +215,7 @@ class DBReaderConnectionNodeModel extends NodeModel {
         try {
             DBDriverLoader.registerDriver(getDriver());
             String password = KnimeEncryption.decrypt(m_pass);
+            DriverManager.setLoginTimeout(5);
             conn = DriverManager.getConnection(m_name, m_user, password);
             Statement stmt = conn.createStatement();
             stmt.execute(statement);

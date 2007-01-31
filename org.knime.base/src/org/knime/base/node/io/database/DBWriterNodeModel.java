@@ -100,13 +100,7 @@ class DBWriterNodeModel extends NodeModel {
             m_driver = history[0];
         }
         // create database name from driver class
-        int lastIdx = m_driver.lastIndexOf('.');
-        m_url = "<database_name>";
-        if (lastIdx > 0) {
-            String url = m_driver.substring(0, lastIdx);
-            url = url.replace('.', ':');
-            m_url = url + ":" + m_url;
-        }
+        m_url = DBDriverLoader.getURLForDriver(m_driver);
     }
 
     /**
@@ -160,6 +154,7 @@ class DBWriterNodeModel extends NodeModel {
             m_driver = driver;
             DBReaderDialogPane.DRIVER_ORDER.add(m_driver);
             m_url = database;
+            DBReaderDialogPane.DRIVER_URLS.add(m_url);
             m_user = user;
             m_pass = password;
             m_table = table;
@@ -198,6 +193,7 @@ class DBWriterNodeModel extends NodeModel {
             // decryt password
             String password = KnimeEncryption.decrypt(m_pass);
             // create database connection
+            DriverManager.setLoginTimeout(5);
             conn = DriverManager.getConnection(m_url, m_user, password);
             // write entire data
             new DBWriterConnection(conn, m_table, inData[0], exec, m_types);
@@ -263,16 +259,16 @@ class DBWriterNodeModel extends NodeModel {
         m_types.clear();
         m_types.putAll(map);
         
+        WrappedDriver wDriver = DBDriverLoader.getWrappedDriver(m_driver);
         try {
-            WrappedDriver wDriver = DBDriverLoader.getWrappedDriver(m_driver);
             DriverManager.registerDriver(wDriver);
             if (!wDriver.acceptsURL(m_url)) {
-                throw new InvalidSettingsException("Driver does not support"
-                        + " url: " + m_url);
+                throw new InvalidSettingsException("Driver \"" + wDriver 
+                        + "\" does not accept URL: " + m_url);
             }
         } catch (Exception e) {
             throw new InvalidSettingsException("Could not register database"
-                    + " driver: " + m_driver);
+                    + " driver: " + wDriver);
         }
         
         // throw exception if no data provided
@@ -283,7 +279,7 @@ class DBWriterNodeModel extends NodeModel {
         // print warning if password is empty
         if (m_pass == null || m_pass.length() == 0) {
             super.setWarningMessage(
-                    "Please check if you need to set a password.");
+                    "Check if you need to set a password.");
         }
         
         return new DataTableSpec[0];

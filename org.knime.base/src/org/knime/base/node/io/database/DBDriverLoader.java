@@ -51,6 +51,37 @@ final class DBDriverLoader {
     
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(DBDriverLoader.class);
+    
+    /**
+     * Name of the standard JDBC-ODBC database driver, 
+     * <i>sun.jdbc.odbc.JdbcOdbcDriver</i> object. Loaded per default.
+     */
+    static final String JDBC_ODBC_DRIVER = "sun.jdbc.odbc.JdbcOdbcDriver";
+    
+    private static final HashMap<String, String> DRIVER_TO_URL
+        = new HashMap<String, String>();
+    
+    static {
+        DRIVER_TO_URL.put(JDBC_ODBC_DRIVER, "jdbc:odbc:");
+        DRIVER_TO_URL.put("com.ibm.db2.jcc.DB2Driver", "jdbc:db2:");
+        DRIVER_TO_URL.put("org.firebirdsql.jdbc.FBDriver", "jdbc:firebirdsql:");
+        DRIVER_TO_URL.put("com.mysql.jdbc.Driver", "jdbc:mysql:");
+        DRIVER_TO_URL.put("oracle.jdbc.driver.OracleDriver", "jdbc:mysql:thin:");
+        DRIVER_TO_URL.put("org.postgresql.Driver", "jdbc:postgresql:");
+        DRIVER_TO_URL.put("com.microsoft.sqlserver.jdbc.SQLServerDriver", 
+                "jdbc:sqlserver:");
+        DRIVER_TO_URL.put("com.microsoft.jdbc.sqlserver.SQLServerDriver", 
+                "jdbc:microsoft:sqlserver:");
+        DRIVER_TO_URL.put("org.apache.derby.jdbc.ClientDriver", "jdbc:derby:");
+        DRIVER_TO_URL.put("jdbc.FrontBase.FBJDriver", "jdbc:FrontBase:");
+        DRIVER_TO_URL.put("org.hsqldb.jdbcDriver", "jdbc:hsqldb:hsql:");
+        DRIVER_TO_URL.put("com.ingres.jdbc.IngresDriver", "jdbc:ingres:");
+        DRIVER_TO_URL.put("com.openbase.jdbc.ObDriver", "jdbc:openbase:");
+        DRIVER_TO_URL.put("net.sourceforge.jtds.jdbc.Driver", 
+                "jdbc:jtds:sybase:");
+        DRIVER_TO_URL.put("com.sybase.jdbc3.jdbc.SybDriver", 
+                "jdbc:sybase:Tds:");
+    }
 
     /**
      * Allowed file extensions, jar and zip only.
@@ -62,12 +93,6 @@ final class DBDriverLoader {
     
     private static final Map<String, WrappedDriver> DRIVER_MAP
         = new HashMap<String, WrappedDriver>();
-    
-    /**
-     * Name of the standard JDBC-ODBC database driver, 
-     * <i>sun.jdbc.odbc.JdbcOdbcDriver</i> object. Loaded per default.
-     */
-    static final String JDBC_ODBC_DRIVER = "sun.jdbc.odbc.JdbcOdbcDriver";
     
     /**
      * Keeps history of loaded driver libraries.
@@ -196,5 +221,21 @@ final class DBDriverLoader {
         String newName = name.substring(0, name.indexOf(".class"));
         String className = newName.replace('/', '.');
         return cl.loadClass(className);
+    }
+    
+    /**
+     * Returns a URL protocol for a given <code>Driver</code> extended by 
+     * an default host, port, database name String. If no protocol URL has been
+     * defined the default String staring with protocol is return.
+     * @param driver the driver to match URL protocol
+     * @return an String containing protocol, port, host, and database name
+     *      place holder 
+     */
+    public static final String getURLForDriver(final String driver) {
+        String url = DRIVER_TO_URL.get(driver);
+        if (url == null) {
+            return "<protocol>://<host>:<port>/<database_name>";
+        }
+        return url + "//<host>:<port>/<database_name>";
     }
 }
