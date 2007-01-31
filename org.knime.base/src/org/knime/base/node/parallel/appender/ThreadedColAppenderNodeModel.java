@@ -275,7 +275,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                             final int rowCount, final RowKey lastKey,
                             final ExecutionMonitor exek) {
                         exec.setProgress(curRowNr / (double)rowCount,
-                                "Processed row " + curRowNr + " (\"" + lastKey
+                                "Collected row " + curRowNr + " (\"" + lastKey
                                         + "\")");
                     }
                 };
