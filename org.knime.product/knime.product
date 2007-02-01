@@ -6,7 +6,7 @@
    <aboutInfo>
       <image path="/org.knime.product/icons/knime64.gif"/>
       <text>
-         Welcome to KNIME v1.2.0 BETA (Build XXX, 2007)
+         Welcome to KNIME v1.2.0 (Build February 2nd, 2007)
 the Konstanz Information Miner
 Copyright, 2003 - 2007
 email: contact@knime.org
@@ -50,6 +50,7 @@ Uses: Java5, GEF, Log4J
       </win>
    </launcher>
 
+
    <plugins>
       <plugin id="org.apache.lucene"/>
       <plugin id="org.eclipse.ant.core"/>
@@ -75,7 +76,7 @@ Uses: Java5, GEF, Log4J
       <plugin id="org.eclipse.osgi.util"/>
       <plugin id="org.eclipse.platform"/>
       <plugin id="org.eclipse.swt"/>
-      <plugin id="org.eclipse.swt.gtk.linux.x86" fragment="true"/>
+      <plugin id="org.eclipse.swt.gtk.linux.x86"/>
       <plugin id="org.eclipse.text"/>
       <plugin id="org.eclipse.ui"/>
       <plugin id="org.eclipse.ui.cheatsheets"/>
@@ -88,7 +89,7 @@ Uses: Java5, GEF, Log4J
       <plugin id="org.eclipse.ui.workbench.texteditor"/>
       <plugin id="org.eclipse.update.configurator"/>
       <plugin id="org.eclipse.update.core"/>
-      <plugin id="org.eclipse.update.core.linux" fragment="true"/>
+      <plugin id="org.eclipse.update.core.linux"/>
       <plugin id="org.eclipse.update.ui"/>
    </plugins>
 
