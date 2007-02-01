@@ -53,7 +53,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
                 PreferenceConstants.P_LOGLEVEL_WARN);
 
         store.setDefault(PreferenceConstants.P_LOGLEVEL_LOG_FILE,
-                PreferenceConstants.P_LOGLEVEL_WARN);
+                PreferenceConstants.P_LOGLEVEL_DEBUG);
 
         store.setDefault(PreferenceConstants.P_MAXIMUM_THREADS, 2 * Runtime
                 .getRuntime().availableProcessors());
