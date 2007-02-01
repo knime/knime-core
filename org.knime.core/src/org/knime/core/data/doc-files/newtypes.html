@@ -39,7 +39,7 @@ implementations of <a href="../DataCell.html">DataCell</a> that hold specific
 types of data such as <a href="../def/StringCell.html">StringCell</a>, <a
   href="../def/IntCell.html">IntCell</a>, and <a href="../def/DoubleCell.html">DoubleCell</a>.
 The entire data that is passed along nodes in the workflow is exposed in a <a
-  href="../DataTable.html">DataTable</a>, containing an usually unknown number
+  href="../DataTable.html">DataTable</a>, containing a (generally unknown) number
 of (equal-length) rows. All elements in a column must be compatible to the type
 that is assigned to the column, e.g. they must all be numeric or all must be a
 strings. The following figure sketches a <a href="../DataTable.html">DataTable</a>.
@@ -50,14 +50,42 @@ strings. The following figure sketches a <a href="../DataTable.html">DataTable</
 
 <p>The meta information to a <a href="../DataTable.html">DataTable</a>
 (number of columns, column specific information) is available through the <a
-href="../DataTableSpec.html">DataTableSpec</a> (acessible via <a
+href="../DataTableSpec.html">DataTableSpec</a> (accessible via <a
 href="../DataTable.html#getDataTableSpec()">DataTable.getDataTableSpec</a>)
 which consists of a set of <a href="../DataColumnSpec.html">DataColumnSpec</a>s
 comprising a specific name (a string), type (a <a href="../DataType.html">DataType</a>,
-see below), and some (optional) properties such as domain information (mininum,
+see below), and some (optional) properties such as domain information (minimum,
 maximum, possible values), a color handler, and so on for each of the columns.
 For further details on these specific classes see their class description and
 the <a href="faq.html">FAQ</a> on how to use them.</p>
+
+<p>
+A <a href="../../node/BufferedDataTable.html">BufferedDataTable</a> is a special 
+implementation of a <a href="../DataTable.html">DataTable</a>, which is used as
+data structure to pass data from one node in the workflow to another. This has some
+major advantages over using the generic <a href="../DataTable.html">DataTable</a> interface:
+</p>
+<ul>
+    <li>Tables can be written to disc, reducing KNIME's memory footprint (in comparison to 
+    generic <a href="../DataTable.html">DataTables</a> where KNIME has no control
+    over memory usage).</li>
+	<li>Similar to above: <a href="../../node/BufferedDataTable.html">BufferedDataTables</a>
+	can be persistently saved, allowing to store and restore the entire workbench state.</li>
+	<li>The implementation is approved, ensuring that certain properties hold, for instance
+	there are no duplicate row keys and the length of each row (i.e. number of cells) is correct.</li>
+	<li>There are different possibilities to instantiate a <a href="../../node/BufferedDataTable.html">BufferedDataTable</a>,
+	some of which allow to simply append a column (or a set of columns) to an existing table (think of a node that
+	does some calculation on the input table and appends the result to it). This gives generally
+	a performance benefit as the unchanged part of the input table does not need to be written again.
+	</li>
+	<li>The instantiation of a <a href="../../node/BufferedDataTable.html">BufferedDataTable</a> is supervised (using 
+	factory methods on the <a href="../../node/ExecutionContext.html">ExecutionContext</a>, which is passed as one
+	of the arguments in the 
+	<a href="	../../node/NodeModel.html#execute(org.knime.core.node.BufferedDataTable[], org.knime.core.node.ExecutionContext)">
+	NodeModel's execute method</a>), allowing KNIME to decide whether or not the table shall be written to disc 
+	immediately or kept in memory.
+	</li>
+</ul>
 
 <h2><a name="newtypes">New Types in KNIME</a></h2>
 <p>KNIME allows to define customized types of data, e.g. a <a
