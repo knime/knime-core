@@ -208,9 +208,17 @@ public class ARFFTable implements DataTable {
                     readUntilEOL(tokenizer, null);
                 } else if (tokenizer.lastTokenWasQuoted()
                         && tokenizer.getLastQuoteBeginPattern().equals("{")) {
+                    // the braces should be still in the string
+                    int openBraceIdx = colType.indexOf('{');
+                    int closeBraceIdx = colType.lastIndexOf('}');
+                    if ((openBraceIdx >= 0) && (closeBraceIdx > 0)
+                            && (openBraceIdx < closeBraceIdx)) {
+                        colType = colType.substring(openBraceIdx + 1,
+                                        closeBraceIdx);
+                    }
                     // the type was a list of nominal values
                     possVals = extractNominalVals(colType, fileLoc.toString(),
-                            tokenizer.getLineNumber());
+                                    tokenizer.getLineNumber());
                     // KNIME uses string cells for nominal values.
                     type = StringCell.TYPE;
                     readUntilEOL(tokenizer, fileLoc.toString());
