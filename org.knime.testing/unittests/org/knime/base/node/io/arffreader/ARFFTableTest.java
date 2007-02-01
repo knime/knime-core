@@ -29,7 +29,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Set;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
@@ -48,28 +50,79 @@ import junit.framework.TestCase;
 public class ARFFTableTest extends TestCase {
 
     private static final String ARFF_IRISFULL = "% \n"
-            + "% The lovely Iris data set - as we all know it\n"
-            + "\n"
-            + "@RELATION iris\n"
-            + "\n"
-            + "@ATTRIBUTE sepallength  REAL\n"
-            + "@ATTRIBUTE sepalwidth   REAL\n"
-            + "@ATTRIBUTE petallength  REAL\n"
-            + "@ATTRIBUTE petalwidth   REAL\n"
-            + "@ATTRIBUTE class  {Iris-setosa,Iris-versicolor,Iris-virginica}\n"
-            + "\n" + "@DATA\n" + "5.1,3.5,1.4,0.2,Iris-setosa\n"
-            + "4.9,3.0,1.4,0.2,Iris-setosa\n" + "4.7,3.2,1.3,0.2,Iris-setosa\n"
-            + "4.6,3.1,1.5,0.2,Iris-setosa\n" + "5.0,3.6,1.4,0.2,Iris-setosa\n"
-            + "7.0,3.2,4.7,1.4,Iris-versicolor\n"
-            + "6.4,3.2,4.5,1.5,Iris-versicolor\n"
-            + "6.9,3.1,4.9,1.5,Iris-versicolor\n"
-            + "5.5,2.3,4.0,1.3,Iris-versicolor\n"
-            + "6.5,2.8,4.6,1.5,Iris-versicolor\n"
-            + "6.3,3.3,6.0,2.5,Iris-virginica\n"
-            + "5.8,2.7,5.1,1.9,Iris-virginica\n"
-            + "7.1,3.0,5.9,2.1,Iris-virginica\n"
-            + "6.3,2.9,5.6,1.8,Iris-virginica\n"
-            + "6.5,3.0,5.8,2.2,Iris-virginica\n";
+        + "% The lovely Iris data set - as we all know it\n"
+        + "\n"
+        + "@RELATION iris\n"
+        + "\n"
+        + "@ATTRIBUTE sepallength  REAL\n"
+        + "@ATTRIBUTE sepalwidth   REAL\n"
+        + "@ATTRIBUTE petallength  REAL\n"
+        + "@ATTRIBUTE petalwidth   REAL\n"
+        + "@ATTRIBUTE class  {Iris-setosa,Iris-versicolor,Iris-virginica}\n"
+        + "\n" + "@DATA\n" + "5.1,3.5,1.4,0.2,Iris-setosa\n"
+        + "4.9,3.0,1.4,0.2,Iris-setosa\n" + "4.7,3.2,1.3,0.2,Iris-setosa\n"
+        + "4.6,3.1,1.5,0.2,Iris-setosa\n" + "5.0,3.6,1.4,0.2,Iris-setosa\n"
+        + "7.0,3.2,4.7,1.4,Iris-versicolor\n"
+        + "6.4,3.2,4.5,1.5,Iris-versicolor\n"
+        + "6.9,3.1,4.9,1.5,Iris-versicolor\n"
+        + "5.5,2.3,4.0,1.3,Iris-versicolor\n"
+        + "6.5,2.8,4.6,1.5,Iris-versicolor\n"
+        + "6.3,3.3,6.0,2.5,Iris-virginica\n"
+        + "5.8,2.7,5.1,1.9,Iris-virginica\n"
+        + "7.1,3.0,5.9,2.1,Iris-virginica\n"
+        + "6.3,2.9,5.6,1.8,Iris-virginica\n"
+        + "6.5,3.0,5.8,2.2,Iris-virginica\n";
+    
+    // same thing but the nominal value list is not separated by a space
+    // (Weka reads that!)
+    private static final String ARFF_IRISFULL_BAR = "% \n"
+        + "% The lovely Iris data set - as we all know it\n"
+        + "\n"
+        + "@RELATION iris\n"
+        + "\n"
+        + "@ATTRIBUTE sepallength  REAL\n"
+        + "@ATTRIBUTE sepalwidth   REAL\n"
+        + "@ATTRIBUTE petallength  REAL\n"
+        + "@ATTRIBUTE petalwidth   REAL\n"
+        + "@ATTRIBUTE class{Iris-setosa,Iris-versicolor,Iris-virginica}\n"
+        + "\n" + "@DATA\n" + "5.1,3.5,1.4,0.2,Iris-setosa\n"
+        + "4.9,3.0,1.4,0.2,Iris-setosa\n" + "4.7,3.2,1.3,0.2,Iris-setosa\n"
+        + "4.6,3.1,1.5,0.2,Iris-setosa\n" + "5.0,3.6,1.4,0.2,Iris-setosa\n"
+        + "7.0,3.2,4.7,1.4,Iris-versicolor\n"
+        + "6.4,3.2,4.5,1.5,Iris-versicolor\n"
+        + "6.9,3.1,4.9,1.5,Iris-versicolor\n"
+        + "5.5,2.3,4.0,1.3,Iris-versicolor\n"
+        + "6.5,2.8,4.6,1.5,Iris-versicolor\n"
+        + "6.3,3.3,6.0,2.5,Iris-virginica\n"
+        + "5.8,2.7,5.1,1.9,Iris-virginica\n"
+        + "7.1,3.0,5.9,2.1,Iris-virginica\n"
+        + "6.3,2.9,5.6,1.8,Iris-virginica\n"
+        + "6.5,3.0,5.8,2.2,Iris-virginica\n";
+
+    // same thing but with attributes followed by a comment
+    private static final String ARFF_IRISFULL_CMT = "% \n"
+        + "% The lovely Iris data set - as we all know it\n"
+        + "\n"
+        + "@RELATION iris\n"
+        + "\n"
+        + "@ATTRIBUTE sepallength  REAL % !comment\n"
+        + "@ATTRIBUTE sepalwidth   REAL\n"
+        + "@ATTRIBUTE petallength  REAL % =Type0\n"
+        + "@ATTRIBUTE petalwidth   REAL\n"
+        + "@ATTRIBUTE class{Iris-setosa,Iris-versicolor,Iris-virginica}\n"
+        + "\n" + "@DATA\n" + "5.1,3.5,1.4,0.2,Iris-setosa\n"
+        + "4.9,3.0,1.4,0.2,Iris-setosa\n" + "4.7,3.2,1.3,0.2,Iris-setosa\n"
+        + "4.6,3.1,1.5,0.2,Iris-setosa\n" + "5.0,3.6,1.4,0.2,Iris-setosa\n"
+        + "7.0,3.2,4.7,1.4,Iris-versicolor\n"
+        + "6.4,3.2,4.5,1.5,Iris-versicolor\n"
+        + "6.9,3.1,4.9,1.5,Iris-versicolor\n"
+        + "5.5,2.3,4.0,1.3,Iris-versicolor\n"
+        + "6.5,2.8,4.6,1.5,Iris-versicolor\n"
+        + "6.3,3.3,6.0,2.5,Iris-virginica\n"
+        + "5.8,2.7,5.1,1.9,Iris-virginica\n"
+        + "7.1,3.0,5.9,2.1,Iris-virginica\n"
+        + "6.3,2.9,5.6,1.8,Iris-virginica\n"
+        + "6.5,3.0,5.8,2.2,Iris-virginica\n";
 
     /**
      * ARFF stuff to test.
@@ -196,6 +249,124 @@ public class ARFFTableTest extends TestCase {
         assertNull(tSpec.getColumnSpec(2).getDomain().getValues());
         assertNull(tSpec.getColumnSpec(3).getDomain().getValues());
         assertEquals(tSpec.getColumnSpec(4).getDomain().getValues().size(), 3);
+        Set<DataCell> vals = tSpec.getColumnSpec(4).getDomain().getValues();
+        assertTrue(vals.contains(new StringCell("Iris-setosa")));
+        assertTrue(vals.contains(new StringCell("Iris-versicolor")));
+        assertTrue(vals.contains(new StringCell("Iris-virginica")));
+        } catch (CanceledExecutionException cee) {
+            // no chance to end up here.
+        }
+    }
+
+    /**
+     * test the creation of a table spec from the IRIS data in an ARFF file.
+     * (With the nominal value list not separated with a space) 
+     * @throws IOException if it wants to.
+     * @throws InvalidSettingsException if it feels like.
+     */
+    public void testCreateDataTableSpecFromARFFfileIRIS_BAR()
+            throws IOException, InvalidSettingsException {
+
+        File tempFile = File.createTempFile("ARFFReaderUnitTest", "mini");
+        tempFile.deleteOnExit();
+        Writer out = new BufferedWriter(new FileWriter(tempFile));
+        out.write(ARFF_IRISFULL_BAR);
+        out.close();
+        try {
+        DataTableSpec tSpec = ARFFTable.
+                createDataTableSpecFromARFFfile(tempFile.toURL(), null);
+        //  + "% The lovely Iris data set - as we all know it\n"
+        //  + "\n"
+        //  + "@RELATION iris\n"
+        //  + "\n"
+        //  + "@ATTRIBUTE sepallength REAL\n"
+        //  + "@ATTRIBUTE sepalwidth REAL\n"
+        //  + "@ATTRIBUTE petallength REAL\n"
+        //  + "@ATTRIBUTE petalwidth REAL\n"
+        //  + "@ATTRIBUTE class{Iris-setosa,Iris-versicolor,Iris-virginica}\n"
+        //  + "\n"
+        assertEquals(tSpec.getNumColumns(), 5);
+        assertEquals(tSpec.getColumnSpec(0).getName().toString(), 
+                "sepallength");
+        assertEquals(tSpec.getColumnSpec(1).getName().toString(), 
+                "sepalwidth");
+        assertEquals(tSpec.getColumnSpec(2).getName().toString(), 
+                "petallength");
+        assertEquals(tSpec.getColumnSpec(3).getName().toString(), 
+                "petalwidth");
+        assertEquals(tSpec.getColumnSpec(4).getName().toString(), 
+                "class");
+        assertEquals(tSpec.getColumnSpec(0).getType(), DoubleCell.TYPE);
+        assertEquals(tSpec.getColumnSpec(1).getType(), DoubleCell.TYPE);
+        assertEquals(tSpec.getColumnSpec(2).getType(), DoubleCell.TYPE);
+        assertEquals(tSpec.getColumnSpec(3).getType(), DoubleCell.TYPE);
+        assertEquals(tSpec.getColumnSpec(4).getType(), StringCell.TYPE);
+        assertNull(tSpec.getColumnSpec(0).getDomain().getValues());
+        assertNull(tSpec.getColumnSpec(1).getDomain().getValues());
+        assertNull(tSpec.getColumnSpec(2).getDomain().getValues());
+        assertNull(tSpec.getColumnSpec(3).getDomain().getValues());
+        assertEquals(tSpec.getColumnSpec(4).getDomain().getValues().size(), 3);
+        Set<DataCell> vals = tSpec.getColumnSpec(4).getDomain().getValues();
+        assertTrue(vals.contains(new StringCell("Iris-setosa")));
+        assertTrue(vals.contains(new StringCell("Iris-versicolor")));
+        assertTrue(vals.contains(new StringCell("Iris-virginica")));
+        } catch (CanceledExecutionException cee) {
+            // no chance to end up here.
+        }
+    }
+
+    /**
+     * test the creation of a table spec from the IRIS data in an ARFF file.
+     * 
+     * @throws IOException if it wants to.
+     * @throws InvalidSettingsException if it feels like.
+     */
+    public void testCreateDataTableSpecFromARFFfileIRISCMT() throws IOException,
+            InvalidSettingsException {
+
+        File tempFile = File.createTempFile("ARFFReaderUnitTest", "mini");
+        tempFile.deleteOnExit();
+        Writer out = new BufferedWriter(new FileWriter(tempFile));
+        out.write(ARFF_IRISFULL_CMT);
+        out.close();
+        try {
+        DataTableSpec tSpec = ARFFTable.
+                createDataTableSpecFromARFFfile(tempFile.toURL(), null);
+        //  + "% The lovely Iris data set - as we all know it\n"
+        //  + "\n"
+        //  + "@RELATION iris\n"
+        //  + "\n"
+        //  + "@ATTRIBUTE sepallength  REAL % !comment\n"
+        //  + "@ATTRIBUTE sepalwidth   REAL\n"
+        //  + "@ATTRIBUTE petallength  REAL % =Type0\n"
+        //  + "@ATTRIBUTE petalwidth   REAL\n"
+        //  + "@ATTRIBUTE class{Iris-setosa,Iris-versicolor,Iris-virginica}\n"
+        //  + "\n"
+        assertEquals(tSpec.getNumColumns(), 5);
+        assertEquals(tSpec.getColumnSpec(0).getName().toString(), 
+                "sepallength");
+        assertEquals(tSpec.getColumnSpec(1).getName().toString(), 
+                "sepalwidth");
+        assertEquals(tSpec.getColumnSpec(2).getName().toString(), 
+                "petallength");
+        assertEquals(tSpec.getColumnSpec(3).getName().toString(), 
+                "petalwidth");
+        assertEquals(tSpec.getColumnSpec(4).getName().toString(), 
+                "class");
+        assertEquals(tSpec.getColumnSpec(0).getType(), DoubleCell.TYPE);
+        assertEquals(tSpec.getColumnSpec(1).getType(), DoubleCell.TYPE);
+        assertEquals(tSpec.getColumnSpec(2).getType(), DoubleCell.TYPE);
+        assertEquals(tSpec.getColumnSpec(3).getType(), DoubleCell.TYPE);
+        assertEquals(tSpec.getColumnSpec(4).getType(), StringCell.TYPE);
+        assertNull(tSpec.getColumnSpec(0).getDomain().getValues());
+        assertNull(tSpec.getColumnSpec(1).getDomain().getValues());
+        assertNull(tSpec.getColumnSpec(2).getDomain().getValues());
+        assertNull(tSpec.getColumnSpec(3).getDomain().getValues());
+        assertEquals(tSpec.getColumnSpec(4).getDomain().getValues().size(), 3);
+        Set<DataCell> vals = tSpec.getColumnSpec(4).getDomain().getValues();
+        assertTrue(vals.contains(new StringCell("Iris-setosa")));
+        assertTrue(vals.contains(new StringCell("Iris-versicolor")));
+        assertTrue(vals.contains(new StringCell("Iris-virginica")));
         } catch (CanceledExecutionException cee) {
             // no chance to end up here.
         }
