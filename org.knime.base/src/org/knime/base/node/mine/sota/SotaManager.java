@@ -138,15 +138,6 @@ public class SotaManager {
      */
     public static final boolean USE_VARIABILITY = false;
 
-    /**
-     * Flag for euclidean distance.
-     */
-    public static final String EUCLIDEAN_DIST = "Euclidean";
-
-    /**
-     * Flag for korrelation distance.
-     */
-    public static final String COS_DIST = "Cosinus";
 
     /**
      * Is hierarchical fuzzy data used or not .
@@ -227,7 +218,7 @@ public class SotaManager {
         this.m_minVariability = SotaManager.MIN_VARIABILITY;
 
         this.m_useVariability = SotaManager.USE_VARIABILITY;
-        this.m_distance = SotaManager.EUCLIDEAN_DIST;
+        this.m_distance = DistanceManagerFactory.EUCLIDEAN_DIST;
         this.m_useHierarchicalFuzzyData 
             = SotaManager.USE_HIERARCHICAL_FUZZY_DATA;
         this.m_trained = false;
@@ -296,14 +287,11 @@ public class SotaManager {
         }
 
         //
-        // / Create distance metric
-        //        
-        if (m_distance.equals(SotaManager.EUCLIDEAN_DIST)) {
-            m_distanceManager = new EuclideanDistanceManager(m_isFuzzy);
-        } else if (m_distance.equals(SotaManager.COS_DIST)) {
-            double offset = 1;
-            m_distanceManager = new CosinusDistanceManager(offset, m_isFuzzy);
-        }
+        /// Create distance metric
+        //
+        double offset = 1;
+        m_distanceManager = DistanceManagerFactory.createDistanceManager(
+                m_distance, m_isFuzzy, offset);
 
         //
         // / Create concrete specialized SotaHelper here !!!
@@ -1018,8 +1006,8 @@ public class SotaManager {
                     + " ! \n";
         }
 
-        if (!useDist.equals(SotaManager.EUCLIDEAN_DIST)
-                && !useDist.equals(SotaManager.COS_DIST)) {
+        if (!useDist.equals(DistanceManagerFactory.EUCLIDEAN_DIST)
+                && !useDist.equals(DistanceManagerFactory.COS_DIST)) {
             msg += "Distance must be euclidean or coeffizient of correlation "
                     + "!\n";
         }

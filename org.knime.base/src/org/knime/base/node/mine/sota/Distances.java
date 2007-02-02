@@ -38,53 +38,21 @@ public final class Distances {
     }
 
     /**
-     * Returns the euclidean distance between the cells values and the number
-     * cells of the given row.
+     * Calculates the Minkowski distance between two rows. If fuzzy is set true
+     * only columns with cells containing numbers are used to compute the 
+     * distance. The given power specifies the distance kind, i.e. if power 
+     * is set to 2 the euclidean distance will be computed.
      * 
-     * @param row row to compute the distance
-     * @param cell cell to compute the distance
-     * @param fuzzy if <code>true</code> only fuzzy data is respected, if
-     *            <code>false</code> only number data
-     * @return the euclidian distance between given row and cell
-     */
-    public static double getEuclideanDistance(final DataRow row,
-            final SotaTreeCell cell, final boolean fuzzy) {
-        int col = 0;
-        double distance = 0;
-        for (int i = 0; i < row.getNumCells(); i++) {
-            DataType type = row.getCell(i).getType();
-
-            if (SotaUtil.isNumberType(type) && !fuzzy) {
-                if (col < cell.getData().length) {
-                    distance += Math.pow(
-                            (cell.getData()[col].getValue() - ((DoubleValue)row
-                                    .getCell(i)).getDoubleValue()), 2);
-                    col++;
-                }
-            } else if (SotaUtil.isFuzzyIntervalType(type) && fuzzy) {
-                if (col < cell.getData().length) {
-                    distance += Math.pow(cell.getData()[col].getValue() 
-                            - SotaFuzzyMath.getCenterOfCoreRegion(
-                                    (FuzzyIntervalValue)row.getCell(i)), 2);
-                    col++;
-                }
-            }
-        }
-        return Math.sqrt(distance);
-    }
-
-    /**
-     * Calculates the euclidean distance between two rows. Only Number cell
-     * columns are used to calculate the distance.
+     * @param power The power to use.
+     * @param row1 The first row
+     * @param row2 The second row
+     * @param fuzzy If true only fuzzy data is taken into account, if 
+     * <code>false</code> only number data.
      * 
-     * @param row1 the first row
-     * @param row2 the second row
-     * @param fuzzy if <code>true</code> only fuzzy data is respected, if
-     *            <code>false</code> only number data
-     * @return distance between the two rows
+     * @return Minkowski distance between the two rows.
      */
-    public static double getEuclideanDistance(final DataRow row1,
-            final DataRow row2, final boolean fuzzy) {
+    public static double getMinkowskiDistance(final int power, 
+            final DataRow row1, final DataRow row2, final boolean fuzzy) {
         double distance = 0;
         for (int i = 0; i < row1.getNumCells(); i++) {
             DataType type1 = row1.getCell(i).getType();
@@ -94,19 +62,132 @@ public final class Distances {
                     && !fuzzy) {
                 distance += Math.pow((((DoubleValue)row1.getCell(i))
                         .getDoubleValue() - ((DoubleValue)row2.getCell(i))
-                        .getDoubleValue()), 2);
+                        .getDoubleValue()), power);
             } else if (SotaUtil.isFuzzyIntervalType(type1)
                     && SotaUtil.isFuzzyIntervalType(type2) && fuzzy) {
                 distance += Math.pow((SotaFuzzyMath
                         .getCenterOfCoreRegion((FuzzyIntervalValue)row1
                                 .getCell(i)) - SotaFuzzyMath
                         .getCenterOfCoreRegion((FuzzyIntervalValue)row2
-                                .getCell(i))), 2);
+                                .getCell(i))), power);
             }
         }
         return Math.sqrt(distance);
     }
+    
+    /**
+     * Calculates the Minkowski distance between a regular <code>DataRow</code>
+     * and a <code>SotaTreeCell</code>. If fuzzy is set true only columns with 
+     * cells containing numbers are used to compute the distance. If the number
+     * of columns, which are used to compute the distance, contained in the 
+     * given <code>DataRow</code> is different to the number of cells contained
+     * in the given <code>SotaTreeCell</code>, only the first <i>n</i> columns
+     * of the <code>DataRow</code> or <i>n</i> cells of the 
+     * <code>SotaTreeCell</code> are used to compute the distance. The rest is
+     * simply ignored.
+     * The given power specifies the distance kind, i.e. if power is set to 2 
+     * the euclidean distance will be computed.
+     * 
+     * @param power The power to use.
+     * @param row The row to compute the distance.
+     * @param cell The cell to compute the distance.
+     * @param fuzzy If true only fuzzy data is taken into account, if 
+     * <code>false</code> only number data.
+     * 
+     * @return Minkowski distance between the two rows.
+     */    
+    public static double getMinkowskiDistance(final int power, 
+            final DataRow row, final SotaTreeCell cell, final boolean fuzzy) {
+        int col = 0;
+        double distance = 0;
+        for (int i = 0; i < row.getNumCells(); i++) {
+            DataType type = row.getCell(i).getType();
 
+            if (SotaUtil.isNumberType(type) && !fuzzy) {
+                if (col < cell.getData().length) {
+                    distance += Math.pow(
+                            (cell.getData()[col].getValue() - ((DoubleValue)row
+                                    .getCell(i)).getDoubleValue()), power);
+                    col++;
+                }
+            } else if (SotaUtil.isFuzzyIntervalType(type) && fuzzy) {
+                if (col < cell.getData().length) {
+                    distance += Math.pow(cell.getData()[col].getValue() 
+                            - SotaFuzzyMath.getCenterOfCoreRegion(
+                                    (FuzzyIntervalValue)row.getCell(i)), power);
+                    col++;
+                }
+            }
+        }
+        return Math.sqrt(distance);
+    }
+    
+    /**
+     * Returns the euclidean distance between a given <code>DataRow</code>
+     * and <code>SotaTreeCell</code> using the Minkowski distance with 
+     * power 2.
+     * @see Distances#getMinkowskiDistance(int, DataRow, DataRow, boolean)
+     * 
+     * @param row row to compute the distance
+     * @param cell cell to compute the distance
+     * @param fuzzy if <code>true</code> only fuzzy data is respected, if
+     *            <code>false</code> only number data
+     * @return the euclidian distance between given row and cell
+     */
+    public static double getEuclideanDistance(final DataRow row,
+            final SotaTreeCell cell, final boolean fuzzy) {
+        return Distances.getMinkowskiDistance(2, row, cell, fuzzy);
+    }
+
+    /**
+     * Calculates the euclidean distance between two <code>DataRow</code>s
+     * using the Minkowski distance with power 2.
+     * @see Distances#getMinkowskiDistance(int, DataRow, DataRow, boolean)
+     * 
+     * @param row1 the first row
+     * @param row2 the second row
+     * @param fuzzy if <code>true</code> only fuzzy data is respected, if
+     *            <code>false</code> only number data
+     * @return distance between the two rows
+     */
+    public static double getEuclideanDistance(final DataRow row1,
+            final DataRow row2, final boolean fuzzy) {
+        return Distances.getMinkowskiDistance(2, row1, row2, fuzzy);
+    }
+
+    /**
+     * Returns the manhattan distance between a given <code>DataRow</code>
+     * and <code>SotaTreeCell</code> using the Minkowski distance with 
+     * power 1.
+     * @see Distances#getMinkowskiDistance(int, DataRow, DataRow, boolean)
+     * 
+     * @param row row to compute the distance
+     * @param cell cell to compute the distance
+     * @param fuzzy if <code>true</code> only fuzzy data is respected, if
+     *            <code>false</code> only number data
+     * @return the euclidian distance between given row and cell
+     */
+    public static double getManhattanDistance(final DataRow row,
+            final SotaTreeCell cell, final boolean fuzzy) {
+        return Distances.getMinkowskiDistance(1, row, cell, fuzzy);
+    }
+
+    /**
+     * Calculates the manhattan distance between two <code>DataRow</code>s
+     * using the Minkowski distance with power 1.
+     * @see Distances#getMinkowskiDistance(int, DataRow, DataRow, boolean)
+     * 
+     * @param row1 the first row
+     * @param row2 the second row
+     * @param fuzzy if <code>true</code> only fuzzy data is respected, if
+     *            <code>false</code> only number data
+     * @return distance between the two rows
+     */
+    public static double getManhattanDistance(final DataRow row1,
+            final DataRow row2, final boolean fuzzy) {
+        return Distances.getMinkowskiDistance(1, row1, row2, fuzzy);
+    }    
+    
     /**
      * Computes the cosinus distance between the given two rows, with given
      * offset.
