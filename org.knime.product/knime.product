@@ -97,7 +97,7 @@ Uses: Java5, GEF, Log4J
       <feature id="org.eclipse.gef" version="3.2.0.v20060626"/>
       <feature id="org.eclipse.platform" version="3.2.0.v20060609m-AgOexn6hlEUsvBO"/>
       <feature id="org.eclipse.rcp" version="3.2.0.v20060609m-SVDNgVrNoh-MeGG"/>
-      <feature id="org.knime.features.base" version="1.2.0.BETA"/>
+      <feature id="org.knime.features.base" version="1.2.0"/>
    </features>
 
 </product>
