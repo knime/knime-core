@@ -21,26 +21,19 @@ How to get additional features:
 
   A convenient way to download new KNIME features is via the KNIME 
   update site. In your current KNIME installation select 
-  "Help", "Software Updates", "Find and Install...". The Update Wizard opens. 
-  Select "Search for new features to install" and click "Next". 
-  Select "New Remote Site..." located on the right-hand side. 
-  A window opens into which you can enter the name and location of the 
-  new update site. Enter "KNIME" as name and "http://www.knime.org/update" as URL.
-  Close the dialog by clicking "OK". On the left-hand side of the remaining 
-  window, you can see the KNIME site included in the list of 
-  "Sites to include in the search". Make sure it's checked. Click "Finish". 
-  A new window appears displaying the root of the KNIME update site. 
-  If you expand it you see three main categories: KNIME Base Package, 
-  KNIME Development Wizard, KNIME Extensions.
+  "File", "Update KNIME..." (or in the Developer Version via "Help", 
+  "Software Updates",  "Find and Install..."). The Update Wizard opens. 
+  If you expand the KNIME site, you see three main categories: 
+  KNIME Base Package, KNIME Development Wizard, KNIME Extensions.
   You may now select the features you want to install. If you select a 
-  feature and receive an error message stating that the selected feature 
-  requires a certain plug-in, subsequently click the "Select Required" button. 
-  This automatically selects all required features.
+  feature and receive an error about a configuration problem, click the 
+  "Select Required" button. This automatically selects all required features.
   You need to restart KNIME after installing new extensions in order to get
-  them activated in the GUI.
+  them activated.
 
   Another way to install new features is to download the extension in an archive
-  file. Unpack the file into your KNIME installation directory (so that all files
-  of the archive's plugin directory are stored in KNIME's plugin dir and the files
-  of the feature directory are stored in KNIME's feature dir).
-  Restart KNIME to register the newly added features.
+  file from our website (www.knime.org). Unpack the file into your KNIME 
+  installation directory (so that all files of the archive's plugin directory 
+  are stored in KNIME's plugin dir and the files of the feature directory are 
+  stored in KNIME's feature dir). Restart KNIME to register the newly added 
+  features.
