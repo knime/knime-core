@@ -101,10 +101,7 @@ public class LinePlotterDrawingPane extends ScatterPlotterDrawingPane {
         GeneralPath path = new GeneralPath();
         for (int i = 0; i < dotInfo.length; i++) {
             DotInfo dot1 = dotInfo[i];
-            if (!dot1.paintDot()) {                
-                continue;
-            }
-            if (m_showDots) {
+            if (m_showDots && dot1.paintDot()) {
                 boolean isSelected = getSelectedDots().contains(
                         dotInfo[i].getRowID());
                 boolean isHilite = dotInfo[i].isHiLit();
@@ -113,24 +110,35 @@ public class LinePlotterDrawingPane extends ScatterPlotterDrawingPane {
                 int y = dotInfo[i].getYCoord();
                 shape.paint(g, x, y, dotSize, c, isHilite, isSelected, false);
             }
-            if (i % m_nrOfLines == 0) {
+            if (i % m_nrOfLines == 0 && path != null) {
                 // start of one line
                 path.reset();
                 // move to start point
                 path.moveTo(dot1.getXCoord(), dot1.getYCoord());
-                continue;
             }
             if (dot1.paintDot()) {
-                // add line segment to path
-                path.lineTo(dot1.getXCoord(), dot1.getYCoord());
+                // if we had a missing value and !interpolate
+                if (path == null) {
+                    path = new GeneralPath();
+                    path.moveTo(dot1.getXCoord(), dot1.getYCoord());
+                } else {
+                    // add line segment to path
+                    path.lineTo(dot1.getXCoord(), dot1.getYCoord());
+                }
+            } else  if (path != null) {
+                // if not paint dot (y = -1) => missing value && !interpolate
+                // we have to close the path and continue a new one
+                g.setColor(dot1.getColor().getColor());
+                ((Graphics2D)g).setStroke(new BasicStroke(m_thickness));
+                ((Graphics2D)g).draw(path);
+                path = null;
             }
-            if (i %  m_nrOfLines == (m_nrOfLines - 1)) {
+            if (i %  m_nrOfLines == (m_nrOfLines - 1) && path != null) {
                 // end of one line -> paint it
                 g.setColor(dot1.getColor().getColor());
                 ((Graphics2D)g).setStroke(new BasicStroke(m_thickness));
                 ((Graphics2D)g).draw(path);
             }
-            
         }
     }
    

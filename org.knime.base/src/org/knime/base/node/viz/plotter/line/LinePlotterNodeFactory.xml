@@ -53,7 +53,8 @@
 		</p>
 		<p>Missing Values:
 			Per default missing values will interrupt the line. Check "Interpolate" to 
-			linearly interpolate the missing values.
+			linearly interpolate the missing values. Missing values at the beginning
+			and at the end will not be interpolated.
 		</p>
 		<p>Appearance:
 			<ul>

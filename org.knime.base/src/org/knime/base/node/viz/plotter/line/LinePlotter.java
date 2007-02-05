@@ -59,7 +59,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
 
 /**
  * Plots the values of all selected numeric columns as lines in a plot, where 
- * the x axis are the rows and the y axis are the values from the minimum of the 
+ * the x axis are the rows and the y axis are the values from the minimum of the
  * values in all columns to the maximum of the values of all selected columns.
  * The <code>LinePlotter</code> extends the 
  * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotter} to inherit 
@@ -371,16 +371,31 @@ public class LinePlotter extends ScatterPlotter {
                         dotList.add(dot);
                     } else if (!m_interpolate) {
 //                        LOGGER.debug("missing value");
-                        dot = new DotInfo(x, y, array.getRow(row).getKey(),
-                            false, color, 1, row);
+                        dot = new DotInfo(x, -1, array.getRow(row).getKey(),
+                                delegateIsHiLit(array.getRow(row).getKey()
+                                        .getId()), color, 1, row);
                         dotList.add(dot);
                     } else {
                         // interpolate
-                        dot = new DotInfo(x, y, array.getRow(row).getKey(),
-                                false, color, 1, row);
+                        dot = new DotInfo(x, -1, array.getRow(row).getKey(),
+                                delegateIsHiLit(array.getRow(row).getKey()
+                                        .getId()), color, 1, row);
                         missingValues.add(dot);
                     }
                 }
+                // if we have missing values left, there are some 
+                // un-interpolated at the end, we add them anyway
+                if (!missingValues.isEmpty()) {
+                    DotInfo[] interpolated = interpolate(p1, null, 
+                            missingValues);
+                    // and add them
+                    for (DotInfo p : interpolated) {
+                        dotList.add(p);
+                    }
+                    // and clear the list again
+                    missingValues.clear();
+                } 
+                p1 = new Point(-1, -1);
                 colNr++;
             }
             DotInfo[] dots = new DotInfo[dotList.size()];
@@ -445,9 +460,25 @@ public class LinePlotter extends ScatterPlotter {
     public DotInfo[] interpolate(final Point p1, 
             final Point p2, final List<DotInfo> xValues) {
         DotInfo[] interpolated = new DotInfo[xValues.size()];
+        if (p1 == null || p2 == null || p1.getY() < 0 || p2.getY() < 0) {
+            // invalid points (either beginning or end)
+            // -> don't interpolate but replace with not visible points
+            for (int i = 0; i < xValues.size(); i++) {
+                // don't interpolate if one of the points is invalid
+                    DotInfo newDot = xValues.get(i);
+                    newDot.setYCoord(-1);
+                    interpolated[i] = newDot;
+            }
+            return interpolated;
+        }
+        // both points are valid -> interpolate
         for (int i = 0; i < xValues.size(); i++) {
             int x = xValues.get(i).getXCoord();
-            double m = ((p2.getY() - p1.getY()) / (p2.getX() - p1.getX()));
+            double m = 0;
+            if (!p1.equals(p2)) {
+                m = ((p2.getY() - p1.getY()) 
+                    / (p2.getX() - p1.getX()));
+            }
             double y = (m * x) - (m * p1.getX()) + p1.getY();
             DotInfo newDot = xValues.get(i);
             newDot.setYCoord((int)getScreenYCoordinate(y));
