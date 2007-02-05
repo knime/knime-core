@@ -72,7 +72,7 @@ public final class Distances {
                                 .getCell(i))), power);
             }
         }
-        return Math.sqrt(distance);
+        return Math.pow(distance, (double)1 / (double)power);
     }
     
     /**
@@ -119,7 +119,7 @@ public final class Distances {
                 }
             }
         }
-        return Math.sqrt(distance);
+        return Math.pow(distance, (double)1 / (double)power);
     }
     
     /**
