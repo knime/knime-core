@@ -47,16 +47,16 @@ import org.knime.core.node.workflow.WorkflowManager;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-class LoadWorflowRunnable extends PersistWorflowRunnable {
+class LoadWorkflowRunnable extends PersistWorflowRunnable {
 
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(LoadWorflowRunnable.class);
+            .getLogger(LoadWorkflowRunnable.class);
 
     private WorkflowEditor m_editor;
 
     private File m_workflowFile;
 
-    public LoadWorflowRunnable(WorkflowEditor editor, File workflowFile) {
+    public LoadWorkflowRunnable(WorkflowEditor editor, File workflowFile) {
         m_editor = editor;
         m_workflowFile = workflowFile;
     }

@@ -777,7 +777,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
-            LoadWorflowRunnable loadWorflowRunnable = new LoadWorflowRunnable(
+            LoadWorkflowRunnable loadWorflowRunnable = new LoadWorkflowRunnable(
                     this, file);
             ps.busyCursorWhile(loadWorflowRunnable);
 
@@ -1618,7 +1618,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * @param canceled
      *            canceled or not
-     * @see LoadWorflowRunnable
+     * @see LoadWorkflowRunnable
      */
     void setLoadingCanceled(final boolean canceled) {
         m_loadingCanceled = canceled;
@@ -1630,7 +1630,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * @param exception
      *            the exception to set
-     * @see LoadWorflowRunnable
+     * @see LoadWorkflowRunnable
      */
     void setWorkflowException(final WorkflowException exception) {
         m_workflowException = exception;
@@ -1642,7 +1642,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * 
      * @param dirty
      *            whether the editor should be marked as dirty or not
-     * @see LoadWorflowRunnable
+     * @see LoadWorkflowRunnable
      */
     void setIsDirty(boolean dirty) {
         m_isDirty = dirty;
