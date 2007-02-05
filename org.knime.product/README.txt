@@ -23,8 +23,10 @@ How to get additional features:
   update site. In your current KNIME installation select 
   "File", "Update KNIME..." (or in the Developer Version via "Help", 
   "Software Updates",  "Find and Install..."). The Update Wizard opens. 
-  If you expand the KNIME site, you see three main categories: 
-  KNIME Base Package, KNIME Development Wizard, KNIME Extensions.
+  If you expand the "KNIME" site, you see two main categories: 
+  KNIME Base Package and KNIME Extensions. (In the All-in-One version
+  of KNIME you also have the KNIME Development Wizard under the
+  "KNIME Development" site available.)
   You may now select the features you want to install. If you select a 
   feature and receive an error about a configuration problem, click the 
   "Select Required" button. This automatically selects all required features.
