@@ -74,6 +74,15 @@ documentation</h2>
 <h2 class="Heading2"><a name="Zip_the_KNIME_AllInOne" />Zip the
 KNIME All-In-One</h2>
 <ul>
+	<li>Before creating the zip the following things have to be done:</li>
+	<ul>
+		<li>Delete the knime.log file in ECLIPSE_ROOT/workspace/.metadata/knime</li>
+		<li>Delete the install.log file in ECLIPSE_ROOT/configuration/org.eclipse.update</li>
+		<li>Delete the error_recovery.log file in ECLIPSE_ROOT/configuration/.settings</li>
+		<li>Remove the RECENT_WORKSPACES entry in file in ECLIPSE_ROOT/configuration/.settings/org.eclipse.ui.ide.prefs</li>
+	</ul>
+</ul>
+<ul>
 	<li>finally create another zip (tar.gz) archive from the Eclipse root directory
 	naming it &quot;eclipse_knime_win32_ALL-in-ONE_1.2.0&quot; or &quot;eclipse_knime_linux_ALL-in-ONE_1.2.0.tar.gz&quot;</li>
 </ul>
