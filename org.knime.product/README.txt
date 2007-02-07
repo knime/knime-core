@@ -24,7 +24,7 @@ How to get additional features:
   "File", "Update KNIME..." (or in the Developer Version via "Help", 
   "Software Updates",  "Find and Install..."). The Update Wizard opens. 
   If you expand the "KNIME" site, you see two main categories: 
-  KNIME Base Package and KNIME Extensions. (In the All-in-One version
+  KNIME Base Package and KNIME Extensions. (In the developer version
   of KNIME you also have the KNIME Development Wizard under the
   "KNIME Development" site available.)
   You may now select the features you want to install. If you select a 
