@@ -74,6 +74,9 @@
 			distance between points.</option>
 		<option name="Linkage type">Which method to use to measure the distance 
 		between points (as described above)</option>
+        <option name="Distance cache">Caching the distances between the data points
+        drastically improves performance especially for high-dimensional datasets. However, it needs
+        much memory, so you can switch it off for large datasets.</option>
 	</fullDescription>
 	<ports>
 	<dataIn index="0" name="Data to cluster">

@@ -28,7 +28,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import org.knime.base.node.mine.cluster.hierarchical.distfunctions.DistanceFunction;
 import org.knime.base.node.mine.cluster.hierarchical.distfunctions.EuclideanDist;
@@ -37,6 +36,7 @@ import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.base.node.viz.plotter.dendrogram.ClusterNode;
+import org.knime.base.util.HalfFloatMatrix;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -87,6 +87,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     private static final String CFG_H_CLUST_DATA = "hClustData";
 
     private static final String CFG_DIST_DATA = "distanceData";
+    
 
     /**
      * Key to store the number of clusters for output in the settings.
@@ -103,6 +104,12 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
      */
     public static final String LINKAGETYPE_KEY = "linkageType";
 
+    
+    /**
+     * Key to store the cache flag in the settings.
+     */
+    public static final String USE_CACHE_KEY = "cacheDistances";
+    
     /**
      * Specifies the mode the distance between two clusters is calculated.
      */
@@ -113,12 +120,16 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
      */
     private int m_numClustersForOutput = 3;
 
+    private boolean m_cacheDistances;
+    
     /**
      * The distance function to use.
      */
-    private DistanceFunction.Names m_distFunction 
+    private DistanceFunction.Names m_distFunctionName 
         = DistanceFunction.Names.Euclidean;
 
+    private DistanceFunction m_distFunction;
+    
     private DataArray m_dataArray;
 
     private ClusterNode m_rootNode;
@@ -159,47 +170,65 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws Exception {
-
         BufferedDataTable inputData = data[0];
         DataTable outputData = null;
 
+        if (m_distFunctionName.equals(DistanceFunction.Names.Manhattan)) {
+            m_distFunction = ManhattanDist.MANHATTEN_DISTANCE;
+        } else {
+            m_distFunction = EuclideanDist.EUCLIDEAN_DISTANCE;
+        }
+
+        
         // generate initial clustering
         // which means that every data point is one cluster
-        Vector<ClusterNode> clusters = initClusters(inputData, exec);
-        List<ClusterNode> clusterStorage = new ArrayList<ClusterNode>();
-        clusterStorage.addAll(clusters);
+        List<ClusterNode> clusters = initClusters(inputData, exec);
         // store the distance per each fusion step
         DataContainer fusionCont = new DataContainer(createFusionSpec());
         int iterationStep = 0;
 
+        
+        final HalfFloatMatrix cache;
+        if (m_cacheDistances) {
+            cache = new HalfFloatMatrix(inputData.getRowCount(), false);
+            cache.fill(Float.NaN);
+        } else {
+            cache = null;
+        }
+        
+        double max = inputData.getRowCount();
         while (clusters.size() > 1) {
-            exec.checkCanceled();
             // checks if number clusters to generate output table is reached
             if (m_numClustersForOutput == clusters.size()) {
-
                 outputData = createResultTable(inputData, clusters, exec);
             }
             iterationStep++;
+            exec.setProgress(iterationStep / max,
+                    "Iteration " + iterationStep + ", " + clusters.size()
+                    + " clusters remaining");
 
             // calculate distance between all clusters
-            double currentSmallestDist = Double.MAX_VALUE;
+            float currentSmallestDist = Float.MAX_VALUE;
             ClusterNode currentClosestCluster1 = null;
-            ClusterNode currentClosestCluster2 = null;
-            double dist = 0;
+            ClusterNode currentClosestCluster2 = null;            
             for (int i = 0; i < clusters.size(); i++) {
+                exec.checkCanceled();
                 ClusterNode node1 = clusters.get(i);
                 for (int j = i + 1; j < clusters.size(); j++) {
+                    final float dist;
                     ClusterNode node2 = clusters.get(j);
+
                     // call the choosen function to calculate the distance
                     // between two clusters. At the moment is single linkage
                     // and average linkage supported.
                     if (m_linkageType.equals(Linkage.SINGLE)) {
-                        dist = calculateSingleLinkageDist(node1, node2);
+                        dist = calculateSingleLinkageDist(node1, node2, cache);
                     } else if (m_linkageType.equals(Linkage.AVERAGE)) {
-                        dist = calculateAverageLinkageDist(node1, node2);
+                        dist = calculateAverageLinkageDist(node1, node2, cache);
                     } else {
-                        dist = calculateCompleteLinkageDist(node1, node2);
+                        dist = calculateCompleteLinkageDist(node1, node2, cache);
                     }
+                    
                     if (dist < currentSmallestDist) {
                         currentClosestCluster1 = node1;
                         currentClosestCluster2 = node2;
@@ -211,7 +240,6 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
             ClusterNode newNode =
                     new ClusterNode(currentClosestCluster1,
                             currentClosestCluster2, currentSmallestDist);
-            clusterStorage.add(newNode);
             clusters.remove(currentClosestCluster1);
             clusters.remove(currentClosestCluster2);
 
@@ -267,28 +295,32 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
      * clusters have the distance of its closest data rows
      * 
      */
-    private double calculateSingleLinkageDist(final ClusterNode node1,
-            final ClusterNode node2) {
-        DataRow[] rowsOfCluster1 = node1.getAllDataRows();
-        DataRow[] rowsOfCluster2 = node2.getAllDataRows();
-        double smallestDist = Double.MAX_VALUE;
-        DistanceFunction distFunction;  
-        if (m_distFunction.equals(DistanceFunction.Names.Manhattan)) {
-            distFunction = ManhattanDist.MANHATTEN_DISTANCE;
-        } else {
-            distFunction = EuclideanDist.EUCLIDEAN_DISTANCE;
-        }
-        for (int i = 0; i < rowsOfCluster1.length; i++) {
-            for (int j = 0; j < rowsOfCluster2.length; j++) {
-                double dist =
-                        distFunction.calcDistance(rowsOfCluster1[i],
-                                rowsOfCluster2[j]);
-                if (dist < smallestDist) {
-                    smallestDist = dist;
+    private float calculateSingleLinkageDist(final ClusterNode node1,
+            final ClusterNode node2, final HalfFloatMatrix cache) {
+        float minDist = Float.MAX_VALUE;
+        
+        for (ClusterNode node1Leaf : node1.leafs()) {
+            final DataRow row1 = node1Leaf.getLeafDataPoint();
+            final int row1Index = node1Leaf.getRowIndex();
+            for (ClusterNode node2Leaf : node2.leafs()) { 
+                final DataRow row2 = node2Leaf.getLeafDataPoint();
+                final int row2Index = node2Leaf.getRowIndex();
+
+                float f = Float.NaN;
+                if (cache != null) {
+                    f = cache.get(row1Index, row2Index);
+                    if (Float.isNaN(f)) {
+                        f = (float) m_distFunction.calcDistance(row1, row2);
+                        cache.set(row1Index, row2Index, f);
+                    }
+                } else {
+                    f = (float) m_distFunction.calcDistance(row1, row2);
                 }
+                minDist = Math.min(minDist, f);
             }
         }
-        return smallestDist;
+
+        return minDist;
     }
 
     /*
@@ -296,25 +328,31 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
      * clusters have the distance of its farest data rows
      * 
      */
-    private double calculateCompleteLinkageDist(final ClusterNode node1,
-            final ClusterNode node2) {
-        DataRow[] rowsOfCluster1 = node1.getAllDataRows();
-        DataRow[] rowsOfCluster2 = node2.getAllDataRows();
-        double maxDist = Double.MIN_VALUE;
-        DistanceFunction distFunction;  
-        if (m_distFunction.equals(DistanceFunction.Names.Manhattan)) {
-            distFunction = ManhattanDist.MANHATTEN_DISTANCE;
-        } else {
-            distFunction = EuclideanDist.EUCLIDEAN_DISTANCE;
-        }
-        for (int i = 0; i < rowsOfCluster1.length; i++) {
-            for (int j = 0; j < rowsOfCluster2.length; j++) {
-                double dist =
-                        distFunction.calcDistance(rowsOfCluster1[i],
-                                rowsOfCluster2[j]);
-                maxDist = Math.max(dist, maxDist);
+    private float calculateCompleteLinkageDist(final ClusterNode node1,
+            final ClusterNode node2, final HalfFloatMatrix cache) {
+        float maxDist = 0;
+        
+        for (ClusterNode node1Leaf : node1.leafs()) {
+            final DataRow row1 = node1Leaf.getLeafDataPoint();
+            final int row1Index = node1Leaf.getRowIndex();
+            for (ClusterNode node2Leaf : node2.leafs()) { 
+                final DataRow row2 = node2Leaf.getLeafDataPoint();
+                final int row2Index = node1Leaf.getRowIndex();
+                
+                float f = Float.NaN;
+                if (cache != null) {
+                    f = cache.get(row1Index, row2Index);
+                    if (Float.isNaN(f)) {
+                        f = (float) m_distFunction.calcDistance(row1, row2);
+                        cache.set(row1Index, row2Index, f);
+                    }
+                } else {
+                    f = (float) m_distFunction.calcDistance(row1, row2);
+                }
+                maxDist = Math.max(maxDist, f);
             }
         }
+
         return maxDist;
     }
 
@@ -323,26 +361,33 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
      * clusters have the distance of the average distance of all their member
      * data rows.
      */
-    private double calculateAverageLinkageDist(final ClusterNode node1,
-            final ClusterNode node2) {
-        DataRow[] rowsOfCluster1 = node1.getAllDataRows();
-        DataRow[] rowsOfCluster2 = node2.getAllDataRows();
-        double sumDist = 0;
-        DistanceFunction distFunction;  
-        if (m_distFunction.equals(DistanceFunction.Names.Manhattan)) {
-            distFunction = ManhattanDist.MANHATTEN_DISTANCE;
-        } else {
-            distFunction = EuclideanDist.EUCLIDEAN_DISTANCE;
-        }
-        for (int i = 0; i < rowsOfCluster1.length; i++) {
-            for (int j = 0; j < rowsOfCluster2.length; j++) {
-                sumDist +=
-                        distFunction.calcDistance(rowsOfCluster1[i],
-                                rowsOfCluster2[j]);
+    private float calculateAverageLinkageDist(final ClusterNode node1,
+            final ClusterNode node2, final HalfFloatMatrix cache) {
+        float sumDist = 0;
+        
+        for (ClusterNode node1Leaf : node1.leafs()) {
+            final DataRow row1 = node1Leaf.getLeafDataPoint();
+            final int row1Index = node1Leaf.getRowIndex();
+            for (ClusterNode node2Leaf : node2.leafs()) { 
+                final DataRow row2 = node2Leaf.getLeafDataPoint();
+                final int row2Index = node1Leaf.getRowIndex();
+                
+                float f = Float.NaN;
+                if (cache != null) {
+                    f = cache.get(row1Index, row2Index);
+                    if (Float.isNaN(f)) {
+                        f = (float) m_distFunction.calcDistance(row1, row2);
+                        cache.set(row1Index, row2Index, f);
+                    }
+                } else {
+                    f = (float) m_distFunction.calcDistance(row1, row2);
+                }
+                sumDist += f;
             }
         }
+        
         // divide by the number pairewise distances
-        return sumDist / (rowsOfCluster1.length * rowsOfCluster2.length);
+        return sumDist / (node1.getLeafCount() * node2.getLeafCount());
     }
 
     /**
@@ -355,9 +400,9 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
      * 
      * @return the vector with all initial clusters.
      */
-    private Vector<ClusterNode> initClusters(final DataTable inputData,
+    private List<ClusterNode> initClusters(final DataTable inputData,
             final ExecutionContext exec) throws CanceledExecutionException {
-        Vector<ClusterNode> rowVector = new Vector<ClusterNode>();
+        List<ClusterNode> rowVector = new ArrayList<ClusterNode>();
         int rowIdx = 0;
         for (DataRow row : inputData) {
             rowVector.add(new ClusterNode(row, rowIdx++));
@@ -380,7 +425,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
      * @throws CanceledExecutionException if user canceled
      */
     private DataTable createResultTable(final DataTable inputData,
-            final Vector<ClusterNode> clusters, final ExecutionContext exec)
+            final List<ClusterNode> clusters, final ExecutionContext exec)
             throws CanceledExecutionException {
         DataTableSpec inputSpec = inputData.getDataTableSpec();
         DataTableSpec outputSpec = generateOutSpec(inputSpec);
@@ -438,9 +483,10 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_numClustersForOutput = settings.getInt(NRCLUSTERS_KEY);
-        m_distFunction = DistanceFunction.Names.valueOf(
+        m_distFunctionName = DistanceFunction.Names.valueOf(
                 settings.getString(DISTFUNCTION_KEY));
         m_linkageType = Linkage.valueOf(settings.getString(LINKAGETYPE_KEY));
+        m_cacheDistances = settings.getBoolean(USE_CACHE_KEY);
     }
 
     /**
@@ -456,8 +502,9 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addInt(NRCLUSTERS_KEY, m_numClustersForOutput);
-        settings.addString(DISTFUNCTION_KEY, m_distFunction.name());
+        settings.addString(DISTFUNCTION_KEY, m_distFunctionName.name());
         settings.addString(LINKAGETYPE_KEY, m_linkageType.name());
+        settings.addBoolean(USE_CACHE_KEY, m_cacheDistances);
     }
 
     /**
@@ -501,6 +548,8 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
                     + Linkage.SINGLE + ", " + Linkage.AVERAGE + " or "
                     + Linkage.COMPLETE);
         }
+        
+        settings.getBoolean(USE_CACHE_KEY);
     }
 
     /** Generate output spec based on input spec (appends column). */
