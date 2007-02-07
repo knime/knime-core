@@ -27,7 +27,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Simples class for managing the cross validation settings.
+ * Simple class for managing the cross validation settings.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -38,6 +38,18 @@ public class XValidateSettings {
 
     private String m_classColumnName;
 
+    private boolean m_leaveOneOut = false;
+    
+    
+    public boolean leaveOneOut() {
+        return m_leaveOneOut;
+    }
+    
+    
+    public void leaveOneOut(final boolean b) {
+        m_leaveOneOut = b;
+    }
+    
     /**
      * Returns the name of the class column.
      * 
@@ -64,6 +76,7 @@ public class XValidateSettings {
     public void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addShort("validations", m_validations);
         settings.addBoolean("randomSampling", m_randomSampling);
+        settings.addBoolean("leaveOneOut", m_leaveOneOut);
         settings.addString("classColumnName", m_classColumnName);
     }
 
@@ -77,6 +90,7 @@ public class XValidateSettings {
             throws InvalidSettingsException {
         m_validations = settings.getShort("validations");
         m_randomSampling = settings.getBoolean("randomSampling");
+        m_leaveOneOut = settings.getBoolean("leaveOneOut");
         m_classColumnName = settings.getString("classColumnName");
     }
 

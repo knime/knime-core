@@ -23,6 +23,8 @@
 			randomly from the input table, otherwise it is cut into consecutive
 			pieces.</option>
 		<option name="Class column name">The name of the column with the class labels.</option>		
+        <option name="Leave-one-out">Performs a leave-one-out cross validation, i.e. there are as many iterations as
+        data points and in each iteration another point's target value is predicted by using all remaining points as training set.</option>
 	</fullDescription>
 	
 	<ports>
