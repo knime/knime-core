@@ -393,7 +393,15 @@ public abstract class SettingsModel {
      */
     private void readEnableStatusAndCheckModelID(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        Config idCfg = settings.getConfig(getConfigName() + CFGKEY_INTERNAL);
+        
+        Config idCfg = null;
+        try {
+            idCfg = settings.getConfig(getConfigName() + CFGKEY_INTERNAL);
+        } catch (InvalidSettingsException ise) {
+            // for backward compatibility we just ignore if the internal config
+            // doesn't exist.
+            return;
+        }
         String settingsID = idCfg.getString(CFGKEY_MODELID);
 
         m_enabled = idCfg.getBoolean(CFGKEY_ENABLESTAT);
