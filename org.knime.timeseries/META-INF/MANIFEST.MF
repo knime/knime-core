@@ -8,6 +8,7 @@ Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.core,
  org.knime.workbench.repository,
+ org.knime.core,
  org.knime.base
 Eclipse-LazyStart: false
 
