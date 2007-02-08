@@ -5,31 +5,31 @@
          point="org.knime.workbench.repository.nodes">
          <node
             category-path="/timeseries"
-            factory-class="org.knime.dev.node.timeseries.display.timeplot.TimePlotterNodeFactory"
+            factory-class="org.knime.timeseries.node.display.timeplot.TimePlotterNodeFactory"
             id="org.knime.dev.nodes.timeseries.display.timeplot.TimePlotterNodeFactory"/>
         <node
             category-path="/timeseries"
-            factory-class="org.knime.dev.node.timeseries.Segmentation.PatternsBetweenEvents.PatternsBetweenEventsNodeFactory"
+            factory-class="org.knime.timeseries.node.Segmentation.PatternsBetweenEvents.PatternsBetweenEventsNodeFactory"
             id="org.knime.dev.nodes.timeseries.Segmentation.PatternsBetweenEvents.PatternsBetweenEventsNodeFactory"/>
         <node
             category-path="/timeseries"
-            factory-class="org.knime.dev.node.timeseries.Segmentation.TSBetweenEvents.TSBetweenEventsNodeFactory"
+            factory-class="org.knime.timeseries.node.Segmentation.TSBetweenEvents.TSBetweenEventsNodeFactory"
             id="org.knime.dev.nodes.timeseries.Segmentation.TSBetweenEvents.TSBetweenEventsNodeFactory"/>
        <node
             category-path="/timeseries"
-            factory-class="org.knime.dev.node.timeseries.Segmentation.OneSampleperDay.OneSampleperDayNodeFactory"
+            factory-class="org.knime.timeseries.node.Segmentation.OneSampleperDay.OneSampleperDayNodeFactory"
             id="org.knime.dev.nodes.timeseries.Segmentation.ExtractOneSampleperDay.ExtractOneSampleperDayNodeFactory"/>
        <node
             category-path="/timeseries"
-            factory-class="org.knime.dev.node.timeseries.Segmentation.ExtractFromTo.ExtractFromToNodeFactory"
+            factory-class="org.knime.timeseries.node.Segmentation.ExtractFromTo.ExtractFromToNodeFactory"
             id="org.knime.dev.nodes.timeseries.Segmentation.ExtractFromTo.ExtractFromToNodeFactory"/>
       <node
             category-path="/timeseries"
-            factory-class="org.knime.dev.node.timeseries.MA.MovingAverageNodeFactory"
+            factory-class="org.knime.timeseries.node.MA.MovingAverageNodeFactory"
             id="org.knime.dev.nodes.timeseries.MovingAverageNodeFactory"/>
       <node
             category-path="/timeseries"
-            factory-class="org.knime.dev.node.timeseries.String2TimeStamp.String2DateNodeFactory"
+            factory-class="org.knime.timeseries.node.String2TimeStamp.String2DateNodeFactory"
             id="org.knime.dev.nodes.timeseries.String2DateNodeFactory"/>
    </extension>
 

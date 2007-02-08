@@ -3,14 +3,11 @@ Bundle-ManifestVersion: 2
 Bundle-Name: DummyNode-Node extension for KNIME Workbench
 Bundle-SymbolicName: org.knime.timeseries; singleton:=true
 Bundle-Version: 1.0.0
-Bundle-ClassPath: dummynode.jar
-Bundle-Activator: org.knime.timeseries.DummyNodeNodePlugin
 Bundle-Vendor: KNIME GmbH
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.core,
  org.knime.workbench.repository,
  org.knime.base
-Eclipse-LazyStart: true
-Export-Package: org.knime.timeseries
+Eclipse-LazyStart: false
 
