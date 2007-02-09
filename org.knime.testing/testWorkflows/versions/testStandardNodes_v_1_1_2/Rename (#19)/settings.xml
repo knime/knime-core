@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="Rename"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="model">
+<config key="all_columns">
+<config key="sepal length">
+<entry key="old_column_name" type="xstring" value="sepal length"/>
+<entry key="new_column_name" type="xstring" isnull="true" value=""/>
+<entry key="new_column_type" type="xint" value="0"/>
+</config>
+<config key="sepal width">
+<entry key="old_column_name" type="xstring" value="sepal width"/>
+<entry key="new_column_name" type="xstring" value="sepal w"/>
+<entry key="new_column_type" type="xint" value="3"/>
+</config>
+<config key="petal length">
+<entry key="old_column_name" type="xstring" value="petal length"/>
+<entry key="new_column_name" type="xstring" isnull="true" value=""/>
+<entry key="new_column_type" type="xint" value="0"/>
+</config>
+<config key="petal width">
+<entry key="old_column_name" type="xstring" value="petal width"/>
+<entry key="new_column_name" type="xstring" isnull="true" value=""/>
+<entry key="new_column_type" type="xint" value="0"/>
+</config>
+<config key="class">
+<entry key="old_column_name" type="xstring" value="class"/>
+<entry key="new_column_name" type="xstring" value="class2"/>
+<entry key="new_column_type" type="xint" value="0"/>
+</config>
+<config key="sepal length_duplicate">
+<entry key="old_column_name" type="xstring" value="sepal length_duplicate"/>
+<entry key="new_column_name" type="xstring" isnull="true" value=""/>
+<entry key="new_column_type" type="xint" value="0"/>
+</config>
+<config key="sepal width_duplicate">
+<entry key="old_column_name" type="xstring" value="sepal width_duplicate"/>
+<entry key="new_column_name" type="xstring" value="sepal width_duplicate"/>
+<entry key="new_column_type" type="xint" value="2"/>
+</config>
+<config key="petal length_duplicate">
+<entry key="old_column_name" type="xstring" value="petal length_duplicate"/>
+<entry key="new_column_name" type="xstring" isnull="true" value=""/>
+<entry key="new_column_type" type="xint" value="0"/>
+</config>
+<config key="petal width_duplicate">
+<entry key="old_column_name" type="xstring" value="petal width_duplicate"/>
+<entry key="new_column_name" type="xstring" isnull="true" value=""/>
+<entry key="new_column_type" type="xint" value="0"/>
+</config>
+<config key="class_duplicate">
+<entry key="old_column_name" type="xstring" value="class_duplicate"/>
+<entry key="new_column_name" type="xstring" isnull="true" value=""/>
+<entry key="new_column_type" type="xint" value="0"/>
+</config>
+</config>
+</config>
+<config key="spec_files">
+<entry key="output_0" type="xstring" value="spec_0.xml"/>
+</config>
+<entry key="data_meta_file" type="xstring" value="data.xml"/>
+<config key="model_files"/>
+</config>

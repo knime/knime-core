@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="R Scripting"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="model">
+<entry key="host" type="xstring" value="127.0.0.1"/>
+<entry key="port" type="xint" value="6311"/>
+<entry key="user" type="xstring" value=""/>
+</config>
+<config key="spec_files"/>
+<config key="model_files"/>
+</config>

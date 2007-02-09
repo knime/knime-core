@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="RProp MultiLayerPerceptron Learner"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings"/>
+<config key="model">
+<config key="maxiter_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_integer"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="maxiter" type="xint" value="100"/>
+<config key="hiddenlayer_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_integer"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="hiddenlayer" type="xint" value="1"/>
+<config key="nrhiddenneurons_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_integer"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="nrhiddenneurons" type="xint" value="10"/>
+<config key="classcol_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="classcol" type="xstring" value="income"/>
+<config key="ignoremv_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="ignoremv" type="xboolean" value="true"/>
+</config>
+<config key="data_meta_file">
+<entry key="data_files_directory" type="xstring" value="data"/>
+</config>
+<config key="model_files">
+<entry key="output_0" type="xstring" value="model_0.pmml.gz"/>
+</config>
+</config>
