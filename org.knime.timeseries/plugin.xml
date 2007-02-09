@@ -38,7 +38,7 @@
       <category
             after="meta"
             description="Time Series Utilities"
-            icon="icons/category_timeseries.png"
+            icon="icons/category_time.png"
             level-id="timeseries"
             name="Time Series"
             path="/"/>

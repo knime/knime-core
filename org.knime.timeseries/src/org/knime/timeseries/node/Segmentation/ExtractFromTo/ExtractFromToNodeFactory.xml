@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Manipulator" icon="">
+<knimeNode type="Manipulator" icon="time_from_to.png">
     <name>Extract From To</name>
     <shortDescription>Extracts data from Timestamp1 to Timestamp2 from input table.
     </shortDescription>
