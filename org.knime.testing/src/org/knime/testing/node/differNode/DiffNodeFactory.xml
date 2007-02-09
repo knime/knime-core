@@ -20,7 +20,6 @@
 			In the node's dialog, select the criteria that should be used to 
 			compare the two input tables:</p>
 		</intro>
-			
 		<option name="TableDiffer">The node succeeds if the two input tables are
 		        equal. Each data cell of each row is compared with the corresponding
 		        cell of the other table using the 
@@ -35,8 +34,10 @@
 		        must be a scorer, the golden table should also be generated
 		        by a scorer (probably by the same in a previous run). This option
 		        allows specifying the upper and lower tolerance (in percent) for 
-		        the scorer result. The node succeeds, if the score of the test table is
-		        within the specified range of the golden score.
+		        the scorer result. The node succeeds, if the classification error
+		        of the current result is not worse than the golden error minus
+		        the lower tolerance and not better that the golden classification error plus
+		        the upper tolerance.
 		</option>		
 
 	</fullDescription>

@@ -1,18 +1,23 @@
 /* 
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
- * 
- * Copyright, 2003 - 2006
- * Universitaet Konstanz, Germany.
- * Lehrstuhl fuer Angewandte Informatik
- * Prof. Dr. Michael R. Berthold
- * 
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
  * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner.
- * -------------------------------------------------------------------
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+ * --------------------------------------------------------------------- *
  * 
  * History
  *   May 10, 2006 (ritmeier): created
@@ -45,10 +50,10 @@ public class DiffNodeModel extends NodeModel {
     public static final String CFGKEY_EVALUATORKEY = "TESTEVALUATOR";
 
     /** Config key for the lower tolerance. */
-    public static final String CFGKEY_LOWERTOLLERANCEKEY = "LOWERTOLLERANCE";
+    public static final String CFGKEY_LOWERTOLERANCEKEY = "LOWERTOLLERANCE";
 
     /** Config key for the upper tolerance. */
-    public static final String CFGKEY_UPPERERTOLLERANCEKEY = "UPPERTOLLERANCE";
+    public static final String CFGKEY_UPPERERTOLERANCEKEY = "UPPERTOLLERANCE";
 
     private DataTable m_diffTable;
 
@@ -77,9 +82,9 @@ public class DiffNodeModel extends NodeModel {
                 : m_evaluator.name());
         if (m_evaluator != null
                 && m_evaluator.equals(Evaluators.LearnerScoreComperator)) {
-            settings.addInt(DiffNodeModel.CFGKEY_LOWERTOLLERANCEKEY,
+            settings.addInt(DiffNodeModel.CFGKEY_LOWERTOLERANCEKEY,
                     m_lowerTolerance);
-            settings.addInt(DiffNodeModel.CFGKEY_UPPERERTOLLERANCEKEY,
+            settings.addInt(DiffNodeModel.CFGKEY_UPPERERTOLERANCEKEY,
                     m_upperTolerance);
         }
 
@@ -104,8 +109,8 @@ public class DiffNodeModel extends NodeModel {
         }
 
         if (eval.equals(DiffNodeDialog.Evaluators.LearnerScoreComperator)) {
-            settings.getInt(CFGKEY_LOWERTOLLERANCEKEY);
-            settings.getInt(CFGKEY_UPPERERTOLLERANCEKEY);
+            settings.getInt(CFGKEY_LOWERTOLERANCEKEY);
+            settings.getInt(CFGKEY_UPPERERTOLERANCEKEY);
         }
 
     }
@@ -121,8 +126,8 @@ public class DiffNodeModel extends NodeModel {
         m_evaluator = DiffNodeDialog.Evaluators.valueOf(evaluatorString);
         if (m_evaluator
                 .equals(DiffNodeDialog.Evaluators.LearnerScoreComperator)) {
-            m_lowerTolerance = settings.getInt(CFGKEY_LOWERTOLLERANCEKEY);
-            m_upperTolerance = settings.getInt(CFGKEY_UPPERERTOLLERANCEKEY);
+            m_lowerTolerance = settings.getInt(CFGKEY_LOWERTOLERANCEKEY);
+            m_upperTolerance = settings.getInt(CFGKEY_UPPERERTOLERANCEKEY);
         }
 
     }

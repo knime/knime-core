@@ -1,26 +1,36 @@
-/* -------------------------------------------------------------------
+/* 
+ * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
- * 
- * Copyright, 2003 - 2006
- * Universitaet Konstanz, Germany.
- * Lehrstuhl fuer Angewandte Informatik
- * Prof. Dr. Michael R. Berthold
- * 
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
  * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner.
- * -------------------------------------------------------------------
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+ * --------------------------------------------------------------------- *
  * 
  * History
  *   17.05.2006 (Fabian Dill): created
  */
 package org.knime.testing.core;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -34,6 +44,7 @@ import org.knime.core.node.NodeStatus;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.testing.KnimeTestRegistry;
 
 // TODO: check, that the number of correct results corresponds to the number
 // of outports of the node under test
@@ -51,6 +62,8 @@ public class KnimeTestCase extends TestCase {
 
     private WorkflowManager m_manager;
 
+    private List<String> m_owners;
+    
     // stores error messages seen during the run
     private TestingAppender m_errorAppender;
     
@@ -61,6 +74,7 @@ public class KnimeTestCase extends TestCase {
     public KnimeTestCase(File workflowFile) {
         m_knimeSettings = workflowFile;
         this.setName(workflowFile.getParent());
+        m_owners = new LinkedList<String>();
     }
 
     /**
@@ -76,8 +90,26 @@ public class KnimeTestCase extends TestCase {
     @Override
     public void setUp() throws InvalidSettingsException,
             CanceledExecutionException, IOException, WorkflowException {
-        // start here the workflow
+
+        // start catching error messages
         m_errorAppender = new TestingAppender(Level.ERROR, Level.ERROR, 100);
+
+        // construct the list of owners
+        File ownerFile =
+                new File(m_knimeSettings.getParentFile(), 
+                        KnimeTestRegistry.OWNER_FILE);
+        if (ownerFile.exists()) {
+            FileReader fileR = new FileReader(ownerFile);
+            BufferedReader r = new BufferedReader(fileR);
+            String line = null;
+            while ((line = r.readLine()) != null) {
+                if (line.trim().length() > 0) { 
+                    m_owners.add(line.trim());
+                }
+            }
+        }
+
+        // start here the workflow
         try {
             m_manager =
                     new WorkflowManager(m_knimeSettings,
@@ -97,10 +129,23 @@ public class KnimeTestCase extends TestCase {
      */
     @Override
     public void runTest() {
-        logger.info("<Start> Test: '"
+        logger.info("<Start> Test='"
                 + m_knimeSettings.getParentFile().getName()
-                + " ---------------------------------------------------------");
-
+                + "' --------------------------------------------------------");
+        String owner = "";
+        if (m_owners.size() > 0) {
+            StringBuilder owns = new StringBuilder();
+            boolean sep = false;
+            for (String o : m_owners) {
+                if (sep) {
+                    owns.append(",");
+                }
+                owns.append(o);
+                sep = true;
+            }
+            owner = owns.toString();
+        }
+        logger.info("TestOwners=" + owner);
         // Collection<NodeView> views = new ArrayList<NodeView>();
         for (NodeContainer nodeCont : m_manager.getNodes()) {
             for (int i = 0; i < nodeCont.getNumViews(); i++) {
@@ -142,9 +187,6 @@ public class KnimeTestCase extends TestCase {
                 nodecont.closeAllViews();
             }
         }
-        logger.info("<End> Test: '"
-                + m_knimeSettings.getParentFile().getName()
-                + " ---------------------------------------------------------");
     }
 
     /**
@@ -154,20 +196,27 @@ public class KnimeTestCase extends TestCase {
      */
     @Override
     public void tearDown() {
-        
-        // disconnect the appender to not catch ny message anymore
-        m_errorAppender.disconnect();
-        
-        if (m_errorAppender.getMessageCount() > 0) {
-            String[] errMsgs = m_errorAppender.getReceivedMessages();
-            for (String msg : errMsgs) {
-                logger.error("Got error: " + msg);
+
+        try {
+            // disconnect the appender to not catch ny message anymore
+            m_errorAppender.disconnect();
+
+            if (m_errorAppender.getMessageCount() > 0) {
+                String[] errMsgs = m_errorAppender.getReceivedMessages();
+                for (String msg : errMsgs) {
+                    logger.error("Got error: " + msg);
+                }
+                logger.error("Got ERROR messages during run -> FAILING! "
+                        + "Check the log file.");
             }
-            logger.error("Got ERROR messages during run -> FAILING! "
-                    + "Check the log file.");
+
+            Assert.assertEquals(m_errorAppender.getMessageCount(), 0);
+        } finally {
+            logger.info("<End> Test='"
+                    + m_knimeSettings.getParentFile().getName()
+                    + "' ----------------------------------------------------");
+
         }
-        
-        Assert.assertEquals(m_errorAppender.getMessageCount(), 0); 
     }
 
 }
