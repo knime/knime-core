@@ -24,9 +24,10 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
 import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramPlotter;
 import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramProperties;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
@@ -70,8 +71,12 @@ public class HistogramNodeView extends NodeView {
      */
     @Override
     public void modelChanged() {
-        final InteractiveHistogramDataModel histogramModel = 
+        if (m_nodeModel == null) {
+            return;
+        }
+        final HistogramDataModel histogramModel = 
             m_nodeModel.getHistogramModelClone();
+        final DataTableSpec tableSpec = m_nodeModel.getTableSpec();
         if (histogramModel == null) {
             return;
         }
@@ -80,12 +85,14 @@ public class HistogramNodeView extends NodeView {
                 new InteractiveHistogramProperties(
                         histogramModel.getAggregationMethod());
             m_plotter = new InteractiveHistogramPlotter(props, histogramModel, 
-                    m_nodeModel.getInHiLiteHandler(0));
+                    tableSpec, m_nodeModel.getInHiLiteHandler(0), 
+                    m_nodeModel.getRows());
             // add the hilite menu to the menu bar of the node view
             getJMenuBar().add(m_plotter.getHiLiteMenu());
             setComponent(m_plotter);
         } else {
             m_plotter.reset();
+            m_plotter.setDataTableSpec(tableSpec);
             m_plotter.setHistogramDataModel(histogramModel);
             m_plotter.setHiLiteHandler(m_nodeModel.getInHiLiteHandler(0));
             m_plotter.updatePaintModel();

@@ -100,7 +100,7 @@ public class KDTree<T> {
         }
 
         m_testedPatterns = 0;
-        search(m_root, query, pq, lowerBounds, upperBounds);
+        search(m_root, query, pq, lowerBounds, upperBounds, false);
         LinkedList<NearestNeighbour<T>> results =
                 new LinkedList<NearestNeighbour<T>>();
 
@@ -114,8 +114,80 @@ public class KDTree<T> {
         return results;
     }
 
+    
+    
+    
+    /**
+     * Searches for all neighbours of the <code>query</code> pattern that are
+     * not more than <code>maxDist</code> away from it. The returned list is
+     * sorted by the distance to the query pattern in increasing order.
+     * 
+     * @param query the query pattern, must have the same dimensionality as the
+     *            patterns inside the tree
+     * @param maxDist the maximum distance the patterns may have (exclusive)
+     * @return a sorted list of the neighbours
+     */
+    public List<NearestNeighbour<T>> getMaxDistanceNeighbours(
+            final double[] query, final double maxDist) {
+        if (query.length != m_k) {
+            throw new IllegalArgumentException(
+                    "The query vector has not length " + m_k);
+        }
+
+        PriorityQueue<NearestNeighbour<T>> pq =
+                new PriorityQueue<NearestNeighbour<T>>();
+        pq.add(new NearestNeighbour<T>(null, maxDist * maxDist));
+
+        double[] lowerBounds = new double[m_k];
+        double[] upperBounds = new double[m_k];
+
+        for (int i = 0; i < m_k; i++) {
+            lowerBounds[i] = -Double.MAX_VALUE;
+            upperBounds[i] = Double.MAX_VALUE;
+        }
+
+        m_testedPatterns = 0;
+        search(m_root, query, pq, lowerBounds, upperBounds, true);
+        LinkedList<NearestNeighbour<T>> results =
+                new LinkedList<NearestNeighbour<T>>();
+
+        while (pq.peek() != null) {
+            NearestNeighbour<T> nn = pq.poll();
+            nn.setDistance(Math.sqrt(nn.getDistance()));
+            if (nn.getData() != null) {
+                // the "border" pattern has null data and must not be included
+                results.addFirst(nn);
+            }
+        }
+
+        assert (results.getLast().getDistance() <= maxDist);
+        return results;
+    }
+
+    
+    /**
+     * Adds a new nearest neighbour to the candidate list, of the passed
+     * terminal node is nearer to the query pattern than the currently farthest
+     * neighbour. This method can be used for two purposes: First during the
+     * search for the k nearest neighbours of the query pattern. For this the
+     * <code>maxDistanceMode</code> parameter must be set to
+     * <code>false</code>. Second during a search for all patterns up to a
+     * maximum distance from the query pattern, if <code>maxDistanceMode</code>
+     * is set to <code>true</code>.
+     * 
+     * @param tn the terminal node under consideration
+     * @param pq the list of nearest neighbours
+     * @param query the query pattern
+     * @param maxDistanceMode <code>true</code> if all nodes up to a maximal
+     *            distance should be added, <code>false</code> if the k
+     *            nearest neighbours should be found
+     * 
+     * @return <code>true</code> if a new nearest neighbour has been found,
+     *         <code>false</code> otherwise
+     */
     private boolean addNewNearestNeighbour(final TerminalNode<T> tn,
-            final PriorityQueue<NearestNeighbour<T>> pq, final double[] query) {
+            final PriorityQueue<NearestNeighbour<T>> pq, final double[] query,
+            final boolean maxDistanceMode) {
         m_testedPatterns++;
         double distance = tn.getDistance(query);
 
@@ -123,38 +195,50 @@ public class KDTree<T> {
             NearestNeighbour<T> qr =
                     new NearestNeighbour<T>(tn.getData(), distance);
             pq.offer(qr);
-            pq.poll();
+            if (!maxDistanceMode) {
+                pq.poll();
+            }
             return true;
         }
         return false;
     }
 
     /**
-     * Does the recursive search.
+     * Does the recursive search. This method can be used for two purposes:
+     * First during the search for the k nearest neighbours of the query
+     * pattern. For this the <code>maxDistanceMode</code> parameter must be
+     * set to <code>false</code>. Second during a search for all patterns up
+     * to a maximum distance from the query pattern, if
+     * <code>maxDistanceMode</code> is set to <code>true</code>.
      * 
      * @param node the current node under consideration
      * @param query the query pattern
-     * @param k the number of neighbours to retrieve
      * @param pq the priority queue of the currently nearest neighbours
      * @param lowerBounds the lower bounds array
      * @param upperBounds the upper bounds array
+     * @param maxDistanceMode <code>true</code> if all nodes up to a maximal
+     *            distance should be added, <code>false</code> if the k
+     *            nearest neighbours should be found
      * 
      * @return <code>true</code> if the search can be aborted,
      *         <code>false</code> if it should be continued
      */
     private boolean search(final Node node, final double[] query,
             final PriorityQueue<NearestNeighbour<T>> pq,
-            final double[] lowerBounds, final double[] upperBounds) {
+            final double[] lowerBounds, final double[] upperBounds,
+            final boolean maxDistanceMode) {
         if (node == null) {
             return false;
         }
         if (node instanceof TerminalBucket) {
             boolean newFound = false;
-            for (TerminalNode<T> tn : ((TerminalBucket<T>) node)) {
-                newFound |= addNewNearestNeighbour(tn, pq, query);
+            for (TerminalNode<T> tn : ((TerminalBucket<T>)node)) {
+                newFound |=
+                        addNewNearestNeighbour(tn, pq, query, maxDistanceMode);
             }
-            if (newFound && ballWithinBounds(query, pq.peek().getDistance(),
-                    lowerBounds, upperBounds)) {
+            if (newFound
+                    && ballWithinBounds(query, pq.peek().getDistance(),
+                            lowerBounds, upperBounds)) {
                 return true; // search is done
             }
             return false;
@@ -170,7 +254,8 @@ public class KDTree<T> {
             final double temp = upperBounds[keyIndex];
             upperBounds[keyIndex] = keyValue;
             boolean finished =
-                    search(n.getLeft(), query, pq, lowerBounds, upperBounds);
+                    search(n.getLeft(), query, pq, lowerBounds, upperBounds,
+                            maxDistanceMode);
             upperBounds[keyIndex] = temp;
             if (finished) {
                 return true;
@@ -179,7 +264,8 @@ public class KDTree<T> {
             final double temp = lowerBounds[keyIndex];
             lowerBounds[keyIndex] = keyValue;
             boolean finished =
-                    search(n.getRight(), query, pq, lowerBounds, upperBounds);
+                    search(n.getRight(), query, pq, lowerBounds, upperBounds,
+                            maxDistanceMode);
             lowerBounds[keyIndex] = temp;
             if (finished) {
                 return true;
@@ -193,7 +279,8 @@ public class KDTree<T> {
 
             if (boundsOverlapBall(query, pq.peek().getDistance(), lowerBounds,
                     upperBounds)) {
-                search(n.getRight(), query, pq, lowerBounds, upperBounds);
+                search(n.getRight(), query, pq, lowerBounds, upperBounds,
+                        maxDistanceMode);
             }
             lowerBounds[keyIndex] = temp;
         } else {
@@ -202,7 +289,8 @@ public class KDTree<T> {
 
             if (boundsOverlapBall(query, pq.peek().getDistance(), lowerBounds,
                     upperBounds)) {
-                search(n.getLeft(), query, pq, lowerBounds, upperBounds);
+                search(n.getLeft(), query, pq, lowerBounds, upperBounds,
+                        maxDistanceMode);
             }
 
             upperBounds[keyIndex] = temp;

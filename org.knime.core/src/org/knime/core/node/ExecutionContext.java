@@ -29,6 +29,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
@@ -252,6 +253,46 @@ public class ExecutionContext extends ExecutionMonitor {
         return out;
     }
     
+    /** Creates a new {@link BufferedDataTable}, which is  row-wise 
+     * concatenation of the arguments table. The order of the rows in the 
+     * returned table is defined through the order of the argument array
+     * <code>tables</code> (the <code>BufferedDataTable</code> at index 0
+     * provides the first set of rows.
+     * 
+     * <p> The table specs of the argument tables must structurally match
+     * (i.e. order of columns, column count, column names, and types). The
+     * column domains (min, max and possible values) and properties will be 
+     * merged. (The merge of properties is based on a maximum intersection of
+     * all properties.) 
+     * 
+     * <p>Property handlers (such as 
+     * {@link org.knime.core.data.property.ColorHandler Color}, 
+     * {@link org.knime.core.data.property.ShapeHandler Shape}, and 
+     * {@link org.knime.core.data.property.SizeHandler}) attached to any of the
+     * input columns need to be the same for all respective columns in the 
+     * remaining tables.
+     * 
+     * <p>The {@link org.knime.core.data.RowKey RowKeys} must be unique, other
+     * wise this method throws an exception.
+     * @param exec For cancel checks (this method iterates all rows to 
+     * ensure uniqueness) and progress.
+     * @param tables An array of tables to concatenate, 
+     * must not be <code>null</code> or empty.
+     * @return The concatenated table.
+     * @throws CanceledExecutionException If canceled.
+     * @throws IllegalArgumentException If the table specs violate any 
+     * constraint mentioned above, the row keys are not unique, or the array
+     * is empty.
+     * @throws NullPointerException If any argument is <code>null</code>.
+     */ 
+    public BufferedDataTable createConcatenateTable(
+            final ExecutionMonitor exec, final BufferedDataTable... tables) 
+        throws CanceledExecutionException {
+        ConcatenateTable t = ConcatenateTable.create(exec, tables);
+        BufferedDataTable out = new BufferedDataTable(t);
+        out.setOwnerRecursively(m_node);
+        return out;
+    }
     
     /**
      * Creates a new execution context with a different max progress value.

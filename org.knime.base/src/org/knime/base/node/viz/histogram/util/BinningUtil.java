@@ -26,7 +26,7 @@ package org.knime.base.node.viz.histogram.util;
 
 import java.text.DecimalFormat;
 
-import org.knime.base.node.viz.histogram.AbstractHistogramDataModel;
+import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
 
@@ -63,7 +63,7 @@ public final class BinningUtil {
                 interval = bigValueRounder(interval);
         } else {
             interval = smallValueRounder(interval, 
-                    AbstractHistogramDataModel.INTERVAL_DIGITS, isInteger);
+                    AbstractHistogramPlotter.INTERVAL_DIGITS, isInteger);
         }
         return interval;
     }
@@ -248,7 +248,7 @@ public final class BinningUtil {
         double addition = 1;
         if (value < 1) {
             return smallValueRounder(value, 
-                    AbstractHistogramDataModel.INTERVAL_DIGITS, false);
+                    AbstractHistogramPlotter.INTERVAL_DIGITS, false);
         } else if (value > 20 && value <= 50) {
           divider = 20;
           addition = 2;

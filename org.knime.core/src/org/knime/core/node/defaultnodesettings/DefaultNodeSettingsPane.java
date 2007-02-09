@@ -129,6 +129,8 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
         for (DialogComponent comp : m_dialogComponents) {
             comp.loadSettingsFrom(settings, specs);
         }
+        
+        loadAdditionalSettingsFrom(settings, specs);
     }
 
     /**
@@ -145,6 +147,36 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
         for (DialogComponent comp : m_dialogComponents) {
             comp.saveSettingsTo(settings);
         }
+        
+        saveAdditionalSettingsTo(settings);
     }
 
+    /**
+     * This method can be overwidden to load additional settings. 
+     * 
+     * @param settings the <code>NodeSettings</code> to read from
+     * @param specs the input specs
+     * @throws NotConfigurableException if the node can currently not be
+     *             configured
+     */
+    @SuppressWarnings("unused")
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+        assert settings != null;
+        assert specs != null;
+    }
+    
+    /**
+     * This method can be overridden to save additional settings to the 
+     * given settings object.
+     * 
+     * @param settings the <code>NodeSettings</code> to write into
+     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
+     * @throws InvalidSettingsException if the user has entered wrong values
+     */
+    @SuppressWarnings("unused")
+    public void saveAdditionalSettingsTo(final NodeSettingsWO settings)
+            throws InvalidSettingsException {
+        assert settings != null;
+    }
 }

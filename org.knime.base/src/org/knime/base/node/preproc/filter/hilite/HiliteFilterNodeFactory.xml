@@ -5,7 +5,7 @@
     <shortDescription>Seperates hilited from non-hilit rows.</shortDescription>
     <fullDescription>
         <intro>
-			This node allows to seperate hilited from non-hilit rows from the
+			This node allows to separate hilited from non-hilit rows from the
 			input data at the time of execution. Both tables are then passed to
 			the outports. Note, if the hilite status changes after execution the 
 			data tables at the outports does not change anymore. Therefore the

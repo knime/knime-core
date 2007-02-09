@@ -36,6 +36,7 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
+import org.knime.base.node.mine.sota.DistanceManagerFactory;
 import org.knime.base.node.mine.sota.SotaConfigKeys;
 import org.knime.base.node.mine.sota.SotaManager;
 import org.knime.core.data.DataTableSpec;
@@ -195,9 +196,9 @@ public class SotaSettingsPanel extends JPanel {
         add(new JLabel("Dictance metric"), getLabelGBC(0, 7));
 
         m_jcbDistance = new JComboBox();
-        m_jcbDistance.addItem(SotaManager.EUCLIDEAN_DIST);
-        m_jcbDistance.addItem(SotaManager.COS_DIST);
-        m_jcbDistance.setSelectedItem(SotaManager.EUCLIDEAN_DIST);
+        m_jcbDistance.addItem(DistanceManagerFactory.EUCLIDEAN_DIST);
+        m_jcbDistance.addItem(DistanceManagerFactory.COS_DIST);
+        m_jcbDistance.setSelectedItem(DistanceManagerFactory.EUCLIDEAN_DIST);
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 7;

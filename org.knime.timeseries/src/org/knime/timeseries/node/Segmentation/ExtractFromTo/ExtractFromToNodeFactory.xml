@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Manipulator" icon="time_from_to.png">
+    <name>Extract From To</name>
+    <shortDescription>Extracts data from Timestamp1 to Timestamp2 from input table.
+    </shortDescription>
+    <fullDescription>
+        <intro>
+            Extracts from input table a sub-table with data 
+            between TimeStamp1 and Timestamp2.
+        </intro>
+        <option name="Columns containing Timestamp">
+        Select the input column containing timestamp cells.</option>
+        <option name="From: Timestamp">
+        First Timestamp boundary of the extraction interval.</option>
+        <option name="To: Timestamp">
+        Second Timestamp boundary of the extraction interval.</option>
+    </fullDescription>
+    <ports>
+        <dataIn index="0" name="Input column">
+        Table containing timestamp cells.</dataIn>
+        <dataOut index="0" name="Wrapped output">
+        Sub-Table containing only data between "From: Timestamp" and 
+        "To: Timestamp".</dataOut>
+    </ports>
+</knimeNode>

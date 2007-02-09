@@ -178,12 +178,15 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
         }
     }
     
+    private static final BufferedDataTable[] EMPTY_ARRAY = 
+        new BufferedDataTable[0];
+    
     /**
-     * Returns <code>null</code>. This method is used internally.
-     * @see KnowsRowCountTable#getReferenceTable()
+     * Returns an empty array. This method is used internally.
+     * @see KnowsRowCountTable#getReferenceTables()
      */
-    public BufferedDataTable getReferenceTable() {
-        return null;
+    public BufferedDataTable[] getReferenceTables() {
+        return EMPTY_ARRAY;
     }
     
     /** Executes the copy process when the content of this table is demanded 

@@ -30,12 +30,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
@@ -181,24 +183,19 @@ public final class BufferedDataTable implements DataTable {
         this((KnowsRowCountTable)table, generateNewID());
     }
     
+    /** Creates a new buffered data table based on a concatenation of
+     * BufferedDataTables.
+     * @param table The reference.
+     */ 
+    BufferedDataTable(final ConcatenateTable table) {
+        this((KnowsRowCountTable)table, generateNewID());
+    }
+    
+    
     private BufferedDataTable(final KnowsRowCountTable table, final int id) {
         m_delegate = table;
         assert id <= lastID : "Table identifiers not unique";
         m_tableID = id;
-    }
-    
-    /** Get reference to reference table, if any. This returns a non-null
-     * value if this table represents for instance a changed column table.
-     * For the container table, the reference is <code>null</code>.
-     * @return The reference table, if any.
-     */
-    BufferedDataTable getReferenceTable() {
-        if (m_delegate instanceof RearrangeColumnsTable) {
-            return ((RearrangeColumnsTable)m_delegate).getReferenceTable();
-        } else if (m_delegate instanceof TableSpecReplacerTable) {
-            return ((TableSpecReplacerTable)m_delegate).getReferenceTable();
-        } 
-        return null;
     }
     
     /** Called after execution of node has finished to put the tables that
@@ -207,8 +204,8 @@ public final class BufferedDataTable implements DataTable {
      */
     void putIntoTableRepository(final HashMap<Integer, ContainerTable> rep) {
         m_delegate.putIntoTableRepository(rep);
-        BufferedDataTable reference = getReferenceTable();
-        if (reference != null) {
+        BufferedDataTable[] references = m_delegate.getReferenceTables();
+        for (BufferedDataTable reference : references) {
             reference.putIntoTableRepository(rep);
         }
     }
@@ -245,7 +242,7 @@ public final class BufferedDataTable implements DataTable {
     }
     
     private static final String CFG_TABLE_META = "table_meta_info";
-    private static final String CFG_TABLE_REFERENCE = "table_reference";
+    private static final String CFG_TABLE_REFERENCE = "table_references";
     private static final String CFG_TABLE_TYPE = "table_type";
     private static final String CFG_TABLE_ID = "table_ID";
     private static final String CFG_TABLE_FILE_NAME = "table_file_name";
@@ -253,6 +250,7 @@ public final class BufferedDataTable implements DataTable {
     private static final String TABLE_TYPE_REARRANGE_COLUMN = 
         "rearrange_columns_table";
     private static final String TABLE_TYPE_NEW_SPEC = "new_spec_table";
+    private static final String TABLE_TYPE_CONCATENATE = "concatenate_table";
     private static final String TABLE_SUB_DIR = "reference";
     private static final String TABLE_FILE = "data.zip";
     private static final String TABLE_DESCRIPTION_FILE = "data.xml";
@@ -277,24 +275,30 @@ public final class BufferedDataTable implements DataTable {
         } else { 
             if (m_delegate instanceof RearrangeColumnsTable) {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN);
-            } else {
-                assert m_delegate instanceof TableSpecReplacerTable;
+            } else if (m_delegate instanceof TableSpecReplacerTable) {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_NEW_SPEC);
-            }
-            BufferedDataTable reference = getReferenceTable();
-            assert reference != null;
-            if (reference.getOwner() == getOwner()) {
-                File subDir = new File(dir, TABLE_SUB_DIR);
-                subDir.mkdir();
-                if (!subDir.exists() || !subDir.canWrite()) {
-                    throw new IOException("Unable to write directory "
-                            + subDir.getAbsolutePath());
-                }
-                s.addString(CFG_TABLE_REFERENCE, TABLE_SUB_DIR);
-                reference.save(subDir, exec);
             } else {
-                s.addString(CFG_TABLE_REFERENCE, null);
+                assert m_delegate instanceof ConcatenateTable;
+                s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONCATENATE);
             }
+            BufferedDataTable[] references = m_delegate.getReferenceTables();
+            ArrayList<String> referenceDirs = new ArrayList<String>();
+            for (BufferedDataTable reference : references) {
+                if (reference.getOwner() == getOwner()) {
+                    int index = referenceDirs.size();
+                    String dirName = TABLE_SUB_DIR + "_" + index;
+                    File subDir = new File(dir, dirName);
+                    subDir.mkdir();
+                    if (!subDir.exists() || !subDir.canWrite()) {
+                        throw new IOException("Unable to write directory "
+                                + subDir.getAbsolutePath());
+                    }
+                    referenceDirs.add(dirName);
+                    reference.save(subDir, exec);
+                }
+            }
+            s.addStringArray(CFG_TABLE_REFERENCE, 
+                    referenceDirs.toArray(new String[referenceDirs.size()]));
         }
         File outFile = new File(dir, TABLE_FILE);
         m_delegate.saveToFile(outFile, s, exec);
@@ -428,9 +432,23 @@ public final class BufferedDataTable implements DataTable {
             }
             t = new BufferedDataTable(fromContainer, id);
         } else if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)
-                || (tableType.equals(TABLE_TYPE_NEW_SPEC))) {
-            String reference = s.getString(CFG_TABLE_REFERENCE, null);
-            if (reference != null) {
+                || (tableType.equals(TABLE_TYPE_NEW_SPEC))
+                || (tableType.equals(TABLE_TYPE_CONCATENATE))) {
+            String[] referenceDirs;
+            // in version 1.2.x and before there was one reference table at most
+            // (no concatenate table in those versions)
+            if (s.containsKey("table_reference")) {
+                String refDir = s.getString("table_reference");
+                referenceDirs = refDir == null 
+                    ? new String[0] : new String[]{refDir};
+            } else {
+                referenceDirs = s.getStringArray(CFG_TABLE_REFERENCE); 
+            }
+            for (String reference : referenceDirs) {
+                if (reference == null) {
+                    throw new InvalidSettingsException(
+                            "Reference dir is \"null\"");
+                }
                 File referenceDir = new File(dir, reference);
                 loadFromFile(referenceDir, s, exec, loadID, bufferRep);
             }
@@ -438,6 +456,9 @@ public final class BufferedDataTable implements DataTable {
                 t = new BufferedDataTable(
                         new RearrangeColumnsTable(
                                 file, s, loadID, spec, id, bufferRep));
+            } else if (tableType.equals(TABLE_TYPE_CONCATENATE)) {
+                ConcatenateTable ct = ConcatenateTable.load(s, spec, loadID);
+                t = new BufferedDataTable(ct);
             } else {
                 TableSpecReplacerTable replTable;
                 if (isVersion11x) {
@@ -469,8 +490,8 @@ public final class BufferedDataTable implements DataTable {
     void setOwnerRecursively(final Node owner) {
         if (m_owner == null) {
             m_owner = owner;
-            BufferedDataTable reference = getReferenceTable();
-            if (reference != null) {
+            BufferedDataTable[] references = m_delegate.getReferenceTables();
+            for (BufferedDataTable reference : references) {
                 reference.setOwnerRecursively(owner);
             }
         }
@@ -485,8 +506,8 @@ public final class BufferedDataTable implements DataTable {
         if (dataOwner != getOwner()) {
             return;
         }
-        BufferedDataTable reference = getReferenceTable();
-        if (reference != null) {
+        BufferedDataTable[] references = m_delegate.getReferenceTables();
+        for (BufferedDataTable reference : references) {
             reference.clear(dataOwner);
         }
         m_delegate.clear();
@@ -517,12 +538,13 @@ public final class BufferedDataTable implements DataTable {
          */
         void clear();
         
-        /** Reference to the underlying table, if any. A reference
+        /** Reference to the underlying tables, if any. A reference
          * table exists if this object is just a wrapper, such as a 
-         * RearrangeColumnsTable. 
+         * RearrangeColumnsTable or if this table concatenates a set of 
+         * other tables.
          * @return The reference table or <code>null</code>.
          */
-        BufferedDataTable getReferenceTable();
+        BufferedDataTable[] getReferenceTables();
         
         /** Put this table into the global table repository. Called when
          * execution finished.

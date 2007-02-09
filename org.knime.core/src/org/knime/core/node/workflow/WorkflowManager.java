@@ -150,6 +150,8 @@ public class WorkflowManager implements WorkflowListener {
         private final Object m_addLock = new Object(),
                 m_transferLock = new Object(), m_finishLock = new Object();
 
+        private boolean m_checkAutoExecNodes = false;
+        
         /**
          * Create new empty workflow executer.
          */
@@ -449,7 +451,7 @@ public class WorkflowManager implements WorkflowListener {
 
                         if (nc.getStatus() instanceof NodeStatus.Error) {
                             cancelExecution(nc.getAllSuccessors());
-                        } else if (nc.isExecuted()) {
+                        } else if (nc.isExecuted() && m_checkAutoExecNodes) {
                             List<NodeContainer> autoNodes =
                                     new ArrayList<NodeContainer>();
                             // check if auto-executable nodes are following
@@ -589,6 +591,16 @@ public class WorkflowManager implements WorkflowListener {
          */
         public boolean isQueued(final NodeContainer cont) {
             return m_waitingNodes.containsKey(cont);
+        }
+        
+        /**
+         * Sets if auto-executable should really be auto-executed or not.
+         * 
+         * @param b <code>true</code> if auto-executable nodes should be
+         *  autoexecuted, <code>false</code> otherwise
+         */
+        public void setCheckAutoexecNodes(final boolean b) {
+            m_checkAutoExecNodes = b;
         }
     }
 
@@ -2305,4 +2317,16 @@ public class WorkflowManager implements WorkflowListener {
     HashMap<Integer, ContainerTable> getTableRepository() {
         return m_tableRepository;
     }
+    
+    /**
+     * Sets if auto-executable should really be auto-executed or not.
+     * Please note that changing this behaviout affects <b>all</b> parent and
+     * child workflow managers and not only this one!
+     * 
+     * @param b <code>true</code> if auto-executable nodes should be
+     *  autoexecuted, <code>false</code> otherwise
+     */
+    public void setCheckAutoexecNodes(final boolean b) {
+        m_executor.setCheckAutoexecNodes(b);
+    }    
 }

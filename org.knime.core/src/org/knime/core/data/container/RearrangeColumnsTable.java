@@ -197,11 +197,11 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         m_spec = new DataTableSpec(colSpecs);
     }
     
-    /** Get handle to the reference table.
+    /** Get handle to the reference table in an array of length 1.
      * @return The table providing likely most of the columns and the rowkeys.
      */
-    public BufferedDataTable getReferenceTable() {
-        return m_reference;
+    public BufferedDataTable[] getReferenceTables() {
+        return new BufferedDataTable[]{m_reference};
     }
     
     /** Get reference to the appended table. This table must not be used
