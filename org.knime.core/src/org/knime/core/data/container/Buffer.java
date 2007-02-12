@@ -682,8 +682,12 @@ class Buffer {
     
     /** Create the shortcut table, it translates m_typeShortCuts to 
      * m_shortCutsLookup. */
-    @SuppressWarnings("unchecked") // no generics in array definiton
+    @SuppressWarnings("unchecked") // no generics in array definition
     private Class<? extends DataCell>[] createShortCutArray() {
+        // unreported bug fix: NPE when the table only contains missing values.
+        if (m_typeShortCuts == null) {
+            m_typeShortCuts = new HashMap<Class<? extends DataCell>, Byte>();
+        }
         m_shortCutsLookup = new Class[m_typeShortCuts.size()];
         for (Map.Entry<Class<? extends DataCell>, Byte> e 
                 : m_typeShortCuts.entrySet()) {
