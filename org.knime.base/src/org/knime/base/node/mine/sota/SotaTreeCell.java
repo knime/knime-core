@@ -30,9 +30,9 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
-import org.knime.base.node.mine.sota.view.Hiliteable;
-import org.knime.base.node.mine.sota.view.Locatable;
-import org.knime.base.node.mine.sota.view.Selectable;
+import org.knime.base.node.mine.sota.view.interaction.Hiliteable;
+import org.knime.base.node.mine.sota.view.interaction.Locatable;
+import org.knime.base.node.mine.sota.view.interaction.Selectable;
 import org.knime.core.data.RowKey;
 
 /**

@@ -20,28 +20,28 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Dec 8, 2005 (Kilian Thiel): created
+ *   Feb 9, 2006 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota.view;
+package org.knime.base.node.mine.sota.view.interaction;
 
 /**
  * 
  * @author Kilian Thiel, University of Konstanz
  */
-public interface Hiliteable {
+public interface Selectable {
     /**
-     * Returns <code>true</code> if object is hilited, <code>false</code> if
-     * not.
+     * Returns <code>true</code> if object is selected, <code>false</code>
+     * if not.
      * 
-     * @return <code>true</code> if object is hilited, <code>false</code> if
-     *         not
+     * @return <code>true</code> if object is selected, <code>false</code>
+     *         if not
      */
-    public boolean isHilited();
+    public boolean isSelected();
 
     /**
-     * Sets the given hilit flag.
+     * Sets the given select flag.
      * 
-     * @param hilit hilitflag to set
+     * @param select selectflag to set
      */
-    public void setHilited(boolean hilit);
+    public void setSelected(boolean select);
 }
