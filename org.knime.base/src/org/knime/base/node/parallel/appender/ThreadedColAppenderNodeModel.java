@@ -38,6 +38,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -363,5 +364,39 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
      */
     public void setMaxThreads(final int count) {
         m_workers.setMaxThreads(count);
+    }
+
+    /**
+     * Returns the output spec based on the input spec and the cell factory.
+     * 
+     * @param inSpec the input spec
+     * @param cellFactory the cell factory used
+     * @return the output spec
+     */
+    protected static DataTableSpec createOutputSpec(final DataTableSpec inSpec,
+            final ExtendedCellFactory cellFactory) {
+        ColumnRearranger rea = new ColumnRearranger(inSpec);
+
+        ColumnDestination[] dests = cellFactory.getColumnDestinations();
+        for (int k = 0; k < dests.length; k++) {
+            ColumnDestination cd = dests[k];
+
+            CellFactory cf =
+                    new SingleCellFactory(cellFactory.getColumnSpecs()[k]) {
+                        @Override
+                        public DataCell getCell(final DataRow row) {
+                            return null;
+                        }
+                    };
+
+            if (cd instanceof AppendColumn) {
+                rea.append(cf);
+            } else if (cd instanceof InsertColumn) {
+                rea.insertAt(((InsertColumn)cd).getIndex(), cf);
+            } else {
+                rea.replace(cf, ((ReplaceColumn)cd).getIndex());
+            }
+        }
+        return rea.createSpec();
     }
 }
