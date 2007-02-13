@@ -177,7 +177,7 @@ public abstract class NodeModel {
      * 
      * @param nodeInternDir The directory to write into.
      * @param exec Used to report progress and to cancel the save process.
-     * @throws IOException If an error occurs during writting to this dir.
+     * @throws IOException If an error occurs during writing to this dir.
      * @throws CanceledExecutionException If the saving has been canceled.
      * @see #loadInternals(File,ExecutionMonitor)
      * @see #setAutoExecutable(boolean)
