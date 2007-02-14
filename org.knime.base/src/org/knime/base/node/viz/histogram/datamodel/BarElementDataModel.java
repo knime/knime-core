@@ -100,6 +100,13 @@ public class BarElementDataModel {
     public Set<DataCell> getKeys() {
         return m_rowKeys;
     }
+
+    /**
+     * @return the keys of the hilited rows in this element
+     */
+    public Set<DataCell> getHilitedKeys() {
+        return m_hilitedRowKeys;
+    }
     
     /**
      * Clears the hilite counter.
@@ -219,7 +226,7 @@ public class BarElementDataModel {
      */
     private void calculateHilitedRectangle(final AggregationMethod aggrMethod) {
         final int noOfHilitedKeys = m_hilitedRowKeys.size();
-        if (noOfHilitedKeys < 1) {
+        if (noOfHilitedKeys < 1 || m_elementRectangle == null) {
             //if their are no rows hilited we have no hilite rectangle
             m_hilitedRectangle = null;
             return;

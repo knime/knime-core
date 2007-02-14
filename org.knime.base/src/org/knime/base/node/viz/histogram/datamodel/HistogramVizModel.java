@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -49,7 +49,7 @@ import org.knime.core.node.NodeLogger;
 
 
 /**
- * 
+ * This class holds all visualization data of a histogram. 
  * @author Tobias Koetter, University of Konstanz
  */
 public class HistogramVizModel {
@@ -378,6 +378,26 @@ public class HistogramVizModel {
     }
     
     /**
+     * @return all keys of hilited rows
+     */
+    public Set<DataCell> getHilitedKeys() {
+        Set<DataCell> keys = new HashSet<DataCell>();
+        for (BinDataModel bin : m_bins) {            
+            final Collection<BarDataModel> bars = bin.getBars();
+            for (BarDataModel bar : bars) {
+                if (bar.isSelected()) {
+                    final Collection<BarElementDataModel> elements = 
+                        bar.getElements();
+                    for (BarElementDataModel element : elements) {
+                        keys.addAll(element.getHilitedKeys());
+                    }
+                }
+            }            
+        }
+        return keys;
+    }
+    
+    /**
      * @param hilite <code>true</code> if the selected elements should be 
      * hilited or <code>false</code> if they should be unhilited
      * @return all keys of the selected elements
@@ -491,6 +511,9 @@ public class HistogramVizModel {
      */
     public void updateHiliteInfo(final Set<DataCell> hilited, 
             final boolean hilite) {
+        if (hilited == null || hilited.size() < 1) {
+            return;
+        }
         for (BinDataModel bin : m_bins) {
             final Collection<BarDataModel> bars = bin.getBars();
             for (BarDataModel bar : bars) {

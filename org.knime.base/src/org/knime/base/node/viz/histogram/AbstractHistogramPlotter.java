@@ -262,7 +262,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (!histoModel.isBinNominal()) {
             // this is only available for none nominal x axis properties
             hasChange = hasChange 
-            || setNumberOfBars(m_histoProps.getNoOfBars());
+            || setNumberOfBins(m_histoProps.getNoOfBars());
         }
         hasChange = hasChange 
         || setShowEmptyBins(m_histoProps.isShowEmptyBars());
@@ -523,17 +523,20 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      * none nominal attributes
      * @return <code>true</code> if the value has changed
      */
-    protected boolean setNumberOfBars(final int noOfBins) {
+    protected boolean setNumberOfBins(final int noOfBins) {
         if (getHistogramVizModel().setNoOfBins(noOfBins)) {
             setXCoordinates();
             setYCoordinates();
             final HistogramVizModel dataModel = getHistogramVizModel();
-            if (dataModel != null
-                    && HistogramLayout.SIDE_BY_SIDE.equals(
+            if (dataModel != null) {
+                //set the current hilited keys in the new bins
+                dataModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
+                if (HistogramLayout.SIDE_BY_SIDE.equals(
                             dataModel.getHistogramLayout())) {
-                //set the bin with to the maximum bin if the layout
-                //is side-by-side
-                m_binWidth = getMaxBinWidth();
+                    //set the bin with to the maximum bin if the layout
+                    //is side-by-side
+                    m_binWidth = getMaxBinWidth();
+                }
             }
             return true;
         }
