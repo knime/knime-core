@@ -20,39 +20,40 @@
  * -------------------------------------------------------------------
  * 
  */
-package org.knime.base.data.join;
+package org.knime.core.data.def;
 
 import java.util.Iterator;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.def.DefaultCellIterator;
-
 
 /**
  * Row that concatenates two given rows.
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class JoinedRow implements DataRow {
-    
+
     /** Underlying left row. */
     private final DataRow m_left;
+
     /** And its right counterpart. */
     private final DataRow m_right;
-    
+
     /**
-     * Creates new row based on two given rows. 
+     * Creates a new row based on two given rows.
+     * 
      * @param left The left row providing the head cells
-     * @param right The right row providing the tail cells 
+     * @param right The right row providing the tail cells
      * @throws NullPointerException If either argument is null
      * @throws IllegalArgumentException If row key's ids aren't equal.
      */
     public JoinedRow(final DataRow left, final DataRow right) {
         DataCell lId = left.getKey().getId();
-        DataCell rId = right.getKey().getId(); 
+        DataCell rId = right.getKey().getId();
         if (!lId.equals(rId)) {
-            throw new IllegalArgumentException("Key of rows do not match: \"" 
+            throw new IllegalArgumentException("Key of rows do not match: \""
                     + lId + "\" vs. \"" + rId + "\"");
         }
         m_left = left;
@@ -68,6 +69,7 @@ public class JoinedRow implements DataRow {
 
     /**
      * Returns the key from the left row that was passed in the constructor.
+     * 
      * @see org.knime.core.data.DataRow#getKey()
      */
     public RowKey getKey() {
@@ -87,7 +89,7 @@ public class JoinedRow implements DataRow {
             return m_right.getCell(index - leftCellCount);
         }
     }
-    
+
     /**
      * @see java.lang.Iterable#iterator()
      */
@@ -95,4 +97,19 @@ public class JoinedRow implements DataRow {
         return new DefaultCellIterator(this);
     }
 
+    /**
+     * @return the row, that was passed to the constructor and that holds the
+     *         left cells (low index cells).
+     */
+    public DataRow getLeftRow() {
+        return m_left;
+    }
+
+    /**
+     * @return the row, that was passed to the constructor and that holds the
+     *         right cells (high index cells).
+     */
+    public DataRow getRightRow() {
+        return m_right;
+    }
 }
