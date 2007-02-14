@@ -27,8 +27,6 @@ package org.knime.base.node.viz.histogram.node;
 import java.awt.Color;
 import java.io.File;
 
-import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.HistogramDataRow;
@@ -205,7 +203,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        LOGGER.info("Entering execute(inData, exec) of class "
+        LOGGER.debug("Entering execute(inData, exec) of class "
                 + "FixedColumnHistogramNodeModel.");
         // create the data object
         BufferedDataTable data = inData[0];
@@ -230,9 +228,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         }
         final ColorColumn aggrColumns = 
             new ColorColumn(Color.CYAN, aggrColIdx, aggrColName);
-        m_model = new HistogramDataModel(HistogramDataModel.DEFAULT_NO_OF_BINS,
-                AggregationMethod.getDefaultMethod(), 
-                HistogramLayout.getDefaultLayout(), xColSpec, aggrColumns);
+        m_model = new HistogramDataModel(xColSpec, aggrColumns);
         final int rowCount = data.getRowCount();
         if (m_allRows.getBooleanValue()) {
             //set the actual number of rows in the selected number of rows
@@ -261,7 +257,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
             exec.checkCanceled();
         }
         exec.setProgress(1.0, "Histogram finished.");
-        LOGGER.info("Exiting execute(inData, exec) of class "
+        LOGGER.debug("Exiting execute(inData, exec) of class "
                 + "FixedColumnHistogramNodeModel.");
         return new BufferedDataTable[0];
     }
@@ -278,11 +274,8 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     /**
      * @return the histogram data model 
      */
-    protected HistogramDataModel getHistogramModelClone() {
-        if (m_model == null) {
-            return null;
-        }
-        return m_model.clone();
+    protected HistogramDataModel getHistogramModel() {
+        return m_model;
     }
 
     /**

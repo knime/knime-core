@@ -28,7 +28,8 @@ package org.knime.base.node.viz.histogram.datamodel;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
@@ -60,7 +61,7 @@ public class BinDataModel {
     private final double m_upperBound;
     
     private final Map<Color, BarDataModel> m_bars = 
-        new Hashtable<Color, BarDataModel>();
+        new HashMap<Color, BarDataModel>();
     
     /**The color of the missing value bar doesn't matter we have to paint it
      * anyway different to ensure the uniqueness.*/
@@ -89,13 +90,13 @@ public class BinDataModel {
      * like the aggregation values
      */
     protected void addDataRow(final HistogramDataRow row, 
-            final ColorColumn[] columns) {
+            final List<ColorColumn> columns) {
         final DataCell[] aggrVals = row.getAggrVals();
         final DataCell id = row.getRowKey().getId();
         final Color rowColor = row.getColor();
         for (int i = 0, length = aggrVals.length; i < length; i++) {
             final DataCell cell = aggrVals[i];
-            final Color barColor = columns[i].getColor();
+            final Color barColor = columns.get(i).getColor();
             BarDataModel bar = m_bars.get(barColor);
             if (bar == null) {
                 bar = new BarDataModel(barColor);
@@ -300,7 +301,7 @@ public class BinDataModel {
             final boolean showMissingValBar, 
             final AggregationMethod aggrMethod, final HistogramLayout layout,
             final int baseLine, final SortedSet<Color> barElementColors, 
-            final ColorColumn[] aggrColumns) {
+            final List<ColorColumn> aggrColumns) {
         m_binRectangle = binRectangle;
         setBarRectangle(showMissingValBar, aggrMethod, layout, baseLine,
                 barElementColors, aggrColumns);
@@ -321,9 +322,9 @@ public class BinDataModel {
     private void setBarRectangle(final boolean showMissingValBar,
             final AggregationMethod aggrMethod, final HistogramLayout layout,
             final int baseLine, final SortedSet<Color> barElementColors, 
-            final ColorColumn[] aggrColumns) {
+            final List<ColorColumn> aggrColumns) {
         final double totalWidth = m_binRectangle.getWidth();
-        int noOfBars = aggrColumns.length;
+        int noOfBars = aggrColumns.size();
         if (showMissingValBar && m_missingValueBar != null
                 && m_missingValueBar.getRowCount() > 0) {
             noOfBars++;
@@ -395,22 +396,22 @@ public class BinDataModel {
             xCoord += barWidth + SPACE_BETWEEN_BARS;
         }
     }
-    
-    /**
-     * @see java.lang.Object#clone()
-     */
-    @Override
-    public BinDataModel clone() {
-        final BinDataModel clone = new BinDataModel(m_xAxisCaption, 
-                m_lowerBound, m_upperBound);
-        clone.m_binRectangle = m_binRectangle;
-        clone.m_missingValueBar = m_missingValueBar;
-        clone.m_rowCounter = m_rowCounter;
-        final Collection<BarDataModel> bars = m_bars.values();
-        for (BarDataModel bar : bars) {
-            clone.m_bars.put(bar.getColor(), bar.clone());            
-        }
-        
-        return clone;
-    }
+//    
+//    /**
+//     * @see java.lang.Object#clone()
+//     */
+//    @Override
+//    public BinDataModel clone() {
+//        final BinDataModel clone = new BinDataModel(m_xAxisCaption, 
+//                m_lowerBound, m_upperBound);
+//        clone.m_binRectangle = m_binRectangle;
+//        clone.m_missingValueBar = m_missingValueBar;
+//        clone.m_rowCounter = m_rowCounter;
+//        final Collection<BarDataModel> bars = m_bars.values();
+//        for (BarDataModel bar : bars) {
+//            clone.m_bars.put(bar.getColor(), bar.clone());            
+//        }
+//        
+//        return clone;
+//    }
 }

@@ -28,7 +28,7 @@ package org.knime.base.node.viz.histogram.datamodel;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
 
@@ -54,7 +54,7 @@ public class BarDataModel {
     private final Color m_color;
     
     private final Map<Color, BarElementDataModel> m_elements =
-        new Hashtable<Color, BarElementDataModel>();
+        new HashMap<Color, BarElementDataModel>();
     
     private int m_rowCounter = 0;
     
@@ -394,20 +394,20 @@ public class BarDataModel {
         }
         return false;
     }
-    
-    /**
-     * @see java.lang.Object#clone()
-     */
-    @Override
-    public BarDataModel clone() {
-        final BarDataModel clone = new BarDataModel(m_color);
-        clone.m_barRectangle = m_barRectangle;
-        clone.m_aggrSum = m_aggrSum;
-        clone.m_rowCounter = m_rowCounter;
-        final Collection<BarElementDataModel> elements = m_elements.values();
-        for (BarElementDataModel element : elements) {
-            clone.m_elements.put(element.getColor(), element.clone());
-        }
-        return clone;
-    }
+//    
+//    /**
+//     * @see java.lang.Object#clone()
+//     */
+//    @Override
+//    public BarDataModel clone() {
+//        final BarDataModel clone = new BarDataModel(m_color);
+//        clone.m_barRectangle = m_barRectangle;
+//        clone.m_aggrSum = m_aggrSum;
+//        clone.m_rowCounter = m_rowCounter;
+//        final Collection<BarElementDataModel> elements = m_elements.values();
+//        for (BarElementDataModel element : elements) {
+//            clone.m_elements.put(element.getColor(), element.clone());
+//        }
+//        return clone;
+//    }
 }

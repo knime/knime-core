@@ -31,7 +31,8 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
 
 /**
- * Compares the x value of to {@link HistogramDataRow} objects.
+ * Sorts the x value of two {@link HistogramDataRow} objects in ascending
+ * order.
  * @author Tobias Koetter, University of Konstanz
  */
 public class HistogramDataRowXComparator 

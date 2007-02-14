@@ -76,7 +76,7 @@ public class FixedColumnHistogramNodeView extends NodeView {
             return;
         }
         final HistogramDataModel histogramModel = 
-            m_nodeModel.getHistogramModelClone();
+            m_nodeModel.getHistogramModel();
         final DataTableSpec tableSpec = m_nodeModel.getTableSpec();
         if (histogramModel == null) {
             return;

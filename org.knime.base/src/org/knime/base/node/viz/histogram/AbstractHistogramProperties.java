@@ -30,6 +30,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.List;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -48,11 +49,12 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
-import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.HistogramVizModel;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
@@ -63,6 +65,9 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  */
 public abstract class AbstractHistogramProperties extends
         AbstractPlotterProperties {
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(AbstractHistogramProperties.class);
 
     private static final String COLUMN_TAB_LABEL = "Column settings";
 
@@ -590,10 +595,10 @@ public abstract class AbstractHistogramProperties extends
      * 
      * @param spec current data table specification
      * @param xColName preselected x column name
-     * @param columns preselected y column names
+     * @param yColumns preselected y column names
      */
     public void updateColumnSelection(final DataTableSpec spec,
-            final String xColName, final ColorColumn[] columns) {
+            final String xColName, final List<ColorColumn> yColumns) {
         try {
             m_xCol.setEnabled(true);
             m_xCol.update(spec, xColName);
@@ -601,7 +606,12 @@ public abstract class AbstractHistogramProperties extends
             m_xCol.setEnabled(false);
         }
         try {
-            m_yCol.update(spec, columns[0].getColumnName());
+            if (yColumns == null || yColumns.size() < 1) {
+                final String er = "No aggregation column available";
+                LOGGER.warn(er);
+                throw new IllegalArgumentException(er);
+            }
+            m_yCol.update(spec, yColumns.get(0).getColumnName());
             if (m_yCol.getModel().getSize() > 0) {
                 m_yCol.setEnabled(true);
             }
@@ -656,7 +666,7 @@ public abstract class AbstractHistogramProperties extends
         AbstractHistogramProperties.setSliderLabels(m_barWidth, 2, false);
 
         // set the number of bars slider
-        final HistogramDataModel histoData = plotter.getHistogramDataModel();
+        final HistogramVizModel histoData = plotter.getHistogramVizModel();
         int maxNoOfBars = plotter.getMaxNoOfBars();
         final int currentNoOfBars = histoData.getNoOfBins();
         if (currentNoOfBars > maxNoOfBars) {

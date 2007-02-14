@@ -21,6 +21,8 @@
  */
 package org.knime.base.node.viz.histogram.impl.fixed;
 
+import java.util.List;
+
 import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
@@ -75,7 +77,7 @@ public class FixedColumnHistogramProperties extends
      */
     @Override
     public void updateColumnSelection(final DataTableSpec spec, 
-            final String xColName, final ColorColumn[] yColumns) {
+            final String xColName, final List<ColorColumn> yColumns) {
         super.updateColumnSelection(spec, xColName, yColumns);
         //disable the column select boxes
         disableSelectBoxes();

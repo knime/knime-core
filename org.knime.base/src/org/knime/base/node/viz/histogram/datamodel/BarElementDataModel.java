@@ -116,11 +116,15 @@ public class BarElementDataModel {
      */
     protected void setHilitedKeys(final Set<DataCell> hilitedKeys, 
             final AggregationMethod aggrMethod) {
+        boolean keyFound = false;
         for (DataCell key : hilitedKeys) {
             if (m_rowKeys.contains(key)) {
                 m_hilitedRowKeys.add(key);
-                calculateHilitedRectangle(aggrMethod);
+                keyFound = true;
             }
+        }
+        if (keyFound) {
+            calculateHilitedRectangle(aggrMethod);
         }
     }
     
@@ -245,20 +249,20 @@ public class BarElementDataModel {
             new Rectangle(xCoord, yCoord, hiliteWidth, hiliteHeight);
         m_hilitedRectangle = hiliteRect;
     }
-    
-    /**
-     * @see java.lang.Object#clone()
-     */
-    @Override
-    public BarElementDataModel clone() {
-        final BarElementDataModel clone = new BarElementDataModel(m_color);
-        clone.m_aggrSum = m_aggrSum;
-        clone.m_elementRectangle = m_elementRectangle;
-        clone.m_hilitedRectangle = m_hilitedRectangle;
-        clone.m_hilitedRowKeys.addAll(m_hilitedRowKeys);
-        clone.m_isSelected = m_isSelected;
-        clone.m_rowCounter = m_rowCounter;
-        clone.m_rowKeys.addAll(m_rowKeys);
-        return clone;
-    }
+//    
+//    /**
+//     * @see java.lang.Object#clone()
+//     */
+//    @Override
+//    public BarElementDataModel clone() {
+//        final BarElementDataModel clone = new BarElementDataModel(m_color);
+//        clone.m_aggrSum = m_aggrSum;
+//        clone.m_elementRectangle = m_elementRectangle;
+//        clone.m_hilitedRectangle = m_hilitedRectangle;
+//        clone.m_hilitedRowKeys.addAll(m_hilitedRowKeys);
+//        clone.m_isSelected = m_isSelected;
+//        clone.m_rowCounter = m_rowCounter;
+//        clone.m_rowKeys.addAll(m_rowKeys);
+//        return clone;
+//    }
 }

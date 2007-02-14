@@ -28,6 +28,7 @@ import java.util.Iterator;
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.HistogramVizModel;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -183,11 +184,11 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
     
     /**
      * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter
-     * #getHistogramDataModel()
+     * #getHistogramVizModel()
      */
     @Override
-    public HistogramDataModel getHistogramDataModel() {
-        HistogramDataModel histoData = super.getHistogramDataModel();
+    public HistogramVizModel getHistogramVizModel() {
+        HistogramVizModel histoData = super.getHistogramVizModel();
         if (histoData == null) {
 //            histoData = new HistogramDataModel(getDataTableSpec(), 
 //                    getXColName(), getAggregationColName(), 

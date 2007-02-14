@@ -37,7 +37,7 @@ import java.util.Collection;
 import org.knime.base.node.viz.histogram.datamodel.BarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
-import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.HistogramVizModel;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.property.ColorAttr;
 
@@ -126,9 +126,9 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     private static final Font INFO_MSG_FONT = new Font("Arial", Font.PLAIN, 16);
 
     /**
-     * Holds the <code>BinDataModel</code> objects to draw.
+     * Holds the {@link HistogramVizModel} objects to draw.
      */
-    private HistogramDataModel m_histoData;
+    private HistogramVizModel m_histoData;
 
     /**
      * Information message. If not <code>null</code> no bars will be drawn
@@ -167,7 +167,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     /**
      * @param histoData the {@link HistogramDataModel} objects to draw
      */
-    public void setHistogramData(final HistogramDataModel histoData) {
+    public void setHistogramData(final HistogramVizModel histoData) {
         m_histoData = histoData;
     }
 
@@ -399,7 +399,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             } //end of bar loop
             //draw the outline of the bin to debug in multiple 
             //aggregation column mode
-            if (m_histoData.getAggrColumns().length > 1) {
+            if (m_histoData.getAggrColumns().size() > 1) {
                 final Rectangle binRectangle = bin.getBinRectangle();
                 drawRectangle(g2, binRectangle, Color.ORANGE, 
                         GRID_LINE_STROKE);

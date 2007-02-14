@@ -28,8 +28,6 @@ import java.awt.Color;
 import java.io.File;
 import java.util.Iterator;
 
-import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.HistogramDataRow;
@@ -275,9 +273,7 @@ public class HistogramNodeModel extends NodeModel {
                     "No numeric column found in table specification");
         }
         final int aggrColIdx = aggrColumn.getColumnIndex();
-        m_model = new HistogramDataModel(HistogramDataModel.DEFAULT_NO_OF_BINS,
-                AggregationMethod.getDefaultMethod(), 
-                HistogramLayout.getDefaultLayout(), xColSpec, aggrColumn);
+        m_model = new HistogramDataModel(xColSpec, aggrColumn);
         if (dataTable != null) {
             final int selectedNoOfRows = m_noOfRows.getIntValue();
             //final int noOfRows = inData[0].getRowCount();
@@ -325,11 +321,8 @@ public class HistogramNodeModel extends NodeModel {
     /**
      * @return the histogram data model
      */
-    protected HistogramDataModel getHistogramModelClone() {
-        if (m_model == null) {
-            return null;
-        }
-        return m_model.clone();
+    protected HistogramDataModel getHistogramDataModel() {
+        return m_model;
     }
     /**
      * @return the {@link DataTableSpec} of the input table

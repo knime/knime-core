@@ -24,6 +24,7 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
+import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
 import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramPlotter;
 import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramProperties;
@@ -75,7 +76,7 @@ public class HistogramNodeView extends NodeView {
             return;
         }
         final HistogramDataModel histogramModel = 
-            m_nodeModel.getHistogramModelClone();
+            m_nodeModel.getHistogramDataModel();
         final DataTableSpec tableSpec = m_nodeModel.getTableSpec();
         if (histogramModel == null) {
             return;
@@ -83,7 +84,7 @@ public class HistogramNodeView extends NodeView {
         if (m_plotter == null) {
             final InteractiveHistogramProperties props =
                 new InteractiveHistogramProperties(
-                        histogramModel.getAggregationMethod());
+                        AggregationMethod.getDefaultMethod());
             m_plotter = new InteractiveHistogramPlotter(props, histogramModel, 
                     tableSpec, m_nodeModel.getInHiLiteHandler(0), 
                     m_nodeModel.getRows());
