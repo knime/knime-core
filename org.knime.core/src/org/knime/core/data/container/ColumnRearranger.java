@@ -46,7 +46,7 @@ import org.knime.core.data.DataTableSpec;
  * The following example demonstrates the usage of a
  * <code>ColumnRearranger</code> to append a column to a given table, which
  * contains the sum of the first two columns of the input table (given that
- * these colums are numeric). The node model implementation would contain code
+ * these columns are numeric). The node model implementation would contain code
  * as follows.
  * 
  * <pre>
@@ -288,7 +288,7 @@ public final class ColumnRearranger {
      * Any columns before that position stay where they are, the column at
      * the position and any thereafter are shifted to the right by the number
      * of columns provided by <code>fac</code>.
-     * @param position The position (index) where to insert the new colums.
+     * @param position The position (index) where to insert the new columns.
      * @param fac The factory from which we get the new columns.
      * @throws IndexOutOfBoundsException If position is invalid.
      * @throws NullPointerException If <code>fac</code> is <code>null</code>.
