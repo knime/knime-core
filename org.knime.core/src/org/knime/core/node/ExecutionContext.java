@@ -254,7 +254,7 @@ public class ExecutionContext extends ExecutionMonitor {
     }
     
     /** Creates a new {@link BufferedDataTable}, which is  row-wise 
-     * concatenation of the arguments table. The order of the rows in the 
+     * concatenation of the argument tables. The order of the rows in the 
      * returned table is defined through the order of the argument array
      * <code>tables</code> (the <code>BufferedDataTable</code> at index 0
      * provides the first set of rows.
