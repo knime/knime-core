@@ -221,6 +221,15 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         if (xColIdx < 0) {
             throw new IllegalArgumentException("Selected X column not found");
         }
+
+        if (!xColSpec.getType().isCompatible(DoubleValue.class) 
+                && xColSpec.getDomain().getValues() == null) {
+            throw new InvalidSettingsException(
+                    "Found nominal column without possible values: "
+                    + xColSpec.getName() 
+                    + " Please use DomainCalculator or ColumnFilter node!");
+        }
+        
         final String aggrColName = m_aggrColName.getStringValue();
         final int aggrColIdx = m_tableSpec.findColumnIndex(aggrColName);
         if (aggrColIdx < 0) {
@@ -327,17 +336,6 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
                 throw new InvalidSettingsException(
                         "Please define the x column name.");
             }
-        }
-        // if we have nominal columns without possible values
-        final DataColumnSpec colSpec = 
-            spec.getColumnSpec(m_xColName.getStringValue());
-        if (colSpec != null 
-                && !colSpec.getType().isCompatible(DoubleValue.class) 
-                && colSpec.getDomain().getValues() == null) {
-            throw new InvalidSettingsException(
-                    "Found nominal column without possible values: "
-                    + colSpec.getName() 
-                    + " Please use DomainCalculator or ColumnFilter node!");
         }
         final String aggrCol = m_aggrColName.getStringValue();
         if (!spec.containsName(aggrCol)) {
