@@ -169,7 +169,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     }
     
     public static DataTableSpec createSpec(final DataTableSpec... specs) {
-        return specs[0];
+        return DataTableSpec.mergeDataTableSpecs(specs);
     }
     
     private class MyIterator extends RowIterator {
