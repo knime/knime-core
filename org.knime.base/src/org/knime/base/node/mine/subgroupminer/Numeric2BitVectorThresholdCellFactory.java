@@ -24,6 +24,7 @@
 package org.knime.base.node.mine.subgroupminer;
 
 import java.util.BitSet;
+import java.util.List;
 
 import org.knime.base.data.bitvector.BitVectorCell;
 import org.knime.base.data.bitvector.BitVectorRowCellFactory;
@@ -48,11 +49,14 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorRowCellFacto
      * 
      * @param bitColSpec {@link DataColumnSpec} of the column containing the 
      * bitvectors
+     * @param nameMapping optional bit position to column name mapping
      * @param threshold the threshold above which the bit is set
      */
-    public Numeric2BitVectorThresholdCellFactory(final DataColumnSpec bitColSpec,
+    public Numeric2BitVectorThresholdCellFactory(
+            final DataColumnSpec bitColSpec,
+            final List<String> nameMapping,
             final double threshold) {
-        super(bitColSpec);
+        super(bitColSpec, nameMapping);
         m_threshold = threshold;
     }
 
@@ -113,6 +117,10 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorRowCellFacto
                 } else {
                     m_totalNrOf0s++;
                 }
+        }
+        if (getNameMapping() != null) {
+            return new BitVectorCell(currBitSet, row.getNumCells(), 
+                    getNameMapping());
         }
         return new BitVectorCell(currBitSet, row.getNumCells());
     }
