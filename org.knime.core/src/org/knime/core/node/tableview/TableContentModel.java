@@ -288,9 +288,14 @@ public class TableContentModel extends AbstractTableModel
         m_rowCounterThread = null;
         m_isMaxRowCountFinal = true;
         m_isRowCountOfInterestFinal = true;
+        boolean structureChanged = oldColCount != newColCount;
         if (oldColCount == newColCount) {
             if (oldRowCount > 0) {
                 fireTableRowsDeleted(0, oldRowCount - 1);
+            }
+            if (newColCount > 0) {
+                structureChanged = !data.getDataTableSpec().equalStructure(
+                        oldData.getDataTableSpec());
             }
         }
         if (data != null) { // new data available, release old stuff
@@ -313,14 +318,14 @@ public class TableContentModel extends AbstractTableModel
             // will also set m_isRowCountOfInterestFinal etc. accordingly 
             cacheNextRow();
         }
-        if (oldColCount == newColCount) {
+        if (structureChanged) {
+            // notify listeners
+            fireTableStructureChanged();
+        } else {
             int newRowCount = getRowCount();
             if (newRowCount > 0) {
                 fireTableRowsInserted(0, newRowCount);
             }
-        } else {
-            // notify listeners
-            fireTableStructureChanged();
         }
         m_propertySupport.firePropertyChange(PROPERTY_DATA, oldData, m_data);
     }
