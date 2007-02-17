@@ -31,6 +31,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.JoinedTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
 
@@ -72,7 +73,7 @@ import org.knime.core.data.container.TableSpecReplacerTable;
  * </dl>
  * 
  * <p>Apart from creating BufferedDataTable, objects of this class are also 
- * reponsible to report progress information. See the super class for more 
+ * responsible to report progress information. See the super class for more 
  * information.
  * 
  * @author Bernd Wiswedel, University of Konstanz
@@ -290,6 +291,49 @@ public class ExecutionContext extends ExecutionMonitor {
         throws CanceledExecutionException {
         ConcatenateTable t = ConcatenateTable.create(exec, tables);
         BufferedDataTable out = new BufferedDataTable(t);
+        out.setOwnerRecursively(m_node);
+        return out;
+    }
+    
+    /**
+     * Creates a new {@link BufferedDataTable} that is a column based join of
+     * the argument tables. The <code>left</code> table argument contributes
+     * the first set of columns and the <code>right</code> table argument the
+     * second set of columns. The tables must not contain duplicate columns
+     * (i.e. columns with the same name). They do need to contain the same set
+     * of rows though, i.e. the same row count and equal row keys in identical
+     * order. If any of these constraints is not met, this method throws and
+     * <code>IllegalArgumentException</code>.
+     * 
+     * <p>
+     * This method will traverse both tables ones to ensure that the row keys
+     * are identical and are returned in the same order. It reports progress for
+     * this sanity check to the <code>exec</code> argument.
+     * 
+     * <p>
+     * The returned table is only a view on both argument tables, i.e. any
+     * subsequent iteration is carried out on the argument tables. This also
+     * means that the returned table does only acquire little main memory and no
+     * disc memory at all.
+     * 
+     * @param left The table contributing the first set of columns.
+     * @param right The table contributing the second set of columns.
+     * @param exec For progress information and cancel checks, consider to use a
+     *            {@link ExecutionMonitor#createSubProgress(double) sub 
+     *            execution monitor} when joining two tables is only part of the
+     *            whole work.
+     * @return A buffered data table as join of the two argument tables.
+     * @throws CanceledExecutionException If progress has been canceled.
+     * @throws NullPointerException If any argument is <code>null</code>.
+     * @throws IllegalArgumentException If the tables contain duplicate columns
+     *             or non-matching rows.
+     * @see DataTableSpec#DataTableSpec(DataTableSpec, DataTableSpec)
+     */
+    public BufferedDataTable createJoinedTable(final BufferedDataTable left,
+            final BufferedDataTable right, final ExecutionMonitor exec) 
+        throws CanceledExecutionException {
+        JoinedTable jt = JoinedTable.create(left, right, exec);
+        BufferedDataTable out = new BufferedDataTable(jt);
         out.setOwnerRecursively(m_node);
         return out;
     }

@@ -39,6 +39,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.JoinedTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.node.config.Config;
@@ -191,6 +192,13 @@ public final class BufferedDataTable implements DataTable {
         this((KnowsRowCountTable)table, generateNewID());
     }
     
+    /** Creates a new buffered data table based on a join of 
+     * BufferedDataTables.
+     * @param table The reference.
+     */ 
+    BufferedDataTable(final JoinedTable table) {
+        this((KnowsRowCountTable)table, generateNewID());
+    }
     
     private BufferedDataTable(final KnowsRowCountTable table, final int id) {
         m_delegate = table;
@@ -251,6 +259,7 @@ public final class BufferedDataTable implements DataTable {
         "rearrange_columns_table";
     private static final String TABLE_TYPE_NEW_SPEC = "new_spec_table";
     private static final String TABLE_TYPE_CONCATENATE = "concatenate_table";
+    private static final String TABLE_TYPE_JOINED = "joined_table";
     private static final String TABLE_SUB_DIR = "reference";
     private static final String TABLE_FILE = "data.zip";
     private static final String TABLE_DESCRIPTION_FILE = "data.xml";
@@ -277,6 +286,8 @@ public final class BufferedDataTable implements DataTable {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN);
             } else if (m_delegate instanceof TableSpecReplacerTable) {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_NEW_SPEC);
+            } else if (m_delegate instanceof JoinedTable) {
+                s.addString(CFG_TABLE_TYPE, TABLE_TYPE_JOINED);
             } else {
                 assert m_delegate instanceof ConcatenateTable;
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONCATENATE);
@@ -385,7 +396,7 @@ public final class BufferedDataTable implements DataTable {
         boolean isVersion11x; 
         File dataXML = new File(dir, TABLE_DESCRIPTION_FILE);
         // no xml file present and no settings passed in method: 
-        // loading an exported worflow without data
+        // loading an exported workflow without data
         if (!dataXML.exists() && settings == null) {
             throw new IOException("No such data file: "
                     + dataXML.getAbsolutePath());
@@ -433,6 +444,7 @@ public final class BufferedDataTable implements DataTable {
             t = new BufferedDataTable(fromContainer, id);
         } else if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)
                 || (tableType.equals(TABLE_TYPE_NEW_SPEC))
+                || (tableType.equals(TABLE_TYPE_JOINED))
                 || (tableType.equals(TABLE_TYPE_CONCATENATE))) {
             String[] referenceDirs;
             // in version 1.2.x and before there was one reference table at most
@@ -456,6 +468,9 @@ public final class BufferedDataTable implements DataTable {
                 t = new BufferedDataTable(
                         new RearrangeColumnsTable(
                                 file, s, loadID, spec, id, bufferRep));
+            } else if (tableType.equals(TABLE_TYPE_JOINED)) {
+                JoinedTable jt = JoinedTable.load(s, spec, loadID);
+                t = new BufferedDataTable(jt);
             } else if (tableType.equals(TABLE_TYPE_CONCATENATE)) {
                 ConcatenateTable ct = ConcatenateTable.load(s, spec, loadID);
                 t = new BufferedDataTable(ct);
@@ -502,7 +517,7 @@ public final class BufferedDataTable implements DataTable {
      * getOwner() != dataOwner, we return immediately.
      */
     synchronized void clear(final Node dataOwner) {
-        // only take responsibilty for our data tables
+        // only take responsibility for our data tables
         if (dataOwner != getOwner()) {
             return;
         }
