@@ -284,6 +284,40 @@ public final class ColumnRearranger {
         return -1;
     }
     
+    /**
+     * Moves the column at index <code>from</code> to the index <code>to</code>.
+     * This method can be used to re-sort the set of columns.
+     * 
+     * If <code>from</code> is greater than <code>to</code>, then the column 
+     * indices will be affected as follows:
+     * <ul>
+     * <li>Any column before <code>to</code> (excl) and after <code>from</code>
+     * (excl) will have the index it had previously.</li>
+     * <li>Any column between <code>to</code> (incl) and <code>from</code>
+     * will have an index shifted upward by one.</li>
+     * </ul>
+     * If the <code>from</code> is smaller than <code>to</code>, the column
+     * indices will change as follows:
+     * <ul>
+     * <li>The columns before <code>from</code> (excl) and after <code>to</code>
+     * (incl) will have the index they had previously.</li>
+     * <li>The columns between <code>from</code> and <code>to</code> (excl)
+     * will have an index one less than they had before.</li>
+     * </ul>
+     * @param from The from index. 
+     * @param to The destination index.
+     */
+    public void move(final int from, final int to) {
+        if (from < to) {
+            SpecAndFactoryObject val = m_includes.get(from);
+            m_includes.insertElementAt(val, to);
+            m_includes.remove(from);
+        } else {
+            SpecAndFactoryObject val = m_includes.remove(from);
+            m_includes.insertElementAt(val, to);
+        }
+    }
+    
     /** Inserts the columns provided by <code>fac</code> at a given position.
      * Any columns before that position stay where they are, the column at
      * the position and any thereafter are shifted to the right by the number
