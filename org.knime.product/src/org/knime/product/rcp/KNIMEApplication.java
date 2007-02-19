@@ -29,6 +29,9 @@ import org.eclipse.ui.PlatformUI;
  * This class controls all aspects of the application's execution.
  */
 public class KNIMEApplication implements IPlatformRunnable {
+    
+    private static final String PROP_EXIT_CODE = "eclipse.exitcode";
+    
     /**
      * @param args The args
      * @throws Exception on general application error
@@ -40,10 +43,22 @@ public class KNIMEApplication implements IPlatformRunnable {
         try {
             int returnCode = PlatformUI.createAndRunWorkbench(display,
                     new KNIMEApplicationWorkbenchAdvisor());
-            if (returnCode == PlatformUI.RETURN_RESTART) {
-                return IPlatformRunnable.EXIT_RESTART;
+            
+//          the workbench doesn't support relaunch yet (bug 61809) so
+            // for now restart is used, and exit data properties are checked
+            // here to substitute in the relaunch return code if needed
+            if (returnCode != PlatformUI.RETURN_RESTART) {
+                return EXIT_OK;
             }
-            return IPlatformRunnable.EXIT_OK;
+
+            // if the exit code property has been set to the relaunch code, then
+            // return that code now, otherwise this is a normal restart
+            return EXIT_RELAUNCH.equals(Integer.getInteger(PROP_EXIT_CODE)) ? EXIT_RELAUNCH
+                    : EXIT_RESTART;
+            // if (returnCode == PlatformUI.RETURN_RESTART) {
+            // return IPlatformRunnable.EXIT_RESTART;
+            // }
+            //            return IPlatformRunnable.EXIT_OK;
         } finally {
             display.dispose();
         }
