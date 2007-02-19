@@ -144,7 +144,7 @@ public final class JoinedTable implements KnowsRowCountTable {
             CanceledExecutionException {
         NodeSettingsWO internals = settings.addNodeSettings(CFG_INTERNAL_META);
         internals.addInt(CFG_LEFT_TABLE_ID, m_leftTable.getBufferedTableId());
-        internals.addInt(CFG_RIGHT_TABLE_ID, m_leftTable.getBufferedTableId());
+        internals.addInt(CFG_RIGHT_TABLE_ID, m_rightTable.getBufferedTableId());
     }
     
     /** Method being called when the workflow is restored and the table shall
