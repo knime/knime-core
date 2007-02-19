@@ -306,6 +306,8 @@ public final class ColumnRearranger {
      * </ul>
      * @param from The from index. 
      * @param to The destination index.
+     * @throws IndexOutOfBoundsException If any of the values is out of range,
+     * i.e. less than 0 or greater or equal to the current set of columns. 
      */
     public void move(final int from, final int to) {
         if (from < to) {
