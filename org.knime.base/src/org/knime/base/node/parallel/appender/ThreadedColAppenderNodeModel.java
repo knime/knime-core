@@ -245,51 +245,71 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                 new BufferedDataTable[getNrDataOuts()];
 
         for (int i = 0; i < getNrDataOuts(); i++) {
-            final int leftColNum = data[i].getDataTableSpec().getNumColumns();
-            resultTables[i] =
-                exec.createJoinedTable(data[i], combinedResults[i],
-                        exec.createSubExecutionContext(0.1));
-
-            
+            final int leftColCount = data[i].getDataTableSpec().getNumColumns();
             ColumnDestination[] dests = cellFacs[i].getColumnDestinations();
             ColumnRearranger crea =
-                new ColumnRearranger(resultTables[i].getDataTableSpec());
-            int[] newPositions = new int[leftColNum + dests.length];
+                new ColumnRearranger(data[i].getDataTableSpec());
+            int[] newPositions = new int[leftColCount + dests.length];
             for (int m = 0; m < newPositions.length; m++) {
                 newPositions[m] = m;
             }
             
-            // first handle all replacements
+            // first part of handling replacements: remove the columns
+            // that should be replaced; necessary because of duplicate
+            // column names in the appended ones
             for (int k = 0; k < dests.length; k++) {
                 if (dests[k] instanceof ReplaceColumn) {
-                    int oldPos = newPositions[k + leftColNum];
                     int insertIndex = ((ReplaceColumn) dests[k]).getIndex();
-                    crea.move(oldPos, insertIndex);
-                    crea.remove(insertIndex + 1);
-                    for (int m = oldPos + 1; m < newPositions.length; m++) {
+                    crea.remove(insertIndex);
+                    for (int m = insertIndex; m < newPositions.length; m++) {
                         newPositions[m]--;
                     }
                     
-                    newPositions[insertIndex] = -1;
-                    newPositions[k + leftColNum] = insertIndex;
+                    newPositions[insertIndex] = Integer.MIN_VALUE;
+                }
+            }
+
+            resultTables[i] = exec.createColumnRearrangeTable(data[i], crea,
+                    exec.createSubExecutionContext(0));            
+            
+            resultTables[i] =
+                exec.createJoinedTable(resultTables[i], combinedResults[i],
+                        exec.createSubExecutionContext(0.1));
+
+            
+            // move replacement columns to their final destinations
+            crea = new ColumnRearranger(resultTables[i].getDataTableSpec());
+            for (int k = 0; k < dests.length; k++) {
+                if (dests[k] instanceof ReplaceColumn) {
+                    int oldPos = newPositions[k + leftColCount];
+                    int insertIndex = ((ReplaceColumn) dests[k]).getIndex();
+                    crea.move(oldPos, insertIndex);
+                    
+                    for (int m = insertIndex; m < k + leftColCount; m++) {
+                        newPositions[m]++;
+                    }
+                    for (int m = k + leftColCount; m < newPositions.length; m++) {
+                        newPositions[m]--;
+                    }
+                    newPositions[k + leftColCount] = insertIndex;
                 }
             }
             
             // then handle explicit inserts
             for (int k = 0; k < dests.length; k++) {
                 if (dests[k] instanceof InsertColumn) {
-                    int oldPos = newPositions[k + leftColNum];
+                    int oldPos = newPositions[k + leftColCount];
                     int insertIndex = ((InsertColumn) dests[k]).getIndex();
                     crea.move(oldPos, insertIndex);
-                    for (int m = insertIndex + 1; m < k + leftColNum; m++) {
+                    for (int m = insertIndex + 1; m < k + leftColCount; m++) {
                         newPositions[m]++;
                     }
-                    newPositions[k + leftColNum] = insertIndex;
+                    newPositions[k + leftColCount] = insertIndex;
                 }
             }
             resultTables[i] =
                     exec.createColumnRearrangeTable(resultTables[i], crea, exec
-                            .createSubExecutionContext(0.05));
+                            .createSubExecutionContext(0));
         }
 
         m_additionalTables = null;
