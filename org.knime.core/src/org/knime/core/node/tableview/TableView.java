@@ -233,7 +233,7 @@ public class TableView extends JScrollPane {
      * @see javax.swing.JScrollPane#getColumnHeader()
      */
     @Override
-    public JViewport getColumnHeader() {
+    public synchronized JViewport getColumnHeader() {
         JViewport viewPort = super.getColumnHeader();
         if (viewPort != null && viewPort.getView() != null) { 
             Component view = viewPort.getView();
