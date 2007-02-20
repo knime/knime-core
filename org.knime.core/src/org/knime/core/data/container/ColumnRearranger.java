@@ -403,14 +403,14 @@ public final class ColumnRearranger {
         }
     }
     
-    /** Access method for the internal datastructure.
+    /** Access method for the internal data structure.
      * @return The current set of columns.
      */
     Vector<SpecAndFactoryObject> getIncludes() {
         return m_includes;
     }
     
-    /** Access method for the internal datastructure.
+    /** Access method for the internal data structure.
      * @return The original spec as passed in the constructor.
      */
     DataTableSpec getOriginalSpec() {

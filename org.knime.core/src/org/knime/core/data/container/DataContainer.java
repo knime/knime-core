@@ -611,7 +611,7 @@ public class DataContainer implements RowAppender {
     }
     
     /** Convenience method that will buffer the entire argument table. This is
-     * usefull if you have a wrapper table at hand and want to make sure that 
+     * useful if you have a wrapper table at hand and want to make sure that 
      * all calculations are done here 
      * @param table The table to cache.
      * @param exec The execution monitor to report progress to and to check
@@ -643,7 +643,7 @@ public class DataContainer implements RowAppender {
     }
     
     /** Convenience method that will buffer the entire argument table. This is
-     * usefull if you have a wrapper table at hand and want to make sure that 
+     * useful if you have a wrapper table at hand and want to make sure that 
      * all calculations are done here 
      * @param table The table to cache.
      * @param exec The execution monitor to report progress to and to check

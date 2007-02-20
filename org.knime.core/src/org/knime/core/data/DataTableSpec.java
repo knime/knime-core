@@ -594,7 +594,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * value of the corresponding cell of the given row.
      * 
      * @param row the row for which the size is requested
-     * @return size in [0,1] or -1 if an error occured (illegal cell, missing)
+     * @return size in [0,1] or -1 if an error occurred (illegal cell, missing)
      */
     public double getRowSize(final DataRow row) {
         if (m_sizeHandlerColIndex == -1) {
@@ -734,7 +734,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         }
         // initialize with first DataTableSpec
         DataTableSpec firstSpec = specs[0];
-        // make sure that all DataTableSpecs have equal strucure
+        // make sure that all DataTableSpecs have equal structure
         for (int i = 1; i < specs.length; i++) {
             if (!firstSpec.equalStructure(specs[i])) {
                 throw new IllegalArgumentException(
