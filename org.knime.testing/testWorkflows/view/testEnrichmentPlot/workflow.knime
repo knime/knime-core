@@ -3,7 +3,7 @@
 <config key="workflow.knime">
 <entry key="version" type="xstring" value="1.2.0"/>
 <entry key="runningNodeID" type="xint" value="24"/>
-<entry key="runningConnectionID" type="xint" value="40"/>
+<entry key="runningConnectionID" type="xint" value="44"/>
 <config key="nodes">
 <config key="node_1">
 <entry key="node_settings_file" type="xstring" value="File Reader (#1)/settings.xml"/>
@@ -708,7 +708,9 @@
 <entry key="name" type="xstring" value="Enrichment Plotter"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
 <entry key="isExecuted" type="xboolean" value="false"/>
-<config key="internal_node_subsettings"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
 <config key="model">
 <entry key="curveCount" type="xint" value="4"/>
 <entry key="curve_1_sort" type="xstring" value="Col29"/>
@@ -744,7 +746,9 @@
 <entry key="name" type="xstring" value="Enrichment Plotter"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
 <entry key="isExecuted" type="xboolean" value="false"/>
-<config key="internal_node_subsettings"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
 <config key="model">
 <entry key="curveCount" type="xint" value="3"/>
 <entry key="curve_1_sort" type="xstring" value="sepal width"/>
@@ -805,7 +809,9 @@
 <entry key="name" type="xstring" value="Enrichment Plotter"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
 <entry key="isExecuted" type="xboolean" value="false"/>
-<config key="internal_node_subsettings"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
 <config key="model">
 <entry key="curveCount" type="xint" value="2"/>
 <entry key="curve_1_sort" type="xstring" value="Col0"/>
@@ -819,29 +825,29 @@
 </config>
 </config>
 <config key="connections">
-<config key="connection_38">
-<entry key="ID" type="xint" value="38"/>
-<entry key="sourceID" type="xint" value="1"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="20"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_39">
-<entry key="ID" type="xint" value="39"/>
+<config key="connection_42">
+<entry key="ID" type="xint" value="42"/>
 <entry key="sourceID" type="xint" value="2"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="targetID" type="xint" value="21"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_37">
-<entry key="ID" type="xint" value="37"/>
+<config key="connection_43">
+<entry key="ID" type="xint" value="43"/>
 <entry key="sourceID" type="xint" value="3"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="targetID" type="xint" value="23"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_40">
-<entry key="ID" type="xint" value="40"/>
+<config key="connection_41">
+<entry key="ID" type="xint" value="41"/>
+<entry key="sourceID" type="xint" value="1"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="20"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_44">
+<entry key="ID" type="xint" value="44"/>
 <entry key="sourceID" type="xint" value="23"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="targetID" type="xint" value="24"/>
