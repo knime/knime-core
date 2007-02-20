@@ -29,9 +29,10 @@ import org.knime.core.data.DoubleValue;
 
 
 /**
- * Render to display a double value using a given <code>NumberFormat</code>.
+ * Render to display a double value using a given {@link NumberFormat}.
+ * If no number format is given, the full precision is used, i.e. 
+ * {@link Double#toString(double)}.
  * 
- * @see java.text.NumberFormat
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class DoubleValueRenderer extends DefaultDataValueRenderer {
@@ -49,6 +50,11 @@ public class DoubleValueRenderer extends DefaultDataValueRenderer {
     public static final DataValueRenderer STANDARD_RENDERER = 
         new DoubleValueRenderer(
                 NumberFormat.getNumberInstance(Locale.US), "Standard Double");
+    /**
+     * Singleton for full precision representation.
+     */
+    public static final DataValueRenderer FULL_PRECISION_RENDERER = 
+        new DoubleValueRenderer(null, "Full Precision");
 
     /** disable grouping in renderer */
     static {
@@ -62,14 +68,15 @@ public class DoubleValueRenderer extends DefaultDataValueRenderer {
     
     /** 
      * Instantiates a new object using a given format.
-     * @param format To be used to render this object.
+     * @param format To be used to render this object, may be <code>null</code>
+     * to use full precision.
      * @param desc The description to the renderer
-     * @throws NullPointerException If argument is <code>null</code>.
+     * @throws NullPointerException 
+     * If <code>desc</code> argument is <code>null</code>.
      */
     public DoubleValueRenderer(final NumberFormat format, final String desc) {
-        if (format == null || desc == null) {
-            throw new NullPointerException(
-                    "Format/Description must not be null.");
+        if (desc == null) {
+            throw new NullPointerException("Description must not be null.");
         }
         m_format = format;
         m_desc = desc;
@@ -92,7 +99,8 @@ public class DoubleValueRenderer extends DefaultDataValueRenderer {
             if (Double.isNaN(d)) {
                 newValue = "NaN";
             } else {
-                newValue = m_format.format(d);
+                newValue = m_format != null 
+                    ? m_format.format(d) : Double.toString(d);
             }
         } else {
             // missing data cells will also end up here

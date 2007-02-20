@@ -102,6 +102,7 @@ public interface DoubleValue extends DataValue {
                 final DataColumnSpec spec) {
             return new DefaultDataValueRendererFamily(
                     DoubleValueRenderer.STANDARD_RENDERER, 
+                    DoubleValueRenderer.FULL_PRECISION_RENDERER, 
                     DoubleValueRenderer.PERCENT_RENDERER,
                     new DoubleGrayValueRenderer(spec),
                     new DoubleBarRenderer(spec)); 
