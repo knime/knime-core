@@ -34,6 +34,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
@@ -46,6 +47,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import org.knime.core.util.FileReaderFileFilter;
@@ -363,23 +365,41 @@ public abstract class NodeView {
      * <code>#modelChanged()</code> method.
      */
     final void callModelChanged() {
-        setComponent(m_comp);
-        try {
-            modelChanged();
-        } catch (NullPointerException npe) {
-            throw new IllegalStateException(
-                    "Implementation error of NodeView.modelChanged(). "
-                            + "NullPointerException during notification of a "
-                            + "changed model: " + npe.getMessage(), npe);
-        } catch (Exception e) {
-            throw new IllegalStateException("Error during notification "
-                    + "of a changed model (in NodeView.modelChanged()). "
-                    + "Reason: " + e.getMessage(), e);
-        } finally {
-            // repaint and pack if the view has not been opened or the 
-            // underlying view component was added
-            relayoutFrame(!m_wasOpened || m_componentSet);
-        }
+        final Runnable run = new Runnable() {
+            public void run() {
+                // set new component into derived view
+                setComponent(m_comp);
+                try {
+                    // CALL abstract model changed
+                    modelChanged();
+                } catch (NullPointerException npe) {
+                    m_logger.coding("NodeView.modelChanged() causes "
+                           + "NullPointerException during notification of a "
+                           + "changed model, reason: " + npe.getMessage(), npe);
+                } catch (Exception e) {
+                    m_logger.error("NodeView.modelChanged() causes "
+                           + "Exception during notification of a changed "
+                           + "model, reason: " + e.getMessage(), e);
+                } finally {
+                    // repaint and pack if the view has not been opened yet or 
+                    // the underlying view component was added
+                    relayoutFrame(!m_wasOpened || m_componentSet);
+                }
+            }
+        };
+        // if event dispatch thread, run directly
+        if (SwingUtilities.isEventDispatchThread()) {
+            run.run();
+        } else {
+            try {
+                // otherwise queue into event dispatch thread
+                SwingUtilities.invokeAndWait(run);
+            } catch (InvocationTargetException ite) {
+            	m_logger.error("Exception during view update", ite);
+            } catch (InterruptedException ie) {
+            	m_logger.error(Thread.currentThread() + " was interrupted", ie);
+            }
+        } 
     }
 
     /**
