@@ -289,7 +289,7 @@ public abstract class NodeView {
                 if (!extension.equals(".png")) {
                     fileName = fileName + ".png";
                 }
-                path = new File(fileName).toURL().toString();
+                path = new File(fileName).toURI().toURL().toString();
             } catch (Exception e) {
                 path = "<Error: Couldn't create URL for file>";
             }

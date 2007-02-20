@@ -149,7 +149,7 @@ public final class NodeLogger {
             }
 
             if (System.getProperty("log4j.configuration") == null) {
-                DOMConfigurator.configure(log4j.toURL());
+                DOMConfigurator.configure(log4j.toURI().toURL());
             }
         } catch (IOException ex) {
             ex.printStackTrace();
