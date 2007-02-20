@@ -24,7 +24,6 @@
 package org.knime.core.node.property.hilite;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -323,10 +322,11 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
         }
     }
 
-    /** 
+    /**
+     * Returns a copy of all hilit keys.
      * @see HiLiteHandler#getHiLitKeys()
      */
     public Set<DataCell> getHiLitKeys() {
-        return Collections.unmodifiableSet(m_hiLitKeys);
+        return new LinkedHashSet<DataCell>(m_hiLitKeys);
     }   
 }
