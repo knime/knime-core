@@ -157,7 +157,7 @@ public class Expression implements Serializable {
         m_classFile.deleteOnExit();
         Class compiled;
         try {
-            URL[] urls = new URL[]{m_classFile.getParentFile().toURL()};
+            URL[] urls = new URL[]{m_classFile.getParentFile().toURI().toURL()};
             ClassLoader parent = getClass().getClassLoader();
             ClassLoader load = URLClassLoader.newInstance(urls, parent);
             compiled = load.loadClass(javaClassName);

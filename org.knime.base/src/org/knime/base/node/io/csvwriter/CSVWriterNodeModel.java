@@ -153,7 +153,7 @@ public class CSVWriterNodeModel extends NodeModel {
         File file = new File(m_fileName);
         String forhistory;
         try {
-            forhistory = file.toURL().toString();
+            forhistory = file.toURI().toURL().toString();
         } catch (MalformedURLException mue) {
             forhistory = null;
         }

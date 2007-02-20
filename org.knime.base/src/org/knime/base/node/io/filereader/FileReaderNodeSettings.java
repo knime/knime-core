@@ -402,7 +402,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
             try {
                 // if this blows up we give up
-                xmlURL = tmp.getAbsoluteFile().toURL();
+                xmlURL = tmp.getAbsoluteFile().toURI().toURL();
             } catch (MalformedURLException mue) {
                 throw new IllegalStateException("Cannot convert '"
                         + xmlLocation + "' to a valid URL.");

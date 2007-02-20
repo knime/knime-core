@@ -279,8 +279,8 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             String path;
             try {
-                path = chooser.getSelectedFile().getAbsoluteFile().toURL()
-                        .toString();
+                path = chooser.getSelectedFile().getAbsoluteFile().toURI()
+                        .toURL().toString();
                 if (!path.toLowerCase().endsWith(".arff")) {
                     path += ".arff";
                 }

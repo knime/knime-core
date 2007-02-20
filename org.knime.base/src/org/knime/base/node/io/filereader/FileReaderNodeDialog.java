@@ -1431,8 +1431,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             String path;
             try {
-                path = chooser.getSelectedFile().getAbsoluteFile().toURL()
-                        .toString();
+                path = chooser.getSelectedFile().getAbsoluteFile()
+                        .toURI().toURL().toString();
             } catch (Exception e) {
                 path = "<Error: Couldn't create URL for file>";
             }
@@ -1463,7 +1463,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             File tmp = new File(url);
 
             // if that blows off we let the exception go up the stack.
-            newURL = tmp.getAbsoluteFile().toURL();
+            newURL = tmp.getAbsoluteFile().toURI().toURL();
         }
         return newURL;
     }
