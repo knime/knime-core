@@ -92,8 +92,9 @@ public class ColumnCalculator implements CellFactory {
      * @param newColSpec the column spec for the newly generated column
      * @throws InstantiationException if the instance cannot be instantiated.
      */
-    protected ColumnCalculator(final Expression expression, final Class rType,
-            final DataTableSpec spec, final DataColumnSpec newColSpec)
+    protected ColumnCalculator(final Expression expression,
+            final Class<?> rType, final DataTableSpec spec,
+            final DataColumnSpec newColSpec)
             throws InstantiationException {
         if (expression == null) {
             throw new NullPointerException("Expression must not be null.");

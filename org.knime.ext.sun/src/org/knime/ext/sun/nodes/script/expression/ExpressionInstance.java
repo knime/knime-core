@@ -33,7 +33,7 @@ import java.util.Map;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ExpressionInstance {
-    private final Map<String, Class> m_properties;
+    private final Map<String, Class<?>> m_properties;
 
     private final Object m_compiled;
 
@@ -46,7 +46,7 @@ public class ExpressionInstance {
      * @param properties map of field name to field class
      */
     protected ExpressionInstance(final Object compiled,
-            final Map<String, Class> properties) {
+            final Map<String, Class<?>> properties) {
         m_compiled = compiled;
         m_properties = properties;
     }
@@ -80,9 +80,9 @@ public class ExpressionInstance {
             throws IllegalPropertyException {
         // Prepare the values by looking at what properties where
         // specified in the constructor
-        for (Map.Entry<String, Class> entry : m_properties.entrySet()) {
+        for (Map.Entry<String, Class<?>> entry : m_properties.entrySet()) {
             String prop = entry.getKey();
-            Class clas = entry.getValue();
+            Class<?> clas = entry.getValue();
             Object value = property2ValueMap.get(prop);
             if (value == null) {
                 throw new IllegalPropertyException("No value for field " + prop);
@@ -104,7 +104,7 @@ public class ExpressionInstance {
             throws IllegalPropertyException {
         String fieldType = "<UNKNOWN>";
         try {
-            Class type = m_compiled.getClass();
+            Class<?> type = m_compiled.getClass();
             Field f = type.getDeclaredField(property);
             fieldType = f.getType().getName();
             f.set(m_compiled, value);
