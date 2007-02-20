@@ -823,7 +823,7 @@ public abstract class Config extends AbstractConfigEntry
         }
         int[] ret = new int[size];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getInt("" + i);
+            ret[i] = config.getInt(Integer.toString(i));
         }
         return ret;
     }
@@ -855,7 +855,7 @@ public abstract class Config extends AbstractConfigEntry
         if (values != null) {
             config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
-                config.addInt("" + i, values[i]);
+                config.addInt(Integer.toString(i), values[i]);
             }
         }
     }
@@ -891,7 +891,7 @@ public abstract class Config extends AbstractConfigEntry
         }
         double[] ret = new double[size];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getDouble("" + i);
+            ret[i] = config.getDouble(Integer.toString(i));
         }
         return ret;
     }
@@ -914,7 +914,7 @@ public abstract class Config extends AbstractConfigEntry
 
     /**
      * Adds this double array value to the Config by the given key. The array
-     * can be null-
+     * can be null.
      * 
      * @param key The key.
      * @param values The double array to add.
@@ -924,13 +924,13 @@ public abstract class Config extends AbstractConfigEntry
         if (values != null) {
             config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
-                config.addDouble("" + i, values[i]);
+                config.addDouble(Integer.toString(i), values[i]);
             }
         }
     }
 
     /**
-     * Returnchar for key or the default value if not available.
+     * Return char for key or the default value if not available.
      * 
      * @param key The key.
      * @param def Returned if no value available for the given key.
@@ -960,7 +960,7 @@ public abstract class Config extends AbstractConfigEntry
         }
         char[] ret = new char[size];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getChar("" + i);
+            ret[i] = config.getChar(Integer.toString(i));
         }
         return ret;
     }
@@ -997,7 +997,7 @@ public abstract class Config extends AbstractConfigEntry
         }
         byte[] ret = new byte[size];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getByte("" + i);
+            ret[i] = config.getByte(Integer.toString(i));
         }
         return ret;
     }
@@ -1014,7 +1014,7 @@ public abstract class Config extends AbstractConfigEntry
         if (values != null) {
             config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
-                config.addByte("" + i, values[i]);
+                config.addByte(Integer.toString(i), values[i]);
             }
         }
     }
@@ -1051,7 +1051,7 @@ public abstract class Config extends AbstractConfigEntry
         }
         short[] ret = new short[size];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getShort("" + i);
+            ret[i] = config.getShort(Integer.toString(i));
         }
         return ret;
     }
@@ -1089,7 +1089,7 @@ public abstract class Config extends AbstractConfigEntry
         }
         long[] ret = new long[size];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getLong("" + i);
+            ret[i] = config.getLong(Integer.toString(i));
         }
         return ret;
     }
@@ -1121,7 +1121,7 @@ public abstract class Config extends AbstractConfigEntry
         if (values != null) {
             config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
-                config.addShort("" + i, values[i]);
+                config.addShort(Integer.toString(i), values[i]);
             }
         }
     }
@@ -1152,7 +1152,7 @@ public abstract class Config extends AbstractConfigEntry
         if (values != null) {
             config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
-                config.addLong("" + i, values[i]);
+                config.addLong(Integer.toString(i), values[i]);
             }
         }
     }
@@ -1199,7 +1199,7 @@ public abstract class Config extends AbstractConfigEntry
         if (values != null) {
             config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
-                config.addChar("" + i, values[i]);
+                config.addChar(Integer.toString(i), values[i]);
             }
         }
     }
@@ -1235,7 +1235,7 @@ public abstract class Config extends AbstractConfigEntry
         }
         boolean[] ret = new boolean[size];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getBoolean("" + i);
+            ret[i] = config.getBoolean(Integer.toString(i));
         }
         return ret;
     }
@@ -1268,7 +1268,7 @@ public abstract class Config extends AbstractConfigEntry
         if (values != null) {
             config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
-                config.addBoolean("" + i, values[i]);
+                config.addBoolean(Integer.toString(i), values[i]);
             }
         }
     }
@@ -1305,7 +1305,7 @@ public abstract class Config extends AbstractConfigEntry
         }
         String[] ret = new String[size];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getString("" + i);
+            ret[i] = config.getString(Integer.toString(i));
         }
         return ret;
     }
@@ -1338,7 +1338,7 @@ public abstract class Config extends AbstractConfigEntry
         if (values != null) {
             config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
-                config.addString("" + i, values[i]);
+                config.addString(Integer.toString(i), values[i]);
             }
         }
     }
@@ -1391,7 +1391,7 @@ public abstract class Config extends AbstractConfigEntry
         }
         DataCell[] ret = new DataCell[size];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getDataCell("" + i);
+            ret[i] = config.getDataCell(Integer.toString(i));
         }
         return ret;
     }
@@ -1430,7 +1430,7 @@ public abstract class Config extends AbstractConfigEntry
         }
         DataType[] ret = new DataType[size];
         for (int i = 0; i < ret.length; i++) {
-            ret[i] = config.getDataType("" + i);
+            ret[i] = config.getDataType(Integer.toString(i));
         }
         return ret;
     }
@@ -1463,7 +1463,7 @@ public abstract class Config extends AbstractConfigEntry
         if (values != null) {
             config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
-                config.addDataCell("" + i, values[i]);
+                config.addDataCell(Integer.toString(i), values[i]);
             }
         }
     }
@@ -1480,7 +1480,7 @@ public abstract class Config extends AbstractConfigEntry
         if (values != null) {
             config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
-                config.addDataType("" + i, values[i]);
+                config.addDataType(Integer.toString(i), values[i]);
             }
         }
     }
