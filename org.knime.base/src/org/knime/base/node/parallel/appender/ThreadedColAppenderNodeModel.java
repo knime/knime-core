@@ -264,8 +264,8 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                 if (dests[k] instanceof ReplaceColumn) {
                     int oldPos = newPositions[k + leftColNum];
                     int insertIndex = ((ReplaceColumn) dests[k]).getIndex();
-                    crea.remove(insertIndex);
                     crea.move(oldPos, insertIndex);
+                    crea.remove(insertIndex + 1);
                     for (int m = oldPos + 1; m < newPositions.length; m++) {
                         newPositions[m]--;
                     }
