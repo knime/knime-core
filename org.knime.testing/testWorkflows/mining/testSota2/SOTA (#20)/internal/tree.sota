@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="SotaModel">
+<entry key="IsCell" type="xboolean" value="false"/>
+<entry key="Resource" type="xdouble" value="0.0"/>
+<entry key="MaxDistance" type="xdouble" value="0.0"/>
+<entry key="Level" type="xint" value="1"/>
+<entry key="HierarchyLevel" type="xint" value="0"/>
+<entry key="LevelInHierarchy" type="xint" value="0"/>
+<entry key="StartX" type="xint" value="-1"/>
+<entry key="StartY" type="xint" value="-1"/>
+<entry key="EndX" type="xint" value="-1"/>
+<entry key="EndY" type="xint" value="-1"/>
+<entry key="DataIdSIZE" type="xint" value="0"/>
+<entry key="RowKeySIZE" type="xint" value="0"/>
+<entry key="DataSIZE" type="xint" value="4"/>
+<entry key="DataTYPE" type="xstring" value="fuzzy"/>
+<config key="Data0">
+<entry key="FuzzyMinSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMincore" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxCore" type="xdouble" value="NaN"/>
+</config>
+<config key="Data1">
+<entry key="FuzzyMinSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMincore" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxCore" type="xdouble" value="NaN"/>
+</config>
+<config key="Data2">
+<entry key="FuzzyMinSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMincore" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxCore" type="xdouble" value="NaN"/>
+</config>
+<config key="Data3">
+<entry key="FuzzyMinSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMincore" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxCore" type="xdouble" value="NaN"/>
+</config>
+<entry key="HASLeft" type="xboolean" value="true"/>
+<config key="Left1">
+<entry key="IsCell" type="xboolean" value="true"/>
+<entry key="Resource" type="xdouble" value="0.0"/>
+<entry key="MaxDistance" type="xdouble" value="0.0"/>
+<entry key="Level" type="xint" value="1"/>
+<entry key="HierarchyLevel" type="xint" value="1"/>
+<entry key="LevelInHierarchy" type="xint" value="1"/>
+<entry key="StartX" type="xint" value="-1"/>
+<entry key="StartY" type="xint" value="-1"/>
+<entry key="EndX" type="xint" value="-1"/>
+<entry key="EndY" type="xint" value="-1"/>
+<entry key="DataIdSIZE" type="xint" value="0"/>
+<entry key="RowKeySIZE" type="xint" value="0"/>
+<entry key="DataSIZE" type="xint" value="4"/>
+<entry key="DataTYPE" type="xstring" value="fuzzy"/>
+<config key="Data0">
+<entry key="FuzzyMinSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMincore" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxCore" type="xdouble" value="NaN"/>
+</config>
+<config key="Data1">
+<entry key="FuzzyMinSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMincore" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxCore" type="xdouble" value="NaN"/>
+</config>
+<config key="Data2">
+<entry key="FuzzyMinSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMincore" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxCore" type="xdouble" value="NaN"/>
+</config>
+<config key="Data3">
+<entry key="FuzzyMinSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMincore" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxCore" type="xdouble" value="NaN"/>
+</config>
+<entry key="HASLeft" type="xboolean" value="false"/>
+<entry key="HASRight" type="xboolean" value="false"/>
+</config>
+<entry key="HASRight" type="xboolean" value="true"/>
+<config key="Right1">
+<entry key="IsCell" type="xboolean" value="true"/>
+<entry key="Resource" type="xdouble" value="0.0"/>
+<entry key="MaxDistance" type="xdouble" value="0.0"/>
+<entry key="Level" type="xint" value="1"/>
+<entry key="HierarchyLevel" type="xint" value="1"/>
+<entry key="LevelInHierarchy" type="xint" value="1"/>
+<entry key="StartX" type="xint" value="-1"/>
+<entry key="StartY" type="xint" value="-1"/>
+<entry key="EndX" type="xint" value="-1"/>
+<entry key="EndY" type="xint" value="-1"/>
+<entry key="DataIdSIZE" type="xint" value="0"/>
+<entry key="RowKeySIZE" type="xint" value="0"/>
+<entry key="DataSIZE" type="xint" value="4"/>
+<entry key="DataTYPE" type="xstring" value="fuzzy"/>
+<config key="Data0">
+<entry key="FuzzyMinSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMincore" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxCore" type="xdouble" value="NaN"/>
+</config>
+<config key="Data1">
+<entry key="FuzzyMinSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMincore" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxCore" type="xdouble" value="NaN"/>
+</config>
+<config key="Data2">
+<entry key="FuzzyMinSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMincore" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxCore" type="xdouble" value="NaN"/>
+</config>
+<config key="Data3">
+<entry key="FuzzyMinSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxSupp" type="xdouble" value="NaN"/>
+<entry key="FuzzyMincore" type="xdouble" value="NaN"/>
+<entry key="FuzzyMaxCore" type="xdouble" value="NaN"/>
+</config>
+<entry key="HASLeft" type="xboolean" value="false"/>
+<entry key="HASRight" type="xboolean" value="false"/>
+</config>
+<entry key="FuzzyHierarchy" type="xboolean" value="false"/>
+<entry key="MaxFuzzyLevel" type="xint" value="1"/>
+<entry key="InDataContainerSize" type="xint" value="0"/>
+<entry key="OrigDataContainerSize" type="xint" value="0"/>
+</config>
