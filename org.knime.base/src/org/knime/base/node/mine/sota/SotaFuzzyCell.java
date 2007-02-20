@@ -28,6 +28,9 @@ import java.io.Serializable;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.FuzzyIntervalValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
 
 
 /**
@@ -36,6 +39,12 @@ import org.knime.core.data.FuzzyIntervalValue;
  */
 public class SotaFuzzyCell implements SotaCell, FuzzyIntervalValue, 
 Serializable {
+    
+    private static final String CFG_KEY_MIN_SUPP = "FuzzyMinSupp";
+    private static final String CFG_KEY_MAX_SUPP = "FuzzyMaxSupp";
+    private static final String CFG_KEY_MIN_CORE = "FuzzyMincore";
+    private static final String CFG_KEY_MAX_CORE = "FuzzyMaxCore";
+    
     private double m_minSupp;
     private double m_maxSupp;
     
@@ -127,4 +136,35 @@ Serializable {
     public SotaCell clone() {
         return new SotaFuzzyCell(m_minSupp, m_minCore, m_maxCore, m_maxSupp);
     }
+    
+
+    /**
+     * @see org.knime.base.node.mine.sota.SotaCell#
+     *      loadFrom(org.knime.core.node.ModelContentRO)
+     */
+    public void loadFrom(final ModelContentRO modelContent)
+            throws InvalidSettingsException {
+        m_minSupp = modelContent.getDouble(CFG_KEY_MIN_SUPP);
+        m_maxSupp = modelContent.getDouble(CFG_KEY_MAX_SUPP);
+        m_minCore = modelContent.getDouble(CFG_KEY_MIN_CORE);
+        m_maxCore = modelContent.getDouble(CFG_KEY_MAX_CORE);
+    }
+
+    /**
+     * @see org.knime.base.node.mine.sota.SotaCell#
+     *      saveTo(org.knime.core.node.ModelContentWO)
+     */
+    public void saveTo(final ModelContentWO modelContent) {
+        modelContent.addDouble(CFG_KEY_MIN_SUPP, m_minSupp);
+        modelContent.addDouble(CFG_KEY_MAX_SUPP, m_maxSupp);
+        modelContent.addDouble(CFG_KEY_MIN_CORE, m_minCore);
+        modelContent.addDouble(CFG_KEY_MAX_CORE, m_maxCore);
+    }
+
+    /**
+     * @see org.knime.base.node.mine.sota.SotaCell#getType()
+     */
+    public String getType() {
+        return SotaCellFactory.FUZZY_TYPE;
+    }     
 }

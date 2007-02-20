@@ -24,8 +24,6 @@
  */
 package org.knime.base.node.mine.sota;
 
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -34,6 +32,9 @@ import org.knime.base.node.mine.sota.view.interaction.Hiliteable;
 import org.knime.base.node.mine.sota.view.interaction.Locatable;
 import org.knime.base.node.mine.sota.view.interaction.Selectable;
 import org.knime.core.data.RowKey;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
 
 /**
  * 
@@ -41,6 +42,38 @@ import org.knime.core.data.RowKey;
  */
 public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
         Serializable {
+    
+    private static final String CFG_KEY_IS_CELL = "IsCell";
+    
+    private static final String CFG_KEY_DATA = "Data";
+    
+    private static final String CFG_KEY_LEFT = "Left";
+    
+    private static final String CFG_KEY_RIGHT = "Right";
+    
+    private static final String CFG_KEY_RESOURCE = "Resource";
+    
+    private static final String CFG_KEY_MAX_DISTANCE = "MaxDistance";
+    
+    private static final String CFG_KEY_LEVEL = "Level";
+    
+    private static final String CFG_KEY_H_LEVEL = "HierarchyLevel";
+    
+    private static final String CFG_KEY_LEVEL_IN_H = "LevelInHierarchy";
+    
+    private static final String CFG_KEY_DATA_ID = "DataId";
+    
+    private static final String CFG_KEY_ROW_KEY = "RowKey";
+    
+    private static final String CFG_KEY_START_X = "StartX";
+    
+    private static final String CFG_KEY_END_X = "EndX";
+    
+    private static final String CFG_KEY_START_Y = "StartY";
+    
+    private static final String CFG_KEY_END_Y = "EndY";
+    
+    
     private SotaCell[] m_data;
 
     private boolean m_isCell;
@@ -85,7 +118,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
 
     // Related to interface Selectable
     private transient boolean m_selected = false;
-
+    
     /**
      * Creates new instance of Cell with given dimension of data vector, given
      * level of hierarchy and given <code>isCell</code> flag.
@@ -610,33 +643,186 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
             getLeft().deselectSubtree();
             getRight().deselectSubtree();
         }
-    }
-
+    }    
+    
     /**
-     * Writes first its siblings serialized to given stream, and then itself.
-     * During recursive method call, the number of cells will be counted and
-     * returned afterwards.
+     * Saves the value of the <code>SotaTreeCell</code> to the given 
+     * <code>ModelContentWO</code>.
      * 
-     * @param out the stream to write its sibling and itself to
-     * @param cellCount the number of cells to beginn the cell count with
-     * @return the number of cells written to given stream, plus the initial
-     *         value.
-     * @throws IOException if cell could not be written to the stream
+     * @param modelContent The <code>ModelContentWO</code> to save the cells
+     * to. 
+     * @param index The index of the cell to save.
      */
-    public int writeToFile(final ObjectOutputStream out, final int cellCount)
-            throws IOException {
-        int count = cellCount + 1;
-
+    public final void saveTo(final ModelContentWO modelContent, 
+            final int index) {
+        int ind = index;
+        ind++;
+        
+        // save resource ect.
+        modelContent.addBoolean(CFG_KEY_IS_CELL, m_isCell);
+        modelContent.addDouble(CFG_KEY_RESOURCE, m_resource);
+        modelContent.addDouble(CFG_KEY_MAX_DISTANCE, m_maxDistance);
+        
+        // save level information
+        modelContent.addInt(CFG_KEY_LEVEL, m_level);
+        modelContent.addInt(CFG_KEY_H_LEVEL, m_hierarchyLevel);
+        modelContent.addInt(CFG_KEY_LEVEL_IN_H, m_levelInHierarchy);
+        
+        // save coordinates
+        modelContent.addInt(CFG_KEY_START_X, m_startX);
+        modelContent.addInt(CFG_KEY_START_Y, m_startY);
+        modelContent.addInt(CFG_KEY_END_X, m_endX);
+        modelContent.addInt(CFG_KEY_END_Y, m_endY);
+        
+        // save data ids
+        int dataIdCount = 0;
+        modelContent.addInt(CFG_KEY_DATA_ID + "SIZE", m_dataIds.size());
+        for (Integer i : m_dataIds) {
+            modelContent.addInt(CFG_KEY_DATA_ID + dataIdCount, i);
+            dataIdCount++;
+        }
+        
+        // save row keys
+        modelContent.addInt(CFG_KEY_ROW_KEY + "SIZE", m_rowKeys.size());
+        int rowKeyCount = 0;
+        for (RowKey r : m_rowKeys) {
+            modelContent.addString(CFG_KEY_ROW_KEY + rowKeyCount, r.toString());
+            rowKeyCount++;
+        }
+        
+        // save data
+        modelContent.addInt(CFG_KEY_DATA + "SIZE", m_data.length);
+        if (m_data.length > 0) {
+            modelContent.addString(CFG_KEY_DATA + "TYPE", m_data[0].getType());
+        }
+        for (int i = 0; i < m_data.length; i++) {
+            ModelContentWO subContent = modelContent.addModelContent(
+                    CFG_KEY_DATA + i);
+            m_data[i].saveTo(subContent);
+        }
+                
+        // save left and right
         if (m_left != null) {
-            count = m_left.writeToFile(out, count);
+            modelContent.addBoolean("HAS" + CFG_KEY_LEFT, true);
+            ModelContentWO subContent = modelContent.addModelContent(
+                    CFG_KEY_LEFT + ind);
+            m_left.saveTo(subContent, ind);
+        } else {
+            modelContent.addBoolean("HAS" + CFG_KEY_LEFT, false);
         }
         if (m_right != null) {
-            count = m_right.writeToFile(out, count);
+            modelContent.addBoolean("HAS" + CFG_KEY_RIGHT, true);
+            ModelContentWO subContent = modelContent.addModelContent(
+                    CFG_KEY_RIGHT + ind);
+            m_right.saveTo(subContent, ind);            
+        } else {
+            modelContent.addBoolean("HAS" + CFG_KEY_RIGHT, false);
         }
-
-        out.writeObject(this);
-        out.flush();
-
-        return count;
+    }    
+    
+    
+    /**
+     * Loads the values from the given <code>ModelContentWO</code>.
+     * 
+     * @param modelContent The <code>ModelContentWO</code> to load the cells 
+     * from.
+     * @param index The index of the cell to load.
+     * @param anchestor The anchsetor cell of the cell to load.
+     * @param isLeft Specifies if the cell to load is a cell at the left side of
+     * its anchestor.
+     * 
+     * @throws InvalidSettingsException If setting to load is not valid.
+     */
+    public void loadFrom(final ModelContentRO modelContent, final int index,
+            final SotaTreeCell anchestor, final boolean isLeft) 
+    throws InvalidSettingsException {
+        
+        int ind = index;
+        ind++;
+                
+        // load resource ect.
+        m_isCell = modelContent.getBoolean(CFG_KEY_IS_CELL);
+        m_resource = modelContent.getDouble(CFG_KEY_RESOURCE);
+        m_maxDistance = modelContent.getDouble(CFG_KEY_MAX_DISTANCE);
+        
+        // load level information
+        m_level = modelContent.getInt(CFG_KEY_LEVEL);
+        m_hierarchyLevel = modelContent.getInt(CFG_KEY_H_LEVEL);
+        m_levelInHierarchy = modelContent.getInt(CFG_KEY_LEVEL_IN_H);
+        
+        // load coordinates
+        m_startX = modelContent.getInt(CFG_KEY_START_X);
+        m_startY = modelContent.getInt(CFG_KEY_START_Y);
+        m_endX = modelContent.getInt(CFG_KEY_END_X);
+        m_endY = modelContent.getInt(CFG_KEY_END_Y);
+     
+        // load data ids
+        int size = modelContent.getInt(CFG_KEY_DATA_ID + "SIZE");
+        m_dataIds = new ArrayList<Integer>(); 
+        int dataIdCount = 0;
+        for (int i = 0; i < size; i++) {
+            m_dataIds.add(modelContent.getInt(CFG_KEY_DATA_ID + dataIdCount));
+            dataIdCount++;
+        }
+        
+        // load row keys
+        size = modelContent.getInt(CFG_KEY_ROW_KEY + "SIZE");
+        m_rowKeys = new ArrayList<RowKey>();
+        int rowKeyCount = 0;
+        for (int i = 0; i < size; i++) {
+            m_rowKeys.add(new RowKey(modelContent.getString(
+                    CFG_KEY_ROW_KEY + rowKeyCount)));
+            rowKeyCount++;
+        }
+        
+        // load data
+        String type = "";
+        size = modelContent.getInt(CFG_KEY_DATA + "SIZE");
+        if (size > 0) {
+            type = modelContent.getString(CFG_KEY_DATA + "TYPE");
+            m_data = new SotaCell[size];
+        }
+        for (int i = 0; i < size; i++) {
+            ModelContentRO subContent = modelContent.getModelContent(
+                    CFG_KEY_DATA + i);
+            m_data[i] = SotaCellFactory.createSotaCell(type);
+            m_data[i].loadFrom(subContent);
+        }        
+        
+        
+        // load left and right
+        boolean hasLeft = modelContent.getBoolean("HAS" + CFG_KEY_LEFT);
+        boolean hasRight = modelContent.getBoolean("HAS" + CFG_KEY_RIGHT);
+        if (hasLeft) {
+            ModelContentRO subContent = modelContent.getModelContent(
+                    CFG_KEY_LEFT + ind);
+            m_left = new SotaTreeCell(0, true);
+            m_left.loadFrom(subContent, ind, this, true);
+        } else {
+            m_left = null;
+        }
+        if (hasRight) {
+            ModelContentRO subContent = modelContent.getModelContent(
+                    CFG_KEY_RIGHT + ind);
+            m_right = new SotaTreeCell(0, true);
+            m_right.loadFrom(subContent, ind, this, false);            
+        } else {
+            m_right = null;
+        }
+        
+        // set anchestor
+        if (anchestor != null) {
+            this.setAncestor(anchestor);
+        }
+        // set sister
+        if (!isLeft) {
+            if (this.getAncestor() != null) {
+                SotaTreeCell leftSister = this.getAncestor().getLeft();
+                if (leftSister != null) {
+                    this.setSister(leftSister);
+                    leftSister.setSister(this);
+                }
+            }
+        }
     }
 }
