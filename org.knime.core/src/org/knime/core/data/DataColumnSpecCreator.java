@@ -126,7 +126,6 @@ public class DataColumnSpecCreator {
         m_shapeHandler = cspec.getShapeHandler();
         // property color
         m_colorHandler = cspec.getColorHandler();
-
     }
     
     /**
@@ -137,7 +136,7 @@ public class DataColumnSpecCreator {
      * 
      * @param cspec2 the second {@link DataColumnSpec}.
      * 
-     * @see DataTableSpec#mergeDataTableSpecs(DataTableSpec, DataTableSpec)
+     * @see DataTableSpec#mergeDataTableSpecs(DataTableSpec...)
      * @throws IllegalArgumentException if the structure (type and name) does
      *             not match, if the domain can not be merged, if the Color-,
      *             Shape- or SizeHandlers are different or if a property with
