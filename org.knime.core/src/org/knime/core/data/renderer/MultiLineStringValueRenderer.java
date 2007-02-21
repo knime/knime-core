@@ -103,7 +103,9 @@ public final class MultiLineStringValueRenderer extends
     public void setFont(final Font font) {
         // DefaultTableCellRenderer sets the font upon each paint to the
         // font of the JTable; we do not want this here so we overwrite it
-        if (font.equals(m_currentFont)) {
+        if (font == null) {
+            super.setFont(m_currentFont);
+        } else if (m_currentFont.equals(font)) {
             return;
         } else {
             m_currentFont =
