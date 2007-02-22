@@ -686,7 +686,7 @@ public class WorkflowManager implements WorkflowListener {
                 if (key < 0) {
                     LOGGER.debug("Table has an invalid ID! " 
                         + "(This message can be ignored if the flow " 
-                        + "was written with a version prior to 1.2.0.");
+                        + "was written with a version prior to 1.2.0.)");
                     return null;
                 }
                 return super.put(key, value);
