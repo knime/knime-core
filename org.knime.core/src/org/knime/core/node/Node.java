@@ -172,7 +172,14 @@ public final class Node {
 
     static {
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            String sysLaF = UIManager.getSystemLookAndFeelClassName();
+            // The GTK L&F has apparently some serious problems. Weka dialogs
+            // cannot be openend (NPE) and in 1.6.0 there were problems with 
+            // "Xlib: sequence lost" ... resulting in KNIME going down.
+            if (sysLaF.equals("com.sun.java.swing.plaf.gtk.GTKLookAndFeel")) {
+                sysLaF = UIManager.getCrossPlatformLookAndFeelClassName();
+            }
+            UIManager.setLookAndFeel(sysLaF);
         } catch (Exception e) {
             // use the default look and feel then.
         }
