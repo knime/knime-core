@@ -25,7 +25,7 @@ Uses: Java5, GEF, Log4J
 
    <launcherArgs>
       <programArgs>-clean</programArgs>
-      <vmArgs>-Xmx256M -XX:MaxPermSize=128m</vmArgs>
+      <vmArgs>-Xmx256M -XX:MaxPermSize=128m -server</vmArgs>
    </launcherArgs>
 
    <windowImages/>
