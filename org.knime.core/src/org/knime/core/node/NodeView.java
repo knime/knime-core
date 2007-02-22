@@ -364,27 +364,11 @@ public abstract class NodeView {
      * data label is set. This method will invoke the abstract
      * <code>#modelChanged()</code> method.
      */
-    final void callModelChanged() {
+    synchronized final void callModelChanged() {
         final Runnable run = new Runnable() {
             public void run() {
                 // set new component into derived view
                 setComponent(m_comp);
-                try {
-                    // CALL abstract model changed
-                    modelChanged();
-                } catch (NullPointerException npe) {
-                    m_logger.coding("NodeView.modelChanged() causes "
-                           + "NullPointerException during notification of a "
-                           + "changed model, reason: " + npe.getMessage(), npe);
-                } catch (Exception e) {
-                    m_logger.error("NodeView.modelChanged() causes "
-                           + "Exception during notification of a changed "
-                           + "model, reason: " + e.getMessage(), e);
-                } finally {
-                    // repaint and pack if the view has not been opened yet or 
-                    // the underlying view component was added
-                    relayoutFrame(!m_wasOpened || m_componentSet);
-                }
             }
         };
         // if event dispatch thread, run directly
@@ -398,6 +382,23 @@ public abstract class NodeView {
             	m_logger.error("Exception during view update", ite);
             } catch (InterruptedException ie) {
             	m_logger.error(Thread.currentThread() + " was interrupted", ie);
+            } finally {
+                try {
+                    // CALL abstract model changed
+                    modelChanged();                        
+                } catch (NullPointerException npe) {
+                    m_logger.coding("NodeView.modelChanged() causes "
+                           + "NullPointerException during notification of a "
+                           + "changed model, reason: " + npe.getMessage(), npe);
+                } catch (Exception e) {
+                    m_logger.error("NodeView.modelChanged() causes "
+                           + "Exception during notification of a changed "
+                           + "model, reason: " + e.getMessage(), e);
+                } finally {
+                    // repaint and pack if the view has not been opened yet or 
+                    // the underlying view component was added
+                    relayoutFrame(!m_wasOpened || m_componentSet);
+                }
             }
         } 
     }
