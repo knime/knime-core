@@ -105,7 +105,7 @@ public final class MultiLineStringValueRenderer extends
         // font of the JTable; we do not want this here so we overwrite it
         if (font == null) {
             super.setFont(m_currentFont);
-        } else if (m_currentFont.equals(font)) {
+        } else if (font.equals(m_currentFont)) {
             return;
         } else {
             m_currentFont =
