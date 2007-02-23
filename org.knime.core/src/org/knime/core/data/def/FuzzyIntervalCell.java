@@ -94,7 +94,7 @@ public final class FuzzyIntervalCell extends DataCell implements
      * core.
      * 
      * @param minSupp Minimum support value.
-     * @param minCore Minumum core value.
+     * @param minCore Minimum core value.
      * @param maxCore Maximum core value.
      * @param maxSupp Maximum support value.
      * @throws IllegalArgumentException If not <code>a <= b <= c <= d</code>.
