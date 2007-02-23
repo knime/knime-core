@@ -139,7 +139,7 @@ public class AppendedRowsTable implements DataTable {
      * @return an iterator which reacts on cancel events
      * @see AppendedRowsIterator.RuntimeCanceledExecutionException
      */
-    public RowIterator iterator(final ExecutionMonitor exec,
+    public AppendedRowsIterator iterator(final ExecutionMonitor exec,
             final int totalRowCount) {
         return new AppendedRowsIterator(m_tables, m_spec, m_suffix, exec,
                 totalRowCount);
