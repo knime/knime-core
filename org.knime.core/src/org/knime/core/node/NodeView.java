@@ -364,43 +364,46 @@ public abstract class NodeView {
      * data label is set. This method will invoke the abstract
      * <code>#modelChanged()</code> method.
      */
-    synchronized final void callModelChanged() {
-        final Runnable run = new Runnable() {
-            public void run() {
-                // set new component into derived view
-                setComponent(m_comp);
-            }
-        };
-        // if event dispatch thread, run directly
-        if (SwingUtilities.isEventDispatchThread()) {
-            run.run();
-        } else {
-            try {
-                // otherwise queue into event dispatch thread
-                SwingUtilities.invokeAndWait(run);
-            } catch (InvocationTargetException ite) {
-            	m_logger.error("Exception during view update", ite);
-            } catch (InterruptedException ie) {
-            	m_logger.error(Thread.currentThread() + " was interrupted", ie);
-            } finally {
+    final void callModelChanged() {
+        synchronized (m_nodeModel) {
+            final Runnable run = new Runnable() {
+                public void run() {
+                    // set new component into derived view
+                    setComponent(m_comp);
+                }
+            };
+            // if event dispatch thread, run directly
+            if (SwingUtilities.isEventDispatchThread()) {
+                run.run();
+            } else {
                 try {
-                    // CALL abstract model changed
-                    modelChanged();                        
-                } catch (NullPointerException npe) {
-                    m_logger.coding("NodeView.modelChanged() causes "
-                           + "NullPointerException during notification of a "
-                           + "changed model, reason: " + npe.getMessage(), npe);
-                } catch (Exception e) {
-                    m_logger.error("NodeView.modelChanged() causes "
-                           + "Exception during notification of a changed "
-                           + "model, reason: " + e.getMessage(), e);
-                } finally {
-                    // repaint and pack if the view has not been opened yet or 
-                    // the underlying view component was added
-                    relayoutFrame(!m_wasOpened || m_componentSet);
+                    // otherwise queue into event dispatch thread
+                    SwingUtilities.invokeAndWait(run);
+                } catch (InvocationTargetException ite) {
+                	m_logger.error("Exception during view update", ite);
+                } catch (InterruptedException ie) {
+                	m_logger.error(Thread.currentThread() 
+                            + " was interrupted", ie);
                 }
             }
-        } 
+            try {
+                // CALL abstract model changed
+                modelChanged();   
+            } catch (NullPointerException npe) {
+                m_logger.coding("NodeView.modelChanged() causes "
+                       + "NullPointerException during notification of a "
+                       + "changed model, reason: " + npe.getMessage(), npe);
+            } catch (Exception e) {
+                m_logger.error("NodeView.modelChanged() causes "
+                       + "Exception during notification of a changed "
+                       + "model, reason: " + e.getMessage(), e);
+            } finally {
+                // repaint and pack if the view has not been opened yet or 
+                // the underlying view component was added
+                // ensured to happen in the EDT thread
+                relayoutFrame(!m_wasOpened || m_componentSet);
+            }
+        }
     }
 
     /**
@@ -633,12 +636,29 @@ public abstract class NodeView {
      *        just validated and repainted
      */
     private void relayoutFrame(final boolean doPack) {
-        if (doPack) {
-            m_frame.pack();
+        final Runnable run = new Runnable() {
+            public void run() {
+                if (doPack) {
+                    m_frame.pack();
+                } else {
+                    m_frame.invalidate();
+                    m_frame.validate();
+                    m_frame.repaint();
+                }
+            }
+        };
+        // if event dispatch thread, run directly
+        if (SwingUtilities.isEventDispatchThread()) {
+            run.run();
         } else {
-            m_frame.invalidate();
-            m_frame.validate();
-            m_frame.repaint();
+            try {
+                // otherwise queue into event dispatch thread
+                SwingUtilities.invokeAndWait(run);
+            } catch (InvocationTargetException ite) {
+                m_logger.error("Exception during view update", ite);
+            } catch (InterruptedException ie) {
+                m_logger.error(Thread.currentThread() + " was interrupted", ie);
+            }
         }   
     }
 

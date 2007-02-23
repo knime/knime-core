@@ -238,10 +238,12 @@ public abstract class NodeModel {
      * @param view The view to register.
      */
     final void registerView(final NodeView view) {
-        assert view != null;
-        m_views.add(view);
-        m_logger.debug("Registering view at  model (total count "
-                + m_views.size() + ")");
+        synchronized (m_views) {
+            assert view != null;
+            m_views.add(view);
+            m_logger.debug("Registering view at  model (total count "
+                    + m_views.size() + ")");
+        }
     }
 
     /**
@@ -250,13 +252,15 @@ public abstract class NodeModel {
      * @param view The view to unregister.
      */
     final void unregisterView(final NodeView view) {
-        assert view != null;
-        boolean success = m_views.remove(view);
-        if (success) {
-            m_logger.debug("Unregistering view from model (" + m_views.size()
-                    + " remaining).");
-        } else {
-            m_logger.debug("Can't remove view from model, not registered.");
+        synchronized (m_views) {
+            assert view != null;
+            boolean success = m_views.remove(view);
+            if (success) {
+                m_logger.debug("Unregistering view from model (" 
+                        + m_views.size() + " remaining).");
+            } else {
+                m_logger.debug("Can't remove view from model, not registered.");
+            }
         }
     }
 
@@ -264,16 +268,20 @@ public abstract class NodeModel {
      * Unregisters all views from the model.
      */
     final void unregisterAllViews() {
-        m_logger.debug("Removing all (" + m_views.size()
-                + ") views from model.");
-        m_views.clear();
+        synchronized (m_views) {
+            m_logger.debug("Removing all (" + m_views.size()
+                    + ") views from model.");
+            m_views.clear();
+        }
     }
 
     /**
      * @return All registered views.
      */
     final Set<NodeView> getViews() {
-        return Collections.unmodifiableSet(m_views);
+        synchronized (m_views) {
+            return Collections.unmodifiableSet(m_views);
+        }
     }
 
     /**
@@ -579,15 +587,17 @@ public abstract class NodeModel {
      * called by functions of the abstract class that modify the model (like
      * <code>#executeModel()</code> and <code>#resetModel()</code> ).
      */
-    protected synchronized void stateChanged() {
-        for (NodeView view : m_views) {
-            try {
-                view.callModelChanged();
-            } catch (Exception e) {
-                setWarningMessage("View [" + view.getViewName() 
-                        + "] could not be open, reason: " + e.getMessage());
-                m_logger.debug("View [" + view.getViewName() 
-                        + "] could not be open", e);
+    protected final void stateChanged() {
+        synchronized (m_views) {
+            for (NodeView view : m_views) {
+                try {
+                    view.callModelChanged();
+                } catch (Exception e) {
+                    setWarningMessage("View [" + view.getViewName() 
+                            + "] could not be open, reason: " + e.getMessage());
+                    m_logger.debug("View [" + view.getViewName() 
+                            + "] could not be open", e);
+                }
             }
         }
     }
@@ -603,8 +613,10 @@ public abstract class NodeModel {
      * @param arg The argument you want to pass.
      */
     protected final void notifyViews(final Object arg) {
-        for (NodeView view : m_views) {
-            view.updateModel(arg);
+        synchronized (m_views) {
+            for (NodeView view : m_views) {
+                view.updateModel(arg);
+            }
         }
     }
 
