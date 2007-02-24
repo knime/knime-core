@@ -105,7 +105,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
      * @param tSpec table spec containing column specs to select from
      * @throws NotConfigurableException it tspec is <code>null</code> or emtpy
      */
-    ColumnRowFilterPanel(final DataTableSpec tSpec)
+    public ColumnRowFilterPanel(final DataTableSpec tSpec)
             throws NotConfigurableException {
 
         super(400, 350);
