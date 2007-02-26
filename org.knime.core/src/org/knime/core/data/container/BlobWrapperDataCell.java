@@ -30,7 +30,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 
 /**
- * Wrapper for {@link BlobDataCell}. We explicitely wrap those cells in this
+ * Wrapper for {@link BlobDataCell}. We explicitly wrap those cells in this
  * package to delay the access to the latest time possible (when someone
  * calls getCell() on the row).
  * @author Bernd Wiswedel, University of Konstanz
