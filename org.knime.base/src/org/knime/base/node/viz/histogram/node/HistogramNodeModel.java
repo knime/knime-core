@@ -28,8 +28,7 @@ import java.awt.Color;
 import java.io.File;
 
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataRow;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -74,7 +73,7 @@ public class HistogramNodeModel extends NodeModel {
     static final String CFGKEY_X_COLNAME = "HistogramXColName";
 
     /**The histogram data model which holds all information.*/
-    private FixedHistogramDataModel m_model;
+    private InteractiveHistogramDataModel m_model;
     
     private DataTableSpec m_tableSpec;
     
@@ -274,8 +273,7 @@ public class HistogramNodeModel extends NodeModel {
             throw new IllegalArgumentException(
                     "No numeric column found in table specification");
         }
-        final int aggrColIdx = aggrColumn.getColumnIndex();
-        m_model = new FixedHistogramDataModel(xColSpec, noOfRows, aggrColumn);
+        m_model = new InteractiveHistogramDataModel(m_tableSpec, noOfRows);
         if (dataTable != null) {
             exec.setMessage("Adding data rows to histogram...");
             final double progressPerRow = 1.0 / noOfRows;
@@ -284,12 +282,7 @@ public class HistogramNodeModel extends NodeModel {
             for (int i = 0; i < noOfRows && rowIterator.hasNext();
                 i++) {
                 final DataRow row = rowIterator.next();
-                final Color color = 
-                    m_tableSpec.getRowColor(row).getColor(false, false);
-                final FixedHistogramDataRow histoRow = new FixedHistogramDataRow(
-                        row.getKey(), color, row.getCell(xColIdx),
-                        row.getCell(aggrColIdx));
-                m_model.addDataRow(histoRow);
+                m_model.addDataRow(row);
                 progress += progressPerRow;
                 exec.setProgress(progress, "Adding data rows to histogram...");
                 exec.checkCanceled();
@@ -309,7 +302,7 @@ public class HistogramNodeModel extends NodeModel {
     /**
      * @return the histogram data model
      */
-    protected FixedHistogramDataModel getHistogramDataModel() {
+    protected InteractiveHistogramDataModel getHistogramDataModel() {
         return m_model;
     }
     /**

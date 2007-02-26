@@ -22,7 +22,11 @@
 package org.knime.base.node.viz.histogram.impl.fixed;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.HistogramVizModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -36,7 +40,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
+public class FixedHistogramPlotter extends AbstractHistogramPlotter {
 
     private static final long serialVersionUID = -3264294894462201355L;
 
@@ -50,11 +54,37 @@ public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
      * @param tableSpec the table specification
      * @param handler the hilite handler from the input port
      */
-    public FixedColumnHistogramPlotter(
-            final FixedColumnHistogramProperties histogramProps,
-            final FixedHistogramDataModel dataModel, final DataTableSpec tableSpec,
-            final HiLiteHandler handler) {
+    public FixedHistogramPlotter(
+            final FixedHistogramProperties histogramProps,
+            final FixedHistogramDataModel dataModel, 
+            final DataTableSpec tableSpec, final HiLiteHandler handler) {
         super(histogramProps, tableSpec, handler);
-        setHistogramDataModel(dataModel);
+        final FixedHistogramVizModel vizModel = new FixedHistogramVizModel(
+                dataModel.getRowColors(),
+                HistogramVizModel.DEFAULT_NO_OF_BINS, 
+                AggregationMethod.getDefaultMethod(), 
+                HistogramLayout.getDefaultLayout(),
+                dataModel.getSortedRows(), dataModel.getXColumnSpec(),
+                dataModel.getAggrColumns());
+        setHistogramVizModel(vizModel);
+    }
+    
+    /**
+     * @param dataModel the new {@link FixedHistogramDataModel}
+     */
+    public void setHistogramDataModel(
+            final FixedHistogramDataModel dataModel) {
+        if (dataModel == null) {
+            throw new IllegalArgumentException(
+                    "Histogram data model shouldn't be null");
+        }
+        final FixedHistogramVizModel vizModel = new FixedHistogramVizModel(
+                dataModel.getRowColors(),
+                HistogramVizModel.DEFAULT_NO_OF_BINS, 
+                AggregationMethod.getDefaultMethod(), 
+                HistogramLayout.getDefaultLayout(),
+                dataModel.getSortedRows(), dataModel.getXColumnSpec(),
+                dataModel.getAggrColumns());
+        setHistogramVizModel(vizModel);
     }
 }

@@ -57,9 +57,9 @@ public class BinDataModel {
     
     private final DataCell m_xAxisCaptionCell;
     
-    private final double m_lowerBound;
+    private final Double m_lowerBound;
     
-    private final double m_upperBound;
+    private final Double m_upperBound;
     
     private final Map<Color, BarDataModel> m_bars = 
         new HashMap<Color, BarDataModel>();
@@ -230,16 +230,16 @@ public class BinDataModel {
     }
     
     /**
-     * @return the lower bound of this bin
+     * @return the lower bound of this bin could be <code>null</code>
      */
-    public double getLowerBound() {
+    public Double getLowerBound() {
         return m_lowerBound;
     }
     
     /**
-     * @return the higher bound of this bin
+     * @return the higher bound of this bin could be <code>null</code>
      */
-    public double getUpperBound() {
+    public Double getUpperBound() {
         return m_upperBound;
     }
     

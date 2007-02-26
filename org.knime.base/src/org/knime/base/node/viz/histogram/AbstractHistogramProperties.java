@@ -28,9 +28,9 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.List;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -634,7 +634,7 @@ public abstract class AbstractHistogramProperties extends
      * @param yColumns preselected y column names
      */
     public void updateColumnSelection(final DataTableSpec spec,
-            final String xColName, final List<ColorColumn> yColumns) {
+            final String xColName, final Collection<ColorColumn> yColumns) {
         try {
             m_xCol.setEnabled(true);
             m_xCol.update(spec, xColName);
@@ -647,7 +647,7 @@ public abstract class AbstractHistogramProperties extends
                 LOGGER.warn(er);
                 throw new IllegalArgumentException(er);
             }
-            m_yCol.update(spec, yColumns.get(0).getColumnName());
+            m_yCol.update(spec, yColumns.iterator().next().getColumnName());
             if (m_yCol.getModel().getSize() > 0) {
                 m_yCol.setEnabled(true);
             }

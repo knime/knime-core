@@ -42,8 +42,6 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.HistogramVizModel;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.Axis;
@@ -1014,34 +1012,22 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         m_histoData = null;
     }
 
-    /**
-     * @param histoData the new {@link AbstractHistogramDataModel}
-     */
-    public void setHistogramDataModel(
-            final FixedHistogramDataModel histoData) {
-        if (histoData == null) {
-            throw new IllegalArgumentException(
-                    "Histogram data model shouldn't be null");
+    public void setHistogramVizModel(final HistogramVizModel vizModel) {
+        if (vizModel == null) {
+            throw new IllegalArgumentException("Viz model shouldn't be null");
         }
-        m_histoData = new FixedHistogramVizModel(
-                histoData.getRowColors(),
-                HistogramVizModel.DEFAULT_NO_OF_BINS, 
-                AggregationMethod.getDefaultMethod(), 
-                HistogramLayout.getDefaultLayout(),
-                histoData.getSortedRows(), histoData.getXColumnSpec(),
-                histoData.getAggrColumns());
+        m_histoData = vizModel;
         if (m_tableSpec == null) {
             throw new IllegalArgumentException("Internal exception:"
                     + " Table specification shouldn't be null.");
         }
-        
         //after setting all properties set the coordinate axis as well
         setXCoordinates();
         setYCoordinates();
         // select the x column also in the select box of the properties
         // panel
        m_histoProps.updateColumnSelection(m_tableSpec, 
-               histoData.getXColumnName(), histoData.getAggrColumns());
+               vizModel.getXColumnName(), vizModel.getAggrColumns());
     }
 
     /**

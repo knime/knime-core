@@ -79,6 +79,13 @@ public class InteractiveHistogramDataModel {
     }
     
     /**
+     * @return the dataRows
+     */
+    public List<DataRow> getDataRows() {
+        return m_dataRows;
+    }
+    
+    /**
      * @param idx the index of the column
      * @return the {@link DataColumnSpec} of the column with the given index
      */

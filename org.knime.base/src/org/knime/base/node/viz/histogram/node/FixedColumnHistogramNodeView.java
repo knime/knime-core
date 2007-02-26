@@ -26,8 +26,8 @@ package org.knime.base.node.viz.histogram.node;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
-import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramPlotter;
-import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramProperties;
+import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramPlotter;
+import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramProperties;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
@@ -42,7 +42,7 @@ public class FixedColumnHistogramNodeView extends NodeView {
     
     private final FixedColumnHistogramNodeModel m_nodeModel;
     
-    private FixedColumnHistogramPlotter m_plotter;
+    private FixedHistogramPlotter m_plotter;
 
     /**
      * Creates a new view instance for the histogram node.
@@ -82,10 +82,10 @@ public class FixedColumnHistogramNodeView extends NodeView {
             return;
         }
         if (m_plotter == null) {
-            final FixedColumnHistogramProperties props =
-                new FixedColumnHistogramProperties(
+            final FixedHistogramProperties props =
+                new FixedHistogramProperties(
                         AggregationMethod.COUNT);
-            m_plotter = new FixedColumnHistogramPlotter(props, histogramModel, 
+            m_plotter = new FixedHistogramPlotter(props, histogramModel, 
                     tableSpec, m_nodeModel.getInHiLiteHandler(0));
             // add the hilite menu to the menu bar of the node view
             getJMenuBar().add(m_plotter.getHiLiteMenu());

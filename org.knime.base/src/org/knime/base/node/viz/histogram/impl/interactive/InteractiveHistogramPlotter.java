@@ -23,13 +23,10 @@ package org.knime.base.node.viz.histogram.impl.interactive;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Iterator;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
-import org.knime.core.data.DataRow;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -54,8 +51,6 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
     
     private static final long serialVersionUID = -893697601218801524L;
     
-    /** <code>DataTable</code> which holds the data rows. */
-//    private final Collection<DataRow> m_data;
     
     /**
      * Creates a new PlotterScrolling pane and associates it with the passed
@@ -70,10 +65,10 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
      */
     public InteractiveHistogramPlotter(
             final InteractiveHistogramProperties histogramProps,
-            final FixedHistogramDataModel dataModel, final DataTableSpec tableSpec,
-            final HiLiteHandler handler, final Iterator<DataRow> rows) {
+            final InteractiveHistogramDataModel dataModel, 
+            final DataTableSpec tableSpec, final HiLiteHandler handler) {
         super(histogramProps, tableSpec, handler);
-        setHistogramDataModel(dataModel);
+        
         histogramProps.getXColSelectBox().addActionListener(
                 new ActionListener() {
                     public void actionPerformed(final ActionEvent e) {
@@ -179,27 +174,13 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
 //        }
         return;
     }
-    
+
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter
-     * #getHistogramVizModel()
+     * @param dataModel
      */
-    @Override
-    public FixedHistogramVizModel getHistogramVizModel() {
-//        FixedHistogramVizModel histoData = super.getHistogramVizModel();
-//        if (histoData == null) {
-//            histoData = new HistogramDataModel(getDataTableSpec(), 
-//                    getXColName(), getAggregationColName(), 
-//                    getAggregationMethod());
-//            if (m_data != null) {
-//                for (Iterator<DataRow> iter = m_data.iterator(); 
-//                    iter.hasNext();) {
-//                    histoData.addDataRow(iter.next());
-//                }
-//            }
-//            super.setHistogramDataModel(histoData);
-//        }
-//        return histoData;
-        return null;
+    public void setHistogramDataModel(
+            final InteractiveHistogramDataModel dataModel) {
+        
     }
+    
 }

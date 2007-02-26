@@ -21,7 +21,7 @@
  */
 package org.knime.base.node.viz.histogram.impl.fixed;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
 import org.knime.base.node.viz.histogram.AggregationMethod;
@@ -43,7 +43,7 @@ import org.knime.core.data.DataTableSpec;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedColumnHistogramProperties extends 
+public class FixedHistogramProperties extends 
     AbstractHistogramProperties {
 
     private static final long serialVersionUID = -6177238900813927896L;
@@ -53,7 +53,7 @@ public class FixedColumnHistogramProperties extends
      * 
      * @param aggrMethod the aggregation method which should be set
      */
-    public FixedColumnHistogramProperties(final AggregationMethod aggrMethod) {
+    public FixedHistogramProperties(final AggregationMethod aggrMethod) {
         super(aggrMethod);
         //disable the select boxes
         disableSelectBoxes();
@@ -77,7 +77,7 @@ public class FixedColumnHistogramProperties extends
      */
     @Override
     public void updateColumnSelection(final DataTableSpec spec, 
-            final String xColName, final List<ColorColumn> yColumns) {
+            final String xColName, final Collection<ColorColumn> yColumns) {
         super.updateColumnSelection(spec, xColName, yColumns);
         //disable the column select boxes
         disableSelectBoxes();
