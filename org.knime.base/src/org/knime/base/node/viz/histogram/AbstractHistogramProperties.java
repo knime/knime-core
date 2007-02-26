@@ -130,9 +130,9 @@ public abstract class AbstractHistogramProperties extends
 
     private final JSlider m_barWidth;
 
-    private final JSlider m_noOfBars;
+    private final JSlider m_noOfBins;
 
-    private final JLabel m_noOfBarsLabel;
+    private final JLabel m_noOfBinsLabel;
 
     private final ButtonGroup m_aggrMethButtonGrp;
 
@@ -178,15 +178,15 @@ public abstract class AbstractHistogramProperties extends
         // histogram settings panel
         m_barWidth = new JSlider(0, 20, 10);
         m_barWidth.setEnabled(false);
-        m_noOfBars = new JSlider(1, 20, 10);
-        m_noOfBarsLabel = new JLabel();
-        m_noOfBars.addChangeListener(new ChangeListener() {
+        m_noOfBins = new JSlider(1, 20, 10);
+        m_noOfBinsLabel = new JLabel();
+        m_noOfBins.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 final JSlider source = (JSlider)e.getSource();
                 updateNoOfBarsText(source.getValue());
             }
         });
-        m_noOfBars.setEnabled(false);
+        m_noOfBins.setEnabled(false);
 
         // set the aggregation method radio buttons
         final JRadioButton countMethod = new JRadioButton(
@@ -501,13 +501,13 @@ public abstract class AbstractHistogramProperties extends
         noOfBarsLabelBox.add(Box.createHorizontalGlue());
         noOfBarsLabelBox.add(noOfBarsLabel);
         noOfBarsLabelBox.add(Box.createHorizontalStrut(10));
-        noOfBarsLabelBox.add(m_noOfBarsLabel);
+        noOfBarsLabelBox.add(m_noOfBinsLabel);
         noOfBarsLabelBox.add(Box.createHorizontalGlue());
         barNoBox.add(noOfBarsLabelBox);
         // the number of bars slider box
         final Box noOfBarsSliderBox = Box.createHorizontalBox();
         noOfBarsSliderBox.add(Box.createHorizontalGlue());
-        noOfBarsSliderBox.add(m_noOfBars);
+        noOfBarsSliderBox.add(m_noOfBins);
         noOfBarsSliderBox.add(Box.createHorizontalGlue());
         barNoBox.add(noOfBarsSliderBox);
         // the box with the select boxes and apply button
@@ -703,24 +703,24 @@ public abstract class AbstractHistogramProperties extends
 
         // set the number of bars slider
         final HistogramVizModel histoData = plotter.getHistogramVizModel();
-        int maxNoOfBars = plotter.getMaxNoOfBars();
-        final int currentNoOfBars = histoData.getNoOfBins();
-        if (currentNoOfBars > maxNoOfBars) {
-            maxNoOfBars = currentNoOfBars;
+        int maxNoOfBins = plotter.getMaxNoOfBins();
+        final int currentNoOfBins = histoData.getNoOfBins();
+        if (currentNoOfBins > maxNoOfBins) {
+            maxNoOfBins = currentNoOfBins;
         }
         // update the number of bar values
-        m_noOfBars.setMaximum(maxNoOfBars);
-        m_noOfBars.setValue(currentNoOfBars);
-        m_noOfBarsLabel.setText(Integer.toString(currentNoOfBars));
-        AbstractHistogramProperties.setSliderLabels(m_noOfBars, 2, true);
+        m_noOfBins.setMaximum(maxNoOfBins);
+        m_noOfBins.setValue(currentNoOfBins);
+        m_noOfBinsLabel.setText(Integer.toString(currentNoOfBins));
+        AbstractHistogramProperties.setSliderLabels(m_noOfBins, 2, true);
         // disable this noOfBars slider for nominal values
         if (!histoData.isBinNominal()) {
-            m_noOfBars.setEnabled(true);
-            m_noOfBars.setToolTipText(
+            m_noOfBins.setEnabled(true);
+            m_noOfBins.setToolTipText(
                     AbstractHistogramProperties.NO_OF_BARS_TOOLTIP);
         } else {
-            m_noOfBars.setEnabled(false);
-            m_noOfBars
+            m_noOfBins.setEnabled(false);
+            m_noOfBins
                     .setToolTipText("Only available for numerical properties");
         }
         // set the aggregation method if it has changed
@@ -758,8 +758,8 @@ public abstract class AbstractHistogramProperties extends
     /**
      * @return the current no of bars
      */
-    public int getNoOfBars() {
-        return m_noOfBars.getValue();
+    public int getNoOfBins() {
+        return m_noOfBins.getValue();
     }
 
     /**
@@ -849,7 +849,7 @@ public abstract class AbstractHistogramProperties extends
      * @param noOfBars the number of bars
      */
     protected void updateNoOfBarsText(final int noOfBars) {
-        m_noOfBarsLabel.setText(Integer.toString(noOfBars));
+        m_noOfBinsLabel.setText(Integer.toString(noOfBars));
     }
 
     /**
@@ -979,7 +979,7 @@ public abstract class AbstractHistogramProperties extends
      * @param listener adds the listener to the number of bars slider
      */
     protected void addNoOfBarsChangeListener(final ChangeListener listener) {
-        m_noOfBars.addChangeListener(listener);
+        m_noOfBins.addChangeListener(listener);
     }
 
     /**

@@ -186,8 +186,8 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
      */
     @Override
     public FixedHistogramVizModel getHistogramVizModel() {
-        FixedHistogramVizModel histoData = super.getHistogramVizModel();
-        if (histoData == null) {
+//        FixedHistogramVizModel histoData = super.getHistogramVizModel();
+//        if (histoData == null) {
 //            histoData = new HistogramDataModel(getDataTableSpec(), 
 //                    getXColName(), getAggregationColName(), 
 //                    getAggregationMethod());
@@ -198,7 +198,8 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
 //                }
 //            }
 //            super.setHistogramDataModel(histoData);
-        }
-        return histoData;
+//        }
+//        return histoData;
+        return null;
     }
 }

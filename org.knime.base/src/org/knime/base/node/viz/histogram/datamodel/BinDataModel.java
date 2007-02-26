@@ -29,7 +29,6 @@ import java.awt.Color;
 import java.awt.Rectangle;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
@@ -96,19 +95,24 @@ public class BinDataModel {
      * columns
      */
     protected void addDataRow(final DataCell id, final Color rowColor, 
-            final List<ColorColumn> columns, final DataCell... aggrVals) {
+            final Collection<ColorColumn> columns, final DataCell... aggrVals) {
 //        final DataCell[] aggrVals = row.getAggrVals();
 //        final DataCell id = row.getRowKey().getId();
 //        final Color rowColor = row.getColor();
-        for (int i = 0, length = aggrVals.length; i < length; i++) {
-            final DataCell cell = aggrVals[i];
-            final Color barColor = columns.get(i).getColor();
+        if (columns.size() != aggrVals.length) {
+            throw new IllegalArgumentException(
+                    "Columns and value should be of equal size");
+        }
+        int i = 0;
+        for (ColorColumn column : columns) {
+            final DataCell cell = aggrVals[i++];
+            final Color barColor = column.getColor();
             BarDataModel bar = m_bars.get(barColor);
             if (bar == null) {
                 bar = new BarDataModel(barColor);
                 m_bars.put(barColor, bar);
             }
-            bar.addDataRow(rowColor, id, cell);
+            bar.addDataRow(rowColor, id, cell);   
         }
         m_rowCounter++;
     }
@@ -293,7 +297,7 @@ public class BinDataModel {
     public void setBinRectangle(final Rectangle binRectangle,
             final AggregationMethod aggrMethod, final HistogramLayout layout,
             final int baseLine, final SortedSet<Color> barElementColors, 
-            final List<ColorColumn> aggrColumns) {
+            final Collection<ColorColumn> aggrColumns) {
         m_binRectangle = binRectangle;
         setBarRectangle(aggrMethod, layout, baseLine, barElementColors, 
                 aggrColumns);
@@ -312,7 +316,7 @@ public class BinDataModel {
     private void setBarRectangle(final AggregationMethod aggrMethod, 
             final HistogramLayout layout, final int baseLine, 
             final SortedSet<Color> barElementColors, 
-            final List<ColorColumn> aggrColumns) {
+            final Collection<ColorColumn> aggrColumns) {
         final double totalWidth = m_binRectangle.getWidth();
         final int noOfBars = aggrColumns.size();
         final int barWidth = 

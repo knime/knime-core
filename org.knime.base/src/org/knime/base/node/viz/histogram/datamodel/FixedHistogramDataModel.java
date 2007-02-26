@@ -59,7 +59,7 @@ public class FixedHistogramDataModel {
     
     private final List<ColorColumn> m_aggrColumns;
     
-    private final SortedSet<Color> m_barElementColors = 
+    private final SortedSet<Color> m_rowColors = 
         new TreeSet<Color>(new HSBColorComparator());
 
     /**Constructor for class HistogramDataModel.
@@ -114,8 +114,8 @@ public class FixedHistogramDataModel {
         m_dataRows.add(row);
         m_rowsSorted = false;
         final Color color = row.getColor();
-        if (!m_barElementColors.contains(color)) {
-            m_barElementColors.add(color);
+        if (!m_rowColors.contains(color)) {
+            m_rowColors.add(color);
         }
 //        addDataRow2Bin(0, row);
     }
@@ -146,8 +146,8 @@ public class FixedHistogramDataModel {
      * set for one attribute in the ColorManager node.
      * THIS IS AN UNMODIFIABLE {@link SortedSet}!
      */
-    public SortedSet<Color> getBarElementColors() {
-        return Collections.unmodifiableSortedSet(m_barElementColors);
+    public SortedSet<Color> getRowColors() {
+        return Collections.unmodifiableSortedSet(m_rowColors);
     }
     
     /**

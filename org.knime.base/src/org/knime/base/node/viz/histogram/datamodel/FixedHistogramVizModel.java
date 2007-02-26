@@ -25,10 +25,13 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
+import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
@@ -45,60 +48,61 @@ import org.knime.core.node.NodeLogger;
  * This class holds all visualization data of a histogram. 
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedHistogramVizModel extends 
-HistogramVizModel {
+public class FixedHistogramVizModel extends HistogramVizModel {
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(FixedHistogramVizModel.class);
 
-    private final FixedHistogramDataModel m_model;
-    
     private final List<FixedHistogramDataRow> m_dataRows;
 
-    private final List<ColorColumn> m_aggrColumns;
+    private final Collection<ColorColumn> m_aggrColumns;
     
     private final DataColumnSpec m_xColSpec;
     
+    private final List<BinDataModel> m_bins = new ArrayList<BinDataModel>(50);
+
+    private int m_noOfBins;
+    
+    
     /**
      * Constructor for class HistogramVizModel.
-     * @param model the {@link FixedHistogramDataModel} to use
+     * @param rowColors all possible colors the user has defined for a row
      * @param noOfBins the number of bins to create
      * @param aggrMethod the {@link AggregationMethod} to use
      * @param layout {@link HistogramLayout} to use
+     * @param rows the {@link FixedHistogramDataRow}
+     * @param xColSpec the {@link DataColumnSpec} of the x column
+     * @param aggrColumns the selected aggregation columns
      */
-    public FixedHistogramVizModel(final FixedHistogramDataModel model,
+    public FixedHistogramVizModel(final SortedSet<Color> rowColors,
             final int noOfBins, final AggregationMethod aggrMethod,
-            final HistogramLayout layout) {
-        super(model.getBarElementColors());
+            final HistogramLayout layout, 
+            final List<FixedHistogramDataRow> rows,
+            final DataColumnSpec xColSpec, 
+            final List<ColorColumn> aggrColumns) {
+        super(rowColors, aggrMethod, layout);
         if (aggrMethod == null) {
             throw new IllegalArgumentException("No aggregation method defined");
-        }
-        if (model == null) {
-            throw new IllegalArgumentException("Model shouldn't ba null");
         }
         if (layout == null) {
             throw new IllegalArgumentException("No layout defined");
         }
-        m_model = model;
-        m_aggrColumns = m_model.getAggrColumns();
-        m_dataRows = m_model.getSortedRows();
-        m_xColSpec = m_model.getXColumnSpec(); 
         m_noOfBins = noOfBins;
-        m_aggrMethod = aggrMethod;
-        m_layout = layout;
-        
-        if (m_model.getXColumnSpec().getType().isCompatible(
+        m_aggrColumns = aggrColumns;
+        m_dataRows = rows;
+        m_xColSpec = xColSpec;
+        if (m_xColSpec.getType().isCompatible(
                 DoubleValue.class)) {
-            m_binNominal = false;
-//             createIntervalBins();
+            setBinNominal(false);
         } else {
-            m_binNominal = true;
-//            createNominalBins();
+            setBinNominal(true);
         }
         createBins();
     }
 
+
     /**
-     * @return the x column name
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * HistogramVizModel#getXColumnName()
      */
     @Override
     public String getXColumnName() {
@@ -106,30 +110,60 @@ HistogramVizModel {
     }
 
     /**
-     * @return the x column specification
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * HistogramVizModel#getXColumnSpec()
      */
     @Override
     public DataColumnSpec getXColumnSpec() {
         return m_xColSpec;
     }
+
     /**
-     * @return the aggrColumns
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * HistogramVizModel#getAggrColumns()
      */
     @Override
-    public List<ColorColumn> getAggrColumns() {
+    public Collection<ColorColumn> getAggrColumns() {
         return m_aggrColumns;
+    }
+    
+    /**
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * HistogramVizModel#getNoOfBins()
+     */
+    @Override
+    public int getNoOfBins() {
+        return m_noOfBins;
     }
 
     /**
-     * @return all {@link BinDataModel} objects of this histogram including
-     * the missing value bin if the showMissingValue bin variable is set to
-     * <code>true</code>
+     * @param noOfBins the new number of bins to create
+     * @return <code>true</code> if the number of bins has changed
+     */
+    @Override
+    public boolean setNoOfBins(final int noOfBins) {
+        if (isBinNominal()) {
+            throw new IllegalArgumentException(
+                    "Not possible for nominal binning");
+        }
+        if (m_noOfBins == noOfBins) {
+            return false;
+        }
+        m_noOfBins = noOfBins;
+        createBins();
+        return true;
+    }
+
+   
+    /**
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * HistogramVizModel#getBins()
      */
     @Override
     public Collection<BinDataModel> getBins() {
         final BinDataModel missingValueBin = getMissingValueBin();
         if (missingValueBin != null) {
-            if (m_showMissingValBin) {
+            if (isShowMissingValBin()) {
                 final int missingValBinIdx = m_bins.size() - 1;
                 if (m_bins.get(missingValBinIdx) != missingValueBin) {
                     m_bins.add(missingValueBin);
@@ -151,12 +185,11 @@ HistogramVizModel {
      * Creates the bins for the currently set binning information
      * and adds all data rows to the corresponding bin.
      */
-    @Override
-    protected void createBins() {
+    private void createBins() {
         LOGGER.debug("Entering createBins() of class HistogramVizModel.");
         final long startBinTimer = System.currentTimeMillis();
         
-        if (m_binNominal) {
+        if (isBinNominal()) {
             createNominalBins();
         } else {
             //create the new bins
@@ -219,7 +252,6 @@ HistogramVizModel {
         
         // remove the old bar information
         m_bins.clear();
-
         //start the binning
         if (m_noOfBins < 1) {
             m_noOfBins = FixedHistogramVizModel.DEFAULT_NO_OF_BINS;
@@ -264,10 +296,11 @@ HistogramVizModel {
      * @param row the data row to add
      * @return the index of the bin where the row was added
      */
-    private int addDataRow2Bin(final int startBin, final FixedHistogramDataRow row) {
+    private int addDataRow2Bin(final int startBin, 
+            final FixedHistogramDataRow row) {
         final DataCell xVal = row.getXVal();
         if (xVal.isMissing()) {
-            m_missingValueBin.addDataRow(row.getRowKey().getId(), 
+            getMissingValueBin().addDataRow(row.getRowKey().getId(), 
                     row.getColor(), m_aggrColumns, row.getAggrVals());
             return startBin;
         }
@@ -275,7 +308,7 @@ HistogramVizModel {
             throw new IllegalArgumentException("Start bin shouldn't be bigger "
                     + "than number of bins");
         }
-        if (m_binNominal) {
+        if (isBinNominal()) {
             return addDataRow2NominalBin(startBin, row, xVal);
         }
         if (!xVal.getType().isCompatible(DoubleValue.class)) {
