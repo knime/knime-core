@@ -52,6 +52,8 @@ public class KnimeTestRegistry extends TestSuite {
     
     private static final String PROPERTY_NAME = "testcase";
     
+    private static final String PROPERTY_DELLOG = "cleanHomeDir";
+    
     private static NodeLogger m_logger =
             NodeLogger.getLogger(KnimeTestRegistry.class);
 
@@ -61,6 +63,11 @@ public class KnimeTestRegistry extends TestSuite {
      * pattern (regexp) used to select testcases to run 
      */
     private static String m_pattern = null;
+    
+    /**
+     * flag to delete log file before run
+     */
+    private static boolean m_deleteLog = false;
     
     /**
      * 
@@ -89,11 +96,18 @@ public class KnimeTestRegistry extends TestSuite {
     static {
         m_registry = new ArrayList<KnimeTestCase>();
         m_pattern = System.getProperty(PROPERTY_NAME);
+        String delLog = System.getProperty(PROPERTY_DELLOG, "false");
+        if (delLog.equalsIgnoreCase("true") || delLog.equalsIgnoreCase("yes")) {
+            m_deleteLog = true;
+        }
         if ((m_pattern == null) || (m_pattern.length() < 1)) {
             m_pattern = JOptionPane.showInputDialog(null, 
             "Enter name (regular expression) of testcase(s) to run: \n"
-                    + "(Cancel runs all.)");
+                    + "(Empty input runs all.)");
         } 
+        if ((m_pattern != null) && (m_pattern.length() == 0)) {
+            m_pattern = ".*";
+        }
         try {
             
             // the workflows to run are at the root dir of the project
@@ -118,8 +132,18 @@ public class KnimeTestRegistry extends TestSuite {
                         + " is no directory");
             }
             searchDirectory(testWorkflowsDir);
-            // Collection c = new ArrayList<KnimeTestCase>(m_registry);
-            // System.out.println(c.toString());
+            
+            if ((m_pattern != null) && (m_registry.size() == 0)) {
+                System.out.println("Found no matching tests. " 
+                        + "Thank you very much.");
+            }
+ 
+            if (m_deleteLog) {
+//                File home = new File(KNIMEConstants.getKNIMEHomeDir());
+//                
+//                
+            }
+            
         } catch (URISyntaxException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -135,12 +159,16 @@ public class KnimeTestRegistry extends TestSuite {
      */
     private static void searchDirectory(File dir) {
 
+        if (m_pattern == null) {
+            // null pattern matches nothing!
+            return;
+        }
+        
         File workflowFile = new File(dir, WorkflowManager.WORKFLOW_FILE);
 
         if (workflowFile.exists()) {
             String name = dir.getName();
-            if ((m_pattern == null) || (m_pattern.length() < 1)
-                    || name.matches(m_pattern)) {
+            if (name.matches(m_pattern)) {
                 File ownerFile = new File(dir, OWNER_FILE);
                 if (ownerFile.exists()) {
                     // add only tests with owner file!
