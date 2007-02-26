@@ -164,7 +164,19 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // from the user)
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             if (getNodeContainer().getName().equals("X-Partitioner")) {
-                info.setNodeLocation(120, 0, -1, -1);
+                info.setNodeLocation(125, 0, -1, -1);
+            }
+
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // TODO: very bad hack for version 1.2.1!!!!
+            // just to set the aggregator of the x-validation meta node
+            // to a suitable position; this is done as the meta nodes
+            // can not determine locations and set them for a node
+            // which is (like the x-partitioner) created from the code (not
+            // from the user)
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if (getNodeContainer().getName().equals("Aggregator")) {
+                info.setNodeLocation(250, 10, -1, -1);
             }
 
             getNodeContainer().setExtraInfo(info);
