@@ -31,17 +31,17 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
 
 /**
- * Sorts the x value of two {@link HistogramDataRow} objects in ascending
+ * Sorts the x value of two {@link FixedHistogramDataRow} objects in ascending
  * order.
  * @author Tobias Koetter, University of Konstanz
  */
 public class HistogramDataRowXComparator 
-implements Comparator<HistogramDataRow> {
+implements Comparator<FixedHistogramDataRow> {
 
     /**
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
-    public int compare(final HistogramDataRow o1, final HistogramDataRow o2) {
+    public int compare(final FixedHistogramDataRow o1, final FixedHistogramDataRow o2) {
         if (o1 == o2) {
             return 0;
         }

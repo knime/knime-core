@@ -43,19 +43,17 @@ import org.knime.core.node.NodeLogger;
  * and the selected aggregation columns.
  * @author Tobias Koetter, University of Konstanz
  */
-public class HistogramDataModel {
+public class FixedHistogramDataModel {
 
     private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(HistogramDataModel.class);
+        NodeLogger.getLogger(FixedHistogramDataModel.class);
     
     private static final HistogramDataRowXComparator ASCENDING_ROW_SORTER =
         new HistogramDataRowXComparator();
         
     private final DataColumnSpec m_xColSpec;
-    
-    
-    private final List<HistogramDataRow> m_dataRows = 
-        new ArrayList<HistogramDataRow>();
+   
+    private final List<FixedHistogramDataRow> m_dataRows;
     
     private boolean m_rowsSorted = false;
     
@@ -66,10 +64,11 @@ public class HistogramDataModel {
 
     /**Constructor for class HistogramDataModel.
      * @param xColSpec the column specification of the bin column
+     * @param noOfRows the expected number of rows
      * @param aggrColumns the aggregation columns
      */
-    public HistogramDataModel(final DataColumnSpec xColSpec,  
-            final ColorColumn... aggrColumns) {
+    public FixedHistogramDataModel(final DataColumnSpec xColSpec,  
+            final int noOfRows, final ColorColumn... aggrColumns) {
         LOGGER.debug("Entering HistogramDataModel(xColSpec, aggrColumns) "
                 + "of class HistogramDataModel.");
         if (xColSpec == null) {
@@ -80,6 +79,7 @@ public class HistogramDataModel {
             throw new IllegalArgumentException(
                     "No aggregation columns defined");
         }
+        m_dataRows = new ArrayList<FixedHistogramDataRow>(noOfRows);
         m_aggrColumns = Arrays.asList(aggrColumns);
         m_xColSpec = xColSpec;
         final DataColumnDomain domain = m_xColSpec.getDomain();
@@ -92,10 +92,10 @@ public class HistogramDataModel {
     }
    
     /**
-     * Adds the given {@link HistogramDataRow} to the histogram.
+     * Adds the given {@link FixedHistogramDataRow} to the histogram.
      * @param row the row to add
      */
-    public void addDataRow(final HistogramDataRow row) {
+    public void addDataRow(final FixedHistogramDataRow row) {
 //        if (m_bins.size() < 1) {
 //            //create the bins before adding a row to it
 //            if (m_binNominal) {
@@ -154,7 +154,7 @@ public class HistogramDataModel {
      * @return a <code>List</code> of the data rows in ascending order.
      * THIS IS AN UNMODIFIABLE {@link List}!
      */
-    public List<HistogramDataRow> getSortedRows() {
+    public List<FixedHistogramDataRow> getSortedRows() {
         //sort the data rows to speedup the process if necessary
         if (!m_rowsSorted) {
             Collections.sort(m_dataRows, ASCENDING_ROW_SORTER);

@@ -37,6 +37,7 @@ import java.util.Collection;
 import org.knime.base.node.viz.histogram.datamodel.BarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.HistogramVizModel;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.property.ColorAttr;
@@ -59,10 +60,17 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     /**The number of digits to display for a label.*/
     private static final int NO_OF_LABEL_DIGITS = 2;
     
+    /**Defines the color of the base line.*/
+    private static final Color OVERLOADED_ELEMENT_COLOR = Color.BLACK;
+    
     /**This stroke is used to draw the rectangle around each element.*/
     private static final BasicStroke ELEMENT_OUTLINE_STROKE = 
         new BasicStroke(1f);
-    
+
+    /**This stroke is used to draw the rectangle around each aggregation
+     * column bar.*/
+    private static final BasicStroke MULTIPLE_AGGR_COLUM_STROKE = 
+        new BasicStroke(2f);
     /**The color of the element outline.*/
     private static final Color ELEMENT_OUTLINE_COLOR = Color.BLACK;
 
@@ -126,7 +134,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     private static final Font INFO_MSG_FONT = new Font("Arial", Font.PLAIN, 16);
 
     /**
-     * Holds the {@link HistogramVizModel} objects to draw.
+     * Holds the {@link FixedHistogramVizModel} objects to draw.
      */
     private HistogramVizModel m_histoData;
 
@@ -165,7 +173,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
 
     
     /**
-     * @param histoData the {@link HistogramDataModel} objects to draw
+     * @param histoData the {@link FixedHistogramDataModel} objects to draw
      */
     public void setHistogramData(final HistogramVizModel histoData) {
         m_histoData = histoData;
@@ -282,6 +290,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     @Override
     public void paintContent(final Graphics g) {
         final Graphics2D g2 = (Graphics2D)g;
+        final Rectangle bounds = getBounds();
         if (m_histoData == null || m_histoData.getBins() == null) {
             //if we have no bins and no info message display a no bars info
             if (m_infoMsg == null) {
@@ -290,122 +299,202 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         }
         //check if we have to display an information message
         if (m_infoMsg != null) {
-            //save the original settings
-            final Font origFont = g2.getFont();
-            g2.setFont(INFO_MSG_FONT);
-            final FontMetrics metrics = g2.getFontMetrics();
-            final int textWidth = metrics.stringWidth(m_infoMsg);
-            final int textHeight = metrics.getHeight();
-            //get the basic rectangle we have to draw in
-            final Rectangle basicRect = getBounds();
-            int textX = (int)basicRect.getCenterX() - (textWidth / 2);
-            int textY = (int)basicRect.getCenterY() - (textHeight / 2);
-            if (textX < 0) {
-                textX = 0;
-            }
-            if (textY < 0) {
-                textY = 0;
-            }
-            g2.drawString(m_infoMsg, textX, textY);
-            //set the original settings
-            g2.setFont(origFont);
+            final String msg = m_infoMsg;
+            drawMessage(g2, msg, bounds);
             return;
         }
 //      check if we have to draw the grid lines
         if (m_gridLines != null) {
             for (int gridLine : m_gridLines) {
                 paintHorizontalLine(g2, 0, gridLine,
-                        (int) getBounds().getWidth(), GRID_LINE_COLOR, 
+                        (int) bounds.getWidth(), GRID_LINE_COLOR, 
                         GRID_LINE_STROKE);
             }
         }
         //check if we have to draw the base line
         if (m_baseLine != null) {
             paintHorizontalLine(g2, 0, m_baseLine.intValue(),
-                    (int) getBounds().getWidth(), BASE_LINE_COLOR, 
+                    (int) bounds.getWidth(), BASE_LINE_COLOR, 
                     BASE_LINE_STROKE);
         }
+        //get all variables which are needed multiple times
         final AggregationMethod aggrMethod = m_histoData.getAggregationMethod();
         final HistogramLayout layout = m_histoData.getHistogramLayout();
-        final Collection<BinDataModel> bins = m_histoData.getBins();
-// loop over all bins and paint them
-        for (BinDataModel bin : bins) {
+        //if the user has selected more then one aggregation column we have to
+        //draw the bar outline to how him which bar belongs to which aggregation
+        //column
+        final boolean drawBarOutline = m_histoData.getAggrColumns().size() > 1
+        //just for debugging purpose
+            || HistogramLayout.SIDE_BY_SIDE.equals(
+                m_histoData.getHistogramLayout());
+        
+        // loop over all bins and paint them
+        for (BinDataModel bin : m_histoData.getBins()) {
+            if (!bin.isDrawBar()) {
+                //the bars doen't fit in this bin so we have to 
+                //fill the complete bin in black to show it to the user
+                drawBlock(g2, bin.getBinRectangle(), 
+                        OVERLOADED_ELEMENT_COLOR);
+                continue;
+            }
             final Collection<BarDataModel> bars = bin.getBars();
             for (BarDataModel bar : bars) {
-                final Collection<BarElementDataModel> elements = 
-                    bar.getElements();
-                for (BarElementDataModel element : elements) {
-                    final Color elementColor = element.getColor();
-                    //draw the element itself first
-                    final Rectangle elementRect = element.getElementRectangle();
-                    drawBlock(g2, elementRect, elementColor);
-                    //draw the hilite rectangle
-                    final Rectangle hiliteRect = element.getHilitedRectangle();
-                    drawBlock(g2, hiliteRect, HILITE_RECT_BGR_COLOR);
-                    //always draw the hilite borders to make them visible
-                    //even if the bar has the same color like the hilite color
-                    drawRectangle(g2, hiliteRect, HILITE_RECT_OUTLINE_COLOR, 
-                            HILITE_RECT_OUTLINE_STROKE);
-                    //draw the surrounding rectangles at last
-                    if (m_showElementOutlines) {
-                        drawRectangle(g2, elementRect, 
-                                ELEMENT_OUTLINE_COLOR, ELEMENT_OUTLINE_STROKE);
-                    }
-                    if (element.isSelected()) {
-                        drawRectangle(g2, elementRect, 
-                                ELEMENT_SELECTED_OUTLINE_COLOR, 
-                                ELEMENT_SELECTED_OUTLINE_STROKE);
-                    }
-                } //end of element loop
-                //draw the bar label
-                if ((bar.isSelected() 
-                        && LabelDisplayPolicy.SELECTED.equals(
-                                m_labelDisplayPolicy)) 
-                        || LabelDisplayPolicy.ALL.equals(
-                                m_labelDisplayPolicy)) {
-                    if (HistogramLayout.STACKED.equals(layout)) {
-                        final double aggrVal = 
-                            bar.getAggregationValue(aggrMethod);
-                        paintLabel(g2, bar.getBarRectangle(), aggrVal, 
-                                aggrMethod, getBounds(), m_showLabelVertical);
-                    } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
-                        //paint a label for each element after painting
-                        //the elements itself to have them in the front
-                        for (BarElementDataModel element : elements) {
-                            if (element.isSelected()
-                                    || LabelDisplayPolicy.ALL.equals(
-                                            m_labelDisplayPolicy)) {
-                                final double aggrVal = 
-                                    element.getAggregationValue(aggrMethod);
-                                paintLabel(g2, element.getElementRectangle(), 
-                                        aggrVal, aggrMethod, getBounds(), 
-                                        m_showLabelVertical);
-                            }
-                        }
-                    } else {
-                        throw new IllegalArgumentException(
-                                "Layout " + layout + " not supported");
-                    }
-                }
-                //draw the outline of the bar to debug in side by side modus
-                if (HistogramLayout.SIDE_BY_SIDE.equals(
-                        m_histoData.getHistogramLayout())) {
-                    final Color barColor = bar.getColor();
+                if (bar.isDrawElements()) {
+                    drawElements(g2, bar.getElements(), m_showElementOutlines);
+                } else {
+                    //the elements doen't fit in this bar so we have to 
+                    //fill the complete bar in black to show it to the user
                     final Rectangle barRectangle = bar.getBarRectangle();
-                    drawRectangle(g2, barRectangle, barColor, 
-                            ELEMENT_OUTLINE_STROKE);
+                    drawBlock(g2, barRectangle, 
+                            OVERLOADED_ELEMENT_COLOR);
+                    if (bar.isHilited()) {
+                        final int hiliteWidth = 
+                            (int)(barRectangle.getWidth() 
+                        * HistogramVizModel.HILITE_RECTANGLE_WIDTH_FACTOR);
+                        final int hiliteX = (int) (barRectangle.getX()
+                                + (barRectangle.getWidth() - hiliteWidth) / 2);
+                        final Rectangle hiliteRectangle = new Rectangle(
+                                hiliteX, (int)barRectangle.getY(),
+                                hiliteWidth, (int) barRectangle.getHeight());
+                        drawBlock(g2, hiliteRectangle, HILITE_RECT_BGR_COLOR);
+                    }
+                    if (bar.isSelected()) {
+                        drawRectangle(g2, barRectangle, 
+                            ELEMENT_SELECTED_OUTLINE_COLOR, 
+                            ELEMENT_SELECTED_OUTLINE_STROKE);
+                    }
                 }
-                
+                if (drawBarOutline) {
+                    //draw the outline of the bar if we have multiple
+                    //aggregation columns
+                    drawRectangle(g2, bar.getBarRectangle(), 
+                            bar.getColor(), MULTIPLE_AGGR_COLUM_STROKE);
+                }
+                //draw the bar label at last to have them on top
+                drawLabels(g2, bar, aggrMethod, layout, bounds);
             } //end of bar loop
             //draw the outline of the bin to debug in multiple 
             //aggregation column mode
             if (m_histoData.getAggrColumns().size() > 1) {
-                final Rectangle binRectangle = bin.getBinRectangle();
-                drawRectangle(g2, binRectangle, Color.ORANGE, 
+                drawRectangle(g2, bin.getBinRectangle(), Color.ORANGE, 
                         GRID_LINE_STROKE);
             }
         } // end of the bin loop
         return;
+    }
+
+
+    /**
+     * Draws the given message in the center of the given rectangle.
+     * @param g2
+     * @param msg
+     * @param the size of the panel to draw the message on
+     */
+    private static void drawMessage(final Graphics2D g2, final String msg,
+            final Rectangle bounds) {
+        //save the original settings
+        final Font origFont = g2.getFont();
+        g2.setFont(INFO_MSG_FONT);
+        final FontMetrics metrics = g2.getFontMetrics();
+        final int textWidth = metrics.stringWidth(msg);
+        final int textHeight = metrics.getHeight();
+        //get the basic rectangle we have to draw in
+        int textX = (int)bounds.getCenterX() - (textWidth / 2);
+        int textY = (int)bounds.getCenterY() - (textHeight / 2);
+        if (textX < 0) {
+            textX = 0;
+        }
+        if (textY < 0) {
+            textY = 0;
+        }
+        g2.drawString(msg, textX, textY);
+        //set the original settings
+        g2.setFont(origFont);
+    }
+
+    /**
+     * Handles the label drawing.
+     * @param g2 the graphics object
+     * @param bar the bar for which the label(s) should be drawn
+     * @param aggrMethod the aggregation method to get the right label
+     * @param layout the current layout to decide if the label is per
+     * element or per bar
+     * @param bounds the surrounding pane on which to draw
+     */
+    private void drawLabels(final Graphics2D g2, final BarDataModel bar, 
+            final AggregationMethod aggrMethod, final HistogramLayout layout,
+            final Rectangle bounds) {
+        if (LabelDisplayPolicy.ALL.equals(
+                m_labelDisplayPolicy)
+                || (LabelDisplayPolicy.SELECTED.equals(
+                        m_labelDisplayPolicy) && bar.isSelected())) {
+            if (HistogramLayout.STACKED.equals(layout)) {
+                final double aggrVal = 
+                    bar.getAggregationValue(aggrMethod);
+                paintLabel(g2, bar.getBarRectangle(), aggrVal, 
+                        aggrMethod, bounds, m_showLabelVertical);
+            } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
+                //paint a label for each element after painting
+                //the elements itself to have them in the front
+                for (BarElementDataModel element : bar.getElements()) {
+                    if (element.isSelected()
+                            || LabelDisplayPolicy.ALL.equals(
+                                    m_labelDisplayPolicy)) {
+                        final double aggrVal = 
+                            element.getAggregationValue(aggrMethod);
+                        paintLabel(g2, element.getElementRectangle(), 
+                                aggrVal, aggrMethod, bounds, 
+                                m_showLabelVertical);
+                    }
+                }
+            } else {
+                throw new IllegalArgumentException(
+                        "Layout " + layout + " not supported");
+            }
+        }
+    }
+
+
+    /**
+     * Draws the given elements on the screen.
+     * @param g2 the graphics object
+     * @param elements the elements to draw
+     * @param showElementOutlines if the outline of each element 
+     * should be drawn
+     */
+    private static void drawElements(final Graphics2D g2, 
+            final Collection<BarElementDataModel> elements, 
+            final boolean showElementOutlines) {
+        for (BarElementDataModel element : elements) {
+            final Color elementColor = element.getColor();
+            //draw the element itself first
+            final Rectangle elementRect = 
+                element.getElementRectangle();
+            if (elementRect != null) {
+                drawBlock(g2, elementRect, elementColor);
+            }
+            //draw the hilite rectangle
+            final Rectangle hiliteRect = 
+                element.getHilitedRectangle();
+            drawBlock(g2, hiliteRect, HILITE_RECT_BGR_COLOR);
+            //always draw the hilite borders to make them visible
+            //even if the bar has the same color like the 
+//                        hilite color
+            drawRectangle(g2, hiliteRect, 
+                    HILITE_RECT_OUTLINE_COLOR, 
+                    HILITE_RECT_OUTLINE_STROKE);
+            //draw the surrounding rectangles at last
+            if (showElementOutlines) {
+                drawRectangle(g2, elementRect, 
+                        ELEMENT_OUTLINE_COLOR, 
+                        ELEMENT_OUTLINE_STROKE);
+            }
+            if (element.isSelected()) {
+                drawRectangle(g2, elementRect, 
+                        ELEMENT_SELECTED_OUTLINE_COLOR, 
+                        ELEMENT_SELECTED_OUTLINE_STROKE);
+            }
+        } //end of element loop
     }
 
    /**

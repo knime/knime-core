@@ -28,8 +28,8 @@ import java.awt.Color;
 import java.io.File;
 
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
-import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.HistogramDataRow;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataRow;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -89,7 +89,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
             CFGKEY_ALL_ROWS, false);
 
     /**The data model on which the plotter based on.*/
-    private HistogramDataModel m_model;
+    private FixedHistogramDataModel m_model;
     
     private DataTableSpec m_tableSpec;
 
@@ -235,9 +235,8 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
         if (aggrColIdx < 0) {
             throw new IllegalArgumentException("Aggregation column not found.");
         }
-        final ColorColumn aggrColumns = 
+        final ColorColumn aggrColumn = 
             new ColorColumn(Color.CYAN, aggrColIdx, aggrColName);
-        m_model = new HistogramDataModel(xColSpec, aggrColumns);
         final int rowCount = data.getRowCount();
         if (m_allRows.getBooleanValue()) {
             //set the actual number of rows in the selected number of rows
@@ -249,6 +248,8 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
             setWarningMessage("Only the first " + selectedNoOfRows + " of " 
                     + rowCount + " rows are displayed.");
         }
+        m_model = 
+            new FixedHistogramDataModel(xColSpec, selectedNoOfRows, aggrColumn);
         exec.setMessage("Adding data rows to histogram...");
         final double progressPerRow = 1.0 / rowCount;
         double progress = 0.0;
@@ -257,7 +258,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
             final DataRow row = rowIterator.next();
             final Color color = 
                 m_tableSpec.getRowColor(row).getColor(false, false);
-            final HistogramDataRow histoRow = new HistogramDataRow(
+            final FixedHistogramDataRow histoRow = new FixedHistogramDataRow(
                     row.getKey(), color, row.getCell(xColIdx),
                     row.getCell(aggrColIdx));
             m_model.addDataRow(histoRow);
@@ -283,7 +284,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     /**
      * @return the histogram data model 
      */
-    protected HistogramDataModel getHistogramModel() {
+    protected FixedHistogramDataModel getHistogramModel() {
         return m_model;
     }
 

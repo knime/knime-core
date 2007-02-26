@@ -25,7 +25,7 @@
 package org.knime.base.node.viz.histogram.node;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramPlotter;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramProperties;
 import org.knime.core.data.DataTableSpec;
@@ -75,7 +75,7 @@ public class FixedColumnHistogramNodeView extends NodeView {
         if (m_nodeModel == null) {
             return;
         }
-        final HistogramDataModel histogramModel = 
+        final FixedHistogramDataModel histogramModel = 
             m_nodeModel.getHistogramModel();
         final DataTableSpec tableSpec = m_nodeModel.getTableSpec();
         if (histogramModel == null) {

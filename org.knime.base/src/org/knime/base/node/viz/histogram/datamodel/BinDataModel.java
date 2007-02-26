@@ -36,7 +36,7 @@ import java.util.SortedSet;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -56,6 +56,8 @@ public class BinDataModel {
 
     private final String m_xAxisCaption;
     
+    private final DataCell m_xAxisCaptionCell;
+    
     private final double m_lowerBound;
     
     private final double m_upperBound;
@@ -63,10 +65,7 @@ public class BinDataModel {
     private final Map<Color, BarDataModel> m_bars = 
         new HashMap<Color, BarDataModel>();
     
-    /**The color of the missing value bar doesn't matter we have to paint it
-     * anyway different to ensure the uniqueness.*/
-    private BarDataModel m_missingValueBar = 
-        new BarDataModel(Color.LIGHT_GRAY);
+    private boolean m_drawBar = true;
     
     private int m_rowCounter = 0;
     
@@ -79,21 +78,28 @@ public class BinDataModel {
      */
     protected BinDataModel(final String xAxisCaption, final double lowerBound,
             final double upperBound) {
+        if (xAxisCaption == null) {
+            throw new IllegalArgumentException("Caption shouldn't be null");
+        }
         m_xAxisCaption = xAxisCaption;
+        m_xAxisCaptionCell = new StringCell(xAxisCaption);
         m_lowerBound = lowerBound;
         m_upperBound = upperBound;
     }
 
     /**
-     * @param row the {@link HistogramDataRow} to add
+     * @param id the row id
+     * @param rowColor the row color
      * @param columns the {@link ColorColumn} objects in the same order
      * like the aggregation values
+     * @param aggrVals the aggregation value in the same order like the
+     * columns
      */
-    protected void addDataRow(final HistogramDataRow row, 
-            final List<ColorColumn> columns) {
-        final DataCell[] aggrVals = row.getAggrVals();
-        final DataCell id = row.getRowKey().getId();
-        final Color rowColor = row.getColor();
+    protected void addDataRow(final DataCell id, final Color rowColor, 
+            final List<ColorColumn> columns, final DataCell... aggrVals) {
+//        final DataCell[] aggrVals = row.getAggrVals();
+//        final DataCell id = row.getRowKey().getId();
+//        final Color rowColor = row.getColor();
         for (int i = 0, length = aggrVals.length; i < length; i++) {
             final DataCell cell = aggrVals[i];
             final Color barColor = columns.get(i).getColor();
@@ -102,35 +108,23 @@ public class BinDataModel {
                 bar = new BarDataModel(barColor);
                 m_bars.put(barColor, bar);
             }
-            if (cell.isMissing()) {
-              m_missingValueBar.addDataRow(m_missingValueBar.getColor(), id, 
-                      0);
-              continue;
-            } 
-            if (!cell.getType().isCompatible(DoubleValue.class)) {
-                throw new IllegalArgumentException(
-                        "Aggregation values should be of numeric type");
-            }
-            bar.addDataRow(rowColor, id, ((DoubleValue)cell).getDoubleValue());
+            bar.addDataRow(rowColor, id, cell);
         }
         m_rowCounter++;
     }
     
     /**
-     * @return the xAxisCaption
+     * @return the x axis caption
      */
     public String getXAxisCaption() {
         return m_xAxisCaption;
     }
-
+    
     /**
-     * @return the missingValueBar
+     * @return the x axis caption as {@link DataCell}
      */
-    public BarDataModel getMissingValueBar() {
-        if (m_missingValueBar.getRowCount() == 0) {
-            return null;
-        }
-        return m_missingValueBar;
+    public DataCell getXAxisCaptionCell() {
+        return m_xAxisCaptionCell;
     }
     
     /**
@@ -150,17 +144,10 @@ public class BinDataModel {
     }
     
     /**
-     * @param showMissingValbar <code>true</code> if the missing value bar
-     * should be displayed as well 
      * @return the number of bars in this bin
      */
-    public int getNoOfBars(final boolean showMissingValbar) {
-        int noOfBars = m_bars.size();
-        if (showMissingValbar && m_missingValueBar != null
-                && m_missingValueBar.getRowCount() > 0) {
-            noOfBars++;
-        }
-        return noOfBars;
+    public int getNoOfBars() {
+        return m_bars.size();
     }
 
     /**
@@ -274,6 +261,14 @@ public class BinDataModel {
         return false;
     }
     
+    
+    /**
+     * @return <code>true</code> if the bars should be drawn
+     */
+    public boolean isDrawBar() {
+        return m_drawBar;
+    }
+    
     /**
      * @return the {@link Rectangle} the bin should be drawn on the 
      * screen 
@@ -287,8 +282,6 @@ public class BinDataModel {
      * MAX AGGREGATION VALUE TO HANDLES BINS WITH POSITIVE AND NEGATIVE BARS!!!
      * @param binRectangle the {@link Rectangle} the bin should be drawn on the 
      * screen 
-     * @param showMissingValBar <code>true</code> if the missing value bar
-     * should be displayed
      * @param aggrMethod the aggregation method which should be used
      * @param layout the histogram layout
      * @param baseLine the x coordinate of the base line (0) on the screen
@@ -297,20 +290,17 @@ public class BinDataModel {
      * @param aggrColumns the aggregation column array which indicates
      * the order of the bars
      */
-    public void setBinRectangle(final Rectangle binRectangle, 
-            final boolean showMissingValBar, 
+    public void setBinRectangle(final Rectangle binRectangle,
             final AggregationMethod aggrMethod, final HistogramLayout layout,
             final int baseLine, final SortedSet<Color> barElementColors, 
             final List<ColorColumn> aggrColumns) {
         m_binRectangle = binRectangle;
-        setBarRectangle(showMissingValBar, aggrMethod, layout, baseLine,
-                barElementColors, aggrColumns);
+        setBarRectangle(aggrMethod, layout, baseLine, barElementColors, 
+                aggrColumns);
     }
     
     /**
      * Sets the rectangle for all bars in this bin.
-     * @param showMissingValBar <code>true</code> if the missing value bar
-     * should be displayed
      * @param aggrMethod the aggregation method which should be used
      * @param layout the histogram layout
      * @param baseLine the x coordinate of the base line (0) on the screen
@@ -319,29 +309,27 @@ public class BinDataModel {
      * @param aggrColumns the aggregation column array which indicates
      * the order of the bars
      */
-    private void setBarRectangle(final boolean showMissingValBar,
-            final AggregationMethod aggrMethod, final HistogramLayout layout,
-            final int baseLine, final SortedSet<Color> barElementColors, 
+    private void setBarRectangle(final AggregationMethod aggrMethod, 
+            final HistogramLayout layout, final int baseLine, 
+            final SortedSet<Color> barElementColors, 
             final List<ColorColumn> aggrColumns) {
         final double totalWidth = m_binRectangle.getWidth();
-        int noOfBars = aggrColumns.size();
-        if (showMissingValBar && m_missingValueBar != null
-                && m_missingValueBar.getRowCount() > 0) {
-            noOfBars++;
-        }
+        final int noOfBars = aggrColumns.size();
         final int barWidth = 
             Math.max((int)totalWidth - (SPACE_BETWEEN_BARS * noOfBars), 1);
         if (noOfBars * barWidth > totalWidth) {
             //the total bin width is not enough to draw all bars so we don't
             //need to calculate any further and reset all previous 
             //bar rectangles
-            final Collection<BarDataModel> bars = m_bars.values();
-            for (BarDataModel bar : bars) {
-                bar.setBarRectangle(null, aggrMethod, layout, baseLine, 
-                        barElementColors);
-            }
+//            final Collection<BarDataModel> bars = m_bars.values();
+//            for (BarDataModel bar : bars) {
+//                bar.setBarRectangle(null, aggrMethod, layout, baseLine, 
+//                        barElementColors);
+//            }
+            m_drawBar = false;
             return;
         }
+        m_drawBar = true;
         //calculate the height
         final int totalHeight = (int)m_binRectangle.getHeight();
         final double maxBinAggrVal = getMaxAggregationValue(aggrMethod, layout);
@@ -396,22 +384,46 @@ public class BinDataModel {
             xCoord += barWidth + SPACE_BETWEEN_BARS;
         }
     }
-//    
-//    /**
-//     * @see java.lang.Object#clone()
-//     */
-//    @Override
-//    public BinDataModel clone() {
-//        final BinDataModel clone = new BinDataModel(m_xAxisCaption, 
-//                m_lowerBound, m_upperBound);
-//        clone.m_binRectangle = m_binRectangle;
-//        clone.m_missingValueBar = m_missingValueBar;
-//        clone.m_rowCounter = m_rowCounter;
-//        final Collection<BarDataModel> bars = m_bars.values();
-//        for (BarDataModel bar : bars) {
-//            clone.m_bars.put(bar.getColor(), bar.clone());            
-//        }
-//        
-//        return clone;
-//    }
+
+    /**
+     * @param startX new x coordinate
+     * @param binWidth new bin width
+     * @param layout the {@link HistogramLayout} to use
+     * @param barElementColors all element colors which define the order
+     * the elements should be drawn
+     * @param aggrMethod the {@link AggregationMethod} to use
+     */
+    public void updateBinWidth(final int startX, final int binWidth,
+            final HistogramLayout layout, 
+            final SortedSet<Color> barElementColors, 
+            final AggregationMethod aggrMethod) {
+        if (m_binRectangle == null) {
+            return;
+        }
+        final int yCoord = (int)m_binRectangle.getY();
+        final int binHeight = (int) m_binRectangle.getHeight();
+        m_binRectangle.setBounds(startX, yCoord, binWidth, binHeight);
+        
+        final int noOfBars = m_bars.size();
+        final int barWidth = 
+            Math.max(binWidth - (SPACE_BETWEEN_BARS * noOfBars), 1);
+        final Collection<BarDataModel> bars = m_bars.values();
+        if (noOfBars * barWidth > binWidth) {
+            //the total bin width is not enough to draw all bars so we don't
+            //need to calculate any further and reset all previous 
+            //bar rectangles
+//            for (BarDataModel bar : bars) {
+//                bar.setBarRectangle(null, aggrMethod, layout, -1, null);
+//            }
+            m_drawBar = false;
+            return;
+        }
+        m_drawBar = true;
+        int xCoord = startX + SPACE_BETWEEN_BARS;
+        for (BarDataModel bar : bars) {
+            bar.updateBarWidth(xCoord, barWidth, layout, 
+                    barElementColors, aggrMethod);
+            xCoord += barWidth + SPACE_BETWEEN_BARS;
+        }
+    }
 }

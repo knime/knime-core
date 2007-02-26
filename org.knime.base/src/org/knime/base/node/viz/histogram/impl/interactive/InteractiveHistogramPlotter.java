@@ -27,8 +27,8 @@ import java.util.Iterator;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.HistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -70,9 +70,10 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
      */
     public InteractiveHistogramPlotter(
             final InteractiveHistogramProperties histogramProps,
-            final HistogramDataModel dataModel, final DataTableSpec tableSpec,
+            final FixedHistogramDataModel dataModel, final DataTableSpec tableSpec,
             final HiLiteHandler handler, final Iterator<DataRow> rows) {
-        super(histogramProps, dataModel, tableSpec, handler);
+        super(histogramProps, tableSpec, handler);
+        setHistogramDataModel(dataModel);
         histogramProps.getXColSelectBox().addActionListener(
                 new ActionListener() {
                     public void actionPerformed(final ActionEvent e) {
@@ -101,18 +102,15 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
        interactiveHistoProps.updateHistogramSettings(this);
    }
    
-   /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter#onApply()
-     */
-   @Override
-   protected void onApply() {
-       final InteractiveHistogramProperties interactiveHistoProps = 
-           (InteractiveHistogramProperties)getHistogramPropertiesPanel();
-       setAggregationColumn(interactiveHistoProps.getSelectedAggrColumn(), 
-                   interactiveHistoProps.getSelectedAggrMethod());
-       super.onApply();
-       return;
-   }
+//   @Override
+//   protected void onApply() {
+//       final InteractiveHistogramProperties interactiveHistoProps = 
+//           (InteractiveHistogramProperties)getHistogramPropertiesPanel();
+//       setAggregationColumn(interactiveHistoProps.getSelectedAggrColumn(), 
+//                   interactiveHistoProps.getSelectedAggrMethod());
+//       super.onApply();
+//       return;
+//   }
 
     /**
      * Sets the new x column.
@@ -187,8 +185,8 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
      * #getHistogramVizModel()
      */
     @Override
-    public HistogramVizModel getHistogramVizModel() {
-        HistogramVizModel histoData = super.getHistogramVizModel();
+    public FixedHistogramVizModel getHistogramVizModel() {
+        FixedHistogramVizModel histoData = super.getHistogramVizModel();
         if (histoData == null) {
 //            histoData = new HistogramDataModel(getDataTableSpec(), 
 //                    getXColName(), getAggregationColName(), 

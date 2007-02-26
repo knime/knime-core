@@ -33,7 +33,7 @@ import org.knime.core.data.RowKey;
  * Saves all information which is needed per row to create a histogram plotter. 
  * @author Tobias Koetter, University of Konstanz
  */
-public class HistogramDataRow {
+public class FixedHistogramDataRow {
     private final Color m_color;
 
     private final DataCell m_xVal;
@@ -48,7 +48,7 @@ public class HistogramDataRow {
      * @param xVal the value of the selected x column
      * @param aggrVal the value of the selected aggregation column
      */
-    public HistogramDataRow(final RowKey key, final Color rowColor,
+    public FixedHistogramDataRow(final RowKey key, final Color rowColor,
             final DataCell xVal, final DataCell... aggrVal) {
         m_rowKey = key;
         m_color = rowColor;

@@ -36,11 +36,12 @@ import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
-import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
@@ -79,6 +80,9 @@ public abstract class AbstractHistogramProperties extends
     private static final String VIZ_SETTINGS_TAB_LABEL = 
         "Visualization settings";
 
+    private static final String DETAILS_TAB_LABEL = 
+        "Details";
+    
     private static final String X_COLUMN_LABEL = "X Column:";
 
     private static final String AGGREGATION_COLUMN_ENABLED_TOOLTIP = 
@@ -114,7 +118,7 @@ public abstract class AbstractHistogramProperties extends
 
     private static final String SHOW_BAR_OUTLINE_LABEL = "Show bar outline";
 
-    private static final String APPLY_BUTTON_LABEL = "Apply";
+//    private static final String APPLY_BUTTON_LABEL = "Apply";
 
     private static final Dimension HORIZONTAL_SPACER_DIM = new Dimension(10, 1);
 
@@ -132,13 +136,15 @@ public abstract class AbstractHistogramProperties extends
 
     private final ButtonGroup m_aggrMethButtonGrp;
 
-    private final JCheckBox m_showEmptyBars;
+    private final JCheckBox m_showEmptyBins;
 
-    private final JCheckBox m_showMissingValBar;
+    private final JCheckBox m_showMissingValBin;
+    
+    private final JEditorPane m_detailsHtmlPane;
 
-    private final JButton m_applyAggrSettingsButton;
+//    private final JButton m_applyAggrSettingsButton;
 
-    private final JButton m_applyBarSettingsButton;
+//    private final JButton m_applyBarSettingsButton;
 
     private final JCheckBox m_showGrid;
 
@@ -227,16 +233,17 @@ public abstract class AbstractHistogramProperties extends
                 button.setSelected(true);
             }
         }
-        m_showEmptyBars = new JCheckBox(SHOW_EMPTY_BARS_LABEL);
-        m_showMissingValBar = new JCheckBox(SHOW_MISSING_VALUE_BAR_LABEL);
-        m_showMissingValBar.setToolTipText(SHOW_MISSING_VAL_BAR_TOOLTIP);
-        m_applyAggrSettingsButton = new JButton(
-                AbstractHistogramProperties.APPLY_BUTTON_LABEL);
-        m_applyAggrSettingsButton.setHorizontalAlignment(SwingConstants.RIGHT);
-
-        m_applyBarSettingsButton = new JButton(
-                AbstractHistogramProperties.APPLY_BUTTON_LABEL);
-        m_applyBarSettingsButton.setHorizontalAlignment(SwingConstants.RIGHT);
+        m_showEmptyBins = new JCheckBox(SHOW_EMPTY_BARS_LABEL);
+        m_showMissingValBin = new JCheckBox(SHOW_MISSING_VALUE_BAR_LABEL);
+        m_showMissingValBin.setToolTipText(SHOW_MISSING_VAL_BAR_TOOLTIP);
+//        m_applyAggrSettingsButton = new JButton(
+//                AbstractHistogramProperties.APPLY_BUTTON_LABEL);
+//        m_applyAggrSettingsButton.setHorizontalAlignment(
+//        SwingConstants.RIGHT);
+//
+//        m_applyBarSettingsButton = new JButton(
+//                AbstractHistogramProperties.APPLY_BUTTON_LABEL);
+//        m_applyBarSettingsButton.setHorizontalAlignment(SwingConstants.RIGHT);
         // create the visualization option elements
         m_showGrid = new JCheckBox(SHOW_GRID_LABEL, true);
         m_showBarOutline = new JCheckBox(SHOW_BAR_OUTLINE_LABEL, true);
@@ -270,6 +277,10 @@ public abstract class AbstractHistogramProperties extends
 
         final JPanel visOptionPanel = createVizSettingsPanel();
         addTab(VIZ_SETTINGS_TAB_LABEL, visOptionPanel);
+        m_detailsHtmlPane = new JEditorPane("text/html", "");
+        final JPanel detailsPanel = createHTMLDetailsPanel(m_detailsHtmlPane);
+        addTab(DETAILS_TAB_LABEL, detailsPanel);
+//        m_detailsHtmlPane.setPreferredSize(detailsPanel.getMaximumSize());
     }
 
     /**
@@ -286,6 +297,31 @@ public abstract class AbstractHistogramProperties extends
             group.add(button);
         }
         return group;
+    }
+
+    /**
+     * The details data panel which contains information about the current
+     * selected elements.
+     * @param htmlPane the panel to write into
+     * @return the details date panel
+     */
+    private JPanel createHTMLDetailsPanel(final JEditorPane htmlPane) {
+        final JPanel detailsPanel = new JPanel();
+        StringBuilder buf = new StringBuilder();
+        buf.append("<h3 align='center'>Details data</h3>");
+        buf.append("<br>");
+        htmlPane.setText(buf.toString());
+        htmlPane.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(htmlPane);
+        detailsPanel.add(scrollPane);
+        return detailsPanel;
+    }
+    
+    /**
+     * @param html the new details view
+     */
+    protected void updateHTMLDetailsPanel(final String html) {
+        m_detailsHtmlPane.setText(html);
     }
 
     /**
@@ -423,11 +459,11 @@ public abstract class AbstractHistogramProperties extends
         colSelectLabelBox.add(colLabelBox);
         colSelectLabelBox.add(m_yCol);
 
-        final Box buttonBox = Box.createHorizontalBox();
-        buttonBox.add(Box.createHorizontalGlue());
-        buttonBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-        buttonBox.add(m_applyAggrSettingsButton);
-        buttonBox.add(Box.createHorizontalGlue());
+//        final Box buttonBox = Box.createHorizontalBox();
+//        buttonBox.add(Box.createHorizontalGlue());
+//        buttonBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+//        buttonBox.add(m_applyAggrSettingsButton);
+//        buttonBox.add(Box.createHorizontalGlue());
         // the all surrounding box
         final Box aggrBox = Box.createHorizontalBox();
         aggrBox
@@ -437,7 +473,7 @@ public abstract class AbstractHistogramProperties extends
         aggrBox.add(Box.createHorizontalGlue());
         aggrBox.add(colSelectLabelBox);
         aggrBox.add(Box.createHorizontalGlue());
-        aggrBox.add(buttonBox);
+//        aggrBox.add(buttonBox);
         aggrPanel.add(aggrBox);
         return aggrPanel;
     }
@@ -481,19 +517,19 @@ public abstract class AbstractHistogramProperties extends
         final Box barSelectBox = Box.createVerticalBox();
         // barSelectBox.setBorder(BorderFactory
         // .createEtchedBorder(EtchedBorder.RAISED));
-        barSelectBox.add(m_showEmptyBars);
+        barSelectBox.add(m_showEmptyBins);
         barSelectBox.add(Box.createVerticalGlue());
-        barSelectBox.add(m_showMissingValBar);
+        barSelectBox.add(m_showMissingValBin);
         barSelectBox.add(Box.createVerticalGlue());
         barSelButtonBox.add(barSelectBox);
         barSelButtonBox.add(Box.createVerticalGlue());
-        final Box buttonBox = Box.createHorizontalBox();
-        // buttonBox.setBorder(BorderFactory
-        // .createEtchedBorder(EtchedBorder.RAISED));
-        final Dimension d = new Dimension(75, 1);
-        buttonBox.add(Box.createRigidArea(d));
-        buttonBox.add(m_applyBarSettingsButton);
-        barSelButtonBox.add(buttonBox);
+//        final Box buttonBox = Box.createHorizontalBox();
+//        // buttonBox.setBorder(BorderFactory
+//        // .createEtchedBorder(EtchedBorder.RAISED));
+//        final Dimension d = new Dimension(75, 1);
+//        buttonBox.add(Box.createRigidArea(d));
+//        buttonBox.add(m_applyBarSettingsButton);
+//        barSelButtonBox.add(buttonBox);
         final Box barBox = Box.createHorizontalBox();
         barBox.setBorder(
                 BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
@@ -705,10 +741,10 @@ public abstract class AbstractHistogramProperties extends
         }
 
         // set the values of the select boxes
-        m_showEmptyBars.setSelected(plotter.isShowEmptyBins());
-        m_showMissingValBar.setSelected(plotter.isShowMissingValBar());
-        m_showMissingValBar.setEnabled(histoData.containsMissingValueBin());
-        m_showEmptyBars.setEnabled(histoData.containsEmptyBins());
+        m_showEmptyBins.setSelected(histoData.isShowEmptyBins());
+        m_showMissingValBin.setSelected(histoData.isShowMissingValBin());
+        m_showMissingValBin.setEnabled(histoData.containsMissingValueBin());
+        m_showEmptyBins.setEnabled(histoData.containsEmptyBins());
         m_showGrid.setSelected(plotter.isShowGridLines());
     }
 
@@ -833,21 +869,21 @@ public abstract class AbstractHistogramProperties extends
     /**
      * @return if the empty bars should be shown
      */
-    public boolean isShowEmptyBars() {
-        if (m_showEmptyBars == null) {
+    public boolean isShowEmptyBins() {
+        if (m_showEmptyBins == null) {
             return false;
         }
-        return m_showEmptyBars.isSelected();
+        return m_showEmptyBins.isSelected();
     }
 
     /**
      * @return if the missing value bar should be shown
      */
     public boolean isShowMissingValBar() {
-        if (m_showMissingValBar == null) {
+        if (m_showMissingValBin == null) {
             return false;
         }
-        return m_showMissingValBar.isSelected();
+        return m_showMissingValBin.isSelected();
     }
 
     /**
@@ -938,14 +974,48 @@ public abstract class AbstractHistogramProperties extends
     protected void addShowGridChangedListener(final ItemListener listener) {
         m_showGrid.addItemListener(listener);
     }
+    
+    /**
+     * @param listener adds the listener to the number of bars slider
+     */
+    protected void addNoOfBarsChangeListener(final ChangeListener listener) {
+        m_noOfBars.addChangeListener(listener);
+    }
 
     /**
-     * @param listener adds a listener to the apply button
+     * @param listener adds the listener to the aggregation method button
+     * group
      */
-    protected void addAggregationChangedListener(
-            final ActionListener listener) {
-        m_applyAggrSettingsButton.addActionListener(listener);
-        m_applyBarSettingsButton.addActionListener(listener);
+    protected void addAggrMethodListener(final ActionListener listener) {
+        final Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
+        .getElements();
+        while (buttons.hasMoreElements()) {
+            final AbstractButton button = buttons.nextElement();
+            button.addActionListener(listener);
+        }
     }
+    
+    /**
+     * @param listener adds the listener to the show empty bins select box
+     */
+    protected void addShowEmptyBinListener(final ItemListener listener) {
+        m_showEmptyBins.addItemListener(listener);
+    }
+    
+    /**
+     * @param listener adds the listener to the show missing value bin 
+     * select box
+     */
+    protected void addShowMissingValBinListener(final ItemListener listener) {
+        m_showMissingValBin.addItemListener(listener);
+    } 
+//    /**
+//     * @param listener adds a listener to the apply button
+//     */
+//    protected void addAggregationChangedListener(
+//            final ActionListener listener) {
+//        m_applyAggrSettingsButton.addActionListener(listener);
+//        m_applyBarSettingsButton.addActionListener(listener);
+//    }
 
 }

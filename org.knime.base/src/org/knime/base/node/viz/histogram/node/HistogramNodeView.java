@@ -24,10 +24,8 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
 import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramPlotter;
-import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramProperties;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
@@ -75,19 +73,19 @@ public class HistogramNodeView extends NodeView {
         if (m_nodeModel == null) {
             return;
         }
-        final HistogramDataModel histogramModel = 
+        final FixedHistogramDataModel histogramModel = 
             m_nodeModel.getHistogramDataModel();
         final DataTableSpec tableSpec = m_nodeModel.getTableSpec();
         if (histogramModel == null) {
             return;
         }
         if (m_plotter == null) {
-            final InteractiveHistogramProperties props =
-                new InteractiveHistogramProperties(
-                        AggregationMethod.getDefaultMethod());
-            m_plotter = new InteractiveHistogramPlotter(props, histogramModel, 
-                    tableSpec, m_nodeModel.getInHiLiteHandler(0), 
-                    m_nodeModel.getRows());
+//            final InteractiveHistogramProperties props =
+//                new InteractiveHistogramProperties(
+//                        AggregationMethod.getDefaultMethod());
+//            m_plotter = new InteractiveHistogramPlotter(props, histogramModel, 
+//                    tableSpec, m_nodeModel.getInHiLiteHandler(0), 
+//                    m_nodeModel.getRows());
             // add the hilite menu to the menu bar of the node view
             getJMenuBar().add(m_plotter.getHiLiteMenu());
             setComponent(m_plotter);

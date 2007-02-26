@@ -22,7 +22,7 @@
 package org.knime.base.node.viz.histogram.impl.fixed;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
-import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -31,7 +31,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * {@link FixedColumnHistogramDataModel}
  * class and the view
  * {@link org.knime.base.node.viz.histogram.HistogramDrawingPane}. It creates
- * the {@link HistogramDataModel} which contains the rectangles to draw
+ * the {@link FixedHistogramDataModel} which contains the rectangles to draw
  * on the screen.
  * 
  * @author Tobias Koetter, University of Konstanz
@@ -52,8 +52,9 @@ public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
      */
     public FixedColumnHistogramPlotter(
             final FixedColumnHistogramProperties histogramProps,
-            final HistogramDataModel dataModel, final DataTableSpec tableSpec,
+            final FixedHistogramDataModel dataModel, final DataTableSpec tableSpec,
             final HiLiteHandler handler) {
-        super(histogramProps, dataModel, tableSpec, handler);
+        super(histogramProps, tableSpec, handler);
+        setHistogramDataModel(dataModel);
     }
 }

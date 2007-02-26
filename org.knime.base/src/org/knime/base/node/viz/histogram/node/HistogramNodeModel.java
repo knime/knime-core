@@ -26,11 +26,10 @@ package org.knime.base.node.viz.histogram.node;
 
 import java.awt.Color;
 import java.io.File;
-import java.util.Iterator;
 
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
-import org.knime.base.node.viz.histogram.datamodel.HistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.HistogramDataRow;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataRow;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -74,11 +73,8 @@ public class HistogramNodeModel extends NodeModel {
      */
     static final String CFGKEY_X_COLNAME = "HistogramXColName";
 
-    /** The <code>BufferedDataTable</code> of the input port. */
-    private DataTable m_data;
-
     /**The histogram data model which holds all information.*/
-    private HistogramDataModel m_model;
+    private FixedHistogramDataModel m_model;
     
     private DataTableSpec m_tableSpec;
     
@@ -97,7 +93,6 @@ public class HistogramNodeModel extends NodeModel {
      */
     protected HistogramNodeModel() {
         super(1, 0); // one input, no outputs
-        m_data = null;
         //if we set the node to autoExecutable = true the execute method
         //gets also called when the workspace is reloaded from file
         setAutoExecutable(true);
@@ -209,7 +204,7 @@ public class HistogramNodeModel extends NodeModel {
             throw new Exception("No data table available!");
         }
         // create the data object
-        m_data = inData[0];
+        final BufferedDataTable table = inData[0];
         final DataTableSpec spec = inData[0].getDataTableSpec();
         // if we have nominal columns without possible values
         for (DataColumnSpec colSpec : spec) {
@@ -228,9 +223,16 @@ public class HistogramNodeModel extends NodeModel {
             //object since the user wants to display all rows
             m_noOfRows.setIntValue(rowCount);
         }
+        final int selectedNoOfRows = m_noOfRows.getIntValue();
+        //final int noOfRows = inData[0].getRowCount();
+        if ((selectedNoOfRows) < rowCount) {
+            setWarningMessage("Only the first " + selectedNoOfRows + " of " 
+                    + rowCount + " rows are displayed.");
+        }
+        
         final String selectedXCol = m_xColName.getStringValue();
         // create the plotter
-        createHistogramModel(m_data, rowCount, exec, selectedXCol);
+        createHistogramModel(table, selectedNoOfRows, exec, selectedXCol);
         LOGGER.info(
                 "Exiting execute(inData, exec) of class HistogramNodeModel.");
         return new BufferedDataTable[0];
@@ -273,24 +275,18 @@ public class HistogramNodeModel extends NodeModel {
                     "No numeric column found in table specification");
         }
         final int aggrColIdx = aggrColumn.getColumnIndex();
-        m_model = new HistogramDataModel(xColSpec, aggrColumn);
+        m_model = new FixedHistogramDataModel(xColSpec, noOfRows, aggrColumn);
         if (dataTable != null) {
-            final int selectedNoOfRows = m_noOfRows.getIntValue();
-            //final int noOfRows = inData[0].getRowCount();
-            if ((selectedNoOfRows) < noOfRows) {
-                setWarningMessage("Only the first " + selectedNoOfRows + " of " 
-                        + noOfRows + " rows are displayed.");
-            }
             exec.setMessage("Adding data rows to histogram...");
             final double progressPerRow = 1.0 / noOfRows;
             double progress = 0.0;
             final RowIterator rowIterator = dataTable.iterator();
-            for (int i = 0; i < selectedNoOfRows && rowIterator.hasNext();
+            for (int i = 0; i < noOfRows && rowIterator.hasNext();
                 i++) {
                 final DataRow row = rowIterator.next();
                 final Color color = 
                     m_tableSpec.getRowColor(row).getColor(false, false);
-                final HistogramDataRow histoRow = new HistogramDataRow(
+                final FixedHistogramDataRow histoRow = new FixedHistogramDataRow(
                         row.getKey(), color, row.getCell(xColIdx),
                         row.getCell(aggrColIdx));
                 m_model.addDataRow(histoRow);
@@ -303,25 +299,17 @@ public class HistogramNodeModel extends NodeModel {
     }
 
     /**
-     * @return the data of the input port.
-     */
-    public DataTable getData() {
-        return m_data;
-    }
-
-    /**
      * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
     protected void reset() {
-        m_data = null;
         m_model = null;
     }
 
     /**
      * @return the histogram data model
      */
-    protected HistogramDataModel getHistogramDataModel() {
+    protected FixedHistogramDataModel getHistogramDataModel() {
         return m_model;
     }
     /**
@@ -331,13 +319,6 @@ public class HistogramNodeModel extends NodeModel {
         return m_tableSpec;
     }
 
-    protected Iterator<DataRow> getRows(){
-        if (m_data == null) {
-            return null;
-        }
-        return m_data.iterator();
-    }
-    
     /**
      * @see org.knime.core.node.NodeModel
      *      #configure(org.knime.core.data.DataTableSpec[])

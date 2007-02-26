@@ -32,6 +32,7 @@ import java.util.Set;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DoubleValue;
 
 /**
  * This class holds all information for a bar element of a histogram bar. A
@@ -40,12 +41,6 @@ import org.knime.core.data.DataCell;
  */
 public class BarElementDataModel {
     
-    /**
-     * The width of the hilite rectangle in percent of the surrounding
-     * rectangle. Should be greater 0 and less than 1. 0.8 = 80%
-     */
-    private static final double HILITE_RECTANGLE_WIDTH_FACTOR = 0.5;
-
     private final Color m_color;
     
     private final Set<DataCell> m_rowKeys = new HashSet<DataCell>();
@@ -54,6 +49,10 @@ public class BarElementDataModel {
     
     private double m_aggrSum = 0;
     
+    /**The number of values without missing values!*/
+    private int m_valueCounter = 0;
+    
+    /**The number of rows including empty value rows.*/
     private int m_rowCounter = 0;
     
     private boolean m_isSelected = false;
@@ -86,11 +85,15 @@ public class BarElementDataModel {
     /**
      * Adds the given values to the bar element.
      * @param rowKey the rowkey of the row to add
-     * @param aggrVal the value of the aggregation column of this bar
+     * @param aggrValCell the value cell of the aggregation column of this bar
      */
-    protected void addDataRow(final DataCell rowKey, final double aggrVal) {
+    protected void addDataRow(final DataCell rowKey, 
+            final DataCell aggrValCell) {
         m_rowKeys.add(rowKey);
-        m_aggrSum += aggrVal;
+        if (!aggrValCell.isMissing()) {
+            m_aggrSum += ((DoubleValue)aggrValCell).getDoubleValue();
+            m_valueCounter++;
+        }
         m_rowCounter++;
     }
     
@@ -101,6 +104,13 @@ public class BarElementDataModel {
         return m_rowKeys;
     }
 
+    /**
+     * @return <code>true</code> if at least one row of this element is hilited
+     */
+    public boolean isHilited() {
+        return m_hilitedRowKeys.size() > 0;
+    }
+    
     /**
      * @return the keys of the hilited rows in this element
      */
@@ -170,11 +180,11 @@ public class BarElementDataModel {
         } else if (AggregationMethod.SUM.equals(method)) {
             return m_aggrSum;
         } else if (AggregationMethod.AVERAGE.equals(method)) {
-            if (m_rowCounter == 0) {
+            if (m_valueCounter == 0) {
                 //avoid division by 0
                 return 0;
             }
-            return m_aggrSum / m_rowCounter;
+            return m_aggrSum / m_valueCounter;
         }
        throw new IllegalArgumentException("Aggregation method "
                + method + " not supported.");
@@ -232,8 +242,9 @@ public class BarElementDataModel {
             return;
         }
         final int totalWidth = (int)m_elementRectangle.getWidth();
-        final int hiliteWidth = Math.max(
-                (int)(totalWidth * HILITE_RECTANGLE_WIDTH_FACTOR), 1);
+        final int hiliteWidth = Math.max((int)(totalWidth 
+                * HistogramVizModel.HILITE_RECTANGLE_WIDTH_FACTOR), 
+                1);
         final int totalHeight = (int)m_elementRectangle.getHeight();
         final double heightPerRow = (double)totalHeight / getRowCount();
         final int hiliteHeight = 
@@ -256,20 +267,21 @@ public class BarElementDataModel {
             new Rectangle(xCoord, yCoord, hiliteWidth, hiliteHeight);
         m_hilitedRectangle = hiliteRect;
     }
-//    
-//    /**
-//     * @see java.lang.Object#clone()
-//     */
-//    @Override
-//    public BarElementDataModel clone() {
-//        final BarElementDataModel clone = new BarElementDataModel(m_color);
-//        clone.m_aggrSum = m_aggrSum;
-//        clone.m_elementRectangle = m_elementRectangle;
-//        clone.m_hilitedRectangle = m_hilitedRectangle;
-//        clone.m_hilitedRowKeys.addAll(m_hilitedRowKeys);
-//        clone.m_isSelected = m_isSelected;
-//        clone.m_rowCounter = m_rowCounter;
-//        clone.m_rowKeys.addAll(m_rowKeys);
-//        return clone;
-//    }
+
+    /**
+     * @param xCoord the new x coordinate
+     * @param elementWidth the new element width
+     * @param aggrMethod the {@link AggregationMethod} to use
+     */
+    public void updateElementWidth(final int xCoord, final int elementWidth,
+            final AggregationMethod aggrMethod) {
+        if (m_elementRectangle == null) {
+            return;
+        }
+        final int yCoord = (int)m_elementRectangle.getY();
+        final int elementHeight = (int)m_elementRectangle.getHeight();
+        m_elementRectangle.setBounds(xCoord, yCoord, 
+                elementWidth, elementHeight);
+        calculateHilitedRectangle(aggrMethod);
+    }
 }
