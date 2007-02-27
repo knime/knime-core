@@ -1539,13 +1539,13 @@ public abstract class Config extends AbstractConfigEntry
     
     private static final int TAB_SIZE = 2;
     
-    private static final String SPACE = " ".intern();
-    private static final String KEYEQ = "key=".intern();
-    private static final String COMMA_TYPEEQ = ",type=".intern();
-    private static final String LINE_BREAK = "\n".intern();
-    private static final String DOT_LINE_BREAK = ":\n".intern();
-    private static final String ARROW_NULL = "->null".intern();
-    private static final String ARROW = "->".intern();
+    private static final String SPACE = " ";
+    private static final String KEYEQ = "key=";
+    private static final String COMMA_TYPEEQ = ",type=";
+    private static final String LINE_BREAK = "\n";
+    private static final String DOT_LINE_BREAK = ":\n";
+    private static final String ARROW_NULL = "->null";
+    private static final String ARROW = "->";
 
     private void toString(final int indent, final StringBuffer sb) {
         assert (indent >= 0);
