@@ -25,6 +25,8 @@
 package org.knime.core.node.interrupt;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.knime.core.data.DataTable;
@@ -35,6 +37,8 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
 
 
 /**
@@ -68,17 +72,23 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     
     private int m_iterationCounter = 0;
     
+    private int m_iterationsToDo = 0;
+    
+    private boolean m_runAnyway = false;
+    
     private BufferedDataTable[] m_inData;
     
     private int m_delay = INITIAL_DELAY;
     
     private ExecutionContext m_exec;
     
-//   private static final String FILE_NAME = "interruptibleInput";
-//    
-//   private static final String INTERN_CFG_KEY = "interruptibleInternSettings";
-//   private static final String INTERN_CFG_ITERATION = "iteration";
-//   private static final String INTERN_CFG_FINIS = "finished";
+    private final Object m_lock = new Object();
+    
+   private static final String FILE_NAME = "interruptibleInput";
+    
+   private static final String INTERN_CFG_KEY = "interruptibleInternSettings";
+   private static final String INTERN_CFG_ITERATION = "iteration";
+   private static final String INTERN_CFG_FINIS = "finished";
     
     
     /**
@@ -119,23 +129,8 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * 
      * @return - the number of processed iterations so far.
      */
-    public synchronized int getNumberOfIterations() {
-        return m_iterationCounter;
-    }
-    
-    /**
-     * Increments the iteration counter.
-     */
-    public synchronized void incrementIterationCounter() {
-        m_iterationCounter++;
-    }
-    
-    /**
-     * Resets the iteration counter to zero again.
-     * 
-     */
-    public void resetIterationCounter() {
-        m_iterationCounter = 0;
+    public int getNumberOfIterations() {
+        return m_iterationCounter;    
     }
     
     /**
@@ -145,8 +140,8 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * 
      * @param delay - the number of iterations until the view is refreshed.
      */
-    public synchronized void setDelay(final int delay) {
-        this.m_delay = delay;
+    public void setDelay(final int delay) {
+        this.m_delay = delay;    
     }
     
     /**
@@ -155,8 +150,8 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * 
      * @return - the current delay.
      */
-    public synchronized int getDelay() {
-        return m_delay;
+    public int getDelay() {
+        return m_delay;   
     }
     
     /**
@@ -164,23 +159,21 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * 
      * @return - true, if the execution pauses, false otherwise.
      */
-    public synchronized boolean isPaused() {
-        return m_pause;
+    public boolean isPaused() {
+        return m_pause;   
     }
     
     /**
-     * Sets the status of the execution to paused or not. By setting it to 
-     * pause = true the execution will be paused after finishing the current 
-     * iteration, setting it to pause = false causes the execution to resume 
-     * after at most waiting SLEEPING_MILLIS milliseconds.
+     * Causes the execution to pause until either {@link #next(int)} or 
+     * {@link #run()} is called. 
      * 
-     * @param b - true, if the execition should pause, false if the execution
-     *            should be resumed.
      */
-    public synchronized void pause(final boolean b) {
-        m_pause = b;
-        if (!m_pause) {
-            notify();
+    public void pause() {
+        synchronized (m_lock) {
+            m_pause = true;
+            if (!m_pause) {
+                m_lock.notify();
+            }            
         }
     }
     
@@ -189,26 +182,44 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * 
      * @return - true, if the algorithm is finished, false otherwise.
      */
-    public synchronized boolean isFinished() {
-        return m_finished;
+    public boolean isFinished() {
+        return m_finished;   
     }
     
     /**
      * Forces the algorithm to finish its execution. If the algorithm is
      * currently running, the current iteration will be finished gracefully.
      */
-    public synchronized void finish() {
-        m_finished = true;
-        notify();
+    public void finish() {
+        synchronized (m_lock) {
+            m_finished = true;
+            m_lock.notify();            
+        }
     }
     
     /**
-     * Sets the status of the execution to be finished or not.
-     * 
-     * @param finish - true, if the execution is finished, false otherwise.
+     * Causes the execution of the next (n) iteration(s).
+     *  
+     * @param numberOfIterations number of iterations to perform
      */
-    public synchronized void setFinish(final boolean finish) {
-        m_finished = finish;
+    public void next(final int numberOfIterations) {
+        synchronized (m_lock) {
+            m_iterationsToDo = numberOfIterations;
+            m_pause = false;
+            m_lock.notify();
+        }
+    }
+    
+    /**
+     * Causes the node to run for an unlimited number of iterations.
+     *
+     */
+    public void run() {
+        synchronized (m_lock) {
+            m_runAnyway = true;
+            m_pause = false;
+            m_lock.notify();
+        }
     }
     
     /**
@@ -253,45 +264,36 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         m_exec = exec;
         init(inData, exec);
         try {
+            // perform iterations until the node is finished
             while (!isFinished()) {
-                exec.checkCanceled();
-                if (isFinished()) {
-                    LOGGER.debug(Thread.currentThread().getName()
-                            + " says: 'bye, bye...'");
-                    break;
-                }
-                if (isPaused()) {
-                    while (isPaused() && !isFinished()) {
-                        exec.checkCanceled();
-                        try {
-                            synchronized (this) {
-                                while (isPaused() && !isFinished()) {
-                                    wait();
-                                }
-                            }
-                            // Thread.sleep(SLEEPING_MILLIS);
-                        } catch (InterruptedException ie) {
-                            ie.printStackTrace();
-                            LOGGER.debug("interrupted while sleeping");
-                            break;
-                        }
+                // in case the the node is paused or there are not iterations
+                // to do and the node should not run anyway, wait until
+                // the state changes
+                while (isPaused() || m_iterationsToDo <= 0 && !m_runAnyway) {
+                    synchronized (m_lock) {
+                        // if the status was changed we have to update the views
+                        notifyViews(this);
+                        // don't catch InterruptedException
+                        // if thrown it will be catched in the catch block
+                        // below where the finish() method is called
+                        m_lock.wait();
                     }
-                } else if (!isPaused()) {
-                    synchronized (this) {
-                        // LOGGER.debug("execute one iteration");
-                        executeOneIteration(exec);
-                        incrementIterationCounter();
-                        if (getNumberOfIterations() % m_delay == 0) {
-                            // LOGGER.debug("notify views at iteration nr.: "
-                            // + getNumberOfIterations());
-                            notifyViews(this);
-                        }
+                }
+                // check whether the previous loop has been left 
+                // due to a "finish" event
+                // if not perform next iteration, where the finish status is 
+                // checked anyway
+                if (!isFinished()) {
+                    executeOneIteration(exec);
+                    m_iterationCounter++;
+                    m_iterationsToDo--;
+                    if (m_iterationCounter % m_delay == 0) {
+                        notifyViews(this);
                     }
                 }
             }
         } catch (Exception e) {
             finish();
-            e.printStackTrace();
             throw new Exception(e);
         }
         LOGGER.debug(this.getClass().getSimpleName()
@@ -307,9 +309,11 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        pause(true);
-        setFinish(false);
-        resetIterationCounter();
+        m_pause = true;
+        m_finished = false;
+        m_runAnyway = false;
+        m_iterationsToDo = 0;
+        m_iterationCounter = 0;
     }
     
     
@@ -321,11 +325,6 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir, 
             final ExecutionMonitor exec) 
     throws IOException, CanceledExecutionException {
-       /* m_inData = new BufferedDataTable[getNrDataIns()];
-        for (int i = 0; i < getNrDataIns(); i++) {
-            File f = new File(nodeInternDir, FILE_NAME + i);
-            m_inData[i] = DataContainer.readFromZip(f);
-        }  
         File f = new File(nodeInternDir, FILE_NAME);
         FileInputStream fis = new FileInputStream(f);
         NodeSettingsRO internalSettings = NodeSettings.loadFromXML(fis);
@@ -335,7 +334,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         } catch (InvalidSettingsException ise) {
             LOGGER.warn(ise.getMessage());
             throw new IOException(ise.getMessage());
-        }*/
+        }
     }
 
     /**
@@ -346,16 +345,12 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir, 
             final ExecutionMonitor exec) 
         throws IOException, CanceledExecutionException {
-       /* for (int i = 0; i < m_inData.length; i++) {
-            File f = new File(nodeInternDir, FILE_NAME + i);
-            DataContainer.writeToZip(m_inData[i], f, exec);
-        }
         NodeSettings internalSettings = new NodeSettings(INTERN_CFG_KEY);
         internalSettings.addInt(INTERN_CFG_ITERATION, m_iterationCounter);
         internalSettings.addBoolean(INTERN_CFG_FINIS, m_finished);
         File f = new File(nodeInternDir, FILE_NAME);
         FileOutputStream fos = new FileOutputStream(f);
-        internalSettings.saveToXML(fos);*/
+        internalSettings.saveToXML(fos);
     }
     
     /**
@@ -381,7 +376,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * by the user.
      */
     public abstract void executeOneIteration(final ExecutionContext exec)
-    throws CanceledExecutionException;
+        throws CanceledExecutionException;
     
     /**
      * Do here the initialisation of the model. This method is called before
