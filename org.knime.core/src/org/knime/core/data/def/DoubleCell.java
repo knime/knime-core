@@ -22,6 +22,7 @@
  * History
  *   07.07.2005 (mb): created
  *   21.06.06 (bw & po): reviewed
+ *   27.02.07 (po): implements ComplexNumberValue now
  */
 package org.knime.core.data.def;
 
@@ -29,6 +30,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
@@ -46,7 +48,7 @@ import org.knime.core.data.FuzzyNumberValue;
  * @author Michael Berthold, University of Konstanz
  */
 public final class DoubleCell extends DataCell implements DoubleValue,
-        FuzzyNumberValue, FuzzyIntervalValue {
+        ComplexNumberValue, FuzzyNumberValue, FuzzyIntervalValue {
     
     /** Convenience access member for 
      * <code>DataType.getType(DoubleCell.class)</code>. 
@@ -137,6 +139,20 @@ public final class DoubleCell extends DataCell implements DoubleValue,
         return m_double;
     }
 
+    /**
+     * @see org.knime.core.data.ComplexNumberValue#getImaginaryValue()
+     */
+    public double getImaginaryValue() {
+        return 0.0;
+    }
+    
+    /**
+     * @see org.knime.core.data.ComplexNumberValue#getRealValue()
+     */
+    public double getRealValue() {
+        return m_double;
+    }
+    
     /**
      * @see org.knime.core.data.DataCell
      *      #equalsDataCell(org.knime.core.data.DataCell)
