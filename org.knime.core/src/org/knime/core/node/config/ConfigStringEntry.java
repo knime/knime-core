@@ -42,7 +42,7 @@ public class ConfigStringEntry extends AbstractConfigEntry {
      */
     ConfigStringEntry(final String key, final String value) {
         super(ConfigEntries.xstring, key);
-        m_string = (value == null ? null : value.intern());   
+        m_string = value; 
     }
     
     /**
