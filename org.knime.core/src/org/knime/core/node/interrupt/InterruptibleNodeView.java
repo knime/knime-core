@@ -79,7 +79,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
         // add the menu entry to the menu bar
         super.getJMenuBar().add(createInterruptMenu());
         // TODO: this is still a hack!
-        // setComponent(getControlPanel());
+//         setComponent(getControlPanel());
     }
 
     /**
@@ -202,6 +202,8 @@ public abstract class InterruptibleNodeView extends NodeView implements
         getControlPanel().getNextStepButton().setEnabled(
                 model.isPaused() && !model.isFinished());
         getControlPanel().getFinishButton().setEnabled(!model.isFinished());
+        
+        getControlPanel().setCurrentIteration(model.getNumberOfIterations());
     }
 
     /**
@@ -213,7 +215,15 @@ public abstract class InterruptibleNodeView extends NodeView implements
     @Override
     public void onClose() {
         ((InterruptibleNodeModel)getNodeModel()).finish();
-        refreshInterruptMenu();
+    }
+    
+    /**
+     * 
+     * @see org.knime.core.node.NodeView#onOpen()
+     */
+    @Override
+    protected void onOpen() {
+        refreshInterruptMenu();   
     }
 
     /**
@@ -246,6 +256,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
      */
     @Override
     public void updateModel(final Object model) {
+        refreshInterruptMenu();
         modelChanged();
     }
 

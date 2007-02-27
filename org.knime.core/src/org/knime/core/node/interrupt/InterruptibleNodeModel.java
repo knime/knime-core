@@ -40,7 +40,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 
-
 /**
  * This class provides a generic implementation of a node that can be stopped
  * and resumed during execution. Therefore a derived class has to provide a
@@ -50,47 +49,46 @@ import org.knime.core.node.NodeSettingsRO;
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class InterruptibleNodeModel extends NodeModel {
-    
+
     /**
      * A constant to define the inital delay, so the algorithm and the slider
      * have the same inital values.
      */
     public static final int INITIAL_DELAY = 10;
-    
+
     /**
      * A constant defining how long the execute thread should sleep, while
      * waiting to resume again.
      */
     public static final int SLEEPING_MILLIS = 500;
-    
-    private static final NodeLogger LOGGER = NodeLogger
-    .getLogger(InterruptibleNodeModel.class);
-    
+
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(InterruptibleNodeModel.class);
+
     private volatile boolean m_pause;
-    
+
     private volatile boolean m_finished;
-    
+
     private int m_iterationCounter = 0;
-    
+
     private int m_iterationsToDo = 0;
-    
+
     private boolean m_runAnyway = false;
-    
+
     private BufferedDataTable[] m_inData;
-    
+
     private int m_delay = INITIAL_DELAY;
-    
-    private ExecutionContext m_exec;
-    
+
     private final Object m_lock = new Object();
-    
-   private static final String FILE_NAME = "interruptibleInput";
-    
-   private static final String INTERN_CFG_KEY = "interruptibleInternSettings";
-   private static final String INTERN_CFG_ITERATION = "iteration";
-   private static final String INTERN_CFG_FINIS = "finished";
-    
-    
+
+    private static final String FILE_NAME = "interruptibleInput";
+
+    private static final String INTERN_CFG_KEY = "interruptibleInternSettings";
+
+    private static final String INTERN_CFG_ITERATION = "iteration";
+
+    private static final String INTERN_CFG_FINIS = "finished";
+
     /**
      * Constructs a NodeModel with the desired in- and outports, setting the
      * state to paused, that is waiting for an intial event to start executing.
@@ -103,19 +101,19 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         m_pause = true;
         m_finished = false;
     }
-    
+
     /**
-     * Constructs a NodeModel with the desired in- and outports, and model
-     * in- and outports. State is paused, waiting for an intial event to start
-     * executing. Be sure to override load/save ModelContent in your 
-     * derived NodeModel.
+     * Constructs a NodeModel with the desired in- and outports, and model in-
+     * and outports. State is paused, waiting for an intial event to start
+     * executing. Be sure to override load/save ModelContent in your derived
+     * NodeModel.
      * 
      * @param nrInPorts - the desired number of inports.
      * @param nrOutPorts - the desired number of outports.
-     * @param nrPredParamsIns The number of <code>ModelContent</code>
-     *            elements available as inputs.
-     * @param nrPredParamsOuts The number of <code>ModelContent</code>
-     *            objects available at the output.
+     * @param nrPredParamsIns The number of <code>ModelContent</code> elements
+     *            available as inputs.
+     * @param nrPredParamsOuts The number of <code>ModelContent</code> objects
+     *            available at the output.
      */
     public InterruptibleNodeModel(final int nrInPorts, final int nrOutPorts,
             final int nrPredParamsIns, final int nrPredParamsOuts) {
@@ -123,16 +121,17 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         m_pause = true;
         m_finished = false;
     }
-    
+
     /**
      * Returns the number of proessed iterations so far.
      * 
      * @return - the number of processed iterations so far.
      */
     public int getNumberOfIterations() {
-        return m_iterationCounter;    
+        return m_iterationCounter;
     }
     
+        
     /**
      * Sets the delay, that is the number of iterations until the view is
      * refreshed. Setting the delay to n, every n-th iteration the view is
@@ -141,9 +140,9 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * @param delay - the number of iterations until the view is refreshed.
      */
     public void setDelay(final int delay) {
-        this.m_delay = delay;    
+        this.m_delay = delay;
     }
-    
+
     /**
      * Returns the current delay, that is the number of iterations until the
      * view is refreshed.
@@ -151,41 +150,43 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * @return - the current delay.
      */
     public int getDelay() {
-        return m_delay;   
+        return m_delay;
     }
-    
+
     /**
      * Indicates whether the execution of the algorithm is paused or not.
      * 
      * @return - true, if the execution pauses, false otherwise.
      */
     public boolean isPaused() {
-        return m_pause;   
+        return m_pause;
     }
-    
+
     /**
-     * Causes the execution to pause until either {@link #next(int)} or 
-     * {@link #run()} is called. 
+     * Causes the execution to pause until either {@link #next(int)} or
+     * {@link #run()} is called.
      * 
      */
     public void pause() {
         synchronized (m_lock) {
             m_pause = true;
+            m_runAnyway = false;
+            m_iterationsToDo = 0;
             if (!m_pause) {
                 m_lock.notify();
-            }            
+            }
         }
     }
-    
+
     /**
      * Indicates whether the state of the algorithm is finished or not.
      * 
      * @return - true, if the algorithm is finished, false otherwise.
      */
     public boolean isFinished() {
-        return m_finished;   
+        return m_finished;
     }
-    
+
     /**
      * Forces the algorithm to finish its execution. If the algorithm is
      * currently running, the current iteration will be finished gracefully.
@@ -193,35 +194,37 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     public void finish() {
         synchronized (m_lock) {
             m_finished = true;
-            m_lock.notify();            
+            m_lock.notify();
         }
     }
-    
+
     /**
      * Causes the execution of the next (n) iteration(s).
-     *  
+     * 
      * @param numberOfIterations number of iterations to perform
      */
     public void next(final int numberOfIterations) {
         synchronized (m_lock) {
             m_iterationsToDo = numberOfIterations;
             m_pause = false;
+            m_runAnyway = false;
             m_lock.notify();
         }
     }
-    
+
     /**
      * Causes the node to run for an unlimited number of iterations.
-     *
+     * 
      */
     public void run() {
         synchronized (m_lock) {
             m_runAnyway = true;
             m_pause = false;
+            m_iterationsToDo = 0;
             m_lock.notify();
         }
     }
-    
+
     /**
      * Provides access to the input data the node is passed to at the beginning
      * of the execute method.
@@ -237,7 +240,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         }
         return null;
     }
-    
+
     /**
      * Returns the input data that was connected to the node at the beginning of
      * the execute method as a whole.
@@ -247,30 +250,36 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     public BufferedDataTable[] getInputData() {
         return m_inData;
     }
-    
+
     /**
      * Initialises the NodeModel, starts the execution, pauses it, resumes it
      * and finishes it. At the end the from the derived NodeModel provided
      * output data is set to the output.
      * 
-     * @see org.knime.core.node.NodeModel#execute(
-     *  BufferedDataTable[],
-     *  ExecutionContext)
+     * @see org.knime.core.node.NodeModel#execute( BufferedDataTable[],
+     *      ExecutionContext)
      */
     @Override
     public final BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        if (isFinished()) {
+            m_finished = false;
+        }
         m_inData = inData;
-        m_exec = exec;
         init(inData, exec);
+        notifyViews(this);
         try {
             // perform iterations until the node is finished
             while (!isFinished()) {
                 // in case the the node is paused or there are not iterations
                 // to do and the node should not run anyway, wait until
                 // the state changes
-                while (isPaused() || m_iterationsToDo <= 0 && !m_runAnyway) {
-                    synchronized (m_lock) {
+                synchronized (m_lock) {
+                    while (!isFinished()
+                            && (isPaused() || m_iterationsToDo <= 0
+                                    && !m_runAnyway)) {
+
+                        m_pause = true;
                         // if the status was changed we have to update the views
                         notifyViews(this);
                         // don't catch InterruptedException
@@ -279,9 +288,9 @@ public abstract class InterruptibleNodeModel extends NodeModel {
                         m_lock.wait();
                     }
                 }
-                // check whether the previous loop has been left 
+                // check whether the previous loop has been left
                 // due to a "finish" event
-                // if not perform next iteration, where the finish status is 
+                // if not perform next iteration, where the finish status is
                 // checked anyway
                 if (!isFinished()) {
                     executeOneIteration(exec);
@@ -300,7 +309,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
                 + " says: 'I'm down and out...'");
         return getOutput(exec);
     }
-    
+
     /**
      * Resets the status of the Node to paused and not finished so it can be
      * triggered to start again.
@@ -314,23 +323,23 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         m_runAnyway = false;
         m_iterationsToDo = 0;
         m_iterationCounter = 0;
+        notifyViews(this);
     }
-    
-    
+
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File,
+     *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-    throws IOException, CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
         File f = new File(nodeInternDir, FILE_NAME);
         FileInputStream fis = new FileInputStream(f);
         NodeSettingsRO internalSettings = NodeSettings.loadFromXML(fis);
         try {
-        m_finished = internalSettings.getBoolean(INTERN_CFG_FINIS);
-        m_iterationCounter = internalSettings.getInt(INTERN_CFG_ITERATION);
+            m_finished = internalSettings.getBoolean(INTERN_CFG_FINIS);
+            m_iterationCounter = internalSettings.getInt(INTERN_CFG_ITERATION);
         } catch (InvalidSettingsException ise) {
             LOGGER.warn(ise.getMessage());
             throw new IOException(ise.getMessage());
@@ -338,13 +347,13 @@ public abstract class InterruptibleNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(
-     * java.io.File, org.knime.core.node.ExecutionMonitor)
+     * @see org.knime.core.node.NodeModel#saveInternals( java.io.File,
+     *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) 
-        throws IOException, CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
         NodeSettings internalSettings = new NodeSettings(INTERN_CFG_KEY);
         internalSettings.addInt(INTERN_CFG_ITERATION, m_iterationCounter);
         internalSettings.addBoolean(INTERN_CFG_FINIS, m_finished);
@@ -352,14 +361,8 @@ public abstract class InterruptibleNodeModel extends NodeModel {
         FileOutputStream fos = new FileOutputStream(f);
         internalSettings.saveToXML(fos);
     }
-    
-    /**
-     * @return the ExecutionContext of this Node.
-     */
-    public ExecutionContext getExecutionContext() {
-        return m_exec;
-    }
-    
+
+
     /**
      * This method is assumed to implement one iteration of an interruptible
      * algorithm. Most of the data mining algorithm typically run in several
@@ -370,31 +373,30 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * any case implement in this method the content of the for- or
      * while-clause.
      * 
-     * @param exec the ExecutionContext to cancel the operation or show
-     * the progress.
-     * @throws CanceledExecutionException if the operation is canceled
-     * by the user.
+     * @param exec the ExecutionContext to cancel the operation or show the
+     *            progress.
+     * @throws CanceledExecutionException if the operation is canceled by the
+     *             user.
      */
     public abstract void executeOneIteration(final ExecutionContext exec)
-        throws CanceledExecutionException;
-    
+            throws CanceledExecutionException;
+
     /**
      * Do here the initialisation of the model. This method is called before
      * starting the execute method.
      * 
      * @param inData - the incoming DataTables at the moment the execute method
      *            starts.
-     * @param exec to show the progress of the initialization or to
-     *            cancel it.
-     *  @throws CanceledExecutionException if the operation is canceled by
-     *  the user.
+     * @param exec to show the progress of the initialization or to cancel it.
+     * @throws CanceledExecutionException if the operation is canceled by the
+     *             user.
      * @throws InvalidSettingsException - if the inData doesn't fit the expected
      *             configuration.
      */
     public abstract void init(final BufferedDataTable[] inData,
             ExecutionContext exec) throws CanceledExecutionException,
             InvalidSettingsException;
-    
+
     /**
      * Is called at the end of the execute method when it is finished and the
      * data should be available. Note that the returned DataTable[] is directly
@@ -404,13 +406,13 @@ public abstract class InterruptibleNodeModel extends NodeModel {
      * @param exec The execution monitor to show the progress.
      * @see org.knime.core.node.NodeModel#execute(BufferedDataTable[],
      *      ExecutionContext)
-     * @return - an BufferedDataTable[] as should be returned from the 
-     *      NodeModel's execute method.
+     * @return - an BufferedDataTable[] as should be returned from the
+     *         NodeModel's execute method.
      * @throws CanceledExecutionException If writting output tables has been
-     *      canceled.
-     *      
+     *             canceled.
+     * 
      */
     public abstract BufferedDataTable[] getOutput(final ExecutionContext exec)
-        throws CanceledExecutionException;
-    
+            throws CanceledExecutionException;
+
 }
