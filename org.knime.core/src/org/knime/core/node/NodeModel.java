@@ -445,26 +445,50 @@ public abstract class NodeModel {
         // if execution was canceled without exception flying return false
         if (exec.isCanceled()) {
             throw new CanceledExecutionException(
-                    "Result discarded due to user " + "cancel");
+                    "Result discarded due to user cancel");
         }
 
         // if number of out tables does not match: fail
         if (outData == null || outData.length != m_nrDataOuts) {
             throw new IllegalStateException(
-                    "Invalid result. Execution failed, "
-                            + "reason: data is null or number "
-                            + "of outputs wrong.");
+                    "Invalid result. Execution failed. "
+                            + "Reason: Incorrect implementation; the execute"
+                            + " method in " + this.getClass().getSimpleName()
+                            + " returned null or an incorrect number of output"
+                            + " tables.");
         }
 
         // check the result, data tables must not be null
         for (int i = 0; i < outData.length; i++) {
             if (outData[i] == null) {
-                m_logger.error("execution failed: null data at port: " + i);
+                m_logger.error("Execution failed: Incorrect implementation;"
+                        + " the execute method in " 
+                        + this.getClass().getSimpleName() 
+                        + "returned a null data table at port: " + i);
                 throw new IllegalStateException("Invalid result. "
                         + "Execution failed, reason: data at output " + i
                         + " is null.");
             }
         }
+        // check meaningfulness of result and warn,
+        // - only if the execute didn't issue a warning already 
+        if ((getWarningMessage() == null) 
+                || (getWarningMessage().length() == 0)) { 
+            for (int i = 0; i < outData.length; i++) {
+                if (outData[i].getDataTableSpec().getNumColumns() < 1) {
+                    setWarningMessage(
+                            "Node created empty data table(s) at the output");
+                    break;
+                }
+                if (outData[i].getRowCount() < 1) {
+                    setWarningMessage(
+                            "Node created empty data table(s) at the output");
+                    break;
+                }
+            }
+        }
+        
+            
         setExecuted(true);
         return outData;
     } // executeModel(DataTable[],ExecutionMonitor)
