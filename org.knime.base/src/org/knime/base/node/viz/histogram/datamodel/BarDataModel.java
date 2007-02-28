@@ -259,11 +259,19 @@ public class BarDataModel {
         if (minAggrVal < 0 && maxAggrVal > 0) {
             valRange = maxAggrVal + Math.abs(minAggrVal);
         }
+        final int totalHeight = (int)m_barRectangle.getHeight();
+        final int barWidth = (int)m_barRectangle.getWidth();
+        final int noOfBars = barElementColors.size();
+        m_drawElements = elementsFitInBar(layout, noOfBars, barWidth, 
+                totalHeight);
+        if (!m_drawElements) {
+            return;
+        }
         if (HistogramLayout.STACKED.equals(layout)) {
             m_drawElements = setStackedRectangles(m_barRectangle, 
                     barElementColors, valRange, aggrMethod, minAggrVal);
         } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
-            m_drawElements = setSideBySideRectangles(m_barRectangle, 
+            m_drawElements = setSideBySideRectangles(m_barRectangle,
                     barElementColors, valRange, aggrMethod, baseLine);
         } else {
             throw new IllegalArgumentException(
@@ -273,23 +281,17 @@ public class BarDataModel {
     }
 
     private boolean setSideBySideRectangles(final Rectangle bounds, 
-            final SortedSet<Color> barElementColors, final double valRange, 
-            final AggregationMethod aggrMethod, final int baseLine) {
-        final double totalWidth = bounds.getWidth();
+            final SortedSet<Color> barElementColors, 
+            final double valRange, final AggregationMethod aggrMethod, 
+            final int baseLine) {
         final int totalHeight = (int)bounds.getHeight();
         //check if all elements fit side by side
         final double heightPerVal = totalHeight / valRange;
         final int startX = (int)bounds.getX();
+        final int barWidth = (int)m_barRectangle.getWidth();
         final int noOfBars = barElementColors.size();
-        final int barWidth = Math.max((int)(totalWidth 
-                - (SPACE_BETWEEN_ELEMENTS * noOfBars)) / noOfBars, 1);
-        if (noOfBars * barWidth 
-                > totalWidth - (SPACE_BETWEEN_ELEMENTS * noOfBars)) {
-            //the total bar width is not enough to draw all elements so we 
-            //don't need to calculate any further instead we set have
-            //to set all rectangles
-            return false;
-        }
+        final int elementWidth = 
+            calculateSideBySideElementWidth(noOfBars, barWidth);
         //the user wants the elements next to each other
         //so we have to change the x coordinate
         int xCoord = startX + SPACE_BETWEEN_ELEMENTS;
@@ -322,12 +324,12 @@ public class BarDataModel {
                     yCoord = baseLine;
                 }
                 final Rectangle elementRect =  
-                    new Rectangle(xCoord, yCoord, barWidth, barHeight);
+                    new Rectangle(xCoord, yCoord, elementWidth, barHeight);
                 element.setElementRectangle(elementRect, aggrMethod);
             }
             //add the bar width and the space between bars to the current
             //x coordinate
-            xCoord += barWidth + SPACE_BETWEEN_ELEMENTS;
+            xCoord += elementWidth + SPACE_BETWEEN_ELEMENTS;
         }
         return true;
     }
@@ -340,11 +342,6 @@ public class BarDataModel {
         final int startY = (int)bounds.getY();
         final int totalHeight = (int)bounds.getHeight();
         final int barWidth = (int)bounds.getWidth();
-        final int noOfBars = barElementColors.size();
-        if (noOfBars > totalHeight) {
-            //we have more elements than pixel
-            return false;
-        }
         //we have to be care full with the value range in stacked layout
         //because of the mixture of positive and negatives
         double stackedValRange = valRange;
@@ -432,39 +429,25 @@ public class BarDataModel {
         final int yCoord = (int)m_barRectangle.getY();
         final int barHeight = (int)m_barRectangle.getHeight();
         m_barRectangle.setBounds(startX, yCoord, barWidth, barHeight);
-        
-        int elementWidth = barWidth;
-        if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
-            //check if all elements fit side by side
-            final int noOfBars = barElementColors.size();
-            elementWidth = Math.max((barWidth 
-                    - (SPACE_BETWEEN_ELEMENTS * noOfBars)) / noOfBars, 1);
-            if (noOfBars * elementWidth 
-                    > barWidth - (SPACE_BETWEEN_ELEMENTS * noOfBars)) {
-                m_drawElements = false;
-                //the total bar width is not enough to draw all elements so we 
-                //don't need to calculate any further instead we set have
-                //to set all rectangles
-//                final Collection<BarElementDataModel> elements = 
-//                    m_elements.values();
-//                for (BarElementDataModel element : elements) {
-//                    element.setElementRectangle(null, aggrMethod);
-//                }
-                return;
-            }
+        final int noOfBars = barElementColors.size();
+        m_drawElements = elementsFitInBar(layout, noOfBars, barWidth, 
+                barHeight);
+        if (!m_drawElements) {
+            return;
         }
-        m_drawElements = true;
         if (HistogramLayout.STACKED.equals(layout)) {
             for (Color elementColor : barElementColors) {
                 final BarElementDataModel element = 
                     m_elements.get(elementColor);
                 if (element != null) {
                     element.updateElementWidth(startX, 
-                            elementWidth, aggrMethod);
+                            barWidth, aggrMethod);
                 }
             }
         } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
             int xCoord = startX + SPACE_BETWEEN_ELEMENTS;
+            final int elementWidth = Math.max((barWidth 
+                    - (SPACE_BETWEEN_ELEMENTS * noOfBars)) / noOfBars, 1);
             for (Color elementColor : barElementColors) {
                 final BarElementDataModel element = 
                     m_elements.get(elementColor);
@@ -483,6 +466,41 @@ public class BarDataModel {
         return;
     }
     
+    /**
+     * Checks if all elements fit in the surrounding bar.
+     * @param layout the {@link HistogramLayout}
+     * @param noOfElements the number of elements which should fit
+     * @param barWidth the width of the bar
+     * @param barHeight the height of the bar
+     * @param elementWidth the width of each element
+     * @return <code>true</code> if the given number of elements fit into
+     * the given bar ranges for the given layout 
+     */
+    private static boolean elementsFitInBar(final HistogramLayout layout, 
+            final int noOfElements, final int barWidth, 
+            final int barHeight) {
+        if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
+            final int elementWidth = 
+                calculateSideBySideElementWidth(noOfElements, barWidth);
+            if (noOfElements * elementWidth 
+                    > barWidth - (SPACE_BETWEEN_ELEMENTS * noOfElements)) {
+                return false;
+            }
+        } else if (HistogramLayout.STACKED.equals(layout)) {
+            if (noOfElements > barHeight) {
+                //we have more elements than pixel
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static int calculateSideBySideElementWidth(final int noOfElements, 
+            final int barWidth) {
+        return Math.max((barWidth 
+                - (SPACE_BETWEEN_ELEMENTS * noOfElements)) 
+                    / noOfElements, 1);
+    }
     
     /**
      * @return <code>true</code> if the elements should be drawn

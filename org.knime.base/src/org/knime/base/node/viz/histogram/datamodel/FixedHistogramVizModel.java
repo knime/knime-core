@@ -40,8 +40,8 @@ import org.knime.core.data.DoubleValue;
  * This class holds all visualization data of a histogram. 
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedHistogramVizModel extends HistogramVizModel {
-    private final List<FixedHistogramDataRow> m_dataRows;
+public class FixedHistogramVizModel extends AbstractHistogramVizModel {
+    private final List<FixedHistogramDataRow> m_sortedDataRows;
 
     private final Collection<ColorColumn> m_aggrColumns;
     
@@ -50,19 +50,19 @@ public class FixedHistogramVizModel extends HistogramVizModel {
     /**
      * Constructor for class HistogramVizModel.
      * @param rowColors all possible colors the user has defined for a row
-     * @param noOfBins the number of bins to create
      * @param aggrMethod the {@link AggregationMethod} to use
      * @param layout {@link HistogramLayout} to use
-     * @param rows the {@link FixedHistogramDataRow}
+     * @param sortedRows the {@link FixedHistogramDataRow} sorted in ascending
+     * order
      * @param xColSpec the {@link DataColumnSpec} of the x column
      * @param aggrColumns the selected aggregation columns
+     * @param noOfBins the number of bins to create
      */
     public FixedHistogramVizModel(final SortedSet<Color> rowColors,
-            final int noOfBins, final AggregationMethod aggrMethod,
-            final HistogramLayout layout, 
-            final List<FixedHistogramDataRow> rows,
-            final DataColumnSpec xColSpec, 
-            final List<ColorColumn> aggrColumns) {
+            final AggregationMethod aggrMethod, final HistogramLayout layout,
+            final List<FixedHistogramDataRow> sortedRows, 
+            final DataColumnSpec xColSpec, final List<ColorColumn> aggrColumns, 
+            final int noOfBins) {
         super(rowColors, aggrMethod, layout, noOfBins);
         if (aggrMethod == null) {
             throw new IllegalArgumentException("No aggregation method defined");
@@ -71,7 +71,7 @@ public class FixedHistogramVizModel extends HistogramVizModel {
             throw new IllegalArgumentException("No layout defined");
         }
         m_aggrColumns = aggrColumns;
-        m_dataRows = rows;
+        m_sortedDataRows = sortedRows;
         m_xColSpec = xColSpec;
         if (m_xColSpec.getType().isCompatible(
                 DoubleValue.class)) {
@@ -85,7 +85,7 @@ public class FixedHistogramVizModel extends HistogramVizModel {
 
     /**
      * @see org.knime.base.node.viz.histogram.datamodel.
-     * HistogramVizModel#getXColumnName()
+     * AbstractHistogramVizModel#getXColumnName()
      */
     @Override
     public String getXColumnName() {
@@ -94,7 +94,7 @@ public class FixedHistogramVizModel extends HistogramVizModel {
 
     /**
      * @see org.knime.base.node.viz.histogram.datamodel.
-     * HistogramVizModel#getXColumnSpec()
+     * AbstractHistogramVizModel#getXColumnSpec()
      */
     @Override
     public DataColumnSpec getXColumnSpec() {
@@ -103,7 +103,7 @@ public class FixedHistogramVizModel extends HistogramVizModel {
 
     /**
      * @see org.knime.base.node.viz.histogram.datamodel.
-     * HistogramVizModel#getAggrColumns()
+     * AbstractHistogramVizModel#getAggrColumns()
      */
     @Override
     public Collection<ColorColumn> getAggrColumns() {
@@ -112,13 +112,13 @@ public class FixedHistogramVizModel extends HistogramVizModel {
     
     /**
      * @see org.knime.base.node.viz.histogram.datamodel.
-     * HistogramVizModel#addRows2Bins()
+     * AbstractHistogramVizModel#addRows2Bins()
      */
     @Override
     protected void addRows2Bins() {
         //add the data rows to the new bins
         int startBin = 0;
-        for (FixedHistogramDataRow row : m_dataRows) {
+        for (FixedHistogramDataRow row : m_sortedDataRows) {
             startBin = addDataRow2Bin(startBin, row.getXVal(), row.getColor(),
                     row.getRowKey().getId(), m_aggrColumns, row.getAggrVals());
         }

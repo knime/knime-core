@@ -44,7 +44,7 @@ public class InteractiveHistogramDataModel {
     
     private final DataTableSpec m_tableSpec;
     
-    private final SortedSet<Color> m_barElementColors = 
+    private final SortedSet<Color> m_rowColors = 
         new TreeSet<Color>(new HSBColorComparator());
     
     private final List<DataRow> m_dataRows;
@@ -73,9 +73,16 @@ public class InteractiveHistogramDataModel {
         }
         m_dataRows.add(row);
         final Color color = m_tableSpec.getRowColor(row).getColor(false, false);
-        if (!m_barElementColors.contains(color)) {
-            m_barElementColors.add(color);
+        if (!m_rowColors.contains(color)) {
+            m_rowColors.add(color);
         }
+    }
+    
+    /**
+     * @return the rowColors
+     */
+    public SortedSet<Color> getRowColors() {
+        return m_rowColors;
     }
     
     /**

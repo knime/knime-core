@@ -49,12 +49,13 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 
 /**
- * 
+ * This is the basic visualization model for a histogram. It handles bin
+ * creation and hilite handling.
  * @author Tobias Koetter, University of Konstanz
  */
-public abstract class HistogramVizModel {
+public abstract class AbstractHistogramVizModel {
     private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(HistogramVizModel.class);
+        NodeLogger.getLogger(AbstractHistogramVizModel.class);
 
     /** The caption of the bar which holds all missing values. */
     public static final String MISSING_VAL_BAR_CAPTION = "Missing_values";
@@ -102,7 +103,7 @@ public abstract class HistogramVizModel {
     private boolean m_showEmptyBins = false;
 
     private final BinDataModel m_missingValueBin = new BinDataModel(
-            HistogramVizModel.MISSING_VAL_BAR_CAPTION, 0, 0);
+            AbstractHistogramVizModel.MISSING_VAL_BAR_CAPTION, 0, 0);
     
     private final List<BinDataModel> m_bins = new ArrayList<BinDataModel>(50);
 
@@ -112,9 +113,9 @@ public abstract class HistogramVizModel {
      * @param rowColors all possible colors the user has defined for a row
      * @param layout the {@link HistogramLayout} to use
      * @param aggrMethod the {@link AggregationMethod} to use
-     * @param noOfBins 
+     * @param noOfBins the no of bins to create
      */
-    public HistogramVizModel(final SortedSet<Color> rowColors,
+    public AbstractHistogramVizModel(final SortedSet<Color> rowColors,
             final AggregationMethod aggrMethod, final HistogramLayout layout, 
             final int noOfBins) {
         if (rowColors == null) {
@@ -132,7 +133,7 @@ public abstract class HistogramVizModel {
      * the missing value bin if the showMissingValue bin variable is set to
      * <code>true</code>
      */
-    public Collection<BinDataModel> getBins(){
+    public Collection<BinDataModel> getBins() {
         final BinDataModel missingValueBin = getMissingValueBin();
         if (missingValueBin != null) {
             if (isShowMissingValBin()) {
@@ -189,12 +190,12 @@ public abstract class HistogramVizModel {
      * @return <code>true</code> if the number of bins has changed
      */
     public boolean setNoOfBins(final int noOfBins) {
+        if (m_noOfBins == noOfBins) {
+            return false;
+        }
         if (isBinNominal()) {
             throw new IllegalArgumentException(
                     "Not possible for nominal binning");
-        }
-        if (m_noOfBins == noOfBins) {
-            return false;
         }
         m_noOfBins = noOfBins;
         createBins();
@@ -587,9 +588,16 @@ public abstract class HistogramVizModel {
     protected void setBinNominal(final boolean nominal) {
         m_binNominal = nominal;
     }
-    
-    protected abstract void addRows2Bins();
 
+    /**
+     * Clears all information from the missing value bin.
+     */
+    protected void clearMissingValueBin() {
+        if (m_missingValueBin.getBinRowCount() > 0) {
+            m_missingValueBin.clear();
+        }
+    }
+    
     /**
      * Creates the bins for the currently set binning information
      * and adds all data rows to the corresponding bin.
@@ -597,7 +605,11 @@ public abstract class HistogramVizModel {
     protected void createBins() {
         LOGGER.debug("Entering createBins() of class HistogramVizModel.");
         final long startBinTimer = System.currentTimeMillis();
-        
+        // remove the old bar information
+        m_bins.clear();
+        //clear all information from the missing value bin
+        //before recreating the bins
+        clearMissingValueBin();
         if (isBinNominal()) {
             createNominalBins();
         } else {
@@ -624,8 +636,6 @@ public abstract class HistogramVizModel {
                     + "Please use DomainCalculator or ColumnFilter node "
                     + "to set the domain values.");
         }
-        // remove the old bar information
-        m_bins.clear();
         final Set<DataCell> values = xColSpec.getDomain().getValues();
         for (DataCell value : values) {
             m_bins.add(new BinDataModel(value.toString(), 0, 0));
@@ -656,8 +666,6 @@ public abstract class HistogramVizModel {
         final double upperBound = 
             ((DoubleValue)upperBoundCell).getDoubleValue();
         
-        // remove the old bar information
-        m_bins.clear();
         //start the binning
         if (m_noOfBins < 1) {
             m_noOfBins = FixedHistogramVizModel.DEFAULT_NO_OF_BINS;
@@ -685,7 +693,7 @@ public abstract class HistogramVizModel {
             double rightBoundary = BinningUtil.myRoundedBorders(
                     leftBoundary + binInterval, binInterval, INTERVAL_DIGITS);
             final String binCaption = BinningUtil.createBarName(
-                    firstBar, leftBoundary, rightBoundary);
+                    firstBar, leftBoundary, rightBoundary, isInteger);
             firstBar = false;
             final BinDataModel bin = 
                 new BinDataModel(binCaption, leftBoundary, rightBoundary);
@@ -696,6 +704,14 @@ public abstract class HistogramVizModel {
         }
     }
 
+    /**
+     *This method should loop through all data rows and should add each row
+     *to the corresponding bin by calling the 
+     *{@link #addDataRow2Bin(int, DataCell, Color, DataCell, 
+     *Collection, DataCell[])} method.
+     */
+    protected abstract void addRows2Bins();
+    
     /**
      * Adds the given data row to the corresponding bin.
      * @param startBin the index of the bin to start with
@@ -712,7 +728,7 @@ public abstract class HistogramVizModel {
             final DataCell[] aggrVals) {
         
         if (xVal.isMissing()) {
-            getMissingValueBin().addDataRow(id, color, aggrColumns, aggrVals);
+            m_missingValueBin.addDataRow(id, color, aggrColumns, aggrVals);
             return startBin;
         }
         if (isBinNominal()) {

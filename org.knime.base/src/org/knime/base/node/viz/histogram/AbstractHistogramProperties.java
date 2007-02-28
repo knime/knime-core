@@ -50,7 +50,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
-import org.knime.base.node.viz.histogram.datamodel.HistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
@@ -72,7 +72,7 @@ public abstract class AbstractHistogramProperties extends
 
     private static final String COLUMN_TAB_LABEL = "Column settings";
 
-    private static final String BAR_TAB_LABEL = "Bar settings";
+    private static final String BIN_TAB_LABEL = "Bin settings";
 
     private static final String AGGREGATION_TAB_LABEL = 
         "Aggregation settings";
@@ -97,22 +97,22 @@ public abstract class AbstractHistogramProperties extends
     private static final String AGGREGATION_COLUMN_LABEL = 
         "Aggregation column:";
 
-    private static final String BAR_SIZE_LABEL = "Bar size:";
+    private static final String BIN_SIZE_LABEL = "Bin size:";
 
-    private static final String BAR_WIDTH_TOOLTIP = "Width of the bars";
+    private static final String BIN_WIDTH_TOOLTIP = "Width of the bins";
 
-    private static final String NUMBER_OF_BARS_LABEL = "Number of bars:";
+    private static final String NUMBER_OF_BINS_LABEL = "Number of bins:";
 
-    private static final String NO_OF_BARS_TOOLTIP = 
-        "Number of bars (incl. empty bars, excl. missing value bar)";
+    private static final String NO_OF_BINS_TOOLTIP = 
+        "Number of bins (incl. empty bins, excl. missing value bin)";
 
-    private static final String SHOW_MISSING_VALUE_BAR_LABEL = 
-        "Show missing value bar";
+    private static final String SHOW_MISSING_VALUE_BIN_LABEL = 
+        "Show missing value bin";
 
-    private static final String SHOW_MISSING_VAL_BAR_TOOLTIP = "Shows a bar "
+    private static final String SHOW_MISSING_VAL_BIN_TOOLTIP = "Shows a bin "
             + "with rows which have a missing value for the selected x column.";
 
-    private static final String SHOW_EMPTY_BARS_LABEL = "Show empty bars";
+    private static final String SHOW_EMPTY_BINS_LABEL = "Show empty bins";
 
     private static final String SHOW_GRID_LABEL = "Y grid lines";
 
@@ -128,7 +128,7 @@ public abstract class AbstractHistogramProperties extends
 
     private final ColumnSelectionComboxBox m_yCol;
 
-    private final JSlider m_barWidth;
+    private final JSlider m_binWidth;
 
     private final JSlider m_noOfBins;
 
@@ -176,14 +176,14 @@ public abstract class AbstractHistogramProperties extends
         m_xCol.setBackground(this.getBackground());
         // create the additional settings components which get added to the
         // histogram settings panel
-        m_barWidth = new JSlider(0, 20, 10);
-        m_barWidth.setEnabled(false);
+        m_binWidth = new JSlider(0, 20, 10);
+        m_binWidth.setEnabled(false);
         m_noOfBins = new JSlider(1, 20, 10);
         m_noOfBinsLabel = new JLabel();
         m_noOfBins.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 final JSlider source = (JSlider)e.getSource();
-                updateNoOfBarsText(source.getValue());
+                updateNoOfBinsText(source.getValue());
             }
         });
         m_noOfBins.setEnabled(false);
@@ -233,9 +233,9 @@ public abstract class AbstractHistogramProperties extends
                 button.setSelected(true);
             }
         }
-        m_showEmptyBins = new JCheckBox(SHOW_EMPTY_BARS_LABEL);
-        m_showMissingValBin = new JCheckBox(SHOW_MISSING_VALUE_BAR_LABEL);
-        m_showMissingValBin.setToolTipText(SHOW_MISSING_VAL_BAR_TOOLTIP);
+        m_showEmptyBins = new JCheckBox(SHOW_EMPTY_BINS_LABEL);
+        m_showMissingValBin = new JCheckBox(SHOW_MISSING_VALUE_BIN_LABEL);
+        m_showMissingValBin.setToolTipText(SHOW_MISSING_VAL_BIN_TOOLTIP);
 //        m_applyAggrSettingsButton = new JButton(
 //                AbstractHistogramProperties.APPLY_BUTTON_LABEL);
 //        m_applyAggrSettingsButton.setHorizontalAlignment(
@@ -268,9 +268,9 @@ public abstract class AbstractHistogramProperties extends
         final JPanel columnPanel = createColumnSettingsPanel();
         addTab(COLUMN_TAB_LABEL, columnPanel);
 
-        // The bar settings tab
-        final JPanel barPanel = createBarSettingsPanel();
-        addTab(BAR_TAB_LABEL, barPanel);
+        // The bin settings tab
+        final JPanel binPanel = createBinSettingsPanel();
+        addTab(BIN_TAB_LABEL, binPanel);
         // the aggregation settings tab
         final JPanel aggrPanel = createAggregationSettingsPanel();
         addTab(AGGREGATION_TAB_LABEL, aggrPanel);
@@ -359,31 +359,31 @@ public abstract class AbstractHistogramProperties extends
 //bar layout box                
         final Box layoutDisplayBox = AbstractHistogramProperties
         .createButtonGroupBox(m_layoutDisplayPolicy, true, null);
-        final Box barWidthBox = Box.createVerticalBox();
+        final Box binWidthBox = Box.createVerticalBox();
         // barWidthBox.setBorder(BorderFactory
         // .createEtchedBorder(EtchedBorder.RAISED));
-        final Box barWidthLabelBox = Box.createHorizontalBox();
-        final JLabel barWidthLabel = new JLabel(
-                AbstractHistogramProperties.BAR_SIZE_LABEL);
-        barWidthLabelBox.add(Box.createHorizontalGlue());
-        barWidthLabelBox.add(barWidthLabel);
-        barWidthLabelBox.add(Box.createHorizontalGlue());
-        barWidthBox.add(barWidthLabelBox);
-        // the bar width slider box
-        final Box barWidthSliderBox = Box.createHorizontalBox();
-        barWidthSliderBox.add(Box.createHorizontalGlue());
-        barWidthSliderBox.add(m_barWidth);
-        barWidthSliderBox.add(Box.createHorizontalGlue());
-        barWidthBox.add(barWidthSliderBox);
-        barWidthBox.add(Box.createVerticalGlue());
-        barWidthBox.add(m_showBarOutline);
+        final Box binWidthLabelBox = Box.createHorizontalBox();
+        final JLabel binWidthLabel = new JLabel(
+                AbstractHistogramProperties.BIN_SIZE_LABEL);
+        binWidthLabelBox.add(Box.createHorizontalGlue());
+        binWidthLabelBox.add(binWidthLabel);
+        binWidthLabelBox.add(Box.createHorizontalGlue());
+        binWidthBox.add(binWidthLabelBox);
+        // the bin width slider box
+        final Box binWidthSliderBox = Box.createHorizontalBox();
+        binWidthSliderBox.add(Box.createHorizontalGlue());
+        binWidthSliderBox.add(m_binWidth);
+        binWidthSliderBox.add(Box.createHorizontalGlue());
+        binWidthBox.add(binWidthSliderBox);
+        binWidthBox.add(Box.createVerticalGlue());
+        binWidthBox.add(m_showBarOutline);
         final Box barLayoutBox = Box.createHorizontalBox();
         barLayoutBox.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(), "Bar Layout"));
         barLayoutBox.add(Box.createHorizontalGlue());
         barLayoutBox.add(layoutDisplayBox);
         barLayoutBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-        barLayoutBox.add(barWidthBox);
+        barLayoutBox.add(binWidthBox);
         barLayoutBox.add(Box.createHorizontalGlue());
 
         final Box rootBox = Box.createHorizontalBox();
@@ -479,50 +479,50 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
-     * The bar related settings:
+     * The bin related settings:
      * <ol>
      * <li>size</li>
-     * <li>number of bars</li>
-     * <li>show empty bars</li>
-     * <li>show missing value bar</li>
+     * <li>number of bins</li>
+     * <li>show empty bins</li>
+     * <li>show missing value bin</li>
      * </ol>.
      * 
      * @return the panel with all bar related settings
      */
-    private JPanel createBarSettingsPanel() {
-        final JPanel barPanel = new JPanel();
-        final Box barNoBox = Box.createVerticalBox();
+    private JPanel createBinSettingsPanel() {
+        final JPanel binPanel = new JPanel();
+        final Box binNoBox = Box.createVerticalBox();
         // barNoBox.setBorder(BorderFactory
         // .createEtchedBorder(EtchedBorder.RAISED));
         // the number of bars label box
-        final Box noOfBarsLabelBox = Box.createHorizontalBox();
-        final JLabel noOfBarsLabel = new JLabel(
-                AbstractHistogramProperties.NUMBER_OF_BARS_LABEL);
-        noOfBarsLabelBox.add(Box.createHorizontalGlue());
-        noOfBarsLabelBox.add(noOfBarsLabel);
-        noOfBarsLabelBox.add(Box.createHorizontalStrut(10));
-        noOfBarsLabelBox.add(m_noOfBinsLabel);
-        noOfBarsLabelBox.add(Box.createHorizontalGlue());
-        barNoBox.add(noOfBarsLabelBox);
-        // the number of bars slider box
-        final Box noOfBarsSliderBox = Box.createHorizontalBox();
-        noOfBarsSliderBox.add(Box.createHorizontalGlue());
-        noOfBarsSliderBox.add(m_noOfBins);
-        noOfBarsSliderBox.add(Box.createHorizontalGlue());
-        barNoBox.add(noOfBarsSliderBox);
+        final Box noOfBinsLabelBox = Box.createHorizontalBox();
+        final JLabel noOfBinsLabel = new JLabel(
+                AbstractHistogramProperties.NUMBER_OF_BINS_LABEL);
+        noOfBinsLabelBox.add(Box.createHorizontalGlue());
+        noOfBinsLabelBox.add(noOfBinsLabel);
+        noOfBinsLabelBox.add(Box.createHorizontalStrut(10));
+        noOfBinsLabelBox.add(m_noOfBinsLabel);
+        noOfBinsLabelBox.add(Box.createHorizontalGlue());
+        binNoBox.add(noOfBinsLabelBox);
+        // the number of bins slider box
+        final Box noOfBinsSliderBox = Box.createHorizontalBox();
+        noOfBinsSliderBox.add(Box.createHorizontalGlue());
+        noOfBinsSliderBox.add(m_noOfBins);
+        noOfBinsSliderBox.add(Box.createHorizontalGlue());
+        binNoBox.add(noOfBinsSliderBox);
         // the box with the select boxes and apply button
-        final Box barSelButtonBox = Box.createVerticalBox();
+        final Box binSelButtonBox = Box.createVerticalBox();
         // barSelButtonBox.setBorder(BorderFactory
         // .createEtchedBorder(EtchedBorder.RAISED));
-        final Box barSelectBox = Box.createVerticalBox();
+        final Box binSelectBox = Box.createVerticalBox();
         // barSelectBox.setBorder(BorderFactory
         // .createEtchedBorder(EtchedBorder.RAISED));
-        barSelectBox.add(m_showEmptyBins);
-        barSelectBox.add(Box.createVerticalGlue());
-        barSelectBox.add(m_showMissingValBin);
-        barSelectBox.add(Box.createVerticalGlue());
-        barSelButtonBox.add(barSelectBox);
-        barSelButtonBox.add(Box.createVerticalGlue());
+        binSelectBox.add(m_showEmptyBins);
+        binSelectBox.add(Box.createVerticalGlue());
+        binSelectBox.add(m_showMissingValBin);
+        binSelectBox.add(Box.createVerticalGlue());
+        binSelButtonBox.add(binSelectBox);
+        binSelButtonBox.add(Box.createVerticalGlue());
 //        final Box buttonBox = Box.createHorizontalBox();
 //        // buttonBox.setBorder(BorderFactory
 //        // .createEtchedBorder(EtchedBorder.RAISED));
@@ -530,15 +530,15 @@ public abstract class AbstractHistogramProperties extends
 //        buttonBox.add(Box.createRigidArea(d));
 //        buttonBox.add(m_applyBarSettingsButton);
 //        barSelButtonBox.add(buttonBox);
-        final Box barBox = Box.createHorizontalBox();
-        barBox.setBorder(
+        final Box binBox = Box.createHorizontalBox();
+        binBox.setBorder(
                 BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
-        barBox.add(Box.createHorizontalGlue());
-        barBox.add(barNoBox);
-        barBox.add(Box.createHorizontalGlue());
-        barBox.add(barSelButtonBox);
-        barPanel.add(barBox);
-        return barPanel;
+        binBox.add(Box.createHorizontalGlue());
+        binBox.add(binNoBox);
+        binBox.add(Box.createHorizontalGlue());
+        binBox.add(binSelButtonBox);
+        binPanel.add(binBox);
+        return binPanel;
     }
 
     /**
@@ -686,38 +686,39 @@ public abstract class AbstractHistogramProperties extends
             return;
         }
         // set the bar width slider
-        final int currentBarWidth = plotter.getBinWidth();
-        final int maxBarWidth = plotter.getMaxBinWidth();
-        int minBarWidth = AbstractHistogramPlotter.MIN_BIN_WIDTH;
-        if (minBarWidth > maxBarWidth) {
-            minBarWidth = maxBarWidth;
+        final int currentBinWidth = plotter.getBinWidth();
+        final int maxBinWidth = plotter.getMaxBinWidth();
+        int minBinWidth = AbstractHistogramPlotter.MIN_BIN_WIDTH;
+        if (minBinWidth > maxBinWidth) {
+            minBinWidth = maxBinWidth;
         }
-        // update the bar width values
-        m_barWidth.setMaximum(maxBarWidth);
-        m_barWidth.setMinimum(minBarWidth);
-        m_barWidth.setValue(currentBarWidth);
-        m_barWidth.setEnabled(true);
-        m_barWidth
-                .setToolTipText(AbstractHistogramProperties.BAR_WIDTH_TOOLTIP);
-        AbstractHistogramProperties.setSliderLabels(m_barWidth, 2, false);
+        // update the bin width values
+        m_binWidth.setMaximum(maxBinWidth);
+        m_binWidth.setMinimum(minBinWidth);
+        m_binWidth.setValue(currentBinWidth);
+        m_binWidth.setEnabled(true);
+        m_binWidth
+                .setToolTipText(AbstractHistogramProperties.BIN_WIDTH_TOOLTIP);
+        AbstractHistogramProperties.setSliderLabels(m_binWidth, 2, false);
 
-        // set the number of bars slider
-        final HistogramVizModel histoData = plotter.getHistogramVizModel();
+        // set the number of bins slider
+        final AbstractHistogramVizModel histoData = 
+            plotter.getHistogramVizModel();
         int maxNoOfBins = plotter.getMaxNoOfBins();
         final int currentNoOfBins = histoData.getNoOfBins();
         if (currentNoOfBins > maxNoOfBins) {
             maxNoOfBins = currentNoOfBins;
         }
-        // update the number of bar values
+        // update the number of bin values
         m_noOfBins.setMaximum(maxNoOfBins);
         m_noOfBins.setValue(currentNoOfBins);
         m_noOfBinsLabel.setText(Integer.toString(currentNoOfBins));
         AbstractHistogramProperties.setSliderLabels(m_noOfBins, 2, true);
-        // disable this noOfBars slider for nominal values
+        // disable this noOfbins slider for nominal values
         if (!histoData.isBinNominal()) {
             m_noOfBins.setEnabled(true);
             m_noOfBins.setToolTipText(
-                    AbstractHistogramProperties.NO_OF_BARS_TOOLTIP);
+                    AbstractHistogramProperties.NO_OF_BINS_TOOLTIP);
         } else {
             m_noOfBins.setEnabled(false);
             m_noOfBins
@@ -749,14 +750,14 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
-     * @return the currently set bar width
+     * @return the currently set bin width
      */
-    public int getBarWidth() {
-        return m_barWidth.getValue();
+    public int getBinWidth() {
+        return m_binWidth.getValue();
     }
 
     /**
-     * @return the current no of bars
+     * @return the current no of bins
      */
     public int getNoOfBins() {
         return m_noOfBins.getValue();
@@ -815,8 +816,15 @@ public abstract class AbstractHistogramProperties extends
     /**
      * @return the select box for the x column
      */
-    public ColumnSelectionComboxBox getXColSelectBox() {
+    protected ColumnSelectionComboxBox getXColSelectBox() {
         return m_xCol;
+    }
+
+    /**
+     * @return the select box for the aggregation column
+     */
+    protected ColumnSelectionComboxBox getAggrColSelectBox() {
+        return m_yCol;
     }
 
     /**
@@ -844,12 +852,12 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
-     * Helper method to update the number of bars text field.
+     * Helper method to update the number of bins text field.
      * 
-     * @param noOfBars the number of bars
+     * @param noOfbins the number of bins
      */
-    protected void updateNoOfBarsText(final int noOfBars) {
-        m_noOfBinsLabel.setText(Integer.toString(noOfBars));
+    protected void updateNoOfBinsText(final int noOfbins) {
+        m_noOfBinsLabel.setText(Integer.toString(noOfbins));
     }
 
     /**
@@ -867,7 +875,7 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
-     * @return if the empty bars should be shown
+     * @return if the empty bins should be shown
      */
     public boolean isShowEmptyBins() {
         if (m_showEmptyBins == null) {
@@ -877,9 +885,9 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
-     * @return if the missing value bar should be shown
+     * @return if the missing value bin should be shown
      */
-    public boolean isShowMissingValBar() {
+    public boolean isShowMissingValBin() {
         if (m_showMissingValBin == null) {
             return false;
         }
@@ -962,10 +970,10 @@ public abstract class AbstractHistogramProperties extends
     }
     
     /**
-     * @param listener adds the listener to the bar width slider
+     * @param listener adds the listener to the bin width slider
      */
-    protected void addBarWidthChangeListener(final ChangeListener listener) {
-        m_barWidth.addChangeListener(listener);
+    protected void addBinWidthChangeListener(final ChangeListener listener) {
+        m_binWidth.addChangeListener(listener);
     }
 
     /**
@@ -978,7 +986,7 @@ public abstract class AbstractHistogramProperties extends
     /**
      * @param listener adds the listener to the number of bars slider
      */
-    protected void addNoOfBarsChangeListener(final ChangeListener listener) {
+    protected void addNoOfBinsChangeListener(final ChangeListener listener) {
         m_noOfBins.addChangeListener(listener);
     }
 

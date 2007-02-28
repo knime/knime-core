@@ -118,11 +118,18 @@ public final class BinningUtil {
      * @param firstBar indicates if this is the first bar
      * @param leftBoundary the left boundary of the bin
      * @param rightBoundary the right boundary of the bin
+     * @param isInteger indicates that the x column is of type integer so we
+     * display simply the upper value if its in a range of one
      * @return the bin name
      */
     public static String createBarName(final boolean firstBar,
-            final double leftBoundary, final double rightBoundary) {
+            final double leftBoundary, final double rightBoundary, 
+            final boolean isInteger) {
         StringBuffer buf = new StringBuffer();
+        //treat integer intervals special if they are only the size of one
+        if (!firstBar && isInteger && rightBoundary - leftBoundary <= 1) {
+            return Integer.toString((int)rightBoundary);
+        }
         //append the interval border indicator
         if (firstBar) {
             //closed interval -> border is included

@@ -21,6 +21,8 @@
  */
 package org.knime.base.node.viz.histogram.impl.interactive;
 
+import java.awt.event.ActionListener;
+
 import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 
@@ -50,5 +52,19 @@ public class InteractiveHistogramProperties extends
      */
     public InteractiveHistogramProperties(final AggregationMethod aggrMethod) {
        super(aggrMethod);
+    }
+    
+    /**
+     * @param listerner the listener to listen if the x column has changed
+     */
+    public void addXColActionListener(final ActionListener listerner) {
+        getXColSelectBox().addActionListener(listerner);
+    }
+    
+    /**
+     * @param listerner the listener to listen if the x column has changed
+     */
+    public void addAggrColActionListener(final ActionListener listerner) {
+        getAggrColSelectBox().addActionListener(listerner);
     }
 }

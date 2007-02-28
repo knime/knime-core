@@ -24,10 +24,14 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
+import java.util.Collection;
+
 import org.knime.base.node.viz.histogram.AggregationMethod;
+import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;
 import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramPlotter;
 import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramProperties;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
@@ -77,23 +81,28 @@ public class HistogramNodeView extends NodeView {
         }
         final InteractiveHistogramDataModel histogramModel = 
             m_nodeModel.getHistogramDataModel();
-        final DataTableSpec tableSpec = m_nodeModel.getTableSpec();
         if (histogramModel == null) {
             return;
         }
+        final DataTableSpec tableSpec = m_nodeModel.getTableSpec();
+        final DataColumnSpec xColSpec = m_nodeModel.getXColSpec();
+        final Collection<ColorColumn> aggrCols = 
+            m_nodeModel.getAggrColumns();
         if (m_plotter == null) {
             final InteractiveHistogramProperties props =
                 new InteractiveHistogramProperties(
                         AggregationMethod.getDefaultMethod());
-            m_plotter = new InteractiveHistogramPlotter(props, histogramModel, 
-                    tableSpec, m_nodeModel.getInHiLiteHandler(0));
+            m_plotter = new InteractiveHistogramPlotter(props, histogramModel,
+                    tableSpec, m_nodeModel.getInHiLiteHandler(0), 
+                    xColSpec, aggrCols);
+//            m_plotter.setHistogramDataModel(histogramModel);
             // add the hilite menu to the menu bar of the node view
             getJMenuBar().add(m_plotter.getHiLiteMenu());
             setComponent(m_plotter);
         } else {
             m_plotter.reset();
-            m_plotter.setDataTableSpec(tableSpec);
-            m_plotter.setHistogramDataModel(histogramModel);
+            m_plotter.setHistogramDataModel(xColSpec, aggrCols, 
+                    tableSpec, histogramModel);
             m_plotter.setHiLiteHandler(m_nodeModel.getInHiLiteHandler(0));
             m_plotter.updatePaintModel();
         }

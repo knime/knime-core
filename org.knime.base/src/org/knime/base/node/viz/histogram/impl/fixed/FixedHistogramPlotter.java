@@ -26,7 +26,7 @@ import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.HistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -58,33 +58,31 @@ public class FixedHistogramPlotter extends AbstractHistogramPlotter {
             final FixedHistogramProperties histogramProps,
             final FixedHistogramDataModel dataModel, 
             final DataTableSpec tableSpec, final HiLiteHandler handler) {
-        super(histogramProps, tableSpec, handler);
-        final FixedHistogramVizModel vizModel = new FixedHistogramVizModel(
-                dataModel.getRowColors(),
-                HistogramVizModel.DEFAULT_NO_OF_BINS, 
-                AggregationMethod.getDefaultMethod(), 
-                HistogramLayout.getDefaultLayout(),
-                dataModel.getSortedRows(), dataModel.getXColumnSpec(),
-                dataModel.getAggrColumns());
-        setHistogramVizModel(vizModel);
+        super(histogramProps, handler);
+        setHistogramDataModel(tableSpec, dataModel);
     }
     
     /**
+     * @param spec the new {@link DataTableSpec}
      * @param dataModel the new {@link FixedHistogramDataModel}
      */
-    public void setHistogramDataModel(
+    public void setHistogramDataModel(final DataTableSpec spec, 
             final FixedHistogramDataModel dataModel) {
+        if (spec == null) {
+            throw new IllegalArgumentException(
+                    "Table specification shouldn't be null");
+        }
         if (dataModel == null) {
             throw new IllegalArgumentException(
                     "Histogram data model shouldn't be null");
         }
         final FixedHistogramVizModel vizModel = new FixedHistogramVizModel(
                 dataModel.getRowColors(),
-                HistogramVizModel.DEFAULT_NO_OF_BINS, 
                 AggregationMethod.getDefaultMethod(), 
-                HistogramLayout.getDefaultLayout(),
-                dataModel.getSortedRows(), dataModel.getXColumnSpec(),
-                dataModel.getAggrColumns());
-        setHistogramVizModel(vizModel);
+                HistogramLayout.getDefaultLayout(), 
+                dataModel.getSortedRows(),
+                dataModel.getXColumnSpec(), dataModel.getAggrColumns(),
+                AbstractHistogramVizModel.DEFAULT_NO_OF_BINS);
+        setHistogramVizModel(spec, vizModel);
     }
 }

@@ -37,8 +37,7 @@ import java.util.Collection;
 import org.knime.base.node.viz.histogram.datamodel.BarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.HistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.property.ColorAttr;
 
@@ -61,7 +60,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     private static final int NO_OF_LABEL_DIGITS = 2;
     
     /**Defines the color of the base line.*/
-    private static final Color OVERLOADED_ELEMENT_COLOR = Color.BLACK;
+    private static final Color OVERLOADED_ELEMENT_COLOR = Color.GRAY;
     
     /**This stroke is used to draw the rectangle around each element.*/
     private static final BasicStroke ELEMENT_OUTLINE_STROKE = 
@@ -136,7 +135,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     /**
      * Holds the {@link FixedHistogramVizModel} objects to draw.
      */
-    private HistogramVizModel m_histoData;
+    private AbstractHistogramVizModel m_histoData;
 
     /**
      * Information message. If not <code>null</code> no bars will be drawn
@@ -175,7 +174,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     /**
      * @param histoData the {@link FixedHistogramDataModel} objects to draw
      */
-    public void setHistogramData(final HistogramVizModel histoData) {
+    public void setHistogramData(final AbstractHistogramVizModel histoData) {
         m_histoData = histoData;
     }
 
@@ -323,10 +322,10 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         //if the user has selected more then one aggregation column we have to
         //draw the bar outline to how him which bar belongs to which aggregation
         //column
-        final boolean drawBarOutline = m_histoData.getAggrColumns().size() > 1
+        final boolean drawBarOutline = m_histoData.getAggrColumns().size() > 1;
         //just for debugging purpose
-            || HistogramLayout.SIDE_BY_SIDE.equals(
-                m_histoData.getHistogramLayout());
+//            || HistogramLayout.SIDE_BY_SIDE.equals(
+//                m_histoData.getHistogramLayout());
         
         // loop over all bins and paint them
         for (BinDataModel bin : m_histoData.getBins()) {
@@ -350,7 +349,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     if (bar.isHilited()) {
                         final int hiliteWidth = 
                             (int)(barRectangle.getWidth() 
-                        * HistogramVizModel.HILITE_RECTANGLE_WIDTH_FACTOR);
+                        * AbstractHistogramVizModel.HILITE_RECTANGLE_WIDTH_FACTOR);
                         final int hiliteX = (int) (barRectangle.getX()
                                 + (barRectangle.getWidth() - hiliteWidth) / 2);
                         final Rectangle hiliteRectangle = new Rectangle(
@@ -428,7 +427,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 m_labelDisplayPolicy)
                 || (LabelDisplayPolicy.SELECTED.equals(
                         m_labelDisplayPolicy) && bar.isSelected())) {
-            if (HistogramLayout.STACKED.equals(layout)) {
+            if (HistogramLayout.STACKED.equals(layout) 
+                    || !bar.isDrawElements()) {
                 final double aggrVal = 
                     bar.getAggregationValue(aggrMethod);
                 paintLabel(g2, bar.getBarRectangle(), aggrVal, 
@@ -465,6 +465,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     private static void drawElements(final Graphics2D g2, 
             final Collection<BarElementDataModel> elements, 
             final boolean showElementOutlines) {
+        final double hiliteStrokeWidth = 
+            HILITE_RECT_OUTLINE_STROKE.getLineWidth() * 2;
         for (BarElementDataModel element : elements) {
             final Color elementColor = element.getColor();
             //draw the element itself first
@@ -473,17 +475,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             if (elementRect != null) {
                 drawBlock(g2, elementRect, elementColor);
             }
-            //draw the hilite rectangle
-            final Rectangle hiliteRect = 
-                element.getHilitedRectangle();
-            drawBlock(g2, hiliteRect, HILITE_RECT_BGR_COLOR);
-            //always draw the hilite borders to make them visible
-            //even if the bar has the same color like the 
-//                        hilite color
-            drawRectangle(g2, hiliteRect, 
-                    HILITE_RECT_OUTLINE_COLOR, 
-                    HILITE_RECT_OUTLINE_STROKE);
-            //draw the surrounding rectangles at last
+//          draw the surrounding rectangles after the block
             if (showElementOutlines) {
                 drawRectangle(g2, elementRect, 
                         ELEMENT_OUTLINE_COLOR, 
@@ -494,6 +486,21 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                         ELEMENT_SELECTED_OUTLINE_COLOR, 
                         ELEMENT_SELECTED_OUTLINE_STROKE);
             }
+            //draw the hilite rectangle
+            final Rectangle hiliteRect = 
+                element.getHilitedRectangle();
+            if (hiliteRect != null) {
+                drawBlock(g2, hiliteRect, HILITE_RECT_BGR_COLOR);
+                //always draw the hilite borders to make them visible
+                //even if the bar has the same color like the hilite color
+                //but only if the complete rectangle is wider than the stroke
+                if (hiliteRect.getWidth() > hiliteStrokeWidth) {
+                    drawRectangle(g2, hiliteRect, 
+                            HILITE_RECT_OUTLINE_COLOR, 
+                            HILITE_RECT_OUTLINE_STROKE);
+                }
+            }
+            
         } //end of element loop
     }
 

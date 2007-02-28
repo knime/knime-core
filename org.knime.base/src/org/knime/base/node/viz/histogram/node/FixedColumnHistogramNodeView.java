@@ -92,8 +92,7 @@ public class FixedColumnHistogramNodeView extends NodeView {
             setComponent(m_plotter);
         } else {
             m_plotter.reset();
-            m_plotter.setDataTableSpec(tableSpec);
-            m_plotter.setHistogramDataModel(histogramModel);
+            m_plotter.setHistogramDataModel(tableSpec, histogramModel);
             m_plotter.setHiLiteHandler(m_nodeModel.getInHiLiteHandler(0));
             m_plotter.updatePaintModel();
         }

@@ -28,6 +28,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -48,6 +49,8 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
     private static final String NO_OF_ROWS_LABEL = "No. of rows to display:";
 
     private static final String X_COL_SEL_LABEL = "X column:";
+
+    private static final String AGGR_COL_SEL_LABEL = "Aggregation column:";
 
     private final DialogComponentNumber m_noOfRowsSpinner;
 
@@ -85,5 +88,11 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
                 new SettingsModelString(
                         HistogramNodeModel.CFGKEY_X_COLNAME, ""),
                 HistogramNodeDialogPane.X_COL_SEL_LABEL, 0, DataValue.class));
+
+        addDialogComponent(new DialogComponentColumnNameSelection(
+                new SettingsModelString(
+                        HistogramNodeModel.CFGKEY_AGGR_COLNAME, ""),
+                AGGR_COL_SEL_LABEL, 0,
+                DoubleValue.class));
     }
 }

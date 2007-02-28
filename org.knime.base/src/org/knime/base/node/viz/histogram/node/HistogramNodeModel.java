@@ -26,6 +26,8 @@ package org.knime.base.node.viz.histogram.node;
 
 import java.awt.Color;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;
@@ -67,25 +69,34 @@ public class HistogramNodeModel extends NodeModel {
     /**Settings name of the number of rows.*/
     protected static final String CFGKEY_NO_OF_ROWS = "noOfRows";
 
-    /**
-     * Used to store the attribute column name in the settings.
-     */
+    /**Used to store the attribute column name in the settings.*/
     static final String CFGKEY_X_COLNAME = "HistogramXColName";
-
+    
+    /**Settings name of the aggregation column name.*/
+    protected static final String CFGKEY_AGGR_COLNAME = "aggrColumn";
+    
     /**The histogram data model which holds all information.*/
     private InteractiveHistogramDataModel m_model;
     
     private DataTableSpec m_tableSpec;
     
-    /** The name of the x column. */
-    private final SettingsModelString m_xColName = new SettingsModelString(
-            CFGKEY_X_COLNAME, "");
+    private DataColumnSpec m_xColSpec;
     
+    private Collection<ColorColumn> m_aggrCols;
+
     private final SettingsModelInteger m_noOfRows = new SettingsModelInteger(
             CFGKEY_NO_OF_ROWS, DEFAULT_NO_OF_ROWS);
     
     private final SettingsModelBoolean m_allRows = new SettingsModelBoolean(
             CFGKEY_ALL_ROWS, false);
+    
+    /** The name of the x column. */
+    private final SettingsModelString m_xColName = new SettingsModelString(
+            CFGKEY_X_COLNAME, "");
+    
+    private SettingsModelString m_aggrColName = new SettingsModelString(
+            FixedColumnHistogramNodeModel.CFGKEY_AGGR_COLNAME, "");
+    
     
     /**
      * The constructor.
@@ -95,16 +106,6 @@ public class HistogramNodeModel extends NodeModel {
         //if we set the node to autoExecutable = true the execute method
         //gets also called when the workspace is reloaded from file
         setAutoExecutable(true);
-    }
-
-    /**
-     * @see org.knime.core.node.NodeModel #saveSettingsTo(NodeSettingsWO)
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_allRows.saveSettingsTo(settings);
-        m_noOfRows.saveSettingsTo(settings);
-        m_xColName.saveSettingsTo(settings);
     }
 
     /**
@@ -121,6 +122,7 @@ public class HistogramNodeModel extends NodeModel {
             m_noOfRows.validateSettings(settings);
         }
         m_xColName.validateSettings(settings);
+        m_aggrColName.validateSettings(settings);
     }
 
     /**
@@ -137,6 +139,18 @@ public class HistogramNodeModel extends NodeModel {
             // In case of older nodes the row number is not available
         }
         m_xColName.loadSettingsFrom(settings);
+        m_aggrColName.loadSettingsFrom(settings);
+    }
+
+    /**
+     * @see org.knime.core.node.NodeModel #saveSettingsTo(NodeSettingsWO)
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_allRows.saveSettingsTo(settings);
+        m_noOfRows.saveSettingsTo(settings);
+        m_xColName.saveSettingsTo(settings);
+        m_aggrColName.saveSettingsTo(settings);
     }
 
     /**
@@ -204,18 +218,25 @@ public class HistogramNodeModel extends NodeModel {
         }
         // create the data object
         final BufferedDataTable table = inData[0];
-        final DataTableSpec spec = inData[0].getDataTableSpec();
-        // if we have nominal columns without possible values
-        for (DataColumnSpec colSpec : spec) {
-
-            if (!colSpec.getType().isCompatible(DoubleValue.class) 
-                    && colSpec.getDomain().getValues() == null) {
-                throw new InvalidSettingsException(
-                        "Found nominal column without possible values: "
-                        + colSpec.getName() 
-                        + " Please use DomainCalculator or ColumnFilter node!");
-            }
+        m_tableSpec = inData[0].getDataTableSpec();
+        if (m_tableSpec == null) {
+            throw new IllegalArgumentException(
+                    "Table specification shouldn't be null");
         }
+        final String xCol = m_xColName.getStringValue();
+        m_xColSpec = m_tableSpec.getColumnSpec(xCol);
+        if (m_xColSpec == null) {
+            throw new IllegalArgumentException("X column not found");
+        }
+        final String aggrColName = m_aggrColName.getStringValue();
+        final int aggrColIdx = m_tableSpec.findColumnIndex(aggrColName);
+        if (aggrColIdx < 0) {
+            throw new IllegalArgumentException("Aggregation column not found.");
+        }
+        final ColorColumn aggrColumn = 
+            new ColorColumn(Color.CYAN, aggrColIdx, aggrColName);
+        m_aggrCols = new ArrayList<ColorColumn>(1);
+        m_aggrCols.add(aggrColumn);
         final int rowCount = inData[0].getRowCount();
         if (m_allRows.getBooleanValue()) {
             //set the actual number of rows in the selected number of rows
@@ -297,6 +318,9 @@ public class HistogramNodeModel extends NodeModel {
     @Override
     protected void reset() {
         m_model = null;
+        m_tableSpec = null;
+        m_xColSpec = null;
+        m_aggrCols = null;
     }
 
     /**
@@ -311,7 +335,22 @@ public class HistogramNodeModel extends NodeModel {
     protected DataTableSpec getTableSpec() {
         return m_tableSpec;
     }
+    
+    
+    /**
+     * @return the {@link DataColumnSpec} of the selected x column
+     */
+    protected DataColumnSpec getXColSpec() {
+        return m_xColSpec;
+    }
 
+    /**
+     * @return the aggregation columns to use
+     */
+    protected Collection<ColorColumn> getAggrColumns() {
+        return m_aggrCols;
+    }
+    
     /**
      * @see org.knime.core.node.NodeModel
      *      #configure(org.knime.core.data.DataTableSpec[])
@@ -327,15 +366,46 @@ public class HistogramNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "Input table should have at least 2 columns.");
         }
-
+        // if we have nominal columns without possible values
+        for (DataColumnSpec colSpec : spec) {
+            if (!colSpec.getType().isCompatible(DoubleValue.class) 
+                    && colSpec.getDomain().getValues() == null) {
+                throw new InvalidSettingsException(
+                        "Found nominal column without possible values: "
+                        + colSpec.getName() 
+                        + " Please use DomainCalculator or ColumnFilter node!");
+            }
+        }
         final String xCol = m_xColName.getStringValue();
+        m_xColSpec = spec.getColumnSpec(xCol);
         if (!spec.containsName(xCol)) {
             if (spec.getNumColumns() > 0) {
                 // set the first column of the table as default x column
-                m_xColName.setStringValue(spec.getColumnSpec(0).getName());
+                m_xColSpec = spec.getColumnSpec(0);
+                m_xColName.setStringValue(m_xColSpec.getName());
             } else {
                 throw new InvalidSettingsException(
                     "No column found in table specification.");
+            }
+        }
+        final String aggrColName = m_aggrColName.getStringValue();
+        if (!spec.containsName(aggrColName)) {
+            final int numColumns = spec.getNumColumns();
+            final String xColName = m_xColName.getStringValue();
+            boolean found = false;
+            for (int i = 0; i < numColumns; i++) {
+                final DataColumnSpec columnSpec = spec.getColumnSpec(i);
+                if (!columnSpec.getName().equals(xColName) 
+                        && columnSpec.getType().isCompatible(
+                                DoubleValue.class)) {
+                    m_aggrColName.setStringValue(columnSpec.getName());
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                throw new IllegalArgumentException(
+                        "Aggregation column not found.");
             }
         }
         return new DataTableSpec[0];

@@ -345,7 +345,7 @@ public class BinDataModel {
         }
         
         if (valRange <= 0) {
-            return;
+            m_drawBar = false;
         }
         final double heightPerVal = totalHeight / valRange;
         final int startX = (int) m_binRectangle.getX();
@@ -429,5 +429,15 @@ public class BinDataModel {
                     barElementColors, aggrMethod);
             xCoord += barWidth + SPACE_BETWEEN_BARS;
         }
+    }
+
+    /**
+     * Clears all bars and rows from this bin.
+     */
+    public void clear() {
+        m_bars.clear();
+        m_rowCounter = 0;
+        m_binRectangle = null;
+        m_drawBar = false;
     }
 }

@@ -243,7 +243,7 @@ public class BarElementDataModel {
         }
         final int totalWidth = (int)m_elementRectangle.getWidth();
         final int hiliteWidth = Math.max((int)(totalWidth 
-                * HistogramVizModel.HILITE_RECTANGLE_WIDTH_FACTOR), 
+                * AbstractHistogramVizModel.HILITE_RECTANGLE_WIDTH_FACTOR), 
                 1);
         final int totalHeight = (int)m_elementRectangle.getHeight();
         final double heightPerRow = (double)totalHeight / getRowCount();

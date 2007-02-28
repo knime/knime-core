@@ -73,25 +73,29 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     protected static final String CFGKEY_X_COLNAME = "xColumn";
     /**Settings name of the aggregation column name.*/
     protected static final String CFGKEY_AGGR_COLNAME = "aggrColumn";
-
-    private SettingsModelString m_xColName = new SettingsModelString(
-            FixedColumnHistogramNodeModel.CFGKEY_X_COLNAME, "");
-    
-    private SettingsModelString m_aggrColName = new SettingsModelString(
-            FixedColumnHistogramNodeModel.CFGKEY_AGGR_COLNAME, "");
     
     private final SettingsModelInteger m_noOfRows = new SettingsModelInteger(
             FixedColumnHistogramNodeModel.CFGKEY_NO_OF_ROWS, 
             FixedColumnHistogramNodeModel.DEFAULT_NO_OF_ROWS);
 
-
     private final SettingsModelBoolean m_allRows = new SettingsModelBoolean(
             CFGKEY_ALL_ROWS, false);
+    
+    private SettingsModelString m_xColName = new SettingsModelString(
+            FixedColumnHistogramNodeModel.CFGKEY_X_COLNAME, "");
+    
+    private SettingsModelString m_aggrColName = new SettingsModelString(
+            FixedColumnHistogramNodeModel.CFGKEY_AGGR_COLNAME, "");
+
 
     /**The data model on which the plotter based on.*/
     private FixedHistogramDataModel m_model;
     
     private DataTableSpec m_tableSpec;
+    
+    private DataColumnSpec m_xColSpec;
+    
+    private ColorColumn m_aggrColumn;
 
     /**
      * The constructor.
@@ -207,36 +211,34 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
                 + "FixedColumnHistogramNodeModel.");
         // create the data object
         BufferedDataTable data = inData[0];
-        final String xCol = m_xColName.getStringValue();
         m_tableSpec = data.getDataTableSpec();
         if (m_tableSpec == null) {
             throw new IllegalArgumentException(
                     "No table specification found.");
         }
-        final DataColumnSpec xColSpec = m_tableSpec.getColumnSpec(xCol);
-        if (xColSpec == null) {
-            throw new Exception("No column specification found for x column");
-        }
-        final int xColIdx = m_tableSpec.findColumnIndex(xCol);
-        if (xColIdx < 0) {
-            throw new IllegalArgumentException("Selected X column not found");
-        }
-
-        if (!xColSpec.getType().isCompatible(DoubleValue.class) 
-                && xColSpec.getDomain().getValues() == null) {
+        final String aggrCol = m_aggrColName.getStringValue();
+        if (!m_tableSpec.containsName(aggrCol)) {
             throw new InvalidSettingsException(
-                    "Found nominal column without possible values: "
-                    + xColSpec.getName() 
-                    + " Please use DomainCalculator or ColumnFilter node!");
+                    "Please define the aggregation column name.");
         }
-        
-        final String aggrColName = m_aggrColName.getStringValue();
-        final int aggrColIdx = m_tableSpec.findColumnIndex(aggrColName);
+        m_xColSpec = m_tableSpec.getColumnSpec(m_xColName.getStringValue());
+        if (m_xColSpec == null) {
+            throw new IllegalArgumentException(
+                    "No x column specification found");
+        }
+        final int aggrColIdx = m_tableSpec.findColumnIndex(aggrCol);
         if (aggrColIdx < 0) {
             throw new IllegalArgumentException("Aggregation column not found.");
         }
-        final ColorColumn aggrColumn = 
-            new ColorColumn(Color.CYAN, aggrColIdx, aggrColName);
+        m_aggrColumn = 
+            new ColorColumn(Color.CYAN, aggrColIdx, aggrCol);
+        if (!m_xColSpec.getType().isCompatible(DoubleValue.class) 
+                && m_xColSpec.getDomain().getValues() == null) {
+            throw new InvalidSettingsException(
+                    "Found nominal column without possible values: "
+                    + m_xColSpec.getName() 
+                    + " Please use DomainCalculator or ColumnFilter node!");
+        }
         final int rowCount = data.getRowCount();
         if (m_allRows.getBooleanValue()) {
             //set the actual number of rows in the selected number of rows
@@ -248,11 +250,12 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
             setWarningMessage("Only the first " + selectedNoOfRows + " of " 
                     + rowCount + " rows are displayed.");
         }
-        m_model = 
-            new FixedHistogramDataModel(xColSpec, selectedNoOfRows, aggrColumn);
+        m_model = new FixedHistogramDataModel(m_xColSpec,
+                selectedNoOfRows, m_aggrColumn);
         exec.setMessage("Adding data rows to histogram...");
         final double progressPerRow = 1.0 / rowCount;
         double progress = 0.0;
+        final int xColIdx = m_tableSpec.findColumnIndex(m_xColSpec.getName());
         final RowIterator rowIterator = data.iterator();
         for (int i = 0; i < selectedNoOfRows && rowIterator.hasNext(); i++) {
             final DataRow row = rowIterator.next();
@@ -279,6 +282,8 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
     protected void reset() {
         m_model = null;
         m_tableSpec = null;
+        m_xColSpec = null;
+        m_aggrColumn = null;
     }
 
     /**
@@ -337,11 +342,6 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
                 throw new InvalidSettingsException(
                         "Please define the x column name.");
             }
-        }
-        final String aggrCol = m_aggrColName.getStringValue();
-        if (!spec.containsName(aggrCol)) {
-            throw new InvalidSettingsException(
-                    "Please define the aggregation column name.");
         }
         return new DataTableSpec[0];
     }
