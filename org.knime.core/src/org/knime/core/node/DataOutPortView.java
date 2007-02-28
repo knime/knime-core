@@ -116,6 +116,7 @@ final class DataOutPortView extends NodeOutPortView {
         m_specView.setShowIconInColumnHeader(false);
         m_dataView = new TableView();
         m_propsView = new TableView();
+        m_propsView.setShowIconInColumnHeader(false);
         m_dataView.getHeaderTable().setShowColorInfo(false);
         // in the data view our columns are all of type string. Don't show that.
         // Users confuse it with the type of their table.
