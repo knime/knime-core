@@ -64,7 +64,7 @@ public class SettingsModelDouble extends SettingsModelNumber {
      */
     @SuppressWarnings("unchecked")
     @Override
-    SettingsModelDouble createClone() {
+    protected SettingsModelDouble createClone() {
         return new SettingsModelDouble(m_configName, m_value);
     }
 
@@ -72,7 +72,7 @@ public class SettingsModelDouble extends SettingsModelNumber {
      * @see SettingsModel#getModelTypeID()
      */
     @Override
-    String getModelTypeID() {
+    protected String getModelTypeID() {
         return "SMID_double";
     }
 
@@ -80,7 +80,7 @@ public class SettingsModelDouble extends SettingsModelNumber {
      * @see SettingsModel#getConfigName()
      */
     @Override
-    String getConfigName() {
+    protected String getConfigName() {
         return m_configName;
     }
 
@@ -137,7 +137,7 @@ public class SettingsModelDouble extends SettingsModelNumber {
      *      org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void loadSettingsForDialog(final NodeSettingsRO settings,
+    protected void loadSettingsForDialog(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         try {
             // use the current value, if no value is stored in the settings
@@ -152,7 +152,7 @@ public class SettingsModelDouble extends SettingsModelNumber {
      *      #saveSettingsForDialog(org.knime.core.node.NodeSettingsWO)
      */
     @Override
-    void saveSettingsForDialog(final NodeSettingsWO settings)
+    protected void saveSettingsForDialog(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         saveSettingsForModel(settings);
     }
@@ -162,7 +162,7 @@ public class SettingsModelDouble extends SettingsModelNumber {
      *      #validateSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    void validateSettingsForModel(final NodeSettingsRO settings)
+    protected void validateSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
 
         validateValue(settings.getDouble(m_configName));
@@ -188,7 +188,7 @@ public class SettingsModelDouble extends SettingsModelNumber {
      *      #loadSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    void loadSettingsForModel(final NodeSettingsRO settings)
+    protected void loadSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         try {
             // no default value, throw an exception instead
@@ -205,7 +205,7 @@ public class SettingsModelDouble extends SettingsModelNumber {
      *      #saveSettingsForModel(org.knime.core.node.NodeSettingsWO)
      */
     @Override
-    void saveSettingsForModel(final NodeSettingsWO settings) {
+    protected void saveSettingsForModel(final NodeSettingsWO settings) {
         settings.addDouble(m_configName, m_value);
     }
 

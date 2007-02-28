@@ -114,7 +114,7 @@ public abstract class SettingsModel {
      * @return a new instance of the same object with identical state and
      *         value(s).
      */
-    abstract <T extends SettingsModel> T createClone();
+    protected abstract <T extends SettingsModel> T createClone();
 
     /**
      * Each settings model provides an ID which will be stored with its values.
@@ -126,13 +126,13 @@ public abstract class SettingsModel {
      * @return a string that identifies all models that are able (and empowered)
      *         to read the values stored by this model.
      */
-    abstract String getModelTypeID();
+    protected abstract String getModelTypeID();
 
     /**
      * @return the name provided at settings model construction time. The id
      *         associated with the value.
      */
-    abstract String getConfigName();
+    protected abstract String getConfigName();
 
     /**
      * Read the value(s) of this settings model from configuration object. If
@@ -147,8 +147,9 @@ public abstract class SettingsModel {
      * @throws NotConfigurableException if the specs are not good enough to
      * 
      */
-    abstract void loadSettingsForDialog(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException;
+    protected abstract void loadSettingsForDialog(
+            final NodeSettingsRO settings, final DataTableSpec[] specs)
+            throws NotConfigurableException;
 
     /**
      * This is the method called from the default dialog component to load the
@@ -186,7 +187,7 @@ public abstract class SettingsModel {
      *            from.
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
-    abstract void saveSettingsForDialog(final NodeSettingsWO settings)
+    protected abstract void saveSettingsForDialog(final NodeSettingsWO settings)
             throws InvalidSettingsException;
 
     /**
@@ -323,8 +324,8 @@ public abstract class SettingsModel {
      * @throws InvalidSettingsException if the value(s) in the settings object
      *             are invalid.
      */
-    abstract void validateSettingsForModel(final NodeSettingsRO settings)
-            throws InvalidSettingsException;
+    protected abstract void validateSettingsForModel(
+            final NodeSettingsRO settings) throws InvalidSettingsException;
 
     /**
      * Read value(s) of this component model from configuration object. If the
@@ -361,7 +362,7 @@ public abstract class SettingsModel {
      *            from.
      * @throws InvalidSettingsException if load fails.
      */
-    abstract void loadSettingsForModel(final NodeSettingsRO settings)
+    protected abstract void loadSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException;
 
     /**
@@ -385,7 +386,7 @@ public abstract class SettingsModel {
      * @param settings The {@link org.knime.core.node.NodeSettings} to write
      *            into.
      */
-    abstract void saveSettingsForModel(final NodeSettingsWO settings);
+    protected abstract void saveSettingsForModel(final NodeSettingsWO settings);
 
     /**
      * Checks the modelID stored in the settings object and throws an assertion
@@ -414,7 +415,9 @@ public abstract class SettingsModel {
         assert getModelTypeID().equals(settingsID) : "Incorrect Implementation:"
                 + "The SettingsModel used to write the values is"
                 + " different from the one that reads them. (WriteID = "
-                + settingsID + ", ReadID = " + getModelTypeID()
+                + settingsID
+                + ", ReadID = "
+                + getModelTypeID()
                 + ", Reading settings model: " + this.toString() + ")";
 
     }

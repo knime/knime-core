@@ -73,7 +73,7 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
      *      #createClone()
      */
     @Override
-    SettingsModelIntegerBounded createClone() {
+    protected SettingsModelIntegerBounded createClone() {
         return new SettingsModelIntegerBounded(getConfigName(), getIntValue(),
                 m_minValue, m_maxValue);
     }

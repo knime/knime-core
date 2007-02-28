@@ -132,7 +132,7 @@ public class SettingsModelFilterString extends SettingsModel {
      */
     @SuppressWarnings("unchecked")
     @Override
-    SettingsModelFilterString createClone() {
+    protected SettingsModelFilterString createClone() {
         return new SettingsModelFilterString(m_configName,
                 new LinkedList<String>(m_inclList), new LinkedList<String>(
                         m_exclList));
@@ -142,7 +142,7 @@ public class SettingsModelFilterString extends SettingsModel {
      * @see SettingsModel#getModelTypeID()
      */
     @Override
-    String getModelTypeID() {
+    protected String getModelTypeID() {
         return "SMID_filterString";
     }
 
@@ -150,7 +150,7 @@ public class SettingsModelFilterString extends SettingsModel {
      * @see SettingsModel#getConfigName()
      */
     @Override
-    String getConfigName() {
+    protected String getConfigName() {
         return m_configName;
     }
 
@@ -160,7 +160,7 @@ public class SettingsModelFilterString extends SettingsModel {
      *      org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void loadSettingsForDialog(final NodeSettingsRO settings,
+    protected void loadSettingsForDialog(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         try {
             Config lists = settings.getConfig(m_configName);
@@ -181,7 +181,7 @@ public class SettingsModelFilterString extends SettingsModel {
      *      #saveSettingsForDialog(org.knime.core.node.NodeSettingsWO)
      */
     @Override
-    void saveSettingsForDialog(final NodeSettingsWO settings)
+    protected void saveSettingsForDialog(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         saveSettingsForModel(settings);
     }
@@ -286,7 +286,7 @@ public class SettingsModelFilterString extends SettingsModel {
      *      #loadSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    void loadSettingsForModel(final NodeSettingsRO settings)
+    protected void loadSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         try {
             // no default value, throw an exception instead
@@ -304,7 +304,7 @@ public class SettingsModelFilterString extends SettingsModel {
      * @see SettingsModel #saveSettingsForModel(NodeSettingsWO)
      */
     @Override
-    void saveSettingsForModel(final NodeSettingsWO settings) {
+    protected void saveSettingsForModel(final NodeSettingsWO settings) {
         Config lists = settings.addConfig(m_configName);
         lists.addStringArray(CFGKEY_INCL, getIncludeList().toArray(
                 new String[0]));
@@ -317,7 +317,7 @@ public class SettingsModelFilterString extends SettingsModel {
      *      #validateSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    void validateSettingsForModel(final NodeSettingsRO settings)
+    protected void validateSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // expect a sub-config with two string arrays: include and exclude list
         Config lists = settings.getConfig(m_configName);

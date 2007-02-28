@@ -191,9 +191,9 @@ public abstract class DialogComponent {
             throws InvalidSettingsException;
 
     /**
-     * Will be called before the values are loaded from the settings object. Can
-     * be used to avoid loading due to missing, invalid, or inappropriate
-     * incoming table specs. <br>
+     * Will be called before the new values are loaded from the NodeSettings
+     * object. Can be used to avoid loading due to missing, invalid, or
+     * inappropriate incoming table specs. <br>
      * Note: This is called even if the component is disabled. Don't reject
      * specs that might be handled by other components
      * 

@@ -141,7 +141,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
      */
     @SuppressWarnings("unchecked")
     @Override
-    SettingsModelDoubleRange createClone() {
+    protected SettingsModelDoubleRange createClone() {
         try {
             return new SettingsModelDoubleRange(m_configName, m_minRange,
                     m_maxRange);
@@ -156,7 +156,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
      *      #getConfigName()
      */
     @Override
-    String getConfigName() {
+    protected String getConfigName() {
         return m_configName;
     }
 
@@ -165,7 +165,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
      *      #getModelTypeID()
      */
     @Override
-    String getModelTypeID() {
+    protected String getModelTypeID() {
         return "SMID_doubleRange";
     }
 
@@ -175,7 +175,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
      *      org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void loadSettingsForDialog(final NodeSettingsRO settings,
+    protected void loadSettingsForDialog(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         try {
             NodeSettingsRO mySettings = settings.getNodeSettings(m_configName);
@@ -194,7 +194,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
      *      #loadSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    void loadSettingsForModel(final NodeSettingsRO settings)
+    protected void loadSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         try {
             NodeSettingsRO mySettings = settings.getNodeSettings(m_configName);
@@ -213,7 +213,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
      *      #saveSettingsForDialog(org.knime.core.node.NodeSettingsWO)
      */
     @Override
-    void saveSettingsForDialog(final NodeSettingsWO settings)
+    protected void saveSettingsForDialog(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         saveSettingsForModel(settings);
     }
@@ -223,7 +223,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
      *      #saveSettingsForModel(org.knime.core.node.NodeSettingsWO)
      */
     @Override
-    void saveSettingsForModel(final NodeSettingsWO settings) {
+    protected void saveSettingsForModel(final NodeSettingsWO settings) {
         NodeSettingsWO mySettings = settings.addNodeSettings(m_configName);
         mySettings.addDouble("MIN", m_minRange);
         mySettings.addDouble("MAX", m_maxRange);
@@ -243,7 +243,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
      *      #validateSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    void validateSettingsForModel(final NodeSettingsRO settings)
+    protected void validateSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         double min;
         double max;

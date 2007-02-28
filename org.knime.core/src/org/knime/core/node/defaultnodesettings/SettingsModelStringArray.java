@@ -65,7 +65,7 @@ public class SettingsModelStringArray extends SettingsModel {
      */
     @SuppressWarnings("unchecked")
     @Override    
-    SettingsModelStringArray createClone() {
+    protected SettingsModelStringArray createClone() {
         return new SettingsModelStringArray(m_configName, m_value);
     }
 
@@ -73,7 +73,7 @@ public class SettingsModelStringArray extends SettingsModel {
      * @see SettingsModel#getModelTypeID()
      */
     @Override
-    String getModelTypeID() {
+    protected String getModelTypeID() {
         return "SMID_stringarray";
     }
 
@@ -81,7 +81,7 @@ public class SettingsModelStringArray extends SettingsModel {
      * @see SettingsModel#getConfigName()
      */
     @Override
-    String getConfigName() {
+    protected String getConfigName() {
         return m_configName;
     }
 
@@ -91,7 +91,7 @@ public class SettingsModelStringArray extends SettingsModel {
      *      org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void loadSettingsForDialog(final NodeSettingsRO settings,
+    protected void loadSettingsForDialog(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         try {
             // use the current value, if no value is stored in the settings
@@ -106,7 +106,7 @@ public class SettingsModelStringArray extends SettingsModel {
      *      #saveSettingsForDialog(org.knime.core.node.NodeSettingsWO)
      */
     @Override
-    void saveSettingsForDialog(final NodeSettingsWO settings)
+    protected void saveSettingsForDialog(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         saveSettingsForModel(settings);
     }
@@ -164,7 +164,7 @@ public class SettingsModelStringArray extends SettingsModel {
      *      #validateSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    void validateSettingsForModel(final NodeSettingsRO settings)
+    protected void validateSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         settings.getStringArray(m_configName);
     }
@@ -174,7 +174,7 @@ public class SettingsModelStringArray extends SettingsModel {
      *      #loadSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    void loadSettingsForModel(final NodeSettingsRO settings)
+    protected void loadSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         try {
             // no default value, throw an exception instead
@@ -189,7 +189,7 @@ public class SettingsModelStringArray extends SettingsModel {
      *      #saveSettingsForModel(org.knime.core.node.NodeSettingsWO)
      */
     @Override
-    void saveSettingsForModel(final NodeSettingsWO settings) {
+    protected void saveSettingsForModel(final NodeSettingsWO settings) {
         settings.addStringArray(m_configName, getStringArrayValue());
     }
 

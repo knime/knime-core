@@ -75,7 +75,7 @@ public class SettingsModelOddIntegerBounded
      *      #createClone()
      */
     @Override
-    SettingsModelOddIntegerBounded createClone() {
+    protected SettingsModelOddIntegerBounded createClone() {
         return new SettingsModelOddIntegerBounded(getConfigName(), 
                 getIntValue(), m_minValue, m_maxValue);
     }

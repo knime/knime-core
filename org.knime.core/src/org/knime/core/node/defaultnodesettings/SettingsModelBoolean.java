@@ -63,7 +63,7 @@ public class SettingsModelBoolean extends SettingsModel {
      */
     @SuppressWarnings("unchecked")
     @Override
-    SettingsModelBoolean createClone() {
+    protected SettingsModelBoolean createClone() {
         return new SettingsModelBoolean(m_configName, m_value);
     }
 
@@ -71,7 +71,7 @@ public class SettingsModelBoolean extends SettingsModel {
      * @see SettingsModel#getModelTypeID()
      */
     @Override
-    String getModelTypeID() {
+    protected String getModelTypeID() {
         return "SMID_boolean";
     }
 
@@ -79,7 +79,7 @@ public class SettingsModelBoolean extends SettingsModel {
      * @see SettingsModel#getConfigName()
      */
     @Override
-    String getConfigName() {
+    protected String getConfigName() {
         return m_configName;
     }
 
@@ -112,7 +112,7 @@ public class SettingsModelBoolean extends SettingsModel {
      *      org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void loadSettingsForDialog(final NodeSettingsRO settings,
+    protected void loadSettingsForDialog(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         // use the current value, if no value is stored in the settings
         setBooleanValue(settings.getBoolean(m_configName, m_value));
@@ -123,7 +123,7 @@ public class SettingsModelBoolean extends SettingsModel {
      *      #saveSettingsForDialog(org.knime.core.node.NodeSettingsWO)
      */
     @Override
-    void saveSettingsForDialog(final NodeSettingsWO settings)
+    protected void saveSettingsForDialog(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         saveSettingsForModel(settings);
     }
@@ -133,7 +133,7 @@ public class SettingsModelBoolean extends SettingsModel {
      *      #validateSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    void validateSettingsForModel(final NodeSettingsRO settings)
+    protected void validateSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         settings.getBoolean(m_configName);
     }
@@ -143,7 +143,7 @@ public class SettingsModelBoolean extends SettingsModel {
      *      #loadSettingsForModel(org.knime.core.node.NodeSettingsRO)
      */
     @Override
-    void loadSettingsForModel(final NodeSettingsRO settings)
+    protected void loadSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // no default value, throw an exception instead
         setBooleanValue(settings.getBoolean(m_configName));
@@ -154,7 +154,7 @@ public class SettingsModelBoolean extends SettingsModel {
      *      #saveSettingsForModel(org.knime.core.node.NodeSettingsWO)
      */
     @Override
-    void saveSettingsForModel(final NodeSettingsWO settings) {
+    protected void saveSettingsForModel(final NodeSettingsWO settings) {
         settings.addBoolean(m_configName, m_value);
     }
 

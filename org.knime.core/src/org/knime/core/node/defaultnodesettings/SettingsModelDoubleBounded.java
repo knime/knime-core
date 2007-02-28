@@ -74,7 +74,7 @@ public class SettingsModelDoubleBounded extends SettingsModelDouble {
      *      #createClone()
      */
     @Override
-    SettingsModelDoubleBounded createClone() {
+    protected SettingsModelDoubleBounded createClone() {
         return new SettingsModelDoubleBounded(getConfigName(),
                 getDoubleValue(), m_minValue, m_maxValue);
     }
