@@ -44,9 +44,8 @@ import org.knime.core.node.NotConfigurableException;
  * NodeDialog. Actual implementations will make sure the label and editable
  * components are placed nicely in the underlying JPanel and their models will
  * handle save/load to and from config objects. Using the
- * {@link org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane} it is
- * easy to add such Component to quickly assemble a dialog dealing with typical
- * parameters. <br>
+ * {@link DefaultNodeSettingsPane} it is easy to add such Component to quickly
+ * assemble a dialog dealing with typical parameters. <br>
  * Each component has a {@link SettingsModel} associated with it, which stores
  * the current value of the component and handles all value related operations,
  * like loading, saving, etc.
@@ -78,7 +77,7 @@ public abstract class DialogComponent {
      * 
      * @param model the value model for this component
      */
-    protected DialogComponent(final SettingsModel model) {
+    public DialogComponent(final SettingsModel model) {
         if (model == null) {
             throw new NullPointerException("SettingsModel can't be null.");
         }
@@ -91,14 +90,14 @@ public abstract class DialogComponent {
      * @return the panel in which all sub-components of this component are
      *         arranged. This panel will be added to the dialog pane.
      */
-    JPanel getComponentPanel() {
+    protected JPanel getComponentPanel() {
         return m_panel;
     }
 
     /**
      * @return the Settings model associated with this component.
      */
-    final SettingsModel getModel() {
+    protected final SettingsModel getModel() {
         return m_model;
     }
 
@@ -108,7 +107,7 @@ public abstract class DialogComponent {
      *         call to loadSettings. Could be null!
      * @see #loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
-    final DataTableSpec getLastTableSpec(final int portID) {
+    protected final DataTableSpec getLastTableSpec(final int portID) {
         if (m_lastSpecs == null) {
             return null;
         }
@@ -121,14 +120,13 @@ public abstract class DialogComponent {
      * @see #loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
 
-    final DataTableSpec[] getLastTableSpecs() {
+    protected final DataTableSpec[] getLastTableSpecs() {
         return m_lastSpecs;
     }
 
     /**
      * Read value(s) of this dialog component from the configuration object.
-     * This method will be called by the dialog pane only. (Is not called if the
-     * component is disabled.)
+     * This method will be called by the dialog pane only.
      * 
      * @param settings the <code>NodeSettings</code> to read from
      * @param specs the input specs
@@ -136,7 +134,7 @@ public abstract class DialogComponent {
      *             component to be valid (i.e. the settings are valid), e.g. if
      *             the given specs lack some important columns or column types.
      */
-    final void loadSettingsFrom(final NodeSettingsRO settings,
+    public final void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
 
         m_lastSpecs = specs;
@@ -151,9 +149,11 @@ public abstract class DialogComponent {
     /**
      * Read the value from the {@link SettingsModel} and set/display it in the
      * component. (Called after loading new values in the model to ensure they
-     * are transfered into the component.)
+     * are transfered into the component.) Implementations should set the new
+     * value(s) in the components, should clear any possible error indications,
+     * and should also take over the enable state.
      */
-    abstract void updateComponent();
+    protected abstract void updateComponent();
 
     /**
      * Write value(s) of this dialog component to the configuration object. This
@@ -163,23 +163,32 @@ public abstract class DialogComponent {
      * @param settings the <code>NodeSettings</code> to read from
      * @throws InvalidSettingsException if the user has entered wrong values.
      */
-    final void saveSettingsTo(final NodeSettingsWO settings)
+    public final void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        if (m_model.isEnabled()) {
+
+        try {
             validateStettingsBeforeSave();
+        } catch (InvalidSettingsException ise) {
+            if (m_model.isEnabled()) {
+                // forward the exception only if the component is enabled.
+                // it's okay for disabled components to hold invalid values.
+                throw ise;
+            }
         }
+
+        // if the model is not enabled - save its settings anyway.
         m_model.dlgSaveSettingsTo(settings);
     }
 
     /**
      * Will be called before the value of the component is saved into the
-     * settings object. Can be used to commit values, to update the model and
-     * must be used to validate the entered value. (Is not called if the
-     * component is disabled.)
+     * NodeSettings object. Can be used to commit values, to update the model
+     * and must be used to validate the entered value.
      * 
      * @throws InvalidSettingsException if the entered values are invalid
      */
-    abstract void validateStettingsBeforeSave() throws InvalidSettingsException;
+    protected abstract void validateStettingsBeforeSave()
+            throws InvalidSettingsException;
 
     /**
      * Will be called before the values are loaded from the settings object. Can
@@ -193,14 +202,13 @@ public abstract class DialogComponent {
      *             inappropriate table specs. (Prevents the dialog from being
      *             opened.)
      */
-    abstract void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
-            throws NotConfigurableException;
+    protected abstract void checkConfigurabilityBeforeLoad(
+            final DataTableSpec[] specs) throws NotConfigurableException;
 
     /**
      * Sets the enabled status of the component. Disabled components don't take
-     * user input and don't store any value in NodeSettings objects! Trying to
-     * retrieve the value of a disabled component from the settings object will
-     * fail.
+     * user input. Retrieving the value from a disabled model (SettingsModel)
+     * could lead to unexpected results.
      * 
      * @param enabled if <code>true</code> the contained components will be
      *            enabled
@@ -230,7 +238,7 @@ public abstract class DialogComponent {
      * 
      * @param field the component to set the color in
      */
-    void showError(final JTextField field) {
+    protected void showError(final JTextField field) {
         if (field.getText().length() == 0) {
             field.setBackground(Color.RED);
         } else {
@@ -244,20 +252,34 @@ public abstract class DialogComponent {
             public void removeUpdate(final DocumentEvent e) {
                 field.setForeground(DEFAULT_FG);
                 field.setBackground(DEFAULT_BG);
+                field.getDocument().removeDocumentListener(this);
             }
 
             public void insertUpdate(final DocumentEvent e) {
                 field.setForeground(DEFAULT_FG);
                 field.setBackground(DEFAULT_BG);
+                field.getDocument().removeDocumentListener(this);
             }
 
             public void changedUpdate(final DocumentEvent e) {
                 field.setForeground(DEFAULT_FG);
                 field.setBackground(DEFAULT_BG);
+                field.getDocument().removeDocumentListener(this);
             }
 
         });
 
+    }
+
+    /**
+     * Sets the foreground and background colors of the specified component back
+     * to the normal default colors.
+     * 
+     * @param field the textfield to clear the error for
+     */
+    protected void clearError(final JTextField field) {
+        field.setForeground(DEFAULT_FG);
+        field.setBackground(DEFAULT_BG);
     }
 
     /**

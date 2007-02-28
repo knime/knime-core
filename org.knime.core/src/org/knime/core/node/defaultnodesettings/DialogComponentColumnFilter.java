@@ -52,7 +52,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
     private final int m_inPortIndex;
 
     private ColumnFilterPanel m_columnFilter;
-    
+
     // the table spec that was sent last into the filter component
     private DataTableSpec m_specInFilter;
 
@@ -91,7 +91,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
 
         m_inPortIndex = inPortIndex;
         m_specInFilter = null;
-        
+
         m_columnFilter = new ColumnFilterPanel(allowedTypes);
         getComponentPanel().add(m_columnFilter);
 
@@ -115,7 +115,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      *      #updateComponent()
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
         // update component only if content is out of sync
         SettingsModelFilterString filterModel =
                 (SettingsModelFilterString)getModel();
@@ -123,12 +123,13 @@ public class DialogComponentColumnFilter extends DialogComponent {
         Set<String> compExcl = m_columnFilter.getExcludedColumnSet();
         List<String> modelIncl = filterModel.getIncludeList();
         List<String> modelExcl = filterModel.getExcludeList();
-        
-        boolean update = (compIncl.size() != modelIncl.size())
+
+        boolean update =
+                (compIncl.size() != modelIncl.size())
                         || (compExcl.size() != modelExcl.size());
 
         if (!update) {
-            // update if the current spec and the spec we last updated with 
+            // update if the current spec and the spec we last updated with
             // are different
             DataTableSpec currSpec = getLastTableSpec(m_inPortIndex);
             if (currSpec == null) {
@@ -155,9 +156,13 @@ public class DialogComponentColumnFilter extends DialogComponent {
         }
         if (update) {
             m_specInFilter = getLastTableSpec(m_inPortIndex);
-            m_columnFilter.update(m_specInFilter, true, 
-                    filterModel.getExcludeList());
+            m_columnFilter.update(m_specInFilter, true, filterModel
+                    .getExcludeList());
         }
+
+        // also update the enable status
+       setEnabled(filterModel.isEnabled());
+
     }
 
     /**
@@ -179,7 +184,8 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * @see DialogComponent#validateStettingsBeforeSave()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         // just in case we didn't get notified about the last change...
         updateModel();
     }
@@ -189,9 +195,9 @@ public class DialogComponentColumnFilter extends DialogComponent {
      *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
-        // currently we open the dialog even with an emtpy spec - causing the 
+        // currently we open the dialog even with an empty spec - causing the
         // panel to be empty.
     }
 

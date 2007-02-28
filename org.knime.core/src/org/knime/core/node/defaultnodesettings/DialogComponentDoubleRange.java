@@ -95,7 +95,7 @@ public class DialogComponentDoubleRange extends DialogComponent {
      *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         // Nothing to check, we don't care about the specs.
     }
@@ -125,7 +125,19 @@ public class DialogComponentDoubleRange extends DialogComponent {
      *      #updateComponent()
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
+        
+        // clear any possible error indication
+        JComponent editor = m_spinnerMin.getEditor();
+        if (editor instanceof DefaultEditor) {
+            clearError(((DefaultEditor)editor).getTextField());
+        }
+        editor = m_spinnerMax.getEditor();
+        if (editor instanceof DefaultEditor) {
+            clearError(((DefaultEditor)editor).getTextField());
+        }
+        
+        // update the spinners
         SettingsModelDoubleRange model = (SettingsModelDoubleRange)getModel();
         double valMin = ((Double)m_spinnerMin.getValue()).doubleValue();
         if (valMin != model.getMinRange()) {
@@ -135,6 +147,9 @@ public class DialogComponentDoubleRange extends DialogComponent {
         if (valMax != model.getMaxRange()) {
             m_spinnerMax.setValue(new Double(model.getMaxRange()));
         }
+
+        // update enable status
+        setEnabled(model.isEnabled());
     }
 
     /**
@@ -142,7 +157,8 @@ public class DialogComponentDoubleRange extends DialogComponent {
      *      #validateStettingsBeforeSave()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         SettingsModelDoubleRange model = (SettingsModelDoubleRange)getModel();
         double newMin;
         double newMax;
@@ -172,8 +188,20 @@ public class DialogComponentDoubleRange extends DialogComponent {
             errMsg += "Please enter a valid maximum.";
             throw new InvalidSettingsException(errMsg);
         }
-        
-        model.setRange(newMin, newMax);
+
+        try {
+            new SettingsModelDoubleRange(model.getConfigName(), newMin, newMax);
+        } catch (IllegalArgumentException iae) {
+            JComponent editor = m_spinnerMax.getEditor();
+            if (editor instanceof DefaultEditor) {
+                showError(((DefaultEditor)editor).getTextField());
+            }
+            editor = m_spinnerMin.getEditor();
+            if (editor instanceof DefaultEditor) {
+                showError(((DefaultEditor)editor).getTextField());
+            }
+            throw new InvalidSettingsException(iae.getMessage());
+        }
     }
 
 }

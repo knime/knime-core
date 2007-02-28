@@ -56,7 +56,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     private final ColumnSelectionPanel m_chooser;
 
     private final JLabel m_label;
-    
+
     private final int m_specIndex;
 
     private final List<Class<? extends DataValue>> m_typeList;
@@ -129,7 +129,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
      *      #updateComponent()
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
         String classCol = ((SettingsModelString)getModel()).getStringValue();
         if ((classCol == null) || (classCol.length() == 0)) {
             classCol = "** Unknown column **";
@@ -141,6 +141,9 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             // this exception shouldn't fly.
             assert false;
         }
+
+        // update the enable status
+        setEnabled(getModel().isEnabled());
     }
 
     /**
@@ -156,7 +159,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
      *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         /*
          * this is a bit of code duplication: if the selection panel is set to
@@ -210,7 +213,8 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
      * @see DialogComponent#validateStettingsBeforeSave()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         // just in case we didn't get notified about the last selection ...
         updateModel();
     }

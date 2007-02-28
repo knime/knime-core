@@ -48,13 +48,15 @@ public final class DialogComponentString extends DialogComponent {
 
     // the min/max and default width of the editfield, if not set explicitly
     private static final int FIELD_MINWIDTH = 5;
+
     private static final int FIELD_DEFWIDTH = 15;
+
     private static final int FIELD_MAXWIDTH = 30;
-    
+
     private final JTextField m_valueField;
 
     private final JLabel m_label;
-    
+
     private final boolean m_disallowEmtpy;
 
     /**
@@ -66,8 +68,8 @@ public final class DialogComponentString extends DialogComponent {
      */
     public DialogComponentString(final SettingsModelString stringModel,
             final String label) {
-        this(stringModel, label, false, 
-                calcDefaultWidth(stringModel.getStringValue()));
+        this(stringModel, label, false, calcDefaultWidth(stringModel
+                .getStringValue()));
     }
 
     /**
@@ -80,7 +82,7 @@ public final class DialogComponentString extends DialogComponent {
      * @param compWidth the width of the edit field (in columns/characters)
      */
     public DialogComponentString(final SettingsModelString stringModel,
-            final String label, final boolean disallowEmptyString, 
+            final String label, final boolean disallowEmptyString,
             final int compWidth) {
         super(stringModel);
 
@@ -144,7 +146,7 @@ public final class DialogComponentString extends DialogComponent {
             return FIELD_MAXWIDTH;
         }
         return defaultValue.length();
-        
+
     }
 
     /**
@@ -152,12 +154,17 @@ public final class DialogComponentString extends DialogComponent {
      *      #updateComponent()
      */
     @Override
-    void updateComponent() {
-        // update copmonent only if values are out of sync
+    protected void updateComponent() {
+        
+        clearError(m_valueField);
+        
+        // update component only if values are out of sync
         final String str = ((SettingsModelString)getModel()).getStringValue();
         if (!m_valueField.getText().equals(str)) {
             m_valueField.setText(str);
         }
+
+        setEnabled(getModel().isEnabled());
     }
 
     /**
@@ -182,7 +189,8 @@ public final class DialogComponentString extends DialogComponent {
      * @see DialogComponent#validateStettingsBeforeSave()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         updateModel();
     }
 
@@ -191,7 +199,7 @@ public final class DialogComponentString extends DialogComponent {
      *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         // we are always good.
     }

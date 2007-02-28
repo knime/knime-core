@@ -178,8 +178,9 @@ public class DialogComponentFileChooser extends DialogComponent {
                         chooser.setFileFilter(new SimpleFileFilter(extension));
                     }
                 }
-                int returnVal = chooser.showDialog(
-                        getComponentPanel().getParent(), null);
+                int returnVal =
+                        chooser.showDialog(getComponentPanel().getParent(),
+                                null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String newFile;
                     try {
@@ -284,11 +285,24 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
 
     /**
+     * Sets the coloring of the specified component back to normal.
+     * 
+     * @param box the component to clear the error status for.
+     */
+    protected void clearError(final JComboBox box) {
+        box.setForeground(DEFAULT_FG);
+        box.setBackground(DEFAULT_BG);
+    }
+
+    /**
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #updateComponent()
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
+
+        clearError(m_fileComboBox);
+
         // update the component only if model and component are out of sync
         SettingsModelString model = (SettingsModelString)getModel();
         String newValue = model.getStringValue();
@@ -304,13 +318,17 @@ public class DialogComponentFileChooser extends DialogComponent {
             m_fileComboBox.addItem(newValue);
             m_fileComboBox.setSelectedItem(newValue);
         }
+
+        // also update the enable status
+        setEnabled(model.isEnabled());
     }
 
     /**
      * @see DialogComponent#validateStettingsBeforeSave()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         // just in case we didn't get notified about the last change...
         updateModel(false); // mark the erroneous component red.
         // store the saved filename in the history
@@ -322,7 +340,7 @@ public class DialogComponentFileChooser extends DialogComponent {
      *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         // we're always good - independent of the incoming spec
     }

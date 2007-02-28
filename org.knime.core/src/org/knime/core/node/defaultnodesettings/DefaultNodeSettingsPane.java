@@ -152,7 +152,7 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
     }
 
     /**
-     * This method can be overwidden to load additional settings. 
+     * This method can be overridden to load additional settings. 
      * 
      * @param settings the <code>NodeSettings</code> to read from
      * @param specs the input specs

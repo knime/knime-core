@@ -47,12 +47,13 @@ public class DialogComponentMultiLineString extends DialogComponent {
 
     // the min/max and default width of the editfield, if not set explicitly
     private static final int FIELD_DEFCOLS = 50;
-    private static final int FIELD_DEFROWS  = 3;
-    
+
+    private static final int FIELD_DEFROWS = 3;
+
     private final JTextArea m_valueField;
 
     private final JLabel m_label;
-    
+
     private final boolean m_disallowEmtpy;
 
     /**
@@ -62,8 +63,8 @@ public class DialogComponentMultiLineString extends DialogComponent {
      * @param label label for dialog in front of JTextArea
      * @param stringModel the model that stores the value for this component.
      */
-    public DialogComponentMultiLineString(final SettingsModelString stringModel,
-            final String label) {
+    public DialogComponentMultiLineString(
+            final SettingsModelString stringModel, final String label) {
         this(stringModel, label, false, FIELD_DEFCOLS, FIELD_DEFROWS);
     }
 
@@ -77,25 +78,25 @@ public class DialogComponentMultiLineString extends DialogComponent {
      * @param cols the number of columns.
      * @param rows the number of rows.
      */
-    public DialogComponentMultiLineString(final SettingsModelString stringModel,
-            final String label, final boolean disallowEmptyString, 
-            final int cols, final int rows) {
+    public DialogComponentMultiLineString(
+            final SettingsModelString stringModel, final String label,
+            final boolean disallowEmptyString, final int cols, final int rows) {
         super(stringModel);
 
         m_disallowEmtpy = disallowEmptyString;
 
         getComponentPanel().setLayout(new BorderLayout());
-        
+
         m_label = new JLabel(label);
         getComponentPanel().add(m_label, BorderLayout.NORTH);
-        
+
         m_valueField = new JTextArea();
         m_valueField.setColumns(cols);
         m_valueField.setRows(rows);
 
         JScrollPane jsp = new JScrollPane(m_valueField);
         getComponentPanel().add(jsp, BorderLayout.CENTER);
-        
+
         m_valueField.getDocument().addDocumentListener(new DocumentListener() {
             public void removeUpdate(final DocumentEvent e) {
                 try {
@@ -135,12 +136,17 @@ public class DialogComponentMultiLineString extends DialogComponent {
      *      #updateComponent()
      */
     @Override
-    void updateComponent() {
-        // update copmonent only if values are out of sync
+    protected void updateComponent() {
+        
+        clearError(m_valueField);
+        
+        // update component only if values are out of sync
         final String str = ((SettingsModelString)getModel()).getStringValue();
         if (!m_valueField.getText().equals(str)) {
             m_valueField.setText(str);
         }
+
+        setEnabled(getModel().isEnabled());
     }
 
     /**
@@ -175,27 +181,41 @@ public class DialogComponentMultiLineString extends DialogComponent {
             public void removeUpdate(final DocumentEvent e) {
                 field.setForeground(DEFAULT_FG);
                 field.setBackground(DEFAULT_BG);
+                field.getDocument().removeDocumentListener(this);
             }
 
             public void insertUpdate(final DocumentEvent e) {
                 field.setForeground(DEFAULT_FG);
                 field.setBackground(DEFAULT_BG);
+                field.getDocument().removeDocumentListener(this);
             }
 
             public void changedUpdate(final DocumentEvent e) {
                 field.setForeground(DEFAULT_FG);
                 field.setBackground(DEFAULT_BG);
+                field.getDocument().removeDocumentListener(this);
             }
 
         });
     }
-    
-    
+
+    /**
+     * Clears the error status of the specified component by reseting its color
+     * to the normal default colors.
+     * 
+     * @param field the component to set the colors back to normal for.
+     */
+    private void clearError(final JTextArea field) {
+        field.setForeground(DEFAULT_FG);
+        field.setBackground(DEFAULT_BG);
+    }
+
     /**
      * @see DialogComponent#validateStettingsBeforeSave()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         updateModel();
     }
 
@@ -204,7 +224,7 @@ public class DialogComponentMultiLineString extends DialogComponent {
      *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         // we are always good.
     }

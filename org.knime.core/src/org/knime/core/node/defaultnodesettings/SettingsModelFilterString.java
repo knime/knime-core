@@ -66,8 +66,8 @@ public class SettingsModelFilterString extends SettingsModel {
      * @param defaultExclList the initial value for the exclude list.
      */
     public SettingsModelFilterString(final String configName,
-            final List<String> defaultInclList,
-            final List<String> defaultExclList) {
+            final Collection<String> defaultInclList,
+            final Collection<String> defaultExclList) {
         if ((configName == null) || (configName == "")) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
@@ -117,6 +117,16 @@ public class SettingsModelFilterString extends SettingsModel {
                 .asList(defaultExclList));
     }
 
+    /**
+     * Constructs a new model with initially empty include and exclude lists.  
+     *
+     * @param configName the identifier the values are stored with in the
+     *            {@link org.knime.core.node.NodeSettings} object
+     */
+    public SettingsModelFilterString(final String configName) {
+        this(configName, (Collection<String>)null, (Collection<String>)null); 
+    }
+    
     /**
      * @see org.knime.core.node.defaultnodesettings.SettingsModel#createClone()
      */

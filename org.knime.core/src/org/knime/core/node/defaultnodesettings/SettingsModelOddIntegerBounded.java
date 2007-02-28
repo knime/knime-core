@@ -33,7 +33,8 @@ import org.knime.core.node.InvalidSettingsException;
  * 
  * @author ohl, University of Konstanz
  */
-public class SettingsModelOddIntegerBounded extends SettingsModelIntegerBounded {
+public class SettingsModelOddIntegerBounded 
+        extends SettingsModelIntegerBounded {
 
     private final int m_minValue;
 
@@ -75,8 +76,8 @@ public class SettingsModelOddIntegerBounded extends SettingsModelIntegerBounded 
      */
     @Override
     SettingsModelOddIntegerBounded createClone() {
-        return new SettingsModelOddIntegerBounded(getConfigName(), getIntValue(),
-                m_minValue, m_maxValue);
+        return new SettingsModelOddIntegerBounded(getConfigName(), 
+                getIntValue(), m_minValue, m_maxValue);
     }
 
     /**

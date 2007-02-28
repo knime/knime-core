@@ -119,7 +119,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
      *      #updateComponent()
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
         String val = ((SettingsModelString)getModel()).getStringValue();
         boolean update;
         if (val == null) {
@@ -130,6 +130,9 @@ public final class DialogComponentStringSelection extends DialogComponent {
         if (update) {
             m_combobox.setSelectedItem(val);
         }
+
+        // also update the enable status
+        setEnabled(getModel().isEnabled());
     }
 
     /**
@@ -174,7 +177,8 @@ public final class DialogComponentStringSelection extends DialogComponent {
      * @see DialogComponent#validateStettingsBeforeSave()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         updateModel();
     }
 
@@ -183,7 +187,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
      *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         // we are always good.
     }
