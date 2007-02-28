@@ -377,7 +377,7 @@ public class DataContainer implements RowAppender {
         if (!isOpen()) {
             throw new IllegalStateException("Container is not open.");
         }
-        return m_buffer.size();
+        return m_buffer != null ? m_buffer.size() : 0;
     }
 
     /**
