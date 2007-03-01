@@ -25,6 +25,7 @@
 package org.knime.base.node.io.filereader;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -68,6 +69,9 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
     /* the table name (derived from the filename if not overridden) */
     private String m_tableName;
+    
+    /* the size of the data file */
+    private long m_dataFileSize;
 
     /*
      * in tokens read for a double column, this char gets replaced with a "."
@@ -474,7 +478,6 @@ public class FileReaderSettings extends FileTokenizerSettings {
             }
         }
         m_dataFileLocation = dataFileLocation;
-
     }
 
     /**
@@ -515,6 +518,14 @@ public class FileReaderSettings extends FileTokenizerSettings {
             result = new BufferedReader(new InputStreamReader(
                     getDataFileLocation().openStream()));
         }
+        
+
+        // get the file size
+        File dataFile = new File(getDataFileLocation().getFile());
+        if (dataFile.exists()) {
+            m_dataFileSize = dataFile.length();
+        }
+        
         return result;
     }
 
@@ -535,6 +546,18 @@ public class FileReaderSettings extends FileTokenizerSettings {
      */
     public String getTableName() {
         return m_tableName;
+    }
+    
+    /**
+     * Returns the size of the data file.
+     * If the file size can not be determined (e.g. the URL is a http source)
+     * the size is 0. In case the reader has not been initialized yet, the 
+     * size will also be 0.
+     * 
+     * @return the size of the data file
+     */
+    public long getDataFileSize() {
+        return m_dataFileSize;
     }
 
     /**

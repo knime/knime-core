@@ -136,7 +136,7 @@ public class FileReaderNodeModel extends NodeModel {
         }
 
         DataTableSpec tSpec = m_frSettings.createDataTableSpec();
-        FileTable fTable = new FileTable(tSpec, m_frSettings);
+        FileTable fTable = new FileTable(tSpec, m_frSettings, exec);
 
         // create a DataContainer and fill it with the rows read. It is faster
         // then reading the file everytime (for each row iterator), and it

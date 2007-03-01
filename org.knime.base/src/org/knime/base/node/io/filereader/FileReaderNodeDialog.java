@@ -1166,7 +1166,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         }
         DataTableSpec tSpec = m_frSettings.createDataTableSpec();
         tSpec = modifyPreviewColNames(tSpec);
-        m_previewTable = new FileReaderPreviewTable(tSpec, m_frSettings);
+        m_previewTable = new FileReaderPreviewTable(tSpec, m_frSettings, null);
         m_previewTable.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 setErrorLabelText(m_previewTable.getErrorMsg());

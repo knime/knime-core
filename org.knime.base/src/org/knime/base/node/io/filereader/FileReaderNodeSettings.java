@@ -549,7 +549,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         }
         DataTableSpec dts = new DataTableSpec(colSpec);
 
-        DataTable dt = new FileTable(dts, this);
+        DataTable dt = new FileTable(dts, this, null);
         RowIterator rowIter = dt.iterator();
         if (rowIter == null) {
             throw new IOException("Couldn't read from col headers from "

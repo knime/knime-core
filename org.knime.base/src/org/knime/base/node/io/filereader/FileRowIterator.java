@@ -35,6 +35,7 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
 
 import org.knime.base.node.io.filetokenizer.FileTokenizer;
@@ -73,6 +74,9 @@ final class FileRowIterator extends RowIterator {
 
     // Used in the above hash to indicate that duplicate of that row was found.
     private static final Integer NOSUFFIX = new Integer(0);
+    
+    // The junk size after which a new progress is reported. (yet 512 KByte)
+    private static final long PROGRESS_JUNK_SIZE = 1024 * 512;
 
     // if that is true we don't return any more rows.
     private boolean m_exceptionThrown;
@@ -81,19 +85,30 @@ final class FileRowIterator extends RowIterator {
     private boolean m_customDecimalSeparator;
 
     private char m_decSeparator;
+    
+    /* the execution context the progress is reported to */
+    private ExecutionContext m_exec;
+    
+    /* counts the progress reportings */
+    private long m_lastReport;
 
     /**
      * The RowIterator for the FileTable.
      * 
      * @param tableSpec the spec defining the structure of the rows to create
      * @param frSettings object containing the wheres and hows to read the data
+     * @param exec the execution context to report the progess to
      * @throws IOException if it couldn't open the data file
      */
     FileRowIterator(final FileReaderSettings frSettings,
-            final DataTableSpec tableSpec) throws IOException {
+            final DataTableSpec tableSpec, final ExecutionContext exec)
+            throws IOException {
 
         m_tableSpec = tableSpec;
         m_frSettings = frSettings;
+
+        m_exec = exec;
+        m_lastReport = 0;
 
         m_tokenizer = new FileTokenizer(m_frSettings.createNewInputReader());
 
@@ -287,6 +302,18 @@ final class FileRowIterator extends RowIterator {
         }
         m_rowNumber++;
 
+        // report progress
+        // only if an execution context exists an if the underlying
+        // URL is a file whose size can be determined
+        double readBytes = (double)m_tokenizer.getReadBytes();
+        if (m_exec != null && m_frSettings.getDataFileSize() > 0
+                && readBytes / PROGRESS_JUNK_SIZE > m_lastReport) {
+            // assert readBytes <= m_frSettings.getDataFileSize();
+            m_exec.setProgress((double)readBytes
+                    / (double)m_frSettings.getDataFileSize());
+            m_lastReport++;
+        }
+        
         return new DefaultRow(rowHeader, row);
     } // next()
 
