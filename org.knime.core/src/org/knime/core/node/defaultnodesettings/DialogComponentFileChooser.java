@@ -265,6 +265,10 @@ public class DialogComponentFileChooser extends DialogComponent {
      */
     private void showError(final JComboBox box) {
 
+        if (!getModel().isEnabled()) {
+            // don't flag an error in disabled components.
+            return;
+        }
         String selection = (String)box.getSelectedItem();
 
         if ((selection == null) || (selection.length() == 0)) {

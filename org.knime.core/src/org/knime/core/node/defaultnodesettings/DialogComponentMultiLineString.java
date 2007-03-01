@@ -168,6 +168,12 @@ public class DialogComponentMultiLineString extends DialogComponent {
     }
 
     private void showError(final JTextArea field) {
+        
+        if (!getModel().isEnabled()) {
+            // don't flag an error in disabled components.
+            return;
+        }
+
         if (field.getText().length() == 0) {
             field.setBackground(Color.RED);
         } else {

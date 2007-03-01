@@ -192,7 +192,8 @@ public abstract class DialogComponent {
     /**
      * Will be called before the value of the component is saved into the
      * NodeSettings object. Can be used to commit values, to update the model
-     * and must be used to validate the entered value.
+     * and must be used to validate the entered value. NOTE: it will be called
+     * even if the model is disabled. 
      * 
      * @throws InvalidSettingsException if the entered values are invalid
      */
@@ -248,6 +249,12 @@ public abstract class DialogComponent {
      * @param field the component to set the color in
      */
     protected void showError(final JTextField field) {
+        
+        if (!getModel().isEnabled()) {
+            // don't show no error, if the model is not enabled.
+            return;
+        }
+        
         if (field.getText().length() == 0) {
             field.setBackground(Color.RED);
         } else {
@@ -300,6 +307,7 @@ public abstract class DialogComponent {
     public abstract void setToolTipText(final String text);
 
     /**
+     * -------------------------------------------------------------------------
      * Components deriving from {@link DialogComponent} can use this model if
      * they don't need or want to store any value (but are only displaying
      * stuff). Do not call any of the methods of this model. No value will be
