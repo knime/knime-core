@@ -30,6 +30,7 @@ import java.awt.Color;
 
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -140,7 +141,12 @@ public abstract class DialogComponent {
         m_lastSpecs = specs;
 
         checkConfigurabilityBeforeLoad(specs);
-        m_model.dlgLoadSettingsFrom(settings, specs);
+        
+        if (!(m_model instanceof EmptySettingsModel)) {
+            // our special empty settings model will not load anything
+            m_model.dlgLoadSettingsFrom(settings, specs);
+        }
+        
         // make sure the component displays the new value (listeners are not
         // notified if the model's value didn't change (is not different)).
         updateComponent();
@@ -177,7 +183,10 @@ public abstract class DialogComponent {
         }
 
         // if the model is not enabled - save its settings anyway.
-        m_model.dlgSaveSettingsTo(settings);
+        if (!(m_model instanceof EmptySettingsModel)) {
+            // the special model EmptySettings model will not save anything
+            m_model.dlgSaveSettingsTo(settings);
+        }
     }
 
     /**
@@ -289,4 +298,173 @@ public abstract class DialogComponent {
      * @see javax.swing.JComponent#setToolTipText(java.lang.String)
      */
     public abstract void setToolTipText(final String text);
+
+    /**
+     * Components deriving from {@link DialogComponent} can use this model if
+     * they don't need or want to store any value (but are only displaying
+     * stuff). Do not call any of the methods of this model. No value will be
+     * stored in this model, no value will be saved or loaded. You cannot change
+     * the value of the component through this model.
+     * 
+     * @author ohl, University of Konstanz
+     */
+    protected static final class EmptySettingsModel extends SettingsModel {
+
+        /**
+         * Creates an empty settings model, that will not hold any value.
+         */
+        public EmptySettingsModel() {
+
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel#toString()
+         */
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + " ('EMPTYMODELID')";
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #addChangeListener(javax.swing.event.ChangeListener)
+         */
+        @Override
+        public void addChangeListener(final ChangeListener l) {
+            // don't listen to me.
+            assert false;
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #prependChangeListener(javax.swing.event.ChangeListener)
+         */
+        @Override
+        protected void prependChangeListener(final ChangeListener l) {
+            // not listening
+            assert false;
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #notifyChangeListeners()
+         */
+        @Override
+        protected void notifyChangeListeners() {
+            // I have nothing to say.
+            assert false;
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #removeChangeListener(javax.swing.event.ChangeListener)
+         */
+        @Override
+        public void removeChangeListener(final ChangeListener l) {
+            // nobody is listening
+            assert false;
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #isEnabled()
+         */
+        @Override
+        public boolean isEnabled() {
+            return true;
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #setEnabled(boolean)
+         */
+        @Override
+        public void setEnabled(final boolean enabled) {
+            // I don't care.
+            assert false;
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #createClone()
+         */
+        @SuppressWarnings("unchecked")
+        @Override
+        protected EmptySettingsModel createClone() {
+            return new EmptySettingsModel();
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #getConfigName()
+         */
+        @Override
+        protected String getConfigName() {
+            // shouldn't be used anyway
+            assert false;
+            return Integer.toString(System.identityHashCode(this));
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #getModelTypeID()
+         */
+        @Override
+        protected String getModelTypeID() {
+            // shouldn't be used
+            assert false;
+            return "EMPTYMODELID";
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #loadSettingsForDialog(org.knime.core.node.NodeSettingsRO,
+         *      org.knime.core.data.DataTableSpec[])
+         */
+        @Override
+        protected void loadSettingsForDialog(final NodeSettingsRO settings,
+                final DataTableSpec[] specs) throws NotConfigurableException {
+            // not loading nor saving any settings
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #loadSettingsForModel(org.knime.core.node.NodeSettingsRO)
+         */
+        @Override
+        protected void loadSettingsForModel(final NodeSettingsRO settings)
+                throws InvalidSettingsException {
+            // not loading nor saving any settings
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #saveSettingsForDialog(org.knime.core.node.NodeSettingsWO)
+         */
+        @Override
+        protected void saveSettingsForDialog(final NodeSettingsWO settings)
+                throws InvalidSettingsException {
+            // not loading nor saving any settings
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #saveSettingsForModel(org.knime.core.node.NodeSettingsWO)
+         */
+        @Override
+        protected void saveSettingsForModel(final NodeSettingsWO settings) {
+            // not loading nor saving any settings
+        }
+
+        /**
+         * @see org.knime.core.node.defaultnodesettings.SettingsModel
+         *      #validateSettingsForModel(org.knime.core.node.NodeSettingsRO)
+         */
+        @Override
+        protected void validateSettingsForModel(final NodeSettingsRO settings)
+                throws InvalidSettingsException {
+            // not loading nor saving any settings
+        }
+    }
+
 }
