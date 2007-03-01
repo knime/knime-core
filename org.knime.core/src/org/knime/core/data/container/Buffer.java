@@ -980,7 +980,9 @@ class Buffer {
         try {
             if (ser != null) { // DataCell is datacell-serializable
                 outStream = new DataOutputStream(out);
-                ser.serialize(cell, (DataOutput)outStream);
+                DataOutput output = 
+                    new LongUTFDataOutputStream((DataOutputStream)outStream);
+                ser.serialize(cell, output);
             } else {
                 outStream = new ObjectOutputStream(out);
                 ((ObjectOutputStream)outStream).writeObject(cell);
@@ -1026,10 +1028,11 @@ class Buffer {
         try {
             if (ser != null) {
                 inStream = new DataInputStream(in);
+                DataInput input = 
+                    new LongUTFDataInputStream((DataInputStream)inStream);
                 // the DataType class will reject Serializer that do not have
                 // the appropriate return type
-                BlobDataCell c = 
-                    (BlobDataCell)ser.deserialize((DataInput)inStream);
+                BlobDataCell c = (BlobDataCell)ser.deserialize(input);
                 c.setBlobAddress(blobAddress);
                 return c;
             } else {
