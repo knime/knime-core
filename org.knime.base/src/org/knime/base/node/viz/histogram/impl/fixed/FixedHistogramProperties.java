@@ -21,10 +21,19 @@
  */
 package org.knime.base.node.viz.histogram.impl.fixed;
 
+import java.awt.Dimension;
 import java.util.Collection;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.border.EtchedBorder;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
 import org.knime.base.node.viz.histogram.AggregationMethod;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.core.data.DataTableSpec;
 
@@ -48,15 +57,72 @@ public class FixedHistogramProperties extends
 
     private static final long serialVersionUID = -6177238900813927896L;
 
+    private static final String COLUMN_TAB_LABEL = "Column settings";
+    
+    private static final String COLUMN_TAB_TOOLTIP = 
+        "Column information tab";
+    
+    private static final String X_COLUMN_LABEL = "X Column:";
+
+    private static final String AGGREGATION_COLUMN_LABEL = 
+        "Aggregation column:";
+    
+    private static final Dimension HORIZONTAL_SPACER_DIM = new Dimension(10, 1);
+    
+    private final JLabel m_xCol;
+    
+    private final JLabel m_aggrCol;
+    
     /**
      * Constructor for class FixedColumnHistogramProperties.
      * 
-     * @param aggrMethod the aggregation method which should be set
+     * @param tableSpec the {@link DataTableSpec} to initialize the column
+     * @param vizModel the {@link AbstractHistogramVizModel}
      */
-    public FixedHistogramProperties(final AggregationMethod aggrMethod) {
-        super(aggrMethod);
-        //disable the select boxes
-        disableSelectBoxes();
+    public FixedHistogramProperties(final DataTableSpec tableSpec,
+            final AbstractHistogramVizModel vizModel) {
+        super(tableSpec, vizModel);
+        m_xCol = new JLabel();
+        m_aggrCol = new JLabel();
+        final JPanel columnPanel = createColumnSettingsPanel();
+        final int tabCount = getTabCount();
+        int colTabIdx = 1;
+        if (tabCount < 1) {
+            colTabIdx = 0;
+        }
+        insertTab(COLUMN_TAB_LABEL, null, columnPanel,
+                COLUMN_TAB_TOOLTIP, colTabIdx);
+    }
+
+    /**
+     * The column information panel which contains the x column 
+     * and aggregation column information.
+     * 
+     * @return the column information panel
+     */
+    private JPanel createColumnSettingsPanel() {
+        final JPanel columnPanel = new JPanel();
+        final Box xColumnBox = Box.createHorizontalBox();
+        xColumnBox.setBorder(BorderFactory
+                .createEtchedBorder(EtchedBorder.RAISED));
+        final JLabel xColLabelLabel = new JLabel(X_COLUMN_LABEL);
+        xColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+        xColumnBox.add(xColLabelLabel);
+        xColumnBox.add(Box.createHorizontalGlue());
+        xColumnBox.add(m_xCol);
+        xColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+//      the column selection and button box
+        final Box aggrColBox = Box.createVerticalBox();        
+        final JLabel aggrColLabel = new JLabel(AGGREGATION_COLUMN_LABEL);
+        aggrColLabel.setVerticalAlignment(SwingConstants.CENTER);
+        // colLabelBox.add(Box.createVerticalGlue());
+        aggrColBox.add(aggrColLabel);
+        aggrColBox.add(Box.createVerticalGlue());
+        final Box colSelectLabelBox = Box.createVerticalBox();
+        colSelectLabelBox.add(aggrColBox);
+        colSelectLabelBox.add(m_aggrCol);
+        columnPanel.add(xColumnBox);
+        return columnPanel;
     }
 
     /**
@@ -65,30 +131,39 @@ public class FixedHistogramProperties extends
      */
     @Override
     protected void onSelectAggrMethod(final String actionCommand) {
-        super.onSelectAggrMethod(actionCommand);
-        //disable the select box
-        disableSelectBoxes();
+        //nothing to do
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramProperties
-     * #updateColumnSelection(org.knime.core.data.DataTableSpec, 
-     * java.lang.String, java.lang.String)
+     * @see org.knime.base.node.viz.histogram.
+     * AbstractHistogramProperties#updateColumnSelection(
+     * org.knime.core.data.DataTableSpec, java.lang.String, 
+     * java.util.Collection, 
+     * org.knime.base.node.viz.histogram.AggregationMethod)
      */
     @Override
     public void updateColumnSelection(final DataTableSpec spec, 
-            final String xColName, final Collection<ColorColumn> yColumns) {
-        super.updateColumnSelection(spec, xColName, yColumns);
-        //disable the column select boxes
-        disableSelectBoxes();
+            final String xColName, final Collection<ColorColumn> yColumns, 
+            final AggregationMethod aggrMethod) {
+        m_xCol.setText(xColName);
+        m_aggrCol.setText(columns2String(yColumns, ", "));
     }
-    
-    /**
-     * Disables the column select boxes which shouldn't be used in this 
-     * histogram implementation.
-     */
-    private void disableSelectBoxes() {
-        setXColEnabled(false);
-        setAggrColEnabled(false);
+
+    private static String columns2String(final Collection<ColorColumn> cols, 
+            final String separator) {
+        if (cols == null) {
+            return "";
+        }
+        StringBuilder buf = new StringBuilder();
+        boolean first = true;
+        for (ColorColumn col : cols) {
+            if (first) {
+                first = false;
+            } else {
+                buf.append(separator);
+            }
+            buf.append(col.getColumnName());
+        }
+        return buf.toString();
     }
 }

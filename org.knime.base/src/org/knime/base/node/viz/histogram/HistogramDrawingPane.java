@@ -38,6 +38,7 @@ import org.knime.base.node.viz.histogram.datamodel.BarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.property.ColorAttr;
 
@@ -136,6 +137,10 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * Holds the {@link FixedHistogramVizModel} objects to draw.
      */
     private AbstractHistogramVizModel m_histoData;
+    
+    private final AbstractHistogramProperties m_properties;
+    
+    private boolean m_modelChanged = false;
 
     /**
      * Information message. If not <code>null</code> no bars will be drawn
@@ -165,17 +170,22 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     
     /**
      * Constructor for class HistogramDrawingPane.
+     * @param props the {@link AbstractHistogramProperties} panel
      */
-    protected HistogramDrawingPane() {
+    protected HistogramDrawingPane(final AbstractHistogramProperties props) {
         super();
+        m_properties = props;
     }
 
     
     /**
      * @param histoData the {@link FixedHistogramDataModel} objects to draw
      */
-    public void setHistogramData(final AbstractHistogramVizModel histoData) {
+    public void setHistogramVizModel(
+            final AbstractHistogramVizModel histoData) {
         m_histoData = histoData;
+        m_modelChanged = true;
+        repaint();
     }
 
     /**
@@ -290,17 +300,22 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     public void paintContent(final Graphics g) {
         final Graphics2D g2 = (Graphics2D)g;
         final Rectangle bounds = getBounds();
-        if (m_histoData == null || m_histoData.getBins() == null) {
+        String msg = m_infoMsg;
+        final AbstractHistogramVizModel vizModel = m_histoData;
+        if (vizModel == null || vizModel.getBins() == null) {
             //if we have no bins and no info message display a no bars info
-            if (m_infoMsg == null) {
-                m_infoMsg = "No bars to display";
+            if (msg == null) {
+                msg = "No bins to display";
             }
         }
         //check if we have to display an information message
-        if (m_infoMsg != null) {
-            final String msg = m_infoMsg;
+        if (msg != null) {
             drawMessage(g2, msg, bounds);
             return;
+        }
+        if (m_modelChanged && m_properties != null) {
+            m_properties.updateHistogramSettings(vizModel);
+            m_modelChanged = false;
         }
 //      check if we have to draw the grid lines
         if (m_gridLines != null) {
@@ -317,18 +332,20 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     BASE_LINE_STROKE);
         }
         //get all variables which are needed multiple times
-        final AggregationMethod aggrMethod = m_histoData.getAggregationMethod();
-        final HistogramLayout layout = m_histoData.getHistogramLayout();
+        final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
+        final Collection<ColorColumn> aggrColumns = 
+            vizModel.getAggrColumns();
+        final HistogramLayout layout = vizModel.getHistogramLayout();
         //if the user has selected more then one aggregation column we have to
         //draw the bar outline to how him which bar belongs to which aggregation
         //column
-        final boolean drawBarOutline = m_histoData.getAggrColumns().size() > 1;
+        final boolean drawBarOutline = aggrColumns.size() > 1;
         //just for debugging purpose
 //            || HistogramLayout.SIDE_BY_SIDE.equals(
 //                m_histoData.getHistogramLayout());
         
         // loop over all bins and paint them
-        for (BinDataModel bin : m_histoData.getBins()) {
+        for (BinDataModel bin : vizModel.getBins()) {
             if (!bin.isDrawBar()) {
                 //the bars doen't fit in this bin so we have to 
                 //fill the complete bin in black to show it to the user
@@ -346,15 +363,9 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     final Rectangle barRectangle = bar.getBarRectangle();
                     drawBlock(g2, barRectangle, 
                             OVERLOADED_ELEMENT_COLOR);
-                    if (bar.isHilited()) {
-                        final int hiliteWidth = 
-                            (int)(barRectangle.getWidth() 
-                        * AbstractHistogramVizModel.HILITE_RECTANGLE_WIDTH_FACTOR);
-                        final int hiliteX = (int) (barRectangle.getX()
-                                + (barRectangle.getWidth() - hiliteWidth) / 2);
-                        final Rectangle hiliteRectangle = new Rectangle(
-                                hiliteX, (int)barRectangle.getY(),
-                                hiliteWidth, (int) barRectangle.getHeight());
+                    final Rectangle hiliteRectangle = 
+                        bar.getHiliteRectangle();
+                    if (hiliteRectangle != null) {
                         drawBlock(g2, hiliteRectangle, HILITE_RECT_BGR_COLOR);
                     }
                     if (bar.isSelected()) {
@@ -374,7 +385,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             } //end of bar loop
             //draw the outline of the bin to debug in multiple 
             //aggregation column mode
-            if (m_histoData.getAggrColumns().size() > 1) {
+            if (aggrColumns.size() > 1) {
                 drawRectangle(g2, bin.getBinRectangle(), Color.ORANGE, 
                         GRID_LINE_STROKE);
             }

@@ -44,20 +44,14 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.SwingConstants;
-import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
  * Abstract class which handles the default properties like x column selection.
@@ -66,11 +60,6 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  */
 public abstract class AbstractHistogramProperties extends
         AbstractPlotterProperties {
-    
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(AbstractHistogramProperties.class);
-
-    private static final String COLUMN_TAB_LABEL = "Column settings";
 
     private static final String BIN_TAB_LABEL = "Bin settings";
 
@@ -82,20 +71,9 @@ public abstract class AbstractHistogramProperties extends
 
     private static final String DETAILS_TAB_LABEL = 
         "Details";
-    
-    private static final String X_COLUMN_LABEL = "X Column:";
-
-    private static final String AGGREGATION_COLUMN_ENABLED_TOOLTIP = 
-        "Select the column used for aggregation an press 'Apply'.";
-
-    private static final String AGGREGATION_COLUMN_DISABLED_TOOLTIP = 
-        "Not available for aggregation method count";
 
     private static final String AGGREGATION_METHOD_LABEL = 
         "Aggregation method:";
-
-    private static final String AGGREGATION_COLUMN_LABEL = 
-        "Aggregation column:";
 
     private static final String BIN_SIZE_LABEL = "Bin size:";
 
@@ -123,10 +101,6 @@ public abstract class AbstractHistogramProperties extends
     private static final Dimension HORIZONTAL_SPACER_DIM = new Dimension(10, 1);
 
     private AggregationMethod m_aggregationMethod;
-
-    private final ColumnSelectionComboxBox m_xCol;
-
-    private final ColumnSelectionComboxBox m_yCol;
 
     private final JSlider m_binWidth;
 
@@ -165,20 +139,27 @@ public abstract class AbstractHistogramProperties extends
     /**
      * Constructor for class AbstractHistogramProperties.
      * 
-     * @param aggrMethod the aggregation method to set
+     * @param tableSpec the {@link DataTableSpec} to initialize the column
+     * @param vizModel the aggregation method to set
+     * selection boxes
      */
-    @SuppressWarnings("unchecked")
-    public AbstractHistogramProperties(final AggregationMethod aggrMethod) {
+    public AbstractHistogramProperties(final DataTableSpec tableSpec, 
+            final AbstractHistogramVizModel vizModel) {
+        if (vizModel == null) {
+            throw new IllegalArgumentException("VizModel shouldn't be null");
+        }
+        if (tableSpec == null) {
+            throw new IllegalArgumentException("TableSpec shouldn't be null");
+        }
         // create all swing components first
-        m_aggregationMethod = aggrMethod;
-        // the column select boxes for the X axis
-        m_xCol = new ColumnSelectionComboxBox((Border)null, DataValue.class);
-        m_xCol.setBackground(this.getBackground());
+        m_aggregationMethod = vizModel.getAggregationMethod();
+     
         // create the additional settings components which get added to the
         // histogram settings panel
-        m_binWidth = new JSlider(0, 20, 10);
+        m_binWidth = new JSlider(0, vizModel.getBinWidth(), 
+                vizModel.getBinWidth());
         m_binWidth.setEnabled(false);
-        m_noOfBins = new JSlider(1, 20, 10);
+        m_noOfBins = new JSlider(1, 1, 1);
         m_noOfBinsLabel = new JLabel();
         m_noOfBins.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
@@ -219,22 +200,18 @@ public abstract class AbstractHistogramProperties extends
         m_aggrMethButtonGrp.add(sumMethod);
         m_aggrMethButtonGrp.add(avgMethod);
 
-        m_yCol = new ColumnSelectionComboxBox((Border)null, DoubleValue.class);
-        m_yCol.setBackground(this.getBackground());
-        m_yCol.setToolTipText(AGGREGATION_COLUMN_DISABLED_TOOLTIP);
         // select the right radio button
         for (final Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
                 .getElements(); buttons.hasMoreElements();) {
             final AbstractButton button = buttons.nextElement();
-            // enable the radio buttons only if we have some aggregation
-            // columns to choose from
-            button.setEnabled(m_yCol.getModel().getSize() > 0);
             if (button.getActionCommand().equals(m_aggregationMethod.name())) {
                 button.setSelected(true);
             }
         }
-        m_showEmptyBins = new JCheckBox(SHOW_EMPTY_BINS_LABEL);
-        m_showMissingValBin = new JCheckBox(SHOW_MISSING_VALUE_BIN_LABEL);
+        m_showEmptyBins = new JCheckBox(SHOW_EMPTY_BINS_LABEL, 
+                vizModel.isShowEmptyBins());
+        m_showMissingValBin = new JCheckBox(SHOW_MISSING_VALUE_BIN_LABEL, 
+                vizModel.isShowEmptyBins());
         m_showMissingValBin.setToolTipText(SHOW_MISSING_VAL_BIN_TOOLTIP);
 //        m_applyAggrSettingsButton = new JButton(
 //                AbstractHistogramProperties.APPLY_BUTTON_LABEL);
@@ -245,7 +222,7 @@ public abstract class AbstractHistogramProperties extends
 //                AbstractHistogramProperties.APPLY_BUTTON_LABEL);
 //        m_applyBarSettingsButton.setHorizontalAlignment(SwingConstants.RIGHT);
         // create the visualization option elements
-        m_showGrid = new JCheckBox(SHOW_GRID_LABEL, true);
+        m_showGrid = new JCheckBox(SHOW_GRID_LABEL, vizModel.isShowGridLines());
         m_showBarOutline = new JCheckBox(SHOW_BAR_OUTLINE_LABEL, true);
 
         m_labelDisplayPolicy = AbstractHistogramProperties
@@ -264,10 +241,6 @@ public abstract class AbstractHistogramProperties extends
 
         m_layoutDisplayPolicy = AbstractHistogramProperties
                 .createEnumButtonGroup(HistogramLayout.values());
-        // the column select tab
-        final JPanel columnPanel = createColumnSettingsPanel();
-        addTab(COLUMN_TAB_LABEL, columnPanel);
-
         // The bin settings tab
         final JPanel binPanel = createBinSettingsPanel();
         addTab(BIN_TAB_LABEL, binPanel);
@@ -400,26 +373,6 @@ public abstract class AbstractHistogramProperties extends
         return vizPanel;
     }
 
-    /**
-     * The column settings panel which contains only the x column selection box.
-     * 
-     * @return the column selection panel
-     */
-    private JPanel createColumnSettingsPanel() {
-        final JPanel columnPanel = new JPanel();
-        final Box columnBox = Box.createHorizontalBox();
-        columnBox.setBorder(BorderFactory
-                .createEtchedBorder(EtchedBorder.RAISED));
-        final JLabel xColLabelLabel = new JLabel(
-                AbstractHistogramProperties.X_COLUMN_LABEL);
-        columnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-        columnBox.add(xColLabelLabel);
-        columnBox.add(Box.createHorizontalGlue());
-        columnBox.add(m_xCol);
-        columnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-        columnPanel.add(columnBox);
-        return columnPanel;
-    }
 
     /**
      * The bar aggregation settings:
@@ -446,34 +399,13 @@ public abstract class AbstractHistogramProperties extends
         final Box aggrButtonBox = AbstractHistogramProperties
                 .createButtonGroupBox(m_aggrMethButtonGrp, false, null);
         aggrLabelButtonBox.add(aggrButtonBox);
-        // the apply button box
-        // the column selection and button box
-        final Box colLabelBox = Box.createVerticalBox();
-        final JLabel colLabel = new JLabel(
-                AbstractHistogramProperties.AGGREGATION_COLUMN_LABEL);
-        colLabel.setVerticalAlignment(SwingConstants.CENTER);
-        // colLabelBox.add(Box.createVerticalGlue());
-        colLabelBox.add(colLabel);
-        colLabelBox.add(Box.createVerticalGlue());
-        final Box colSelectLabelBox = Box.createVerticalBox();
-        colSelectLabelBox.add(colLabelBox);
-        colSelectLabelBox.add(m_yCol);
-
-//        final Box buttonBox = Box.createHorizontalBox();
-//        buttonBox.add(Box.createHorizontalGlue());
-//        buttonBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-//        buttonBox.add(m_applyAggrSettingsButton);
-//        buttonBox.add(Box.createHorizontalGlue());
-        // the all surrounding box
         final Box aggrBox = Box.createHorizontalBox();
         aggrBox
                 .setBorder(BorderFactory
                         .createEtchedBorder(EtchedBorder.RAISED));
         aggrBox.add(aggrLabelButtonBox);
         aggrBox.add(Box.createHorizontalGlue());
-        aggrBox.add(colSelectLabelBox);
         aggrBox.add(Box.createHorizontalGlue());
-//        aggrBox.add(buttonBox);
         aggrPanel.add(aggrBox);
         return aggrPanel;
     }
@@ -632,67 +564,35 @@ public abstract class AbstractHistogramProperties extends
      * @param spec current data table specification
      * @param xColName preselected x column name
      * @param yColumns preselected y column names
+     * @param aggrMethod the current {@link AggregationMethod}
      */
-    public void updateColumnSelection(final DataTableSpec spec,
-            final String xColName, final Collection<ColorColumn> yColumns) {
-        try {
-            m_xCol.setEnabled(true);
-            m_xCol.update(spec, xColName);
-        } catch (final NotConfigurableException e) {
-            m_xCol.setEnabled(false);
-        }
-        try {
-            if (yColumns == null || yColumns.size() < 1) {
-                final String er = "No aggregation column available";
-                LOGGER.warn(er);
-                throw new IllegalArgumentException(er);
-            }
-            m_yCol.update(spec, yColumns.iterator().next().getColumnName());
-            if (m_yCol.getModel().getSize() > 0) {
-                m_yCol.setEnabled(true);
-            }
-        } catch (final NotConfigurableException e) {
-            m_yCol.setEnabled(false);
-        }
-        // set the values for the y axis select box
-        if (m_aggregationMethod.equals(AggregationMethod.COUNT)
-                || m_yCol.getModel().getSize() < 1) {
-            // if the aggregation method is count disable the y axis select box
-            m_yCol.setEnabled(false);
-        } else {
-            // enable the select box only if it contains at least one value
-            m_yCol.setEnabled(true);
-        }
-        // enable or disable the aggregation method buttons depending if
-        // aggregation columns available or not
-        for (final Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
-                .getElements(); buttons.hasMoreElements();) {
-            final AbstractButton button = buttons.nextElement();
-            button.setEnabled(m_yCol.getModel().getSize() > 0);
-        }
-    }
+    public abstract void updateColumnSelection(final DataTableSpec spec,
+            final String xColName, final Collection<ColorColumn> yColumns,
+            final AggregationMethod aggrMethod);
 
     /**
      * Updates the available slider with the current values of the Histogram
      * plotter.
      * 
-     * @param plotter the <code>AbstractHistogramPlotter</code> object which
+     * @param vizModel the {@link AbstractHistogramVizModel} object which
      *            contains the data
      */
-    @SuppressWarnings("unchecked")
     public void updateHistogramSettings(
-            final AbstractHistogramPlotter plotter) {
-        if (plotter == null) {
+            final AbstractHistogramVizModel vizModel) {
+        if (vizModel == null) {
             return;
         }
-        // set the bar width slider
-        final int currentBinWidth = plotter.getBinWidth();
-        final int maxBinWidth = plotter.getMaxBinWidth();
-        int minBinWidth = AbstractHistogramPlotter.MIN_BIN_WIDTH;
+        final int currentBinWidth = vizModel.getBinWidth();
+        final int maxBinWidth = vizModel.getMaxBinWidth();
+        int minBinWidth = AbstractHistogramVizModel.MIN_BIN_WIDTH;
         if (minBinWidth > maxBinWidth) {
             minBinWidth = maxBinWidth;
         }
-        // update the bin width values
+        // update the bin width values        
+        final ChangeListener[] widthListeners = m_binWidth.getChangeListeners();
+        for (ChangeListener listener : widthListeners) {
+            m_binWidth.removeChangeListener(listener);
+        }
         m_binWidth.setMaximum(maxBinWidth);
         m_binWidth.setMinimum(minBinWidth);
         m_binWidth.setValue(currentBinWidth);
@@ -700,22 +600,23 @@ public abstract class AbstractHistogramProperties extends
         m_binWidth
                 .setToolTipText(AbstractHistogramProperties.BIN_WIDTH_TOOLTIP);
         AbstractHistogramProperties.setSliderLabels(m_binWidth, 2, false);
-
-        // set the number of bins slider
-        final AbstractHistogramVizModel histoData = 
-            plotter.getHistogramVizModel();
-        int maxNoOfBins = plotter.getMaxNoOfBins();
-        final int currentNoOfBins = histoData.getNoOfBins();
-        if (currentNoOfBins > maxNoOfBins) {
-            maxNoOfBins = currentNoOfBins;
+        for (ChangeListener listener : widthListeners) {
+            m_binWidth.addChangeListener(listener);
         }
+
+        int maxNoOfBins = vizModel.getMaxNoOfBins();
+        final int currentNoOfBins = vizModel.getNoOfBins();
         // update the number of bin values
+        final ChangeListener[] noOfListeners = m_noOfBins.getChangeListeners();
+        for (ChangeListener listener : noOfListeners) {
+            m_noOfBins.removeChangeListener(listener);
+        }
         m_noOfBins.setMaximum(maxNoOfBins);
         m_noOfBins.setValue(currentNoOfBins);
         m_noOfBinsLabel.setText(Integer.toString(currentNoOfBins));
         AbstractHistogramProperties.setSliderLabels(m_noOfBins, 2, true);
         // disable this noOfbins slider for nominal values
-        if (!histoData.isBinNominal()) {
+        if (!vizModel.isBinNominal()) {
             m_noOfBins.setEnabled(true);
             m_noOfBins.setToolTipText(
                     AbstractHistogramProperties.NO_OF_BINS_TOOLTIP);
@@ -724,16 +625,17 @@ public abstract class AbstractHistogramProperties extends
             m_noOfBins
                     .setToolTipText("Only available for numerical properties");
         }
+        for (ChangeListener listener : noOfListeners) {
+            m_noOfBins.addChangeListener(listener);
+        }
+        
         // set the aggregation method if it has changed
-        final AggregationMethod aggrMethod = histoData.getAggregationMethod();
+        final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
         if (!m_aggregationMethod.equals(aggrMethod)) {
             m_aggregationMethod = aggrMethod;
             for (final Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
                     .getElements(); buttons.hasMoreElements();) {
                 final AbstractButton button = buttons.nextElement();
-                // enable the radio buttons only if we have some aggregation
-                // columns to choose from
-                button.setEnabled(m_yCol.getModel().getSize() > 0);
                 if (button.getActionCommand()
                         .equals(m_aggregationMethod.name())) {
                     button.setSelected(true);
@@ -742,11 +644,29 @@ public abstract class AbstractHistogramProperties extends
         }
 
         // set the values of the select boxes
-        m_showEmptyBins.setSelected(histoData.isShowEmptyBins());
-        m_showMissingValBin.setSelected(histoData.isShowMissingValBin());
-        m_showMissingValBin.setEnabled(histoData.containsMissingValueBin());
-        m_showEmptyBins.setEnabled(histoData.containsEmptyBins());
-        m_showGrid.setSelected(plotter.isShowGridLines());
+        final ItemListener[] emptyListeners = 
+            m_showEmptyBins.getItemListeners();
+        for (ItemListener listener : emptyListeners) {
+            m_showEmptyBins.removeItemListener(listener);
+        }
+        m_showEmptyBins.setSelected(vizModel.isShowEmptyBins());
+        m_showEmptyBins.setEnabled(vizModel.containsEmptyBins());
+        for (ItemListener listener : emptyListeners) {
+            m_showEmptyBins.addItemListener(listener);
+        }
+        
+        final ItemListener[] missingListeners = 
+            m_showMissingValBin.getItemListeners();
+        for (ItemListener listener : missingListeners) {
+            m_showMissingValBin.removeItemListener(listener);
+        }
+        m_showMissingValBin.setSelected(vizModel.isShowMissingValBin());
+        m_showMissingValBin.setEnabled(vizModel.containsMissingValueBin());
+        for (ItemListener listener : missingListeners) {
+            m_showMissingValBin.addItemListener(listener);
+        }
+        
+        m_showGrid.setSelected(vizModel.isShowGridLines());
     }
 
     /**
@@ -779,77 +699,10 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
-     * @return the name of the column the user has selected as y coordinate
-     */
-    public String getSelectedAggrColumn() {
-        return m_yCol.getSelectedColumn();
-    }
-
-    /**
-     * @return the name of the column the user has selected as x coordinate
-     */
-    public String getSelectedXColumn() {
-        return m_xCol.getSelectedColumn();
-    }
-
-    /**
      * @param actionCommand the action command of the radio button which should
      *            be the name of the <code>AggregationMethod</code>
      */
-    protected void onSelectAggrMethod(final String actionCommand) {
-        final AggregationMethod method = AggregationMethod
-                .getMethod4String(actionCommand);
-        if (method.equals(AggregationMethod.COUNT)
-                || m_yCol.getModel().getSize() < 1) {
-            m_yCol.setEnabled(false);
-            m_yCol.setToolTipText(
-                    AbstractHistogramProperties.
-                    AGGREGATION_COLUMN_DISABLED_TOOLTIP);
-        } else {
-            m_yCol.setEnabled(true);
-            m_yCol.setToolTipText(
-                    AbstractHistogramProperties.
-                    AGGREGATION_COLUMN_ENABLED_TOOLTIP);
-        }
-    }
-
-    /**
-     * @return the select box for the x column
-     */
-    protected ColumnSelectionComboxBox getXColSelectBox() {
-        return m_xCol;
-    }
-
-    /**
-     * @return the select box for the aggregation column
-     */
-    protected ColumnSelectionComboxBox getAggrColSelectBox() {
-        return m_yCol;
-    }
-
-    /**
-     * Enables the x column select box so that items can be selected. When the
-     * select box is disabled, items cannot be selected and values cannot be
-     * typed into its field (if it is editable).
-     * 
-     * @param b a boolean value, where true enables the component and false
-     *            disables it
-     */
-    protected void setXColEnabled(final boolean b) {
-        m_xCol.setEnabled(b);
-    }
-
-    /**
-     * Enables the x column select box so that items can be selected. When the
-     * select box is disabled, items cannot be selected and values cannot be
-     * typed into its field (if it is editable).
-     * 
-     * @param b a boolean value, where true enables the component and false
-     *            disables it
-     */
-    protected void setAggrColEnabled(final boolean b) {
-        m_yCol.setEnabled(b);
-    }
+    protected abstract void onSelectAggrMethod(final String actionCommand);
 
     /**
      * Helper method to update the number of bins text field.

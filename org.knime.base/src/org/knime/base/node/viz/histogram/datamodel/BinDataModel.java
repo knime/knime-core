@@ -26,10 +26,12 @@
 package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
@@ -67,6 +69,8 @@ public class BinDataModel {
     private boolean m_drawBar = true;
     
     private int m_rowCounter = 0;
+    
+    private boolean m_isSelected = false;
     
     private Rectangle m_binRectangle;
     
@@ -251,20 +255,6 @@ public class BinDataModel {
 //    public boolean isInBoundaries(final double value) {
 //        return (value > m_lowerBound && value <= m_higherBound);
 //    }
-
-    /**
-     * @return <code>true</code> if at least one bar is selected
-     */
-    public boolean isSelected() {
-        final Collection<BarDataModel> bars = m_bars.values();
-        for (BarDataModel bar : bars) {
-            if (bar.isSelected()) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
     
     /**
      * @return <code>true</code> if the bars should be drawn
@@ -439,5 +429,83 @@ public class BinDataModel {
         m_rowCounter = 0;
         m_binRectangle = null;
         m_drawBar = false;
+    }
+
+    /**
+     * @return <code>true</code> if at least one bar is selected
+     */
+    public boolean isSelected() {
+        return m_isSelected;
+    }
+    
+    /**
+     * @param selected <code>true</code> to select the given bar otherwise
+     * <code>false</code>
+     * @return <code>true</code> if the parameter has changed
+     */
+    public boolean setSelected(final boolean selected) {
+        if (m_isSelected == selected) {
+            return false;
+        }
+        m_isSelected = selected;
+        for (final BarDataModel bar : getBars()) {
+            bar.setSelected(m_isSelected);
+        }
+        return true;
+    }
+
+    /**
+     * Selects all elements which contain the given point. 
+     * @param point the {@link Point} to check
+     */
+    public void selectElement(final Point point) {
+        if (m_binRectangle != null && m_binRectangle.contains(point)) {
+            for (final BarDataModel bar : getBars()) {
+               m_isSelected = bar.selectElement(point) || m_isSelected;
+            }
+        }
+    }
+    
+    /**
+     * Selects all elements which intersect with the given rectangle. 
+     * @param rect the {@link Rectangle} to check
+     */
+    public void selectElement(final Rectangle rect) {
+        if (m_binRectangle != null && m_binRectangle.intersects(rect)) {
+            for (final BarDataModel bar : getBars()) {
+               m_isSelected = bar.selectElement(rect) || m_isSelected;
+            }
+        }
+    }
+    
+    /**
+     * @param hilited the row keys to hilite
+     * @param aggrMethod the current aggregation method
+     */
+    protected void setHilitedKeys(final Set<DataCell> hilited, 
+            final AggregationMethod aggrMethod) {
+        for (final BarDataModel bar : getBars()) {
+            bar.setHilitedKeys(hilited, aggrMethod);
+        }
+    }
+
+    /**
+     * @param hilited the row keys to unhilite
+     * @param aggrMethod the current aggregation method
+     */
+    protected void removeHilitedKeys(final Set<DataCell> hilited, 
+            final AggregationMethod aggrMethod) {
+        for (final BarDataModel bar : getBars()) {
+            bar.removeHilitedKeys(hilited, aggrMethod);
+        }
+    }
+
+    /**
+     * Clears the hilite information.
+     */
+    public void clearHilite() {
+        for (final BarDataModel bar : getBars()) {
+            bar.clearHilite();
+        }
     }
 }

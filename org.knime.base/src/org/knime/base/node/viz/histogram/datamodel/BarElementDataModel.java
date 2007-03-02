@@ -26,7 +26,9 @@
 package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -129,31 +131,44 @@ public class BarElementDataModel {
     /**
      * @param hilitedKeys the hilited keys
      * @param aggrMethod the current aggregation method
-     * 
+     * @return <code>true</code> if at least one key has been added
      */
-    protected void setHilitedKeys(final Set<DataCell> hilitedKeys, 
+    protected boolean setHilitedKeys(final Collection<DataCell> hilitedKeys, 
             final AggregationMethod aggrMethod) {
-        boolean keyFound = false;
+        boolean changed = false;
         for (DataCell key : hilitedKeys) {
             if (m_rowKeys.contains(key)) {
-                m_hilitedRowKeys.add(key);
-                keyFound = true;
+                if (m_hilitedRowKeys.add(key)) {
+                    changed = true;
+                }
             }
         }
-        if (keyFound) {
+        if (changed) {
             calculateHilitedRectangle(aggrMethod);
         }
+        return changed;
     }
     
     /**
      * @param unhilitedKeys the keys which should be unhilited
      * @param aggrMethod the current aggregation method
+     * @return <code>true</code> if at least one key has been removed
      */
-    protected void removeHilitedKeys(final Set<DataCell> unhilitedKeys,
+    protected boolean removeHilitedKeys(
+            final Collection<DataCell> unhilitedKeys,
             final AggregationMethod aggrMethod) {
-        if (m_hilitedRowKeys.removeAll(unhilitedKeys)) {
+        final boolean changed = m_hilitedRowKeys.removeAll(unhilitedKeys);
+        if (changed) {
             calculateHilitedRectangle(aggrMethod);
         }
+        return changed;
+    }
+    
+    /**
+     * @return the number of hilited rows
+     */
+    public int getHiliteRowCount() {
+        return m_hilitedRowKeys.size();
     }
     
     /**
@@ -243,7 +258,7 @@ public class BarElementDataModel {
         }
         final int totalWidth = (int)m_elementRectangle.getWidth();
         final int hiliteWidth = Math.max((int)(totalWidth 
-                * AbstractHistogramVizModel.HILITE_RECTANGLE_WIDTH_FACTOR), 
+                * AbstractHistogramVizModel.HILITE_RECT_WIDTH_FACTOR), 
                 1);
         final int totalHeight = (int)m_elementRectangle.getHeight();
         final double heightPerRow = (double)totalHeight / getRowCount();
@@ -283,5 +298,35 @@ public class BarElementDataModel {
         m_elementRectangle.setBounds(xCoord, yCoord, 
                 elementWidth, elementHeight);
         calculateHilitedRectangle(aggrMethod);
+    }
+
+    /**
+     * Selects this element if the element rectangle contains the given 
+     * point.
+     * @param point the {@link Point} to check
+     * @return <code>true</code> if the element contains the point
+     */
+    public boolean selectElement(final Point point) {
+        if (m_elementRectangle != null 
+                    && m_elementRectangle.contains(point)) {
+            setSelected(true);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Selects this element if the element rectangle intersect the given 
+     * rectangle.
+     * @param rect the {@link Rectangle} to check
+     * @return <code>true</code> if the element intersects the rectangle
+     */
+    public boolean selectElement(final Rectangle rect) {
+        if (m_elementRectangle != null 
+                && m_elementRectangle.intersects(rect)) {
+        setSelected(true);
+        return true;
+    }
+    return false;
     }
 }

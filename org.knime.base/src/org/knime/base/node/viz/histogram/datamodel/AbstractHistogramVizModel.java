@@ -26,6 +26,7 @@
 package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.ArrayList;
@@ -45,6 +46,7 @@ import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 
@@ -59,7 +61,13 @@ public abstract class AbstractHistogramVizModel {
 
     /** The caption of the bar which holds all missing values. */
     public static final String MISSING_VAL_BAR_CAPTION = "Missing_values";
+    
+    /** Defines the minimum width of a bar. */
+    public static final int MIN_BIN_WIDTH = 2;
 
+    /** This is the minimum space between two bins. */
+    public static final int SPACE_BETWEEN_BINS = 2;
+    
     /**
      * The default number of bars which get created if the createBinnedBars
      * method is called with a number smaller then 1.
@@ -73,15 +81,10 @@ public abstract class AbstractHistogramVizModel {
     public static final int INTERVAL_DIGITS = 2;
 
     /**
-     * The space between to bins in pixels.
-     */
-    public static final int SPACE_BETWEEN_BINS = 2;
-
-    /**
      * The width of the hilite rectangle in percent of the surrounding
      * rectangle. Should be greater 0 and less than 1. 0.8 = 80%
      */
-    public static final double HILITE_RECTANGLE_WIDTH_FACTOR = 0.5;
+    public static final double HILITE_RECT_WIDTH_FACTOR = 0.5;
 
     /**Compare the caption of bins.*/
     protected static final BinDataModelComparator BIN_CAPTION_COMPARATOR = 
@@ -96,6 +99,14 @@ public abstract class AbstractHistogramVizModel {
     private HistogramLayout m_layout;
 
     private boolean m_showMissingValBin = true;
+    
+    /**If set to true the plotter paints the grid lines for the y axis values.*/
+    private boolean m_showGridLines = true;
+  
+    /** The current basic width of the bins. */
+    private int m_binWidth = Integer.MAX_VALUE;
+    
+    private int m_maxBinWidth;
 
     /**
      *The plotter will show all bars empty or not when set to <code>true</code>.
@@ -107,8 +118,13 @@ public abstract class AbstractHistogramVizModel {
     
     private final List<BinDataModel> m_bins = new ArrayList<BinDataModel>(50);
 
-    private int m_noOfBins;
+    private int m_noOfBins = 1;
+    
+    private int m_maxNoOfBins;
 
+    /**Holds the actual size of the drawing space.*/
+    private Dimension m_drawingSpace;
+    
     /**Constructor for class HistogramVizModel.
      * @param rowColors all possible colors the user has defined for a row
      * @param layout the {@link HistogramLayout} to use
@@ -126,6 +142,31 @@ public abstract class AbstractHistogramVizModel {
         m_aggrMethod = aggrMethod;
         m_layout = layout;
         m_noOfBins = noOfBins;
+    }
+    
+    
+    /**
+     * @return the drawingSpace
+     */
+    public Dimension getDrawingSpace() {
+        return m_drawingSpace;
+    }
+    
+    
+    /**
+     * @param drawingSpace the drawingSpace to set
+     * @return <code>true</code> if the parameter has changed
+     */
+    public boolean setDrawingSpace(final Dimension drawingSpace) {
+        if (drawingSpace == null) {
+            throw new IllegalArgumentException(
+                    "Drawing space shouldn't be null");
+        }
+        if (drawingSpace == null || drawingSpace.equals(m_drawingSpace)) {
+            return false;
+        }
+        m_drawingSpace = drawingSpace;
+        return true;
     }
     
     /**
@@ -178,30 +219,189 @@ public abstract class AbstractHistogramVizModel {
     }
 
     /**
-     * @return the noOfBins without the missing value bin
+     * @return the noOfBins without the missing value bin but including the
+     * empty bins displayed or not.
      */
     public int getNoOfBins() {
         return m_noOfBins;
     }
 
+    /**
+     * @return the maximum number of bins which fit into the 
+     * current drawing space
+     */
+    public int getMaxNoOfBins() {
+        calculateMaxNoOfBins();
+        return m_maxNoOfBins;
+    }
 
+    /**
+     * @return the binWidth
+     */
+    public int getBinWidth() {
+        calculateMaxBinWidth();
+        checkBinWidth();
+        return m_binWidth;
+    }
+    
+    /**
+     * Calculates the current preferred width of the bars.
+     */
+    private void checkBinWidth() {
+        if (m_drawingSpace == null) {
+            return;
+        }
+        int binWidth = m_binWidth;
+        if (binWidth < 0) {
+            // that only occurs at the first call
+            //we have to use the getBinCaptions method which checks if the 
+            //missing value bin should be included or not and if empty 
+            //bins should be displayed
+            final int noOfBins = getDisplayedNoOfBins();
+            binWidth = (int)(m_drawingSpace.getWidth() / noOfBins)
+                    - SPACE_BETWEEN_BINS;
+        }
+        if (binWidth < MIN_BIN_WIDTH) {
+            binWidth = MIN_BIN_WIDTH;
+        }
+        final int maxBinWidth = getMaxBinWidth();
+        if (binWidth > maxBinWidth) {
+            // to avoid to wide bars after resizing the window!
+            binWidth = maxBinWidth;
+        }
+        //draw at least a small line
+        if (binWidth <= 0) {
+            binWidth = 1;
+        }
+        m_binWidth = binWidth;
+    }
+    /**
+     * Calculates the maximum width per bar for the current display settings.
+     */
+    private void calculateMaxBinWidth() {
+        if (m_drawingSpace == null) {
+            return;
+        }
+        //we have to use the getBinCaptions method which checks if the missing
+        //value bin should be included or not and if empty bins should be
+        //displayed
+        final int noOfBins = getDisplayedNoOfBins();
+        //the minimum bin width should be at least 1 pixel
+        m_maxBinWidth = Math.max((int)(m_drawingSpace.getWidth() / noOfBins)
+                - AbstractHistogramVizModel.SPACE_BETWEEN_BINS, 1);
+    }
+    
+    /**
+     * @return the maximum bin width
+     */
+    public int getMaxBinWidth() {
+        calculateMaxBinWidth();
+        return m_maxBinWidth;
+    }
+
+    /**
+     * @param binWidth the binWidth to set
+     * @return <code>true</code> if the with has changed
+     */
+    public boolean setBinWidth(final int binWidth) {
+        if (m_binWidth == binWidth) {
+            return false;
+        }
+        if (binWidth < 0) {
+            m_binWidth = 0;
+        } else {
+            m_binWidth = binWidth;
+        }
+        return true;
+    }
+    
     /**
      * @param noOfBins the new number of bins to create
      * @return <code>true</code> if the number of bins has changed
      */
     public boolean setNoOfBins(final int noOfBins) {
-        if (m_noOfBins == noOfBins) {
+        int noOf = Math.min(noOfBins, getMaxNoOfBins());
+        if (m_noOfBins == noOf) {
             return false;
         }
-        if (isBinNominal()) {
-            throw new IllegalArgumentException(
-                    "Not possible for nominal binning");
-        }
-        m_noOfBins = noOfBins;
+        m_noOfBins = noOf;
         createBins();
         return true;
     }
 
+    /**
+     * @param noOfBins updates the number of bins but doesn't check if the
+     * number has changed and thus doesn't recreate the bins if the 
+     * number has changed.
+     */
+    protected void updateNoOfBins(final int noOfBins) {
+        m_noOfBins = Math.min(noOfBins, getMaxNoOfBins());
+    }
+
+    /**
+     * Calculates the maximum number of bars which could be displayed.
+     */
+    private void calculateMaxNoOfBins() {
+        //handle nominal binning special
+        if (isBinNominal()) {
+            final DataColumnSpec xColSpec = getXColumnSpec();
+            final DataColumnDomain domain = xColSpec.getDomain();
+            if (domain == null) {
+                throw new IllegalStateException(
+                        "X column domain shouldn't be null");
+            }
+            final Set<DataCell> values = domain.getValues();
+            if (values == null) {
+                throw new IllegalStateException(
+                        "Values of x column domain shouldn't be null");
+            }
+            m_maxNoOfBins = values.size();
+            return;
+        }
+        if (m_drawingSpace == null) {
+            return;
+        }
+        int maxNoOfBins = (int)(m_drawingSpace.getWidth() 
+                / (AbstractHistogramVizModel.MIN_BIN_WIDTH 
+                        + AbstractHistogramVizModel.SPACE_BETWEEN_BINS));
+        if (isShowMissingValBin() && containsMissingValueBin()) {
+            maxNoOfBins--;
+        }
+        //handle integer values special
+        final DataColumnSpec xColSpec = getXColumnSpec();
+        if (xColSpec != null) {
+            final boolean isInteger = 
+                xColSpec.getType().isCompatible(IntValue.class);
+            if (isInteger) {
+                final DataColumnDomain domain = xColSpec.getDomain();
+                if (domain != null) {
+                    final IntCell lowerBound = 
+                        (IntCell)domain.getLowerBound();
+                    final IntCell upperBound = 
+                        (IntCell)domain.getUpperBound();
+                    final int range = 
+                        upperBound.getIntValue() - lowerBound.getIntValue()
+                        + 1;
+                    if (maxNoOfBins > range) {
+                        maxNoOfBins = range;
+                    }
+                }
+            }
+        }
+        // avoid rounding errors and display at least one bar
+        if (maxNoOfBins < 1) {
+            maxNoOfBins = 1;
+        }
+        m_maxNoOfBins = maxNoOfBins;
+    }
+
+    /**
+     * @return the number of bins which are displayed.
+     */
+    public int getDisplayedNoOfBins() {
+        return getBinCaptions().size();
+    }
+    
     /**
      * @param caption the caption of the bin of interest
      * @return the bin with the given caption or <code>null</code> if no bin
@@ -389,7 +589,26 @@ public abstract class AbstractHistogramVizModel {
         m_showMissingValBin = inclMissingValBin;
         return true;
     }
-
+    
+    /**
+     * @return the showGridLines
+     */
+    public boolean isShowGridLines() {
+        return m_showGridLines;
+    }
+    
+    
+    /**
+     * @param showGridLines the showGridLines to set
+     * @return <code>true</code> if the parameter has changed
+     */
+    public boolean setShowGridLines(final boolean showGridLines) {
+        if (m_showGridLines != showGridLines) {
+            m_showGridLines = showGridLines;
+            return true;
+        }
+        return false;
+    }
     /**
      * @return all keys of hilited rows
      */
@@ -411,11 +630,9 @@ public abstract class AbstractHistogramVizModel {
     }
 
     /**
-     * @param hilite <code>true</code> if the selected elements should be 
-     * hilited or <code>false</code> if they should be unhilited
      * @return all keys of the selected elements
      */
-    public Set<DataCell> getSelectedKeys(final boolean hilite) {
+    public Set<DataCell> getSelectedKeys() {
         final Set<DataCell> keys = new HashSet<DataCell>();
         for (final BinDataModel bin : getBins()) {
             if (bin.isSelected()) {
@@ -427,11 +644,6 @@ public abstract class AbstractHistogramVizModel {
                         for (final BarElementDataModel element : elements) {
                             if (element.isSelected()) {
                                 keys.addAll(element.getKeys());
-                                if (hilite) {
-                                    element.setHilitedKeys(keys, m_aggrMethod);
-                                } else {
-                                    element.clearHilite();
-                                }
                             }
                         }
                     }
@@ -447,31 +659,7 @@ public abstract class AbstractHistogramVizModel {
      */
     public void selectElement(final Point point) {
         for (final BinDataModel bin : getBins()) {
-            final Rectangle binRectangle = bin.getBinRectangle();
-            if (binRectangle != null && binRectangle.contains(point)) {
-                final Collection<BarDataModel> bars = bin.getBars();
-                for (final BarDataModel bar : bars) {
-                    final Rectangle barRectangle = bar.getBarRectangle();
-                    if (barRectangle != null && barRectangle.contains(point)) {
-                        bar.setSelected(true);
-                        final Collection<BarElementDataModel> elements = bar
-                                .getElements();
-                        for (final BarElementDataModel element : elements) {
-                            final Rectangle elementRectangle = element
-                                    .getElementRectangle();
-                            //if the bar is to small to draw the different
-                            //elements we have to select all elements 
-                            //of this bar
-                            if (!bar.isDrawElements()
-                                    || (elementRectangle != null 
-                                        && elementRectangle.contains(point))) {
-                                element.setSelected(true);
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
+            bin.selectElement(point);
         }
         return;
     }
@@ -482,30 +670,7 @@ public abstract class AbstractHistogramVizModel {
      */
     public void selectElement(final Rectangle rect) {
         for (final BinDataModel bin : getBins()) {
-            final Rectangle binRectangle = bin.getBinRectangle();
-            if (binRectangle != null && binRectangle.intersects(rect)) {
-                final Collection<BarDataModel> bars = bin.getBars();
-                for (final BarDataModel bar : bars) {
-                    final Rectangle barRectangle = bar.getBarRectangle();
-                    if (barRectangle != null && barRectangle.intersects(rect)) {
-                        bar.setSelected(true);
-                        final Collection<BarElementDataModel> elements = bar
-                                .getElements();
-                        for (final BarElementDataModel element : elements) {
-                            final Rectangle elementRectangle = element
-                                    .getElementRectangle();
-                            //if the bar is to small to draw the different
-                            //elements we have to select all elements 
-                            //of this bar
-                            if (!bar.isDrawElements()
-                                    || (elementRectangle != null 
-                                        && elementRectangle.intersects(rect))) {
-                                element.setSelected(true);
-                            }
-                        }
-                    }
-                }
-            }
+            bin.selectElement(rect);
         }
         return;
     }
@@ -515,15 +680,7 @@ public abstract class AbstractHistogramVizModel {
      */
     public void clearSelection() {
         for (final BinDataModel bin : getBins()) {
-            final Collection<BarDataModel> bars = bin.getBars();
-            for (final BarDataModel bar : bars) {
-                bar.setSelected(false);
-                final Collection<BarElementDataModel> elements = bar
-                        .getElements();
-                for (final BarElementDataModel element : elements) {
-                    element.setSelected(false);
-                }
-            }
+            bin.setSelected(false);
         }
     }
 
@@ -539,17 +696,10 @@ public abstract class AbstractHistogramVizModel {
             return;
         }
         for (final BinDataModel bin : getBins()) {
-            final Collection<BarDataModel> bars = bin.getBars();
-            for (final BarDataModel bar : bars) {
-                final Collection<BarElementDataModel> elements = bar
-                        .getElements();
-                for (final BarElementDataModel element : elements) {
-                    if (hilite) {
-                        element.setHilitedKeys(hilited, m_aggrMethod);
-                    } else {
-                        element.removeHilitedKeys(hilited, m_aggrMethod);
-                    }
-                }
+            if (hilite) {
+                bin.setHilitedKeys(hilited, m_aggrMethod);
+            } else {
+                bin.removeHilitedKeys(hilited, m_aggrMethod);
             }
         }
     }
@@ -559,14 +709,7 @@ public abstract class AbstractHistogramVizModel {
      */
     public void unHiliteAll() {
         for (final BinDataModel bin : getBins()) {
-            final Collection<BarDataModel> bars = bin.getBars();
-            for (final BarDataModel bar : bars) {
-                final Collection<BarElementDataModel> elements = bar
-                        .getElements();
-                for (final BarElementDataModel element : elements) {
-                    element.clearHilite();
-                }
-            }
+            bin.clearHilite();
         }
     }
 
@@ -616,6 +759,7 @@ public abstract class AbstractHistogramVizModel {
             //create the new bins
             createIntervalBins();
         }
+        updateNoOfBins(m_bins.size());
         final long startAddRowTimer = System.currentTimeMillis();
         addRows2Bins();
         final long end = System.currentTimeMillis();
@@ -665,7 +809,6 @@ public abstract class AbstractHistogramVizModel {
         }
         final double upperBound = 
             ((DoubleValue)upperBoundCell).getDoubleValue();
-        
         //start the binning
         if (m_noOfBins < 1) {
             m_noOfBins = FixedHistogramVizModel.DEFAULT_NO_OF_BINS;

@@ -25,7 +25,10 @@
 package org.knime.base.node.viz.histogram.node;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramPlotter;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramProperties;
 import org.knime.core.data.DataTableSpec;
@@ -78,24 +81,32 @@ public class FixedColumnHistogramNodeView extends NodeView {
         final FixedHistogramDataModel histogramModel = 
             m_nodeModel.getHistogramModel();
         final DataTableSpec tableSpec = m_nodeModel.getTableSpec();
+        if (m_plotter != null) {
+            m_plotter.reset();
+        }
         if (histogramModel == null) {
             return;
         }
+        final FixedHistogramVizModel vizModel = new FixedHistogramVizModel(
+                histogramModel.getRowColors(),
+                AggregationMethod.getDefaultMethod(), 
+                HistogramLayout.getDefaultLayout(), 
+                histogramModel.getSortedRows(),
+                histogramModel.getXColumnSpec(), 
+                histogramModel.getAggrColumns(),
+                AbstractHistogramVizModel.DEFAULT_NO_OF_BINS);
         if (m_plotter == null) {
             final FixedHistogramProperties props =
-                new FixedHistogramProperties(
-                        AggregationMethod.COUNT);
-            m_plotter = new FixedHistogramPlotter(props, histogramModel, 
-                    tableSpec, m_nodeModel.getInHiLiteHandler(0));
+                new FixedHistogramProperties(tableSpec, vizModel);
+            m_plotter = new FixedHistogramPlotter(props, 
+                    m_nodeModel.getInHiLiteHandler(0));
             // add the hilite menu to the menu bar of the node view
             getJMenuBar().add(m_plotter.getHiLiteMenu());
             setComponent(m_plotter);
-        } else {
-            m_plotter.reset();
-            m_plotter.setHistogramDataModel(tableSpec, histogramModel);
-            m_plotter.setHiLiteHandler(m_nodeModel.getInHiLiteHandler(0));
-            m_plotter.updatePaintModel();
         }
+        m_plotter.setHiLiteHandler(m_nodeModel.getInHiLiteHandler(0));
+        m_plotter.setHistogramVizModel(tableSpec, vizModel);
+        m_plotter.updatePaintModel();
     }
 
     /**

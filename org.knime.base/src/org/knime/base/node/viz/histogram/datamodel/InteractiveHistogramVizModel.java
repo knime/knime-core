@@ -163,8 +163,9 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
 
     /**
      * @param xColSpec the new x column specification
+     * @return <code>true</code> if the variable has changed
      */
-    public void setXColumn(final DataColumnSpec xColSpec) {
+    public boolean setXColumn(final DataColumnSpec xColSpec) {
         if (xColSpec == null) {
             throw new IllegalArgumentException(
                     "X column specification shouldn't be null");
@@ -174,7 +175,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
             throw new IllegalArgumentException("X column not found");
         }
         if (xColIdx == m_xColIdx) {
-            return;
+            return false;
         }
         m_xColSpec = xColSpec;
         m_xColIdx = xColIdx;
@@ -188,26 +189,34 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         }
         if (xColType.isCompatible(
                 DoubleValue.class)) {
+            //if we have binned nominal reset the number of bins to default
             setBinNominal(false);
+            if (isBinNominal()) {
+                updateNoOfBins(DEFAULT_NO_OF_BINS);
+            }
         } else {
             setBinNominal(true);
         }
         createBins();
+        return true;
     }
 
     /**
      * @param aggrCols the new aggregation columns
+     * @return <code>true</code> if the variable has changed
      */
-    public void setAggregationColumns(final ArrayList<ColorColumn> aggrCols) {
+    public boolean setAggregationColumns(
+            final ArrayList<ColorColumn> aggrCols) {
         if (aggrCols == null || aggrCols.size() < 1) {
             throw new IllegalArgumentException(
                     "Aggregation column shouldn't be null");
         }
         if (m_aggrColumns.containsAll(aggrCols)) {
-            return;
+            return false;
         }
         m_aggrColumns = aggrCols;
         createBins();
+        return true;
     }
     
     /**

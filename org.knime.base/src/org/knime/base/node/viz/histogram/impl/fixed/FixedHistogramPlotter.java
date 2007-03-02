@@ -22,21 +22,13 @@
 package org.knime.base.node.viz.histogram.impl.fixed;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
-import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * This class is the controller between the data model of the
  * {@link FixedColumnHistogramDataModel}
  * class and the view
- * {@link org.knime.base.node.viz.histogram.HistogramDrawingPane}. It creates
- * the {@link FixedHistogramDataModel} which contains the rectangles to draw
- * on the screen.
+ * {@link org.knime.base.node.viz.histogram.HistogramDrawingPane}.
  * 
  * @author Tobias Koetter, University of Konstanz
  */
@@ -50,39 +42,11 @@ public class FixedHistogramPlotter extends AbstractHistogramPlotter {
      * 
      * @param histogramProps the <code>FixedColumnHistogramProperties</code>
      *            with the view options for the user
-     * @param dataModel the data model on which the plotter based on
-     * @param tableSpec the table specification
      * @param handler the hilite handler from the input port
      */
     public FixedHistogramPlotter(
             final FixedHistogramProperties histogramProps,
-            final FixedHistogramDataModel dataModel, 
-            final DataTableSpec tableSpec, final HiLiteHandler handler) {
+            final HiLiteHandler handler) {
         super(histogramProps, handler);
-        setHistogramDataModel(tableSpec, dataModel);
-    }
-    
-    /**
-     * @param spec the new {@link DataTableSpec}
-     * @param dataModel the new {@link FixedHistogramDataModel}
-     */
-    public void setHistogramDataModel(final DataTableSpec spec, 
-            final FixedHistogramDataModel dataModel) {
-        if (spec == null) {
-            throw new IllegalArgumentException(
-                    "Table specification shouldn't be null");
-        }
-        if (dataModel == null) {
-            throw new IllegalArgumentException(
-                    "Histogram data model shouldn't be null");
-        }
-        final FixedHistogramVizModel vizModel = new FixedHistogramVizModel(
-                dataModel.getRowColors(),
-                AggregationMethod.getDefaultMethod(), 
-                HistogramLayout.getDefaultLayout(), 
-                dataModel.getSortedRows(),
-                dataModel.getXColumnSpec(), dataModel.getAggrColumns(),
-                AbstractHistogramVizModel.DEFAULT_NO_OF_BINS);
-        setHistogramVizModel(spec, vizModel);
     }
 }

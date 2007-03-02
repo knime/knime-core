@@ -26,6 +26,7 @@
 package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.Collection;
 import java.util.HashMap;
@@ -68,6 +69,11 @@ public class BarDataModel {
     private boolean m_drawElements = true;
     
     private Rectangle m_barRectangle;
+    
+    /**If the different elements of this bar can't be draw because the bar
+     * is to small this rectangle is calculated to reflect the proportion
+     * of hilited rows in this bar. */
+    private Rectangle m_hiliteRectangle;
     
     private boolean m_isSelected = false;
     
@@ -210,6 +216,51 @@ public class BarDataModel {
         }
     }
 
+    
+    /**
+     * The proportional hilite rectangle of this bar which
+     * could be displayed if the elements of this bar can't be draw.
+     * @return the proportional hilite rectangle
+     */
+    public Rectangle getHiliteRectangle() {
+        return m_hiliteRectangle;
+    }
+    
+    /**
+     * This calculates the proportional hilite rectangle of this bar which
+     * could be displayed if the elements of this bar can't be draw.
+     * @param aggrMethod the current {@link AggregationMethod} to calculate
+     * the right y coordinate
+     */
+    private void calculateHiliteRectangle(final AggregationMethod aggrMethod) {
+        if (m_drawElements || m_barRectangle == null) {
+            m_hiliteRectangle = null;
+            return;
+        }
+        final int noOfHilitedRows = getNoOfHilitedRows();
+        if (noOfHilitedRows <= 0) {
+            m_hiliteRectangle = null;
+            return;
+        }
+        final int barHeight = (int)m_barRectangle.getHeight();
+        final int barWidth = (int)m_barRectangle.getWidth();
+        final int rowCount = getRowCount();
+        final double fraction = noOfHilitedRows / (double)rowCount;
+        final int hiliteHeight = (int)(barHeight * fraction);
+        final int hiliteWidth = Math.max(
+                (int)(barWidth 
+        * AbstractHistogramVizModel.HILITE_RECT_WIDTH_FACTOR), 
+        1);
+        final int hiliteX = (int) (m_barRectangle.getX()
+                + (barWidth - hiliteWidth) / 2);
+        int hiliteY = (int)m_barRectangle.getY();
+        if (getAggregationValue(aggrMethod) > 0) {
+            hiliteY = hiliteY + barHeight - hiliteHeight;
+        }
+        m_hiliteRectangle = 
+            new Rectangle(hiliteX, hiliteY, hiliteWidth, hiliteHeight);
+    }
+
     /**
      * @return the {@link Rectangle} the bar should be drawn on the 
      * screen 
@@ -238,9 +289,11 @@ public class BarDataModel {
             for (BarElementDataModel element : elements) {
                 element.setElementRectangle(null, aggrMethod);
             }
+            m_hiliteRectangle = null;
             return;
         }
         setElementRectangle(aggrMethod, layout, baseLine, barElementColors);
+        calculateHiliteRectangle(aggrMethod);
     }
     
     /**
@@ -255,24 +308,31 @@ public class BarDataModel {
             final SortedSet<Color> barElementColors) {
         final double maxAggrVal = getMaxAggregationValue(aggrMethod, layout);
         final double minAggrVal = getMinAggregationValue(aggrMethod, layout);
-        double valRange = Math.max(Math.abs(maxAggrVal), Math.abs(minAggrVal));
+        double valRange;
         if (minAggrVal < 0 && maxAggrVal > 0) {
+            //if the bar contains negative and positive elements
+            //we have to add the min and max aggregation value
+            //to get the full range
             valRange = maxAggrVal + Math.abs(minAggrVal);
+        } else {
+            //if the bar contains either negative or positive elements
+            //simply take the maximum since one of them is zero
+            valRange = Math.max(Math.abs(maxAggrVal), Math.abs(minAggrVal));
         }
-        final int totalHeight = (int)m_barRectangle.getHeight();
+        final int barHeight = (int)m_barRectangle.getHeight();
         final int barWidth = (int)m_barRectangle.getWidth();
-        final int noOfBars = barElementColors.size();
-        m_drawElements = elementsFitInBar(layout, noOfBars, barWidth, 
-                totalHeight);
+        final int noOfElements = m_elements.size();
+        m_drawElements = elementsFitInBar(layout, noOfElements, barWidth, 
+                barHeight);
         if (!m_drawElements) {
             return;
         }
         if (HistogramLayout.STACKED.equals(layout)) {
-            m_drawElements = setStackedRectangles(m_barRectangle, 
-                    barElementColors, valRange, aggrMethod, minAggrVal);
+            setStackedRectangles(m_barRectangle, barElementColors, 
+                    valRange, aggrMethod, minAggrVal);
         } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
-            m_drawElements = setSideBySideRectangles(m_barRectangle,
-                    barElementColors, valRange, aggrMethod, baseLine);
+            setSideBySideRectangles(m_barRectangle, barElementColors, 
+                    valRange, aggrMethod, baseLine);
         } else {
             throw new IllegalArgumentException(
                     "Layout " + layout + " not supported");
@@ -280,18 +340,28 @@ public class BarDataModel {
         return;
     }
 
-    private boolean setSideBySideRectangles(final Rectangle bounds, 
+    private void setSideBySideRectangles(final Rectangle bounds, 
             final SortedSet<Color> barElementColors, 
             final double valRange, final AggregationMethod aggrMethod, 
             final int baseLine) {
-        final int totalHeight = (int)bounds.getHeight();
+        LOGGER.debug("Entering setSideBySideRectangles"
+                + "(bounds, barElementColors, valRange, aggrMethod, baseLine) "
+                + "of class BarDataModel.");
+        final int barHeight = (int)bounds.getHeight();
         //check if all elements fit side by side
-        final double heightPerVal = totalHeight / valRange;
+        final double heightPerVal = barHeight / valRange;
         final int startX = (int)bounds.getX();
         final int barWidth = (int)m_barRectangle.getWidth();
         final int noOfBars = barElementColors.size();
         final int elementWidth = 
             calculateSideBySideElementWidth(noOfBars, barWidth);
+        LOGGER.debug("Bar values (x,height,width, totalNoOf): " 
+                + startX + ", "
+                + barHeight + ", "
+                + barWidth 
+                + noOfBars);
+        LOGGER.debug("Value range: " + valRange
+                + " height per value:" + heightPerVal);
         //the user wants the elements next to each other
         //so we have to change the x coordinate
         int xCoord = startX + SPACE_BETWEEN_ELEMENTS;
@@ -303,11 +373,11 @@ public class BarDataModel {
                 final double aggrVal = 
                     element.getAggregationValue(aggrMethod);
                 //calculate the bar height
-                int barHeight = Math.max((int)(
+                int elementHeight = Math.max((int)(
                         heightPerVal * Math.abs(aggrVal)), 1);
-                if (barHeight > totalHeight) {
-                    final int diff = barHeight - totalHeight;
-                    barHeight -= diff;
+                if (elementHeight > barHeight) {
+                    final int diff = elementHeight - barHeight;
+                    elementHeight -= diff;
                     LOGGER.debug("Height diff. in side-by-side layout."
                             + " Element(Bar) higher than surrounding bar: " 
                             + diff);
@@ -317,31 +387,48 @@ public class BarDataModel {
                 if (aggrVal >= 0) {
                     //if it's a positive value the start point is the
                     //baseline minus the height of the bar
-                    yCoord = baseLine - barHeight;
+                    yCoord = baseLine - elementHeight;
                 } else {
                     //if it's a negative value the top left corner start 
                     //point is the base line
                     yCoord = baseLine;
                 }
+                LOGGER.debug("xCoord: " + xCoord 
+                        + " yCoord: " + yCoord
+                        + " elementAggrVal: " + aggrVal
+                        + " elementWidth:" + elementWidth
+                        + " elementHeight:" + elementHeight);
                 final Rectangle elementRect =  
-                    new Rectangle(xCoord, yCoord, elementWidth, barHeight);
+                    new Rectangle(xCoord, yCoord, elementWidth, elementHeight);
                 element.setElementRectangle(elementRect, aggrMethod);
             }
             //add the bar width and the space between bars to the current
             //x coordinate
             xCoord += elementWidth + SPACE_BETWEEN_ELEMENTS;
         }
-        return true;
+        LOGGER.debug("Exiting setSideBySideRectangles"
+                + "(bounds, barElementColors, valRange, aggrMethod, baseLine) "
+                + "of class BarDataModel.");
     }
 
-    private boolean setStackedRectangles(final Rectangle bounds, 
+    private void setStackedRectangles(final Rectangle bounds, 
             final SortedSet<Color> barElementColors, final double valRange, 
             final AggregationMethod aggrMethod, final double minAggrVal) {
+        LOGGER.debug("Entering setStackedRectangles("
+                + "bounds, barElementColors, valRange, aggrMethod, minAggrVal) "
+                + "of class BarDataModel.");
         //the user wants the elements on top of each other
         final int startX = (int)bounds.getX();
         final int startY = (int)bounds.getY();
-        final int totalHeight = (int)bounds.getHeight();
+        final int barHeight = (int)bounds.getHeight();
         final int barWidth = (int)bounds.getWidth();
+        final double barAggrVal = getAggregationValue(aggrMethod);
+        LOGGER.debug("Bar values (x,y,height,width,aggrVal): " 
+                + startX + ", "
+                + startY + ", "
+                + barHeight + ", "
+                + barWidth + ", "
+                + barAggrVal);
         //we have to be care full with the value range in stacked layout
         //because of the mixture of positive and negatives
         double stackedValRange = valRange;
@@ -349,17 +436,28 @@ public class BarDataModel {
                 || AggregationMethod.SUM.equals(aggrMethod)) {
             //if the current aggregation method is average or sum 
             //we have to handle the negative values as positives
-            stackedValRange = 0;
+            if (minAggrVal < 0) {
+                stackedValRange = Math.abs(minAggrVal);
+            } else {
+                stackedValRange = 0;
+            }
+            LOGGER.debug("Calculating stacked value range.Starting with: "
+                    + stackedValRange);
             for (BarElementDataModel element : m_elements.values()) {
                 stackedValRange += 
                     Math.abs(element.getAggregationValue(aggrMethod));
             }
+            LOGGER.debug("Calculating stacked bin height "
+                    + "using stackedValRange: " + stackedValRange);
         }
         final double heightPerAbsVal = bounds.getHeight() / stackedValRange;
         int yCoord = startY;
         double elementHeightSum = 0;
         int elementCounter = 0;
         int noOfElements = m_elements.size();
+        LOGGER.debug("Stacked valRange: " + stackedValRange
+                + " height per absVal: " + heightPerAbsVal
+                + " noOfElements: " + noOfElements);
         for (Color elementColor : barElementColors) {
             final BarElementDataModel element = 
                 m_elements.get(elementColor);
@@ -369,38 +467,47 @@ public class BarDataModel {
             elementCounter++;
             //the user wants the elements next to each other;
             final double aggrVal = element.getAggregationValue(aggrMethod);
+            
             double elementAbsVal = Math.abs(aggrVal);
-            if (minAggrVal < 0 && aggrVal >= 0) {
-                elementAbsVal += Math.abs(minAggrVal);
-            }
+//            if (minAggrVal < 0 && aggrVal > 0) {
+//                elementAbsVal += Math.abs(minAggrVal);
+//            }
             //add the minimum aggregation value to the real value if it's 
             //negative
-            int elementHeight = (int)Math.floor(
-                    Math.max((heightPerAbsVal * elementAbsVal), 1.0));
+            final double rawElementHeight = 
+                Math.max((heightPerAbsVal * elementAbsVal), 1.0);
+            int elementHeight = (int)Math.round(rawElementHeight);
             elementHeightSum += elementHeight;
             if (elementCounter == noOfElements) {
                 //this is the last element of this bar handle 
                 //possible rounding errors
-                if (elementHeightSum < totalHeight 
-                        || elementHeightSum > totalHeight) {
-                    final double diff = totalHeight - elementHeightSum;
+                if (elementHeightSum < barHeight 
+                        || elementHeightSum > barHeight) {
+                    final double diff = barHeight - elementHeightSum;
                     elementHeight = 
                         (int)Math.round(elementHeight + diff);
                     if (elementHeight < 1) {
-                        LOGGER.warn("Unable to correct height diff. for "
-                                + "bar " + getAggregationValue(aggrMethod)
+                        LOGGER.warn("******Unable to correct height diff. for "
+                                + "bar " + barAggrVal
                                 + ". Last element to low for height "
                                 + "adjustment.");
                     }
-                    LOGGER.debug("Height diff. on last element in "
-                            + " stacked visualization because "
-                            + "of rounding errors: " 
-                            + diff + ". Bar height: " + totalHeight
+                    LOGGER.warn("++++++++Height diff. for bar " + barAggrVal 
+                            + " in last element: " + diff 
+                            + ". Bar height: " + barHeight
                             + " Height sum without adjustment: " 
                             + elementHeightSum 
                             + " No of elements: " + m_elements.size());
                 }
             }
+            LOGGER.debug("Element aggrVal: " + aggrVal
+                    + " element absVal: " + elementAbsVal
+                    + " xCoord: " + startX
+                    + " yCoord: " + yCoord
+                    + " elementWidth: " + barWidth
+                    + " rawElementHeight: " + rawElementHeight
+                    + " adjusted elementHeight: " + elementHeight);
+            
             final Rectangle elementRect =  
                 new Rectangle(startX, yCoord, barWidth, elementHeight);
             element.setElementRectangle(elementRect, aggrMethod);
@@ -408,7 +515,9 @@ public class BarDataModel {
             //the next element below the current one
             yCoord += elementHeight;
         }
-        return true;
+        LOGGER.debug("Exiting setStackedRectangles("
+                + "bounds, barElementColors, valRange, aggrMethod, minAggrVal) "
+                + "of class BarDataModel.");
     }
 
     /**
@@ -429,9 +538,11 @@ public class BarDataModel {
         final int yCoord = (int)m_barRectangle.getY();
         final int barHeight = (int)m_barRectangle.getHeight();
         m_barRectangle.setBounds(startX, yCoord, barWidth, barHeight);
-        final int noOfBars = barElementColors.size();
-        m_drawElements = elementsFitInBar(layout, noOfBars, barWidth, 
+        final int totalNoOfElements = barElementColors.size();
+        final int noOfElements = m_elements.size();
+        m_drawElements = elementsFitInBar(layout, noOfElements, barWidth, 
                 barHeight);
+        calculateHiliteRectangle(aggrMethod);
         if (!m_drawElements) {
             return;
         }
@@ -447,7 +558,8 @@ public class BarDataModel {
         } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
             int xCoord = startX + SPACE_BETWEEN_ELEMENTS;
             final int elementWidth = Math.max((barWidth 
-                    - (SPACE_BETWEEN_ELEMENTS * noOfBars)) / noOfBars, 1);
+                    - (SPACE_BETWEEN_ELEMENTS * totalNoOfElements)) 
+                    / totalNoOfElements, 1);
             for (Color elementColor : barElementColors) {
                 final BarElementDataModel element = 
                     m_elements.get(elementColor);
@@ -510,6 +622,38 @@ public class BarDataModel {
     }
     
     /**
+     * @return <code>true</code> if one of the elements of this bar is selected
+     */
+    public boolean isSelected() {
+        return m_isSelected;
+    }
+
+    /**
+     * @param selected <code>true</code> if this bar is selected
+     * @return <code>true</code> if the parameter has changed
+     */
+    protected boolean setSelected(final boolean selected) {
+        if (m_isSelected == selected) {
+            return false;
+        }
+        m_isSelected = selected;
+        for (BarElementDataModel element : getElements()) {
+            element.setSelected(selected);
+        } return true;
+    }
+
+    /**
+     * @return the number of hilited rows in this bar.
+     */
+    public int getNoOfHilitedRows() {
+        int noOfHilitedKeys = 0;
+        for (BarElementDataModel element : getElements()) {
+            noOfHilitedKeys += element.getHiliteRowCount();
+        }
+        return noOfHilitedKeys;
+    }
+    
+    /**
      * @return <code>true</code> if at least one row of this element is hilited
      */
     public boolean isHilited() {
@@ -522,16 +666,97 @@ public class BarDataModel {
     }
     
     /**
-     * @return <code>true</code> if one of the elements of this bar is selected
+     * @param hilited the row keys to unhilite
+     * @param aggrMethod the current {@link AggregationMethod}
      */
-    public boolean isSelected() {
+    public void removeHilitedKeys(final Collection<DataCell> hilited, 
+            final AggregationMethod aggrMethod) {
+        boolean changed = false;
+        for (BarElementDataModel element : getElements()) {
+            changed = element.removeHilitedKeys(hilited, aggrMethod) || changed;
+        }
+        if (changed) {
+            calculateHiliteRectangle(aggrMethod);
+        }
+    }
+
+    /**
+     * @param hilited the row keys to hilite
+     * @param aggrMethod the current {@link AggregationMethod}
+     */
+    public void setHilitedKeys(final Collection<DataCell> hilited, 
+            final AggregationMethod aggrMethod) {
+        boolean changed = false;
+        for (BarElementDataModel element : getElements()) {
+            changed = element.setHilitedKeys(hilited, aggrMethod) || changed;
+        }
+        if (changed) {
+            calculateHiliteRectangle(aggrMethod);
+        }
+    }
+
+    /**
+     * Clears all hilite information.
+     */
+    public void clearHilite() {
+        for (BarElementDataModel element : getElements()) {
+            element.clearHilite();
+        }
+        //since no elements are hilited we have to reset the hilite rectangle
+        m_hiliteRectangle = null;
+    }
+
+    /**
+     * @param point the {@link Point} to check
+     * @return <code>true</code> if at least one element of the bar contains
+     * the point
+     */
+    public boolean selectElement(final Point point) {
+        if (m_barRectangle != null && m_barRectangle.contains(point)) {
+//          if the bar is to small to draw the different
+            //elements we have to select all elements 
+            //of this bar
+            if (!m_drawElements) {
+                for (final BarElementDataModel element : getElements()) {
+                    element.setSelected(true);
+                }
+                m_isSelected = true;
+            } else {
+                for (final BarElementDataModel element : getElements()) {
+                    m_isSelected = element.selectElement(point) || m_isSelected;
+                }
+            }
+        } else {
+            setSelected(false);
+        }
         return m_isSelected;
     }
 
     /**
-     * @param selected <code>true</code> if this bar is selected
+     * Selects all element of this bar which intersect the given 
+     * rectangle.
+     * @param rect the {@link Rectangle} to check
+     * @return <code>true</code> if at least one element of the bar 
+     * intersects the rectangle
      */
-    public void setSelected(final boolean selected) {
-        m_isSelected = selected;
+    public boolean selectElement(final Rectangle rect) {
+        if (m_barRectangle != null && m_barRectangle.intersects(rect)) {
+//          if the bar is to small to draw the different
+            //elements we have to select all elements 
+            //of this bar
+            if (!m_drawElements) {
+                for (final BarElementDataModel element : getElements()) {
+                    element.setSelected(true);
+                }
+                m_isSelected = true;
+            } else {
+                for (final BarElementDataModel element : getElements()) {
+                    m_isSelected = element.selectElement(rect) || m_isSelected;
+                }
+            }
+        } else {
+            setSelected(false);
+        }
+        return m_isSelected;
     }
 }
