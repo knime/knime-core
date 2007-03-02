@@ -50,5 +50,12 @@
             id="open.new.project.wizard">
       </command>
    </extension>
+   <extension
+         id="KNIME_BATCH_APPLICATION"
+         point="org.eclipse.core.runtime.applications">
+      <application>
+         <run class="org.knime.product.headless.KNIMEBatchApplication"/>
+      </application>
+   </extension>
 
 </plugin>
