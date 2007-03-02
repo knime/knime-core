@@ -75,8 +75,7 @@ public final class BatchExecutor {
 
     private static void usage() {
         System.err.println(
-              "Usage: " + BatchExecutor.class.getName() + " OPTIONS\n"
-            + "where OPTIONS can be:\n"
+              "Usage: The following options are available:\n"
             + " -nosave => do not save the workflow after execution has finished\n"
             + " -reset => reset workflow prior to execution\n"
             + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root of the ZIP\n"
