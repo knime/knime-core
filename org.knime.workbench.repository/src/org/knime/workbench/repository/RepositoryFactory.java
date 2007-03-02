@@ -78,24 +78,24 @@ public final class RepositoryFactory {
         }
 
         node.setName(factory.getNodeName());
-        node
-                .setType(str(element.getAttribute("type"),
-                        NodeTemplate.TYPE_OTHER));
+        node.setType(
+                str(element.getAttribute("type"), NodeTemplate.TYPE_OTHER));
 
-        Image icon = ImageRepository.getScaledImage(factory.getIcon(), 16, 16);
-        // get default image if null
-        if (icon == null) {
-            icon =
-                    ImageRepository.getScaledImage(
-                            NodeFactory.getDefaultIcon(), 16, 16);
-        }
-
-        // Load images from declaring plugin
         String pluginID = element.getDeclaringExtension().getNamespace();
         node.setPluginID(pluginID);
 
-        // FIXME dispose this somewhere !!
-        node.setIcon(icon);
+        if (!Boolean.valueOf(
+                System.getProperty("java.awt.headless", "false"))) {
+            // Load images from declaring plugin
+            Image icon = ImageRepository.getScaledImage(factory.getIcon(), 16, 16);
+            // get default image if null
+            if (icon == null) {
+                icon = ImageRepository.getScaledImage(
+                        NodeFactory.getDefaultIcon(), 16, 16);
+            }
+            // FIXME dispose this somewhere !!
+            node.setIcon(icon);
+        }
 
         node.setCategoryPath(str(element.getAttribute("category-path"), "/"));
 
@@ -122,12 +122,14 @@ public final class RepositoryFactory {
         cat.setDescription(str(element.getAttribute("description"), ""));
         cat.setName(str(element.getAttribute("name"), "!name is missing!"));
         cat.setAfterID(str(element.getAttribute("after"), ""));
-        cat.setIcon(KNIMERepositoryPlugin.getDefault().getImage(pluginID,
-                str(element.getAttribute("icon"), "")));
-        cat.setIconDescriptor(KNIMERepositoryPlugin.getDefault()
-                .getImageDescriptor(pluginID,
-                        str(element.getAttribute("icon"), "")));
-
+        if (!Boolean.valueOf(System.getProperty(
+                "java.awt.headless", "false"))) {
+            cat.setIcon(KNIMERepositoryPlugin.getDefault().getImage(pluginID,
+                    str(element.getAttribute("icon"), "")));
+            cat.setIconDescriptor(KNIMERepositoryPlugin.getDefault()
+                    .getImageDescriptor(pluginID,
+                            str(element.getAttribute("icon"), "")));
+        }
         String path = str(element.getAttribute("path"), "/");
         cat.setPath(path);
 

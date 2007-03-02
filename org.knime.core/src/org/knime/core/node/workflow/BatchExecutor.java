@@ -95,19 +95,39 @@ public final class BatchExecutor {
      * Main method.
      * 
      * @param args a workflow directory or a zip input and output file
-     * @throws IOException bum
-     * @throws WorkflowException crash
-     * @throws WorkflowInExecutionException bomb
-     * @throws CanceledExecutionException ploing
-     * @throws InvalidSettingsException shit
+     * @throws IOException Delegated from WFM
+     * @throws WorkflowException Delegated from WFM
+     * @throws WorkflowInExecutionException Delegated from WFM
+     * @throws CanceledExecutionException Delegated from WFM
+     * @throws InvalidSettingsException Delegated from WFM
      */
     public static void main(final String[] args) throws IOException,
             InvalidSettingsException, CanceledExecutionException,
             WorkflowInExecutionException, WorkflowException {
+        int returnVal = mainRun(args);
+        System.exit(returnVal);
+    }
+    
+    /** Called from {@link #main(String[])} method. It parses the command line
+     * and starts up KNIME. It returns 0 if the execution was run (even with
+     * errors) and 1 if the command line could not be parsed (e.g. usage was
+     * printed).
+     * 
+     * @param args Command line arguments
+     * @return 0 if WorkflowManager (WFM) was executed, 1 otherwise.
+     * @throws IOException Delegated from WFM
+     * @throws InvalidSettingsException Delegated from WFM
+     * @throws CanceledExecutionException Delegated from WFM
+     * @throws WorkflowInExecutionException Delegated from WFM
+     * @throws WorkflowException Delegated from WFM
+     */
+    public static int mainRun(final String[] args) throws IOException,
+        InvalidSettingsException, CanceledExecutionException,
+        WorkflowInExecutionException, WorkflowException {
         long t = System.currentTimeMillis();
         if (args.length < 1) {
             usage();
-            System.exit(1);
+            return 1;
         }
 
         File input = null, output = null;
@@ -126,14 +146,14 @@ public final class BatchExecutor {
                 if (!input.isFile()) {
                     System.err.println("Workflow file '" + parts[1]
                             + "' is not a file.");
-                    System.exit(1);
+                    return 1;
                 }
             } else if ("-workflowDir".equals(parts[0])) {
                 input = new File(parts[1]);
                 if (!input.isDirectory()) {
                     System.err.println("Workflow directory '" + parts[1]
                             + "' is not a directory.");
-                    System.exit(1);
+                    return 1;
                 }
             } else if ("-destFile".equals(parts[0])) {
                 output = new File(parts[1]);
@@ -148,15 +168,14 @@ public final class BatchExecutor {
             } else {
                 System.err.println("Unknown option '" + parts[0] + "'");
                 usage();
-                System.exit(1);
+                return 1;
             }
         }
 
         final File workflowDir;
         if (input == null) {
             System.err.println("No input file or directory given.");
-            System.exit(1);
-            return;
+            return 1;
         } else if (input.isFile()) {
             File dir = FileUtil.createTempDir("BatchExecutor");
             FileUtil.unzip(input, dir);
@@ -225,7 +244,8 @@ public final class BatchExecutor {
                 FileUtil.zipDir(output, workflowDir, 9);
             }
         }
-        System.out.println("Finished in " + (System.currentTimeMillis() - t)
-                + "ms");
+        System.out.println(
+                "Finished in " + (System.currentTimeMillis() - t) + "ms");
+        return 0;
     }
 }
