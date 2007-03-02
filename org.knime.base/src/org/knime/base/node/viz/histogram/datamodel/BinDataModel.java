@@ -189,8 +189,8 @@ public class BinDataModel {
     public int getMaxBarRowCount() {
         final Collection<BarDataModel> bars = m_bars.values();
         int maxRowCount = 0;
-        for (BarDataModel model : bars) {
-            final int rowCount = model.getRowCount();
+        for (BarDataModel bar : bars) {
+            final int rowCount = bar.getRowCount();
             if (rowCount > maxRowCount) {
                 maxRowCount = rowCount;
             }
@@ -290,7 +290,7 @@ public class BinDataModel {
             final Collection<ColorColumn> aggrColumns) {
         m_binRectangle = binRectangle;
         setBarRectangle(aggrMethod, layout, baseLine, barElementColors, 
-                aggrColumns);
+                    aggrColumns);
     }
     
     /**
@@ -307,6 +307,15 @@ public class BinDataModel {
             final HistogramLayout layout, final int baseLine, 
             final SortedSet<Color> barElementColors, 
             final Collection<ColorColumn> aggrColumns) {
+        if (m_binRectangle == null) {
+            final Collection<BarDataModel> bars = m_bars.values();
+            //also reset the bar rectangle
+            for (BarDataModel bar : bars) {
+                bar.setBarRectangle(null, aggrMethod, layout, baseLine, 
+                        barElementColors);
+            }
+            return;
+        }
         final double totalWidth = m_binRectangle.getWidth();
         final int noOfBars = aggrColumns.size();
         final int barWidth = 
@@ -336,6 +345,7 @@ public class BinDataModel {
         
         if (valRange <= 0) {
             m_drawBar = false;
+            return;
         }
         final double heightPerVal = totalHeight / valRange;
         final int startX = (int) m_binRectangle.getX();
@@ -386,14 +396,19 @@ public class BinDataModel {
      * @param barElementColors all element colors which define the order
      * the elements should be drawn
      * @param aggrMethod the {@link AggregationMethod} to use
+     * @param aggrColumns the current aggregation columns
+     * @param baseLine the base line
      */
     public void updateBinWidth(final int startX, final int binWidth,
             final HistogramLayout layout, 
             final SortedSet<Color> barElementColors, 
-            final AggregationMethod aggrMethod) {
+            final AggregationMethod aggrMethod, 
+            final Collection<ColorColumn> aggrColumns,
+            final int baseLine) {
         if (m_binRectangle == null) {
             return;
         }
+        final boolean drawBarBefore = m_drawBar;
         final int yCoord = (int)m_binRectangle.getY();
         final int binHeight = (int) m_binRectangle.getHeight();
         m_binRectangle.setBounds(startX, yCoord, binWidth, binHeight);
@@ -413,10 +428,18 @@ public class BinDataModel {
             return;
         }
         m_drawBar = true;
+        if (!drawBarBefore) {
+            //if the bar couldn't be draw before but now we have to 
+            //recalculate them
+            setBarRectangle(aggrMethod, layout, baseLine, barElementColors, 
+                    aggrColumns);
+            return;
+        }
+
         int xCoord = startX + SPACE_BETWEEN_BARS;
         for (BarDataModel bar : bars) {
             bar.updateBarWidth(xCoord, barWidth, layout, 
-                    barElementColors, aggrMethod);
+                    barElementColors, aggrMethod, baseLine);
             xCoord += barWidth + SPACE_BETWEEN_BARS;
         }
     }
@@ -481,22 +504,26 @@ public class BinDataModel {
     /**
      * @param hilited the row keys to hilite
      * @param aggrMethod the current aggregation method
+     * @param layout the current {@link HistogramLayout}
      */
     protected void setHilitedKeys(final Set<DataCell> hilited, 
-            final AggregationMethod aggrMethod) {
+            final AggregationMethod aggrMethod,
+            final HistogramLayout layout) {
         for (final BarDataModel bar : getBars()) {
-            bar.setHilitedKeys(hilited, aggrMethod);
+            bar.setHilitedKeys(hilited, aggrMethod, layout);
         }
     }
 
     /**
      * @param hilited the row keys to unhilite
      * @param aggrMethod the current aggregation method
+     * @param layout the current {@link HistogramLayout}
      */
     protected void removeHilitedKeys(final Set<DataCell> hilited, 
-            final AggregationMethod aggrMethod) {
+            final AggregationMethod aggrMethod, 
+            final HistogramLayout layout) {
         for (final BarDataModel bar : getBars()) {
-            bar.removeHilitedKeys(hilited, aggrMethod);
+            bar.removeHilitedKeys(hilited, aggrMethod, layout);
         }
     }
 

@@ -229,10 +229,11 @@ public class BarDataModel {
     /**
      * This calculates the proportional hilite rectangle of this bar which
      * could be displayed if the elements of this bar can't be draw.
-     * @param aggrMethod the current {@link AggregationMethod} to calculate
-     * the right y coordinate
+     * Set the hilite rectangle in the middle of the bar since we
+     * @param layout the current {@link HistogramLayout}
      */
-    private void calculateHiliteRectangle(final AggregationMethod aggrMethod) {
+    private void calculateHiliteRectangle(final AggregationMethod aggrMethod,
+            final HistogramLayout layout) {
         if (m_drawElements || m_barRectangle == null) {
             m_hiliteRectangle = null;
             return;
@@ -242,20 +243,39 @@ public class BarDataModel {
             m_hiliteRectangle = null;
             return;
         }
+        final int barY = (int)m_barRectangle.getY();
         final int barHeight = (int)m_barRectangle.getHeight();
         final int barWidth = (int)m_barRectangle.getWidth();
         final int rowCount = getRowCount();
         final double fraction = noOfHilitedRows / (double)rowCount;
-        final int hiliteHeight = (int)(barHeight * fraction);
+        int hiliteHeight = (int)(barHeight * fraction);
         final int hiliteWidth = Math.max(
                 (int)(barWidth 
         * AbstractHistogramVizModel.HILITE_RECT_WIDTH_FACTOR), 
         1);
         final int hiliteX = (int) (m_barRectangle.getX()
                 + (barWidth - hiliteWidth) / 2);
-        int hiliteY = (int)m_barRectangle.getY();
-        if (getAggregationValue(aggrMethod) > 0) {
+        int hiliteY = barY;
+        if (HistogramLayout.SIDE_BY_SIDE.equals(layout) 
+                && getMinAggregationValue(aggrMethod, layout) < 0
+                && getMaxAggregationValue(aggrMethod, layout) > 0) {
+            //set the hilite rectangle in the side by side mode in the middle
+            //if the minimum aggregation value is negative and the maximum
+            //aggregation value is positive
+            final int middleY = (int)(barY + (barHeight / 2.0));
+            hiliteY = middleY - (hiliteHeight / 2);
+        } else  if (getAggregationValue(aggrMethod) > 0) {
             hiliteY = hiliteY + barHeight - hiliteHeight;
+        }
+        //check for possible rounding errors
+        if (hiliteHeight > barHeight) {
+            hiliteHeight = barHeight;
+            LOGGER.warn("Hilite rectangle higher than surrounding bar");
+        }
+        if (hiliteY < barY) {
+            hiliteY = barY;
+            LOGGER.warn("Hilite rectangle y coordinate above "
+                    + "surrounding bar y coordinate");
         }
         m_hiliteRectangle = 
             new Rectangle(hiliteX, hiliteY, hiliteWidth, hiliteHeight);
@@ -282,18 +302,8 @@ public class BarDataModel {
             final AggregationMethod aggrMethod, final HistogramLayout layout,
             final int baseLine, final SortedSet<Color> barElementColors) {
         m_barRectangle = barRect;
-        if (barRect == null) {
-            //also reset the element rectangles
-            final Collection<BarElementDataModel> elements = 
-                m_elements.values();
-            for (BarElementDataModel element : elements) {
-                element.setElementRectangle(null, aggrMethod);
-            }
-            m_hiliteRectangle = null;
-            return;
-        }
         setElementRectangle(aggrMethod, layout, baseLine, barElementColors);
-        calculateHiliteRectangle(aggrMethod);
+        calculateHiliteRectangle(aggrMethod, layout);
     }
     
     /**
@@ -306,6 +316,15 @@ public class BarDataModel {
     private void setElementRectangle(final AggregationMethod aggrMethod, 
             final HistogramLayout layout, final int baseLine, 
             final SortedSet<Color> barElementColors) {
+        if (m_barRectangle == null) {
+            //also reset the element rectangles
+            final Collection<BarElementDataModel> elements = 
+                m_elements.values();
+            for (BarElementDataModel element : elements) {
+                element.setElementRectangle(null, aggrMethod);
+            }
+            return;
+        }
         final double maxAggrVal = getMaxAggregationValue(aggrMethod, layout);
         final double minAggrVal = getMinAggregationValue(aggrMethod, layout);
         double valRange;
@@ -322,8 +341,8 @@ public class BarDataModel {
         final int barHeight = (int)m_barRectangle.getHeight();
         final int barWidth = (int)m_barRectangle.getWidth();
         final int noOfElements = m_elements.size();
-        m_drawElements = elementsFitInBar(layout, noOfElements, barWidth, 
-                barHeight);
+        m_drawElements = elementsFitInBar(layout, barElementColors, 
+                noOfElements, barWidth, barHeight);
         if (!m_drawElements) {
             return;
         }
@@ -354,7 +373,7 @@ public class BarDataModel {
         final int barWidth = (int)m_barRectangle.getWidth();
         final int noOfBars = barElementColors.size();
         final int elementWidth = 
-            calculateSideBySideElementWidth(noOfBars, barWidth);
+            calculateSideBySideElementWidth(barElementColors, barWidth);
         LOGGER.debug("Bar values (x,height,width, totalNoOf): " 
                 + startX + ", "
                 + barHeight + ", "
@@ -374,7 +393,8 @@ public class BarDataModel {
                     element.getAggregationValue(aggrMethod);
                 //calculate the bar height
                 int elementHeight = Math.max((int)(
-                        heightPerVal * Math.abs(aggrVal)), 1);
+                        heightPerVal * Math.abs(aggrVal)), 
+                        AbstractHistogramVizModel.MINIMUM_BAR_HEIGHT);
                 if (elementHeight > barHeight) {
                     final int diff = elementHeight - barHeight;
                     elementHeight -= diff;
@@ -432,15 +452,16 @@ public class BarDataModel {
         //we have to be care full with the value range in stacked layout
         //because of the mixture of positive and negatives
         double stackedValRange = valRange;
-        if (AggregationMethod.AVERAGE.equals(aggrMethod)
-                || AggregationMethod.SUM.equals(aggrMethod)) {
+        if ((AggregationMethod.AVERAGE.equals(aggrMethod)
+                || AggregationMethod.SUM.equals(aggrMethod))) {
             //if the current aggregation method is average or sum 
             //we have to handle the negative values as positives
-            if (minAggrVal < 0) {
-                stackedValRange = Math.abs(minAggrVal);
-            } else {
-                stackedValRange = 0;
-            }
+//            if (minAggrVal < 0) {
+//                stackedValRange = Math.abs(minAggrVal);
+//            } else {
+//                stackedValRange = 0;
+//            }
+            stackedValRange = 0;
             LOGGER.debug("Calculating stacked value range.Starting with: "
                     + stackedValRange);
             for (BarElementDataModel element : m_elements.values()) {
@@ -527,25 +548,35 @@ public class BarDataModel {
      * @param barElementColors all element colors which define the order
      * the elements should be drawn
      * @param aggrMethod the {@link AggregationMethod} to use
+     * @param baseLine the base line
      */
     public void updateBarWidth(final int startX, final int barWidth,
             final HistogramLayout layout, 
             final SortedSet<Color> barElementColors,
-            final AggregationMethod aggrMethod) {
+            final AggregationMethod aggrMethod, final int baseLine) {
         if (m_barRectangle == null) {
             return;
         }
+        final boolean drawElementsBefore = m_drawElements;
         final int yCoord = (int)m_barRectangle.getY();
         final int barHeight = (int)m_barRectangle.getHeight();
         m_barRectangle.setBounds(startX, yCoord, barWidth, barHeight);
         final int totalNoOfElements = barElementColors.size();
         final int noOfElements = m_elements.size();
-        m_drawElements = elementsFitInBar(layout, noOfElements, barWidth, 
-                barHeight);
-        calculateHiliteRectangle(aggrMethod);
+        calculateHiliteRectangle(aggrMethod, layout);
+        m_drawElements = elementsFitInBar(layout, barElementColors,
+                noOfElements, barWidth, barHeight);
         if (!m_drawElements) {
+            //if the elements doesn't fit any way return here
             return;
         }
+        if (!drawElementsBefore) {
+            //if the elements couldn't be draw before but now recalculate 
+            //them
+            setElementRectangle(aggrMethod, layout, baseLine, barElementColors);
+            return;
+        }
+        
         if (HistogramLayout.STACKED.equals(layout)) {
             for (Color elementColor : barElementColors) {
                 final BarElementDataModel element = 
@@ -581,6 +612,8 @@ public class BarDataModel {
     /**
      * Checks if all elements fit in the surrounding bar.
      * @param layout the {@link HistogramLayout}
+     * @param barElementColors the total number of bars in the 
+     * side by side layout
      * @param noOfElements the number of elements which should fit
      * @param barWidth the width of the bar
      * @param barHeight the height of the bar
@@ -589,13 +622,14 @@ public class BarDataModel {
      * the given bar ranges for the given layout 
      */
     private static boolean elementsFitInBar(final HistogramLayout layout, 
-            final int noOfElements, final int barWidth, 
-            final int barHeight) {
+            final SortedSet<Color> barElementColors, final int noOfElements, 
+            final int barWidth, final int barHeight) {
         if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
+            final int noOfColors = barElementColors.size();
             final int elementWidth = 
-                calculateSideBySideElementWidth(noOfElements, barWidth);
-            if (noOfElements * elementWidth 
-                    > barWidth - (SPACE_BETWEEN_ELEMENTS * noOfElements)) {
+                calculateSideBySideElementWidth(barElementColors, barWidth);
+            if (noOfColors * elementWidth 
+                    > barWidth - (SPACE_BETWEEN_ELEMENTS * noOfColors)) {
                 return false;
             }
         } else if (HistogramLayout.STACKED.equals(layout)) {
@@ -607,11 +641,13 @@ public class BarDataModel {
         return true;
     }
 
-    private static int calculateSideBySideElementWidth(final int noOfElements, 
+    private static int calculateSideBySideElementWidth(
+            final SortedSet<Color> barElementColors, 
             final int barWidth) {
+        final int noOfBars = barElementColors.size();
         return Math.max((barWidth 
-                - (SPACE_BETWEEN_ELEMENTS * noOfElements)) 
-                    / noOfElements, 1);
+                - (SPACE_BETWEEN_ELEMENTS * noOfBars)) 
+                    / noOfBars, 1);
     }
     
     /**
@@ -668,30 +704,32 @@ public class BarDataModel {
     /**
      * @param hilited the row keys to unhilite
      * @param aggrMethod the current {@link AggregationMethod}
+     * @param layout the current {@link HistogramLayout}
      */
     public void removeHilitedKeys(final Collection<DataCell> hilited, 
-            final AggregationMethod aggrMethod) {
+            final AggregationMethod aggrMethod, final HistogramLayout layout) {
         boolean changed = false;
         for (BarElementDataModel element : getElements()) {
             changed = element.removeHilitedKeys(hilited, aggrMethod) || changed;
         }
         if (changed) {
-            calculateHiliteRectangle(aggrMethod);
+            calculateHiliteRectangle(aggrMethod, layout);
         }
     }
 
     /**
      * @param hilited the row keys to hilite
      * @param aggrMethod the current {@link AggregationMethod}
+     * @param layout the current {@link HistogramLayout}
      */
     public void setHilitedKeys(final Collection<DataCell> hilited, 
-            final AggregationMethod aggrMethod) {
+            final AggregationMethod aggrMethod, final HistogramLayout layout) {
         boolean changed = false;
         for (BarElementDataModel element : getElements()) {
             changed = element.setHilitedKeys(hilited, aggrMethod) || changed;
         }
         if (changed) {
-            calculateHiliteRectangle(aggrMethod);
+            calculateHiliteRectangle(aggrMethod, layout);
         }
     }
 

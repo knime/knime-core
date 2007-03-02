@@ -234,7 +234,7 @@ public class HistogramNodeModel extends NodeModel {
             throw new IllegalArgumentException("Aggregation column not found.");
         }
         final ColorColumn aggrColumn = 
-            new ColorColumn(Color.CYAN, aggrColIdx, aggrColName);
+            new ColorColumn(Color.LIGHT_GRAY, aggrColIdx, aggrColName);
         m_aggrCols = new ArrayList<ColorColumn>(1);
         m_aggrCols.add(aggrColumn);
         final int rowCount = inData[0].getRowCount();
@@ -286,7 +286,8 @@ public class HistogramNodeModel extends NodeModel {
         for (int i = 0; i < numColumns; i++) {
             final DataColumnSpec spec = m_tableSpec.getColumnSpec(i);
             if (spec.getType().isCompatible(DoubleValue.class)) {
-                aggrColumn = new ColorColumn(Color.CYAN, i, spec.getName());
+                aggrColumn = new ColorColumn(Color.LIGHT_GRAY, i, 
+                        spec.getName());
                 break;
             }
         }

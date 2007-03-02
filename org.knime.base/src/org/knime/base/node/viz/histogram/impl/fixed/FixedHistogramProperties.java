@@ -28,7 +28,6 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 import javax.swing.border.EtchedBorder;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
@@ -101,28 +100,40 @@ public class FixedHistogramProperties extends
      * @return the column information panel
      */
     private JPanel createColumnSettingsPanel() {
-        final JPanel columnPanel = new JPanel();
+//the x column box        
         final Box xColumnBox = Box.createHorizontalBox();
-        xColumnBox.setBorder(BorderFactory
-                .createEtchedBorder(EtchedBorder.RAISED));
+//        xColumnBox.setBorder(BorderFactory
+//                .createEtchedBorder(EtchedBorder.RAISED));
         final JLabel xColLabelLabel = new JLabel(X_COLUMN_LABEL);
         xColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
         xColumnBox.add(xColLabelLabel);
         xColumnBox.add(Box.createHorizontalGlue());
         xColumnBox.add(m_xCol);
         xColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-//      the column selection and button box
-        final Box aggrColBox = Box.createVerticalBox();        
-        final JLabel aggrColLabel = new JLabel(AGGREGATION_COLUMN_LABEL);
-        aggrColLabel.setVerticalAlignment(SwingConstants.CENTER);
-        // colLabelBox.add(Box.createVerticalGlue());
-        aggrColBox.add(aggrColLabel);
-        aggrColBox.add(Box.createVerticalGlue());
-        final Box colSelectLabelBox = Box.createVerticalBox();
-        colSelectLabelBox.add(aggrColBox);
-        colSelectLabelBox.add(m_aggrCol);
-        columnPanel.add(xColumnBox);
-        return columnPanel;
+        
+//the aggregation column box
+        final Box aggrColumnBox = Box.createHorizontalBox();
+        final JLabel aggrColumnLabel = new JLabel(AGGREGATION_COLUMN_LABEL);
+        aggrColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+        aggrColumnBox.add(aggrColumnLabel);
+        aggrColumnBox.add(Box.createHorizontalGlue());
+        aggrColumnBox.add(m_aggrCol);
+        aggrColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+
+//      the box which surround both column boxes
+              final Box columnsBox = Box.createVerticalBox();
+              columnsBox.setBorder(BorderFactory
+                      .createEtchedBorder(EtchedBorder.RAISED));
+              columnsBox.add(Box.createVerticalGlue());
+              columnsBox.add(xColumnBox);
+              columnsBox.add(Box.createVerticalGlue());
+              columnsBox.add(aggrColumnBox);
+              columnsBox.add(Box.createVerticalGlue());
+
+//      the root panel to return
+              final JPanel columnPanel = new JPanel();
+              columnPanel.add(columnsBox);
+              return columnPanel;
     }
 
     /**

@@ -69,8 +69,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
 
     /**This stroke is used to draw the rectangle around each aggregation
      * column bar.*/
-    private static final BasicStroke MULTIPLE_AGGR_COLUM_STROKE = 
-        new BasicStroke(2f);
+    private static final BasicStroke AGGR_COLUM_OUTLINE_STROKE = 
+        new BasicStroke(1f);
     /**The color of the element outline.*/
     private static final Color ELEMENT_OUTLINE_COLOR = Color.BLACK;
 
@@ -136,11 +136,11 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     /**
      * Holds the {@link FixedHistogramVizModel} objects to draw.
      */
-    private AbstractHistogramVizModel m_histoData;
+    private AbstractHistogramVizModel m_vizModel;
     
     private final AbstractHistogramProperties m_properties;
     
-    private boolean m_modelChanged = false;
+    private boolean m_updatePropertiesPanel = false;
 
     /**
      * Information message. If not <code>null</code> no bars will be drawn
@@ -177,14 +177,22 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         m_properties = props;
     }
 
+    /**
+     * Call this method to indicates that the properties panel should be 
+     * update the next time the {@link #paintComponent(Graphics)} method
+     * is called.
+     */
+    public void updateProperties() {
+        m_updatePropertiesPanel = true;
+    }
     
     /**
      * @param histoData the {@link FixedHistogramDataModel} objects to draw
      */
     public void setHistogramVizModel(
             final AbstractHistogramVizModel histoData) {
-        m_histoData = histoData;
-        m_modelChanged = true;
+        m_vizModel = histoData;
+        m_updatePropertiesPanel = true;
         repaint();
     }
 
@@ -286,7 +294,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         m_showLabelVertical = true;
         m_baseLine = null;
         m_gridLines = null;
-        m_histoData = null;
+        m_vizModel = null;
         m_infoMsg = null;
     }
     // **********************************************
@@ -301,7 +309,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         final Graphics2D g2 = (Graphics2D)g;
         final Rectangle bounds = getBounds();
         String msg = m_infoMsg;
-        final AbstractHistogramVizModel vizModel = m_histoData;
+        final AbstractHistogramVizModel vizModel = m_vizModel;
         if (vizModel == null || vizModel.getBins() == null) {
             //if we have no bins and no info message display a no bars info
             if (msg == null) {
@@ -313,9 +321,9 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             drawMessage(g2, msg, bounds);
             return;
         }
-        if (m_modelChanged && m_properties != null) {
+        if (m_updatePropertiesPanel && m_properties != null) {
             m_properties.updateHistogramSettings(vizModel);
-            m_modelChanged = false;
+            m_updatePropertiesPanel = false;
         }
 //      check if we have to draw the grid lines
         if (m_gridLines != null) {
@@ -325,12 +333,6 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                         GRID_LINE_STROKE);
             }
         }
-        //check if we have to draw the base line
-        if (m_baseLine != null) {
-            paintHorizontalLine(g2, 0, m_baseLine.intValue(),
-                    (int) bounds.getWidth(), BASE_LINE_COLOR, 
-                    BASE_LINE_STROKE);
-        }
         //get all variables which are needed multiple times
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
         final Collection<ColorColumn> aggrColumns = 
@@ -339,10 +341,9 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         //if the user has selected more then one aggregation column we have to
         //draw the bar outline to how him which bar belongs to which aggregation
         //column
-        final boolean drawBarOutline = aggrColumns.size() > 1;
-        //just for debugging purpose
-//            || HistogramLayout.SIDE_BY_SIDE.equals(
-//                m_histoData.getHistogramLayout());
+        final boolean drawBarOutline = aggrColumns.size() > 1
+            || HistogramLayout.SIDE_BY_SIDE.equals(
+                m_vizModel.getHistogramLayout());
         
         // loop over all bins and paint them
         for (BinDataModel bin : vizModel.getBins()) {
@@ -378,7 +379,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     //draw the outline of the bar if we have multiple
                     //aggregation columns
                     drawRectangle(g2, bar.getBarRectangle(), 
-                            bar.getColor(), MULTIPLE_AGGR_COLUM_STROKE);
+                            bar.getColor(), AGGR_COLUM_OUTLINE_STROKE);
                 }
                 //draw the bar label at last to have them on top
                 drawLabels(g2, bar, aggrMethod, layout, bounds);
@@ -390,6 +391,12 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                         GRID_LINE_STROKE);
             }
         } // end of the bin loop
+//      check if we have to draw the base line
+        if (m_baseLine != null) {
+            paintHorizontalLine(g2, 0, m_baseLine.intValue(),
+                    (int) bounds.getWidth(), BASE_LINE_COLOR, 
+                    BASE_LINE_STROKE);
+        }
         return;
     }
 
@@ -652,7 +659,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             textX = 1;
         }
         int textY = 0;
-        if (aggrVal > 0) {
+        if (aggrVal >= 0) {
             textY =  (int)(borderRect.getY() + borderRect.getHeight() 
                     - textWidth / 2) - AGGR_VAL_LABEL_SPACER;
         } else {

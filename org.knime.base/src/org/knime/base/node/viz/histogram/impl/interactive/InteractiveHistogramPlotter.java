@@ -149,7 +149,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                         "Selected column: " + aggrColName 
                         + " not found in table specification");
             }
-            final ColorColumn aggrColumn = new ColorColumn(Color.CYAN,
+            final ColorColumn aggrColumn = new ColorColumn(Color.LIGHT_GRAY,
                     aggrColIdx, aggrColName);
             final ArrayList<ColorColumn> aggrCols = new ArrayList<ColorColumn>(
                     1);

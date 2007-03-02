@@ -231,7 +231,7 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
             throw new IllegalArgumentException("Aggregation column not found.");
         }
         m_aggrColumn = 
-            new ColorColumn(Color.CYAN, aggrColIdx, aggrCol);
+            new ColorColumn(Color.LIGHT_GRAY, aggrColIdx, aggrCol);
         if (!m_xColSpec.getType().isCompatible(DoubleValue.class) 
                 && m_xColSpec.getDomain().getValues() == null) {
             throw new InvalidSettingsException(
@@ -269,6 +269,9 @@ public class FixedColumnHistogramNodeModel extends NodeModel {
             exec.setProgress(progress, "Adding data rows to histogram...");
             exec.checkCanceled();
         }
+        exec.setMessage("Sorting rows...");
+        //call this method to force the sorting
+        m_model.getSortedRows();
         exec.setProgress(1.0, "Histogram finished.");
         LOGGER.debug("Exiting execute(inData, exec) of class "
                 + "FixedColumnHistogramNodeModel.");

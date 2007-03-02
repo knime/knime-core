@@ -62,8 +62,9 @@ public abstract class AbstractHistogramVizModel {
     /** The caption of the bar which holds all missing values. */
     public static final String MISSING_VAL_BAR_CAPTION = "Missing_values";
     
-    /** Defines the minimum width of a bar. */
-    public static final int MIN_BIN_WIDTH = 2;
+    /** Defines the minimum width of a bar. Should be more than the base line
+     * stroke.*/
+    public static final int MIN_BIN_WIDTH = 4;
 
     /** This is the minimum space between two bins. */
     public static final int SPACE_BETWEEN_BINS = 2;
@@ -124,6 +125,9 @@ public abstract class AbstractHistogramVizModel {
 
     /**Holds the actual size of the drawing space.*/
     private Dimension m_drawingSpace;
+
+    /** The minimum height of a bar with an aggregation value > 0. */
+    public static final int MINIMUM_BAR_HEIGHT = 5;
     
     /**Constructor for class HistogramVizModel.
      * @param rowColors all possible colors the user has defined for a row
@@ -359,6 +363,9 @@ public abstract class AbstractHistogramVizModel {
             return;
         }
         if (m_drawingSpace == null) {
+            //if no drawing space is defined we set the maximum number
+            //of bins to the current number of bins
+            m_maxNoOfBins = m_bins.size();
             return;
         }
         int maxNoOfBins = (int)(m_drawingSpace.getWidth() 
@@ -697,9 +704,9 @@ public abstract class AbstractHistogramVizModel {
         }
         for (final BinDataModel bin : getBins()) {
             if (hilite) {
-                bin.setHilitedKeys(hilited, m_aggrMethod);
+                bin.setHilitedKeys(hilited, m_aggrMethod, m_layout);
             } else {
-                bin.removeHilitedKeys(hilited, m_aggrMethod);
+                bin.removeHilitedKeys(hilited, m_aggrMethod, m_layout);
             }
         }
     }
