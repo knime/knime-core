@@ -142,6 +142,16 @@ public final class KnimeEncryption {
     public static void setEncryptionKey(final SecretKey key) {
         secretKey = key;
     }
+    
+    /**
+     * Sets an encryption key given as string.
+     * The key is transformed to a {@link SecretKey} before it is set.
+     * 
+     * @param key the encryption key to set as string
+     */
+    public static void setEncryptionKeyAsString(final String key) {
+        secretKey = createSecretKey(key);
+    }
 
     private static SecretKey createSecretKey(final String keyAsString) {
 
