@@ -51,6 +51,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -805,7 +806,23 @@ public class DataContainer implements RowAppender {
         String date = DATE_FORMAT.format(new Date());
         String fileName = "knime_container_" + date + "_";
         String suffix = ".bin.gz";
-        File f = File.createTempFile(fileName, suffix);
+        // the preference page contains an entry to set the temp dir
+        // we evaluate it here explicitly as the environment variable may
+        // not have been set by the preference page when File.createTempFile
+        // is called the very first time (may happen in some early plugin load)
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        File tmpDirFile = null;
+        if (tmpDir != null) {
+            tmpDirFile = new File(tmpDir);
+            if (!tmpDirFile.isDirectory()) {
+                NodeLogger.getLogger(DataContainer.class).warn(
+                        "System property \"java.io.tmpdir\" (\""
+                        + tmpDir + "\") does not point to existing directory," 
+                        + " using default");
+                tmpDir = null;
+            }
+        }
+        File f = File.createTempFile(fileName, suffix, tmpDirFile);
         f.deleteOnExit();
         return f;
     }
