@@ -190,6 +190,7 @@ class Buffer {
                             it.clear();
                         }
                     }
+                    DeleteInBackgroundThread.waitUntilFinished();
                 }
             };
             Runtime.getRuntime().addShutdownHook(hook);
@@ -1294,7 +1295,6 @@ class Buffer {
      */
     void clear() {
         m_list = null;
-        boolean hasRunGC = false;
         if (m_binFile != null) {
             for (WeakReference<FromFileIterator> w : m_openIteratorSet) {
                 FromFileIterator f = w.get();
@@ -1302,34 +1302,10 @@ class Buffer {
                     f.clearIteratorInstance();
                 }
             }
-            boolean deleted = m_binFile.delete();
-            if (!deleted && m_binFile.exists()) {
-                // note: although all input streams are closed, the file
-                // can't be deleted. If we call the gc, it works. No clue.
-                // That only happens under windows!
- // http://forum.java.sun.com/thread.jspa?forumID=31&threadID=609458
-                System.gc();
-                hasRunGC = true;
-            }
-            if (deleted || m_binFile.delete()) {
-                logDebug("Deleted temp file \"" 
-                        + m_binFile.getAbsolutePath() + "\"", null);
+            if (m_blobDir != null) {
+                DeleteInBackgroundThread.delete(m_binFile, m_blobDir);
             } else {
-                logDebug("Failed to delete temp file \"" 
-                        + m_binFile.getAbsolutePath() + "\"", null);
-            }
-        }
-        if (m_blobDir != null) {
-            boolean deleted = deleteRecursively(m_blobDir);
-            if (!hasRunGC && (!deleted && m_blobDir.exists())) {
-                System.gc();
-            }
-            if (deleted || deleteRecursively(m_blobDir)) {
-                logDebug("Deleted blob directory \"" 
-                        + m_blobDir.getAbsolutePath() + "\"", null);
-            } else {
-                logDebug("Failed to delete blob directory \"" 
-                        + m_blobDir.getAbsolutePath() + "\"", null);
+                DeleteInBackgroundThread.delete(m_binFile);
             }
         }
         m_binFile = null;
@@ -1432,7 +1408,7 @@ class Buffer {
                 }
                 char eoRow = inStream.readChar();
                 if (eoRow != ROW_SEPARATOR) {
-                    throw new IOException("Exptected end of row character, " 
+                    throw new IOException("Expected end of row character, " 
                             + "got '" + eoRow + "'");
                 }
                 return new BlobSupportDataRow(key, cells);
@@ -1502,25 +1478,164 @@ class Buffer {
         }
     }
     
-    /** Deletes the argument directory recursively and returns true
-     * if this was successful. This method follows any symbolic link 
-     * (in comparison to 
-     * {@link org.knime.core.utilFileUtil#deleteRecursively(File)}.
-     * @param dir The (blob) directory to delete.
-     * @return Whether or not the directory has been deleted.
-     */
-    private static boolean deleteRecursively(final File dir) {
-        File[] files = dir.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                boolean deleted = file.delete();
-                if (!deleted) {
-                    if (file.isDirectory()) {
-                        deleteRecursively(file);
-                    }
+    /** A background thread that deletes temporary files and directory 
+     * (which may be a very long lasting job - in particular when blob 
+     * directories need to get deleted). This is the long term fix for bug
+     * 1051. 
+     * <p>Implementation note: There is singleton thread running that does the 
+     * deletion, if this thread is idle for a while, it is shut down and 
+     * recreated on demand.*/
+    private static final class DeleteInBackgroundThread extends Thread {
+        
+        private static final NodeLogger THREAD_LOGGER = 
+            NodeLogger.getLogger(DeleteInBackgroundThread.class);
+        private static DeleteInBackgroundThread instance;
+        private final LinkedList<File> m_filesToDeleteList;
+        
+        private static final Object LOCK = new Object();
+        
+        private DeleteInBackgroundThread() {
+            super("KNIME Temp File Deleter");
+            m_filesToDeleteList = new LinkedList<File>();
+        }
+        
+        /** Queues a set of files for deletion and returns immediately.
+         * @param file To delete.
+         */
+        public static void delete(final File... file) {
+            synchronized (LOCK) {
+                if (instance == null || !instance.isAlive()) {
+                    instance = new DeleteInBackgroundThread();
+                    instance.start();
+                }
+                instance.addFile(file);
+            }
+        }
+        
+        /** Blocks the calling thread until all queued files have been 
+         * deleted. */
+        public static void waitUntilFinished() {
+            synchronized (LOCK) {
+                if (instance == null || !instance.isAlive()) {
+                    return;
+                }
+            }
+            instance.blockUntilFinished();
+        }
+        
+        private void addFile(final File[] files) {
+            synchronized (LOCK) {
+                m_filesToDeleteList.addAll(Arrays.asList(files));
+                if (!m_filesToDeleteList.isEmpty()) {
+                    LOCK.notifyAll();
                 }
             }
         }
-        return dir.delete();
+        
+        /**
+         * @see java.lang.Thread#run()
+         */
+        @Override
+        public void run() {
+            while (true) {
+                synchronized (LOCK) {
+                    if (m_filesToDeleteList.isEmpty()) {
+                        try {
+                            LOCK.wait(60 * 1000);
+                        } catch (InterruptedException ie) {
+                            if (!m_filesToDeleteList.isEmpty()) {
+                                THREAD_LOGGER.warn("Deletion of " 
+                                        + m_filesToDeleteList.size() + "files "
+                                        + "or directories failed because " 
+                                        + "deleter thread was interrupted");
+                            }
+                            return;
+                        }
+                        if (m_filesToDeleteList.isEmpty()) {
+                            return;
+                        }
+                    }
+                }
+                executeDeletion();
+            }
+        }
+        
+        private synchronized void executeDeletion() {
+            try {
+                while (!m_filesToDeleteList.isEmpty()) {
+                    File first;
+                    synchronized (m_filesToDeleteList) {
+                        first = m_filesToDeleteList.removeFirst();
+                    }
+                    String type = first.isFile() ? "file" : "directory";
+                    boolean deleted = deleteRecursively(first);
+                    if (!deleted && first.exists()) {
+                        // note: although all input streams are closed, the
+                        // file can't be deleted. If we call the gc, it 
+                        // works. No clue. That only happens on windows!
+            // http://forum.java.sun.com/thread.jspa?forumID=31&threadID=609458
+                        System.gc();
+                    }
+                    if (deleted || deleteRecursively(first)) {
+                        logDebug("Deleted temporary " + type + " \"" 
+                                + first.getAbsolutePath() + "\"", null);
+                    } else {
+                        logDebug("Failed to delete temporary " + type + " \"" 
+                                + first.getAbsolutePath() + "\"", null);
+                    }
+                }
+            } finally {
+                notifyAll();
+            }
+        }
+        
+        private synchronized void blockUntilFinished() {
+            if (!m_filesToDeleteList.isEmpty()) {
+                try {
+                    wait();
+                } catch (InterruptedException ie) {
+                    // that should only be called from the shutdown hook,
+                    // if someone interrupts us, so be it.
+                }
+            }
+        }
+        
+        /** Makes sure the list is empty. This is necessary because when the
+         * VM goes done, any running thread is stopped.
+         * @see java.lang.Object#finalize()
+         */
+        @Override
+        protected void finalize() throws Throwable {
+            if (!m_filesToDeleteList.isEmpty()) {
+                executeDeletion();
+            }
+        }
+        
+        /** Deletes the argument file or directory recursively and returns true
+         * if this was successful. This method follows any symbolic link 
+         * (in comparison to 
+         * {@link org.knime.core.utilFileUtil#deleteRecursively(File)}.
+         * @param f The (blob) directory or temp file to delete.
+         * @return Whether or not the f has been deleted.
+         */
+        private static boolean deleteRecursively(final File f) {
+            if (f.isFile()) {
+                return f.delete();
+            }
+            File[] files = f.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    boolean deleted = file.delete();
+                    if (!deleted) {
+                        if (file.isDirectory()) {
+                            deleteRecursively(file);
+                        }
+                    }
+                }
+            }
+            return f.delete();
+        }
+
     }
+    
 }
