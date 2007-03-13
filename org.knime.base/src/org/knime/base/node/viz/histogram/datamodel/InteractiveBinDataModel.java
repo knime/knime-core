@@ -37,19 +37,24 @@ import java.util.SortedSet;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 
 /**
  * This class holds the information of a histogram bin. A bin consists of at 
  * least one {@link BarDataModel} object which consists of one or more
- * {@link BarElementDataModel} objects.
+ * {@link InteractiveBarElementDataModel} objects.
  * @author Tobias Koetter, University of Konstanz
  */
-public class BinDataModel {
+public class InteractiveBinDataModel {
     
+    /**
+     * 
+     */
+    private static final Color NO_AGGR_COL_COLOR = Color.GRAY;
     private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(BinDataModel.class);
+        NodeLogger.getLogger(InteractiveBinDataModel.class);
     /**
      * The space between to bars in pixel.
      */
@@ -79,7 +84,7 @@ public class BinDataModel {
      * @param lowerBound the lower bound of the bin interval
      * @param upperBound the higher bound of the bin interval
      */
-    protected BinDataModel(final String xAxisCaption, final double lowerBound,
+    protected InteractiveBinDataModel(final String xAxisCaption, final double lowerBound,
             final double upperBound) {
         if (xAxisCaption == null) {
             throw new IllegalArgumentException("Caption shouldn't be null");
@@ -93,30 +98,42 @@ public class BinDataModel {
     /**
      * @param id the row id
      * @param rowColor the row color
-     * @param columns the {@link ColorColumn} objects in the same order
+     * @param aggrCols the {@link ColorColumn} objects in the same order
      * like the aggregation values
      * @param aggrVals the aggregation value in the same order like the
      * columns
      */
     protected void addDataRow(final DataCell id, final Color rowColor, 
-            final Collection<ColorColumn> columns, final DataCell... aggrVals) {
+            final Collection<ColorColumn> aggrCols, 
+            final DataCell... aggrVals) {
 //        final DataCell[] aggrVals = row.getAggrVals();
 //        final DataCell id = row.getRowKey().getId();
 //        final Color rowColor = row.getColor();
-        if (columns.size() != aggrVals.length) {
-            throw new IllegalArgumentException(
-                    "Columns and value should be of equal size");
-        }
-        int i = 0;
-        for (ColorColumn column : columns) {
-            final DataCell cell = aggrVals[i++];
-            final Color barColor = column.getColor();
-            BarDataModel bar = m_bars.get(barColor);
+//        if (aggrCols.size() != aggrVals.length) {
+//            throw new IllegalArgumentException(
+//                    "Columns and value should be of equal size");
+//        }
+        if (aggrCols == null || aggrCols.size() < 1) {
+            //no aggregation column selected create a dummy bar to show
+            //at least the count aggregation method
+            BarDataModel bar = m_bars.get(NO_AGGR_COL_COLOR);
             if (bar == null) {
-                bar = new BarDataModel(barColor);
-                m_bars.put(barColor, bar);
+                bar = new BarDataModel(NO_AGGR_COL_COLOR);
+                m_bars.put(NO_AGGR_COL_COLOR, bar);
             }
-            bar.addDataRow(rowColor, id, cell);   
+            bar.addDataRow(rowColor, id, new DoubleCell(0));
+        } else {
+            int i = 0;
+            for (ColorColumn column : aggrCols) {
+                final DataCell cell = aggrVals[i++];
+                final Color barColor = column.getColor();
+                BarDataModel bar = m_bars.get(barColor);
+                if (bar == null) {
+                    bar = new BarDataModel(barColor);
+                    m_bars.put(barColor, bar);
+                }
+                bar.addDataRow(rowColor, id, cell);   
+            }
         }
         m_rowCounter++;
     }
@@ -289,8 +306,19 @@ public class BinDataModel {
             final int baseLine, final SortedSet<Color> barElementColors, 
             final Collection<ColorColumn> aggrColumns) {
         m_binRectangle = binRectangle;
-        setBarRectangle(aggrMethod, layout, baseLine, barElementColors, 
+        if (aggrColumns == null || aggrColumns.size() < 1) {
+            //no aggregation column selected so we have only one bar the 
+            //face bar -> simply set the bin rectangle as bar rectangle
+            final BarDataModel bar = m_bars.get(NO_AGGR_COL_COLOR);
+            if (bar == null) {
+                throw new IllegalStateException("No dummy bar available");
+            }
+            bar.setBarRectangle(binRectangle, aggrMethod, layout, baseLine, 
+                    barElementColors);
+        } else {
+            setBarRectangle(aggrMethod, layout, baseLine, barElementColors, 
                     aggrColumns);
+        }
     }
     
     /**
@@ -431,8 +459,8 @@ public class BinDataModel {
         if (!drawBarBefore) {
             //if the bar couldn't be draw before but now we have to 
             //recalculate them
-            setBarRectangle(aggrMethod, layout, baseLine, barElementColors, 
-                    aggrColumns);
+            setBinRectangle(m_binRectangle, aggrMethod, layout, baseLine, 
+                    barElementColors, aggrColumns);
             return;
         }
 

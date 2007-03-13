@@ -24,17 +24,9 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import java.util.Collection;
-
-import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
-import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
 import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramPlotter;
 import org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramProperties;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
@@ -47,7 +39,7 @@ import org.knime.core.node.NodeView;
  */
 public class HistogramNodeView extends NodeView {
     
-    private final HistogramNodeModel m_nodeModel;
+    private final AbstractHistogramNodeModel m_nodeModel;
     
     private InteractiveHistogramPlotter m_plotter;
 
@@ -58,12 +50,12 @@ public class HistogramNodeView extends NodeView {
      */
     HistogramNodeView(final NodeModel nodeModel) {
         super(nodeModel);
-        if (!(nodeModel instanceof HistogramNodeModel)) {
+        if (!(nodeModel instanceof AbstractHistogramNodeModel)) {
             throw new IllegalArgumentException(NodeModel.class.getName()
                     + " not an instance of "
                     + HistogramNodeModel.class.getName());
         }
-        m_nodeModel = (HistogramNodeModel)nodeModel;
+        m_nodeModel = (AbstractHistogramNodeModel)nodeModel;
     }
 
     /**
@@ -82,24 +74,15 @@ public class HistogramNodeView extends NodeView {
         if (m_nodeModel == null) {
             return;
         }
-        final InteractiveHistogramDataModel histogramModel = 
-            m_nodeModel.getHistogramDataModel();
         if (m_plotter != null) {
             m_plotter.reset();
         }
-        if (histogramModel == null) {
+        final DataTableSpec tableSpec = m_nodeModel.getTableSpec();
+        final AbstractHistogramVizModel vizModel = 
+            m_nodeModel.getHistogramVizModel();
+        if (vizModel == null) {
             return;
         }
-        final DataTableSpec tableSpec = m_nodeModel.getTableSpec();
-        final DataColumnSpec xColSpec = m_nodeModel.getXColSpec();
-        final Collection<ColorColumn> aggrCols = 
-            m_nodeModel.getAggrColumns();
-        final InteractiveHistogramVizModel vizModel = 
-            new InteractiveHistogramVizModel(histogramModel.getRowColors(), 
-                AggregationMethod.getDefaultMethod(), 
-                HistogramLayout.getDefaultLayout(), tableSpec,
-                histogramModel.getDataRows(), xColSpec, aggrCols, 
-                AbstractHistogramVizModel.DEFAULT_NO_OF_BINS);
         if (m_plotter == null) {
             final InteractiveHistogramProperties props =
                 new InteractiveHistogramProperties(tableSpec, vizModel);

@@ -41,7 +41,7 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * This class holds the information of a histogram bar. Like the color to use
- * and the {@link BarElementDataModel} objects of this bar.
+ * and the {@link InteractiveBarElementDataModel} objects of this bar.
  * @author Tobias Koetter, University of Konstanz
  */
 public class BarDataModel {
@@ -55,8 +55,8 @@ public class BarDataModel {
     
     private final Color m_color;
     
-    private final Map<Color, BarElementDataModel> m_elements =
-        new HashMap<Color, BarElementDataModel>();
+    private final Map<Color, InteractiveBarElementDataModel> m_elements =
+        new HashMap<Color, InteractiveBarElementDataModel>();
     
     /**The number of rows including empty value rows.*/
     private int m_rowCounter = 0;
@@ -92,9 +92,9 @@ public class BarDataModel {
      */
     protected void addDataRow(final Color color, final DataCell rowKey, 
             final DataCell cell) {
-        BarElementDataModel element = m_elements.get(color);
+        InteractiveBarElementDataModel element = m_elements.get(color);
         if (element == null) {
-            element = new BarElementDataModel(color);
+            element = new InteractiveBarElementDataModel(color);
             m_elements.put(color, element);
         }
         if (!cell.isMissing()) {
@@ -121,14 +121,14 @@ public class BarDataModel {
      * @return the element with the given color or <code>null</code> if none
      * element with the given color exists
      */
-    public BarElementDataModel getElement(final Color color) {
+    public InteractiveBarElementDataModel getElement(final Color color) {
         return m_elements.get(color);
     }
 
     /**
-     * @return all {@link BarElementDataModel} objects of this bar
+     * @return all {@link InteractiveBarElementDataModel} objects of this bar
      */
-    public Collection<BarElementDataModel> getElements() {
+    public Collection<InteractiveBarElementDataModel> getElements() {
         return m_elements.values();
     }
     
@@ -176,9 +176,9 @@ public class BarDataModel {
         if (HistogramLayout.STACKED.equals(layout)) {
             return getAggregationValue(method);
         } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
-            final Collection<BarElementDataModel> elements = getElements();
+            final Collection<InteractiveBarElementDataModel> elements = getElements();
             double maxAggrValue = -Double.MAX_VALUE;
-            for (BarElementDataModel element : elements) {
+            for (InteractiveBarElementDataModel element : elements) {
                 final double value = element.getAggregationValue(method);
                 if (value > maxAggrValue) {
                     maxAggrValue = value;
@@ -201,9 +201,9 @@ public class BarDataModel {
         if (HistogramLayout.STACKED.equals(layout)) {
             return getAggregationValue(method);
         } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
-            final Collection<BarElementDataModel> elements = getElements();
+            final Collection<InteractiveBarElementDataModel> elements = getElements();
             double minAggrValue = Double.MAX_VALUE;
-            for (BarElementDataModel element : elements) {
+            for (InteractiveBarElementDataModel element : elements) {
                 final double value = element.getAggregationValue(method);
                 if (value < minAggrValue) {
                     minAggrValue = value;
@@ -318,9 +318,9 @@ public class BarDataModel {
             final SortedSet<Color> barElementColors) {
         if (m_barRectangle == null) {
             //also reset the element rectangles
-            final Collection<BarElementDataModel> elements = 
+            final Collection<InteractiveBarElementDataModel> elements = 
                 m_elements.values();
-            for (BarElementDataModel element : elements) {
+            for (InteractiveBarElementDataModel element : elements) {
                 element.setElementRectangle(null, aggrMethod);
             }
             return;
@@ -385,7 +385,7 @@ public class BarDataModel {
         //so we have to change the x coordinate
         int xCoord = startX + SPACE_BETWEEN_ELEMENTS;
         for (Color elementColor : barElementColors) {
-            final BarElementDataModel element = 
+            final InteractiveBarElementDataModel element = 
                 m_elements.get(elementColor);
             if (element != null) {
                 //the user wants the elements next to each other;
@@ -464,7 +464,7 @@ public class BarDataModel {
             stackedValRange = 0;
             LOGGER.debug("Calculating stacked value range.Starting with: "
                     + stackedValRange);
-            for (BarElementDataModel element : m_elements.values()) {
+            for (InteractiveBarElementDataModel element : m_elements.values()) {
                 stackedValRange += 
                     Math.abs(element.getAggregationValue(aggrMethod));
             }
@@ -480,7 +480,7 @@ public class BarDataModel {
                 + " height per absVal: " + heightPerAbsVal
                 + " noOfElements: " + noOfElements);
         for (Color elementColor : barElementColors) {
-            final BarElementDataModel element = 
+            final InteractiveBarElementDataModel element = 
                 m_elements.get(elementColor);
             if (element == null) {
                 continue;
@@ -579,7 +579,7 @@ public class BarDataModel {
         
         if (HistogramLayout.STACKED.equals(layout)) {
             for (Color elementColor : barElementColors) {
-                final BarElementDataModel element = 
+                final InteractiveBarElementDataModel element = 
                     m_elements.get(elementColor);
                 if (element != null) {
                     element.updateElementWidth(startX, 
@@ -592,7 +592,7 @@ public class BarDataModel {
                     - (SPACE_BETWEEN_ELEMENTS * totalNoOfElements)) 
                     / totalNoOfElements, 1);
             for (Color elementColor : barElementColors) {
-                final BarElementDataModel element = 
+                final InteractiveBarElementDataModel element = 
                     m_elements.get(elementColor);
                 if (element != null) {
                     element.updateElementWidth(xCoord, 
@@ -673,7 +673,7 @@ public class BarDataModel {
             return false;
         }
         m_isSelected = selected;
-        for (BarElementDataModel element : getElements()) {
+        for (InteractiveBarElementDataModel element : getElements()) {
             element.setSelected(selected);
         } return true;
     }
@@ -683,7 +683,7 @@ public class BarDataModel {
      */
     public int getNoOfHilitedRows() {
         int noOfHilitedKeys = 0;
-        for (BarElementDataModel element : getElements()) {
+        for (InteractiveBarElementDataModel element : getElements()) {
             noOfHilitedKeys += element.getHiliteRowCount();
         }
         return noOfHilitedKeys;
@@ -693,7 +693,7 @@ public class BarDataModel {
      * @return <code>true</code> if at least one row of this element is hilited
      */
     public boolean isHilited() {
-        for (BarElementDataModel element : getElements()) {
+        for (InteractiveBarElementDataModel element : getElements()) {
             if (element.isHilited()) {
                 return true;
             }
@@ -709,7 +709,7 @@ public class BarDataModel {
     public void removeHilitedKeys(final Collection<DataCell> hilited, 
             final AggregationMethod aggrMethod, final HistogramLayout layout) {
         boolean changed = false;
-        for (BarElementDataModel element : getElements()) {
+        for (InteractiveBarElementDataModel element : getElements()) {
             changed = element.removeHilitedKeys(hilited, aggrMethod) || changed;
         }
         if (changed) {
@@ -725,7 +725,7 @@ public class BarDataModel {
     public void setHilitedKeys(final Collection<DataCell> hilited, 
             final AggregationMethod aggrMethod, final HistogramLayout layout) {
         boolean changed = false;
-        for (BarElementDataModel element : getElements()) {
+        for (InteractiveBarElementDataModel element : getElements()) {
             changed = element.setHilitedKeys(hilited, aggrMethod) || changed;
         }
         if (changed) {
@@ -737,7 +737,7 @@ public class BarDataModel {
      * Clears all hilite information.
      */
     public void clearHilite() {
-        for (BarElementDataModel element : getElements()) {
+        for (InteractiveBarElementDataModel element : getElements()) {
             element.clearHilite();
         }
         //since no elements are hilited we have to reset the hilite rectangle
@@ -755,12 +755,12 @@ public class BarDataModel {
             //elements we have to select all elements 
             //of this bar
             if (!m_drawElements) {
-                for (final BarElementDataModel element : getElements()) {
+                for (final InteractiveBarElementDataModel element : getElements()) {
                     element.setSelected(true);
                 }
                 m_isSelected = true;
             } else {
-                for (final BarElementDataModel element : getElements()) {
+                for (final InteractiveBarElementDataModel element : getElements()) {
                     m_isSelected = element.selectElement(point) || m_isSelected;
                 }
             }
@@ -783,12 +783,12 @@ public class BarDataModel {
             //elements we have to select all elements 
             //of this bar
             if (!m_drawElements) {
-                for (final BarElementDataModel element : getElements()) {
+                for (final InteractiveBarElementDataModel element : getElements()) {
                     element.setSelected(true);
                 }
                 m_isSelected = true;
             } else {
-                for (final BarElementDataModel element : getElements()) {
+                for (final InteractiveBarElementDataModel element : getElements()) {
                     m_isSelected = element.selectElement(rect) || m_isSelected;
                 }
             }

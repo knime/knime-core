@@ -95,6 +95,9 @@ public abstract class AbstractHistogramProperties extends
     private static final String SHOW_GRID_LABEL = "Y grid lines";
 
     private static final String SHOW_BAR_OUTLINE_LABEL = "Show bar outline";
+    
+    private static final String AGGR_METHOD_DISABLED_TOOLTIP = 
+        "Only available with aggregation column";
 
 //    private static final String APPLY_BUTTON_LABEL = "Apply";
 
@@ -631,6 +634,29 @@ public abstract class AbstractHistogramProperties extends
         
         // set the aggregation method if it has changed
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
+        final Collection<ColorColumn> aggrColumns = vizModel.getAggrColumns();
+        if (aggrColumns == null || aggrColumns.size() < 1) {
+            //if we have no aggregation columns selected disable all
+            //aggregation methods but not count
+            for (final Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
+                    .getElements(); buttons.hasMoreElements();) {
+                final AbstractButton button = buttons.nextElement();
+                if (!button.getActionCommand()
+                        .equals(AggregationMethod.COUNT.name())) {
+                    button.setEnabled(false);
+                    button.setToolTipText(AGGR_METHOD_DISABLED_TOOLTIP);
+                }
+            }
+        } else {
+            //enable all buttons
+            for (final Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
+                    .getElements(); buttons.hasMoreElements();) {
+                final AbstractButton button = buttons.nextElement();
+                button.setEnabled(true);
+                //remove the tool tip
+                button.setToolTipText(null);
+            }
+        }
         if (!m_aggregationMethod.equals(aggrMethod)) {
             m_aggregationMethod = aggrMethod;
             for (final Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
@@ -642,7 +668,6 @@ public abstract class AbstractHistogramProperties extends
                 }
             }
         }
-
         // set the values of the select boxes
         final ItemListener[] emptyListeners = 
             m_showEmptyBins.getItemListeners();

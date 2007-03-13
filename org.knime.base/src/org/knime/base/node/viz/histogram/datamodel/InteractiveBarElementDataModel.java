@@ -41,7 +41,7 @@ import org.knime.core.data.DoubleValue;
  * bar element is a rectangle section of a histogram bar.
  * @author Tobias Koetter, University of Konstanz
  */
-public class BarElementDataModel {
+public class InteractiveBarElementDataModel {
     
     private final Color m_color;
     
@@ -80,7 +80,7 @@ public class BarElementDataModel {
     /**Constructor for class BarElementDataModel.
      * @param color the color to use for this bar element
      */
-    protected BarElementDataModel(final Color color) {
+    protected InteractiveBarElementDataModel(final Color color) {
         m_color = color;
     }
     

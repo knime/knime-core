@@ -27,7 +27,7 @@ package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
@@ -57,7 +57,7 @@ public class FixedHistogramDataModel {
     
     private boolean m_rowsSorted = false;
     
-    private final List<ColorColumn> m_aggrColumns;
+    private final Collection<ColorColumn> m_aggrColumns;
     
     private final SortedSet<Color> m_rowColors = 
         new TreeSet<Color>(new HSBColorComparator());
@@ -68,24 +68,24 @@ public class FixedHistogramDataModel {
      * @param aggrColumns the aggregation columns
      */
     public FixedHistogramDataModel(final DataColumnSpec xColSpec,  
-            final int noOfRows, final ColorColumn... aggrColumns) {
+            final int noOfRows, final Collection<ColorColumn> aggrColumns) {
         LOGGER.debug("Entering HistogramDataModel(xColSpec, aggrColumns) "
                 + "of class HistogramDataModel.");
         if (xColSpec == null) {
-            throw new IllegalArgumentException(
-                    "X column specification shouldn't be null");
+            throw new NullPointerException(
+                    "X column specification must not be null");
         }
-        if (aggrColumns == null || aggrColumns.length < 1) {
-            throw new IllegalArgumentException(
-                    "No aggregation columns defined");
-        }
+//        if (aggrColumns == null || aggrColumns.length < 1) {
+//            throw new IllegalArgumentException(
+//                    "No aggregation columns defined");
+//        }
         m_dataRows = new ArrayList<FixedHistogramDataRow>(noOfRows);
-        m_aggrColumns = Arrays.asList(aggrColumns);
+        m_aggrColumns = aggrColumns;
         m_xColSpec = xColSpec;
         final DataColumnDomain domain = m_xColSpec.getDomain();
         if (domain == null) {
-            throw new IllegalArgumentException(
-                    "The x column domain shouldn't be null");
+            throw new NullPointerException(
+                    "The x column domain must not be null");
         }
         LOGGER.debug("Exiting HistogramDataModel(xColSpec, aggrColumns) "
                 + "of class HistogramDataModel.");
@@ -104,12 +104,15 @@ public class FixedHistogramDataModel {
 //                createIntervalBins();
 //            }
 //        }
-        if (row.getAggrVals().length != m_aggrColumns.size()) {
-            //check at least if they have the same number of
-            //aggregation columns is
-            throw new IllegalArgumentException(
-                    "No of defined aggregation columns and number of "
-                    + "aggregation values in given row are unequal.");
+//        if (row.getAggrVals().length != m_aggrColumns.size()) {
+//            //check at least if they have the same number of
+//            //aggregation columns is
+//            throw new IllegalArgumentException(
+//                    "No of defined aggregation columns and number of "
+//                    + "aggregation values in given row are unequal.");
+//        }
+        if (row == null) {
+            throw new NullPointerException("Row must not be null.");
         }
         m_dataRows.add(row);
         m_rowsSorted = false;
@@ -135,10 +138,13 @@ public class FixedHistogramDataModel {
     }
     /**
      * @return the columns to use for aggregation.
-     * THIS IS AN UNMODIFIABLE {@link List}!
+     * THIS IS AN UNMODIFIABLE {@link Collection}!
      */
-    public List<ColorColumn> getAggrColumns() {
-        return Collections.unmodifiableList(m_aggrColumns);
+    public Collection<ColorColumn> getAggrColumns() {
+        if (m_aggrColumns == null) {
+            return null;
+        }
+        return Collections.unmodifiableCollection(m_aggrColumns);
     }
 
     /**
@@ -152,15 +158,15 @@ public class FixedHistogramDataModel {
     
     /**
      * @return a <code>List</code> of the data rows in ascending order.
-     * THIS IS AN UNMODIFIABLE {@link List}!
+     * THIS IS AN UNMODIFIABLE {@link Collection}!
      */
-    public List<FixedHistogramDataRow> getSortedRows() {
+    public Collection<FixedHistogramDataRow> getSortedRows() {
         //sort the data rows to speedup the process if necessary
         if (!m_rowsSorted) {
             Collections.sort(m_dataRows, ASCENDING_ROW_SORTER);
             m_rowsSorted = true;
         }
-        return Collections.unmodifiableList(m_dataRows);
+        return Collections.unmodifiableCollection(m_dataRows);
     }
 //
 //    /**

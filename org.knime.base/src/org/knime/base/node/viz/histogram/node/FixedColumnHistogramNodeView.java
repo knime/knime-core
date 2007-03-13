@@ -24,11 +24,7 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramPlotter;
 import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramProperties;
 import org.knime.core.data.DataTableSpec;
@@ -78,23 +74,15 @@ public class FixedColumnHistogramNodeView extends NodeView {
         if (m_nodeModel == null) {
             return;
         }
-        final FixedHistogramDataModel histogramModel = 
-            m_nodeModel.getHistogramModel();
         final DataTableSpec tableSpec = m_nodeModel.getTableSpec();
         if (m_plotter != null) {
             m_plotter.reset();
         }
-        if (histogramModel == null) {
+        final AbstractHistogramVizModel vizModel = 
+            m_nodeModel.getHistogramVizModel();
+        if (vizModel == null) {
             return;
         }
-        final FixedHistogramVizModel vizModel = new FixedHistogramVizModel(
-                histogramModel.getRowColors(),
-                AggregationMethod.getDefaultMethod(), 
-                HistogramLayout.getDefaultLayout(), 
-                histogramModel.getSortedRows(),
-                histogramModel.getXColumnSpec(), 
-                histogramModel.getAggrColumns(),
-                AbstractHistogramVizModel.DEFAULT_NO_OF_BINS);
         if (m_plotter == null) {
             final FixedHistogramProperties props =
                 new FixedHistogramProperties(tableSpec, vizModel);

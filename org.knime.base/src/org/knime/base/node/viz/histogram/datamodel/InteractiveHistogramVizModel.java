@@ -26,11 +26,15 @@
 package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
@@ -273,6 +277,112 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
             }
             startBin = addDataRow2Bin(startBin, xVal, color, id, 
                     aggrColumns, aggrVals);
+        }
+    }
+//Hiliting selection stuff
+    /**
+     * @return all keys of hilited rows
+     */
+    public Set<DataCell> getHilitedKeys() {
+        final Set<DataCell> keys = new HashSet<DataCell>();
+        for (final InteractiveBinDataModel bin : getBins()) {
+            final Collection<BarDataModel> bars = bin.getBars();
+            for (final BarDataModel bar : bars) {
+                if (bar.isSelected()) {
+                    final Collection<InteractiveBarElementDataModel> elements = bar
+                            .getElements();
+                    for (final InteractiveBarElementDataModel element : elements) {
+                        keys.addAll(element.getHilitedKeys());
+                    }
+                }
+            }
+        }
+        return keys;
+    }
+
+    /**
+     * @return all keys of the selected elements
+     */
+    public Set<DataCell> getSelectedKeys() {
+        final Set<DataCell> keys = new HashSet<DataCell>();
+        for (final InteractiveBinDataModel bin : getBins()) {
+            if (bin.isSelected()) {
+                final Collection<BarDataModel> bars = bin.getBars();
+                for (final BarDataModel bar : bars) {
+                    if (bar.isSelected()) {
+                        final Collection<InteractiveBarElementDataModel> elements = bar
+                                .getElements();
+                        for (final InteractiveBarElementDataModel element : elements) {
+                            if (element.isSelected()) {
+                                keys.addAll(element.getKeys());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return keys;
+    }
+
+    /**
+     * Selects the element which contains the given point.
+     * @param point the point on the screen to select
+     */
+    public void selectElement(final Point point) {
+        for (final InteractiveBinDataModel bin : getBins()) {
+            bin.selectElement(point);
+        }
+        return;
+    }
+
+    /**
+     * Selects all elements which are touched by the given rectangle.
+     * @param rect the rectangle on the screen select
+     */
+    public void selectElement(final Rectangle rect) {
+        for (final InteractiveBinDataModel bin : getBins()) {
+            bin.selectElement(rect);
+        }
+        return;
+    }
+
+    /**
+     * Clears all selections.
+     */
+    public void clearSelection() {
+        for (final InteractiveBinDataModel bin : getBins()) {
+            bin.setSelected(false);
+        }
+    }
+
+    /**
+     * This method un/hilites all rows with the given key.
+     * @param hilited the rowKeys of the rows to un/hilite
+     * @param hilite if the given keys should be hilited <code>true</code> 
+     * or unhilited <code>false</code>
+     */
+    public void updateHiliteInfo(final Set<DataCell> hilited,
+            final boolean hilite) {
+        if (hilited == null || hilited.size() < 1) {
+            return;
+        }
+        final AggregationMethod aggrMethod = getAggregationMethod();
+        final HistogramLayout layout = getHistogramLayout();
+        for (final InteractiveBinDataModel bin : getBins()) {
+            if (hilite) {
+                bin.setHilitedKeys(hilited, aggrMethod, layout);
+            } else {
+                bin.removeHilitedKeys(hilited, aggrMethod, layout);
+            }
+        }
+    }
+
+    /**
+     * Unhilites all rows.
+     */
+    public void unHiliteAll() {
+        for (final InteractiveBinDataModel bin : getBins()) {
+            bin.clearHilite();
         }
     }
 }

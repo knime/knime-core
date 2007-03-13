@@ -50,6 +50,19 @@ public class FixedHistogramDataRow {
      */
     public FixedHistogramDataRow(final RowKey key, final Color rowColor,
             final DataCell xVal, final DataCell... aggrVal) {
+        if (key == null) {
+            throw new NullPointerException("Key must not be null");
+        }
+        if (rowColor == null) {
+            throw new NullPointerException("Row color must not be null");
+        }
+        if (xVal == null) {
+            throw new NullPointerException("X value must not be null");
+        }
+        if (aggrVal == null || aggrVal.length < 0) {
+            throw new NullPointerException(
+                    "Aggregation value must not be null");
+        }
         m_rowKey = key;
         m_color = rowColor;
         m_xVal = xVal;
@@ -62,7 +75,7 @@ public class FixedHistogramDataRow {
      */
     public DataCell getAggrVal(final int index) {
         if (index >= m_aggrVal.length) {
-            throw new IllegalArgumentException("Index out of bounds");
+            throw new IndexOutOfBoundsException("Index out of bounds");
         }
         return m_aggrVal[index];
     }

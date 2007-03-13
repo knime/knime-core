@@ -62,17 +62,15 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
      */
     @SuppressWarnings("unchecked")
     protected HistogramNodeDialogPane() {
-        // TK_TODO: Abstract class which handles the row options and maybe 
-        //some more
 
         super();
         createNewGroup("Rows to display:");
         m_noOfRowsSpinner = new DialogComponentNumber(new SettingsModelInteger(
-                HistogramNodeModel.CFGKEY_NO_OF_ROWS,
-                HistogramNodeModel.DEFAULT_NO_OF_ROWS),
+                AbstractHistogramNodeModel.CFGKEY_NO_OF_ROWS,
+                AbstractHistogramNodeModel.DEFAULT_NO_OF_ROWS),
                 NO_OF_ROWS_LABEL, 1);
         final SettingsModelBoolean allRowsModel = new SettingsModelBoolean(
-                HistogramNodeModel.CFGKEY_ALL_ROWS, false);
+                AbstractHistogramNodeModel.CFGKEY_ALL_ROWS, false);
         allRowsModel.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 m_noOfRowsSpinner.setEnabled(!m_allRowsBox.isSelected());
@@ -86,12 +84,12 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
         createNewGroup("Column selection:");
         addDialogComponent(new DialogComponentColumnNameSelection(
                 new SettingsModelString(
-                        HistogramNodeModel.CFGKEY_X_COLNAME, ""),
+                        AbstractHistogramNodeModel.CFGKEY_X_COLNAME, ""),
                 HistogramNodeDialogPane.X_COL_SEL_LABEL, 0, DataValue.class));
 
         addDialogComponent(new DialogComponentColumnNameSelection(
                 new SettingsModelString(
-                        HistogramNodeModel.CFGKEY_AGGR_COLNAME, ""),
+                        AbstractHistogramNodeModel.CFGKEY_AGGR_COLNAME, ""),
                 AGGR_COL_SEL_LABEL, 0,
                 DoubleValue.class));
     }

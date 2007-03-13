@@ -42,7 +42,7 @@ public class ColorColumn {
     /**Constructor for class ColorColumn.
      * @param color the color
      * @param colIdx the index of this column from the {@link DataTableSpec}
-     * @param colName the value
+     * @param colName the name of the column
      */
     public ColorColumn(final Color color, final int colIdx, 
             final String colName) {
@@ -62,21 +62,21 @@ public class ColorColumn {
     }
 
     /**
-     * @return the color
+     * @return the color of the column
      */
     public Color getColor() {
         return m_color;
     }
 
     /**
-     * @return the value
+     * @return the name of the column
      */
     public String getColumnName() {
         return m_columnName;
     }
 
     /**
-     * @return the columnIndex
+     * @return the index of the column in the table specification
      */
     public int getColumnIndex() {
         return m_columnIndex;

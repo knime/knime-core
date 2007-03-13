@@ -24,8 +24,6 @@
  */
 package org.knime.base.node.viz.histogram.util;
 
-import java.text.DecimalFormat;
-
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
@@ -60,10 +58,10 @@ public final class BinningUtil {
         double interval = (maxVal - minVal) / noOfBars;
         if (interval > 10) {
                 // find the next higher number divided by ten.
-                interval = bigValueRounder(interval);
+                interval = bigValueRounder(interval, true);
         } else {
             interval = smallValueRounder(interval, 
-                    AbstractHistogramPlotter.INTERVAL_DIGITS, isInteger);
+                    AbstractHistogramPlotter.INTERVAL_DIGITS, isInteger, true);
         }
         return interval;
     }
@@ -83,11 +81,8 @@ public final class BinningUtil {
             // try to start with 0 as left border to have nicer intervals
             //but only if the minimum value is bigger then 0
             result = 0;
-        } else if (minVal < 0) {
-            result = bigValueRounder(Math.abs(minVal));
-            result *= -1;
-        } else if (minVal > 0) {
-            result = bigValueRounder(minVal);
+        } else {
+            result = bigValueRounder(minVal, false);
         }
         return result;
     }
@@ -185,10 +180,22 @@ public final class BinningUtil {
                 }
             }
         }
-        DecimalFormat df = new DecimalFormat(decimalFormatBuf.toString());
-        String resultString = df.format(doubleVal);
-        double result = Double.parseDouble(resultString);
-        return result;
+        long factor = (long)Math.pow(10, digitCounter);
+
+        // Shift the decimal the correct number of places
+        // to the right.
+        final double val = doubleVal * factor;
+        double tmp;
+        if (doubleVal < 0) {
+        // Round to the nearest integer.
+            tmp = Math.floor(val);
+        } else {
+            tmp = Math.ceil(val);
+        }
+
+        // Shift the decimal the correct number of places
+        // back to the left.
+        return tmp / factor;
     }
 
     /**
@@ -203,44 +210,50 @@ public final class BinningUtil {
      * @param isInteger <code>true</code> if the given number is an integer
      * @return the rounded value of the given value
      */
-    private static double smallValueRounder(final double doubleVal,
-            final int noOfDigits, final boolean isInteger) {
+    public static double smallValueRounder(final double doubleVal,
+            final int noOfDigits, final boolean isInteger, 
+            final boolean roundUp) {
         // if the value is >= 1 or an integer return an interval without decimal
         // places
-        if (doubleVal >= 1) {
-            return bigValueRounder(doubleVal);
+        final double absVal = Math.abs(doubleVal);
+        if (absVal >= 1) {
+            return bigValueRounder(doubleVal, roundUp);
         }
-        //it's an integer an less then one
+        //it's an integer and less then one
         if (isInteger) {
             return 1;
         }
     // the given doubleVal is less then one and no integer
         char[] interval = Double.toString(doubleVal).toCharArray();
-        StringBuffer decimalFormatBuf = new StringBuffer();
         boolean digitFound = false;
         int digitCounter = 0;
         int positionCounter = 0;
         for (int length = interval.length; positionCounter < length
                 && digitCounter <= noOfDigits; positionCounter++) {
             char c = interval[positionCounter];
-            if (c == '.') {
-                decimalFormatBuf.append(".");
-            } else {
-                if (c != '0' || digitFound) {
+            if (c == '-' || c == '.') {
+                //ignore negative sign
+                continue;
+            } else if (c != '0' || digitFound) {
                     digitFound = true;
                     digitCounter++;
-                }
-                if (digitCounter <= noOfDigits) {
-                    decimalFormatBuf.append("#");
-                }
             }
         }
-        double result = Double.parseDouble(new String(interval, 0,
-                positionCounter));
-        DecimalFormat df = new DecimalFormat(decimalFormatBuf.toString());
-        String resultString = df.format(result);
-        result = Double.parseDouble(resultString);
-        return result;
+        long factor = (long)Math.pow(10, digitCounter);
+
+        // Shift the decimal the correct number of places
+        // to the right.
+        final double val = doubleVal * factor;
+        double tmp;
+        if (roundUp) {
+            tmp = Math.ceil(val);
+        } else {
+            tmp = Math.floor(val);
+        }
+
+        // Shift the decimal the correct number of places
+        // back to the left.
+        return tmp / factor;
     }
 
     /**
@@ -250,37 +263,47 @@ public final class BinningUtil {
      * @param value the value to round
      * @return the rounded value which is >= the given value and looks nicer :-)
      */
-    private static double bigValueRounder(final double value) {
+    private static double bigValueRounder(final double value, 
+            final boolean roundUp) {
         double divider = 1;
         double addition = 1;
-        if (value < 1) {
+        final double absVal = Math.abs(value);
+        if (absVal < 1) {
             return smallValueRounder(value, 
-                    AbstractHistogramPlotter.INTERVAL_DIGITS, false);
-        } else if (value > 20 && value <= 50) {
+                    AbstractHistogramPlotter.INTERVAL_DIGITS, false, roundUp);
+        } else if (absVal > 20 && absVal <= 50) {
           divider = 20;
           addition = 2;
-        } else if (value > 50 && value <= 100) {
+        } else if (absVal > 50 && absVal <= 100) {
             divider = 50;
             addition = 5;
-        } else if (value > 100 && value <= 500) {
+        } else if (absVal > 100 && absVal <= 500) {
             divider = 100;
             addition = 10;
-        } else if (value > 500 && value <= 1000) {
+        } else if (absVal > 500 && absVal <= 1000) {
             divider = 500;
             addition = 50;
-        } else if (value > 1000 && value <= 100000) {
+        } else if (absVal > 1000 && absVal <= 100000) {
             divider = 1000;
             addition = 100;
-        } else if (value > 100000) {
+        } else if (absVal > 100000) {
             divider = 100000;
             addition = 1000;
-            while ((value / 10) > divider) {
+            while ((absVal / 10) > divider) {
                 divider *= 10;
                 addition *= 10;
             }
         }
-        while (value / divider > 1) {
+        while (absVal / divider > 1) {
             divider += addition;
+        }
+        if (!roundUp && value - divider != 0 && value > 0) {
+            //if we shouldn't not round up but round down subtract
+            //the last addition to get the next smaller value
+            divider -= addition;
+        }
+        if (value < 0) {
+            return divider * -1;
         }
         return divider;
     }

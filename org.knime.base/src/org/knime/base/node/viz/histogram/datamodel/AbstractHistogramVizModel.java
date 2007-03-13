@@ -32,7 +32,6 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -114,10 +113,10 @@ public abstract class AbstractHistogramVizModel {
      */
     private boolean m_showEmptyBins = false;
 
-    private final BinDataModel m_missingValueBin = new BinDataModel(
+    private final InteractiveBinDataModel m_missingValueBin = new InteractiveBinDataModel(
             AbstractHistogramVizModel.MISSING_VAL_BAR_CAPTION, 0, 0);
     
-    private final List<BinDataModel> m_bins = new ArrayList<BinDataModel>(50);
+    private final List<InteractiveBinDataModel> m_bins = new ArrayList<InteractiveBinDataModel>(50);
 
     private int m_noOfBins = 1;
     
@@ -174,12 +173,12 @@ public abstract class AbstractHistogramVizModel {
     }
     
     /**
-     * @return all {@link BinDataModel} objects of this histogram including
+     * @return all {@link InteractiveBinDataModel} objects of this histogram including
      * the missing value bin if the showMissingValue bin variable is set to
      * <code>true</code>
      */
-    public Collection<BinDataModel> getBins() {
-        final BinDataModel missingValueBin = getMissingValueBin();
+    public Collection<InteractiveBinDataModel> getBins() {
+        final InteractiveBinDataModel missingValueBin = getMissingValueBin();
         if (missingValueBin != null) {
             if (isShowMissingValBin()) {
                 final int missingValBinIdx = m_bins.size() - 1;
@@ -200,7 +199,7 @@ public abstract class AbstractHistogramVizModel {
     }
 
     /**
-     * @return the aggregation columns
+     * @return the aggregation columns. Could be null!
      */
     public abstract Collection<ColorColumn> getAggrColumns();
 
@@ -414,8 +413,8 @@ public abstract class AbstractHistogramVizModel {
      * @return the bin with the given caption or <code>null</code> if no bin
      * with the given caption exists
      */
-    public BinDataModel getBin(final String caption) {
-        for (final BinDataModel bin : getBins()) {
+    public InteractiveBinDataModel getBin(final String caption) {
+        for (final InteractiveBinDataModel bin : getBins()) {
             if (bin.getXAxisCaption().equals(caption)) {
                 return bin;
             }
@@ -425,9 +424,9 @@ public abstract class AbstractHistogramVizModel {
     
     /**
      * @param idx the index of the bin
-     * @return the {@link BinDataModel} at the given index
+     * @return the {@link InteractiveBinDataModel} at the given index
      */
-    public BinDataModel getBin(final int idx) {
+    public InteractiveBinDataModel getBin(final int idx) {
         return m_bins.get(idx);
     }
 
@@ -435,10 +434,10 @@ public abstract class AbstractHistogramVizModel {
      * @return all bin captions in the order they should be displayed
      */
     public Set<DataCell> getBinCaptions() {
-        final Collection<BinDataModel> bins = getBins();
+        final Collection<InteractiveBinDataModel> bins = getBins();
         final LinkedHashSet<DataCell> captions = 
             new LinkedHashSet<DataCell>(bins.size());
-        for (final BinDataModel bin : bins) {
+        for (final InteractiveBinDataModel bin : bins) {
             if (m_showEmptyBins || bin.getMaxBarRowCount() > 0) {
                 captions.add(new StringCell(bin.getXAxisCaption()));
             }
@@ -462,7 +461,7 @@ public abstract class AbstractHistogramVizModel {
      */
     public double getMaxAggregationValue() {
         double maxAggrValue = Double.MIN_VALUE;
-        for (final BinDataModel bin : getBins()) {
+        for (final InteractiveBinDataModel bin : getBins()) {
             final double value = bin.getMaxAggregationValue(m_aggrMethod,
                     m_layout);
             if (value > maxAggrValue) {
@@ -477,7 +476,7 @@ public abstract class AbstractHistogramVizModel {
      */
     public double getMinAggregationValue() {
         double minAggrValue = Double.MAX_VALUE;
-        for (final BinDataModel bin : getBins()) {
+        for (final InteractiveBinDataModel bin : getBins()) {
             final double value = bin.getMinAggregationValue(m_aggrMethod,
                     m_layout);
             if (value < minAggrValue) {
@@ -491,7 +490,7 @@ public abstract class AbstractHistogramVizModel {
      * @return the missingValueBin or <code>null</code> if the selected
      * x column contains no missing values
      */
-    public BinDataModel getMissingValueBin() {
+    public InteractiveBinDataModel getMissingValueBin() {
         if (m_missingValueBin.getMaxBarRowCount() == 0) {
             return null;
         }
@@ -510,7 +509,7 @@ public abstract class AbstractHistogramVizModel {
      * bin with no rows in it.
      */
     public boolean containsEmptyBins() {
-        for (final BinDataModel bin : getBins()) {
+        for (final InteractiveBinDataModel bin : getBins()) {
             if (bin.getBinRowCount() < 1) {
                 return true;
             }
@@ -619,78 +618,30 @@ public abstract class AbstractHistogramVizModel {
     /**
      * @return all keys of hilited rows
      */
-    public Set<DataCell> getHilitedKeys() {
-        final Set<DataCell> keys = new HashSet<DataCell>();
-        for (final BinDataModel bin : getBins()) {
-            final Collection<BarDataModel> bars = bin.getBars();
-            for (final BarDataModel bar : bars) {
-                if (bar.isSelected()) {
-                    final Collection<BarElementDataModel> elements = bar
-                            .getElements();
-                    for (final BarElementDataModel element : elements) {
-                        keys.addAll(element.getHilitedKeys());
-                    }
-                }
-            }
-        }
-        return keys;
-    }
+    public abstract Set<DataCell> getHilitedKeys();
 
     /**
      * @return all keys of the selected elements
      */
-    public Set<DataCell> getSelectedKeys() {
-        final Set<DataCell> keys = new HashSet<DataCell>();
-        for (final BinDataModel bin : getBins()) {
-            if (bin.isSelected()) {
-                final Collection<BarDataModel> bars = bin.getBars();
-                for (final BarDataModel bar : bars) {
-                    if (bar.isSelected()) {
-                        final Collection<BarElementDataModel> elements = bar
-                                .getElements();
-                        for (final BarElementDataModel element : elements) {
-                            if (element.isSelected()) {
-                                keys.addAll(element.getKeys());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return keys;
-    }
+    public abstract Set<DataCell> getSelectedKeys();
 
     /**
      * Selects the element which contains the given point.
      * @param point the point on the screen to select
      */
-    public void selectElement(final Point point) {
-        for (final BinDataModel bin : getBins()) {
-            bin.selectElement(point);
-        }
-        return;
-    }
+    public abstract void selectElement(final Point point);
 
     /**
      * Selects all elements which are touched by the given rectangle.
      * @param rect the rectangle on the screen select
      */
-    public void selectElement(final Rectangle rect) {
-        for (final BinDataModel bin : getBins()) {
-            bin.selectElement(rect);
-        }
-        return;
-    }
+    public abstract void selectElement(final Rectangle rect);
 
     /**
      * Clears all selections.
      */
-    public void clearSelection() {
-        for (final BinDataModel bin : getBins()) {
-            bin.setSelected(false);
-        }
-    }
-
+    public abstract void clearSelection();
+    
     /**
      * This method un/hilites all rows with the given key.
      * @param hilited the rowKeys of the rows to un/hilite
@@ -702,7 +653,7 @@ public abstract class AbstractHistogramVizModel {
         if (hilited == null || hilited.size() < 1) {
             return;
         }
-        for (final BinDataModel bin : getBins()) {
+        for (final InteractiveBinDataModel bin : getBins()) {
             if (hilite) {
                 bin.setHilitedKeys(hilited, m_aggrMethod, m_layout);
             } else {
@@ -715,7 +666,7 @@ public abstract class AbstractHistogramVizModel {
      * Unhilites all rows.
      */
     public void unHiliteAll() {
-        for (final BinDataModel bin : getBins()) {
+        for (final InteractiveBinDataModel bin : getBins()) {
             bin.clearHilite();
         }
     }
@@ -789,7 +740,7 @@ public abstract class AbstractHistogramVizModel {
         }
         final Set<DataCell> values = xColSpec.getDomain().getValues();
         for (DataCell value : values) {
-            m_bins.add(new BinDataModel(value.toString(), 0, 0));
+            m_bins.add(new InteractiveBinDataModel(value.toString(), 0, 0));
         }
         //sort the bins by their caption
         Collections.sort(m_bins, BIN_CAPTION_COMPARATOR);
@@ -845,8 +796,8 @@ public abstract class AbstractHistogramVizModel {
             final String binCaption = BinningUtil.createBarName(
                     firstBar, leftBoundary, rightBoundary, isInteger);
             firstBar = false;
-            final BinDataModel bin = 
-                new BinDataModel(binCaption, leftBoundary, rightBoundary);
+            final InteractiveBinDataModel bin = 
+                new InteractiveBinDataModel(binCaption, leftBoundary, rightBoundary);
             m_bins.add(bin);
             // set the left boundary of the next bar to the current right
             // boundary
@@ -888,7 +839,7 @@ public abstract class AbstractHistogramVizModel {
         if (!xVal.getType().isCompatible(DoubleValue.class)) {
             throw new IllegalStateException("X value is not a valid number");
         }
-        return addDataRow2NoneNominalBin(startBin, (DoubleValue)xVal, color, 
+        return addDataRow2IntervalBin(startBin, (DoubleValue)xVal, color, 
                 id, aggrColumns, aggrVals);
     }
 
@@ -910,7 +861,7 @@ public abstract class AbstractHistogramVizModel {
         final String xValString = xVal.toString();
          for (int binIdx = startBin, length = getBins().size(); 
              binIdx < length; binIdx++) {
-            final BinDataModel bin = getBin(binIdx);
+            final InteractiveBinDataModel bin = getBin(binIdx);
             if (bin.getXAxisCaption().equals(xValString)) {
                 bin.addDataRow(id, color, aggrColumns, aggrVals);
                 return startBin;
@@ -931,14 +882,14 @@ public abstract class AbstractHistogramVizModel {
      * @param aggrVals the aggregation values
      * @return the index of the bin this row was added
      */
-    private int addDataRow2NoneNominalBin(final int startBin, 
+    private int addDataRow2IntervalBin(final int startBin, 
             final DoubleValue xVal, final Color color, final DataCell id, 
             final Collection<ColorColumn> aggrColumns, 
             final DataCell[] aggrVals) {
         final double value = xVal.getDoubleValue();
          for (int binIdx = startBin, length = getBins().size(); 
              binIdx < length; binIdx++) {
-            final BinDataModel bin = getBin(binIdx);
+            final InteractiveBinDataModel bin = getBin(binIdx);
             final Double lowerBoundObj = bin.getLowerBound();
             final Double upperBoundObj = bin.getUpperBound();
             if (lowerBoundObj == null || upperBoundObj == null) {

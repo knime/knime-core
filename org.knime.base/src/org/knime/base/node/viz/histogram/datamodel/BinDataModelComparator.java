@@ -32,7 +32,7 @@ import java.util.Comparator;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-public class BinDataModelComparator implements Comparator<BinDataModel> {
+public class BinDataModelComparator implements Comparator<InteractiveBinDataModel> {
 
     /**
      * This method compares the caption of two bins and orders them in natural
@@ -60,7 +60,7 @@ public class BinDataModelComparator implements Comparator<BinDataModel> {
     /**
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
      */
-    public int compare(final BinDataModel o1, final BinDataModel o2) {
+    public int compare(final InteractiveBinDataModel o1, final InteractiveBinDataModel o2) {
         switch (m_compareMethod) {
             case COMPARE_CAPTION:
                 return o1.getXAxisCaption().compareTo(o2.getXAxisCaption());

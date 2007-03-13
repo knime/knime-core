@@ -31,6 +31,7 @@ import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
@@ -52,7 +53,8 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
-    
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(InteractiveHistogramPlotter.class);
     private static final long serialVersionUID = -893697601218801524L;
     
     
@@ -105,6 +107,10 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
        }
        final AbstractHistogramVizModel abstractVizModel = 
            getHistogramVizModel();
+       if (abstractVizModel == null) {
+           LOGGER.debug("VizModel was null");
+           return;
+       }
        if (abstractVizModel instanceof InteractiveHistogramVizModel) {
            final InteractiveHistogramVizModel vizModel = 
                (InteractiveHistogramVizModel)abstractVizModel;
@@ -139,6 +145,10 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
         }
         final AbstractHistogramVizModel abstractVizModel = 
             getHistogramVizModel();
+        if (abstractVizModel == null) {
+            LOGGER.debug("VizModel was null");
+            return;
+        }
         if (abstractVizModel instanceof InteractiveHistogramVizModel) {
             final InteractiveHistogramVizModel vizModel = 
                 (InteractiveHistogramVizModel)abstractVizModel;

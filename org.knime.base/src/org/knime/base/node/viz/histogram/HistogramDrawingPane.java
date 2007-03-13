@@ -35,8 +35,8 @@ import java.text.DecimalFormat;
 import java.util.Collection;
 
 import org.knime.base.node.viz.histogram.datamodel.BarDataModel;
-import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
-import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveBarElementDataModel;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
@@ -341,12 +341,13 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         //if the user has selected more then one aggregation column we have to
         //draw the bar outline to how him which bar belongs to which aggregation
         //column
-        final boolean drawBarOutline = aggrColumns.size() > 1
+        final boolean drawBarOutline = (aggrColumns != null 
+            && aggrColumns.size() > 1)
             || HistogramLayout.SIDE_BY_SIDE.equals(
                 m_vizModel.getHistogramLayout());
         
         // loop over all bins and paint them
-        for (BinDataModel bin : vizModel.getBins()) {
+        for (InteractiveBinDataModel bin : vizModel.getBins()) {
             if (!bin.isDrawBar()) {
                 //the bars doen't fit in this bin so we have to 
                 //fill the complete bin in black to show it to the user
@@ -386,7 +387,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             } //end of bar loop
             //draw the outline of the bin to debug in multiple 
             //aggregation column mode
-            if (aggrColumns.size() > 1) {
+            if (aggrColumns != null && aggrColumns.size() > 1) {
                 drawRectangle(g2, bin.getBinRectangle(), Color.ORANGE, 
                         GRID_LINE_STROKE);
             }
@@ -454,7 +455,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
                 //paint a label for each element after painting
                 //the elements itself to have them in the front
-                for (BarElementDataModel element : bar.getElements()) {
+                for (InteractiveBarElementDataModel element : bar.getElements()) {
                     if (element.isSelected()
                             || LabelDisplayPolicy.ALL.equals(
                                     m_labelDisplayPolicy)) {
@@ -481,11 +482,11 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * should be drawn
      */
     private static void drawElements(final Graphics2D g2, 
-            final Collection<BarElementDataModel> elements, 
+            final Collection<InteractiveBarElementDataModel> elements, 
             final boolean showElementOutlines) {
         final double hiliteStrokeWidth = 
             HILITE_RECT_OUTLINE_STROKE.getLineWidth() * 2;
-        for (BarElementDataModel element : elements) {
+        for (InteractiveBarElementDataModel element : elements) {
             final Color elementColor = element.getColor();
             //draw the element itself first
             final Rectangle elementRect = 
