@@ -21,6 +21,7 @@
  * 
  * History
  *   Dec 17, 2005 (wiswedel): created
+ *   Mar  7, 2007 (ohl): extended with more options
  */
 package org.knime.base.node.io.csvwriter;
 
@@ -34,42 +35,27 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.RowIterator;
-import org.knime.core.data.StringValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeLogger;
-
 
 /**
- * Class to write a {@link org.knime.core.data.DataTable} to a file or an
- * output stream. Only known types can be written to it, i.e. each column must
- * be compatible to either {@link org.knime.core.data.DoubleValue},
- * {@link org.knime.core.data.IntValue}, or {@link StringValue}.
+ * Class to write a {@link org.knime.core.data.DataTable} to an output stream.
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class CSVWriter extends BufferedWriter {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(CSVWriter.class);
+    private final FileWriterSettings m_settings;
 
-    /** true for: write also the row header values. */
-    private boolean m_isWriteRowHeader = true;
-
-    /** true for: write also the column header values. */
-    private boolean m_isWriteColHeader = true;
-
-    /** The string that's written when missing cells are encountered. */
-    private String m_missing = "";
-
-    /** Separation character. */
-    private char m_sepChar = ',';
-
-    /** Remove separation character if it appears inside a string (Excel...). */
-    private boolean m_removeSepCharInStrings = false;
+    /**
+     * Creates a new writer with default settings.
+     * 
+     * @param writer the writer to write the table to.
+     */
+    public CSVWriter(final Writer writer) {
+        this(writer, new FileWriterSettings());
+    }
 
     /**
      * Creates new instance which writes tables to the given writer class. An
@@ -77,9 +63,45 @@ public class CSVWriter extends BufferedWriter {
      * row headers) and will write missing values as "" (empty string).
      * 
      * @param writer to write to
+     * @param settings the object holding all settings, influencing how data
+     *            tables are written to file.
      */
-    public CSVWriter(final Writer writer) {
+    public CSVWriter(final Writer writer, final FileWriterSettings settings) {
         super(writer);
+        if (settings == null) {
+            throw new NullPointerException(
+                    "The CSVWriter doesn't accept null settings.");
+        }
+
+        m_settings = settings;
+
+        // change all null strings to empty strings
+        if (m_settings.getColSeparator() == null) {
+            m_settings.setColSeparator("");
+        }
+        if (m_settings.getMissValuePattern() == null) {
+            m_settings.setMissValuePattern("");
+        }
+        if (m_settings.getQuoteBegin() == null) {
+            m_settings.setQuoteBegin("");
+        }
+        if (m_settings.getQuoteEnd() == null) {
+            m_settings.setQuoteEnd("");
+        }
+        if (m_settings.getQuoteReplacement() == null) {
+            m_settings.setQuoteReplacement("");
+        }
+        if (m_settings.getSeparatorReplacement() == null) {
+            m_settings.setSeparatorReplacement("");
+        }
+    }
+
+    /**
+     * @return the settings object that configures this writer. Modifying it
+     *         influences its behavior.
+     */
+    protected FileWriterSettings getSettings() {
+        return m_settings;
     }
 
     /**
@@ -96,175 +118,239 @@ public class CSVWriter extends BufferedWriter {
      */
     public void write(final DataTable table, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
+
         DataTableSpec inSpec = table.getDataTableSpec();
         final int colCount = inSpec.getNumColumns();
-        boolean first; // is it the first entry in the row (skip comma then)
+        boolean first; // if first entry in the row (skip separator then)
+
         // write column names
-        if (m_isWriteColHeader) {
-            String debugmessage = "Writing Header (" + colCount + " columns).";
-            LOGGER.debug(debugmessage);
-            exec.setMessage(debugmessage);
-            if (m_isWriteRowHeader) {
-                write("\"rowkey\""); // rowheader header
+        if (m_settings.writeColumnHeader()) {
+
+            if (m_settings.writeRowID()) {
+                write(quoteString("row ID", false)); // RowHeader header
                 first = false;
             } else {
                 first = true;
             }
-            // 
+
             for (int i = 0; i < colCount; i++) {
                 String cName = inSpec.getColumnSpec(i).getName();
                 if (!first) {
-                    write(m_sepChar);
+                    write(m_settings.getColSeparator());
                 }
                 first = false;
-                if (m_removeSepCharInStrings) {
-                    cName.replace("" + m_sepChar, "");
-                }
-                write("\"" + cName + "\"");
+                write(quoteString(cName, false));
             }
             newLine();
-        } // if write column names
+        } // end of if write column names
 
-        // write data
+        // write each row of the data
         int i = 0;
         int rowCnt = -1;
         if (table instanceof BufferedDataTable) {
             rowCnt = ((BufferedDataTable)table).getRowCount();
         }
-        for (RowIterator it = table.iterator(); it.hasNext(); i++) {
-            final DataRow next = it.next();
-            String rowKey = next.getKey().toString();
-            String debugMessage = "Writing row " + (i + 1) + " (\"" + rowKey
-                    + "\") of " + rowCnt;
-            if (rowCnt > 0) {
-                exec.setProgress(i / (double)rowCnt, debugMessage);
+
+        for (DataRow row : table) {
+
+            String rowKey = row.getKey().toString();
+            String msg;
+
+            // set the progress
+            if (rowCnt <= 0) {
+                msg = "Writing row " + (i + 1) + " (\"" + rowKey + "\")";
             } else {
-                exec.setMessage(debugMessage);
+                msg =
+                        "Writing row " + (i + 1) + " (\"" + rowKey + "\") of "
+                                + rowCnt;
+                exec.setProgress(i / (double)rowCnt, msg);
             }
             // Check if execution was canceled !
             exec.checkCanceled();
 
+            // write the columns
             first = true;
-            if (m_isWriteRowHeader) {
-                write("\"" + next.getKey().getId().toString() + "\"");
+            // first, the row id
+            if (m_settings.writeRowID()) {
+                write(quoteString(row.getKey().getId().toString(), false));
                 first = false;
             }
+            // now all data cells
             for (int c = 0; c < colCount; c++) {
-                DataCell colValue = next.getCell(c);
-                boolean isMissing = colValue.isMissing();
+
+                DataCell colValue = row.getCell(c);
                 if (!first) {
-                    write(m_sepChar);
+                    write(m_settings.getColSeparator());
                 }
                 first = false;
-                // write according to column type (quote strings)
-                DataType type = inSpec.getColumnSpec(c).getType();
-                String toString;
-                if (isMissing) {
-                    toString = m_missing;
-                } else if (type.isCompatible(IntValue.class)) {
-                    toString = "" + ((IntValue)colValue).getIntValue();
-                } else if (type.isCompatible(DoubleValue.class)) {
-                    toString = "" + ((DoubleValue)colValue).getDoubleValue();
-                } else if (type.isCompatible(StringValue.class)) {
-                    toString = "\"" + ((StringValue)colValue).getStringValue()
-                            + "\"";
-                    if (m_removeSepCharInStrings) {
-                        toString.replace("" + m_sepChar, "");
-                    }
+
+                if (colValue.isMissing()) {
+                    // never quote missing patterns.
+                    write(m_settings.getMissValuePattern());
                 } else {
-                    throw new IllegalArgumentException(
-                            "Table must not contain other types than strings"
-                                    + "or doubles. (\""
-                                    + type.getClass().getName() + "\" at "
-                                    + "column " + c + ")");
+                    boolean isNumerical = false;
+                    DataType type = inSpec.getColumnSpec(c).getType();
+                    if (type.isCompatible(DoubleValue.class)) {
+                        isNumerical = true;
+                    }
+
+                    write(quoteString(colValue.toString(), isNumerical));
+
                 }
-                write(toString);
             }
             newLine();
         }
     }
 
     /**
-     * @return the isWriteColHeader
-     */
-    public boolean isWriteColHeader() {
-        return m_isWriteColHeader;
-    }
-
-    /**
-     * @param isWriteColHeader the isWriteColHeader to set
-     */
-    public void setWriteColHeader(final boolean isWriteColHeader) {
-        m_isWriteColHeader = isWriteColHeader;
-    }
-
-    /**
-     * @return the isWriteRowHeader
-     */
-    public boolean isWriteRowHeader() {
-        return m_isWriteRowHeader;
-    }
-
-    /**
-     * @param isWriteRowHeader the isWriteRowHeader to set
-     */
-    public void setWriteRowHeader(final boolean isWriteRowHeader) {
-        m_isWriteRowHeader = isWriteRowHeader;
-    }
-
-    /**
-     * Use other than the usual "," charater inbetween columns. (Excel says hi).
+     * Returns a string that can be written out to the file that is treated
+     * (with respect to quotes) according to the current settings.
      * 
-     * @param sepChar new separation character
-     * @param removeFromStrings remove sep chars from strings (another Excel
-     *            feature)
+     * @param data the string to quote/replaceQuotes/notQuote/etc.
+     * @param isNumerical set true, if the data comes from a numerical data cell
+     * @return the string correctly quoted according to the current settings.
      */
-    public void setSepChar(final char sepChar, 
-            final boolean removeFromStrings) {
-        m_sepChar = sepChar;
-        m_removeSepCharInStrings = removeFromStrings;
+    protected String quoteString(final String data, final boolean isNumerical) {
+
+        String result = data;
+        
+        
+        switch (m_settings.getQuoteMode()) {
+        case ALWAYS:
+            if (m_settings.replaceSeparatorInStrings() && !isNumerical) {
+                result = replaceSeparator(data);
+                result = replaceAndQuote(result);
+            } else {
+                result = replaceAndQuote(data);
+            }
+            break;
+        case IF_NEEDED:
+            boolean needsQuotes = false;
+            // we need quotes if the data contains the separator, equals the
+            // missing value pattern.
+            if (m_settings.getColSeparator().length() > 0) {
+                needsQuotes = data.contains(m_settings.getColSeparator());
+            } else {
+                needsQuotes = true;
+            }
+            needsQuotes |= data.equals(m_settings.getMissValuePattern());
+
+            result = data;
+            if (m_settings.replaceSeparatorInStrings() && !isNumerical) {
+                result = replaceSeparator(result);
+            }
+            if (needsQuotes) {
+                result = replaceAndQuote(result);
+            }
+            break;
+        case REPLACE:
+            result = replaceSeparator(data);
+            break;
+        case STRINGS:
+            if (isNumerical) {
+                result = data;
+            } else {
+                result = data;
+                if (m_settings.replaceSeparatorInStrings()) {
+                    result = replaceSeparator(result);
+                }
+                result = replaceAndQuote(result);
+            }
+            break;
+        }
+
+        
+        return result;
     }
 
     /**
-     * @return The seperator character.
-     */
-    public char getSepChar() {
-        return m_sepChar;
-    }
-    
-    /**
-     * @return True if seperator characters in Strings shell be removed, false
-     * otherwise.
-     */
-    public boolean isRemoveSepCharInStrings() {
-        return m_removeSepCharInStrings;
-    }
-
-    /**
-     * @return the missing
-     */
-    public String getMissing() {
-        return m_missing;
-    }
-
-    /**
-     * The string for missing cells. Must not contain ',' (comma) as that serves
-     * to separate fields. Also new line characters are not permitted.
-     * <p>
-     * <code>null</code> is ok (uses "" string).
+     * Replaces the quote end pattern contained in the string and puts quotes
+     * around the string.
      * 
-     * @param missing the missing to set
+     * @param data the string to examine and change
+     * @return the input string with quotes around it and either replaced or
+     *         escaped quote end patterns in the string.
      */
-    public void setMissing(final String missing) {
-        String newMissing = missing == null ? "" : missing;
-        if (newMissing.indexOf(',') >= 0) {
-            throw new IllegalArgumentException(
-                    "Comma not allowed as separator: " + newMissing);
+    protected String replaceAndQuote(final String data) {
+
+        if (m_settings.getQuoteEnd().length() == 0) {
+            return m_settings.getQuoteBegin() + data;
         }
-        if (newMissing.indexOf('\n') >= 0) {
-            throw new IllegalArgumentException("\\n not allowed as separator: "
-                    + newMissing);
+
+        // start with the opening quotes
+        StringBuilder result = new StringBuilder(m_settings.getQuoteBegin());
+        int examined = 0; // index up to which the input string is handled
+
+        do {
+            int quoteIdx = data.indexOf(m_settings.getQuoteEnd(), examined);
+            if (quoteIdx < 0) {
+                // no (more) quote end pattern in the string. Copy the rest.
+                result.append(data.substring(examined));
+                // done.
+                break;
+            }
+
+            // copy the part up to the quote pattern
+            result.append(data.substring(examined, quoteIdx));
+
+            // replace the quote pattern with the specified string
+            result.append(m_settings.getQuoteReplacement());
+
+            examined = quoteIdx + m_settings.getQuoteEnd().length();
+
+        } while (examined < data.length());
+
+        // finally append the closing quote
+        result.append(m_settings.getQuoteEnd());
+
+        return result.toString();
+
+    }
+
+    /**
+     * Derives a string from the input string that has all appearances of the
+     * separator replaced with the specified replacer string.
+     * 
+     * @param data the string to examine and to replace the separator in.
+     * @return the input string with all appearances of the separator replaced.
+     */
+    protected String replaceSeparator(final String data) {
+
+        if (m_settings.getColSeparator().length() == 0) {
+            return data;
         }
-        m_missing = missing;
+
+        boolean changed = false;
+        StringBuilder result = new StringBuilder();
+        int examined = 0; // index up to which the input string is handled
+
+        do {
+            int sepIdx = data.indexOf(m_settings.getColSeparator(), examined);
+            if (sepIdx < 0) {
+                // no (more) separator in the string. Copy the rest.
+                result.append(data.substring(examined));
+                // done.
+                break;
+            }
+
+            changed = true;
+            
+            // copy the part up to the separator
+            result.append(data.substring(examined, sepIdx));
+
+            // replace the separator with the specified string
+            result.append(m_settings.getSeparatorReplacement());
+
+            examined = sepIdx + m_settings.getColSeparator().length();
+
+        } while (examined < data.length());
+
+        if (changed) {
+            return result.toString();
+        } else {
+            return data;
+        }
+        
+
     }
 }
