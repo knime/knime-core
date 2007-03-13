@@ -44,9 +44,9 @@ import org.knime.core.node.NodeLogger;
  * and the {@link InteractiveBarElementDataModel} objects of this bar.
  * @author Tobias Koetter, University of Konstanz
  */
-public class BarDataModel {
+public class InteractiveBarDataModel {
     private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(BarDataModel.class);
+        NodeLogger.getLogger(InteractiveBarDataModel.class);
     /**
      * The space between to elements in the {@link HistogramLayout.SIDE_BY_SIDE}
      * layout in  pixel.
@@ -80,7 +80,7 @@ public class BarDataModel {
     /**Constructor for class BarDataModel.
      * @param color the color to use for this bar
      */
-    protected BarDataModel(final Color color) {
+    protected InteractiveBarDataModel(final Color color) {
         m_color = color;
     }
     

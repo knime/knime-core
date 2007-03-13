@@ -34,7 +34,7 @@ import java.awt.geom.AffineTransform;
 import java.text.DecimalFormat;
 import java.util.Collection;
 
-import org.knime.base.node.viz.histogram.datamodel.BarDataModel;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveBarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBarElementDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
@@ -355,8 +355,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                         OVERLOADED_ELEMENT_COLOR);
                 continue;
             }
-            final Collection<BarDataModel> bars = bin.getBars();
-            for (BarDataModel bar : bars) {
+            final Collection<InteractiveBarDataModel> bars = bin.getBars();
+            for (InteractiveBarDataModel bar : bars) {
                 if (bar.isDrawElements()) {
                     drawElements(g2, bar.getElements(), m_showElementOutlines);
                 } else {
@@ -439,7 +439,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * element or per bar
      * @param bounds the surrounding pane on which to draw
      */
-    private void drawLabels(final Graphics2D g2, final BarDataModel bar, 
+    private void drawLabels(final Graphics2D g2, final InteractiveBarDataModel bar, 
             final AggregationMethod aggrMethod, final HistogramLayout layout,
             final Rectangle bounds) {
         if (LabelDisplayPolicy.ALL.equals(

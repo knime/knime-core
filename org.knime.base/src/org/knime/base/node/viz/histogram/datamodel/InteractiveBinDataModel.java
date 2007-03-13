@@ -43,7 +43,7 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * This class holds the information of a histogram bin. A bin consists of at 
- * least one {@link BarDataModel} object which consists of one or more
+ * least one {@link InteractiveBarDataModel} object which consists of one or more
  * {@link InteractiveBarElementDataModel} objects.
  * @author Tobias Koetter, University of Konstanz
  */
@@ -68,8 +68,8 @@ public class InteractiveBinDataModel {
     
     private final Double m_upperBound;
     
-    private final Map<Color, BarDataModel> m_bars = 
-        new HashMap<Color, BarDataModel>();
+    private final Map<Color, InteractiveBarDataModel> m_bars = 
+        new HashMap<Color, InteractiveBarDataModel>();
     
     private boolean m_drawBar = true;
     
@@ -116,9 +116,9 @@ public class InteractiveBinDataModel {
         if (aggrCols == null || aggrCols.size() < 1) {
             //no aggregation column selected create a dummy bar to show
             //at least the count aggregation method
-            BarDataModel bar = m_bars.get(NO_AGGR_COL_COLOR);
+            InteractiveBarDataModel bar = m_bars.get(NO_AGGR_COL_COLOR);
             if (bar == null) {
-                bar = new BarDataModel(NO_AGGR_COL_COLOR);
+                bar = new InteractiveBarDataModel(NO_AGGR_COL_COLOR);
                 m_bars.put(NO_AGGR_COL_COLOR, bar);
             }
             bar.addDataRow(rowColor, id, new DoubleCell(0));
@@ -127,9 +127,9 @@ public class InteractiveBinDataModel {
             for (ColorColumn column : aggrCols) {
                 final DataCell cell = aggrVals[i++];
                 final Color barColor = column.getColor();
-                BarDataModel bar = m_bars.get(barColor);
+                InteractiveBarDataModel bar = m_bars.get(barColor);
                 if (bar == null) {
-                    bar = new BarDataModel(barColor);
+                    bar = new InteractiveBarDataModel(barColor);
                     m_bars.put(barColor, bar);
                 }
                 bar.addDataRow(rowColor, id, cell);   
@@ -157,14 +157,14 @@ public class InteractiveBinDataModel {
      * @return the bar with the given color or <code>null</code> if no bar
      * exists for the given color
      */
-    public BarDataModel getBar(final Color color) {
+    public InteractiveBarDataModel getBar(final Color color) {
         return m_bars.get(color);
     }
     
     /**
-     * @return all {@link BarDataModel} objects of this bin
+     * @return all {@link InteractiveBarDataModel} objects of this bin
      */
-    public Collection<BarDataModel> getBars() {
+    public Collection<InteractiveBarDataModel> getBars() {
         return m_bars.values();
     }
     
@@ -182,9 +182,9 @@ public class InteractiveBinDataModel {
      */
     public double getMaxAggregationValue(final AggregationMethod method,
             final HistogramLayout layout) {
-        final Collection<BarDataModel> bars = m_bars.values();
+        final Collection<InteractiveBarDataModel> bars = m_bars.values();
         double maxAggrValue = -Double.MAX_VALUE;
-        for (BarDataModel bar : bars) {
+        for (InteractiveBarDataModel bar : bars) {
             final double value = bar.getMaxAggregationValue(method, layout);
             if (value > maxAggrValue) {
                 maxAggrValue = value;
@@ -204,9 +204,9 @@ public class InteractiveBinDataModel {
      * @return the maximum row count of all bars in this bin
      */
     public int getMaxBarRowCount() {
-        final Collection<BarDataModel> bars = m_bars.values();
+        final Collection<InteractiveBarDataModel> bars = m_bars.values();
         int maxRowCount = 0;
-        for (BarDataModel bar : bars) {
+        for (InteractiveBarDataModel bar : bars) {
             final int rowCount = bar.getRowCount();
             if (rowCount > maxRowCount) {
                 maxRowCount = rowCount;
@@ -223,9 +223,9 @@ public class InteractiveBinDataModel {
      */
     public double getMinAggregationValue(final AggregationMethod method,
             final HistogramLayout layout) {
-        final Collection<BarDataModel> bars = m_bars.values();
+        final Collection<InteractiveBarDataModel> bars = m_bars.values();
         double minAggrValue = Double.MAX_VALUE;
-        for (BarDataModel bar : bars) {
+        for (InteractiveBarDataModel bar : bars) {
             final double value = bar.getMinAggregationValue(method, layout);
             if (value < minAggrValue) {
                 minAggrValue = value;
@@ -239,9 +239,9 @@ public class InteractiveBinDataModel {
      * @return the minimum row count of all bars in this bin
      */
     public int getMinRowCount() {
-        final Collection<BarDataModel> bars = m_bars.values();
+        final Collection<InteractiveBarDataModel> bars = m_bars.values();
         int minRowCount = 0;
-        for (BarDataModel model : bars) {
+        for (InteractiveBarDataModel model : bars) {
             final int rowCount = model.getRowCount();
             if (rowCount < minRowCount) {
                 minRowCount = rowCount;
@@ -309,7 +309,7 @@ public class InteractiveBinDataModel {
         if (aggrColumns == null || aggrColumns.size() < 1) {
             //no aggregation column selected so we have only one bar the 
             //face bar -> simply set the bin rectangle as bar rectangle
-            final BarDataModel bar = m_bars.get(NO_AGGR_COL_COLOR);
+            final InteractiveBarDataModel bar = m_bars.get(NO_AGGR_COL_COLOR);
             if (bar == null) {
                 throw new IllegalStateException("No dummy bar available");
             }
@@ -336,9 +336,9 @@ public class InteractiveBinDataModel {
             final SortedSet<Color> barElementColors, 
             final Collection<ColorColumn> aggrColumns) {
         if (m_binRectangle == null) {
-            final Collection<BarDataModel> bars = m_bars.values();
+            final Collection<InteractiveBarDataModel> bars = m_bars.values();
             //also reset the bar rectangle
-            for (BarDataModel bar : bars) {
+            for (InteractiveBarDataModel bar : bars) {
                 bar.setBarRectangle(null, aggrMethod, layout, baseLine, 
                         barElementColors);
             }
@@ -380,7 +380,7 @@ public class InteractiveBinDataModel {
         final int startY = (int)m_binRectangle.getY();
         int xCoord = startX + SPACE_BETWEEN_BARS;
         for (ColorColumn aggrColumn : aggrColumns) {
-            final BarDataModel bar = m_bars.get(aggrColumn.getColor());
+            final InteractiveBarDataModel bar = m_bars.get(aggrColumn.getColor());
             if (bar != null) {
                 final double maxBarAggrVal = 
                     bar.getMaxAggregationValue(aggrMethod, layout);
@@ -444,7 +444,7 @@ public class InteractiveBinDataModel {
         final int noOfBars = m_bars.size();
         final int barWidth = 
             Math.max(binWidth - (SPACE_BETWEEN_BARS * noOfBars), 1);
-        final Collection<BarDataModel> bars = m_bars.values();
+        final Collection<InteractiveBarDataModel> bars = m_bars.values();
         if (noOfBars * barWidth > binWidth) {
             //the total bin width is not enough to draw all bars so we don't
             //need to calculate any further and reset all previous 
@@ -465,7 +465,7 @@ public class InteractiveBinDataModel {
         }
 
         int xCoord = startX + SPACE_BETWEEN_BARS;
-        for (BarDataModel bar : bars) {
+        for (InteractiveBarDataModel bar : bars) {
             bar.updateBarWidth(xCoord, barWidth, layout, 
                     barElementColors, aggrMethod, baseLine);
             xCoord += barWidth + SPACE_BETWEEN_BARS;
@@ -499,7 +499,7 @@ public class InteractiveBinDataModel {
             return false;
         }
         m_isSelected = selected;
-        for (final BarDataModel bar : getBars()) {
+        for (final InteractiveBarDataModel bar : getBars()) {
             bar.setSelected(m_isSelected);
         }
         return true;
@@ -511,7 +511,7 @@ public class InteractiveBinDataModel {
      */
     public void selectElement(final Point point) {
         if (m_binRectangle != null && m_binRectangle.contains(point)) {
-            for (final BarDataModel bar : getBars()) {
+            for (final InteractiveBarDataModel bar : getBars()) {
                m_isSelected = bar.selectElement(point) || m_isSelected;
             }
         }
@@ -523,7 +523,7 @@ public class InteractiveBinDataModel {
      */
     public void selectElement(final Rectangle rect) {
         if (m_binRectangle != null && m_binRectangle.intersects(rect)) {
-            for (final BarDataModel bar : getBars()) {
+            for (final InteractiveBarDataModel bar : getBars()) {
                m_isSelected = bar.selectElement(rect) || m_isSelected;
             }
         }
@@ -537,7 +537,7 @@ public class InteractiveBinDataModel {
     protected void setHilitedKeys(final Set<DataCell> hilited, 
             final AggregationMethod aggrMethod,
             final HistogramLayout layout) {
-        for (final BarDataModel bar : getBars()) {
+        for (final InteractiveBarDataModel bar : getBars()) {
             bar.setHilitedKeys(hilited, aggrMethod, layout);
         }
     }
@@ -550,7 +550,7 @@ public class InteractiveBinDataModel {
     protected void removeHilitedKeys(final Set<DataCell> hilited, 
             final AggregationMethod aggrMethod, 
             final HistogramLayout layout) {
-        for (final BarDataModel bar : getBars()) {
+        for (final InteractiveBarDataModel bar : getBars()) {
             bar.removeHilitedKeys(hilited, aggrMethod, layout);
         }
     }
@@ -559,7 +559,7 @@ public class InteractiveBinDataModel {
      * Clears the hilite information.
      */
     public void clearHilite() {
-        for (final BarDataModel bar : getBars()) {
+        for (final InteractiveBarDataModel bar : getBars()) {
             bar.clearHilite();
         }
     }

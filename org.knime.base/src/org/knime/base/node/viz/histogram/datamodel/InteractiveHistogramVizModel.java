@@ -286,8 +286,8 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     public Set<DataCell> getHilitedKeys() {
         final Set<DataCell> keys = new HashSet<DataCell>();
         for (final InteractiveBinDataModel bin : getBins()) {
-            final Collection<BarDataModel> bars = bin.getBars();
-            for (final BarDataModel bar : bars) {
+            final Collection<InteractiveBarDataModel> bars = bin.getBars();
+            for (final InteractiveBarDataModel bar : bars) {
                 if (bar.isSelected()) {
                     final Collection<InteractiveBarElementDataModel> elements = bar
                             .getElements();
@@ -307,8 +307,8 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         final Set<DataCell> keys = new HashSet<DataCell>();
         for (final InteractiveBinDataModel bin : getBins()) {
             if (bin.isSelected()) {
-                final Collection<BarDataModel> bars = bin.getBars();
-                for (final BarDataModel bar : bars) {
+                final Collection<InteractiveBarDataModel> bars = bin.getBars();
+                for (final InteractiveBarDataModel bar : bars) {
                     if (bar.isSelected()) {
                         final Collection<InteractiveBarElementDataModel> elements = bar
                                 .getElements();
