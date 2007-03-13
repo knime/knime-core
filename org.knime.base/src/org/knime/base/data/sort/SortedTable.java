@@ -229,11 +229,11 @@ public class SortedTable implements DataTable {
         // TODO: can be ommited due to new buffered table with known row size
         ArrayList<DataRow> containerrowlist = new ArrayList<DataRow>();
         ExecutionMonitor subexec = exec.createSubProgress(.5);
-        int junkCounter = 1;
-        int numJunks = nrRows / CONTAINERSIZE;
+        int chunkCounter = 1;
+        int numChunks = nrRows / CONTAINERSIZE;
         while (rowIt.hasNext()) {
             subexec.setProgress((double)currentRowNr / (double)nrRows,
-                    "Reading in data junk " + junkCounter + "...");
+                    "Reading in data-chunk " + chunkCounter + "...");
             exec.checkCanceled();
             if (newContainer.isClosed()) {
                 newContainer = new DataContainer(m_spec, false, 100);
@@ -249,8 +249,8 @@ public class SortedTable implements DataTable {
                 // sort list
                 DataRow[] temparray = new DataRow[containerrowlist.size()];
                 temparray = containerrowlist.toArray(temparray);
-                subexec.setMessage("Presorting junk " + junkCounter + " of "
-                        + numJunks);
+                subexec.setMessage("Presorting chunk " + chunkCounter + " of "
+                        + numChunks);
                 Arrays.sort(temparray, 0, temparray.length, m_rowComparator);
                 // write in container
                 for (int i = 0; i < temparray.length; i++) {
@@ -258,7 +258,7 @@ public class SortedTable implements DataTable {
                 }
                 newContainer.close();
                 containerVector.add(newContainer);
-                junkCounter++;
+                chunkCounter++;
             }
         }
         if (nrRowsinContainer % CONTAINERSIZE != 0) {
@@ -266,8 +266,8 @@ public class SortedTable implements DataTable {
             // sort list
             DataRow[] temparray = new DataRow[containerrowlist.size()];
             temparray = containerrowlist.toArray(temparray);
-            subexec.setMessage("Presorting junk " + junkCounter + " of "
-                    + numJunks);
+            subexec.setMessage("Presorting chunk " + chunkCounter + " of "
+                    + numChunks);
             Arrays.sort(temparray, 0, temparray.length, m_rowComparator);
             // write in container
             for (int i = 0; i < temparray.length; i++) {
