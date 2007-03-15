@@ -122,7 +122,7 @@ public abstract class NodeModel {
         m_executed = false;
 
         // set intial array of HiLiteHandlers
-        if (getNrIns() == 0) {
+        if (getNrDataIns() == 0) {
             // init a new one if no input exists
             m_inHiLiteHdls = new HiLiteHandler[1];
         } else {
@@ -699,11 +699,11 @@ public abstract class NodeModel {
      * @throws IndexOutOfBoundsException If the index is not in output's range.
      */
     protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
-        if (outIndex < 0 || outIndex >= getNrOuts()) {
+        if (outIndex < 0 || outIndex >= getNrDataOuts()) {
             throw new IndexOutOfBoundsException("index=" + outIndex);
         }
         // if we have no inputs we create a new instance (but only one...)
-        if (getNrIns() == 0) {
+        if (getNrDataIns() == 0) {
             if (m_inHiLiteHdls[0] == null) {
                 m_inHiLiteHdls[0] = new DefaultHiLiteHandler();
             }
