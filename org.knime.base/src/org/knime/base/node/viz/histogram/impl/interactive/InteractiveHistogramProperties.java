@@ -32,13 +32,12 @@ import javax.swing.JPanel;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 
+import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
@@ -98,11 +97,13 @@ public class InteractiveHistogramProperties extends
             final AbstractHistogramVizModel vizModel) {
        super(tableSpec, vizModel);
        // the column select boxes for the X axis
-       m_xCol = new ColumnSelectionComboxBox((Border)null, DataValue.class);
+       m_xCol = new ColumnSelectionComboxBox((Border)null, 
+               AbstractHistogramPlotter.X_COLUMN_FILTER);
        m_xCol.setBackground(this.getBackground());
 
        m_aggrCol = 
-           new ColumnSelectionComboxBox((Border)null, DoubleValue.class);
+           new ColumnSelectionComboxBox((Border)null, 
+                   AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER);
        m_aggrCol.setBackground(this.getBackground());
        m_aggrCol.setToolTipText(AGGREGATION_COLUMN_DISABLED_TOOLTIP);
 //     the column select tab
@@ -183,7 +184,7 @@ public class InteractiveHistogramProperties extends
      */
     @Override
     public void updateColumnSelection(final DataTableSpec spec,
-            final String xColName, final Collection<ColorColumn> yColumns,
+            final String xColName, final Collection<ColorColumn> aggrColumns,
             final AggregationMethod aggrMethod) {
         try {
             if (xColName == null) {
@@ -205,19 +206,24 @@ public class InteractiveHistogramProperties extends
             m_xCol.setEnabled(false);
         }
         try {
-            if (yColumns == null || yColumns.size() < 1) {
-                final String er = "No aggregation column available";
-                LOGGER.warn(er);
-                throw new IllegalArgumentException(er);
-            }
+//            if (aggrColumns == null || aggrColumns.size() < 1) {
+//                final String er = "No aggregation column available";
+//                LOGGER.warn(er);
+//                throw new IllegalArgumentException(er);
+//            }
             //remove all action listener to avoid unnecessary calls
             final ActionListener[] listeners = m_aggrCol.getActionListeners();
             for (ActionListener listener : listeners) {
                 m_aggrCol.removeActionListener(listener);
             }
-            m_aggrCol.update(spec, yColumns.iterator().next().getColumnName());
-            if (m_aggrCol.getModel().getSize() > 0) {
-                m_aggrCol.setEnabled(true);
+            if (aggrColumns == null || aggrColumns.size() < 1) {
+                m_aggrCol.setEnabled(false);
+            } else {
+                m_aggrCol.update(spec, 
+                        aggrColumns.iterator().next().getColumnName());
+                if (m_aggrCol.getModel().getSize() > 0) {
+                    m_aggrCol.setEnabled(true);
+                }
             }
             for (ActionListener listener : listeners) {
                 m_aggrCol.addActionListener(listener);

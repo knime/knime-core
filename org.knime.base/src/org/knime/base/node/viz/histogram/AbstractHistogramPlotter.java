@@ -41,8 +41,9 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
+import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
+import org.knime.base.node.viz.histogram.impl.NoDomainColumnFilter;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.Axis;
 import org.knime.base.util.coordinate.Coordinate;
@@ -54,6 +55,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -61,6 +63,9 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
+import org.knime.core.node.util.ColumnFilter;
+import org.knime.core.node.util.CombinedColumnFilter;
+import org.knime.core.node.util.DataValueColumnFilter;
 
 /**
  * Abstract class which is the coordinator between the 
@@ -76,12 +81,16 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     /**Number of digits used in an interval.*/
     public static final int INTERVAL_DIGITS = 2;
     
-    /** The highlight selected item menu entry. */
-    public static final String HILITE = HiLiteHandler.HILITE_SELECTED;
-    /** The unhighlight selected item menu entry. */
-    public static final String UNHILITE = HiLiteHandler.UNHILITE_SELECTED;
-    /** The unhighlight item menu entry. */
-    public static final String CLEAR_HILITE = HiLiteHandler.CLEAR_HILITE;
+    /**This column filter should be used in all x column select boxes.*/
+    public static final ColumnFilter X_COLUMN_FILTER = 
+        NoDomainColumnFilter.getInstance();
+    
+    /**This column filter should be used in all aggregation column 
+     * select boxes.*/
+    @SuppressWarnings("unchecked")
+    public static final ColumnFilter AGGREGATION_COLUMN_FILTER =
+        new CombinedColumnFilter(new DataValueColumnFilter(DoubleValue.class), 
+            NoDomainColumnFilter.getInstance());
     
     /** The <code>DataTableSpec</code> of the input data. */
     private DataTableSpec m_tableSpec;
@@ -93,8 +102,6 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     private AbstractHistogramVizModel m_vizModel;
     
     private final AbstractHistogramProperties m_histoProps;
-    
-//    private int m_binWidth = -1;
     
     /**If the user changes the layout to side-by-side we automatically
      * set the bin width to maximum. If he goes back to stacked layout
@@ -111,12 +118,6 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             final HiLiteHandler handler) {
         super(new HistogramDrawingPane(histogramProps), histogramProps);
         m_histoProps = histogramProps;
-//        m_histoProps.addAggregationChangedListener(
-//                new ActionListener() {
-//            public void actionPerformed(final ActionEvent arg0) {
-//                onApply();
-//            }
-//        });
 //      add the visualization listener
         registerPropertiesChangeListener();
 //      set the default value
@@ -127,9 +128,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         // set the hilitehandler for highlighting stuff
         if (handler != null) {
             super.setHiLiteHandler(handler);
-        } else {
-            throw new IllegalArgumentException("HiLiteHandler not defined.");
-        }
+        } 
+//        else {
+//            throw new IllegalArgumentException("HiLiteHandler not defined.");
+//        }
     }
 
     /**
@@ -382,7 +384,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             vizModel.getRowColors();
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
         final Collection<ColorColumn> aggrColumns = vizModel.getAggrColumns();
-        for (InteractiveBinDataModel bin : vizModel.getBins()) {
+        for (BinDataModel bin : vizModel.getBins()) {
             final DataCell captionCell = bin.getXAxisCaptionCell();
             final double labelCoord = xCoordinates.calculateMappedValue(
                     captionCell, drawingWidth, true);
@@ -457,7 +459,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 AbstractHistogramVizModel.MINIMUM_BAR_HEIGHT);
         // get the default width for all bins
 //        final int binWidth = getBinWidth();
-        for (InteractiveBinDataModel bin : vizModel.getBins()) {
+        for (BinDataModel bin : vizModel.getBins()) {
             final DataCell captionCell = bin.getXAxisCaptionCell();
             final double labelCoord = xCoordinates.calculateMappedValue(
                     captionCell, drawingWidth, true);
@@ -654,13 +656,12 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         // the aggregation method is summary and the data type of the
         // aggregation column is integer the result must be an integer itself
         DataType type = DoubleCell.TYPE;
+        final Collection<ColorColumn> columnNames = vizModel.getAggrColumns();
         if (AggregationMethod.COUNT.equals(aggrMethod)) {
             type = IntCell.TYPE;
         }
-        if (AggregationMethod.SUM.equals(aggrMethod)) {
+        if (AggregationMethod.SUM.equals(aggrMethod) && columnNames != null) {
             //if the aggregation method is summary and ...
-            final Collection<ColorColumn> columnNames = 
-                vizModel.getAggrColumns();
             boolean allInteger = true;
             for (ColorColumn column : columnNames) {
                 final DataColumnSpec colSpec = 
@@ -677,7 +678,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             }
         }
         final String displayColumnName = createAggregationColumnName(
-                vizModel.getAggrColumns(), aggrMethod);
+                columnNames, aggrMethod);
         final DataColumnSpec spec = createColumnSpec(displayColumnName, type,
                 lowerBound, upperBound, null);
         return spec;
@@ -770,6 +771,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         }
         StringBuilder name = new StringBuilder();
         if (columnNames == null || columnNames.size() < 0) {
+            //if the method is not count the user has to 
+            //select a aggregation column
             throw new IllegalArgumentException("Column name not defined.");
         } else if (aggrMethod.equals(AggregationMethod.SUM)) {
             name.append("Sum of ");
@@ -1021,9 +1024,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     @Override
     public void hiLite(final KeyEvent event) {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
-        if (vizModel == null) {
-            LOGGER.debug("VizModel was null");
-           return;
+        if (vizModel == null || vizModel.isFixed()) {
+            LOGGER.debug("VizModel doesn't support hiliting or was null");
+            return;
         }
         final Set<DataCell>hilited = event.keys();
         vizModel.updateHiliteInfo(hilited, true);
@@ -1037,8 +1040,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     @Override
     public void unHiLite(final KeyEvent event) {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
-        if (vizModel == null) {
-            LOGGER.debug("VizModel was null");
+        if (vizModel == null || vizModel.isFixed()) {
+            LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
         final Set<DataCell>hilited = event.keys();
@@ -1052,8 +1055,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      */
     public void unHiLiteAll() {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
-        if (vizModel == null) {
-            LOGGER.debug("VizModel was null");
+        if (vizModel == null || vizModel.isFixed()) {
+            LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
         vizModel.unHiliteAll();
@@ -1066,8 +1069,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     @Override
     public void hiLiteSelected() {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
-        if (vizModel == null) {
-            LOGGER.debug("VizModel was null");
+        if (vizModel == null || vizModel.isFixed()) {
+            LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
         final Set<DataCell> selectedKeys = 
@@ -1083,8 +1086,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     @Override
     public void unHiLiteSelected() {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
-        if (vizModel == null) {
-            LOGGER.debug("VizModel was null");
+        if (vizModel == null || vizModel.isFixed()) {
+            LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
         final Set<DataCell> selectedKeys = 

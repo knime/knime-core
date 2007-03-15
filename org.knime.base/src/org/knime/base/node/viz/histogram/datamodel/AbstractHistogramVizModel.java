@@ -31,7 +31,6 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,15 +38,12 @@ import java.util.SortedSet;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.util.BinningUtil;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.node.NodeLogger;
 
 /**
  * This is the basic visualization model for a histogram. It handles bin
@@ -55,8 +51,6 @@ import org.knime.core.node.NodeLogger;
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramVizModel {
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(AbstractHistogramVizModel.class);
 
     /** The caption of the bar which holds all missing values. */
     public static final String MISSING_VAL_BAR_CAPTION = "Missing_values";
@@ -75,7 +69,7 @@ public abstract class AbstractHistogramVizModel {
     public static final int DEFAULT_NO_OF_BINS = 10;
 
     /**
-     * Defines the maximum number of decimal places which are used in the
+     * Defines the number of decimal places which are used by default in the
      * binning method.
      */
     public static final int INTERVAL_DIGITS = 2;
@@ -85,10 +79,6 @@ public abstract class AbstractHistogramVizModel {
      * rectangle. Should be greater 0 and less than 1. 0.8 = 80%
      */
     public static final double HILITE_RECT_WIDTH_FACTOR = 0.5;
-
-    /**Compare the caption of bins.*/
-    protected static final BinDataModelComparator BIN_CAPTION_COMPARATOR = 
-        new BinDataModelComparator(BinDataModelComparator.COMPARE_CAPTION);
 
     private final SortedSet<Color> m_rowColors;
 
@@ -113,10 +103,9 @@ public abstract class AbstractHistogramVizModel {
      */
     private boolean m_showEmptyBins = false;
 
-    private final InteractiveBinDataModel m_missingValueBin = new InteractiveBinDataModel(
-            AbstractHistogramVizModel.MISSING_VAL_BAR_CAPTION, 0, 0);
+    private BinDataModel m_missingValueBin; 
     
-    private final List<InteractiveBinDataModel> m_bins = new ArrayList<InteractiveBinDataModel>(50);
+    private final List<BinDataModel> m_bins = new ArrayList<BinDataModel>(50);
 
     private int m_noOfBins = 1;
     
@@ -125,7 +114,13 @@ public abstract class AbstractHistogramVizModel {
     /**Holds the actual size of the drawing space.*/
     private Dimension m_drawingSpace;
 
-    /** The minimum height of a bar with an aggregation value > 0. */
+    /**
+     * The space between to elements in the {@link HistogramLayout.SIDE_BY_SIDE}
+     * layout in  pixel.
+     */
+    public static final int SPACE_BETWEEN_ELEMENTS = 1;
+
+    /** The minimum height of a bar.*/
     public static final int MINIMUM_BAR_HEIGHT = 5;
     
     /**Constructor for class HistogramVizModel.
@@ -173,23 +168,26 @@ public abstract class AbstractHistogramVizModel {
     }
     
     /**
-     * @return all {@link InteractiveBinDataModel} objects of this histogram including
-     * the missing value bin if the showMissingValue bin variable is set to
+     * @return all {@link BinDataModel} objects of this 
+     * histogram including the missing value bin if the showMissingValue 
+     * bin variable is set to
      * <code>true</code>
      */
-    public Collection<InteractiveBinDataModel> getBins() {
-        final InteractiveBinDataModel missingValueBin = getMissingValueBin();
+    public Collection<BinDataModel> getBins() {
+        final BinDataModel missingValueBin = getMissingValueBin();
         if (missingValueBin != null) {
             if (isShowMissingValBin()) {
                 final int missingValBinIdx = m_bins.size() - 1;
-                if (m_bins.get(missingValBinIdx) != missingValueBin) {
+                if (missingValBinIdx < 0 
+                        || m_bins.get(missingValBinIdx) != missingValueBin) {
                     m_bins.add(missingValueBin);
                 }
             } else {
                 //check the last bin if it's the missing value bin if thats the
                 //case remove it from the list
                 final int missingValBinIdx = m_bins.size() - 1;
-                if (m_bins.get(missingValBinIdx) == missingValueBin) {
+                if (missingValBinIdx >= 0
+                        && m_bins.get(missingValBinIdx) == missingValueBin) {
                     //if the list contains the missing value bin remove it
                     m_bins.remove(missingValBinIdx);
                 }
@@ -278,6 +276,7 @@ public abstract class AbstractHistogramVizModel {
         }
         m_binWidth = binWidth;
     }
+    
     /**
      * Calculates the maximum width per bar for the current display settings.
      */
@@ -328,7 +327,6 @@ public abstract class AbstractHistogramVizModel {
             return false;
         }
         m_noOfBins = noOf;
-        createBins();
         return true;
     }
 
@@ -342,7 +340,7 @@ public abstract class AbstractHistogramVizModel {
     }
 
     /**
-     * Calculates the maximum number of bars which could be displayed.
+     * Calculates the maximum number of bins which could be displayed.
      */
     private void calculateMaxNoOfBins() {
         //handle nominal binning special
@@ -413,8 +411,8 @@ public abstract class AbstractHistogramVizModel {
      * @return the bin with the given caption or <code>null</code> if no bin
      * with the given caption exists
      */
-    public InteractiveBinDataModel getBin(final String caption) {
-        for (final InteractiveBinDataModel bin : getBins()) {
+    public BinDataModel getBin(final String caption) {
+        for (final BinDataModel bin : getBins()) {
             if (bin.getXAxisCaption().equals(caption)) {
                 return bin;
             }
@@ -424,9 +422,9 @@ public abstract class AbstractHistogramVizModel {
     
     /**
      * @param idx the index of the bin
-     * @return the {@link InteractiveBinDataModel} at the given index
+     * @return the {@link BinDataModel} at the given index
      */
-    public InteractiveBinDataModel getBin(final int idx) {
+    public BinDataModel getBin(final int idx) {
         return m_bins.get(idx);
     }
 
@@ -434,10 +432,10 @@ public abstract class AbstractHistogramVizModel {
      * @return all bin captions in the order they should be displayed
      */
     public Set<DataCell> getBinCaptions() {
-        final Collection<InteractiveBinDataModel> bins = getBins();
+        final Collection<BinDataModel> bins = getBins();
         final LinkedHashSet<DataCell> captions = 
             new LinkedHashSet<DataCell>(bins.size());
-        for (final InteractiveBinDataModel bin : bins) {
+        for (final BinDataModel bin : bins) {
             if (m_showEmptyBins || bin.getMaxBarRowCount() > 0) {
                 captions.add(new StringCell(bin.getXAxisCaption()));
             }
@@ -457,11 +455,17 @@ public abstract class AbstractHistogramVizModel {
     }
 
     /**
+     * @return <code>true</code> if the bins are fixed otherwise
+     * <code>false</code>
+     */
+    public abstract boolean isFixed();
+    
+    /**
      * @return the maximum aggregation value
      */
     public double getMaxAggregationValue() {
         double maxAggrValue = Double.MIN_VALUE;
-        for (final InteractiveBinDataModel bin : getBins()) {
+        for (final BinDataModel bin : getBins()) {
             final double value = bin.getMaxAggregationValue(m_aggrMethod,
                     m_layout);
             if (value > maxAggrValue) {
@@ -476,7 +480,7 @@ public abstract class AbstractHistogramVizModel {
      */
     public double getMinAggregationValue() {
         double minAggrValue = Double.MAX_VALUE;
-        for (final InteractiveBinDataModel bin : getBins()) {
+        for (final BinDataModel bin : getBins()) {
             final double value = bin.getMinAggregationValue(m_aggrMethod,
                     m_layout);
             if (value < minAggrValue) {
@@ -490,7 +494,7 @@ public abstract class AbstractHistogramVizModel {
      * @return the missingValueBin or <code>null</code> if the selected
      * x column contains no missing values
      */
-    public InteractiveBinDataModel getMissingValueBin() {
+    public BinDataModel getMissingValueBin() {
         if (m_missingValueBin.getMaxBarRowCount() == 0) {
             return null;
         }
@@ -509,7 +513,7 @@ public abstract class AbstractHistogramVizModel {
      * bin with no rows in it.
      */
     public boolean containsEmptyBins() {
-        for (final InteractiveBinDataModel bin : getBins()) {
+        for (final BinDataModel bin : getBins()) {
             if (bin.getBinRowCount() < 1) {
                 return true;
             }
@@ -629,18 +633,32 @@ public abstract class AbstractHistogramVizModel {
      * Selects the element which contains the given point.
      * @param point the point on the screen to select
      */
-    public abstract void selectElement(final Point point);
+    public void selectElement(final Point point) {
+        for (final BinDataModel bin : getBins()) {
+            bin.selectElement(point);
+        }
+        return;
+    }
 
     /**
      * Selects all elements which are touched by the given rectangle.
      * @param rect the rectangle on the screen select
      */
-    public abstract void selectElement(final Rectangle rect);
+    public void selectElement(final Rectangle rect) {
+        for (final BinDataModel bin : getBins()) {
+            bin.selectElement(rect);
+        }
+        return;
+    }
 
     /**
      * Clears all selections.
      */
-    public abstract void clearSelection();
+    public void clearSelection() {
+        for (final BinDataModel bin : getBins()) {
+            bin.setSelected(false);
+        }
+    }
     
     /**
      * This method un/hilites all rows with the given key.
@@ -648,28 +666,13 @@ public abstract class AbstractHistogramVizModel {
      * @param hilite if the given keys should be hilited <code>true</code> 
      * or unhilited <code>false</code>
      */
-    public void updateHiliteInfo(final Set<DataCell> hilited,
-            final boolean hilite) {
-        if (hilited == null || hilited.size() < 1) {
-            return;
-        }
-        for (final InteractiveBinDataModel bin : getBins()) {
-            if (hilite) {
-                bin.setHilitedKeys(hilited, m_aggrMethod, m_layout);
-            } else {
-                bin.removeHilitedKeys(hilited, m_aggrMethod, m_layout);
-            }
-        }
-    }
+    public abstract void updateHiliteInfo(final Set<DataCell> hilited,
+            final boolean hilite);
 
     /**
      * Unhilites all rows.
      */
-    public void unHiliteAll() {
-        for (final InteractiveBinDataModel bin : getBins()) {
-            bin.clearHilite();
-        }
-    }
+    public abstract void unHiliteAll();
 
     /**
      * @return a HTML <code>String</code> which contains details information
@@ -689,226 +692,22 @@ public abstract class AbstractHistogramVizModel {
     protected void setBinNominal(final boolean nominal) {
         m_binNominal = nominal;
     }
-
-    /**
-     * Clears all information from the missing value bin.
-     */
-    protected void clearMissingValueBin() {
-        if (m_missingValueBin.getBinRowCount() > 0) {
-            m_missingValueBin.clear();
-        }
-    }
     
     /**
-     * Creates the bins for the currently set binning information
-     * and adds all data rows to the corresponding bin.
+     * @param bins the bins to display
+     * @param missingValueBin the missing value bin
      */
-    protected void createBins() {
-        LOGGER.debug("Entering createBins() of class HistogramVizModel.");
-        final long startBinTimer = System.currentTimeMillis();
-        // remove the old bar information
+    protected void setBins(final List<? extends BinDataModel> bins, 
+            final BinDataModel missingValueBin) {
+        if (bins == null) {
+            throw new NullPointerException("Bins must not be null");
+        }
+        if (missingValueBin == null) {
+            throw new NullPointerException("Bin must not be null");
+        }
+        m_missingValueBin = missingValueBin;
         m_bins.clear();
-        //clear all information from the missing value bin
-        //before recreating the bins
-        clearMissingValueBin();
-        if (isBinNominal()) {
-            createNominalBins();
-        } else {
-            //create the new bins
-            createIntervalBins();
-        }
+        m_bins.addAll(bins);
         updateNoOfBins(m_bins.size());
-        final long startAddRowTimer = System.currentTimeMillis();
-        addRows2Bins();
-        final long end = System.currentTimeMillis();
-        LOGGER.debug(" Total time to create " + m_noOfBins + " bins: " 
-                + (end - startBinTimer) + " in ms.\n"
-                + "Time to create bins: " + (startAddRowTimer - startBinTimer)
-                + " in ms.\n"
-                + "Time to add rows: " + (end - startAddRowTimer) + " in ms.");
-        LOGGER.debug("Exiting createBins() of class HistogramVizModel.");
-    }
-    
-    private void createNominalBins() {
-        //check if we have the values
-        final DataColumnSpec xColSpec = getXColumnSpec();
-        if (xColSpec.getDomain().getValues() == null) {
-            throw new IllegalArgumentException(
-                    "No domain values defined for nominal binning column. " 
-                    + "Please use DomainCalculator or ColumnFilter node "
-                    + "to set the domain values.");
-        }
-        final Set<DataCell> values = xColSpec.getDomain().getValues();
-        for (DataCell value : values) {
-            m_bins.add(new InteractiveBinDataModel(value.toString(), 0, 0));
-        }
-        //sort the bins by their caption
-        Collections.sort(m_bins, BIN_CAPTION_COMPARATOR);
-    }
-    
-    private void createIntervalBins() {
-        //set the bounds for binning
-        final DataColumnSpec xColSpec = getXColumnSpec();
-        final DataColumnDomain domain = xColSpec.getDomain();
-        final DataCell lowerBoundCell = domain.getLowerBound();
-        if (lowerBoundCell == null || lowerBoundCell.isMissing()
-                || !lowerBoundCell.getType().isCompatible(
-                        DoubleValue.class)) {
-            throw new IllegalArgumentException(
-            "The lower bound of the x column domain should be defined");
-        }
-        double lowerBound = ((DoubleValue)lowerBoundCell).getDoubleValue();
-        final DataCell upperBoundCell = domain.getUpperBound();
-        if (upperBoundCell == null || upperBoundCell.isMissing()
-                || !upperBoundCell.getType().isCompatible(
-                        DoubleValue.class)) {
-            throw new IllegalArgumentException(
-            "The upper bound of the x column domain should be defined");
-        }
-        final double upperBound = 
-            ((DoubleValue)upperBoundCell).getDoubleValue();
-        //start the binning
-        if (m_noOfBins < 1) {
-            m_noOfBins = FixedHistogramVizModel.DEFAULT_NO_OF_BINS;
-        }
-        if ((lowerBound - upperBound) == 0) {
-            m_noOfBins = 1;
-        }
-        final boolean isInteger = 
-            xColSpec.getType().isCompatible(IntValue.class);
-        final double binInterval = BinningUtil.createBinInterval(upperBound, 
-                lowerBound, m_noOfBins, isInteger);
-        lowerBound = BinningUtil.createBinStart(lowerBound, binInterval);
-        // increase the number of bars to include the max value
-        while (lowerBound + (binInterval * m_noOfBins) < upperBound) {
-            m_noOfBins++;
-        }
-        double leftBoundary = BinningUtil.myRoundedBorders(lowerBound, 
-                binInterval, FixedHistogramVizModel.INTERVAL_DIGITS);
-        boolean firstBar = true;
-        for (int i = 0; i < m_noOfBins; i++) {
-            // I have to use this rounding method to avoid problems with very
-            // small intervals. If the interval is very small it could happen
-            // that we get the same boundaries for several bars by rounding the
-            // borders
-            double rightBoundary = BinningUtil.myRoundedBorders(
-                    leftBoundary + binInterval, binInterval, INTERVAL_DIGITS);
-            final String binCaption = BinningUtil.createBarName(
-                    firstBar, leftBoundary, rightBoundary, isInteger);
-            firstBar = false;
-            final InteractiveBinDataModel bin = 
-                new InteractiveBinDataModel(binCaption, leftBoundary, rightBoundary);
-            m_bins.add(bin);
-            // set the left boundary of the next bar to the current right
-            // boundary
-            leftBoundary = rightBoundary;
-        }
-    }
-
-    /**
-     *This method should loop through all data rows and should add each row
-     *to the corresponding bin by calling the 
-     *{@link #addDataRow2Bin(int, DataCell, Color, DataCell, 
-     *Collection, DataCell[])} method.
-     */
-    protected abstract void addRows2Bins();
-    
-    /**
-     * Adds the given data row to the corresponding bin.
-     * @param startBin the index of the bin to start with
-     * @param xVal the x axis value oft this row
-     * @param color the color of this row
-     * @param id the id of this row
-     * @param aggrColumns the selected aggregation columns
-     * @param aggrVals the aggregation values
-     * @return the index of the bin to whom this row was added
-     */
-    protected int addDataRow2Bin(final int startBin, final DataCell xVal, 
-            final Color color, final DataCell id, 
-            final Collection<ColorColumn> aggrColumns, 
-            final DataCell[] aggrVals) {
-        
-        if (xVal.isMissing()) {
-            m_missingValueBin.addDataRow(id, color, aggrColumns, aggrVals);
-            return startBin;
-        }
-        if (isBinNominal()) {
-            return addDataRow2NominalBin(startBin, xVal, color, id, 
-                    aggrColumns, aggrVals);
-        }
-        if (!xVal.getType().isCompatible(DoubleValue.class)) {
-            throw new IllegalStateException("X value is not a valid number");
-        }
-        return addDataRow2IntervalBin(startBin, (DoubleValue)xVal, color, 
-                id, aggrColumns, aggrVals);
-    }
-
-    /**
-     * Adds the given row to a nominal bin by checking if the given x 
-     * value.toString is equal to the current bin caption.
-     * @param startBin the index of the bin to start with
-     * @param xVal the x value of this row
-     * @param color the color of this row
-     * @param id the id of this row
-     * @param aggrColumns the selected aggregation columns
-     * @param aggrVals the aggregation values
-     * @return the index of the bin this row was added
-     */
-    private int addDataRow2NominalBin(final int startBin, final DataCell xVal, 
-            final Color color, final DataCell id, 
-            final Collection<ColorColumn> aggrColumns, 
-            final DataCell[] aggrVals) {
-        final String xValString = xVal.toString();
-         for (int binIdx = startBin, length = getBins().size(); 
-             binIdx < length; binIdx++) {
-            final InteractiveBinDataModel bin = getBin(binIdx);
-            if (bin.getXAxisCaption().equals(xValString)) {
-                bin.addDataRow(id, color, aggrColumns, aggrVals);
-                return startBin;
-            }
-         }
-        throw new IllegalArgumentException("No bin found for x value:" 
-                + xValString);
-    }
-    
-    /**
-     * Adds the given row to a none nominal bin by checking if the given
-     * x value is in the range of the lower and upper bound of a bin.
-     * @param startBin the index of the bin to start with
-     * @param xVal the x value of this row
-     * @param color the color of this row
-     * @param id the id of this row
-     * @param aggrColumns the selected aggregation columns
-     * @param aggrVals the aggregation values
-     * @return the index of the bin this row was added
-     */
-    private int addDataRow2IntervalBin(final int startBin, 
-            final DoubleValue xVal, final Color color, final DataCell id, 
-            final Collection<ColorColumn> aggrColumns, 
-            final DataCell[] aggrVals) {
-        final double value = xVal.getDoubleValue();
-         for (int binIdx = startBin, length = getBins().size(); 
-             binIdx < length; binIdx++) {
-            final InteractiveBinDataModel bin = getBin(binIdx);
-            final Double lowerBoundObj = bin.getLowerBound();
-            final Double upperBoundObj = bin.getUpperBound();
-            if (lowerBoundObj == null || upperBoundObj == null) {
-                continue;
-            }
-            final double lowerBound = lowerBoundObj.doubleValue();
-            final double upperBound = upperBoundObj.doubleValue();
-            boolean add2Bin = false;
-            if (binIdx == 0) {
-                add2Bin = (value >= lowerBound && value <= upperBound);
-            } else {
-                add2Bin = (value > lowerBound && value <= upperBound);
-            }
-            if (add2Bin) {
-                bin.addDataRow(id, color, aggrColumns, aggrVals);
-                return binIdx;
-            }
-         }
-        throw new IllegalArgumentException("No bin found for x value:" 
-                + xVal.toString());
     }
 }

@@ -11,24 +11,27 @@
 		<p>The user can change the following view properties on the fly:
 			<ol>
 			<li>Aggregation method (count, summary, average)</li>
-			<li>Number of bins for numerical attributes (incl. empty bars, 
-			excl. missing value bar)</li>
 			<li>Bar size</li>
 			<li>Show empty intervals</li>
 			<li>Show missing value bar</li>
+			<li>Layout</li>
 			<li>Zooming</li>
 			<li>...</li>
 			</ol>
-			The bars are colored according to the number of rows per color 
-			attribute.
+			The bars are colored in proportion to the aggregation value.
+			Hiliting is not supported.
 		</p>
 		<p>All automatically created bins, except the first one, are
 		left open intervals (a,b] where a is excluded and b is included in 
 		the interval. To cover all values the first interval is a closed 
 		interval [a,b] where a and b are included.</p>
 		<p>In order to work with huge data sets the user has to specify the 
-		desired x and aggregation column before opening the view. For more 
-		interaction use the "Interactive Histogram" node.</p>
+		desired x and aggregation column and the number of bins before 
+		opening the view. This node doesn't supports hiliting.
+		For more interaction and hiliting support use the 
+		"Interactive Histogram" node.</p>
+		<p><b>Only columns with a valid domain are available in this view.
+		To set the domain use the DomainCalculator or ColumnFilter node!</b></p>
 		</intro>
 		<option name="Display all rows">
 		    If selected the histogram view displays all rows of the incoming data.

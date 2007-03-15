@@ -103,8 +103,6 @@ public abstract class AbstractHistogramProperties extends
 
     private static final Dimension HORIZONTAL_SPACER_DIM = new Dimension(10, 1);
 
-    private AggregationMethod m_aggregationMethod;
-
     private final JSlider m_binWidth;
 
     private final JSlider m_noOfBins;
@@ -154,8 +152,6 @@ public abstract class AbstractHistogramProperties extends
         if (tableSpec == null) {
             throw new IllegalArgumentException("TableSpec shouldn't be null");
         }
-        // create all swing components first
-        m_aggregationMethod = vizModel.getAggregationMethod();
      
         // create the additional settings components which get added to the
         // histogram settings panel
@@ -207,7 +203,8 @@ public abstract class AbstractHistogramProperties extends
         for (final Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
                 .getElements(); buttons.hasMoreElements();) {
             final AbstractButton button = buttons.nextElement();
-            if (button.getActionCommand().equals(m_aggregationMethod.name())) {
+            if (button.getActionCommand().equals(
+                    vizModel.getAggregationMethod().name())) {
                 button.setSelected(true);
             }
         }
@@ -619,21 +616,27 @@ public abstract class AbstractHistogramProperties extends
         m_noOfBinsLabel.setText(Integer.toString(currentNoOfBins));
         AbstractHistogramProperties.setSliderLabels(m_noOfBins, 2, true);
         // disable this noOfbins slider for nominal values
-        if (!vizModel.isBinNominal()) {
+        if (vizModel.isBinNominal() || vizModel.isFixed()) {
+            m_noOfBins.setEnabled(false);
+            if (vizModel.isFixed()) {
+                m_noOfBins.setToolTipText("Not available for "
+                        + "this histogram implementation");
+            } else {
+                m_noOfBins
+                    .setToolTipText("Only available for numerical properties");
+            }
+        } else {
             m_noOfBins.setEnabled(true);
             m_noOfBins.setToolTipText(
                     AbstractHistogramProperties.NO_OF_BINS_TOOLTIP);
-        } else {
-            m_noOfBins.setEnabled(false);
-            m_noOfBins
-                    .setToolTipText("Only available for numerical properties");
         }
         for (ChangeListener listener : noOfListeners) {
             m_noOfBins.addChangeListener(listener);
         }
         
-        // set the aggregation method if it has changed
-        final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
+        //set the right aggregation method settings
+        //since the set selected method doesn't trigger an event
+        //we don't need to remove/add the action listener
         final Collection<ColorColumn> aggrColumns = vizModel.getAggrColumns();
         if (aggrColumns == null || aggrColumns.size() < 1) {
             //if we have no aggregation columns selected disable all
@@ -646,6 +649,11 @@ public abstract class AbstractHistogramProperties extends
                     button.setEnabled(false);
                     button.setToolTipText(AGGR_METHOD_DISABLED_TOOLTIP);
                 }
+//              select the current aggregation method
+                if (button.getActionCommand()
+                        .equals(vizModel.getAggregationMethod().name())) {
+                    button.setSelected(true);
+                }
             }
         } else {
             //enable all buttons
@@ -655,20 +663,16 @@ public abstract class AbstractHistogramProperties extends
                 button.setEnabled(true);
                 //remove the tool tip
                 button.setToolTipText(null);
-            }
-        }
-        if (!m_aggregationMethod.equals(aggrMethod)) {
-            m_aggregationMethod = aggrMethod;
-            for (final Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
-                    .getElements(); buttons.hasMoreElements();) {
-                final AbstractButton button = buttons.nextElement();
+                //select the current aggregation method
                 if (button.getActionCommand()
-                        .equals(m_aggregationMethod.name())) {
+                        .equals(vizModel.getAggregationMethod().name())) {
                     button.setSelected(true);
                 }
             }
         }
+        
         // set the values of the select boxes
+        //show empty bins box
         final ItemListener[] emptyListeners = 
             m_showEmptyBins.getItemListeners();
         for (ItemListener listener : emptyListeners) {
@@ -679,7 +683,7 @@ public abstract class AbstractHistogramProperties extends
         for (ItemListener listener : emptyListeners) {
             m_showEmptyBins.addItemListener(listener);
         }
-        
+        //show missing value bin box
         final ItemListener[] missingListeners = 
             m_showMissingValBin.getItemListeners();
         for (ItemListener listener : missingListeners) {
@@ -690,8 +694,28 @@ public abstract class AbstractHistogramProperties extends
         for (ItemListener listener : missingListeners) {
             m_showMissingValBin.addItemListener(listener);
         }
-        
+        //show grid lines
+        final ItemListener[] gridListeners = 
+            m_showGrid.getItemListeners();
+        for (ItemListener listener : missingListeners) {
+            m_showGrid.removeItemListener(listener);
+        }
         m_showGrid.setSelected(vizModel.isShowGridLines());
+        for (ItemListener listener : gridListeners) {
+            m_showGrid.addItemListener(listener);
+        }
+        
+        //select the current layout
+        //since the set selected method doesn't trigger an event
+        //we don't need to remove/add the action listener
+        for (final Enumeration<AbstractButton> buttons = m_layoutDisplayPolicy
+                .getElements(); buttons.hasMoreElements();) {
+            final AbstractButton button = buttons.nextElement();
+            if (button.getActionCommand()
+                    .equals(vizModel.getHistogramLayout().name())) {
+                button.setSelected(true);
+            }
+        }
     }
 
     /**

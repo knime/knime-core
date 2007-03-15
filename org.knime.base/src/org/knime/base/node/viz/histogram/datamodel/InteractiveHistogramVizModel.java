@@ -26,8 +26,6 @@
 package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
-import java.awt.Point;
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,6 +37,7 @@ import java.util.SortedSet;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -46,6 +45,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.NodeLogger;
 
 
 /**
@@ -53,7 +53,8 @@ import org.knime.core.data.DoubleValue;
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
-
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(InteractiveHistogramVizModel.class);
     /**
      * Compares the value on the given column index with the given
      * {@link DataValueComparator} of to rows.
@@ -142,11 +143,11 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         if (rows == null) {
             throw new IllegalArgumentException("Rows shouldn't be null");
         }
-        if (aggrColumns == null || aggrColumns.size() < 1) {
-            throw new IllegalArgumentException("At least one aggregation "
-                    + "column should be selected");
-                    
-        }
+//        if (aggrColumns == null || aggrColumns.size() < 1) {
+//            throw new IllegalArgumentException("At least one aggregation "
+//                    + "column should be selected");
+//                    
+//        }
         if (noOfBins < 1) {
             throw new IllegalArgumentException("Number of bins should be > 0");
         }
@@ -156,6 +157,19 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         setXColumn(xColSpec);
     }
 
+    /**
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * AbstractHistogramVizModel#setNoOfBins(int)
+     */
+    @Override
+    public boolean setNoOfBins(final int noOfBins) {
+        if (super.setNoOfBins(noOfBins)) {
+            createBins();
+            return true;
+        }
+        return false;
+    }
+    
     /**
      * @see org.knime.base.node.viz.histogram.datamodel.
      * AbstractHistogramVizModel#getAggrColumns()
@@ -193,11 +207,13 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         }
         if (xColType.isCompatible(
                 DoubleValue.class)) {
-            //if we have binned nominal reset the number of bins to default
+            final boolean wasNominal = isBinNominal();
             setBinNominal(false);
-            if (isBinNominal()) {
+            //if we have binned nominal reset the number of bins to default
+            if (wasNominal) {
                 updateNoOfBins(DEFAULT_NO_OF_BINS);
             }
+            
         } else {
             setBinNominal(true);
         }
@@ -215,7 +231,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
             throw new IllegalArgumentException(
                     "Aggregation column shouldn't be null");
         }
-        if (m_aggrColumns.containsAll(aggrCols)) {
+        if (m_aggrColumns != null && m_aggrColumns.containsAll(aggrCols)) {
             return false;
         }
         m_aggrColumns = aggrCols;
@@ -252,47 +268,109 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#addRows2Bins()
+     * Creates the bins for the currently set binning information
+     * and adds all data rows to the corresponding bin.
      */
-    @Override
-    protected void addRows2Bins() {
+    private void createBins() {
+        LOGGER.debug("Entering createBins() of class HistogramVizModel.");
+        final long startBinTimer = System.currentTimeMillis();
+        List<InteractiveBinDataModel> bins;
+        if (isBinNominal()) {
+            bins = BinningUtil.createInteractiveNominalBins(getXColumnSpec());
+        } else {
+            //create the new bins
+            bins = BinningUtil.createInteractiveIntervalBins(getXColumnSpec(), 
+                    getNoOfBins());
+        }
+        final BinDataModel missingValBin = new InteractiveBinDataModel(
+                AbstractHistogramVizModel.MISSING_VAL_BAR_CAPTION, 0, 0);
+        final long startAddRowTimer = System.currentTimeMillis();
+        addRows2Bins(bins, missingValBin);
+        final long end = System.currentTimeMillis();
+        //add the created bins to the super implementation
+        setBins(bins, missingValBin);
+        
+        LOGGER.debug(" Total time to create " + bins.size() + " bins: " 
+                + (end - startBinTimer) + " in ms.\n"
+                + "Time to create bins: " + (startAddRowTimer - startBinTimer)
+                + " in ms.\n"
+                + "Time to add rows: " + (end - startAddRowTimer) + " in ms.");
+        LOGGER.debug("Exiting createBins() of class HistogramVizModel.");
+    }
+    
+    /**
+     *This method should loop through all data rows and should add each row
+     *to the corresponding bin by calling the 
+     *{@link #addDataRow2Bin(int, DataCell, Color, DataCell, 
+     *Collection, DataCell[])} method.
+     * @param missingValBin the bin for missing values
+     * @param bins the different bins
+     */
+    private void addRows2Bins(final List<InteractiveBinDataModel> bins, 
+            final BinDataModel missingValBin) {
 //      add the data rows to the new bins
         int startBin = 0;
         final Collection<ColorColumn> aggrColumns = getAggrColumns();
-        final int aggrSize = aggrColumns.size();
-        final int[] aggrIdx = new int[aggrSize];
-        int i = 0;
-        for (ColorColumn aggrColumn : aggrColumns) {
-            aggrIdx[i++] = aggrColumn.getColumnIndex();
-        }
-        for (DataRow row : getSortedRows()) {
-            final DataCell xVal = row.getCell(m_xColIdx);
-            final Color color = 
-                m_tableSpec.getRowColor(row).getColor(false, false);
-            final DataCell id = row.getKey().getId();
-            DataCell[] aggrVals = new DataCell[aggrSize];
-            for (int j = 0, length = aggrIdx.length; j < length; j++) {
-                aggrVals[j] = row.getCell(aggrIdx[j]);
+        if (aggrColumns == null || aggrColumns.size() < 1) {
+            //if the user hsn't selected a aggregation column
+            for (DataRow row : getSortedRows()) {
+                final DataCell xVal = row.getCell(m_xColIdx);
+                final Color color = 
+                    m_tableSpec.getRowColor(row).getColor(false, false);
+                final DataCell id = row.getKey().getId();
+                startBin = BinningUtil.addDataRow2Bin(
+                        isBinNominal(), bins, missingValBin, startBin, 
+                        xVal, color, id, aggrColumns, 
+                        DataType.getMissingCell());
             }
-            startBin = addDataRow2Bin(startBin, xVal, color, id, 
-                    aggrColumns, aggrVals);
+        } else {
+            final int aggrSize = aggrColumns.size();
+            final int[] aggrIdx = new int[aggrSize];
+            int i = 0;
+            for (ColorColumn aggrColumn : aggrColumns) {
+                aggrIdx[i++] = aggrColumn.getColumnIndex();
+            }
+            for (DataRow row : getSortedRows()) {
+                final DataCell xVal = row.getCell(m_xColIdx);
+                final Color color = 
+                    m_tableSpec.getRowColor(row).getColor(false, false);
+                final DataCell id = row.getKey().getId();
+                DataCell[] aggrVals = new DataCell[aggrSize];
+                for (int j = 0, length = aggrIdx.length; j < length; j++) {
+                    aggrVals[j] = row.getCell(aggrIdx[j]);
+                }
+                startBin = BinningUtil.addDataRow2Bin(
+                        isBinNominal(), bins, missingValBin, startBin, 
+                        xVal, color, id, aggrColumns, aggrVals);
+            }
         }
     }
-//Hiliting selection stuff
+    
     /**
-     * @return all keys of hilited rows
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * AbstractHistogramVizModel#isFixed()
      */
+    @Override
+    public boolean isFixed() {
+        return false;
+    }
+   
+    /**
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * AbstractHistogramVizModel#getHilitedKeys()
+     */
+    @Override
     public Set<DataCell> getHilitedKeys() {
         final Set<DataCell> keys = new HashSet<DataCell>();
-        for (final InteractiveBinDataModel bin : getBins()) {
-            final Collection<InteractiveBarDataModel> bars = bin.getBars();
-            for (final InteractiveBarDataModel bar : bars) {
+        for (final BinDataModel bin : getBins()) {
+            final Collection<BarDataModel> bars = bin.getBars();
+            for (final BarDataModel bar : bars) {
                 if (bar.isSelected()) {
-                    final Collection<InteractiveBarElementDataModel> elements = bar
-                            .getElements();
-                    for (final InteractiveBarElementDataModel element : elements) {
-                        keys.addAll(element.getHilitedKeys());
+                    final Collection<BarElementDataModel> elements = 
+                        bar.getElements();
+                    for (BarElementDataModel element : elements) {
+                        keys.addAll(((InteractiveBarElementDataModel)
+                                element).getHilitedKeys());
                     }
                 }
             }
@@ -301,20 +379,24 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     }
 
     /**
-     * @return all keys of the selected elements
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * AbstractHistogramVizModel#getSelectedKeys()
      */
+    @Override
     public Set<DataCell> getSelectedKeys() {
         final Set<DataCell> keys = new HashSet<DataCell>();
-        for (final InteractiveBinDataModel bin : getBins()) {
+        for (final BinDataModel bin : getBins()) {
             if (bin.isSelected()) {
-                final Collection<InteractiveBarDataModel> bars = bin.getBars();
-                for (final InteractiveBarDataModel bar : bars) {
+                final Collection<BarDataModel> bars = bin.getBars();
+                for (final BarDataModel bar : bars) {
                     if (bar.isSelected()) {
-                        final Collection<InteractiveBarElementDataModel> elements = bar
-                                .getElements();
-                        for (final InteractiveBarElementDataModel element : elements) {
+                        final Collection<BarElementDataModel> 
+                        elements = bar.getElements();
+                        for (BarElementDataModel element 
+                                : elements) {
                             if (element.isSelected()) {
-                                keys.addAll(element.getKeys());
+                                keys.addAll(((InteractiveBarElementDataModel)
+                                        element).getKeys());
                             }
                         }
                     }
@@ -325,42 +407,10 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     }
 
     /**
-     * Selects the element which contains the given point.
-     * @param point the point on the screen to select
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * AbstractHistogramVizModel#updateHiliteInfo(java.util.Set, boolean)
      */
-    public void selectElement(final Point point) {
-        for (final InteractiveBinDataModel bin : getBins()) {
-            bin.selectElement(point);
-        }
-        return;
-    }
-
-    /**
-     * Selects all elements which are touched by the given rectangle.
-     * @param rect the rectangle on the screen select
-     */
-    public void selectElement(final Rectangle rect) {
-        for (final InteractiveBinDataModel bin : getBins()) {
-            bin.selectElement(rect);
-        }
-        return;
-    }
-
-    /**
-     * Clears all selections.
-     */
-    public void clearSelection() {
-        for (final InteractiveBinDataModel bin : getBins()) {
-            bin.setSelected(false);
-        }
-    }
-
-    /**
-     * This method un/hilites all rows with the given key.
-     * @param hilited the rowKeys of the rows to un/hilite
-     * @param hilite if the given keys should be hilited <code>true</code> 
-     * or unhilited <code>false</code>
-     */
+    @Override
     public void updateHiliteInfo(final Set<DataCell> hilited,
             final boolean hilite) {
         if (hilited == null || hilited.size() < 1) {
@@ -368,21 +418,25 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         }
         final AggregationMethod aggrMethod = getAggregationMethod();
         final HistogramLayout layout = getHistogramLayout();
-        for (final InteractiveBinDataModel bin : getBins()) {
+        for (final BinDataModel bin : getBins()) {
             if (hilite) {
-                bin.setHilitedKeys(hilited, aggrMethod, layout);
+                ((InteractiveBinDataModel)bin).setHilitedKeys(hilited, 
+                        aggrMethod, layout);
             } else {
-                bin.removeHilitedKeys(hilited, aggrMethod, layout);
+                ((InteractiveBinDataModel)bin).removeHilitedKeys(hilited, 
+                        aggrMethod, layout);
             }
         }
     }
 
     /**
-     * Unhilites all rows.
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * AbstractHistogramVizModel#unHiliteAll()
      */
+    @Override
     public void unHiliteAll() {
-        for (final InteractiveBinDataModel bin : getBins()) {
-            bin.clearHilite();
+        for (final BinDataModel bin : getBins()) {
+            ((InteractiveBinDataModel)bin).clearHilite();
         }
     }
 }

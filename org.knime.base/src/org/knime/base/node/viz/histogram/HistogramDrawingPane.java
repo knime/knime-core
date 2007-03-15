@@ -21,8 +21,10 @@
  */
 package org.knime.base.node.viz.histogram;
 
+import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -30,15 +32,19 @@ import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.Stroke;
+import java.awt.TexturePaint;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.util.Collection;
 
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.BarDataModel;
+import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
+import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
+import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBarElementDataModel;
-import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.property.ColorAttr;
 
@@ -61,16 +67,30 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     private static final int NO_OF_LABEL_DIGITS = 2;
     
     /**Defines the color of the base line.*/
-    private static final Color OVERLOADED_ELEMENT_COLOR = Color.GRAY;
+    private static final TexturePaint OVERLOADED_ELEMENT_FILLING;
+    static {
+//      draw 2D rounded rectangle with a buffered background
+        final BufferedImage img = 
+            new BufferedImage(4, 4, BufferedImage.TYPE_INT_RGB);
+        // obtain Graphics2D from bufferImage and draw on it
+        final Graphics2D gg = img.createGraphics();
+        gg.setColor(Color.LIGHT_GRAY);
+        gg.fillRect(0, 0, 4, 4);
+        gg.setColor(Color.GRAY);
+        gg.drawRect(0, 0, 1, 1);
+        gg.fillRect(1, 1, 1, 1);
+        final Rectangle rect = new Rectangle(img.getWidth(), img.getHeight());
+        OVERLOADED_ELEMENT_FILLING = new TexturePaint(img, rect);
+    }
     
     /**This stroke is used to draw the rectangle around each element.*/
     private static final BasicStroke ELEMENT_OUTLINE_STROKE = 
         new BasicStroke(1f);
 
-    /**This stroke is used to draw the rectangle around each aggregation
-     * column bar.*/
-    private static final BasicStroke AGGR_COLUM_OUTLINE_STROKE = 
-        new BasicStroke(1f);
+//    /**This stroke is used to draw the rectangle around each aggregation
+//     * column bar.*/
+//    private static final BasicStroke AGGR_COLUM_OUTLINE_STROKE = 
+//        new BasicStroke(1f);
     /**The color of the element outline.*/
     private static final Color ELEMENT_OUTLINE_COLOR = Color.BLACK;
 
@@ -134,7 +154,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     private static final Font INFO_MSG_FONT = new Font("Arial", Font.PLAIN, 16);
 
     /**
-     * Holds the {@link FixedHistogramVizModel} objects to draw.
+     * Holds the {@link AbstractHistogramVizModel} objects to draw.
      */
     private AbstractHistogramVizModel m_vizModel;
     
@@ -187,7 +207,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     }
     
     /**
-     * @param histoData the {@link FixedHistogramDataModel} objects to draw
+     * @param histoData the {@link AbstractHistogramVizModel} objects to draw
      */
     public void setHistogramVizModel(
             final AbstractHistogramVizModel histoData) {
@@ -347,16 +367,22 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 m_vizModel.getHistogramLayout());
         
         // loop over all bins and paint them
-        for (InteractiveBinDataModel bin : vizModel.getBins()) {
+        for (BinDataModel bin : vizModel.getBins()) {
             if (!bin.isDrawBar()) {
                 //the bars doen't fit in this bin so we have to 
                 //fill the complete bin in black to show it to the user
                 drawBlock(g2, bin.getBinRectangle(), 
-                        OVERLOADED_ELEMENT_COLOR);
+                        OVERLOADED_ELEMENT_FILLING, 0.8f);
                 continue;
             }
-            final Collection<InteractiveBarDataModel> bars = bin.getBars();
-            for (InteractiveBarDataModel bar : bars) {
+            final Collection<BarDataModel> bars = bin.getBars();
+            for (BarDataModel bar : bars) {
+                if (drawBarOutline) {
+                    //draw the outline of the bar if we have multiple
+                    //aggregation columns
+                    drawBlock(g2, bar.getBarRectangle(), 
+                            bar.getColor(), 0.2f);
+                }
                 if (bar.isDrawElements()) {
                     drawElements(g2, bar.getElements(), m_showElementOutlines);
                 } else {
@@ -364,23 +390,17 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     //fill the complete bar in black to show it to the user
                     final Rectangle barRectangle = bar.getBarRectangle();
                     drawBlock(g2, barRectangle, 
-                            OVERLOADED_ELEMENT_COLOR);
-                    final Rectangle hiliteRectangle = 
-                        bar.getHiliteRectangle();
-                    if (hiliteRectangle != null) {
-                        drawBlock(g2, hiliteRectangle, HILITE_RECT_BGR_COLOR);
+                            OVERLOADED_ELEMENT_FILLING, 0.8f);
+                    if (bar instanceof InteractiveBarDataModel) {
+                        InteractiveBarDataModel interactiveBar = 
+                            (InteractiveBarDataModel)bar;
+                        drawHiliteRect(g2, interactiveBar.getHiliteRectangle());
                     }
                     if (bar.isSelected()) {
                         drawRectangle(g2, barRectangle, 
                             ELEMENT_SELECTED_OUTLINE_COLOR, 
                             ELEMENT_SELECTED_OUTLINE_STROKE);
                     }
-                }
-                if (drawBarOutline) {
-                    //draw the outline of the bar if we have multiple
-                    //aggregation columns
-                    drawRectangle(g2, bar.getBarRectangle(), 
-                            bar.getColor(), AGGR_COLUM_OUTLINE_STROKE);
                 }
                 //draw the bar label at last to have them on top
                 drawLabels(g2, bar, aggrMethod, layout, bounds);
@@ -439,7 +459,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * element or per bar
      * @param bounds the surrounding pane on which to draw
      */
-    private void drawLabels(final Graphics2D g2, final InteractiveBarDataModel bar, 
+    private void drawLabels(final Graphics2D g2, final BarDataModel bar, 
             final AggregationMethod aggrMethod, final HistogramLayout layout,
             final Rectangle bounds) {
         if (LabelDisplayPolicy.ALL.equals(
@@ -448,14 +468,13 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                         m_labelDisplayPolicy) && bar.isSelected())) {
             if (HistogramLayout.STACKED.equals(layout) 
                     || !bar.isDrawElements()) {
-                final double aggrVal = 
-                    bar.getAggregationValue(aggrMethod);
-                paintLabel(g2, bar.getBarRectangle(), aggrVal, 
-                        aggrMethod, bounds, m_showLabelVertical);
+                paintLabel(g2, bar.getBarRectangle(), 
+                        bar.getAggregationValue(aggrMethod), aggrMethod, 
+                        bounds, m_showLabelVertical);
             } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
                 //paint a label for each element after painting
                 //the elements itself to have them in the front
-                for (InteractiveBarElementDataModel element : bar.getElements()) {
+                for (BarElementDataModel element : bar.getElements()) {
                     if (element.isSelected()
                             || LabelDisplayPolicy.ALL.equals(
                                     m_labelDisplayPolicy)) {
@@ -482,45 +501,60 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * should be drawn
      */
     private static void drawElements(final Graphics2D g2, 
-            final Collection<InteractiveBarElementDataModel> elements, 
+            final Collection<BarElementDataModel> elements, 
             final boolean showElementOutlines) {
-        final double hiliteStrokeWidth = 
-            HILITE_RECT_OUTLINE_STROKE.getLineWidth() * 2;
-        for (InteractiveBarElementDataModel element : elements) {
+        for (BarElementDataModel element : elements) {
             final Color elementColor = element.getColor();
             //draw the element itself first
             final Rectangle elementRect = 
                 element.getElementRectangle();
-            if (elementRect != null) {
-                drawBlock(g2, elementRect, elementColor);
-            }
+//            drawBlock(g2, elementRect, elementColor);
 //          draw the surrounding rectangles after the block
-            if (showElementOutlines) {
-                drawRectangle(g2, elementRect, 
-                        ELEMENT_OUTLINE_COLOR, 
-                        ELEMENT_OUTLINE_STROKE);
-            }
             if (element.isSelected()) {
+                drawBlock(g2, elementRect, elementColor);
                 drawRectangle(g2, elementRect, 
                         ELEMENT_SELECTED_OUTLINE_COLOR, 
                         ELEMENT_SELECTED_OUTLINE_STROKE);
-            }
-            //draw the hilite rectangle
-            final Rectangle hiliteRect = 
-                element.getHilitedRectangle();
-            if (hiliteRect != null) {
-                drawBlock(g2, hiliteRect, HILITE_RECT_BGR_COLOR);
-                //always draw the hilite borders to make them visible
-                //even if the bar has the same color like the hilite color
-                //but only if the complete rectangle is wider than the stroke
-                if (hiliteRect.getWidth() > hiliteStrokeWidth) {
-                    drawRectangle(g2, hiliteRect, 
-                            HILITE_RECT_OUTLINE_COLOR, 
-                            HILITE_RECT_OUTLINE_STROKE);
+            } else {
+                drawBlock(g2, elementRect, elementColor, 0.8f);
+                if (showElementOutlines) {
+                    drawRectangle(g2, elementRect, 
+                            ELEMENT_OUTLINE_COLOR, 
+                            ELEMENT_OUTLINE_STROKE);
                 }
+            }
+            if (element instanceof InteractiveBarElementDataModel) {
+                InteractiveBarElementDataModel interactiveElement = 
+                    (InteractiveBarElementDataModel)element;
+//              draw the hilite rectangle
+                final Rectangle hiliteRect = 
+                    interactiveElement.getHilitedRectangle();
+                drawHiliteRect(g2, hiliteRect);    
             }
             
         } //end of element loop
+    }
+
+    /**
+     * @param g2 the graphics object
+     * @param hiliteRect the rectangle to draw. If null no rectangle
+     * is drawn.
+     */
+    private static void drawHiliteRect(final Graphics2D g2, 
+            final Rectangle hiliteRect) {
+        if (hiliteRect != null) {
+            drawBlock(g2, hiliteRect, HILITE_RECT_BGR_COLOR);
+            //always draw the hilite borders to make them visible
+            //even if the bar has the same color like the hilite color
+            //but only if the complete rectangle is wider than the 
+            //stroke
+            if (hiliteRect.getWidth() 
+                    > HILITE_RECT_OUTLINE_STROKE.getLineWidth()) {
+                drawRectangle(g2, hiliteRect, 
+                        HILITE_RECT_OUTLINE_COLOR, 
+                        HILITE_RECT_OUTLINE_STROKE);
+            }
+        }
     }
 
    /**
@@ -546,27 +580,40 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         g2.setStroke(origStroke);
         g2.setColor(origColor);
     }
+    /**
+     * Draws a filled rectangle without a border and default transparency.
+     * @param g2 the graphic object
+     * @param rect the rectangle to fill
+     * @param paint the filling color or TexturePaint
+     */
+    private static void drawBlock(final Graphics2D g2, final Rectangle rect,
+            final Paint paint) {
+        drawBlock(g2, rect, paint, 1.0f);
+    }
     
     /**
      * Draws a filled rectangle without a border.
      * @param g2 the graphic object
      * @param rect the rectangle to fill
-     * @param fillingColor the filling color
+     * @param paint the filling color or TexturePaint
+     * @param alpha the transparency
      */
     private static void drawBlock(final Graphics2D g2, final Rectangle rect,
-            final Color fillingColor) {
+            final Paint paint, final float alpha) {
         if (rect == null) {
             return;
         }
         // save the original settings
-        final Stroke origStroke = g2.getStroke();
         final Paint origPaint = g2.getPaint();
+        final Composite originalComposite = g2.getComposite();
         //draw the color block
-        g2.setPaint(fillingColor);
+        g2.setComposite(AlphaComposite.getInstance(
+                AlphaComposite.SRC_OVER, alpha));
+        g2.setPaint(paint);
         g2.fill(rect);
         //set the old settings
-        g2.setStroke(origStroke);
         g2.setPaint(origPaint);
+        g2.setComposite(originalComposite);
     }
 
     /**

@@ -53,7 +53,7 @@ public class HistogramNodeView extends NodeView {
         if (!(nodeModel instanceof AbstractHistogramNodeModel)) {
             throw new IllegalArgumentException(NodeModel.class.getName()
                     + " not an instance of "
-                    + HistogramNodeModel.class.getName());
+                    + AbstractHistogramNodeModel.class.getName());
         }
         m_nodeModel = (AbstractHistogramNodeModel)nodeModel;
     }

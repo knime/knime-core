@@ -26,6 +26,7 @@ package org.knime.base.node.viz.histogram.node;
 
 import java.awt.Color;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Collection;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
@@ -33,7 +34,6 @@ import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataRow;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -44,7 +44,11 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 
 
 /**
@@ -57,6 +61,11 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(FixedColumnHistogramNodeModel.class);
 
+    /**The number of bins configuration key.*/
+    protected static final String CFGKEY_NO_OF_BINS = "noOfBins";
+    
+    private final SettingsModelInteger m_noOfBins = new SettingsModelInteger(
+            CFGKEY_NO_OF_BINS, AbstractHistogramVizModel.DEFAULT_NO_OF_BINS);
     /**The data model on which the plotter based on.*/
     private FixedHistogramDataModel m_model;
     
@@ -65,9 +74,35 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
      */
     protected FixedColumnHistogramNodeModel() {
         super(1, 0); // one input, no outputs
-        //if we set the node to autoExecutable = true the execute method
-        //gets also called when the workspace is reloaded from file
-//        setAutoExecutable(true);
+    }
+    /**
+     * @see org.knime.core.node.NodeModel #validateSettings(NodeSettingsRO)
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings) 
+    throws InvalidSettingsException {
+        super.validateSettings(settings);
+        m_noOfBins.validateSettings(settings);
+    }
+
+    /**
+     * @see org.knime.core.node.NodeModel
+     *      #loadValidatedSettingsFrom(NodeSettingsRO)
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) 
+    throws InvalidSettingsException {
+        super.loadValidatedSettingsFrom(settings);
+        m_noOfBins.loadSettingsFrom(settings);
+    }
+
+    /**
+     * @see org.knime.core.node.NodeModel #saveSettingsTo(NodeSettingsWO)
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        super.saveSettingsTo(settings);
+        m_noOfBins.saveSettingsTo(settings);
     }
     
     /**
@@ -82,8 +117,9 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
                 + "of class FixedColumnHistogramNodeModel.");
         final int noOfRows = getNoOfRows();
         final Collection<ColorColumn> aggrColumns = getAggrColumns();
+        final int noOfBins = m_noOfBins.getIntValue();
         m_model = 
-            new FixedHistogramDataModel(getXColSpec(), noOfRows, aggrColumns);
+            new FixedHistogramDataModel(getXColSpec(), aggrColumns, noOfBins);
         exec.setMessage("Adding data rows to histogram...");
         final double progressPerRow = 1.0 / noOfRows;
         double progress = 0.0;
@@ -99,11 +135,9 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
             final DataRow row = rowIterator.next();
             final Color color = 
                 tableSpec.getRowColor(row).getColor(false, false);
-            FixedHistogramDataRow histoRow;
             if (aggrColSize < 1) {
-                histoRow = new FixedHistogramDataRow(
-                        row.getKey(), color, row.getCell(xColIdx),
-                        DataType.getMissingCell());
+                m_model.addDataRow(row.getKey().getId(), color, 
+                        row.getCell(xColIdx), DataType.getMissingCell());
             } else {
                 DataCell[] aggrCells = new DataCell[aggrColSize];
                 int cellIdx = 0;
@@ -111,18 +145,15 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
                     aggrCells[cellIdx++] = 
                         row.getCell(aggrCol.getColumnIndex());
                 }
-                histoRow = new FixedHistogramDataRow(
-                        row.getKey(), color, row.getCell(xColIdx),
-                        aggrCells);
+                m_model.addDataRow(row.getKey().getId(), color, 
+                        row.getCell(xColIdx), aggrCells);
             }
-            m_model.addDataRow(histoRow);
+            
             progress += progressPerRow;
             exec.setProgress(progress, "Adding data rows to histogram...");
             exec.checkCanceled();
         }
         exec.setMessage("Sorting rows...");
-        //call this method to force the sorting
-        m_model.getSortedRows();
         exec.setProgress(1.0, "Histogram finished.");
         LOGGER.debug("Exiting createHistogramModel(exec, table) "
                 + "of class FixedColumnHistogramNodeModel.");
@@ -147,12 +178,11 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
             return null;
         }
         final FixedHistogramVizModel vizModel = new FixedHistogramVizModel(
-                m_model.getRowColors(),
-                AggregationMethod.getDefaultMethod(), 
-                HistogramLayout.getDefaultLayout(), 
-                m_model.getSortedRows(), m_model.getXColumnSpec(), 
+                m_model.getRowColors(), m_model.getClonedBins(), 
+                m_model.getClonedMissingValueBin(), m_model.getXColumnSpec(),
                 m_model.getAggrColumns(),
-                AbstractHistogramVizModel.DEFAULT_NO_OF_BINS);
+                AggregationMethod.getDefaultMethod(), 
+                HistogramLayout.getDefaultLayout());
         return vizModel;
     }
 
@@ -163,15 +193,30 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir, 
             final ExecutionMonitor exec) {
-        
+        try {
+            m_model = FixedHistogramDataModel.loadFromFile(nodeInternDir, exec);
+        } catch (FileNotFoundException e) {
+            LOGGER.debug("Previous implementations haven't stored the data");
+        } catch (Exception e) {
+            LOGGER.warn("Exception while loadInternals: " + e.getMessage());
+            m_model = null;
+        }
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel#saveInternals(java.io.File, org.knime.core.node.ExecutionMonitor)
+     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
+     * #saveInternals(java.io.File, org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveInternals(final File nodeInternDir, 
             final ExecutionMonitor exec) {
-        
+        if (m_model == null) {
+            return;
+        }
+        try {
+            m_model.save2File(nodeInternDir, exec);
+        } catch (Exception e) {
+            LOGGER.warn("Error while saveInternals: " + e.getMessage());
+        }
     }
 }

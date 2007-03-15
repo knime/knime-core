@@ -26,12 +26,15 @@
 package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
+import java.io.Serializable;
 
 /**
  * Holds the color for a given row value.
  * @author Tobias Koetter, University of Konstanz
  */
-public class ColorColumn {
+public class ColorColumn implements Serializable {
+
+    private static final long serialVersionUID = 8377552063347776434L;
 
     private final Color m_color;
     

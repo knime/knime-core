@@ -25,12 +25,16 @@
 package org.knime.base.node.viz.histogram.node;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -38,6 +42,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 
 
@@ -76,8 +81,7 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
                 + "of class HistogramNodeModel.");
         final DataTableSpec tableSpec = getTableSpec();
        final int noOfRows = getNoOfRows();
-        final InteractiveHistogramDataModel model = 
-            new InteractiveHistogramDataModel(tableSpec, noOfRows);
+       m_model = new InteractiveHistogramDataModel(tableSpec, noOfRows);
         exec.setMessage("Adding data rows to histogram...");
         final double progressPerRow = 1.0 / noOfRows;
         double progress = 0.0;
@@ -85,7 +89,7 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
         for (int i = 0; i < noOfRows && rowIterator.hasNext();
             i++) {
             final DataRow row = rowIterator.next();
-            model.addDataRow(row);
+            m_model.addDataRow(row);
             progress += progressPerRow;
             exec.setProgress(progress, "Adding data rows to histogram...");
             exec.checkCanceled();
@@ -103,6 +107,58 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
     protected void reset() {
         super.reset();
         m_model = null;
+    }
+    
+    /**
+     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
+     * #configure(org.knime.core.data.DataTableSpec[])
+     */
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) 
+    throws InvalidSettingsException {
+        try {
+            return super.configure(inSpecs);
+        } catch (Exception e) {
+            final DataTableSpec spec = inSpecs[0];
+            if (spec == null) {
+                throw new IllegalArgumentException(
+                        "No table specification found");
+            }
+            final int numColumns = spec.getNumColumns();
+          if (numColumns < 1) {
+              throw new InvalidSettingsException(
+                      "Input table should have at least 1 column.");
+          }
+          boolean xFound = false;
+          boolean aggrFound = false;
+          for (int i = 0; i < numColumns; i++) {
+              final DataColumnSpec columnSpec = spec.getColumnSpec(i);
+              if (!xFound 
+                      && AbstractHistogramPlotter.X_COLUMN_FILTER.includeColumn(
+                      columnSpec)) {
+                  setSelectedXColumnName(columnSpec.getName());
+                  xFound = true;
+              } else if (!aggrFound 
+                      && AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER.
+                      includeColumn(columnSpec)) {
+                  final List<String> aggrNames = new ArrayList<String>(1);
+                  aggrNames.add(columnSpec.getName());
+                  setSelectedAggrColNames(aggrNames);
+                  aggrFound = true;
+              }
+              if (xFound && aggrFound) {
+                  break;
+              }
+          }
+          if (!xFound) {
+              throw new InvalidSettingsException(
+                      "No column compatible with this node. Column needs to "
+                      + "be nominal or numeric and must contain a valid "
+                      + "domain. In order to compute the domain of a column "
+                      + "use the DomainCalculator or ColumnFilter node.");
+          }
+        }
+        return new DataTableSpec[0];
     }
     
     /**

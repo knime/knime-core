@@ -24,15 +24,34 @@
  */
 package org.knime.base.node.viz.histogram.util;
 
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
+import org.knime.base.node.viz.histogram.datamodel.BinDataModelComparator;
+import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
 
 /**
  * This class provides methods to create the bins of numerical bars.
  * @author Tobias Koetter, University of Konstanz
  */
 public final class BinningUtil {
+
+    /**Compare the caption of bins.*/
+    private static final BinDataModelComparator BIN_CAPTION_COMPARATOR = 
+        new BinDataModelComparator(BinDataModelComparator.COMPARE_CAPTION);
 
     private BinningUtil() {
         //prevent object creation for utility class
@@ -160,27 +179,33 @@ public final class BinningUtil {
      */
     public static double myRoundedBorders(final double doubleVal,
             final double increment, final int noOfDigits) {
-        char[] incrementString = Double.toString(increment).toCharArray();
-        StringBuffer decimalFormatBuf = new StringBuffer();
-        boolean digitFound = false;
-        int digitCounter = 0;
-        int positionCounter = 0;
-        for (int length = incrementString.length; positionCounter < length
-                && digitCounter <= noOfDigits; positionCounter++) {
-            char c = incrementString[positionCounter];
-            if (c == '.') {
-                decimalFormatBuf.append(".");
-            } else {
-                if (c != '0' || digitFound) {
-                    digitFound = true;
-                    digitCounter++;
-                }
-                if (digitCounter <= noOfDigits) {
-                    decimalFormatBuf.append("#");
-                }
-            }
+        if (increment <= 0) {
+            throw new IllegalArgumentException("Increment should be positive");
         }
-        long factor = (long)Math.pow(10, digitCounter);
+//        boolean dotFound = false;
+        int firstDigitCounter = 0;
+//        int positionCounter = 0;
+        int currentVal = 0;
+        while (currentVal == 0) {
+            firstDigitCounter++;
+            currentVal = (int)(increment * Math.pow(10, firstDigitCounter));
+        }
+//        for (int length = incrementString.length; positionCounter < length; 
+//            positionCounter++) {
+//            char c = incrementString[positionCounter];
+//            if (c == '.') {
+//                dotFound = true;
+//            } else if (dotFound) {
+//                if (c != '0') {
+//                    firstDigitCounter++;
+//                    break;
+//                }
+//                firstDigitCounter++;
+//            }
+//        }
+        //add one more digit since we call round up the last number
+        final int digits = Math.max(noOfDigits, firstDigitCounter) + 1;
+        long factor = (long)Math.pow(10, digits);
 
         // Shift the decimal the correct number of places
         // to the right.
@@ -306,5 +331,329 @@ public final class BinningUtil {
             return divider * -1;
         }
         return divider;
+    }
+
+    /**
+     * Creates interactive nominal bins for the given column specification.
+     * @param colSpec the column specification
+     * @return the interactive bins
+     */
+    public static List<InteractiveBinDataModel> createInteractiveNominalBins(
+                final DataColumnSpec colSpec) {
+            //check if we have the values
+            if (colSpec.getDomain().getValues() == null) {
+                throw new IllegalArgumentException(
+                        "No domain values defined for nominal binning column. " 
+                        + "Please use DomainCalculator or ColumnFilter node "
+                        + "to set the domain values.");
+            }
+            final Set<DataCell> values = colSpec.getDomain().getValues();
+            final List<InteractiveBinDataModel> bins = 
+                new ArrayList<InteractiveBinDataModel>(values.size());
+            for (DataCell value : values) {
+                bins.add(new InteractiveBinDataModel(value.toString(), 0, 0));
+            }
+            //sort the bins by their caption
+            Collections.sort(bins, BinningUtil.BIN_CAPTION_COMPARATOR);
+            return bins;
+        }
+
+    /**
+     * Creates interactive nominal bins for the given column specification.
+     * @param colSpec the column specification
+     * @return the interactive bins
+     */
+    public static List<BinDataModel> createNominalBins(
+                final DataColumnSpec colSpec) {
+            //check if we have the values
+            if (colSpec.getDomain().getValues() == null) {
+                throw new IllegalArgumentException(
+                        "No domain values defined for nominal binning column. " 
+                        + "Please use DomainCalculator or ColumnFilter node "
+                        + "to set the domain values.");
+            }
+            final Set<DataCell> values = colSpec.getDomain().getValues();
+            final List<BinDataModel> bins = 
+                new ArrayList<BinDataModel>(values.size());
+            for (DataCell value : values) {
+                bins.add(new BinDataModel(value.toString(), 0, 0));
+            }
+            //sort the bins by their caption
+            Collections.sort(bins, BinningUtil.BIN_CAPTION_COMPARATOR);
+            return bins;
+        }
+
+    /**
+     * Creates the given number of interval bins for the given 
+     * column specification.
+     * @param colSpec the column specification
+     * @param numberOfBins the number of bins to create
+     * @return the created bins
+     */
+    public static List<InteractiveBinDataModel> createInteractiveIntervalBins(
+                final DataColumnSpec colSpec, final int numberOfBins) {
+            //set the bounds for binning
+            final DataColumnDomain domain = colSpec.getDomain();
+            final DataCell lowerBoundCell = domain.getLowerBound();
+            if (lowerBoundCell == null || lowerBoundCell.isMissing()
+                    || !lowerBoundCell.getType().isCompatible(
+                            DoubleValue.class)) {
+                throw new IllegalArgumentException(
+                "The lower bound of the x column domain should be defined");
+            }
+            double lowerBound = ((DoubleValue)lowerBoundCell).getDoubleValue();
+            final DataCell upperBoundCell = domain.getUpperBound();
+            if (upperBoundCell == null || upperBoundCell.isMissing()
+                    || !upperBoundCell.getType().isCompatible(
+                            DoubleValue.class)) {
+                throw new IllegalArgumentException(
+                "The upper bound of the x column domain should be defined");
+            }
+            final double upperBound = 
+                ((DoubleValue)upperBoundCell).getDoubleValue();
+            int noOfBins = numberOfBins;
+            //start the binning
+            if (noOfBins < 1) {
+                noOfBins = AbstractHistogramVizModel.DEFAULT_NO_OF_BINS;
+            }
+            if ((lowerBound - upperBound) == 0) {
+                noOfBins = 1;
+            }
+            final boolean isInteger = 
+                colSpec.getType().isCompatible(IntValue.class);
+            final double binInterval = createBinInterval(upperBound, 
+                    lowerBound, noOfBins, isInteger);
+            lowerBound = createBinStart(lowerBound, binInterval);
+            // increase the number of bars to include the max value
+            while (lowerBound + (binInterval * noOfBins) < upperBound) {
+                noOfBins++;
+            }
+            double leftBoundary = myRoundedBorders(lowerBound, 
+                    binInterval, AbstractHistogramVizModel.INTERVAL_DIGITS);
+            boolean firstBar = true;
+            final List<InteractiveBinDataModel> bins = 
+                new ArrayList<InteractiveBinDataModel>(noOfBins);
+            for (int i = 0; i < noOfBins; i++) {
+        // I have to use this rounding method to avoid problems with very
+        // small intervals. If the interval is very small it could happen
+        // that we get the same boundaries for several bars by rounding the
+        // borders
+                double rightBoundary = myRoundedBorders(
+                        leftBoundary + binInterval, binInterval, 
+                        AbstractHistogramVizModel.INTERVAL_DIGITS);
+                final String binCaption = createBarName(
+                        firstBar, leftBoundary, rightBoundary, isInteger);
+                firstBar = false;
+                bins.add(new InteractiveBinDataModel(
+                        binCaption, leftBoundary, rightBoundary));
+                // set the left boundary of the next bar to the current right
+                // boundary
+                leftBoundary = rightBoundary;
+            }
+            return bins;
+        }
+    /**
+     * Creates the given number of interval bins for the given 
+     * column specification.
+     * @param colSpec the column specification
+     * @param numberOfBins the number of bins to create
+     * @return the created bins
+     */
+    public static List<BinDataModel> createIntervalBins(
+                final DataColumnSpec colSpec, final int numberOfBins) {
+            //set the bounds for binning
+            final DataColumnDomain domain = colSpec.getDomain();
+            final DataCell lowerBoundCell = domain.getLowerBound();
+            if (lowerBoundCell == null || lowerBoundCell.isMissing()
+                    || !lowerBoundCell.getType().isCompatible(
+                            DoubleValue.class)) {
+                throw new IllegalArgumentException(
+                "The lower bound of the x column domain should be defined");
+            }
+            double lowerBound = ((DoubleValue)lowerBoundCell).getDoubleValue();
+            final DataCell upperBoundCell = domain.getUpperBound();
+            if (upperBoundCell == null || upperBoundCell.isMissing()
+                    || !upperBoundCell.getType().isCompatible(
+                            DoubleValue.class)) {
+                throw new IllegalArgumentException(
+                "The upper bound of the x column domain should be defined");
+            }
+            final double upperBound = 
+                ((DoubleValue)upperBoundCell).getDoubleValue();
+            int noOfBins = numberOfBins;
+            //start the binning
+            if (noOfBins < 1) {
+                noOfBins = AbstractHistogramVizModel.DEFAULT_NO_OF_BINS;
+            }
+            if ((lowerBound - upperBound) == 0) {
+                noOfBins = 1;
+            }
+            final boolean isInteger = 
+                colSpec.getType().isCompatible(IntValue.class);
+            final double binInterval = createBinInterval(upperBound, 
+                    lowerBound, noOfBins, isInteger);
+            lowerBound = createBinStart(lowerBound, binInterval);
+            // increase the number of bars to include the max value
+            while (lowerBound + (binInterval * noOfBins) < upperBound) {
+                noOfBins++;
+            }
+            double leftBoundary = myRoundedBorders(lowerBound, 
+                    binInterval, AbstractHistogramVizModel.INTERVAL_DIGITS);
+            boolean firstBar = true;
+            final List<BinDataModel> bins = 
+                new ArrayList<BinDataModel>(noOfBins);
+            for (int i = 0; i < noOfBins; i++) {
+        // I have to use this rounding method to avoid problems with very
+        // small intervals. If the interval is very small it could happen
+        // that we get the same boundaries for several bars by rounding the
+        // borders
+                double rightBoundary = myRoundedBorders(
+                        leftBoundary + binInterval, binInterval, 
+                        AbstractHistogramVizModel.INTERVAL_DIGITS);
+                final String binCaption = createBarName(
+                        firstBar, leftBoundary, rightBoundary, isInteger);
+                firstBar = false;
+                bins.add(new BinDataModel(
+                        binCaption, leftBoundary, rightBoundary));
+                // set the left boundary of the next bar to the current right
+                // boundary
+                leftBoundary = rightBoundary;
+            }
+            return bins;
+        }
+
+    /**
+     * Adds the given row either to the missing value bin if the x value is
+     * missing or to the corresponding bin.
+     * @param binNominal if <code>true</code> the bins should be nominal
+     * bins where the x value has to match exactly. If <code>false</code>
+     * the bins should be interval bins and the x value has fit into the lower
+     * and upper bound of the bin.
+     * 
+     * @param bins the {@link BinDataModel} list
+     * @param missingValueBin the bin for the missing x value rows
+     * @param startBin the index of the bin to start with to speed up the 
+     * process if the data rows are sorted by the x value
+     * @param xCell the x cell 
+     * @param rowColor the color of the row
+     * @param id the row id
+     * @param aggrColumns the aggregation columns as {@link ColorColumn} 
+     * objects in the same order like the aggregation cells
+     * @param aggrCells the aggregation {@link DataCell} objects which 
+     * contain the value
+     * @return the index of the bin where the row was added
+     */
+    public static int addDataRow2Bin(final boolean binNominal,
+            final List<? extends BinDataModel> bins, 
+            final BinDataModel missingValueBin, final int startBin, 
+            final DataCell xCell, final Color rowColor, final DataCell id, 
+            final Collection<ColorColumn> aggrColumns, 
+            final DataCell... aggrCells) {
+        if (bins == null) {
+            throw new NullPointerException("Bins must not be null");
+        }
+        if (missingValueBin == null) {
+            throw new NullPointerException(
+                    "Missing value bin must not be null");
+        }
+        if (xCell == null) {
+            throw new NullPointerException("X cell must not be null");
+        }
+        if (rowColor == null) {
+            throw new NullPointerException("Row color must not be null");
+        }
+        if (id == null) {
+            throw new NullPointerException("Row id must not be null");
+        }
+        if (xCell.isMissing()) {
+            missingValueBin.addDataRow(id, rowColor, aggrColumns, 
+                    aggrCells);
+            return startBin;
+        } else if (binNominal) {
+            return BinningUtil.addDataRow2NominalBin(bins, startBin, xCell, 
+                    rowColor, id, aggrColumns, aggrCells);
+        } else {
+            if (!xCell.getType().isCompatible(DoubleValue.class)) {
+                throw new IllegalStateException(
+                        "X value is not a valid number");
+            }
+            return BinningUtil.addDataRow2IntervalBin(bins, startBin, 
+                    (DoubleValue) xCell, rowColor, id, aggrColumns, 
+                    aggrCells);
+        }
+    }
+    
+    /**
+     * Adds the given row to a nominal bin by checking if the given x 
+     * value.toString is equal to the current bin caption.
+     * @param bins 
+     * @param startBin the index of the bin to start with
+     * @param xVal the x value of this row
+     * @param color the color of this row
+     * @param id the id of this row
+     * @param aggrColumns the selected aggregation columns
+     * @param aggrVals the aggregation values
+     * @return the index of the bin this row was added
+     */
+    private static int addDataRow2NominalBin(
+            final List<? extends BinDataModel> bins, 
+            final int startBin, final DataCell xVal, 
+            final Color color, final DataCell id, 
+            final Collection<ColorColumn> aggrColumns, 
+            final DataCell... aggrVals) {
+        final String xValString = xVal.toString();
+         for (int binIdx = startBin, length = bins.size(); binIdx < length; 
+             binIdx++) {
+            final BinDataModel bin = bins.get(binIdx);
+            if (bin.getXAxisCaption().equals(xValString)) {
+                bin.addDataRow(id, color, aggrColumns, aggrVals);
+                return startBin;
+            }
+         }
+        throw new IllegalArgumentException("No bin found for x value:" 
+                + xValString);
+    }
+
+    /**
+     * Adds the given row to a none nominal bin by checking if the given
+     * x value is in the range of the lower and upper bound of a bin.
+     * @param bins 
+     * @param startBin the index of the bin to start with
+     * @param xVal the x value of this row
+     * @param color the color of this row
+     * @param id the id of this row
+     * @param aggrColumns the selected aggregation columns
+     * @param aggrVals the aggregation values
+     * @return the index of the bin this row was added
+     */
+    private static int addDataRow2IntervalBin(
+            final List<? extends BinDataModel> bins, final int startBin, 
+            final DoubleValue xVal, final Color color, final DataCell id, 
+            final Collection<ColorColumn> aggrColumns, 
+            final DataCell... aggrVals) {
+        final double value = xVal.getDoubleValue();
+         for (int binIdx = startBin, length = bins.size(); binIdx < length; 
+             binIdx++) {
+            final BinDataModel bin = bins.get(binIdx);
+            final Double lowerBoundObj = bin.getLowerBound();
+            final Double upperBoundObj = bin.getUpperBound();
+            if (lowerBoundObj == null || upperBoundObj == null) {
+                continue;
+            }
+            final double lowerBound = lowerBoundObj.doubleValue();
+            final double upperBound = upperBoundObj.doubleValue();
+            boolean add2Bin = false;
+            if (binIdx == 0) {
+                add2Bin = (value >= lowerBound && value <= upperBound);
+            } else {
+                add2Bin = (value > lowerBound && value <= upperBound);
+            }
+            if (add2Bin) {
+                bin.addDataRow(id, color, aggrColumns, aggrVals);
+                return binIdx;
+            }
+         }
+        throw new IllegalArgumentException("No bin found for x value:" 
+                + xVal.toString());
     }
 }

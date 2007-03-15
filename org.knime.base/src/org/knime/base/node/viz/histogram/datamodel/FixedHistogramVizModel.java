@@ -26,9 +26,9 @@
 package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
-import java.awt.Point;
-import java.awt.Rectangle;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -36,7 +36,6 @@ import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DoubleValue;
 
 
 /**
@@ -44,7 +43,6 @@ import org.knime.core.data.DoubleValue;
  * @author Tobias Koetter, University of Konstanz
  */
 public class FixedHistogramVizModel extends AbstractHistogramVizModel {
-    private final Collection<FixedHistogramDataRow> m_sortedDataRows;
 
     private final Collection<ColorColumn> m_aggrColumns;
     
@@ -52,21 +50,22 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
     
     /**
      * Constructor for class HistogramVizModel.
-     * @param rowColors all possible colors the user has defined for a row
+     * @param rowColors the different row colors
+     * @param bins the bins
+     * @param missingValueBin the bin with the rows with missing x values
+     * @param xColSpec the column specification of the selected x column
+     * @param aggrColumns the selected aggregation columns. Could be 
+     * <code>null</code>
      * @param aggrMethod the {@link AggregationMethod} to use
      * @param layout {@link HistogramLayout} to use
-     * @param sortedRows the {@link FixedHistogramDataRow} sorted in ascending
-     * order
-     * @param xColSpec the {@link DataColumnSpec} of the x column
-     * @param aggrColumns the selected aggregation columns
-     * @param noOfBins the number of bins to create
      */
-    public FixedHistogramVizModel(final SortedSet<Color> rowColors,
-            final AggregationMethod aggrMethod, final HistogramLayout layout,
-            final Collection<FixedHistogramDataRow> sortedRows, 
+    public FixedHistogramVizModel(final SortedSet<Color> rowColors, 
+            final List<BinDataModel> bins, final BinDataModel missingValueBin,
             final DataColumnSpec xColSpec, 
-            final Collection<ColorColumn> aggrColumns, final int noOfBins) {
-        super(rowColors, aggrMethod, layout, noOfBins);
+            final Collection<ColorColumn> aggrColumns, 
+            final AggregationMethod aggrMethod, 
+            final HistogramLayout layout) {
+        super(rowColors, aggrMethod, layout, bins.size());
         if (aggrMethod == null) {
             throw new NullPointerException(
                     "Aggregation method must not be null");
@@ -75,15 +74,8 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
             throw new NullPointerException("Layout must not be null");
         }
         m_aggrColumns = aggrColumns;
-        m_sortedDataRows = sortedRows;
         m_xColSpec = xColSpec;
-        if (m_xColSpec.getType().isCompatible(
-                DoubleValue.class)) {
-            setBinNominal(false);
-        } else {
-            setBinNominal(true);
-        }
-        createBins();
+        setBins(bins, missingValueBin);
     }
 
 
@@ -113,32 +105,17 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
     public Collection<ColorColumn> getAggrColumns() {
         return m_aggrColumns;
     }
+
+    /**
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * AbstractHistogramVizModel#isFixed()
+     */
+    @Override
+    public boolean isFixed() {
+        return true;
+    }
     
-    /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#addRows2Bins()
-     */
-    @Override
-    protected void addRows2Bins() {
-        //add the data rows to the new bins
-        int startBin = 0;
-        for (FixedHistogramDataRow row : m_sortedDataRows) {
-            startBin = addDataRow2Bin(startBin, row.getXVal(), row.getColor(),
-                    row.getRowKey().getId(), m_aggrColumns, row.getAggrVals());
-        }
-    }
-
-// hiliting and selection stuff
-
-    /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#clearSelection()
-     */
-    @Override
-    public void clearSelection() {
-        // not supported in this implementation   
-    }
-
+    // hiliting stuff
 
     /**
      * @see org.knime.base.node.viz.histogram.datamodel.
@@ -146,7 +123,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
      */
     @Override
     public Set<DataCell> getHilitedKeys() {
-        return null;
+        return new HashSet<DataCell>(1);
     }
 
 
@@ -156,27 +133,26 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
      */
     @Override
     public Set<DataCell> getSelectedKeys() {
-        return null;
+        return new HashSet<DataCell>(1);
     }
-
 
     /**
      * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#selectElement(java.awt.Point)
+     * AbstractHistogramVizModel#unHiliteAll()
      */
     @Override
-    public void selectElement(final Point point) {
+    public void unHiliteAll() {
         //not supported in this implementation
     }
 
 
     /**
      * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#selectElement(java.awt.Rectangle)
+     * AbstractHistogramVizModel#updateHiliteInfo(java.util.Set, boolean)
      */
     @Override
-    public void selectElement(final Rectangle rect) {
+    public void updateHiliteInfo(final Set<DataCell> hilited, 
+            final boolean hilite) {
         //not supported in this implementation
     }
- 
 }

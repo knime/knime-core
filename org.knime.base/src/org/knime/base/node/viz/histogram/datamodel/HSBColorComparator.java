@@ -23,6 +23,7 @@
 package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
+import java.io.Serializable;
 import java.util.Comparator;
 
 
@@ -33,7 +34,10 @@ import java.util.Comparator;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-class HSBColorComparator implements Comparator<Color> {
+class HSBColorComparator implements Comparator<Color>, Serializable {
+    
+    private static final long serialVersionUID = -2017351242977651036L;
+    
     private static final int HUE_IDX = 0;
     private static final int SATURATION_IDX = 1;
     private static final int BRIGHTNESS_IDX = 2;

@@ -27,8 +27,7 @@ package org.knime.base.node.viz.histogram.node;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
+import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -55,7 +54,6 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
     private final DialogComponentNumber m_noOfRowsSpinner;
 
     private final DialogComponentBoolean m_allRowsBox;
-
     /**
      * Constructor for class HistogramNodeDialogPane.
      * 
@@ -82,15 +80,18 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
         addDialogComponent(m_noOfRowsSpinner);
 
         createNewGroup("Column selection:");
+        //the x column select box
         addDialogComponent(new DialogComponentColumnNameSelection(
                 new SettingsModelString(
                         AbstractHistogramNodeModel.CFGKEY_X_COLNAME, ""),
-                HistogramNodeDialogPane.X_COL_SEL_LABEL, 0, DataValue.class));
+                HistogramNodeDialogPane.X_COL_SEL_LABEL, 0, true, 
+                AbstractHistogramPlotter.X_COLUMN_FILTER));
 
+        //the aggregation column select box
         addDialogComponent(new DialogComponentColumnNameSelection(
                 new SettingsModelString(
                         AbstractHistogramNodeModel.CFGKEY_AGGR_COLNAME, ""),
-                AGGR_COL_SEL_LABEL, 0,
-                DoubleValue.class));
+                AGGR_COL_SEL_LABEL, 0, false, 
+                AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER));
     }
 }

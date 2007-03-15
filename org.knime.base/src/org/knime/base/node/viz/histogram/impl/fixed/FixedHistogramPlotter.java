@@ -21,6 +21,8 @@
  */
 package org.knime.base.node.viz.histogram.impl.fixed;
 
+import javax.swing.JPopupMenu;
+
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -48,5 +50,17 @@ public class FixedHistogramPlotter extends AbstractHistogramPlotter {
             final FixedHistogramProperties histogramProps,
             final HiLiteHandler handler) {
         super(histogramProps, handler);
+        
+    }
+    
+    /**
+     * @see org.knime.base.node.viz.plotter.AbstractPlotter
+     * #fillPopupMenu(javax.swing.JPopupMenu)
+     */
+    @Override
+    public void fillPopupMenu(final JPopupMenu popupMenu) {
+        //add disable the popup menu since this implementation
+        //doesn't supports hiliting
+        popupMenu.setEnabled(false);
     }
 }

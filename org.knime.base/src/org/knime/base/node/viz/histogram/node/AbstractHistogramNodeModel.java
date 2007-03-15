@@ -29,12 +29,17 @@ import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
+import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.StringValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -47,6 +52,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.ColumnFilter;
 
 /**
  * 
@@ -182,104 +188,67 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "No input specification available.");
         }
-        final DataTableSpec spec = inSpecs[0];
-        if (spec.getNumColumns() < 1) {
+        m_tableSpec = inSpecs[0];
+        if (m_tableSpec == null || m_tableSpec.getNumColumns() < 1) {
             throw new InvalidSettingsException(
                     "Input table should have at least 1 column.");
         }
-        // if we have nominal columns without possible values
-//        for (DataColumnSpec colSpec : spec) {
-//            if (!colSpec.getType().isCompatible(DoubleValue.class) 
-//                    && colSpec.getDomain().getValues() == null) {
-//                throw new InvalidSettingsException(
-//                        "Found nominal column without possible values: "
-//                        + colSpec.getName() 
-//                     + " Please use DomainCalculator or ColumnFilter node!");
-//            }
-//        }
+
         final String xCol = m_xColName.getStringValue();
-        m_xColSpec = spec.getColumnSpec(xCol);
-        if (!spec.containsName(xCol)) {
-//            throw new InvalidSettingsException("No x column selected");
-            //to be compatible to old implementations set the first
-            //column as default x column
-            if (spec.getNumColumns() > 0) {
-                // set the first column of the table as default x column
-                m_xColSpec = spec.getColumnSpec(0);
-                m_xColName.setStringValue(m_xColSpec.getName());
+        m_xColSpec = m_tableSpec.getColumnSpec(xCol);
+        if (!m_tableSpec.containsName(xCol)) {
+            // if the input table has only two columns where only one column
+            // is numerical select these two columns as default columns
+            // if both are numeric we don't know which one the user wants as
+            // aggregation column and which one as x column
+            final ColumnFilter xFilter = 
+                AbstractHistogramPlotter.X_COLUMN_FILTER;
+            final ColumnFilter aggrFilter = 
+                AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER;
+            if (m_tableSpec.getNumColumns() == 1) {
+                final DataColumnSpec columnSpec0 = m_tableSpec.getColumnSpec(0);
+                if (xFilter.includeColumn(columnSpec0)) {
+                    m_xColName.setStringValue(columnSpec0.getName());
+                } else {
+                    throw new InvalidSettingsException(
+                        "No column compatible with this node. Column needs to "
+                        + "be nominal or numeric and must contain a valid "
+                        + "domain. In order to compute the domain of a column "
+                        + "use the DomainCalculator or ColumnFilter node.");
+                }
+            } else if (m_tableSpec.getNumColumns() == 2) {
+                final DataColumnSpec columnSpec0 = m_tableSpec.getColumnSpec(0);
+                final DataColumnSpec columnSpec1 = m_tableSpec.getColumnSpec(1);
+                final DataType type0 = columnSpec0.getType();
+                final DataType type1 = columnSpec1.getType();
+
+                if (type0.isCompatible(StringValue.class)
+                        && type1.isCompatible(DoubleValue.class)
+                        && xFilter.includeColumn(columnSpec0)
+                        && aggrFilter.includeColumn(columnSpec1)) {
+                    m_xColName.setStringValue(m_tableSpec.getColumnSpec(0)
+                            .getName());
+                    m_aggrColName.setStringValue(m_tableSpec.getColumnSpec(1)
+                            .getName());
+                } else if (type0.isCompatible(DoubleValue.class)
+                        && type1.isCompatible(StringValue.class)
+                        && xFilter.includeColumn(columnSpec1)
+                        && aggrFilter.includeColumn(columnSpec0)) {
+                    m_xColName.setStringValue(m_tableSpec.getColumnSpec(1)
+                            .getName());
+                    m_aggrColName.setStringValue(m_tableSpec.getColumnSpec(0)
+                            .getName());
+                } else {
+                    throw new InvalidSettingsException(
+                            "Please define the x column name.");
+                }
             } else {
                 throw new InvalidSettingsException(
-                    "No column found in table specification.");
+                        "Please define the x column name.");
             }
         }
-//        final String aggrColName = m_aggrColName.getStringValue();
-//        if (!spec.containsName(aggrColName)) {
-//            final int numColumns = spec.getNumColumns();
-//            final String xColName = m_xColName.getStringValue();
-//            boolean found = false;
-//            for (int i = 0; i < numColumns; i++) {
-//                final DataColumnSpec columnSpec = spec.getColumnSpec(i);
-//                if (!columnSpec.getName().equals(xColName) 
-//                        && columnSpec.getType().isCompatible(
-//                                DoubleValue.class)) {
-//                    m_aggrColName.setStringValue(columnSpec.getName());
-//                    found = true;
-//                    break;
-//                }
-//            }
-//            if (!found) {
-//                throw new IllegalArgumentException(
-//                        "Aggregation column not found.");
-//            }
-//        }
         return new DataTableSpec[0];
     }
-
-//  /** 
-//   * @see org.knime.core.node.NodeModel
-//   *      #configure(org.knime.core.data.DataTableSpec[])
-//   */
-//  @Override
-//  protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-//  throws InvalidSettingsException {
-//      if (inSpecs == null || inSpecs[0] == null) {
-//          throw new InvalidSettingsException("No input spec available.");
-//      }
-//      final DataTableSpec spec = inSpecs[0];
-//      if (spec.getNumColumns() < 2) {
-//          throw new InvalidSettingsException(
-//                  "Input table should have at least 2 columns.");
-//      }
-//      final String xCol = m_xColName.getStringValue();
-//      if (!spec.containsName(xCol)) {
-//          //if the input table has only two columns where only one column
-//          //is numerical select these two columns as default columns
-//          //if both are numeric we don't know which one the user wants as
-//          //aggregation column and which one as x column
-//          if (spec.getNumColumns() == 2) {
-//              final DataType type0 = spec.getColumnSpec(0).getType();
-//              final DataType type1 = spec.getColumnSpec(1).getType();
-//              if (type0.isCompatible(StringValue.class) 
-//                      && type1.isCompatible(DoubleValue.class)) {
-//                  m_xColName.setStringValue(spec.getColumnSpec(0).getName());
-//                  m_aggrColName.setStringValue(
-//                          spec.getColumnSpec(1).getName());
-//              } else if (type0.isCompatible(DoubleValue.class) 
-//                      && type1.isCompatible(StringValue.class)) {
-//                  m_xColName.setStringValue(spec.getColumnSpec(1).getName());
-//                  m_aggrColName.setStringValue(
-//                          spec.getColumnSpec(0).getName());
-//              } else {
-//                  throw new InvalidSettingsException(
-//                  "Please define the x column name.");
-//              }
-//          } else {
-//              throw new InvalidSettingsException(
-//                      "Please define the x column name.");
-//          }
-//      }
-//      return new DataTableSpec[0];
-//  }
     
     /**
      * @see org.knime.core.node.NodeModel #execute(BufferedDataTable[],
@@ -316,14 +285,21 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             throw new IllegalArgumentException("X column index not found");
         }
         final String aggrColName = m_aggrColName.getStringValue();
-        final int aggrColIdx = m_tableSpec.findColumnIndex(aggrColName);
-        if (aggrColIdx < 0) {
-            throw new IllegalArgumentException("Aggregation column not found.");
+        if (aggrColName == null || aggrColName.trim().length() < 1) {
+            //the user hasn't selected an aggregation column
+            //thats fine since it is optional
+            m_aggrCols = null;
+        } else {
+            final int aggrColIdx = m_tableSpec.findColumnIndex(aggrColName);
+            if (aggrColIdx < 0) {
+                throw new IllegalArgumentException(
+                        "Selected aggregation column not found.");
+            }
+            final ColorColumn aggrColumn = 
+                new ColorColumn(Color.LIGHT_GRAY, aggrColIdx, aggrColName);
+            m_aggrCols = new ArrayList<ColorColumn>(1);
+            m_aggrCols.add(aggrColumn);
         }
-        final ColorColumn aggrColumn = 
-            new ColorColumn(Color.LIGHT_GRAY, aggrColIdx, aggrColName);
-        m_aggrCols = new ArrayList<ColorColumn>(1);
-        m_aggrCols.add(aggrColumn);
         
         if (m_allRows.getBooleanValue()) {
             //set the actual number of rows in the selected number of rows
@@ -367,6 +343,51 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      */
     protected Collection<ColorColumn> getAggrColumns() {
         return m_aggrCols;
+    }
+    
+    /**
+     * @return the name of the selected x column or null if none is selected
+     */
+    protected String getSelectedXColumnName() {
+        final String value = m_xColName.getStringValue();
+        if (value == null || value.trim().length() < 1) {
+            return null;
+        }
+        return value;
+    }
+    
+    /**
+     * @param name the new selected x column name
+     */
+    protected void setSelectedXColumnName(final String name) {
+        if (name == null) {
+            throw new NullPointerException("Name must not be null");
+        }
+        m_xColName.setStringValue(name);
+    }
+    
+    /**
+     * @return all selected aggregation column names or null if none is
+     * selected
+     */
+    protected List<String> getSelectedAggrColNames() {
+        final String value = m_aggrColName.getStringValue();
+        if (value == null || value.trim().length() < 1) {
+            return null;
+        }
+        final ArrayList<String> names = new ArrayList<String>(1);
+        names.add(value);
+        return names;
+    }
+    
+    /**
+     * @param names the new selected aggregation names
+     */
+    protected void setSelectedAggrColNames(final List<String> names) {
+        if (names == null || names.size() < 1) {
+            throw new NullPointerException("Names must not be null or empty");
+        }
+        m_aggrColName.setStringValue(names.get(0));
     }
     
     /**

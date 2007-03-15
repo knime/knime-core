@@ -39,7 +39,7 @@ import org.knime.core.node.NodeView;
  */
 public class FixedColumnHistogramNodeView extends NodeView {
     
-    private final FixedColumnHistogramNodeModel m_nodeModel;
+    private final AbstractHistogramNodeModel m_nodeModel;
     
     private FixedHistogramPlotter m_plotter;
 
@@ -53,9 +53,9 @@ public class FixedColumnHistogramNodeView extends NodeView {
         if (!(nodeModel instanceof FixedColumnHistogramNodeModel)) {
             throw new IllegalArgumentException(NodeModel.class.getName()
                     + " not an instance of "
-                    + HistogramNodeModel.class.getName());
+                    + AbstractHistogramNodeModel.class.getName());
         }
-        m_nodeModel = (FixedColumnHistogramNodeModel)nodeModel;
+        m_nodeModel = (AbstractHistogramNodeModel)nodeModel;
     }
 
     /**
@@ -88,8 +88,9 @@ public class FixedColumnHistogramNodeView extends NodeView {
                 new FixedHistogramProperties(tableSpec, vizModel);
             m_plotter = new FixedHistogramPlotter(props, 
                     m_nodeModel.getInHiLiteHandler(0));
+            //hiliting is not supported in the fixed column histogram
             // add the hilite menu to the menu bar of the node view
-            getJMenuBar().add(m_plotter.getHiLiteMenu());
+//            getJMenuBar().add(m_plotter.getHiLiteMenu());
             setComponent(m_plotter);
         }
         m_plotter.setHiLiteHandler(m_nodeModel.getInHiLiteHandler(0));
