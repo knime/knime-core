@@ -592,14 +592,23 @@ public final class NodeLogger {
     }
 
     /**
+     * @param level minimum log level
+     * @see #setLevel(NodeLogger.LEVEL)
+     */
+    @Deprecated
+    public static void setLevelIntern(final LEVEL level) {
+        setLevel(level);
+    }
+    
+    /**
      * Sets an new minimum logging level for all internal appenders, that are,
      * log file, and <code>System.out</code> and <code>System.err</code>
      * appender. The maximum logging level stays <code>LEVEL.ALL</code> for
      * all appenders.
      * 
-     * @param level The new minimum logging level.
+     * @param level new minimum logging level
      */
-    public static void setLevelIntern(final LEVEL level) {
+    public static void setLevel(final LEVEL level) {
         getLogger(NodeLogger.class).info(
                 "Changing logging level to " + level.toString());
         LevelRangeFilter filter = new LevelRangeFilter();
@@ -612,12 +621,31 @@ public final class NodeLogger {
         // SERR_APPENDER.addFilter(filter);
         SOUT_APPENDER.addFilter(filter);
     }
+    
+    /**
+     * Returns the minimum logging retrieved from the underlying file appender.
+     * @return minimum logging level
+     */
+    public static LEVEL getLevel() {
+        Level l = ((LevelRangeFilter) FILE_APPENDER.getFilter()).getLevelMin();
+        return getLevel(l);
+    }
+    
+    /**   
+     * Checks if the minimum logging level is set to <code>LEVEL.DEBUG</code>.
+     * @return true if minimum logging level is <code>LEVEL.DEBUG</code>,
+     *         otherwise false     
+     */
+    public static boolean isDebug() {
+        return getLevel() == LEVEL.DEBUG;
+    }
+    
 
     /**
-     * Translates this logging levels into Log4J logging levels.
+     * Translates this logging <code>LEVEL</code> into Log4J logging levels.
      * 
-     * @param level The level to translate.
-     * @return The Log4J logging level.
+     * @param level the <code>LEVEL</code> to translate
+     * @return the Log4J logging level
      */
     private static Level getLevel(final LEVEL level) {
         switch (level) {
@@ -631,10 +659,30 @@ public final class NodeLogger {
             return Level.ERROR;
         case FATAL:
             return Level.FATAL;
-        case ALL:
-            return Level.ALL;
         default:
             return Level.ALL;
+        }
+    }
+    
+    /**
+     * Translates Log4J logging level into this <code>LEVEL</code>.
+     * 
+     * @param level the Level to translate
+     * @return this logging LEVEL
+     */
+    private static LEVEL getLevel(final Level level) {
+        if (level == Level.DEBUG) {
+            return LEVEL.DEBUG;
+        } else if (level == Level.INFO) {
+            return LEVEL.INFO;
+        } else if (level == Level.WARN) {
+            return LEVEL.WARN;
+        } else if (level == Level.ERROR) {
+            return LEVEL.ERROR;
+        } else if (level == Level.FATAL) {
+            return LEVEL.FATAL;
+        } else {
+            return LEVEL.ALL;
         }
     }
 
