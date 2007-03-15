@@ -257,6 +257,9 @@ public final class DialogComponentStringSelection extends DialogComponent {
         } else {
             m_combobox.setSelectedItem(sel);
         }
-
+        //update the size of the comboBox and force the repainting
+        //of the whole panel
+        m_combobox.setSize(m_combobox.getPreferredSize());
+        getComponentPanel().validate();
     }
 }
