@@ -367,7 +367,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
                 m_isDragged = false;
                 JPopupMenu menu = new JPopupMenu();
                 fillPopupMenu(menu);
-                menu.show(m_drawingPane, (int)at.getX(), (int)at.getY());
+                if (menu.isEnabled()) {
+                    menu.show(m_drawingPane, (int)at.getX(), (int)at.getY());
+                }
                 return;
     }
 
