@@ -95,6 +95,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     public AbstractHistogramNodeModel(final int nrDataIns, 
             final int nrDataOuts) {
         super(nrDataIns, nrDataOuts);
+        m_noOfRows.setEnabled(!m_allRows.getBooleanValue());
     }
 
     /**
@@ -311,6 +312,8 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
         if ((selectedNoOfRows) < maxNoOfRows) {
             setWarningMessage("Only the first " + selectedNoOfRows + " of " 
                     + maxNoOfRows + " rows are displayed.");
+        } else if (selectedNoOfRows > maxNoOfRows) {
+            m_noOfRows.setIntValue(maxNoOfRows);
         }
         createHistogramModel(exec, table);
         LOGGER.debug("Exiting execute(inData, exec) of class "

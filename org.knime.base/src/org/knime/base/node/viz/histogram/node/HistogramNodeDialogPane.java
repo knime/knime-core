@@ -51,33 +51,34 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
 
     private static final String AGGR_COL_SEL_LABEL = "Aggregation column:";
 
-    private final DialogComponentNumber m_noOfRowsSpinner;
+    private final SettingsModelInteger m_noOfRowsModel;
 
-    private final DialogComponentBoolean m_allRowsBox;
+    private final SettingsModelBoolean m_allRowsModel;
     /**
      * Constructor for class HistogramNodeDialogPane.
      * 
      */
     @SuppressWarnings("unchecked")
     protected HistogramNodeDialogPane() {
-
         super();
         createNewGroup("Rows to display:");
-        m_noOfRowsSpinner = new DialogComponentNumber(new SettingsModelInteger(
+        m_noOfRowsModel = new SettingsModelInteger(
                 AbstractHistogramNodeModel.CFGKEY_NO_OF_ROWS,
-                AbstractHistogramNodeModel.DEFAULT_NO_OF_ROWS),
+                AbstractHistogramNodeModel.DEFAULT_NO_OF_ROWS);
+        final DialogComponentNumber noOfRowsComp = 
+            new DialogComponentNumber(m_noOfRowsModel,
                 NO_OF_ROWS_LABEL, 1);
-        final SettingsModelBoolean allRowsModel = new SettingsModelBoolean(
+        m_allRowsModel = new SettingsModelBoolean(
                 AbstractHistogramNodeModel.CFGKEY_ALL_ROWS, false);
-        allRowsModel.addChangeListener(new ChangeListener() {
+        m_allRowsModel.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                m_noOfRowsSpinner.setEnabled(!m_allRowsBox.isSelected());
+                m_noOfRowsModel.setEnabled(!m_allRowsModel.getBooleanValue());
             }
         });
-        m_allRowsBox = new DialogComponentBoolean(allRowsModel, ALL_ROWS_LABEL);
-        m_noOfRowsSpinner.setEnabled(!m_allRowsBox.isSelected());
-        addDialogComponent(m_allRowsBox);
-        addDialogComponent(m_noOfRowsSpinner);
+        final DialogComponentBoolean allRowsComp = 
+            new DialogComponentBoolean(m_allRowsModel, ALL_ROWS_LABEL);
+        addDialogComponent(allRowsComp);
+        addDialogComponent(noOfRowsComp);
 
         createNewGroup("Column selection:");
         //the x column select box
