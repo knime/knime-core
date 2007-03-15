@@ -24,6 +24,9 @@
  */
 package org.knime.base.node.viz.histogram.util;
 
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.core.node.NodeLogger;
+
 import junit.framework.TestCase;
 
 /**
@@ -32,6 +35,8 @@ import junit.framework.TestCase;
  */
 public class BinningUtilTest extends TestCase {
 
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(BinningUtilTest.class);
     /**
      * Test method for {@link 
      * org.knime.base.node.viz.histogram.util.BinningUtil
@@ -95,6 +100,67 @@ public class BinningUtilTest extends TestCase {
         expected = 2;
         start = BinningUtil.createBinStart(minVal, interval);
         assertEquals(start, expected);
+        
+        minVal = -0.20000000018;
+        interval = 2;
+        start = BinningUtil.createBinStart(minVal, interval);
+        assertTrue(start <= minVal);
+        
+        minVal = 0.20000000018;
+        interval = 2;
+        start = BinningUtil.createBinStart(minVal, interval);
+        assertTrue(start <= minVal);
+
+        minVal = 200000018;
+        interval = 2;
+        start = BinningUtil.createBinStart(minVal, interval);
+        assertTrue(start <= minVal);
+
+        minVal = -200000018;
+        interval = 2;
+        start = BinningUtil.createBinStart(minVal, interval);
+        assertTrue(start <= minVal);
+        
+        minVal = 200000018;
+        interval = 333333;
+        start = BinningUtil.createBinStart(minVal, interval);
+        assertTrue(start <= minVal);
+
+        minVal = -200000018;
+        interval = 333333;
+        start = BinningUtil.createBinStart(minVal, interval);
+        assertTrue(start <= minVal);
+
+        minVal = 15;
+        interval = 2;
+        start = BinningUtil.createBinStart(minVal, interval);
+        assertTrue(start <= minVal);
+
+        minVal = -15;
+        interval = 2;
+        start = BinningUtil.createBinStart(minVal, interval);
+        assertTrue(start <= minVal);
+    }
+    
+    /**
+     * Test method {@link BinningUtil#smallValueRounder(double, int, boolean)}.
+     */
+    public void testSmallValueRounder() {
+        double val = -0.200000018;
+        double result = BinningUtil.smallValueRounder(val, 2, false, false);
+        assertTrue(result < val);
+        
+        val = -0.200000018;
+        result = BinningUtil.smallValueRounder(val, 2, false, true);
+        assertTrue(result > val);
+        
+        val = 0.200000018;
+        result = BinningUtil.smallValueRounder(val, 2, false, true);
+        assertTrue(result > val);
+        
+        val = 0.200000018;
+        result = BinningUtil.smallValueRounder(val, 2, false, false);
+        assertTrue(result < val);
     }
 
     /**
@@ -103,12 +169,61 @@ public class BinningUtilTest extends TestCase {
      * #myRoundedBorders(double, double, int)}.
      */
     public void testMyRoundedBorders() {
-        double value = 0;
-        double increment = 0;
-        int noOfDigits = 2;
+        
+        int noOfDigits = AbstractHistogramVizModel.INTERVAL_DIGITS;
+        try {
+            BinningUtil.myRoundedBorders(0.0, 0, noOfDigits);
+            fail("Zero or negative increment shouldn't be allowed");
+        } catch (IllegalArgumentException e) {
+            //thats fine
+        }
+        try {
+            BinningUtil.myRoundedBorders(0.0, -1, noOfDigits);
+            fail("Zero or negative increment shouldn't be allowed");
+        } catch (IllegalArgumentException e) {
+            //thats fine
+        }
+        double baseVal = 0;
+        double increment = 0.1;
+        double value = baseVal + increment;
         double roundedVal = 
             BinningUtil.myRoundedBorders(value, increment, noOfDigits);
-        assertEquals(roundedVal, value);
+        assertTrue(roundedVal >= value);
+        
+        baseVal = -0.200000018;
+        testIncrement(10, baseVal, noOfDigits);
+        
+        baseVal = 0.200000018;
+        testIncrement(10, baseVal, noOfDigits);
+        
+        baseVal = 2000;
+        testIncrement(10, baseVal, noOfDigits);
+        
+        baseVal = 2000;
+
+        increment = 10;
+        value = baseVal + increment;
+        roundedVal = BinningUtil.myRoundedBorders(value, increment, noOfDigits);
+        assertTrue(roundedVal >= value);
+    }
+
+    private void testIncrement(final int noOfIncrements,
+            final double baseVal, final int noOfDigits) {
+        double increment;
+        double value;
+        double roundedVal;
+        for(int i = 0; i < noOfIncrements; i++) {
+            increment = 1 / Math.pow(10, i);
+            value = baseVal + increment;
+            roundedVal = 
+                BinningUtil.myRoundedBorders(value, increment, noOfDigits);
+            LOGGER.debug("Increment: " + increment);
+            if (value < 0) {
+                assertTrue(roundedVal <= value);
+            } else {
+                assertTrue(roundedVal >= value);
+            }
+        }
     }
 
 }
