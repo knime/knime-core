@@ -59,7 +59,7 @@ public class SizeModelDouble implements SizeModel {
     
     /**
      * Compute size based on actual value of this cell and the range
-     * which was defined during contruction.
+     * which was defined during construction.
      * 
      * @param dc value to be used for size computation.
      * @return size in percent or -1 if cell type invalid or out of range
