@@ -25,12 +25,13 @@
 package org.knime.core.data.container;
 
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 
 /**
- * Wrapper for {@link BlobDataCell}. We explicitely wrap those cells in this
+ * Wrapper for {@link BlobDataCell}. We explicitly wrap those cells in this
  * package to delay the access to the latest time possible (when someone
  * calls getCell() on the row).
  * @author Bernd Wiswedel, University of Konstanz
@@ -40,7 +41,7 @@ final class BlobWrapperDataCell extends DataCell {
     private final Buffer m_buffer;
     private final BlobAddress m_blobAddress;
     private final Class<? extends BlobDataCell> m_blobClass;
-    private BlobDataCell m_cell;
+    private SoftReference<BlobDataCell> m_cellRef;
     
     /**
      * Keeps references.
@@ -61,14 +62,16 @@ final class BlobWrapperDataCell extends DataCell {
      * @return The blob Data cell being read.
      */
     BlobDataCell getCell() {
-        if (m_cell == null) {
+        BlobDataCell cell = m_cellRef != null ? m_cellRef.get() : null;
+        if (cell == null) {
             try {
-                m_cell = m_buffer.readBlobDataCell(m_blobAddress, m_blobClass);
+                cell = m_buffer.readBlobDataCell(m_blobAddress, m_blobClass);
+                m_cellRef = new SoftReference<BlobDataCell>(cell);
             } catch (IOException ioe) {
                 throw new RuntimeException(ioe);
             }
         }
-        return m_cell;
+        return cell;
     }
     
     /** @return The blob address. */
