@@ -27,7 +27,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -41,7 +40,6 @@ import javax.swing.border.Border;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.NotConfigurableException;
 
@@ -59,9 +57,9 @@ public class ColumnSelectionPanel extends JPanel {
     /** Contains all column names for the given given filter class. */
     private final JComboBox m_chooser;
 
-    /** Show only columns of types that are compatible 
-     * to one of theses classes. */
-    private final Class<? extends DataValue>[] m_filterClasses;
+    
+    /**Show only columns which pass the given {@link ColumnFilter}.*/
+    private final ColumnFilter m_columnFilter;
     
     private boolean m_isRequired;
     
@@ -108,6 +106,36 @@ public class ColumnSelectionPanel extends JPanel {
             final Class<? extends DataValue>... filterValueClasses) {
         this(BorderFactory.createTitledBorder(borderTitle), filterValueClasses);
     }
+
+    /**
+     * Creates new Panel that will filter columns using the given 
+     * {@link ColumnFilter}. The panel will have a border as given. 
+     * If null, no border is set.
+     * 
+     * 
+     * @param columnFilter {@link ColumnFilter}. The combo box
+     *            will allow to select only columns compatible with the 
+     *            column filter. All other columns will be ignored.
+     * @param border Border for the panel or null to have no border.
+     * 
+     * @see #update(DataTableSpec,String)
+     */
+    public ColumnSelectionPanel(final Border border,
+            final ColumnFilter columnFilter) {
+        if (columnFilter == null) {
+            throw new NullPointerException("ColumnFilter must not be null");
+        }
+        m_columnFilter = columnFilter;
+        if (border != null) {
+            setBorder(border);
+        }
+        m_chooser = new JComboBox();
+        m_chooser.setRenderer(new DataColumnSpecListCellRenderer());
+        m_chooser.setMinimumSize(new Dimension(100, 25));
+        m_chooser.setMaximumSize(new Dimension(Integer.MAX_VALUE, 25));
+        m_isRequired = true;
+        add(m_chooser);
+    }
     
     /**
      * Creates new Panel that will filter columns for particular value classes.
@@ -123,16 +151,7 @@ public class ColumnSelectionPanel extends JPanel {
     public ColumnSelectionPanel(final Border border,
             final Class<? extends DataValue>... filterValueClasses) {
         super(new FlowLayout());
-        if (filterValueClasses == null || filterValueClasses.length == 0) {
-            throw new NullPointerException("Classes must not be null");
-        }
-        List<Class<? extends DataValue>> list = 
-            Arrays.asList(filterValueClasses);
-        if (list.contains(null)) {
-            throw new NullPointerException("List of value classes must not " 
-                    + "contain null elements.");
-        }
-        m_filterClasses = filterValueClasses;
+        m_columnFilter = new DataValueColumnFilter(filterValueClasses);
         if (border != null) {
             setBorder(border);
         }
@@ -149,20 +168,43 @@ public class ColumnSelectionPanel extends JPanel {
      * preserves the minimum size to either the label width or the combo box 
      * width.
      * @param label label of the combo box.
+     * @param columnFilter {@link ColumnFilter}. The combo box
+     *            will allow to select only columns compatible with the 
+     *            column filter. All other columns will be ignored.
+     */
+    public ColumnSelectionPanel(final JLabel label, 
+            final ColumnFilter columnFilter) {
+        if (columnFilter == null) {
+            throw new NullPointerException("ColumnFilter must not be null");
+        }
+        m_columnFilter = columnFilter;
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        m_chooser = new JComboBox();
+        m_chooser.setRenderer(new DataColumnSpecListCellRenderer());
+        m_chooser.setMinimumSize(new Dimension(100, 25));
+        m_chooser.setMaximumSize(new Dimension(200, 25));
+        m_isRequired = true;
+        Box labelBox = Box.createHorizontalBox();
+        labelBox.add(label);
+        labelBox.add(Box.createHorizontalGlue());
+        add(labelBox);
+        add(Box.createVerticalGlue());
+        Box chooserBox = Box.createHorizontalBox();
+        chooserBox.add(m_chooser);
+        chooserBox.add(Box.createHorizontalGlue());
+        add(chooserBox);        
+    }
+    
+    /**
+     * Creates a column selection panel with a label instead of a border which 
+     * preserves the minimum size to either the label width or the combo box 
+     * width.
+     * @param label label of the combo box.
      * @param filterValueClasses allowed classes.
      */
     public ColumnSelectionPanel(final JLabel label, 
             final Class<? extends DataValue>...filterValueClasses) {
-        if (filterValueClasses == null || filterValueClasses.length == 0) {
-            throw new NullPointerException("Classes must not be null");
-        }
-        List<Class<? extends DataValue>> list = 
-            Arrays.asList(filterValueClasses);
-        if (list.contains(null)) {
-            throw new NullPointerException("List of value classes must not " 
-                    + "contain null elements.");
-        }
-        m_filterClasses = filterValueClasses;
+        m_columnFilter = new DataValueColumnFilter(filterValueClasses);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         m_chooser = new JComboBox();
         m_chooser.setRenderer(new DataColumnSpecListCellRenderer());
@@ -182,7 +224,7 @@ public class ColumnSelectionPanel extends JPanel {
     
     /**
      * True, if a compatible type is required, false otherwise.
-     * If required an excpetion is thrown in the update method +
+     * If required an exception is thrown in the update method +
      * if no compatible type was found in the input spec. If it is not required
      * this exception is suppressed.
      * @param isRequired True, if at least one compatible type is required, 
@@ -222,14 +264,10 @@ public class ColumnSelectionPanel extends JPanel {
             DataColumnSpec selectMe = null;
             for (int c = 0; c < spec.getNumColumns(); c++) {
                 DataColumnSpec current = spec.getColumnSpec(c);
-                DataType type = current.getType();
-                for (Class<? extends DataValue> cl : m_filterClasses) {
-                    if (type.isCompatible(cl)) {
-                        m_chooser.addItem(current);
-                        if (current.getName().equals(selColName)) {
-                            selectMe = current;
-                        }
-                        break;
+                if (m_columnFilter.includeColumn(current)) {
+                    m_chooser.addItem(current);
+                    if (current.getName().equals(selColName)) {
+                        selectMe = current;
                     }
                 }
             }
@@ -244,24 +282,7 @@ public class ColumnSelectionPanel extends JPanel {
             }
         }
         if (m_chooser.getItemCount() == 0 && m_isRequired) {
-            StringBuffer error = new StringBuffer(
-                    "No column in spec compatible to");
-            if (m_filterClasses.length == 1) {
-                error.append(" \"");
-                error.append(m_filterClasses[0].getSimpleName());
-                error.append('"');
-            } else {
-                for (int i = 0; i < m_filterClasses.length; i++) {
-                    error.append(" \"");
-                    error.append(m_filterClasses[i].getSimpleName());
-                    error.append('"');
-                    if (i == m_filterClasses.length - 2) { // second last
-                        error.append(" or");
-                    }
-                }
-            }
-            error.append('.');
-            throw new NotConfigurableException(error.toString());
+            throw new NotConfigurableException(m_columnFilter.allFilteredMsg());
         }
     }
 

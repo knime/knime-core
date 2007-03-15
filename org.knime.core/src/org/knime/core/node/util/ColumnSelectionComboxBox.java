@@ -24,8 +24,6 @@ package org.knime.core.node.util;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
-import java.util.Arrays;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
@@ -33,7 +31,6 @@ import javax.swing.border.Border;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.NotConfigurableException;
 
@@ -50,9 +47,9 @@ public class ColumnSelectionComboxBox extends JComboBox {
     private static final long serialVersionUID = 5797563450894378207L;
 
     /**
-     * Show only columns of types that are compatible to one of theses classes.
+     * Show only columns that are compatible to the ColumnFilter.
      */
-    private final Class<? extends DataValue>[] m_filterClasses;
+    private final ColumnFilter m_columnFilter;
 
     /**
      * Creates new Panel that will filter columns for particular value classes.
@@ -109,23 +106,32 @@ public class ColumnSelectionComboxBox extends JComboBox {
      */
     public ColumnSelectionComboxBox(final Border border,
             final Class<? extends DataValue>... filterValueClasses) {
-        if (filterValueClasses == null || filterValueClasses.length == 0) {
-            throw new NullPointerException("Classes must not be null");
+        this(border, new DataValueColumnFilter(filterValueClasses));
+    }
+    
+    /**
+     * Creates new Panel that will filter columns for particular value classes.
+     * The panel will have a border as given. If null, no border is set.
+     * 
+     * @param columnFilter The combo box will allow to select only columns 
+     *                      which are not filtered by this 
+     *                      {@link ColumnFilter}
+     * @param border Border for the panel or null to have no border.
+     * 
+     * @see #update(DataTableSpec, String)
+     */
+    public ColumnSelectionComboxBox(final Border border,
+            final ColumnFilter columnFilter) {
+        if (columnFilter == null) {
+            throw new NullPointerException("Column filter must not be null");
         }
-        List<Class<? extends DataValue>> list = Arrays
-                .asList(filterValueClasses);
-        if (list.contains(null)) {
-            throw new NullPointerException("List of value classes must not "
-                    + "contain null elements.");
-        }
-        m_filterClasses = filterValueClasses;
+        m_columnFilter = columnFilter;
         if (border != null) {
             setBorder(border);
         }
         setRenderer(new DataColumnSpecListCellRenderer());
         setMinimumSize(new Dimension(100, 25));
     }
-
     
     /**
      * Updates this filter panel by removing all current items and adding the
@@ -180,14 +186,10 @@ public class ColumnSelectionComboxBox extends JComboBox {
         if (spec != null) {
             for (int c = 0; c < spec.getNumColumns(); c++) {
                 DataColumnSpec current = spec.getColumnSpec(c);
-                DataType type = current.getType();
-                for (Class<? extends DataValue> cl : m_filterClasses) {
-                    if (type.isCompatible(cl)) {
-                        addItem(current);
-                        if (current.getName().equals(selColName)) {
-                            selectMe = current;
-                        }
-                        break;
+                if (m_columnFilter.includeColumn(current)) {
+                    addItem(current);
+                    if (current.getName().equals(selColName)) {
+                        selectMe = current;
                     }
                 }
             }
@@ -215,26 +217,7 @@ public class ColumnSelectionComboxBox extends JComboBox {
             }
         }
         if (getItemCount() == 0) {
-            StringBuffer error = new StringBuffer(
-                    "No column in spec compatible to");
-            if (m_filterClasses.length == 1) {
-                error.append(" \"");
-                error.append(m_filterClasses[0].getSimpleName());
-                error.append('"');
-            } else {
-                for (int i = 0; i < m_filterClasses.length; i++) {
-                    error.append(" \"");
-                    error.append(m_filterClasses[i].getSimpleName());
-                    error.append('"');
-                    if (i == m_filterClasses.length - 2) { // second last
-                        error.append(" or");
-                    } else if (i < m_filterClasses.length - 2) {
-                        error.append(", ");
-                    }
-                }
-            }
-            error.append('.');
-            throw new NotConfigurableException(error.toString());
+            throw new NotConfigurableException(m_columnFilter.allFilteredMsg());
         }
     }
 
