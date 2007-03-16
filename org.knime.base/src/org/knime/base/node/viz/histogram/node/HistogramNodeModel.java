@@ -181,21 +181,23 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
 
     /**
      * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
-     * #loadInternals(java.io.File, org.knime.core.node.ExecutionMonitor)
+     * #loadHistogramInternals(java.io.File, 
+     * org.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadHistogramInternals(final File dataDir, 
             final ExecutionMonitor exec) {
-        //nothing to do since it is auto executable
+        //      nothing to do since it is auto executable
     }
 
     /**
      * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
-     * #saveInternals(java.io.File, org.knime.core.node.ExecutionMonitor)
+     * #saveHistogramInternals(java.io.File, 
+     * org.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveHistogramInternals(final File dataDir, 
             final ExecutionMonitor exec) {
-        //nothing to do since it is auto executable
+        //      nothing to do since it is auto executable
     }
 }

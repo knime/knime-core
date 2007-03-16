@@ -187,36 +187,42 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
-     * #loadInternals(java.io.File, org.knime.core.node.ExecutionMonitor)
+     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel#
+     * loadHistogramInternals(java.io.File, 
+     * org.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) {
+    protected void loadHistogramInternals(final File dataDir, 
+            final ExecutionMonitor exec) throws Exception {
         try {
-            m_model = FixedHistogramDataModel.loadFromFile(nodeInternDir, exec);
+            m_model = FixedHistogramDataModel.loadFromFile(dataDir, exec);
         } catch (FileNotFoundException e) {
             LOGGER.debug("Previous implementations haven't stored the data");
-        } catch (Exception e) {
-            LOGGER.warn("Exception while loadInternals: " + e.getMessage());
             m_model = null;
+        } catch (Exception e) {
+            LOGGER.warn("Error while saveHistogramInternals of "
+                    + "FixedColumn implementation: " + e.getMessage());
+            m_model = null;
+            throw e;
         }
     }
-
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
-     * #saveInternals(java.io.File, org.knime.core.node.ExecutionMonitor)
+     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel#
+     * saveHistogramInternals(java.io.File, 
+     * org.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) {
+    protected void saveHistogramInternals(final File dataDir, 
+            final ExecutionMonitor exec) throws Exception {
         if (m_model == null) {
             return;
         }
         try {
-            m_model.save2File(nodeInternDir, exec);
+            m_model.save2File(dataDir, exec);
         } catch (Exception e) {
-            LOGGER.warn("Error while saveInternals: " + e.getMessage());
+            LOGGER.warn("Error while saveHistogramInternals of "
+                    + "FixedColumn implementation: " + e.getMessage());
+            throw e;
         }
     }
 }

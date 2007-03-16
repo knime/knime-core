@@ -27,6 +27,8 @@ package org.knime.base.node.viz.histogram.node;
 
 import java.awt.Color;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -47,8 +49,10 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -71,6 +75,14 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     protected static final String CFGKEY_X_COLNAME = "HistogramXColName";
     /**Settings name of the aggregation column name.*/
     protected static final String CFGKEY_AGGR_COLNAME = "aggrColumn";
+    /**The name of the file which holds the table specification.*/
+    private static final String CFG_TABLESPEC_FILE = "histoTableSpec";
+    /**The root tag of the table specification.*/
+    private static final String CFG_TABLESPEC_TAG = "tableSpec";
+    
+    /**The name of the directory which holds the optional data of the 
+     * different histogram implementations.*/
+    public static final String CFG_DATA_DIR_NAME = "histoData";
 
     private DataTableSpec m_tableSpec;
     private DataColumnSpec m_xColSpec;
@@ -148,16 +160,75 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected abstract void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec);
-
+    protected void loadInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) {
+        try {
+            final File settingsFile = 
+                new File(nodeInternDir, CFG_TABLESPEC_FILE);
+            FileInputStream settingsIS = new FileInputStream(settingsFile);
+            final ConfigRO settings = NodeSettings.loadFromXML(settingsIS);
+            m_tableSpec = DataTableSpec.load(settings);
+            final File histoDataDir = 
+                new File(nodeInternDir, CFG_DATA_DIR_NAME);
+            //load the data of the implementation
+            loadHistogramInternals(histoDataDir, exec);
+        } catch (Exception e) {
+            LOGGER.debug("Error while loading table specification: " 
+                    + e.getMessage());
+            m_tableSpec = null;
+        }
+    }
+    
+    /**
+     * Called from the {@link #loadInternals(File, ExecutionMonitor)} method
+     * to let the histogram implementation load own internal data.
+     * @param dataDir the directory to write to
+     * @param exec the {@link ExecutionMonitor} to provide progress message
+     * @throws Exception if an exception occurs
+     */
+    protected abstract void loadHistogramInternals(final File dataDir, 
+            final ExecutionMonitor exec) throws Exception;
+    
     /**
      * @see org.knime.core.node.NodeModel#saveInternals( java.io.File,
      *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
-    protected abstract void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec);
+    protected void saveInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) {
+        if (m_tableSpec == null) {
+            return;
+        }
+        try {
+            final File settingsFile = 
+                new File(nodeInternDir, CFG_TABLESPEC_FILE);
+            final FileOutputStream settingsOS = 
+                new FileOutputStream(settingsFile);
+            final NodeSettings settings = new NodeSettings(CFG_TABLESPEC_TAG);
+            m_tableSpec.save(settings);
+            settings.saveToXML(settingsOS);
+            if (!new File(nodeInternDir, CFG_DATA_DIR_NAME).mkdir()) {
+                throw new Exception("Unable to create internal data directory");
+            }
+            final File histoDataDir = 
+                new File(nodeInternDir, CFG_DATA_DIR_NAME);
+            //save the data of the implementation
+            saveHistogramInternals(histoDataDir, exec);
+        } catch (Exception e) {
+            LOGGER.warn("Error while saving table specification: " 
+                    + e.getMessage());
+        }
+    }
+    /**
+     * Called from the {@link #saveInternals(File, ExecutionMonitor)} method
+     * to let the histogram implementation save own internal data.
+     * @param dataDir the directory to write to
+     * @param exec the {@link ExecutionMonitor} to provide progress message
+     * @throws Exception if an exception occurs
+     */
+    protected abstract void saveHistogramInternals(final File dataDir, 
+            final ExecutionMonitor exec) throws Exception;
+    
     /**
      * @see org.knime.core.node.NodeModel#reset()
      */
@@ -189,15 +260,15 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "No input specification available.");
         }
-        m_tableSpec = inSpecs[0];
-        if (m_tableSpec == null || m_tableSpec.getNumColumns() < 1) {
+        final DataTableSpec tableSpec = inSpecs[0];
+        if (tableSpec == null || tableSpec.getNumColumns() < 1) {
             throw new InvalidSettingsException(
                     "Input table should have at least 1 column.");
         }
 
         final String xCol = m_xColName.getStringValue();
-        m_xColSpec = m_tableSpec.getColumnSpec(xCol);
-        if (!m_tableSpec.containsName(xCol)) {
+        m_xColSpec = tableSpec.getColumnSpec(xCol);
+        if (!tableSpec.containsName(xCol)) {
             // if the input table has only two columns where only one column
             // is numerical select these two columns as default columns
             // if both are numeric we don't know which one the user wants as
@@ -206,8 +277,8 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                 AbstractHistogramPlotter.X_COLUMN_FILTER;
             final ColumnFilter aggrFilter = 
                 AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER;
-            if (m_tableSpec.getNumColumns() == 1) {
-                final DataColumnSpec columnSpec0 = m_tableSpec.getColumnSpec(0);
+            if (tableSpec.getNumColumns() == 1) {
+                final DataColumnSpec columnSpec0 = tableSpec.getColumnSpec(0);
                 if (xFilter.includeColumn(columnSpec0)) {
                     m_xColName.setStringValue(columnSpec0.getName());
                 } else {
@@ -217,9 +288,9 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                         + "domain. In order to compute the domain of a column "
                         + "use the DomainCalculator or ColumnFilter node.");
                 }
-            } else if (m_tableSpec.getNumColumns() == 2) {
-                final DataColumnSpec columnSpec0 = m_tableSpec.getColumnSpec(0);
-                final DataColumnSpec columnSpec1 = m_tableSpec.getColumnSpec(1);
+            } else if (tableSpec.getNumColumns() == 2) {
+                final DataColumnSpec columnSpec0 = tableSpec.getColumnSpec(0);
+                final DataColumnSpec columnSpec1 = tableSpec.getColumnSpec(1);
                 final DataType type0 = columnSpec0.getType();
                 final DataType type1 = columnSpec1.getType();
 
@@ -227,17 +298,17 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                         && type1.isCompatible(DoubleValue.class)
                         && xFilter.includeColumn(columnSpec0)
                         && aggrFilter.includeColumn(columnSpec1)) {
-                    m_xColName.setStringValue(m_tableSpec.getColumnSpec(0)
+                    m_xColName.setStringValue(tableSpec.getColumnSpec(0)
                             .getName());
-                    m_aggrColName.setStringValue(m_tableSpec.getColumnSpec(1)
+                    m_aggrColName.setStringValue(tableSpec.getColumnSpec(1)
                             .getName());
                 } else if (type0.isCompatible(DoubleValue.class)
                         && type1.isCompatible(StringValue.class)
                         && xFilter.includeColumn(columnSpec1)
                         && aggrFilter.includeColumn(columnSpec0)) {
-                    m_xColName.setStringValue(m_tableSpec.getColumnSpec(1)
+                    m_xColName.setStringValue(tableSpec.getColumnSpec(1)
                             .getName());
-                    m_aggrColName.setStringValue(m_tableSpec.getColumnSpec(0)
+                    m_aggrColName.setStringValue(tableSpec.getColumnSpec(0)
                             .getName());
                 } else {
                     throw new InvalidSettingsException(
@@ -265,8 +336,8 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
         }
         // create the data object
         final BufferedDataTable table = inData[0];
-        final DataTableSpec tableSpec = inData[0].getDataTableSpec();
-        if (tableSpec == null) {
+        m_tableSpec = inData[0].getDataTableSpec();
+        if (m_tableSpec == null) {
             throw new NullPointerException(
                     "Table specification must not be null");
         }
@@ -275,7 +346,6 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             throw new IllegalArgumentException(
                     "Maximum number of rows must be a positive integer");
         }
-        m_tableSpec = tableSpec;
         final String xCol = m_xColName.getStringValue();
         m_xColSpec = m_tableSpec.getColumnSpec(xCol);
         if (m_xColSpec == null) {
