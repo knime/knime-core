@@ -24,10 +24,10 @@
  */
 package org.knime.base.node.mine.sota;
 
-import java.io.Serializable;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.FuzzyIntervalValue;
+import org.knime.core.data.FuzzyNumberValue;
+import org.knime.core.data.IntervalValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -37,8 +37,8 @@ import org.knime.core.node.ModelContentWO;
  * 
  * @author Kilian Thiel, University of Konstanz
  */
-public class SotaFuzzyCell implements SotaCell, FuzzyIntervalValue, 
-Serializable {
+public final class SotaFuzzyCell implements SotaCell, FuzzyIntervalValue, 
+        FuzzyNumberValue, IntervalValue {
     
     private static final String CFG_KEY_MIN_SUPP = "FuzzyMinSupp";
     private static final String CFG_KEY_MAX_SUPP = "FuzzyMaxSupp";
@@ -166,5 +166,26 @@ Serializable {
      */
     public String getType() {
         return SotaCellFactory.FUZZY_TYPE;
+    }
+
+    /**
+     * @see org.knime.core.data.FuzzyNumberValue#getCore()
+     */
+    public double getCore() {
+        return getCenterOfGravity();
+    }
+
+    /**
+     * @see org.knime.core.data.IntervalValue#getRightBound()
+     */
+    public double getRightBound() {
+        return getMaxCore();
+    }
+
+    /**
+     * @see org.knime.core.data.IntervalValue#getLeftBound()
+     */
+    public double getLeftBound() {
+        return getMinCore();
     }     
 }
