@@ -132,7 +132,6 @@ public class CSVWriter extends BufferedWriter {
             } else {
                 first = true;
             }
-
             for (int i = 0; i < colCount; i++) {
                 String cName = inSpec.getColumnSpec(i).getName();
                 if (!first) {
