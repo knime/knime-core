@@ -207,7 +207,11 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
      * @param dotInfo the dots to be painted.
      */
     public void setDotInfoArray(final DotInfoArray dotInfo) {
-        m_dots = dotInfo;
+        if (dotInfo != null) {
+            m_dots = dotInfo;
+        } else {
+            m_dots = new DotInfoArray(0);
+        }
     }
     
     /**
