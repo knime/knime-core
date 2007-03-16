@@ -296,7 +296,7 @@ public abstract class InterruptibleNodeModel extends NodeModel {
                     executeOneIteration(exec);
                     m_iterationCounter++;
                     m_iterationsToDo--;
-                    if (m_iterationCounter % m_delay == 0) {
+                    if (m_delay == 0 || m_iterationCounter % m_delay == 0) {
                         notifyViews(this);
                     }
                 }
