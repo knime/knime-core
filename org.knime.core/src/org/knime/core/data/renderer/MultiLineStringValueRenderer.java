@@ -46,11 +46,10 @@ public final class MultiLineStringValueRenderer extends
      * @param description description for the renderer shown in the popup menu
      */
     public MultiLineStringValueRenderer(final String description) {
-        m_description = description;
+        m_description = description == null ? "Multi Line String" : description;
         setVerticalAlignment(SwingConstants.TOP);
-        m_currentFont =
-                new Font("Monospaced", getFont().getStyle(), getFont()
-                        .getSize());
+        m_currentFont = 
+            new Font("Monospaced", getFont().getStyle(), getFont().getSize());
         super.setFont(m_currentFont);
         setBackground(Color.WHITE);
         setUI(new MultiLineBasicLabelUI());
@@ -112,5 +111,29 @@ public final class MultiLineStringValueRenderer extends
                     new Font("Monospaced", font.getStyle(), font.getSize());
             super.setFont(m_currentFont);
         }
+    }
+
+    /**
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode() ^ m_description.hashCode();
+    }
+    
+    /**
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof MultiLineStringValueRenderer)) {
+            return false;
+        }
+        MultiLineStringValueRenderer other = (MultiLineStringValueRenderer)obj;
+        return other.getClass().equals(getClass()) 
+            && m_description.equals(other.m_description);
     }
 }
