@@ -23,7 +23,7 @@
  *    12.03.2007 (Tobias Koetter): created
  */
 
-package org.knime.base.node.viz.histogram.impl;
+package org.knime.base.node.viz.histogram.util;
 
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;

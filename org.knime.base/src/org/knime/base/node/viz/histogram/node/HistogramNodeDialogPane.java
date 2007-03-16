@@ -24,10 +24,14 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
+import java.awt.Dimension;
+
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.util.AggregationColumnDialogComponent;
+import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -89,10 +93,16 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
                 AbstractHistogramPlotter.X_COLUMN_FILTER));
 
         //the aggregation column select box
-        addDialogComponent(new DialogComponentColumnNameSelection(
-                new SettingsModelString(
-                        AbstractHistogramNodeModel.CFGKEY_AGGR_COLNAME, ""),
-                AGGR_COL_SEL_LABEL, 0, false, 
-                AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER));
+//        addDialogComponent(new DialogComponentColumnNameSelection(
+//                ,
+//                AGGR_COL_SEL_LABEL, 0, false, 
+//                AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER));
+        final AggregationColumnDialogComponent aggrCols = 
+            new AggregationColumnDialogComponent(AGGR_COL_SEL_LABEL,
+                    new SettingsModelColorNameColumns(
+                        AbstractHistogramNodeModel.CFGKEY_AGGR_COLNAME, null),
+                        new Dimension(150, 155), 
+                AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER);
+        addDialogComponent(aggrCols);
     }
 }

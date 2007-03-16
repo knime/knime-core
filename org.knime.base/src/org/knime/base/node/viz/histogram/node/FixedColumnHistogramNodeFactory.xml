@@ -27,7 +27,7 @@
 		interval [a,b] where a and b are included.</p>
 		<p>In order to work with huge data sets the user has to specify the 
 		desired x and aggregation column and the number of bins before 
-		opening the view. This node doesn't supports hiliting.
+		opening the view and hiliting is not supported.
 		For more interaction and hiliting support use the 
 		"Interactive Histogram" node.</p>
 		<p><b>Only columns with a valid domain are available in this view.
@@ -47,9 +47,13 @@
    	    </option>
    	  	<option name="Aggregation column">
    	  		This is the column to be used as the bar value and displayed on the
-   	  		y axis. Only numerical values are allowed. The aggregation method
-   	  		can be adjusted later in the 'Aggregation setting' section of view 
-   	  		properties .
+   	  		y axis. Only numerical values with a valid domain are allowed. 
+   	  		The aggregation method can be adjusted later in the 
+   	  		'Aggregation setting' section of view properties .
+   	    </option>
+   	  	<option name="Number of bins">
+   	  		The number of bins to create for a numerical x axis column.
+   	  		If the selected x column is nominal this value is ignored.
    	    </option>
 	</fullDescription>
 	

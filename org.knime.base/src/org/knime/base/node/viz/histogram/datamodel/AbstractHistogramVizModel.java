@@ -114,6 +114,9 @@ public abstract class AbstractHistogramVizModel {
     /**Holds the actual size of the drawing space.*/
     private Dimension m_drawingSpace;
 
+    /**The space between to bars in pixel.*/
+    public static final int SPACE_BETWEEN_BARS = 5;
+
     /**
      * The space between to elements in the {@link HistogramLayout.SIDE_BY_SIDE}
      * layout in  pixel.

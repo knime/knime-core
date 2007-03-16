@@ -55,9 +55,6 @@ public class BinDataModel implements Serializable {
     /**The color of the bar if no aggregation column is selected.*/
     private static final Color NO_AGGR_COL_COLOR = Color.GRAY;
 
-    /**The space between to bars in pixel.*/
-    private static final int SPACE_BETWEEN_BARS = 1;
-    
     private final String m_xAxisCaption;
     private final DataCell m_xAxisCaptionCell;
     private final Double m_lowerBound;
@@ -334,11 +331,10 @@ public class BinDataModel implements Serializable {
                 }
                 return;
             }
-            final double totalWidth = m_binRectangle.getWidth();
+            final int binWidth = (int)m_binRectangle.getWidth();
             final int noOfBars = aggrColumns.size();
-            final int barWidth = 
-                Math.max((int)totalWidth - (SPACE_BETWEEN_BARS * noOfBars), 1);
-            if (noOfBars * barWidth > totalWidth) {
+            m_drawBar = elementsFitInBin(noOfBars, binWidth);
+            if (!m_drawBar) {
                 //the total bin width is not enough to draw all bars so we don't
                 //need to calculate any further and reset all previous 
                 //bar rectangles
@@ -367,10 +363,12 @@ public class BinDataModel implements Serializable {
                 m_drawBar = false;
                 return;
             }
+
+            final int barWidth = calculateBarWidth(binWidth, noOfBars);
             final double heightPerVal = totalHeight / valRange;
             final int startX = (int) m_binRectangle.getX();
             final int startY = (int)m_binRectangle.getY();
-            int xCoord = startX + SPACE_BETWEEN_BARS;
+            int xCoord = startX + AbstractHistogramVizModel.SPACE_BETWEEN_BARS;
             for (ColorColumn aggrColumn : aggrColumns) {
                 final BarDataModel bar = 
                     m_bars.get(aggrColumn.getColor());
@@ -407,7 +405,8 @@ public class BinDataModel implements Serializable {
                 }
                 //add the bar width and the space between bars to the current
                 //x coordinate
-                xCoord += barWidth + SPACE_BETWEEN_BARS;
+                xCoord += barWidth 
+                + AbstractHistogramVizModel.SPACE_BETWEEN_BARS;
             }
         }
 
@@ -433,19 +432,15 @@ public class BinDataModel implements Serializable {
             final int yCoord = (int)m_binRectangle.getY();
             final int binHeight = (int) m_binRectangle.getHeight();
             m_binRectangle.setBounds(startX, yCoord, binWidth, binHeight);
-            
             final int noOfBars = m_bars.size();
-            final int barWidth = 
-                Math.max(binWidth - (SPACE_BETWEEN_BARS * noOfBars), 1);
-            final Collection<BarDataModel> bars = m_bars.values();
-            if (noOfBars * barWidth > binWidth) {
+            m_drawBar = elementsFitInBin(noOfBars, binWidth);
+            if (!m_drawBar) {
                 //the total bin width is not enough to draw all bars so we don't
                 //need to calculate any further and reset all previous 
                 //bar rectangles
     //            for (BarDataModel bar : bars) {
     //                bar.setBarRectangle(null, aggrMethod, layout, -1, null);
     //            }
-                m_drawBar = false;
                 return;
             }
             m_drawBar = true;
@@ -456,15 +451,51 @@ public class BinDataModel implements Serializable {
                         barElementColors, aggrColumns);
                 return;
             }
-    
-            int xCoord = startX + SPACE_BETWEEN_BARS;
-            for (BarDataModel bar : bars) {
+            final int barWidth = calculateBarWidth(binWidth, noOfBars);
+            int xCoord = startX 
+            + AbstractHistogramVizModel.SPACE_BETWEEN_BARS;
+            for (ColorColumn aggrCol : aggrColumns) {
+                final BarDataModel bar = m_bars.get(aggrCol.getColor());
                 bar.updateBarWidth(xCoord, barWidth, layout, 
                         barElementColors, aggrMethod, baseLine);
-                xCoord += barWidth + SPACE_BETWEEN_BARS;
+                xCoord += barWidth 
+                + AbstractHistogramVizModel.SPACE_BETWEEN_BARS;
             }
         }
 
+    /**
+     * @param binWidth the total width of this bin
+     * @param noOfBars the number of elements to fit in
+     * @return the iwdth
+     */
+    private static int calculateBarWidth(final int binWidth, 
+            final int noOfBars) {
+        return Math.max((binWidth 
+                - (AbstractHistogramVizModel.SPACE_BETWEEN_BARS 
+                        * noOfBars)) / noOfBars, 1);
+    }
+    /**
+     * Checks if all bars fit in the surrounding bin.
+     * @param layout the {@link HistogramLayout}
+     * @param noOfBars the number of bars which should fit
+     * @param binWidth the width of the bin
+     * @return <code>true</code> if the given number of bars fit into
+     * the given bin ranges
+     */
+    private static boolean elementsFitInBin(final int noOfBars, 
+            final int binWidth) {
+        if (noOfBars > 1) {
+            final int barWidth = 
+                calculateBarWidth(binWidth, noOfBars);
+            if (noOfBars * barWidth 
+                    > binWidth 
+                    - (AbstractHistogramVizModel.SPACE_BETWEEN_BARS 
+                            * noOfBars)) {
+                return false;
+            }
+        }
+        return true;
+    }
     /**
      * Clears all bars and rows from this bin.
      */

@@ -24,9 +24,8 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
+import java.awt.Color;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AggregationMethod;
@@ -34,6 +33,7 @@ import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
+import org.knime.base.node.viz.histogram.util.ColorNameColumn;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -141,9 +141,8 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
               } else if (!aggrFound 
                       && AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER.
                       includeColumn(columnSpec)) {
-                  final List<String> aggrNames = new ArrayList<String>(1);
-                  aggrNames.add(columnSpec.getName());
-                  setSelectedAggrColNames(aggrNames);
+                  setSelectedAggrColumns(new ColorNameColumn(Color.lightGray, 
+                          columnSpec.getName()));
                   aggrFound = true;
               }
               if (xFound && aggrFound) {
