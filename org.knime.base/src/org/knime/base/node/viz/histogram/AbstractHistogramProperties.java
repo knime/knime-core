@@ -52,6 +52,7 @@ import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Abstract class which handles the default properties like x column selection.
@@ -60,6 +61,8 @@ import org.knime.core.data.DataTableSpec;
  */
 public abstract class AbstractHistogramProperties extends
         AbstractPlotterProperties {
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(AbstractHistogramProperties.class);
 
     private static final String BIN_TAB_LABEL = "Bin settings";
 
@@ -579,6 +582,9 @@ public abstract class AbstractHistogramProperties extends
      */
     public void updateHistogramSettings(
             final AbstractHistogramVizModel vizModel) {
+        LOGGER.debug("Entering updateHistogramSettings(vizModel) "
+                + "of class AbstractHistogramProperties.");
+        final long startTime = System.currentTimeMillis();
         if (vizModel == null) {
             return;
         }
@@ -590,6 +596,7 @@ public abstract class AbstractHistogramProperties extends
         }
         // update the bin width values        
         final ChangeListener[] widthListeners = m_binWidth.getChangeListeners();
+        LOGGER.debug("No of bin width listener: " + widthListeners.length);
         for (ChangeListener listener : widthListeners) {
             m_binWidth.removeChangeListener(listener);
         }
@@ -603,11 +610,12 @@ public abstract class AbstractHistogramProperties extends
         for (ChangeListener listener : widthListeners) {
             m_binWidth.addChangeListener(listener);
         }
-
+        LOGGER.debug("Bin width updated");
         int maxNoOfBins = vizModel.getMaxNoOfBins();
         final int currentNoOfBins = vizModel.getNoOfBins();
         // update the number of bin values
         final ChangeListener[] noOfListeners = m_noOfBins.getChangeListeners();
+        LOGGER.debug("No of noOfBins listener: " + noOfListeners.length);
         for (ChangeListener listener : noOfListeners) {
             m_noOfBins.removeChangeListener(listener);
         }
@@ -633,7 +641,7 @@ public abstract class AbstractHistogramProperties extends
         for (ChangeListener listener : noOfListeners) {
             m_noOfBins.addChangeListener(listener);
         }
-        
+        LOGGER.debug("No of bins updated");
         //set the right aggregation method settings
         //since the set selected method doesn't trigger an event
         //we don't need to remove/add the action listener
@@ -670,41 +678,19 @@ public abstract class AbstractHistogramProperties extends
                 }
             }
         }
-        
+        LOGGER.debug("Aggregation method updated");
         // set the values of the select boxes
         //show empty bins box
-        final ItemListener[] emptyListeners = 
-            m_showEmptyBins.getItemListeners();
-        for (ItemListener listener : emptyListeners) {
-            m_showEmptyBins.removeItemListener(listener);
-        }
-        m_showEmptyBins.setSelected(vizModel.isShowEmptyBins());
-        m_showEmptyBins.setEnabled(vizModel.containsEmptyBins());
-        for (ItemListener listener : emptyListeners) {
-            m_showEmptyBins.addItemListener(listener);
-        }
+        updateSelectBox(m_showEmptyBins, vizModel.isShowEmptyBins(),
+                vizModel.containsEmptyBins());
+        LOGGER.debug("Show empty bins updated");
         //show missing value bin box
-        final ItemListener[] missingListeners = 
-            m_showMissingValBin.getItemListeners();
-        for (ItemListener listener : missingListeners) {
-            m_showMissingValBin.removeItemListener(listener);
-        }
-        m_showMissingValBin.setSelected(vizModel.isShowMissingValBin());
-        m_showMissingValBin.setEnabled(vizModel.containsMissingValueBin());
-        for (ItemListener listener : missingListeners) {
-            m_showMissingValBin.addItemListener(listener);
-        }
+        updateSelectBox(m_showMissingValBin, vizModel.isShowMissingValBin(), 
+                vizModel.containsMissingValueBin());
+        LOGGER.debug("Show missing value bin updated");
         //show grid lines
-        final ItemListener[] gridListeners = 
-            m_showGrid.getItemListeners();
-        for (ItemListener listener : missingListeners) {
-            m_showGrid.removeItemListener(listener);
-        }
-        m_showGrid.setSelected(vizModel.isShowGridLines());
-        for (ItemListener listener : gridListeners) {
-            m_showGrid.addItemListener(listener);
-        }
-        
+        updateSelectBox(m_showGrid, vizModel.isShowGridLines(), true);
+        LOGGER.debug("Show grid line updated");
         //select the current layout
         //since the set selected method doesn't trigger an event
         //we don't need to remove/add the action listener
@@ -716,6 +702,39 @@ public abstract class AbstractHistogramProperties extends
                 button.setSelected(true);
             }
         }
+        final long endTime = System.currentTimeMillis();
+        final long durationTime = endTime - startTime;
+        LOGGER.debug("Time for updateHistogramSettings. " 
+                + durationTime + " ms");
+        LOGGER.debug("Exiting updateHistogramSettings(vizModel) "
+                + "of class AbstractHistogramProperties.");
+    }
+
+    /**
+     * Removes all listener from the given box updates the values and
+     * adds all previous removed listener.
+     * @param box the select box to update
+     * @param selected the selected value
+     * @param enabled the enable value
+     */
+    private static void updateSelectBox(final JCheckBox box, 
+            final boolean selected, 
+            final boolean enabled) {
+        LOGGER.debug("Entering updateSelectBox(box, selected, enabled) "
+                + "of class AbstractHistogramProperties.");
+        final ItemListener[] listeners = 
+            box.getItemListeners();
+        LOGGER.debug("No of select box listener: " + listeners.length);
+        for (ItemListener listener : listeners) {
+            box.removeItemListener(listener);
+        }
+        box.setSelected(selected);
+        box.setEnabled(enabled);
+        for (ItemListener listener : listeners) {
+            box.addItemListener(listener);
+        }
+        LOGGER.debug("Exiting updateSelectBox(box, selected, enabled) "
+                + "of class AbstractHistogramProperties.");
     }
 
     /**

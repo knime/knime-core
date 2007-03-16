@@ -349,7 +349,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         } else {
             drawingPane.setGridLines(null);
         }
-        drawingPane.setHistogramVizModel(vizModel);
+        //update the properties panel as well since somthing could have changed
+        drawingPane.setHistogramVizModel(vizModel, true);
     }
     
     /**
@@ -394,7 +395,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             bin.updateBinWidth(xCoord, newBinWidth, layout,
                     barElementColors, aggrMethod, aggrColumns, baseLine);
         }
-        drawingPane.setHistogramVizModel(vizModel);
+        //if only the bar width changes we don't need to update the properties
+        //since the bar width change is triggered by the property component
+        //itself
+        drawingPane.setHistogramVizModel(vizModel, false);
     }
 
     /**

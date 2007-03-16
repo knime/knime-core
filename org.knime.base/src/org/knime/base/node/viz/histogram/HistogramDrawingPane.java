@@ -47,6 +47,7 @@ import org.knime.base.node.viz.histogram.datamodel.InteractiveBarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBarElementDataModel;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.property.ColorAttr;
+import org.knime.core.node.NodeLogger;
 
 /**
  * The view class of a Histogram visualisation. It simply uses the given
@@ -56,8 +57,11 @@ import org.knime.core.data.property.ColorAttr;
  * @author Tobias Koetter, University of Konstanz
  */
 public class HistogramDrawingPane extends AbstractDrawingPane {
-
+    
     private static final long serialVersionUID = 7881989778083295425L;
+    
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(HistogramDrawingPane.class);
     
     /**Used to format the aggregation value for the aggregation method count.*/
     private static final DecimalFormat AGGREGATION_LABEL_FORMATER_COUNT = 
@@ -73,12 +77,12 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         final BufferedImage img = 
             new BufferedImage(4, 4, BufferedImage.TYPE_INT_RGB);
         // obtain Graphics2D from bufferImage and draw on it
-        final Graphics2D gg = img.createGraphics();
-        gg.setColor(Color.LIGHT_GRAY);
-        gg.fillRect(0, 0, 4, 4);
-        gg.setColor(Color.GRAY);
-        gg.drawRect(0, 0, 1, 1);
-        gg.fillRect(1, 1, 1, 1);
+        final Graphics2D g2 = img.createGraphics();
+        g2.setColor(Color.LIGHT_GRAY);
+        g2.fillRect(0, 0, 4, 4);
+        g2.setColor(Color.GRAY);
+        g2.fillRect(0, 0, 1, 1);
+        g2.fillRect(1, 1, 1, 1);
         final Rectangle rect = new Rectangle(img.getWidth(), img.getHeight());
         OVERLOADED_ELEMENT_FILLING = new TexturePaint(img, rect);
     }
@@ -208,11 +212,13 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     
     /**
      * @param histoData the {@link AbstractHistogramVizModel} objects to draw
+     * @param updatPropertiesPanel set to <code>true</code> if the
+     * properties panel should be updated as well 
      */
-    public void setHistogramVizModel(
-            final AbstractHistogramVizModel histoData) {
+    public void setHistogramVizModel(final AbstractHistogramVizModel histoData,
+            final boolean updatPropertiesPanel) {
         m_vizModel = histoData;
-        m_updatePropertiesPanel = true;
+        m_updatePropertiesPanel = updatPropertiesPanel;
         repaint();
     }
 
@@ -326,6 +332,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      */
     @Override
     public void paintContent(final Graphics g) {
+        LOGGER.debug("Entering paintContent(g) of class HistogramDrawingPane.");
         final Graphics2D g2 = (Graphics2D)g;
         final Rectangle bounds = getBounds();
         String msg = m_infoMsg;
@@ -418,6 +425,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     (int) bounds.getWidth(), BASE_LINE_COLOR, 
                     BASE_LINE_STROKE);
         }
+        LOGGER.debug("Exiting paintContent(g) of class HistogramDrawingPane.");
         return;
     }
 
