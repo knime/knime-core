@@ -64,6 +64,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
      */
     public ScatterPlotterDrawingPane() {
         super();
+        m_dots = new DotInfoArray(0);
         m_selDots = new HashSet<DataCell>();
         setToolTipText("");
     }
