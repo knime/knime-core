@@ -567,8 +567,8 @@ public final class NodeLogger {
                         + MAX_CHARS + "m\n"), writer);
         app.setImmediateFlush(true);
         LevelRangeFilter filter = new LevelRangeFilter();
-        filter.setLevelMin(getLevel(minLevel));
-        filter.setLevelMax(getLevel(maxLevel));
+        filter.setLevelMin(transLEVEL(minLevel));
+        filter.setLevelMax(transLEVEL(maxLevel));
         app.addFilter(filter);
         Logger.getRootLogger().addAppender(app);
         WRITER.put(writer, app);
@@ -612,8 +612,8 @@ public final class NodeLogger {
         getLogger(NodeLogger.class).info(
                 "Changing logging level to " + level.toString());
         LevelRangeFilter filter = new LevelRangeFilter();
-        filter.setLevelMin(getLevel(level));
-        filter.setLevelMax(getLevel(LEVEL.FATAL));
+        filter.setLevelMin(transLEVEL(level));
+        filter.setLevelMax(transLEVEL(LEVEL.FATAL));
         FILE_APPENDER.clearFilters();
         // SERR_APPENDER.clearFilters();
         SOUT_APPENDER.clearFilters();
@@ -623,23 +623,41 @@ public final class NodeLogger {
     }
     
     /**
-     * Returns the minimum logging retrieved from the underlying file appender.
+     * Returns the minimum logging retrieved from the underlying Log4J logger.
      * @return minimum logging level
      */
-    public static LEVEL getLevel() {
-        Level l = ((LevelRangeFilter) FILE_APPENDER.getFilter()).getLevelMin();
-        return getLevel(l);
+    public LEVEL getLevel() {
+        return transLevel(m_logger.getLevel());
     }
     
     /**   
-     * Checks if the minimum logging level is set to <code>LEVEL.DEBUG</code>.
-     * @return true if minimum logging level is <code>LEVEL.DEBUG</code>,
-     *         otherwise false     
+     * Checks if debug logging level is enabled.
+     * @return <code>true</code> if debug logging level is enabled, otherwise 
+     *         <code>false</code>     
      */
-    public static boolean isDebug() {
-        return getLevel() == LEVEL.DEBUG;
+    public boolean isDebugEnabled() {
+        return m_logger.isDebugEnabled();
     }
     
+    /**   
+     * Checks if info logging level is enabled.
+     * @return <code>true</code> if info logging level is enabled, otherwise 
+     *         <code>false</code>     
+     */
+    public boolean isInfoEnabled() {
+        return m_logger.isInfoEnabled();
+    }
+    
+    /**
+     * Returns <code>true</code> if the underlying Log4J logger is enabled 
+     * for the given <code>level</code>.
+     * @param level to test logging enabled
+     * @return <code>true</code> if logging is enabled, otherwise 
+     *         <code>false</code>
+     */
+    public boolean isEnabledFor(final LEVEL level) {
+        return m_logger.isEnabledFor(transLEVEL(level));
+    }
 
     /**
      * Translates this logging <code>LEVEL</code> into Log4J logging levels.
@@ -647,7 +665,7 @@ public final class NodeLogger {
      * @param level the <code>LEVEL</code> to translate
      * @return the Log4J logging level
      */
-    private static Level getLevel(final LEVEL level) {
+    private static Level transLEVEL(final LEVEL level) {
         switch (level) {
         case DEBUG:
             return Level.DEBUG;
@@ -670,7 +688,7 @@ public final class NodeLogger {
      * @param level the Level to translate
      * @return this logging LEVEL
      */
-    private static LEVEL getLevel(final Level level) {
+    private static LEVEL transLevel(final Level level) {
         if (level == Level.DEBUG) {
             return LEVEL.DEBUG;
         } else if (level == Level.INFO) {
