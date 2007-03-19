@@ -103,11 +103,11 @@ public class DialogComponentFileChooser extends DialogComponent {
      * accepted.
      * 
      * @param stringModel the model holding the value
+     * @param historyID id for the file history
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
      *            {@link JFileChooser#CUSTOM_DIALOG}
      * @param validExtensions only show files with those extensions
-     * @param historyID id for the file history
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final int dialogType,
@@ -121,13 +121,13 @@ public class DialogComponentFileChooser extends DialogComponent {
      * non-existing paths are accepted.
      * 
      * @param stringModel the model holding the value
+     * @param historyID to identify the file histroy
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
      *            {@link JFileChooser#CUSTOM_DIALOG}
      * @param directoryOnly <code>true</code> if only directories should be
      *            selectable, otherwise only files can be selected
      * @param validExtensions only show files with those extensions
-     * @param historyID to identify the file histroy
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final int dialogType,
