@@ -60,7 +60,7 @@ public class SortedTable implements DataTable {
     /**
      * Number of rows for each container.
      */
-    private static final int CONTAINERSIZE = 20000;
+    private static final int CONTAINERSIZE = 100000;
 
     private BufferedDataTable m_sortedTable;
 
