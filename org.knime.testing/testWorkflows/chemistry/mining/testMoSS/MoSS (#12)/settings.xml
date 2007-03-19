@@ -20,17 +20,18 @@
 <entry key="0" type="xstring" value="1"/>
 <entry key="1" type="xstring" value="2"/>
 </config>
-<entry key="Complement Support (%)" type="xdouble" value="5.0"/>
-<entry key="Focus Support (%)" type="xdouble" value="10.0"/>
+<entry key="Complement Support (%)" type="xdouble" value="2.0"/>
+<entry key="Focus Support (%)" type="xdouble" value="5.0"/>
 <entry key="Max embs# (0: disabled)" type="xint" value="0"/>
 <entry key="Minimum fragment size" type="xint" value="1"/>
 <entry key="Maximum fragment size" type="xint" value="256"/>
 <entry key="Fragment extension mode" type="xstring" value="MAXIMUM_SOURCE_NODE"/>
 <config key="Ring mining range">
-<entry key="array-size" type="xint" value="0"/>
+<entry key="array-size" type="xint" value="2"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="0"/>
 </config>
 <entry key="Find variable-length carbon chains" type="xboolean" value="false"/>
-<entry key="Molecule format" type="xstring" value="SMILES"/>
 <entry key="Core" type="xstring" value=""/>
 <entry key="Equivalent sibling Pruning" type="xboolean" value="true"/>
 <entry key="Perfect extension Pruning" type="xboolean" value="true"/>

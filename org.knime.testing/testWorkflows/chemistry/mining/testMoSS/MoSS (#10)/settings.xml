@@ -30,7 +30,6 @@
 <entry key="array-size" type="xint" value="0"/>
 </config>
 <entry key="Find variable-length carbon chains" type="xboolean" value="false"/>
-<entry key="Molecule format" type="xstring" value="SMILES"/>
 <entry key="Core" type="xstring" value=""/>
 <entry key="Equivalent sibling Pruning" type="xboolean" value="true"/>
 <entry key="Perfect extension Pruning" type="xboolean" value="true"/>
