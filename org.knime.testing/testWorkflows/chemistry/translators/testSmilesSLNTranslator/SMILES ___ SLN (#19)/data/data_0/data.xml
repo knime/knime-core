@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
 <config key="table_meta_info">
-<entry key="table_ID" type="xint" value="179"/>
+<entry key="table_ID" type="xint" value="65799"/>
 <entry key="table_type" type="xstring" value="rearrange_columns_table"/>
-<entry key="table_reference" type="xstring" isnull="true" value=""/>
+<config key="table_references">
+<entry key="array-size" type="xint" value="0"/>
+</config>
 <config key="meta_internal">
-<entry key="table_reference_ID" type="xint" value="178"/>
+<entry key="table_reference_ID" type="xint" value="65798"/>
 <config key="table_internal_map">
 <entry key="array-size" type="xint" value="2"/>
 <entry key="0" type="xint" value="0"/>
