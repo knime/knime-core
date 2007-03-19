@@ -24,6 +24,7 @@ package org.knime.base.node.io.filereader;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Vector;
 
@@ -334,10 +335,14 @@ public class FileReaderNodeModel extends NodeModel {
                 url = new URL(loc);
                 if (url.getProtocol().equalsIgnoreCase("FILE")) {
                     // if we have a file location check its existence
-                    File f = new File(url.getPath());
-                    if (f.exists()) {
-                        validLoc.add(loc);
-                    } // else ignore old, not existing entries
+                    try {
+                        File f = new File(url.toURI());
+                        if (f.exists()) {
+                            validLoc.add(loc);
+                        } // else ignore old, not existing entries
+                    } catch (URISyntaxException use) {
+                        // ignore it
+                    }
                 } else {
                     // non-file URL we just take over
                     validLoc.add(loc);

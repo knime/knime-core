@@ -154,7 +154,7 @@ final class FileRowIterator extends RowIterator {
     } // FileRowIterator(FileTableSpec)
 
     /**
-     * @see org.knime.core.data.RowIterator#hasNext()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasNext() {
@@ -187,7 +187,7 @@ final class FileRowIterator extends RowIterator {
     }
 
     /**
-     * @see org.knime.core.data.RowIterator#next()
+     * {@inheritDoc}
      */
     @Override
     public DataRow next() {
@@ -264,17 +264,24 @@ final class FileRowIterator extends RowIterator {
 
         } // end of while(createdCols < noOfCols)
 
-        // In case we've seen a row delimiter before the row was complete:
-        // puke and die
         int lineNr = m_tokenizer.getLineNumber();
         if ((lineNr > 0) && (token != null) && (token.equals("\n"))) {
             lineNr--;
         }
-        if (createdCols < noOfCols) {
-            throw prepareForException("Too few data elements in row "
-                    + "(line: " + lineNr + " (" + rowHeader + "), source: '"
-                    + m_frSettings.getDataFileLocation() + "')", lineNr,
-                    rowHeader, row);
+        // In case we've seen a row delimiter before the row was complete:
+        // puke and die - unless we are told otherwise
+        if (m_frSettings.getSupportShortLines()) {
+            // pad the row with missing values
+            while (createdCols < noOfCols) {
+                row[createdCols++] = DataType.getMissingCell();
+            }
+        } else {
+            if (createdCols < noOfCols) {
+                throw prepareForException("Too few data elements in row "
+                        + "(line: " + lineNr + " (" + rowHeader
+                        + "), source: '" + m_frSettings.getDataFileLocation()
+                        + "')", lineNr, rowHeader, row);
+            }
         }
 
         token = m_tokenizer.nextToken();
