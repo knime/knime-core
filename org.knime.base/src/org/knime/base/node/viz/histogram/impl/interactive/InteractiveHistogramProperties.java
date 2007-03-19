@@ -38,7 +38,7 @@ import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.util.AggregationColumnFilterPanel;
-import org.knime.base.node.viz.histogram.util.ColorNameColumn;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
@@ -188,7 +188,7 @@ public class InteractiveHistogramProperties extends
     @Override
     public void updateColumnSelection(final DataTableSpec spec,
             final String xColName, 
-            final Collection<? extends ColorNameColumn> aggrColumns,
+            final Collection<? extends ColorColumn> aggrColumns,
             final AggregationMethod aggrMethod) {
         try {
             if (xColName == null) {
@@ -252,7 +252,7 @@ public class InteractiveHistogramProperties extends
     /**
      * @return all selected aggregation columns
      */
-    public ColorNameColumn[] getSelectedAggrColumns() {
+    public ColorColumn[] getSelectedAggrColumns() {
         return m_aggrCol.getIncludedColorNameColumns();
     }
 }

@@ -39,7 +39,7 @@ import java.util.SortedSet;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.LabelDisplayPolicy;
-import org.knime.base.node.viz.histogram.util.ColorNameColumn;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -217,7 +217,7 @@ public abstract class AbstractHistogramVizModel {
     /**
      * @return the aggregation columns. Could be null!
      */
-    public abstract Collection<? extends ColorNameColumn> getAggrColumns();
+    public abstract Collection<? extends ColorColumn> getAggrColumns();
 
     /**
      * @return the x column specification

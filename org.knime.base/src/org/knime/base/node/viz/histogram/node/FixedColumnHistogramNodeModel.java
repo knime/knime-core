@@ -34,7 +34,7 @@ import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
-import org.knime.base.node.viz.histogram.util.ColorNameColumn;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -116,7 +116,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         LOGGER.debug("Entering createHistogramModel(exec, table) "
                 + "of class FixedColumnHistogramNodeModel.");
         final int noOfRows = getNoOfRows();
-        final Collection<ColorNameColumn> aggrColumns = getAggrColumns();
+        final Collection<ColorColumn> aggrColumns = getAggrColumns();
         final int noOfBins = m_noOfBins.getIntValue();
         m_model = 
             new FixedHistogramDataModel(getXColSpec(), aggrColumns, noOfBins);
@@ -133,7 +133,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         final int[] aggrColIdxs = new int[aggrColSize];
         if (aggrColSize > 0) {
             int idx = 0;
-            for (ColorNameColumn aggrCol : aggrColumns) {
+            for (ColorColumn aggrCol : aggrColumns) {
                 aggrColIdxs[idx++] = tableSpec.findColumnIndex(
                         aggrCol.getColumnName());
             }

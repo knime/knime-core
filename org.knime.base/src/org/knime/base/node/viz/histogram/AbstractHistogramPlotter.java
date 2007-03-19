@@ -42,7 +42,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
-import org.knime.base.node.viz.histogram.util.ColorNameColumn;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.Axis;
@@ -403,7 +403,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final SortedSet<Color> barElementColors = 
             vizModel.getRowColors();
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
-        final Collection<? extends ColorNameColumn> aggrColumns = 
+        final Collection<? extends ColorColumn> aggrColumns = 
             vizModel.getAggrColumns();
         for (BinDataModel bin : vizModel.getBins()) {
             final DataCell captionCell = bin.getXAxisCaptionCell();
@@ -470,7 +470,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
         final SortedSet<Color> barElementColors = 
             vizModel.getRowColors();
-        final Collection<? extends ColorNameColumn> aggrColumns = 
+        final Collection<? extends ColorColumn> aggrColumns = 
             vizModel.getAggrColumns();
         final HistogramLayout layout = vizModel.getHistogramLayout();
         final double drawingWidth = drawingSpace.getWidth();
@@ -680,7 +680,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         // the aggregation method is summary and the data type of the
         // aggregation column is integer the result must be an integer itself
         DataType type = DoubleCell.TYPE;
-        final Collection<? extends ColorNameColumn> columnNames = 
+        final Collection<? extends ColorColumn> columnNames = 
             vizModel.getAggrColumns();
         if (AggregationMethod.COUNT.equals(aggrMethod)) {
             type = IntCell.TYPE;
@@ -688,7 +688,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (AggregationMethod.SUM.equals(aggrMethod) && columnNames != null) {
             //if the aggregation method is summary and ...
             boolean allInteger = true;
-            for (ColorNameColumn column : columnNames) {
+            for (ColorColumn column : columnNames) {
                 final DataColumnSpec colSpec = 
                     m_tableSpec.getColumnSpec(column.getColumnName());
                 if (colSpec == null 
@@ -789,7 +789,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      * @return column name with a hint about the aggregation method
      */
     private String createAggregationColumnName(
-            final Collection<? extends ColorNameColumn> columnNames, 
+            final Collection<? extends ColorColumn> columnNames, 
             final AggregationMethod aggrMethod) {
         if (aggrMethod.equals(AggregationMethod.COUNT)) {
             return AbstractHistogramPlotter.COL_NAME_COUNT;
@@ -808,7 +808,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     "Aggregation method not supported.");
         }
         boolean first = true;
-        for (ColorNameColumn column : columnNames) {
+        for (ColorColumn column : columnNames) {
             if (first) {
                 first = false;
             } else {

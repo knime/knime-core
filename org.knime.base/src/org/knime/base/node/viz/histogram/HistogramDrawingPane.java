@@ -44,7 +44,7 @@ import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBarElementDataModel;
-import org.knime.base.node.viz.histogram.util.ColorNameColumn;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.NodeLogger;
@@ -304,7 +304,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         }
         //get all variables which are needed multiple times
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
-        final Collection<? extends ColorNameColumn> aggrColumns = 
+        final Collection<? extends ColorColumn> aggrColumns = 
             vizModel.getAggrColumns();
         final HistogramLayout layout = vizModel.getHistogramLayout();
         //if the user has selected more then one aggregation column we have to

@@ -335,7 +335,7 @@ public class AggregationColumnFilterPanel extends JPanel {
      * @param cells an array of data cells to either include.
      */
     public void update(final DataTableSpec spec,
-            final ColorNameColumn... cells) {
+            final ColorColumn... cells) {
         this.update(spec, Arrays.asList(cells));
     }
 
@@ -348,13 +348,13 @@ public class AggregationColumnFilterPanel extends JPanel {
      * @param incl the list of columns to include
      */
     public void update(final DataTableSpec spec,
-            final Collection<? extends ColorNameColumn> incl) {
+            final Collection<? extends ColorColumn> incl) {
         assert (spec != null && incl != null);
         m_order.clear();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
         final Set<String> inclNames = new HashSet<String>(incl.size());
-        for (ColorNameColumn colorCol : incl) {
+        for (ColorColumn colorCol : incl) {
             inclNames.add(colorCol.getColumnName());
         }
         final int noOfColumns = spec.getNumColumns();
@@ -399,16 +399,16 @@ public class AggregationColumnFilterPanel extends JPanel {
      * 
      * @return a list of all columns from the include list
      */
-    public ColorNameColumn[] getIncludedColorNameColumns() {
+    public ColorColumn[] getIncludedColorNameColumns() {
         if (m_inclList == null || m_inclMdl.getSize() < 1) {
             return null;
         }
         final int noOfElements = m_inclMdl.getSize();
-        final ColorNameColumn[] list = new ColorNameColumn[noOfElements];
+        final ColorColumn[] list = new ColorColumn[noOfElements];
         for (int i = 0; i < noOfElements; i++) {
             AggregationColumnIcon o = 
                 (AggregationColumnIcon) m_inclMdl.getElementAt(i);
-            list[i] = new ColorNameColumn(o.getColor(), 
+            list[i] = new ColorColumn(o.getColor(), 
                     o.getColumnSpec().getName());
         }
         return list;

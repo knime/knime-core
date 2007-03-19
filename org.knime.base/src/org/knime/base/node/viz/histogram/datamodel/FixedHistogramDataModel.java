@@ -42,7 +42,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.knime.base.node.viz.histogram.util.BinningUtil;
-import org.knime.base.node.viz.histogram.util.ColorNameColumn;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -74,7 +74,7 @@ public class FixedHistogramDataModel {
     
     private final DataColumnSpec m_xColSpec;
    
-    private final Collection<ColorNameColumn> m_aggrColumns;
+    private final Collection<ColorColumn> m_aggrColumns;
     
     private final SortedSet<Color> m_rowColors;
     
@@ -90,7 +90,7 @@ public class FixedHistogramDataModel {
      * @param noOfBins the number of bins to create
      */
     public FixedHistogramDataModel(final DataColumnSpec xColSpec,
-            final Collection<ColorNameColumn> aggrColumns, final int noOfBins) {
+            final Collection<ColorColumn> aggrColumns, final int noOfBins) {
         LOGGER.debug("Entering HistogramDataModel(xColSpec, aggrColumns) "
                 + "of class HistogramDataModel.");
         if (xColSpec == null) {
@@ -129,7 +129,7 @@ public class FixedHistogramDataModel {
      * @param rowColors the row colors
      */
     private FixedHistogramDataModel(final DataColumnSpec xColSpec,
-            final Collection<ColorNameColumn> aggrColumns, 
+            final Collection<ColorColumn> aggrColumns, 
             final boolean binNominal,
             final List<BinDataModel> bins, final BinDataModel missingBin,
             final SortedSet<Color> rowColors) {
@@ -178,7 +178,7 @@ public class FixedHistogramDataModel {
      * @return the columns to use for aggregation.
      * THIS IS AN UNMODIFIABLE {@link Collection}!
      */
-    public Collection<ColorNameColumn> getAggrColumns() {
+    public Collection<ColorColumn> getAggrColumns() {
         if (m_aggrColumns == null) {
             return null;
         }
@@ -311,8 +311,8 @@ public class FixedHistogramDataModel {
         final File dataFile = new File(directory, CFG_DATA_FILE);
         final FileInputStream dataIS = new FileInputStream(dataFile);
         final ObjectInputStream os = new ObjectInputStream(dataIS);
-        final Collection<ColorNameColumn> aggrColumns = 
-            (Collection<ColorNameColumn>)os.readObject();
+        final Collection<ColorColumn> aggrColumns = 
+            (Collection<ColorColumn>)os.readObject();
         if (exec != null) {
             exec.setProgress(0.3, "Loading bins...");
         }

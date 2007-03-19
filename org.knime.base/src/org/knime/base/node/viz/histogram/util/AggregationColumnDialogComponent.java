@@ -74,7 +74,7 @@ public class AggregationColumnDialogComponent extends DialogComponent {
      * transfers the settings from the component into the settings model.
      */
     protected void updateModel() {
-        final ColorNameColumn[] includedColumns = 
+        final ColorColumn[] includedColumns = 
             m_panel.getIncludedColorNameColumns();
         SettingsModelColorNameColumns colModel =
                 (SettingsModelColorNameColumns)getModel();
@@ -116,9 +116,9 @@ public class AggregationColumnDialogComponent extends DialogComponent {
     protected void updateComponent() {
         SettingsModelColorNameColumns colModel =
             (SettingsModelColorNameColumns)getModel();
-        final ColorNameColumn[] inclCols = colModel.getColorNameColumns();
+        final ColorColumn[] inclCols = colModel.getColorNameColumns();
         if (inclCols == null) {
-            m_panel.update(getLastTableSpec(0), new ColorNameColumn[0]);
+            m_panel.update(getLastTableSpec(0), new ColorColumn[0]);
         } else {
             m_panel.update(getLastTableSpec(0), inclCols);
         }

@@ -49,7 +49,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.util.ColorNameColumn;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
@@ -568,7 +568,7 @@ public abstract class AbstractHistogramProperties extends
      */
     public abstract void updateColumnSelection(final DataTableSpec spec,
             final String xColName, 
-            final Collection<? extends ColorNameColumn> yColumns,
+            final Collection<? extends ColorColumn> yColumns,
             final AggregationMethod aggrMethod);
 
     /**
@@ -631,7 +631,7 @@ public abstract class AbstractHistogramProperties extends
 //      set the right aggregation method settings
         //since the set selected method doesn't trigger an event
         //we don't need to remove/add the action listener
-        final Collection<? extends ColorNameColumn> aggrColumns = 
+        final Collection<? extends ColorColumn> aggrColumns = 
             vizModel.getAggrColumns();
         if ((aggrColumns == null || aggrColumns.size() < 1)
                 && vizModel.isFixed()) {

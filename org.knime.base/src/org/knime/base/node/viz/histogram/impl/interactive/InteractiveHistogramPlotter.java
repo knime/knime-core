@@ -36,7 +36,7 @@ import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
-import org.knime.base.node.viz.histogram.util.ColorNameColumn;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
@@ -169,16 +169,16 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                     instanceof InteractiveHistogramProperties) {
                 final InteractiveHistogramProperties props =
                 (InteractiveHistogramProperties) abstractHistogramProperties;
-                final ColorNameColumn[] selectedAggrCols = 
+                final ColorColumn[] selectedAggrCols = 
                     props.getSelectedAggrColumns();
-                List<ColorNameColumn> aggrCols = null;
+                List<ColorColumn> aggrCols = null;
                 if (selectedAggrCols != null && selectedAggrCols.length > 0) {
                     aggrCols = 
-                        new ArrayList<ColorNameColumn>(selectedAggrCols.length);
+                        new ArrayList<ColorColumn>(selectedAggrCols.length);
                     for (int i = 0, length = selectedAggrCols.length; 
                         i < length; i++) {
-                        final ColorNameColumn column = selectedAggrCols[i];
-                        aggrCols.add(new ColorNameColumn(column.getColor(), 
+                        final ColorColumn column = selectedAggrCols[i];
+                        aggrCols.add(new ColorColumn(column.getColor(), 
                                 column.getColumnName()));
                     }
                 }
@@ -209,7 +209,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                     + " be null");
         }
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
-        final Collection<? extends ColorNameColumn> oldAggrCols = 
+        final Collection<? extends ColorColumn> oldAggrCols = 
             vizModel.getAggrColumns();
         if (oldAggrCols == null || oldAggrCols.size() < 1) {
             //check if the user hasn't defined any aggregation column yet we 
@@ -225,11 +225,11 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                     final DataColumnSpec colSpec = spec.getColumnSpec(i);
                     if (AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER.
                             includeColumn(colSpec)) {
-                        final ColorNameColumn aggrColumn = 
-                            new ColorNameColumn(Color.LIGHT_GRAY, 
+                        final ColorColumn aggrColumn = 
+                            new ColorColumn(Color.LIGHT_GRAY, 
                                     colSpec.getName());
-                        final ArrayList<ColorNameColumn> aggrCols = 
-                            new ArrayList<ColorNameColumn>(1);
+                        final ArrayList<ColorColumn> aggrCols = 
+                            new ArrayList<ColorColumn>(1);
                         aggrCols.add(aggrColumn);
                         getHistogramPropertiesPanel().updateColumnSelection(
                                 spec, getXColName(), aggrCols, aggrMethod);

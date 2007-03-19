@@ -34,7 +34,7 @@ import java.util.Collection;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.util.ColorNameColumn;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
@@ -87,7 +87,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     private DataTableSpec m_tableSpec;
     private DataColumnSpec m_xColSpec;
     private int m_xColIdx;
-    private Collection<ColorNameColumn> m_aggrCols;
+    private Collection<ColorColumn> m_aggrCols;
     
     private final SettingsModelInteger m_noOfRows = new SettingsModelInteger(
                 CFGKEY_NO_OF_ROWS, DEFAULT_NO_OF_ROWS);
@@ -301,7 +301,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                     m_xColName.setStringValue(tableSpec.getColumnSpec(0)
                             .getName());
                     m_aggrColName.setColorNameColumns(
-                            new ColorNameColumn(Color.lightGray, 
+                            new ColorColumn(Color.lightGray, 
                                     tableSpec.getColumnSpec(1).getName()));
                 } else if (type0.isCompatible(DoubleValue.class)
                         && type1.isCompatible(StringValue.class)
@@ -310,7 +310,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                     m_xColName.setStringValue(tableSpec.getColumnSpec(1)
                             .getName());
                     m_aggrColName.setColorNameColumns(
-                            new ColorNameColumn(Color.lightGray, 
+                            new ColorColumn(Color.lightGray, 
                                     tableSpec.getColumnSpec(0).getName()));
                 } else {
                     throw new InvalidSettingsException(
@@ -357,22 +357,22 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
         if (m_xColIdx < 0) {
             throw new IllegalArgumentException("X column index not found");
         }
-        final ColorNameColumn[] aggrCols = m_aggrColName.getColorNameColumns();
+        final ColorColumn[] aggrCols = m_aggrColName.getColorNameColumns();
         if (aggrCols == null) {
             //the user hasn't selected an aggregation column
             //thats fine since it is optional
             m_aggrCols = null;
         } else {
-            m_aggrCols = new ArrayList<ColorNameColumn>(aggrCols.length);
-            for (ColorNameColumn column : aggrCols) {
+            m_aggrCols = new ArrayList<ColorColumn>(aggrCols.length);
+            for (ColorColumn column : aggrCols) {
                 final String columnName = column.getColumnName();
                 final int aggrColIdx = m_tableSpec.findColumnIndex(columnName);
                 if (aggrColIdx < 0) {
                     throw new IllegalArgumentException(
                             "Selected aggregation column not found.");
                 }
-                final ColorNameColumn aggrColumn = 
-                    new ColorNameColumn(column.getColor(), columnName);
+                final ColorColumn aggrColumn = 
+                    new ColorColumn(column.getColor(), columnName);
                 m_aggrCols.add(aggrColumn);
             }
         }
@@ -419,7 +419,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      * @return the aggregation columns to use or <code>null</code> if
      * the user hasn't selected a aggregation column
      */
-    protected Collection<ColorNameColumn> getAggrColumns() {
+    protected Collection<ColorColumn> getAggrColumns() {
         return m_aggrCols;
     }
     
@@ -447,7 +447,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     /**
      * @param aggrCols the new selected aggregation column
      */
-    protected void setSelectedAggrColumns(final ColorNameColumn... aggrCols) {
+    protected void setSelectedAggrColumns(final ColorColumn... aggrCols) {
         if (aggrCols == null) {
             throw new NullPointerException(
                     "Aggregation columns must not be null or empty");

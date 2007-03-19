@@ -37,7 +37,7 @@ import java.util.SortedSet;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.util.BinningUtil;
-import org.knime.base.node.viz.histogram.util.ColorNameColumn;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -109,7 +109,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     
     private RowComparator m_rowComparator;
     
-    private Collection<ColorNameColumn> m_aggrColumns;
+    private Collection<ColorColumn> m_aggrColumns;
     
     private final List<DataRow> m_dataRows;
     
@@ -129,7 +129,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
             final AggregationMethod aggrMethod, final HistogramLayout layout,
             final DataTableSpec spec,  final List<DataRow> rows,
             final DataColumnSpec xColSpec, 
-            final Collection<ColorNameColumn> aggrColumns, 
+            final Collection<ColorColumn> aggrColumns, 
             final int noOfBins) {
         super(rowColors, aggrMethod, layout, noOfBins);
         if (spec == null) {
@@ -175,7 +175,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * AbstractHistogramVizModel#getAggrColumns()
      */
     @Override
-    public Collection<? extends ColorNameColumn> getAggrColumns() {
+    public Collection<? extends ColorColumn> getAggrColumns() {
         return m_aggrColumns;
     }
 
@@ -226,7 +226,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * @return <code>true</code> if the variable has changed
      */
     public boolean setAggregationColumns(
-            final Collection<ColorNameColumn> aggrCols) {
+            final Collection<ColorColumn> aggrCols) {
 //        if (aggrCols == null || aggrCols.size() < 1) {
 //            throw new IllegalArgumentException(
 //                    "Aggregation column shouldn't be null");
@@ -333,7 +333,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
             final int aggrSize = m_aggrColumns.size();
             final int[] aggrIdx = new int[aggrSize];
             int i = 0;
-            for (ColorNameColumn aggrColumn : m_aggrColumns) {
+            for (ColorColumn aggrColumn : m_aggrColumns) {
                 aggrIdx[i++] = tableSpec.findColumnIndex(
                         aggrColumn.getColumnName());
             }

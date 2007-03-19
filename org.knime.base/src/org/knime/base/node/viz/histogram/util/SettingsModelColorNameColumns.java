@@ -49,7 +49,7 @@ public class SettingsModelColorNameColumns extends SettingsModel {
 
     private static final String CFG_COLOR_COLUMN_NAMES = "colorColumnNames";
     
-    private ColorNameColumn[] m_value;
+    private ColorColumn[] m_value;
 
     private final String m_configName;
 
@@ -61,7 +61,7 @@ public class SettingsModelColorNameColumns extends SettingsModel {
      * @param defaultValue the initial value
      */
     public SettingsModelColorNameColumns(final String configName,
-            final ColorNameColumn[] defaultValue) {
+            final ColorColumn[] defaultValue) {
         if ((configName == null) || (configName == "")) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
@@ -105,7 +105,7 @@ public class SettingsModelColorNameColumns extends SettingsModel {
     protected void loadSettingsForDialog(final NodeSettingsRO settings, 
             final DataTableSpec[] specs) {
         try {
-            final ColorNameColumn[] columns = 
+            final ColorColumn[] columns = 
                 loadColorColumns(m_configName, settings);
             if (columns != null) {
                 //only if the settings return a value use it
@@ -126,7 +126,7 @@ public class SettingsModelColorNameColumns extends SettingsModel {
     }
     
     private static void saveColorColumns(final String configName, 
-            final NodeSettingsWO settings, final ColorNameColumn[] columns) {
+            final NodeSettingsWO settings, final ColorColumn[] columns) {
         final Config config = settings.addConfig(configName);
         if (columns == null || columns.length < 1) {
             config.addStringArray(CFG_COLOR_COLUMN_NAMES, new String[0]);
@@ -137,13 +137,13 @@ public class SettingsModelColorNameColumns extends SettingsModel {
             columnNames[i] = columns[i].getColumnName();
         }
         config.addStringArray(CFG_COLOR_COLUMN_NAMES, columnNames);
-        for (ColorNameColumn column : columns) {
+        for (ColorColumn column : columns) {
             config.addInt(column.getColumnName(), 
                     column.getColor().getRGB());
         }
     }
 
-    private static ColorNameColumn[] loadColorColumns(final String configName,
+    private static ColorColumn[] loadColorColumns(final String configName,
             final NodeSettingsRO settings) {
         try {
             final Config config = settings.getConfig(configName);
@@ -152,12 +152,12 @@ public class SettingsModelColorNameColumns extends SettingsModel {
             if (columnNames == null) {
                 return null;
             }
-            final ColorNameColumn[] columns = 
-                new ColorNameColumn[columnNames.length];
+            final ColorColumn[] columns = 
+                new ColorColumn[columnNames.length];
             for (int i = 0, length = columnNames.length; i < length; i++) {
                 final String columnName = columnNames[i];
                 final int rgb = config.getInt(columnName);
-                columns[i] = new ColorNameColumn(new Color(rgb), columnName);
+                columns[i] = new ColorColumn(new Color(rgb), columnName);
             }
             return columns;
         } catch (Exception e) {
@@ -192,11 +192,11 @@ public class SettingsModelColorNameColumns extends SettingsModel {
     /**
      * @return the (a copy of the) current value stored.
      */
-    public ColorNameColumn[] getColorNameColumns() {
+    public ColorColumn[] getColorNameColumns() {
         if (m_value == null) {
             return null;
         }
-        final ColorNameColumn[] result = new ColorNameColumn[m_value.length];
+        final ColorColumn[] result = new ColorColumn[m_value.length];
         System.arraycopy(m_value, 0, result, 0, m_value.length);
         return result;
     }
@@ -206,7 +206,7 @@ public class SettingsModelColorNameColumns extends SettingsModel {
      * 
      * @param newValue the new value to store.
      */
-    public void setColorNameColumns(final ColorNameColumn... newValue) {
+    public void setColorNameColumns(final ColorColumn... newValue) {
         boolean same;
         if (newValue == null) {
             same = (m_value == null);
@@ -214,9 +214,9 @@ public class SettingsModelColorNameColumns extends SettingsModel {
             if ((m_value == null) || (m_value.length != newValue.length)) {
                 same = false;
             } else {
-                List<ColorNameColumn> current = Arrays.asList(m_value);
+                List<ColorColumn> current = Arrays.asList(m_value);
                 same = true;
-                for (ColorNameColumn s : newValue) {
+                for (ColorColumn s : newValue) {
                     if (!current.contains(s)) {
                         same = false;
                         break;
@@ -228,7 +228,7 @@ public class SettingsModelColorNameColumns extends SettingsModel {
         if (newValue == null) {
             m_value = null;
         } else {
-            m_value = new ColorNameColumn[newValue.length];
+            m_value = new ColorColumn[newValue.length];
             System.arraycopy(newValue, 0, m_value, 0, newValue.length);
         }
         

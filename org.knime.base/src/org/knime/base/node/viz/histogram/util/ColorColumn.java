@@ -31,7 +31,7 @@ import java.awt.Color;
  * Holds the color for a given row value.
  * @author Tobias Koetter, University of Konstanz
  */
-public class ColorNameColumn {
+public class ColorColumn {
 
     private final Color m_color;
     
@@ -41,7 +41,7 @@ public class ColorNameColumn {
      * @param color the color
      * @param colName the name of the column
      */
-    public ColorNameColumn(final Color color, final String colName) {
+    public ColorColumn(final Color color, final String colName) {
         if (color == null) {
             throw new IllegalArgumentException("Color not defined");
         }

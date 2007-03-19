@@ -33,7 +33,7 @@ import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
-import org.knime.base.node.viz.histogram.util.ColorNameColumn;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -141,7 +141,7 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
               } else if (!aggrFound 
                       && AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER.
                       includeColumn(columnSpec)) {
-                  setSelectedAggrColumns(new ColorNameColumn(Color.lightGray, 
+                  setSelectedAggrColumns(new ColorColumn(Color.lightGray, 
                           columnSpec.getName()));
                   aggrFound = true;
               }
