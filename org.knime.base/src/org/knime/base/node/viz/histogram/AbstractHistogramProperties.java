@@ -567,8 +567,7 @@ public abstract class AbstractHistogramProperties extends
      * @param aggrMethod the current {@link AggregationMethod}
      */
     public abstract void updateColumnSelection(final DataTableSpec spec,
-            final String xColName, 
-            final Collection<? extends ColorColumn> yColumns,
+            final String xColName, final Collection<ColorColumn> yColumns,
             final AggregationMethod aggrMethod);
 
     /**

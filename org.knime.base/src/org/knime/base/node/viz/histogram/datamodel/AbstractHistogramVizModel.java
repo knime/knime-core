@@ -217,7 +217,7 @@ public abstract class AbstractHistogramVizModel {
     /**
      * @return the aggregation columns. Could be null!
      */
-    public abstract Collection<? extends ColorColumn> getAggrColumns();
+    public abstract Collection<ColorColumn> getAggrColumns();
 
     /**
      * @return the x column specification

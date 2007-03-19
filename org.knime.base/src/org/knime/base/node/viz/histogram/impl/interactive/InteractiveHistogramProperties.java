@@ -188,7 +188,7 @@ public class InteractiveHistogramProperties extends
     @Override
     public void updateColumnSelection(final DataTableSpec spec,
             final String xColName, 
-            final Collection<? extends ColorColumn> aggrColumns,
+            final Collection<ColorColumn> aggrColumns,
             final AggregationMethod aggrMethod) {
         try {
             if (xColName == null) {

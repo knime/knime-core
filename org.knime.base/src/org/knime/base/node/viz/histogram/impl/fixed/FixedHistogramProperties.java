@@ -154,8 +154,7 @@ public class FixedHistogramProperties extends
      */
     @Override
     public void updateColumnSelection(final DataTableSpec spec, 
-            final String xColName, 
-            final Collection<? extends ColorColumn> aggrColumns, 
+            final String xColName, final Collection<ColorColumn> aggrColumns, 
             final AggregationMethod aggrMethod) {
         m_xCol.setText(xColName);
         m_aggrCol.setText(columns2String(aggrColumns, ", "));

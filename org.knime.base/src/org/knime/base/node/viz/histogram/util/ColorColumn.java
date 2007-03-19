@@ -28,7 +28,7 @@ package org.knime.base.node.viz.histogram.util;
 import java.awt.Color;
 
 /**
- * Holds the color for a given row value.
+ * Holds the color for a given column name.
  * @author Tobias Koetter, University of Konstanz
  */
 public class ColorColumn {

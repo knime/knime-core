@@ -175,7 +175,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * AbstractHistogramVizModel#getAggrColumns()
      */
     @Override
-    public Collection<? extends ColorColumn> getAggrColumns() {
+    public Collection<ColorColumn> getAggrColumns() {
         return m_aggrColumns;
     }
 
