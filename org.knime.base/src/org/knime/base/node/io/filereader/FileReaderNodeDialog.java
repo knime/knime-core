@@ -43,6 +43,7 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Vector;
@@ -60,6 +61,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -74,6 +76,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -288,6 +291,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      * drop down list (because this triggers a useless event), and add it
      * afterwards again.
      * 
+     * @param e the event 
      * @see java.awt.event.ItemListener
      *      #itemStateChanged(java.awt.event.ItemEvent)
      */
@@ -912,13 +916,39 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         }
 
     }
+    
 
     /**
-     * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO,DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
+        if (SwingUtilities.isEventDispatchThread()) {
+            loadSettingsFromInternal(settings, specs);
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(new Runnable() {
+                   public void run() {
+                       loadSettingsFromInternal(settings, specs);
+                   } 
+                });
+            } catch (InterruptedException ie) {
+                NodeLogger.getLogger(getClass()).warn(
+                        "Exception while setting new table.", ie);
+            } catch (InvocationTargetException ite) {
+                NodeLogger.getLogger(getClass()).warn(
+                        "Exception while setting new table.", ite);
+            }
+        }
+    }
+
+    /**
+     * We do the entire load settings in the Event/GUI thread as it accesses
+     * a lot of GUI components.
+     */
+    private void loadSettingsFromInternal(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) {
         assert (settings != null && specs != null);
 
         String[] history = FileReaderNodeModel.getFileHistory();
@@ -981,7 +1011,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     }
 
     /**
-     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
@@ -994,7 +1024,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         }
         if (m_previewTable.getErrorOccured()) {
             throw new InvalidSettingsException("With the current settings"
-                    + " an error occures when reading the file (line "
+                    + " an error occurs when reading the file (line "
                     + m_previewTable.getErrorLine() + "): "
                     + m_previewTable.getErrorMsg());
         }
