@@ -42,7 +42,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
-import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
+import org.knime.base.node.viz.histogram.util.ColorNameColumn;
 import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.Axis;
@@ -121,9 +121,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 //      add the visualization listener
         registerPropertiesChangeListener();
 //      set the default value
-        final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
-        drawingPane.setShowElementOutline(m_histoProps.isShowBarOutline());
-        drawingPane.setShowLabelVertical(m_histoProps.isShowLabelVertical());
+//        final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
+//        drawingPane.setShowElementOutline(m_histoProps.isShowBarOutline());
+//        drawingPane.setShowLabelVertical(m_histoProps.isShowLabelVertical());
 //        setHistogramDataModel(dataModel);
         // set the hilitehandler for highlighting stuff
         if (handler != null) {
@@ -154,11 +154,16 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         m_histoProps.addShowBarOutlineChangedListener(
                 new ItemListener() {
                     public void itemStateChanged(final ItemEvent e) {
-                        final HistogramDrawingPane histoDrawingPane = 
-                            getHistogramDrawingPane();
-                        if (histoDrawingPane != null) {
-                            histoDrawingPane.setShowElementOutline(
-                                e.getStateChange() == ItemEvent.SELECTED);
+                        final AbstractHistogramVizModel vizModel = 
+                            getHistogramVizModel();
+                        if (vizModel != null) {
+                            vizModel.setShowElementOutlines(
+                                    e.getStateChange() == ItemEvent.SELECTED);
+                            final HistogramDrawingPane histoDrawingPane = 
+                                getHistogramDrawingPane();
+                            if (histoDrawingPane != null) {
+                                histoDrawingPane.repaint();
+                            }
                         }
                     }
                 });
@@ -166,27 +171,41 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         m_histoProps.addLabelOrientationListener(
                 new ActionListener() {
                     public void actionPerformed(final ActionEvent e) {
-                        final HistogramDrawingPane histoDrawingPane = 
-                            getHistogramDrawingPane();
-                        final AbstractHistogramProperties histoProps = 
-                            getHistogramPropertiesPanel();
-                        if (histoDrawingPane != null) {
-                            histoDrawingPane.setShowLabelVertical(
-                                    histoProps.isShowLabelVertical());
-                        }                       
+                        final AbstractHistogramVizModel vizModel = 
+                            getHistogramVizModel();
+                        if (vizModel != null) {
+                            final AbstractHistogramProperties histoProps = 
+                                getHistogramPropertiesPanel();
+                            if (histoProps != null) {
+                                vizModel.setShowLabelVertical(
+                                        histoProps.isShowLabelVertical());
+                                final HistogramDrawingPane histoDrawingPane = 
+                                    getHistogramDrawingPane();
+                                if (histoDrawingPane != null) {
+                                    histoDrawingPane.repaint();
+                                }
+                            }
+                        }
                     }
                 });
         
         m_histoProps.addLabelDisplayListener(
             new ActionListener() {
                 public void actionPerformed(final ActionEvent e) {
-                    final HistogramDrawingPane histoDrawingPane = 
-                        getHistogramDrawingPane();
-                    final AbstractHistogramProperties histoProps = 
-                        getHistogramPropertiesPanel();
-                    if (histoDrawingPane != null) {
-                        histoDrawingPane.setLabelDisplayPolicy(
-                                histoProps.getLabelDisplayPolicy());
+                    final AbstractHistogramVizModel vizModel = 
+                        getHistogramVizModel();
+                    if (vizModel != null) {
+                        final AbstractHistogramProperties histoProps = 
+                            getHistogramPropertiesPanel();
+                        if (histoProps != null) {
+                            vizModel.setLabelDisplayPolicy(
+                                    histoProps.getLabelDisplayPolicy());
+                            final HistogramDrawingPane histoDrawingPane = 
+                                getHistogramDrawingPane();
+                            if (histoDrawingPane != null) {
+                                histoDrawingPane.repaint();
+                            }
+                        }
                     }
                 }
             });
@@ -384,7 +403,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final SortedSet<Color> barElementColors = 
             vizModel.getRowColors();
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
-        final Collection<ColorColumn> aggrColumns = vizModel.getAggrColumns();
+        final Collection<? extends ColorNameColumn> aggrColumns = 
+            vizModel.getAggrColumns();
         for (BinDataModel bin : vizModel.getBins()) {
             final DataCell captionCell = bin.getXAxisCaptionCell();
             final double labelCoord = xCoordinates.calculateMappedValue(
@@ -450,7 +470,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
         final SortedSet<Color> barElementColors = 
             vizModel.getRowColors();
-        final Collection<ColorColumn> aggrColumns = vizModel.getAggrColumns();
+        final Collection<? extends ColorNameColumn> aggrColumns = 
+            vizModel.getAggrColumns();
         final HistogramLayout layout = vizModel.getHistogramLayout();
         final double drawingWidth = drawingSpace.getWidth();
         final double drawingHeight = drawingSpace.getHeight();
@@ -593,7 +614,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      */
     public boolean setAggregationMethod(final AggregationMethod aggrMethod) {
         if (aggrMethod == null) {
-            throw new IllegalArgumentException("Aggregation method shouldn't"
+            throw new IllegalArgumentException("Aggregation method must not"
                     + " be null");
         }
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
@@ -601,10 +622,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             LOGGER.debug("VizModel was null");
             throw new IllegalStateException(
                     "Exception in setAggregationMethod: "
-                    + "Viz model shouldn't be null");
+                    + "Visualization model must not be null");
         }
-        final boolean changed = vizModel.setAggregationMethod(aggrMethod);
-        if (!changed) {
+        if (!vizModel.setAggregationMethod(aggrMethod)) {
             return false;
         }
         // if the method has changed we have to update the y coordinates
@@ -660,14 +680,15 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         // the aggregation method is summary and the data type of the
         // aggregation column is integer the result must be an integer itself
         DataType type = DoubleCell.TYPE;
-        final Collection<ColorColumn> columnNames = vizModel.getAggrColumns();
+        final Collection<? extends ColorNameColumn> columnNames = 
+            vizModel.getAggrColumns();
         if (AggregationMethod.COUNT.equals(aggrMethod)) {
             type = IntCell.TYPE;
         }
         if (AggregationMethod.SUM.equals(aggrMethod) && columnNames != null) {
             //if the aggregation method is summary and ...
             boolean allInteger = true;
-            for (ColorColumn column : columnNames) {
+            for (ColorNameColumn column : columnNames) {
                 final DataColumnSpec colSpec = 
                     m_tableSpec.getColumnSpec(column.getColumnName());
                 if (colSpec == null 
@@ -768,7 +789,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      * @return column name with a hint about the aggregation method
      */
     private String createAggregationColumnName(
-            final Collection<ColorColumn> columnNames, 
+            final Collection<? extends ColorNameColumn> columnNames, 
             final AggregationMethod aggrMethod) {
         if (aggrMethod.equals(AggregationMethod.COUNT)) {
             return AbstractHistogramPlotter.COL_NAME_COUNT;
@@ -787,7 +808,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     "Aggregation method not supported.");
         }
         boolean first = true;
-        for (ColorColumn column : columnNames) {
+        for (ColorNameColumn column : columnNames) {
             if (first) {
                 first = false;
             } else {

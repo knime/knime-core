@@ -24,7 +24,6 @@ package org.knime.base.node.viz.histogram.util;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -143,10 +142,25 @@ public class AggregationColumnFilterPanel extends JPanel {
 
         JPanel excludePanel = new JPanel(new BorderLayout());
         m_excludeBorder = BorderFactory.createTitledBorder(
-                EXCLUDE_BORDER, " Exclude ");
+                EXCLUDE_BORDER, " Available columns ");
         excludePanel.setBorder(m_excludeBorder);
         excludePanel.add(jspExcl, BorderLayout.CENTER);
         
+               // include list
+        m_inclMdl = new DefaultListModel();
+        m_inclList = new JList(m_inclMdl);
+        m_inclList.setSelectionMode(
+                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        m_inclList.setCellRenderer(new AggregationColumnIconRenderer());
+        final JScrollPane jspIncl = new JScrollPane(m_inclList);
+        jspIncl.setMinimumSize(listDimension);
+        jspIncl.setMaximumSize(listDimension);
+        JPanel includePanel = new JPanel(new BorderLayout());
+        m_includeBorder = BorderFactory.createTitledBorder(
+                INCLUDE_BORDER, " Aggregation columns ");
+        includePanel.setBorder(m_includeBorder);
+        includePanel.add(jspIncl, BorderLayout.CENTER);
+
         // button panel
         final JPanel buttonPan = new JPanel();
         buttonPan.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
@@ -176,35 +190,26 @@ public class AggregationColumnFilterPanel extends JPanel {
         buttonPan.add(new JPanel());
 
         buttonPan.add(new JPanel());
-
-        // include list
-        m_inclMdl = new DefaultListModel();
-        m_inclList = new JList(m_inclMdl);
-        m_inclList.setSelectionMode(
-                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        m_inclList.setCellRenderer(new AggregationColumnIconRenderer());
-        final JScrollPane jspIncl = new JScrollPane(m_inclList);
-        jspIncl.setMinimumSize(listDimension);
-        jspIncl.setMaximumSize(listDimension);
-        JPanel includePanel = new JPanel(new BorderLayout());
-        m_includeBorder = BorderFactory.createTitledBorder(
-                INCLUDE_BORDER, " Include ");
-        includePanel.setBorder(m_includeBorder);
-        includePanel.add(jspIncl, BorderLayout.CENTER);
-
-
-        JPanel buttonPan2 = new JPanel(new GridLayout());
-        Border border = BorderFactory.createTitledBorder(" Select ");
-        buttonPan2.setBorder(border);
-        buttonPan2.add(buttonPan);
+        
+//        JPanel buttonPan2 = new JPanel(new GridLayout());
+//        Border border = BorderFactory.createTitledBorder(" Select ");
+//        buttonPan2.setBorder(border);
+//        buttonPan2.add(buttonPan);
 
         // adds include, button, exclude component
-        JPanel center = new JPanel(new BorderLayout());
+        final JPanel center = new JPanel(new BorderLayout());
+        if (label != null) {
+            final TitledBorder mainBorder = 
+                BorderFactory.createTitledBorder(label);
+            center.setBorder(mainBorder);
+        }
         super.setLayout(new BorderLayout());
-        center.add(excludePanel, BorderLayout.CENTER);
-        center.add(buttonPan2, BorderLayout.EAST);
-        super.add(center, BorderLayout.WEST);
-        super.add(includePanel, BorderLayout.CENTER);
+        center.add(excludePanel, BorderLayout.WEST);
+        center.add(buttonPan, BorderLayout.CENTER);
+//        center.add(buttonPan2, BorderLayout.CENTER);
+        center.add(includePanel, BorderLayout.EAST);
+        super.add(center, BorderLayout.CENTER);
+//        super.add(includePanel, BorderLayout.CENTER);
     } // ColumnFilterPanel()
     
     /**
@@ -343,7 +348,7 @@ public class AggregationColumnFilterPanel extends JPanel {
      * @param incl the list of columns to include
      */
     public void update(final DataTableSpec spec,
-            final Collection<ColorNameColumn> incl) {
+            final Collection<? extends ColorNameColumn> incl) {
         assert (spec != null && incl != null);
         m_order.clear();
         m_inclMdl.removeAllElements();
@@ -409,6 +414,13 @@ public class AggregationColumnFilterPanel extends JPanel {
         return list;
     }
 
+    /**
+     * @return the total number of columns available
+     */
+    public int getNoOfColumns() {
+        return m_exclList.getModel().getSize() 
+        + m_inclList.getModel().getSize();
+    }
     /**
      * Returns the data type for the given cell retrieving it from the initial
      * {@link DataTableSpec}. If this name could not found, return

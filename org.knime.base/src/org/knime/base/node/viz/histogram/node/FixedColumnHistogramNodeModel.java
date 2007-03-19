@@ -32,9 +32,9 @@ import java.util.Collection;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
+import org.knime.base.node.viz.histogram.util.ColorNameColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -116,7 +116,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         LOGGER.debug("Entering createHistogramModel(exec, table) "
                 + "of class FixedColumnHistogramNodeModel.");
         final int noOfRows = getNoOfRows();
-        final Collection<ColorColumn> aggrColumns = getAggrColumns();
+        final Collection<ColorNameColumn> aggrColumns = getAggrColumns();
         final int noOfBins = m_noOfBins.getIntValue();
         m_model = 
             new FixedHistogramDataModel(getXColSpec(), aggrColumns, noOfBins);
@@ -129,6 +129,15 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         }
         final DataTableSpec tableSpec = getTableSpec();
         final int xColIdx = getXColIdx();
+        //save the aggregation column indices
+        final int[] aggrColIdxs = new int[aggrColSize];
+        if (aggrColSize > 0) {
+            int idx = 0;
+            for (ColorNameColumn aggrCol : aggrColumns) {
+                aggrColIdxs[idx++] = tableSpec.findColumnIndex(
+                        aggrCol.getColumnName());
+            }
+        }
         final RowIterator rowIterator = table.iterator();
         for (int rowCounter = 0; rowCounter < noOfRows 
         && rowIterator.hasNext(); rowCounter++) {
@@ -140,10 +149,8 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
                         row.getCell(xColIdx), DataType.getMissingCell());
             } else {
                 DataCell[] aggrCells = new DataCell[aggrColSize];
-                int cellIdx = 0;
-                for (ColorColumn aggrCol : aggrColumns) {
-                    aggrCells[cellIdx++] = 
-                        row.getCell(aggrCol.getColumnIndex());
+                for (int i = 0, length = aggrColIdxs.length; i < length; i++) {
+                    aggrCells[i] = row.getCell(aggrColIdxs[i]);
                 }
                 m_model.addDataRow(row.getKey().getId(), color, 
                         row.getCell(xColIdx), aggrCells);

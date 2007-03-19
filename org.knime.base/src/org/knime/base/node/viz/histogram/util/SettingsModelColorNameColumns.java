@@ -26,10 +26,8 @@
 package org.knime.base.node.viz.histogram.util;
 
 import java.awt.Color;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import javax.swing.event.ChangeListener;
 
@@ -37,6 +35,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.Config;
 import org.knime.core.node.defaultnodesettings.SettingsModel;
 
 
@@ -46,8 +45,10 @@ import org.knime.core.node.defaultnodesettings.SettingsModel;
  */
 public class SettingsModelColorNameColumns extends SettingsModel {
     
-    private static final String VALUE_SEPARATOR = "@";
+//    private static final String VALUE_SEPARATOR = "@";
 
+    private static final String CFG_COLOR_COLUMN_NAMES = "colorColumnNames";
+    
     private ColorNameColumn[] m_value;
 
     private final String m_configName;
@@ -104,10 +105,12 @@ public class SettingsModelColorNameColumns extends SettingsModel {
     protected void loadSettingsForDialog(final NodeSettingsRO settings, 
             final DataTableSpec[] specs) {
         try {
-            String[] stringVals = createStringValues(m_value);
-            // use the current value, if no value is stored in the settings
-            setStringArrayValue(settings.getStringArray(m_configName, 
-                    stringVals));
+            final ColorNameColumn[] columns = 
+                loadColorColumns(m_configName, settings);
+            if (columns != null) {
+                //only if the settings return a value use it
+                setColorNameColumns(columns);
+            }
         } catch (IllegalArgumentException iae) {
             // if the argument is not accepted: keep the old value.
         } 
@@ -122,63 +125,44 @@ public class SettingsModelColorNameColumns extends SettingsModel {
         saveSettingsForModel(settings);
     }
     
-    private String[] createStringValues(final ColorNameColumn[] value) {
-        if (value == null) {
-            return null;
+    private static void saveColorColumns(final String configName, 
+            final NodeSettingsWO settings, final ColorNameColumn[] columns) {
+        final Config config = settings.addConfig(configName);
+        if (columns == null || columns.length < 1) {
+            config.addStringArray(CFG_COLOR_COLUMN_NAMES, new String[0]);
+            return;
         }
-        String[] vals = new String[value.length];
-        StringBuilder buf = new StringBuilder();
-        for (int i = 0, length = value.length; i < length; i++) {
-            final ColorNameColumn column = value[i];
-            final Color color = column.getColor();
-            buf.append(color.getRGB());
-            buf.append(VALUE_SEPARATOR);
-            buf.append(column.getColumnName());
-            vals[i] = buf.toString();
-            buf.setLength(0);
+        final String[] columnNames = new String[columns.length];
+        for (int i = 0, length = columns.length; i < length; i++) {
+            columnNames[i] = columns[i].getColumnName();
         }
-        return vals;
+        config.addStringArray(CFG_COLOR_COLUMN_NAMES, columnNames);
+        for (ColorNameColumn column : columns) {
+            config.addInt(column.getColumnName(), 
+                    column.getColor().getRGB());
+        }
     }
-    
-    private ColorNameColumn[] parseStringValues(final String[] value) {
-        if (value == null) {
+
+    private static ColorNameColumn[] loadColorColumns(final String configName,
+            final NodeSettingsRO settings) {
+        try {
+            final Config config = settings.getConfig(configName);
+            final String[] columnNames = 
+                config.getStringArray(CFG_COLOR_COLUMN_NAMES);
+            if (columnNames == null) {
+                return null;
+            }
+            final ColorNameColumn[] columns = 
+                new ColorNameColumn[columnNames.length];
+            for (int i = 0, length = columnNames.length; i < length; i++) {
+                final String columnName = columnNames[i];
+                final int rgb = config.getInt(columnName);
+                columns[i] = new ColorNameColumn(new Color(rgb), columnName);
+            }
+            return columns;
+        } catch (Exception e) {
             return null;
         }
-        List<ColorNameColumn> vals = 
-            new ArrayList<ColorNameColumn>(value.length);
-        final StringBuilder nameBuf = new StringBuilder();
-        for (int i = 0, length = value.length; i < length; i++) {
-            final String string = value[i];
-            if (string == null) {
-                continue;
-            }
-            StringTokenizer tok = 
-                new StringTokenizer(string, VALUE_SEPARATOR);
-            int valueCounter = 0;
-            String colorString = null;
-            try {
-                while (tok.hasMoreTokens()) {
-                    String token = tok.nextToken();
-                    if (valueCounter == 0) {
-                        colorString = token;
-                    } else {
-                        nameBuf.append(token);
-                    }
-                    valueCounter++;
-                }
-                final Color color = new Color(Integer.parseInt(colorString));
-                vals.add(new ColorNameColumn(color, nameBuf.toString()));
-                nameBuf.setLength(0);
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException(
-                        "Error while parsing internal number: " 
-                        + e.getMessage());
-            }
-        }
-        if (vals.size() < 1) {
-            return null;
-        }
-        return vals.toArray(new ColorNameColumn[vals.size()]);
     }
     
     /**
@@ -190,12 +174,11 @@ public class SettingsModelColorNameColumns extends SettingsModel {
     throws InvalidSettingsException {
         try {
             // no default value, throw an exception instead
-            setStringArrayValue(settings.getStringArray(m_configName));
+            setColorNameColumns(loadColorColumns(m_configName, settings));
         } catch (IllegalArgumentException iae) {
             throw new InvalidSettingsException(iae.getMessage());
         }
     }
-
 
     /**
      * @see org.knime.core.node.defaultnodesettings.SettingsModel
@@ -203,7 +186,7 @@ public class SettingsModelColorNameColumns extends SettingsModel {
      */
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
-        settings.addStringArray(m_configName, getStringArrayValue());
+        saveColorColumns(m_configName, settings, m_value);
     }
 
     /**
@@ -254,48 +237,48 @@ public class SettingsModelColorNameColumns extends SettingsModel {
         }
     }
     
-    /**
-     * @return the (a copy of the) current value stored.
-     */
-    public String[] getStringArrayValue() {
-        return createStringValues(m_value);
-    }
-
-    /**
-     * set the value stored to (a copy of) the new value.
-     * 
-     * @param newValue the new value to store.
-     */
-    public void setStringArrayValue(final String[] newValue) {
-        boolean same;
-        final ColorNameColumn[] newVals = parseStringValues(newValue);
-        if (newVals == null) {
-            same = (m_value == null);
-        } else {
-            if ((m_value == null) || (m_value.length != newVals.length)) {
-                same = false;
-            } else {
-                List<ColorNameColumn> current = Arrays.asList(m_value);
-                same = true;
-                for (ColorNameColumn s : newVals) {
-                    if (!current.contains(s)) {
-                        same = false;
-                        break;
-                    }
-                }
-            }
-        }
-        if (newVals == null) {
-            m_value = null;
-        } else {
-            m_value = new ColorNameColumn[newVals.length];
-            System.arraycopy(newVals, 0, m_value, 0, newVals.length);
-        }
-        
-        if (!same) {
-            notifyChangeListeners();
-        }
-    }
+//    /**
+//     * @return the (a copy of the) current value stored.
+//     */
+//    public String[] getStringArrayValue() {
+//        return createStringValues(m_value);
+//    }
+//
+//    /**
+//     * set the value stored to (a copy of) the new value.
+//     * 
+//     * @param newValue the new value to store.
+//     */
+//    public void setStringArrayValue(final String[] newValue) {
+//        boolean same;
+//        final ColorNameColumn[] newVals = parseStringValues(newValue);
+//        if (newVals == null) {
+//            same = (m_value == null);
+//        } else {
+//            if ((m_value == null) || (m_value.length != newVals.length)) {
+//                same = false;
+//            } else {
+//                List<ColorNameColumn> current = Arrays.asList(m_value);
+//                same = true;
+//                for (ColorNameColumn s : newVals) {
+//                    if (!current.contains(s)) {
+//                        same = false;
+//                        break;
+//                    }
+//                }
+//            }
+//        }
+//        if (newVals == null) {
+//            m_value = null;
+//        } else {
+//            m_value = new ColorNameColumn[newVals.length];
+//            System.arraycopy(newVals, 0, m_value, 0, newVals.length);
+//        }
+//        
+//        if (!same) {
+//            notifyChangeListeners();
+//        }
+//    }
     
     /**
      * @see org.knime.core.node.defaultnodesettings.SettingsModel#toString()

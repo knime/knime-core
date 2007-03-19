@@ -36,6 +36,7 @@ import java.util.SortedSet;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.util.ColorNameColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
@@ -87,13 +88,13 @@ public class BinDataModel implements Serializable {
     /**
      * @param id the row id
      * @param rowColor the row color
-     * @param aggrCols the {@link ColorColumn} objects in the same order
+     * @param aggrCols the {@link InteractiveColorColumn} objects in the same order
      * like the aggregation values
      * @param aggrVals the aggregation value in the same order like the
      * columns
      */
     public void addDataRow(final DataCell id, final Color rowColor, 
-            final Collection<ColorColumn> aggrCols, 
+            final Collection<? extends ColorNameColumn> aggrCols, 
             final DataCell... aggrVals) {
     //        final DataCell[] aggrVals = row.getAggrVals();
     //        final DataCell id = row.getRowKey().getId();
@@ -113,7 +114,7 @@ public class BinDataModel implements Serializable {
                 bar.addDataRow(rowColor, id, new DoubleCell(0));
             } else {
                 int i = 0;
-                for (ColorColumn column : aggrCols) {
+                for (ColorNameColumn column : aggrCols) {
                     final DataCell cell = aggrVals[i++];
                     final Color barColor = column.getColor();
                     BarDataModel bar = m_bars.get(barColor);
@@ -291,17 +292,17 @@ public class BinDataModel implements Serializable {
     public void setBinRectangle(final Rectangle binRectangle, 
             final AggregationMethod aggrMethod, final HistogramLayout layout, 
             final int baseLine, final SortedSet<Color> barElementColors, 
-            final Collection<ColorColumn> aggrColumns) {
+            final Collection<? extends ColorNameColumn> aggrColumns) {
         m_binRectangle = binRectangle;
         if (aggrColumns == null || aggrColumns.size() < 1) {
             //no aggregation column selected so we have only one bar the 
             //face bar -> simply set the bin rectangle as bar rectangle
             final BarDataModel bar = m_bars.get(NO_AGGR_COL_COLOR);
-            if (bar == null) {
-                throw new IllegalStateException("No dummy bar available");
+            if (bar != null) {
+                //no data row was added to this bin so we don't  have a bar
+                bar.setBarRectangle(binRectangle, aggrMethod, layout, baseLine, 
+                        barElementColors);
             }
-            bar.setBarRectangle(binRectangle, aggrMethod, layout, baseLine, 
-                    barElementColors);
         } else {
             setBarRectangle(aggrMethod, layout, baseLine, barElementColors, 
                     aggrColumns);
@@ -321,7 +322,7 @@ public class BinDataModel implements Serializable {
     private void setBarRectangle(final AggregationMethod aggrMethod, 
             final HistogramLayout layout, final int baseLine, 
             final SortedSet<Color> barElementColors, 
-            final Collection<ColorColumn> aggrColumns) {
+            final Collection<? extends ColorNameColumn> aggrColumns) {
             if (m_binRectangle == null) {
                 final Collection<BarDataModel> bars = m_bars.values();
                 //also reset the bar rectangle
@@ -368,11 +369,14 @@ public class BinDataModel implements Serializable {
             final double heightPerVal = totalHeight / valRange;
             final int startX = (int) m_binRectangle.getX();
             final int startY = (int)m_binRectangle.getY();
-            int xCoord = startX + AbstractHistogramVizModel.SPACE_BETWEEN_BARS;
-            for (ColorColumn aggrColumn : aggrColumns) {
+            int xCoord = startX 
+                + AbstractHistogramVizModel.SPACE_BETWEEN_BARS / 2;
+            for (ColorNameColumn aggrColumn : aggrColumns) {
                 final BarDataModel bar = 
                     m_bars.get(aggrColumn.getColor());
                 if (bar != null) {
+                    //set the rectangle only for the bars which are available
+                    //in this bin
                     final double maxBarAggrVal = 
                         bar.getMaxAggregationValue(aggrMethod, layout);
                     final double minBarAggrVal = 
@@ -424,7 +428,8 @@ public class BinDataModel implements Serializable {
             final HistogramLayout layout, 
             final SortedSet<Color> barElementColors, 
             final AggregationMethod aggrMethod, 
-            final Collection<ColorColumn> aggrColumns, final int baseLine) {
+            final Collection<? extends ColorNameColumn> aggrColumns, 
+            final int baseLine) {
             if (m_binRectangle == null) {
                 return;
             }
@@ -433,6 +438,9 @@ public class BinDataModel implements Serializable {
             final int binHeight = (int) m_binRectangle.getHeight();
             m_binRectangle.setBounds(startX, yCoord, binWidth, binHeight);
             final int noOfBars = m_bars.size();
+            if (noOfBars < 1) {
+                return;
+            }
             m_drawBar = elementsFitInBin(noOfBars, binWidth);
             if (!m_drawBar) {
                 //the total bin width is not enough to draw all bars so we don't
@@ -453,20 +461,28 @@ public class BinDataModel implements Serializable {
             }
             final int barWidth = calculateBarWidth(binWidth, noOfBars);
             int xCoord = startX 
-            + AbstractHistogramVizModel.SPACE_BETWEEN_BARS;
-            for (ColorColumn aggrCol : aggrColumns) {
-                final BarDataModel bar = m_bars.get(aggrCol.getColor());
+                + AbstractHistogramVizModel.SPACE_BETWEEN_BARS / 2;
+            if (aggrColumns == null || aggrColumns.size() < 1) {
+                //the user hasn't selected a aggregation column so we use the
+                //dummy bar
+                final BarDataModel bar = m_bars.get(NO_AGGR_COL_COLOR);
                 bar.updateBarWidth(xCoord, barWidth, layout, 
                         barElementColors, aggrMethod, baseLine);
-                xCoord += barWidth 
-                + AbstractHistogramVizModel.SPACE_BETWEEN_BARS;
+            } else {
+                for (ColorNameColumn aggrCol : aggrColumns) {
+                    final BarDataModel bar = m_bars.get(aggrCol.getColor());
+                    bar.updateBarWidth(xCoord, barWidth, layout, 
+                            barElementColors, aggrMethod, baseLine);
+                    xCoord += barWidth 
+                        + AbstractHistogramVizModel.SPACE_BETWEEN_BARS;
+                }
             }
         }
 
     /**
      * @param binWidth the total width of this bin
      * @param noOfBars the number of elements to fit in
-     * @return the iwdth
+     * @return the bar width
      */
     private static int calculateBarWidth(final int binWidth, 
             final int noOfBars) {

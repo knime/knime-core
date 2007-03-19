@@ -26,7 +26,6 @@
 package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -38,6 +37,7 @@ import java.util.SortedSet;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.util.BinningUtil;
+import org.knime.base.node.viz.histogram.util.ColorNameColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -109,7 +109,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     
     private RowComparator m_rowComparator;
     
-    private Collection<ColorColumn> m_aggrColumns;
+    private Collection<ColorNameColumn> m_aggrColumns;
     
     private final List<DataRow> m_dataRows;
     
@@ -129,7 +129,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
             final AggregationMethod aggrMethod, final HistogramLayout layout,
             final DataTableSpec spec,  final List<DataRow> rows,
             final DataColumnSpec xColSpec, 
-            final Collection<ColorColumn> aggrColumns, 
+            final Collection<ColorNameColumn> aggrColumns, 
             final int noOfBins) {
         super(rowColors, aggrMethod, layout, noOfBins);
         if (spec == null) {
@@ -175,7 +175,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * AbstractHistogramVizModel#getAggrColumns()
      */
     @Override
-    public Collection<ColorColumn> getAggrColumns() {
+    public Collection<? extends ColorNameColumn> getAggrColumns() {
         return m_aggrColumns;
     }
 
@@ -226,10 +226,16 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * @return <code>true</code> if the variable has changed
      */
     public boolean setAggregationColumns(
-            final ArrayList<ColorColumn> aggrCols) {
+            final Collection<ColorNameColumn> aggrCols) {
+//        if (aggrCols == null || aggrCols.size() < 1) {
+//            throw new IllegalArgumentException(
+//                    "Aggregation column shouldn't be null");
+//        }
         if (aggrCols == null || aggrCols.size() < 1) {
-            throw new IllegalArgumentException(
-                    "Aggregation column shouldn't be null");
+            //force the aggregation method to be count
+            if (!AggregationMethod.COUNT.equals(getAggregationMethod())) {
+                setAggregationMethod(AggregationMethod.COUNT);
+            }
         }
         if (m_aggrColumns != null && m_aggrColumns.containsAll(aggrCols)) {
             return false;
@@ -310,8 +316,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
             final BinDataModel missingValBin) {
 //      add the data rows to the new bins
         int startBin = 0;
-        final Collection<ColorColumn> aggrColumns = getAggrColumns();
-        if (aggrColumns == null || aggrColumns.size() < 1) {
+        if (m_aggrColumns == null || m_aggrColumns.size() < 1) {
             //if the user hsn't selected a aggregation column
             for (DataRow row : getSortedRows()) {
                 final DataCell xVal = row.getCell(m_xColIdx);
@@ -320,15 +325,17 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
                 final DataCell id = row.getKey().getId();
                 startBin = BinningUtil.addDataRow2Bin(
                         isBinNominal(), bins, missingValBin, startBin, 
-                        xVal, color, id, aggrColumns, 
+                        xVal, color, id, m_aggrColumns, 
                         DataType.getMissingCell());
             }
         } else {
-            final int aggrSize = aggrColumns.size();
+            final DataTableSpec tableSpec = getTableSpec();
+            final int aggrSize = m_aggrColumns.size();
             final int[] aggrIdx = new int[aggrSize];
             int i = 0;
-            for (ColorColumn aggrColumn : aggrColumns) {
-                aggrIdx[i++] = aggrColumn.getColumnIndex();
+            for (ColorNameColumn aggrColumn : m_aggrColumns) {
+                aggrIdx[i++] = tableSpec.findColumnIndex(
+                        aggrColumn.getColumnName());
             }
             for (DataRow row : getSortedRows()) {
                 final DataCell xVal = row.getCell(m_xColIdx);
@@ -341,7 +348,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
                 }
                 startBin = BinningUtil.addDataRow2Bin(
                         isBinNominal(), bins, missingValBin, startBin, 
-                        xVal, color, id, aggrColumns, aggrVals);
+                        xVal, color, id, m_aggrColumns, aggrVals);
             }
         }
     }
@@ -355,6 +362,14 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         return false;
     }
    
+    /**
+     * @return the {@link DataTableSpec} of the table on which this 
+     * histogram based on
+     */
+    public DataTableSpec getTableSpec() {
+        return m_tableSpec;
+    }
+    
     /**
      * @see org.knime.base.node.viz.histogram.datamodel.
      * AbstractHistogramVizModel#getHilitedKeys()

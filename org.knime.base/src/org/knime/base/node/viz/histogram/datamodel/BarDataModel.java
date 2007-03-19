@@ -347,7 +347,8 @@ public class BarDataModel implements Serializable {
                 + " height per value:" + heightPerVal);
         //the user wants the elements next to each other
         //so we have to change the x coordinate
-        int xCoord = startX + AbstractHistogramVizModel.SPACE_BETWEEN_ELEMENTS;
+        int xCoord = startX 
+            + AbstractHistogramVizModel.SPACE_BETWEEN_ELEMENTS / 2;
         for (Color elementColor : barElementColors) {
             final BarElementDataModel element = 
                 m_elements.get(elementColor);
@@ -389,7 +390,7 @@ public class BarDataModel implements Serializable {
             //add the bar width and the space between bars to the current
             //x coordinate
             xCoord += elementWidth 
-            + AbstractHistogramVizModel.SPACE_BETWEEN_ELEMENTS;
+                + AbstractHistogramVizModel.SPACE_BETWEEN_ELEMENTS;
         }
         LOGGER.debug("Exiting setSideBySideRectangles"
                 + "(bounds, barElementColors, valRange, aggrMethod, baseLine) "
@@ -528,7 +529,6 @@ public class BarDataModel implements Serializable {
             final int yCoord = (int)m_barRectangle.getY();
             final int barHeight = (int)m_barRectangle.getHeight();
             m_barRectangle.setBounds(startX, yCoord, barWidth, barHeight);
-            final int totalNoOfElements = barElementColors.size();
             final int noOfElements = m_elements.size();
             m_drawElements = elementsFitInBar(layout, barElementColors,
                     noOfElements, barWidth, barHeight);
@@ -555,11 +555,9 @@ public class BarDataModel implements Serializable {
                 }
             } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
                 int xCoord = startX 
-                + AbstractHistogramVizModel.SPACE_BETWEEN_ELEMENTS;
-                final int elementWidth = Math.max((barWidth 
-                        - (AbstractHistogramVizModel.SPACE_BETWEEN_ELEMENTS 
-                                * totalNoOfElements)) 
-                        / totalNoOfElements, 1);
+                    + AbstractHistogramVizModel.SPACE_BETWEEN_ELEMENTS / 2;
+                final int elementWidth = 
+                    calculateSideBySideElementWidth(barElementColors, barWidth);
                 for (Color elementColor : barElementColors) {
                     final BarElementDataModel element = 
                         m_elements.get(elementColor);
@@ -570,7 +568,7 @@ public class BarDataModel implements Serializable {
     //              add the bar width and the space between bars to the current
                     //x coordinate
                     xCoord += elementWidth 
-                    + AbstractHistogramVizModel.SPACE_BETWEEN_ELEMENTS;
+                        + AbstractHistogramVizModel.SPACE_BETWEEN_ELEMENTS;
                 }
             } else {
                 throw new IllegalArgumentException(

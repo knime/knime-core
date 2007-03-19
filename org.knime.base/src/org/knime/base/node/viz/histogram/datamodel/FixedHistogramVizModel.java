@@ -34,6 +34,7 @@ import java.util.SortedSet;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.util.ColorNameColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 
@@ -44,7 +45,7 @@ import org.knime.core.data.DataColumnSpec;
  */
 public class FixedHistogramVizModel extends AbstractHistogramVizModel {
 
-    private final Collection<ColorColumn> m_aggrColumns;
+    private final Collection<ColorNameColumn> m_aggrColumns;
     
     private final DataColumnSpec m_xColSpec;
     
@@ -62,7 +63,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
     public FixedHistogramVizModel(final SortedSet<Color> rowColors, 
             final List<BinDataModel> bins, final BinDataModel missingValueBin,
             final DataColumnSpec xColSpec, 
-            final Collection<ColorColumn> aggrColumns, 
+            final Collection<ColorNameColumn> aggrColumns, 
             final AggregationMethod aggrMethod, 
             final HistogramLayout layout) {
         super(rowColors, aggrMethod, layout, bins.size());
@@ -102,7 +103,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
      * AbstractHistogramVizModel#getAggrColumns()
      */
     @Override
-    public Collection<ColorColumn> getAggrColumns() {
+    public Collection<ColorNameColumn> getAggrColumns() {
         return m_aggrColumns;
     }
 

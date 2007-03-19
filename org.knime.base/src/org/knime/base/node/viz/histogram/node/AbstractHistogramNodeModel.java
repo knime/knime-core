@@ -34,7 +34,6 @@ import java.util.Collection;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.util.ColorNameColumn;
 import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
 import org.knime.core.data.DataColumnSpec;
@@ -88,7 +87,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     private DataTableSpec m_tableSpec;
     private DataColumnSpec m_xColSpec;
     private int m_xColIdx;
-    private Collection<ColorColumn> m_aggrCols;
+    private Collection<ColorNameColumn> m_aggrCols;
     
     private final SettingsModelInteger m_noOfRows = new SettingsModelInteger(
                 CFGKEY_NO_OF_ROWS, DEFAULT_NO_OF_ROWS);
@@ -364,7 +363,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             //thats fine since it is optional
             m_aggrCols = null;
         } else {
-            m_aggrCols = new ArrayList<ColorColumn>(aggrCols.length);
+            m_aggrCols = new ArrayList<ColorNameColumn>(aggrCols.length);
             for (ColorNameColumn column : aggrCols) {
                 final String columnName = column.getColumnName();
                 final int aggrColIdx = m_tableSpec.findColumnIndex(columnName);
@@ -372,8 +371,8 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                     throw new IllegalArgumentException(
                             "Selected aggregation column not found.");
                 }
-                final ColorColumn aggrColumn = 
-                    new ColorColumn(column.getColor(), aggrColIdx, columnName);
+                final ColorNameColumn aggrColumn = 
+                    new ColorNameColumn(column.getColor(), columnName);
                 m_aggrCols.add(aggrColumn);
             }
         }
@@ -420,7 +419,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      * @return the aggregation columns to use or <code>null</code> if
      * the user hasn't selected a aggregation column
      */
-    protected Collection<ColorColumn> getAggrColumns() {
+    protected Collection<ColorNameColumn> getAggrColumns() {
         return m_aggrCols;
     }
     

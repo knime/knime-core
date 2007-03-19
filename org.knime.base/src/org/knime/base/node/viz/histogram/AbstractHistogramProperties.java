@@ -49,7 +49,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
+import org.knime.base.node.viz.histogram.util.ColorNameColumn;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
@@ -126,7 +126,7 @@ public abstract class AbstractHistogramProperties extends
 
     private final JCheckBox m_showGrid;
 
-    private final JCheckBox m_showBarOutline;
+    private final JCheckBox m_showElementOutline;
 
     private final ButtonGroup m_labelDisplayPolicy;
 
@@ -226,7 +226,7 @@ public abstract class AbstractHistogramProperties extends
 //        m_applyBarSettingsButton.setHorizontalAlignment(SwingConstants.RIGHT);
         // create the visualization option elements
         m_showGrid = new JCheckBox(SHOW_GRID_LABEL, vizModel.isShowGridLines());
-        m_showBarOutline = new JCheckBox(SHOW_BAR_OUTLINE_LABEL, true);
+        m_showElementOutline = new JCheckBox(SHOW_BAR_OUTLINE_LABEL, true);
 
         m_labelDisplayPolicy = AbstractHistogramProperties
                 .createEnumButtonGroup(LabelDisplayPolicy.values());
@@ -352,7 +352,7 @@ public abstract class AbstractHistogramProperties extends
         binWidthSliderBox.add(Box.createHorizontalGlue());
         binWidthBox.add(binWidthSliderBox);
         binWidthBox.add(Box.createVerticalGlue());
-        binWidthBox.add(m_showBarOutline);
+        binWidthBox.add(m_showElementOutline);
         final Box barLayoutBox = Box.createHorizontalBox();
         barLayoutBox.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(), "Bar Layout"));
@@ -476,10 +476,7 @@ public abstract class AbstractHistogramProperties extends
         return binPanel;
     }
 
-    /**
-     * 
-     */
-    private static Box createButtonGroupBox(final ButtonGroup group,
+  private static Box createButtonGroupBox(final ButtonGroup group,
             final boolean vertical, final String label) {
         Box buttonBox = null;
         if (vertical) {
@@ -570,7 +567,8 @@ public abstract class AbstractHistogramProperties extends
      * @param aggrMethod the current {@link AggregationMethod}
      */
     public abstract void updateColumnSelection(final DataTableSpec spec,
-            final String xColName, final Collection<ColorColumn> yColumns,
+            final String xColName, 
+            final Collection<? extends ColorNameColumn> yColumns,
             final AggregationMethod aggrMethod);
 
     /**
@@ -588,32 +586,10 @@ public abstract class AbstractHistogramProperties extends
         if (vizModel == null) {
             return;
         }
-        final int currentBinWidth = vizModel.getBinWidth();
-        final int maxBinWidth = vizModel.getMaxBinWidth();
-        int minBinWidth = AbstractHistogramVizModel.MIN_BIN_WIDTH;
-        if (minBinWidth > maxBinWidth) {
-            minBinWidth = maxBinWidth;
-        }
-        // update the bin width values        
-        final ChangeListener[] widthListeners = m_binWidth.getChangeListeners();
-        LOGGER.debug("No of bin width listener: " + widthListeners.length);
-        for (ChangeListener listener : widthListeners) {
-            m_binWidth.removeChangeListener(listener);
-        }
-        m_binWidth.setMaximum(maxBinWidth);
-        m_binWidth.setMinimum(minBinWidth);
-        m_binWidth.setValue(currentBinWidth);
-        m_binWidth.setEnabled(true);
-        m_binWidth
-                .setToolTipText(AbstractHistogramProperties.BIN_WIDTH_TOOLTIP);
-        AbstractHistogramProperties.setSliderLabels(m_binWidth, 2, false);
-        for (ChangeListener listener : widthListeners) {
-            m_binWidth.addChangeListener(listener);
-        }
-        LOGGER.debug("Bin width updated");
+//update the bin settings tab components
+        //update the number of bin values
         int maxNoOfBins = vizModel.getMaxNoOfBins();
         final int currentNoOfBins = vizModel.getNoOfBins();
-        // update the number of bin values
         final ChangeListener[] noOfListeners = m_noOfBins.getChangeListeners();
         LOGGER.debug("No of noOfBins listener: " + noOfListeners.length);
         for (ChangeListener listener : noOfListeners) {
@@ -642,11 +618,23 @@ public abstract class AbstractHistogramProperties extends
             m_noOfBins.addChangeListener(listener);
         }
         LOGGER.debug("No of bins updated");
-        //set the right aggregation method settings
+        //show empty bins box
+        updateCheckBox(m_showEmptyBins, vizModel.isShowEmptyBins(),
+                vizModel.containsEmptyBins());
+        LOGGER.debug("Show empty bins updated");
+        //show missing value bin box
+        updateCheckBox(m_showMissingValBin, vizModel.isShowMissingValBin(), 
+                vizModel.containsMissingValueBin());
+        LOGGER.debug("Show missing value bin updated");
+        
+//update the aggregation settings tab        
+//      set the right aggregation method settings
         //since the set selected method doesn't trigger an event
         //we don't need to remove/add the action listener
-        final Collection<ColorColumn> aggrColumns = vizModel.getAggrColumns();
-        if (aggrColumns == null || aggrColumns.size() < 1) {
+        final Collection<? extends ColorNameColumn> aggrColumns = 
+            vizModel.getAggrColumns();
+        if ((aggrColumns == null || aggrColumns.size() < 1)
+                && vizModel.isFixed()) {
             //if we have no aggregation columns selected disable all
             //aggregation methods but not count
             for (final Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
@@ -679,18 +667,42 @@ public abstract class AbstractHistogramProperties extends
             }
         }
         LOGGER.debug("Aggregation method updated");
-        // set the values of the select boxes
-        //show empty bins box
-        updateSelectBox(m_showEmptyBins, vizModel.isShowEmptyBins(),
-                vizModel.containsEmptyBins());
-        LOGGER.debug("Show empty bins updated");
-        //show missing value bin box
-        updateSelectBox(m_showMissingValBin, vizModel.isShowMissingValBin(), 
-                vizModel.containsMissingValueBin());
-        LOGGER.debug("Show missing value bin updated");
+        
+//update the visualization settings tab
         //show grid lines
-        updateSelectBox(m_showGrid, vizModel.isShowGridLines(), true);
+        updateCheckBox(m_showGrid, vizModel.isShowGridLines(), true);
         LOGGER.debug("Show grid line updated");
+        //Labels group
+        //select the current display policy
+        //since the set selected method doesn't trigger an event
+        //we don't need to remove/add the action listener
+        for (final Enumeration<AbstractButton> buttons = m_labelDisplayPolicy
+                .getElements(); buttons.hasMoreElements();) {
+            final AbstractButton button = buttons.nextElement();
+            if (button.getActionCommand()
+                    .equals(vizModel.getLabelDisplayPolicy().getID())) {
+                button.setSelected(true);
+            }
+        }
+        LOGGER.debug("Label display policy updated");
+        //select the current label orientation
+        //since the set selected method doesn't trigger an event
+        //we don't need to remove/add the action listener
+        for (final Enumeration<AbstractButton> buttons = m_labelOrientation
+                .getElements(); buttons.hasMoreElements();) {
+            final AbstractButton button = buttons.nextElement();
+            if (button.getActionCommand()
+                    .equals(LABEL_ORIENTATION_VERTICAL) 
+                    && vizModel.isShowLabelVertical()) {
+                button.setSelected(true);
+            } else if (button.getActionCommand()
+                    .equals(LABEL_ORIENTATION_HORIZONTAL) 
+                    && !vizModel.isShowLabelVertical()) {
+                button.setSelected(true);
+            }
+        }
+        LOGGER.debug("Label orientation updated");
+        //Bar layout group
         //select the current layout
         //since the set selected method doesn't trigger an event
         //we don't need to remove/add the action listener
@@ -698,10 +710,39 @@ public abstract class AbstractHistogramProperties extends
                 .getElements(); buttons.hasMoreElements();) {
             final AbstractButton button = buttons.nextElement();
             if (button.getActionCommand()
-                    .equals(vizModel.getHistogramLayout().name())) {
+                    .equals(vizModel.getHistogramLayout().getID())) {
                 button.setSelected(true);
             }
         }
+        LOGGER.debug("Layout updated");
+        final int currentBinWidth = vizModel.getBinWidth();
+        final int maxBinWidth = vizModel.getMaxBinWidth();
+        int minBinWidth = AbstractHistogramVizModel.MIN_BIN_WIDTH;
+        if (minBinWidth > maxBinWidth) {
+            minBinWidth = maxBinWidth;
+        }
+        // update the bin width values        
+        final ChangeListener[] widthListeners = m_binWidth.getChangeListeners();
+        LOGGER.debug("No of bin width listener: " + widthListeners.length);
+        for (ChangeListener listener : widthListeners) {
+            m_binWidth.removeChangeListener(listener);
+        }
+        m_binWidth.setMaximum(maxBinWidth);
+        m_binWidth.setMinimum(minBinWidth);
+        m_binWidth.setValue(currentBinWidth);
+        m_binWidth.setEnabled(true);
+        m_binWidth.setToolTipText(
+                AbstractHistogramProperties.BIN_WIDTH_TOOLTIP);
+        AbstractHistogramProperties.setSliderLabels(m_binWidth, 2, false);
+        for (ChangeListener listener : widthListeners) {
+            m_binWidth.addChangeListener(listener);
+        }
+        LOGGER.debug("Bin width updated");
+        //show element outline
+        updateCheckBox(m_showElementOutline, vizModel.isShowElementOutline(), 
+                true);
+        LOGGER.debug("Show element outline updated");
+        
         final long endTime = System.currentTimeMillis();
         final long durationTime = endTime - startTime;
         LOGGER.debug("Time for updateHistogramSettings. " 
@@ -717,7 +758,7 @@ public abstract class AbstractHistogramProperties extends
      * @param selected the selected value
      * @param enabled the enable value
      */
-    private static void updateSelectBox(final JCheckBox box, 
+    private static void updateCheckBox(final JCheckBox box, 
             final boolean selected, 
             final boolean enabled) {
         LOGGER.debug("Entering updateSelectBox(box, selected, enabled) "
@@ -792,7 +833,7 @@ public abstract class AbstractHistogramProperties extends
      * @return the current value of the show bar outline select box
      */
     public boolean isShowBarOutline() {
-        return m_showBarOutline.isSelected();
+        return m_showElementOutline.isSelected();
     }
 
     /**
@@ -887,7 +928,7 @@ public abstract class AbstractHistogramProperties extends
      */
     protected void addShowBarOutlineChangedListener(
             final ItemListener listener) {
-        m_showBarOutline.addItemListener(listener);
+        m_showElementOutline.addItemListener(listener);
     }
     
     /**

@@ -42,9 +42,9 @@ import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.BarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
-import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBarElementDataModel;
+import org.knime.base.node.viz.histogram.util.ColorNameColumn;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.NodeLogger;
@@ -177,20 +177,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
 
     /**If set the grid lines are drawn at the given positions.*/
     private int[] m_gridLines;
-    
 
-    /**If set to true the plotter paints the outline of the bars. The outline
-     * is always painted for highlighted blocks!.*/
-    private boolean m_showElementOutlines = false;
-
-    /**If set to <code>true</code> the bar labels are displayed vertical 
-     * otherwise they are displayed horizontal.*/
-    private boolean m_showLabelVertical = true;
-
-    /**The label display policy defines for which bars the labels should be
-     * displayed.*/
-    private LabelDisplayPolicy m_labelDisplayPolicy = 
-        LabelDisplayPolicy.getDefaultOption();
     
     /**
      * Constructor for class HistogramDrawingPane.
@@ -257,48 +244,6 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     public void setGridLines(final int[] gridLines) {
         m_gridLines = gridLines;
     }
-
-    /**
-     * @return <code>true</code> if the bar outline should be also shown for
-     * none highlighted blocks
-     */
-    public boolean isShowElementOutline() {
-        return m_showElementOutlines;
-    }
-    
-    /**
-     * @param showBarOutline set to <code>true</code> if the outline of the
-     * bars should be also shown for not highlighted bars
-     */
-    public void setShowElementOutline(final boolean showBarOutline) {
-        if (showBarOutline != m_showElementOutlines) {
-            m_showElementOutlines = showBarOutline;
-            repaint();
-        }
-    }
-    
-
-    /**
-     * @param showLabelVertical if <code>true</code> the bar labels are 
-     * displayed vertical otherwise horizontal.
-     */
-    public void setShowLabelVertical(final boolean showLabelVertical) {
-        if (m_showLabelVertical  != showLabelVertical) {
-            m_showLabelVertical = showLabelVertical;
-            repaint();
-        }
-    }
-
-    /**
-     * @param labelDisplayPolicy the display policy
-     */
-    public void setLabelDisplayPolicy(
-            final LabelDisplayPolicy labelDisplayPolicy) {
-        if (m_labelDisplayPolicy != labelDisplayPolicy) {
-            m_labelDisplayPolicy = labelDisplayPolicy;
-            repaint();
-        }
-    }
     
     /**
      * @return the width of the stroke used to outline the bars in the
@@ -315,9 +260,6 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * values.
      */
     public void reset() {
-        m_labelDisplayPolicy = LabelDisplayPolicy.getDefaultOption();
-        m_showElementOutlines = false;
-        m_showLabelVertical = true;
         m_baseLine = null;
         m_gridLines = null;
         m_vizModel = null;
@@ -353,7 +295,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             m_updatePropertiesPanel = false;
         }
 //      check if we have to draw the grid lines
-        if (m_gridLines != null) {
+        if (vizModel.isShowGridLines() && m_gridLines != null) {
             for (int gridLine : m_gridLines) {
                 paintHorizontalLine(g2, 0, gridLine,
                         (int) bounds.getWidth(), GRID_LINE_COLOR, 
@@ -362,7 +304,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         }
         //get all variables which are needed multiple times
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
-        final Collection<ColorColumn> aggrColumns = 
+        final Collection<? extends ColorNameColumn> aggrColumns = 
             vizModel.getAggrColumns();
         final HistogramLayout layout = vizModel.getHistogramLayout();
         //if the user has selected more then one aggregation column we have to
@@ -372,7 +314,10 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             && aggrColumns.size() > 1)
             || HistogramLayout.SIDE_BY_SIDE.equals(
                 m_vizModel.getHistogramLayout());
-        
+        final boolean showElementOutline = vizModel.isShowElementOutline();
+        final LabelDisplayPolicy labelDisplayPolicy = 
+            vizModel.getLabelDisplayPolicy();
+        final boolean showLabelVertical = vizModel.isShowLabelVertical();
         // loop over all bins and paint them
         for (BinDataModel bin : vizModel.getBins()) {
             if (!bin.isDrawBar()) {
@@ -391,7 +336,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                             bar.getColor(), 0.2f);
                 }
                 if (bar.isDrawElements()) {
-                    drawElements(g2, bar.getElements(), m_showElementOutlines);
+                    drawElements(g2, bar.getElements(), showElementOutline);
                 } else {
                     //the elements doen't fit in this bar so we have to 
                     //fill the complete bar in black to show it to the user
@@ -410,7 +355,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     }
                 }
                 //draw the bar label at last to have them on top
-                drawLabels(g2, bar, aggrMethod, layout, bounds);
+                drawLabels(g2, bar, aggrMethod, layout, bounds, 
+                        labelDisplayPolicy, showLabelVertical);
             } //end of bar loop
             //draw the outline of the bin to debug in multiple 
             //aggregation column mode
@@ -466,31 +412,35 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * @param layout the current layout to decide if the label is per
      * element or per bar
      * @param bounds the surrounding pane on which to draw
+     * @param displayPolicy the {@link LabelDisplayPolicy}
+     * @param showVertical if set to <code>true</code> the labels are
+     * painted vertical otherwise horizontal
      */
     private void drawLabels(final Graphics2D g2, final BarDataModel bar, 
             final AggregationMethod aggrMethod, final HistogramLayout layout,
-            final Rectangle bounds) {
+            final Rectangle bounds, final LabelDisplayPolicy displayPolicy,
+            final boolean showVertical) {
         if (LabelDisplayPolicy.ALL.equals(
-                m_labelDisplayPolicy)
+                displayPolicy)
                 || (LabelDisplayPolicy.SELECTED.equals(
-                        m_labelDisplayPolicy) && bar.isSelected())) {
+                        displayPolicy) && bar.isSelected())) {
             if (HistogramLayout.STACKED.equals(layout) 
                     || !bar.isDrawElements()) {
                 paintLabel(g2, bar.getBarRectangle(), 
                         bar.getAggregationValue(aggrMethod), aggrMethod, 
-                        bounds, m_showLabelVertical);
+                        bounds, showVertical);
             } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
                 //paint a label for each element after painting
                 //the elements itself to have them in the front
                 for (BarElementDataModel element : bar.getElements()) {
                     if (element.isSelected()
                             || LabelDisplayPolicy.ALL.equals(
-                                    m_labelDisplayPolicy)) {
+                                    displayPolicy)) {
                         final double aggrVal = 
                             element.getAggregationValue(aggrMethod);
                         paintLabel(g2, element.getElementRectangle(), 
                                 aggrVal, aggrMethod, bounds, 
-                                m_showLabelVertical);
+                                showVertical);
                     }
                 }
             } else {

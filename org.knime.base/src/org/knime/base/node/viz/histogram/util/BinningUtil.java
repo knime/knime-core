@@ -35,7 +35,6 @@ import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModelComparator;
-import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -537,7 +536,7 @@ public final class BinningUtil {
      * @param xCell the x cell 
      * @param rowColor the color of the row
      * @param id the row id
-     * @param aggrColumns the aggregation columns as {@link ColorColumn} 
+     * @param aggrColumns the aggregation columns as {@link InteractiveColorColumn} 
      * objects in the same order like the aggregation cells
      * @param aggrCells the aggregation {@link DataCell} objects which 
      * contain the value
@@ -547,7 +546,7 @@ public final class BinningUtil {
             final List<? extends BinDataModel> bins, 
             final BinDataModel missingValueBin, final int startBin, 
             final DataCell xCell, final Color rowColor, final DataCell id, 
-            final Collection<ColorColumn> aggrColumns, 
+            final Collection<ColorNameColumn> aggrColumns, 
             final DataCell... aggrCells) {
         if (bins == null) {
             throw new NullPointerException("Bins must not be null");
@@ -599,7 +598,7 @@ public final class BinningUtil {
             final List<? extends BinDataModel> bins, 
             final int startBin, final DataCell xVal, 
             final Color color, final DataCell id, 
-            final Collection<ColorColumn> aggrColumns, 
+            final Collection<ColorNameColumn> aggrColumns, 
             final DataCell... aggrVals) {
         final String xValString = xVal.toString();
          for (int binIdx = startBin, length = bins.size(); binIdx < length; 
@@ -629,7 +628,7 @@ public final class BinningUtil {
     private static int addDataRow2IntervalBin(
             final List<? extends BinDataModel> bins, final int startBin, 
             final DoubleValue xVal, final Color color, final DataCell id, 
-            final Collection<ColorColumn> aggrColumns, 
+            final Collection<ColorNameColumn> aggrColumns, 
             final DataCell... aggrVals) {
         final double value = xVal.getDoubleValue();
          for (int binIdx = startBin, length = bins.size(); binIdx < length; 

@@ -31,12 +31,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
+import org.knime.base.node.viz.histogram.util.AggregationColumnFilterPanel;
+import org.knime.base.node.viz.histogram.util.ColorNameColumn;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
@@ -84,7 +86,7 @@ public class InteractiveHistogramProperties extends
     
     private final ColumnSelectionComboxBox m_xCol;
     
-    private final ColumnSelectionComboxBox m_aggrCol;
+    private final AggregationColumnFilterPanel m_aggrCol;
     
     /**
      * Constructor for class FixedColumnHistogramProperties.
@@ -102,7 +104,8 @@ public class InteractiveHistogramProperties extends
        m_xCol.setBackground(this.getBackground());
 
        m_aggrCol = 
-           new ColumnSelectionComboxBox((Border)null, 
+           new AggregationColumnFilterPanel("Aggregation columns:", 
+                   new Dimension(50, 50),
                    AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER);
        m_aggrCol.setBackground(this.getBackground());
        m_aggrCol.setToolTipText(AGGREGATION_COLUMN_DISABLED_TOOLTIP);
@@ -171,8 +174,8 @@ public class InteractiveHistogramProperties extends
     /**
      * @param listener adds the listener to the aggregation column select box.
      */
-    protected void addAggrColumnChangeListener(final ActionListener listener) {
-        m_aggrCol.addActionListener(listener);
+    protected void addAggrColumnChangeListener(final ChangeListener listener) {
+        m_aggrCol.addChangeListener(listener);
     }
 
     /**
@@ -184,7 +187,8 @@ public class InteractiveHistogramProperties extends
      */
     @Override
     public void updateColumnSelection(final DataTableSpec spec,
-            final String xColName, final Collection<ColorColumn> aggrColumns,
+            final String xColName, 
+            final Collection<? extends ColorNameColumn> aggrColumns,
             final AggregationMethod aggrMethod) {
         try {
             if (xColName == null) {
@@ -205,35 +209,10 @@ public class InteractiveHistogramProperties extends
         } catch (final NotConfigurableException e) {
             m_xCol.setEnabled(false);
         }
-        try {
-//            if (aggrColumns == null || aggrColumns.size() < 1) {
-//                final String er = "No aggregation column available";
-//                LOGGER.warn(er);
-//                throw new IllegalArgumentException(er);
-//            }
-            //remove all action listener to avoid unnecessary calls
-            final ActionListener[] listeners = m_aggrCol.getActionListeners();
-            for (ActionListener listener : listeners) {
-                m_aggrCol.removeActionListener(listener);
-            }
-            if (aggrColumns == null || aggrColumns.size() < 1) {
-                m_aggrCol.setEnabled(false);
-            } else {
-                m_aggrCol.update(spec, 
-                        aggrColumns.iterator().next().getColumnName());
-                if (m_aggrCol.getModel().getSize() > 0) {
-                    m_aggrCol.setEnabled(true);
-                }
-            }
-            for (ActionListener listener : listeners) {
-                m_aggrCol.addActionListener(listener);
-            }
-        } catch (final NotConfigurableException e) {
-            m_aggrCol.setEnabled(false);
-        }
+        m_aggrCol.update(spec, aggrColumns);
         // set the values for the y axis select box
         if (aggrMethod.equals(AggregationMethod.COUNT)
-                || m_aggrCol.getModel().getSize() < 1) {
+                || m_aggrCol.getNoOfColumns() < 1) {
             // if the aggregation method is count disable the y axis select box
             m_aggrCol.setEnabled(false);
         } else {
@@ -258,7 +237,7 @@ public class InteractiveHistogramProperties extends
         final AggregationMethod method = AggregationMethod
                 .getMethod4String(actionCommand);
         if (method.equals(AggregationMethod.COUNT)
-                || m_aggrCol.getModel().getSize() < 1) {
+                || m_aggrCol.getNoOfColumns() < 1) {
             m_aggrCol.setEnabled(false);
             m_aggrCol.setToolTipText(
                     AGGREGATION_COLUMN_DISABLED_TOOLTIP);
@@ -267,5 +246,13 @@ public class InteractiveHistogramProperties extends
             m_aggrCol.setToolTipText(
                     AGGREGATION_COLUMN_ENABLED_TOOLTIP);
         }
+    }
+
+
+    /**
+     * @return all selected aggregation columns
+     */
+    public ColorNameColumn[] getSelectedAggrColumns() {
+        return m_aggrCol.getIncludedColorNameColumns();
     }
 }

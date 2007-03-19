@@ -38,6 +38,8 @@ import java.util.SortedSet;
 
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.LabelDisplayPolicy;
+import org.knime.base.node.viz.histogram.util.ColorNameColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -55,9 +57,9 @@ public abstract class AbstractHistogramVizModel {
     /** The caption of the bar which holds all missing values. */
     public static final String MISSING_VAL_BAR_CAPTION = "Missing_values";
     
-    /** Defines the minimum width of a bar. Should be more than the base line
+    /** Defines the minimum width of a bin. Should be more than the base line
      * stroke.*/
-    public static final int MIN_BIN_WIDTH = 4;
+    public static final int MIN_BIN_WIDTH = 6;
 
     /** This is the minimum space between two bins. */
     public static final int SPACE_BETWEEN_BINS = 2;
@@ -92,6 +94,19 @@ public abstract class AbstractHistogramVizModel {
     
     /**If set to true the plotter paints the grid lines for the y axis values.*/
     private boolean m_showGridLines = true;
+
+    /**If set to true the plotter paints the outline of the bars. The outline
+     * is always painted for highlighted blocks!.*/
+    private boolean m_showElementOutlines = false;
+
+    /**If set to <code>true</code> the bar labels are displayed vertical 
+     * otherwise they are displayed horizontal.*/
+    private boolean m_showLabelVertical = true;
+
+    /**The label display policy defines for which bars the labels should be
+     * displayed.*/
+    private LabelDisplayPolicy m_labelDisplayPolicy = 
+        LabelDisplayPolicy.getDefaultOption();
   
     /** The current basic width of the bins. */
     private int m_binWidth = Integer.MAX_VALUE;
@@ -114,14 +129,14 @@ public abstract class AbstractHistogramVizModel {
     /**Holds the actual size of the drawing space.*/
     private Dimension m_drawingSpace;
 
-    /**The space between to bars in pixel.*/
-    public static final int SPACE_BETWEEN_BARS = 5;
+    /**The space between to bars in pixel. Must be greater 0.*/
+    public static final int SPACE_BETWEEN_BARS = 8;
 
     /**
      * The space between to elements in the {@link HistogramLayout.SIDE_BY_SIDE}
-     * layout in  pixel.
+     * layout in  pixel. Must be greater 0.
      */
-    public static final int SPACE_BETWEEN_ELEMENTS = 1;
+    public static final int SPACE_BETWEEN_ELEMENTS = 2;
 
     /** The minimum height of a bar.*/
     public static final int MINIMUM_BAR_HEIGHT = 5;
@@ -202,7 +217,7 @@ public abstract class AbstractHistogramVizModel {
     /**
      * @return the aggregation columns. Could be null!
      */
-    public abstract Collection<ColorColumn> getAggrColumns();
+    public abstract Collection<? extends ColorNameColumn> getAggrColumns();
 
     /**
      * @return the x column specification
@@ -622,6 +637,66 @@ public abstract class AbstractHistogramVizModel {
         }
         return false;
     }
+    
+    /**
+     * @param showElementOutlines the showElementOutlines to set
+     * @return <code>true</code> if the parameter has changed
+     */
+    public boolean setShowElementOutlines(final boolean showElementOutlines) {
+        if (m_showElementOutlines != showElementOutlines) {
+            m_showElementOutlines = showElementOutlines;
+            return true;
+        }
+        return false;
+    }
+    /**
+     * @return <code>true</code> if the bar outline should be also shown for
+     * none highlighted blocks
+     */
+    public boolean isShowElementOutline() {
+        return m_showElementOutlines;
+    }
+    
+    /**
+     * @return the showLabelVertical
+     */
+    public boolean isShowLabelVertical() {
+        return m_showLabelVertical;
+    }
+    
+    /**
+     * @param showLabelVertical if <code>true</code> the bar labels are 
+     * displayed vertical otherwise horizontal.
+     * @return <code>true</code> if the parameter has changed
+     */
+    public boolean setShowLabelVertical(final boolean showLabelVertical) {
+        if (m_showLabelVertical  != showLabelVertical) {
+            m_showLabelVertical = showLabelVertical;
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * @return the labelDisplayPolicy
+     */
+    public LabelDisplayPolicy getLabelDisplayPolicy() {
+        return m_labelDisplayPolicy;
+    }
+    
+    /**
+     * @param labelDisplayPolicy the display policy
+     * @return <code>true</code> if the parameter has changed
+     */
+    public boolean setLabelDisplayPolicy(
+            final LabelDisplayPolicy labelDisplayPolicy) {
+        if (m_labelDisplayPolicy != labelDisplayPolicy) {
+            m_labelDisplayPolicy = labelDisplayPolicy;
+            return true;
+        }
+        return false;
+    }
+    
     /**
      * @return all keys of hilited rows
      */

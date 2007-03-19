@@ -33,7 +33,7 @@ import javax.swing.border.EtchedBorder;
 import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
 import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.ColorColumn;
+import org.knime.base.node.viz.histogram.util.ColorNameColumn;
 import org.knime.core.data.DataTableSpec;
 
 
@@ -154,20 +154,22 @@ public class FixedHistogramProperties extends
      */
     @Override
     public void updateColumnSelection(final DataTableSpec spec, 
-            final String xColName, final Collection<ColorColumn> aggrColumns, 
+            final String xColName, 
+            final Collection<? extends ColorNameColumn> aggrColumns, 
             final AggregationMethod aggrMethod) {
         m_xCol.setText(xColName);
         m_aggrCol.setText(columns2String(aggrColumns, ", "));
     }
 
-    private static String columns2String(final Collection<ColorColumn> cols, 
+    private static String columns2String(
+            final Collection<? extends ColorNameColumn> cols, 
             final String separator) {
         if (cols == null) {
             return "";
         }
         StringBuilder buf = new StringBuilder();
         boolean first = true;
-        for (ColorColumn col : cols) {
+        for (ColorNameColumn col : cols) {
             if (first) {
                 first = false;
             } else {
