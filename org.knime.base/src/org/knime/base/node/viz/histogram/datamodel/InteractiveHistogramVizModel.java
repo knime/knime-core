@@ -106,10 +106,10 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     private int m_xColIdx = -1;
     
     private DataColumnSpec m_xColSpec;
+
+    private Collection<ColorColumn> m_aggrColumns;
     
     private RowComparator m_rowComparator;
-    
-    private Collection<ColorColumn> m_aggrColumns;
     
     private final List<DataRow> m_dataRows;
     
@@ -170,15 +170,6 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         return false;
     }
     
-    /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#getAggrColumns()
-     */
-    @Override
-    public Collection<ColorColumn> getAggrColumns() {
-        return m_aggrColumns;
-    }
-
     /**
      * @param xColSpec the new x column specification
      * @return <code>true</code> if the variable has changed
@@ -263,6 +254,16 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         return m_xColSpec;
     }
 
+
+    /**
+     * @see org.knime.base.node.viz.histogram.datamodel.
+     * AbstractHistogramVizModel#getAggrColumns()
+     */
+    @Override
+    public Collection<ColorColumn> getAggrColumns() {
+        return m_aggrColumns;
+    }
+    
     /**
      * @return the data rows in ascending order
      */

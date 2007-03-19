@@ -576,6 +576,11 @@ public abstract class AbstractHistogramVizModel {
         if (m_aggrMethod.equals(aggrMethod)) {
             return false;
         }
+        if (!AggregationMethod.COUNT.equals(aggrMethod) 
+                && (getAggrColumns() == null || getAggrColumns().size() < 1)) {
+            throw new IllegalArgumentException("Aggregation method only "
+                    + "valid with a selected aggregation column");
+        }
         m_aggrMethod = aggrMethod;
         return true;
     }

@@ -66,4 +66,49 @@ public class ColorColumn {
         return m_columnName;
     }
 
+    /**
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((m_color == null) ? 0 : m_color.hashCode());
+        result = prime * result 
+            + ((m_columnName == null) ? 0 : m_columnName.hashCode());
+        return result;
+    }
+
+    /**
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ColorColumn other = (ColorColumn)obj;
+        if (m_color == null) {
+            if (other.m_color != null) {
+                return false;
+            }
+        } else if (!m_color.equals(other.m_color)) {
+            return false;
+        }
+        if (m_columnName == null) {
+            if (other.m_columnName != null) {
+                return false;
+            }
+        } else if (!m_columnName.equals(other.m_columnName)) {
+            return false;
+        }
+        return true;
+    }
+
 }

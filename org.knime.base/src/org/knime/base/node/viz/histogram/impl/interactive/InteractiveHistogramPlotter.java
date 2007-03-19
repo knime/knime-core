@@ -25,7 +25,6 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -90,19 +89,10 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                 });
         histogramProps.addAggrColumnChangeListener(
                 new ChangeListener() {
-//                    public void actionPerformed(final ActionEvent e) {
-//                        final ColumnSelectionComboxBox cb = 
-//                            (ColumnSelectionComboxBox)e.getSource();
-//                        final String aggrCol = cb.getSelectedColumn();
-//                        onAggrColChanged(aggrCol);
-//                    }
-
                     public void stateChanged(final ChangeEvent e) {
                         onAggrColChanged();
                     }
                 });
-//        setHistogramDataModel(xColSpec, aggrCols, tableSpec, dataModel);
-//        m_data = rows;
     }
    
     /**
@@ -170,12 +160,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                     instanceof InteractiveHistogramProperties) {
                 final InteractiveHistogramProperties props =
                 (InteractiveHistogramProperties) abstractHistogramProperties;
-                final ColorColumn[] selectedAggrCols = 
-                    props.getSelectedAggrColumns();
-                List<ColorColumn> aggrCols = null;
-                if (selectedAggrCols != null && selectedAggrCols.length > 0) {
-                    aggrCols = Arrays.asList(selectedAggrCols);
-                }
+                List<ColorColumn> aggrCols = props.getSelectedAggrColumns();
                 if (vizModel.setAggregationColumns(aggrCols)) {
                     //set the current hilited keys in the new bins
                     vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
@@ -213,24 +198,44 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
             if (vizModel instanceof InteractiveHistogramVizModel) {
                 final InteractiveHistogramVizModel interactiveVizModel = 
                     (InteractiveHistogramVizModel)vizModel;
-                final DataTableSpec spec = interactiveVizModel.getTableSpec();
-                final int numColumns = spec.getNumColumns();
-                for (int i = 0; i < numColumns; i++) {
-                    final DataColumnSpec colSpec = spec.getColumnSpec(i);
-                    if (AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER.
-                            includeColumn(colSpec)) {
-                        final ColorColumn aggrColumn = 
-                            new ColorColumn(Color.LIGHT_GRAY, 
-                                    colSpec.getName());
-                        final ArrayList<ColorColumn> aggrCols = 
-                            new ArrayList<ColorColumn>(1);
-                        aggrCols.add(aggrColumn);
-                        getHistogramPropertiesPanel().updateColumnSelection(
-                                spec, getXColName(), aggrCols, aggrMethod);
-
-                        interactiveVizModel.setAggregationColumns(aggrCols);
-                        break;
+                final AbstractHistogramProperties abstHistoProps = 
+                    getHistogramPropertiesPanel();
+                if (abstHistoProps 
+                        instanceof InteractiveHistogramProperties) {
+                    final InteractiveHistogramProperties props = 
+                        (InteractiveHistogramProperties)abstHistoProps;
+                    
+                    final DataTableSpec spec = 
+                        interactiveVizModel.getTableSpec();
+                    final int numColumns = spec.getNumColumns();
+                    boolean found = false;
+                    for (int i = 0; i < numColumns; i++) {
+                        final DataColumnSpec colSpec = spec.getColumnSpec(i);
+                        if (AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER.
+                                includeColumn(colSpec)) {
+                            final ColorColumn aggrColumn = 
+                                new ColorColumn(Color.LIGHT_GRAY, 
+                                        colSpec.getName());
+                            final ArrayList<ColorColumn> aggrCols = 
+                                new ArrayList<ColorColumn>(1);
+                            aggrCols.add(aggrColumn);
+                            props.updateColumnSelection(
+                                    spec, getXColName(), aggrCols, aggrMethod);
+                            final List<ColorColumn> selectedAggrCols = 
+                                props.getSelectedAggrColumns();
+                            interactiveVizModel.setAggregationColumns(
+                                    selectedAggrCols);
+                            found = true;
+                            break;
+                        }
                     }
+                    if (!found) {
+                        props.updateHistogramSettings(interactiveVizModel);
+                        return false;
+                    }
+                } else {
+                    throw new IllegalStateException(
+                            "ProeprtiesPanel should  be of interactive type.");
                 }
             } else {
                 throw new IllegalStateException("Visualization model should "

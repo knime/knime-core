@@ -139,6 +139,7 @@ public class AggregationColumnFilterPanel extends JPanel {
         final JScrollPane jspExcl = new JScrollPane(m_exclList);
         jspExcl.setMinimumSize(listDimension);
         jspExcl.setMaximumSize(listDimension);
+        jspExcl.setPreferredSize(listDimension);
 
         JPanel excludePanel = new JPanel(new BorderLayout());
         m_excludeBorder = BorderFactory.createTitledBorder(
@@ -155,6 +156,7 @@ public class AggregationColumnFilterPanel extends JPanel {
         final JScrollPane jspIncl = new JScrollPane(m_inclList);
         jspIncl.setMinimumSize(listDimension);
         jspIncl.setMaximumSize(listDimension);
+        jspIncl.setPreferredSize(listDimension);
         JPanel includePanel = new JPanel(new BorderLayout());
         m_includeBorder = BorderFactory.createTitledBorder(
                 INCLUDE_BORDER, " Aggregation columns ");

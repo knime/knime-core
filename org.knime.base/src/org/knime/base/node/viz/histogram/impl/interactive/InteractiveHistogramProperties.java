@@ -23,7 +23,9 @@ package org.knime.base.node.viz.histogram.impl.interactive;
 
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -104,8 +106,8 @@ public class InteractiveHistogramProperties extends
        m_xCol.setBackground(this.getBackground());
 
        m_aggrCol = 
-           new AggregationColumnFilterPanel("Aggregation columns:", 
-                   new Dimension(50, 50),
+           new AggregationColumnFilterPanel(null, 
+                   new Dimension(150, 10),
                    AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER);
        m_aggrCol.setBackground(this.getBackground());
        m_aggrCol.setToolTipText(AGGREGATION_COLUMN_DISABLED_TOOLTIP);
@@ -140,14 +142,17 @@ public class InteractiveHistogramProperties extends
         xColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
 //the aggregation column box
         final Box aggrColumnBox = Box.createHorizontalBox();
-//        aggrColumnBox.setBorder(BorderFactory
-//                .createEtchedBorder(EtchedBorder.RAISED));
-        final JLabel aggrColLabelLabel = new JLabel(AGGREGATION_COLUMN_LABEL);
-        aggrColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-        aggrColumnBox.add(aggrColLabelLabel);
-        aggrColumnBox.add(Box.createHorizontalGlue());
-        aggrColumnBox.add(m_aggrCol);
-        aggrColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+//      xColumnBox.setBorder(BorderFactory
+//              .createEtchedBorder(EtchedBorder.RAISED));
+      final JLabel aggrColLabelLabel = new JLabel(AGGREGATION_COLUMN_LABEL);
+      aggrColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+      aggrColumnBox.add(aggrColLabelLabel);
+      aggrColumnBox.add(Box.createHorizontalGlue());
+      aggrColumnBox.add(m_aggrCol);
+      aggrColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+//        final Box aggrColumnBox = Box.createHorizontalBox();
+//        aggrColumnBox.add(m_aggrCol);
+//        aggrColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
 
 //the box which surround both column selection boxes
         final Box columnsBox = Box.createVerticalBox();
@@ -252,7 +257,7 @@ public class InteractiveHistogramProperties extends
     /**
      * @return all selected aggregation columns
      */
-    public ColorColumn[] getSelectedAggrColumns() {
-        return m_aggrCol.getIncludedColorNameColumns();
+    public List<ColorColumn> getSelectedAggrColumns() {
+        return Arrays.asList(m_aggrCol.getIncludedColorNameColumns());
     }
 }

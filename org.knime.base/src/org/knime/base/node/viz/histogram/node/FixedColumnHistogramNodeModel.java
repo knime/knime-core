@@ -184,7 +184,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         if (m_model == null) {
             return null;
         }
-        final FixedHistogramVizModel vizModel = new FixedHistogramVizModel(
+        final AbstractHistogramVizModel vizModel = new FixedHistogramVizModel(
                 m_model.getRowColors(), m_model.getClonedBins(), 
                 m_model.getClonedMissingValueBin(), m_model.getXColumnSpec(),
                 m_model.getAggrColumns(),
