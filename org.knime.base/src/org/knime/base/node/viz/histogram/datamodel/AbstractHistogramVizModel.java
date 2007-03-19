@@ -140,6 +140,10 @@ public abstract class AbstractHistogramVizModel {
 
     /** The minimum height of a bar.*/
     public static final int MINIMUM_BAR_HEIGHT = 5;
+
+    /**The space around a bar which is used to show the aggregation 
+     * column color.*/
+    public static final int BAR_SURROUNDING_SPACE = 4;
     
     /**Constructor for class HistogramVizModel.
      * @param rowColors all possible colors the user has defined for a row

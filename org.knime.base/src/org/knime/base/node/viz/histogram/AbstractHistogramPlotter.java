@@ -890,7 +890,6 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 //... and set the bin width to the maximum bin 
                 //with by changing to the side by side layout
                 vizModel.setBinWidth(vizModel.getMaxBinWidth());
-                
             } else if (HistogramLayout.STACKED.equals(layout)) {
                 //set the previous used bin width
                 vizModel.setBinWidth(m_lastStackedBinWidth);

@@ -88,13 +88,13 @@ public class BinDataModel implements Serializable {
     /**
      * @param id the row id
      * @param rowColor the row color
-     * @param aggrCols the {@link InteractiveColorColumn} objects in the same order
+     * @param aggrCols the {@link ColorColumn} objects in the same order
      * like the aggregation values
      * @param aggrVals the aggregation value in the same order like the
      * columns
      */
     public void addDataRow(final DataCell id, final Color rowColor, 
-            final Collection<? extends ColorColumn> aggrCols, 
+            final Collection<ColorColumn> aggrCols, 
             final DataCell... aggrVals) {
     //        final DataCell[] aggrVals = row.getAggrVals();
     //        final DataCell id = row.getRowKey().getId();
@@ -349,15 +349,21 @@ public class BinDataModel implements Serializable {
             }
             m_drawBar = true;
             //calculate the height
-            final int totalHeight = (int)m_binRectangle.getHeight();
-            final double maxBinAggrVal = 
+            final int binHeight = (int)m_binRectangle.getHeight();
+            final double maxAggrVal = 
                 getMaxAggregationValue(aggrMethod, layout);
-            final double minBinAggrVal = 
+            final double minAggrVal = 
                 getMinAggregationValue(aggrMethod, layout);
-            double valRange = 
-                Math.max(Math.abs(maxBinAggrVal), Math.abs(minBinAggrVal));
-            if (minBinAggrVal < 0 && maxBinAggrVal > 0) {
-                valRange = maxBinAggrVal + Math.abs(minBinAggrVal);
+            double valRange;
+            if (minAggrVal < 0 && maxAggrVal > 0) {
+                //if the bar contains negative and positive elements
+                //we have to add the min and max aggregation value
+                //to get the full range
+                valRange = maxAggrVal + Math.abs(minAggrVal);
+            } else {
+                //if the bar contains either negative or positive elements
+                //simply take the maximum since one of them is zero
+                valRange = Math.max(Math.abs(maxAggrVal), Math.abs(minAggrVal));
             }
             
             if (valRange <= 0) {
@@ -366,10 +372,10 @@ public class BinDataModel implements Serializable {
             }
 
             final int barWidth = calculateBarWidth(binWidth, noOfBars);
-            final double heightPerVal = totalHeight / valRange;
-            final int startX = (int) m_binRectangle.getX();
-            final int startY = (int)m_binRectangle.getY();
-            int xCoord = startX 
+            final double heightPerVal = binHeight / valRange;
+            final int binX = (int) m_binRectangle.getX();
+            final int binY = (int) m_binRectangle.getY();
+            int xCoord = binX 
                 + AbstractHistogramVizModel.SPACE_BETWEEN_BARS / 2;
             for (ColorColumn aggrColumn : aggrColumns) {
                 final BarDataModel bar = 
@@ -377,33 +383,35 @@ public class BinDataModel implements Serializable {
                 if (bar != null) {
                     //set the rectangle only for the bars which are available
                     //in this bin
-                    final double maxBarAggrVal = 
-                        bar.getMaxAggregationValue(aggrMethod, layout);
-                    final double minBarAggrVal = 
-                        bar.getMinAggregationValue(aggrMethod, layout);
-                    double barVal = 
-                        Math.max(Math.abs(maxBarAggrVal), 
-                                Math.abs(minBarAggrVal));
-                    if (minBinAggrVal < 0 && maxBarAggrVal >= 0) {
-                        //add the other aggregation value to the real value
-                        //if the min value is negative and the max is positive
-                        if (Math.abs(minBarAggrVal) > maxBarAggrVal) {
-                            barVal += maxBinAggrVal;
-                        } else {
-                            barVal += Math.abs(minBinAggrVal);
-                        }
+                    final double aggrVal = bar.getAggregationValue(aggrMethod);
+                    int barHeight = Math.max((int)(
+                            heightPerVal * Math.abs(aggrVal)), 
+                            AbstractHistogramVizModel.MINIMUM_BAR_HEIGHT);
+                    final int totalHeight;
+                    if (aggrVal < 0) {
+                        totalHeight = binHeight + binY - baseLine;
+                    } else {
+                        totalHeight = baseLine - binY;
                     }
-                    int barMaxHeight = 
-                        Math.max((int)(heightPerVal * barVal), 1);
-                    final int yCoord = startY + (totalHeight - barMaxHeight);
-                    if (barMaxHeight > totalHeight) {
-                        final int diff = barMaxHeight - totalHeight;
-                        barMaxHeight -= diff;
+                    if (barHeight > totalHeight) {
+                        final int diff = barHeight - totalHeight;
+                        barHeight -= diff;
                         LOGGER.debug("Height diff. bar higher than bin: " 
                                 + diff);
                     }
+//                  calculate the position of the y coordinate
+                    int yCoord = 0;
+                    if (aggrVal >= 0) {
+                        //if it's a positive value the start point is the
+                        //baseline minus the height of the bar
+                        yCoord = baseLine - barHeight;
+                    } else {
+                        //if it's a negative value the top left corner start 
+                        //point is the base line
+                        yCoord = baseLine;
+                    }
                     final Rectangle barRect = 
-                        new Rectangle(xCoord, yCoord, barWidth, barMaxHeight);
+                        new Rectangle(xCoord, yCoord, barWidth, barHeight);
                     bar.setBarRectangle(barRect, aggrMethod, layout, baseLine,
                             barElementColors);
                 }

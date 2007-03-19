@@ -332,7 +332,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 if (drawBarOutline) {
                     //draw the outline of the bar if we have multiple
                     //aggregation columns
-                    drawBlock(g2, bar.getBarRectangle(), 
+                    drawBlock(g2, bar.getSurroundingRectangle(), 
                             bar.getColor(), 0.2f);
                 }
                 if (bar.isDrawElements()) {
@@ -361,7 +361,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             //draw the outline of the bin to debug in multiple 
             //aggregation column mode
             if (aggrColumns != null && aggrColumns.size() > 1) {
-                drawRectangle(g2, bin.getBinRectangle(), Color.ORANGE, 
+                drawRectangle(g2, bin.getBinRectangle(), Color.LIGHT_GRAY, 
                         GRID_LINE_STROKE);
             }
         } // end of the bin loop

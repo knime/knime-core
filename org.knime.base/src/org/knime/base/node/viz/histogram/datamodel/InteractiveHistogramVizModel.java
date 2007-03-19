@@ -228,7 +228,9 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
                 setAggregationMethod(AggregationMethod.COUNT);
             }
         }
-        if (m_aggrColumns != null && m_aggrColumns.containsAll(aggrCols)) {
+        if (m_aggrColumns != null && aggrCols != null 
+                && m_aggrColumns.size() == aggrCols.size()
+                && m_aggrColumns.containsAll(aggrCols)) {
             return false;
         }
         m_aggrColumns = aggrCols;

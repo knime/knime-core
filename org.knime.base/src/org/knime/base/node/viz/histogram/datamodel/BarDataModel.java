@@ -63,6 +63,11 @@ public class BarDataModel implements Serializable {
     //visual variables
     private boolean m_drawElements = true;
     private boolean m_isSelected = false;
+    
+    /**The surrounding rectangle is used to distinguish between multiple
+     * selected aggregation columns.*/
+    private Rectangle m_surroundingRectangle;
+    /**The bar rectangle is the main rectangle which contains the elements.*/
     private Rectangle m_barRectangle;
 
     /**Constructor for class BarDataModel.
@@ -254,6 +259,15 @@ public class BarDataModel implements Serializable {
     public Rectangle getBarRectangle() {
         return m_barRectangle;
     }
+    
+    
+    /**
+     * @return the {@link Rectangle} the aggregation color of this bar
+     *  should be drawn on the screen 
+     */
+    public Rectangle getSurroundingRectangle() {
+        return m_surroundingRectangle;
+    }
 
     /**
      * @param barRect the {@link Rectangle} the bar should be drawn on the 
@@ -267,8 +281,41 @@ public class BarDataModel implements Serializable {
     protected void setBarRectangle(final Rectangle barRect, 
             final AggregationMethod aggrMethod, final HistogramLayout layout, 
             final int baseLine, final SortedSet<Color> barElementColors) {
-        m_barRectangle = barRect;
+        m_surroundingRectangle = barRect;
+        m_barRectangle = calculateBarRectangle(barRect, baseLine);
         setElementRectangle(aggrMethod, layout, baseLine, barElementColors);
+    }
+
+    /**
+     * @param barRect the total space for this bar to draw in
+     * @param baseLine the base line to know if the bar is negative or
+     * positive
+     * @return the rectangle to draw the bar elements in
+     */
+    private static Rectangle calculateBarRectangle(final Rectangle barRect,
+            final int baseLine) {
+        if (barRect == null) {
+            return null;
+        }
+        final int diff = AbstractHistogramVizModel.BAR_SURROUNDING_SPACE;
+        final int x = (int)barRect.getX();
+        final int y = (int)barRect.getY();
+        final int height = (int)barRect.getHeight();
+        final int width = (int)barRect.getWidth();
+        //calculate the new y coordinate and height
+        final int newHeight = Math.max(height - diff, 1);
+        int newY = y;
+        if (y < baseLine) {
+            //it's a positive bar so we have to subtract the difference
+            newY += height - newHeight;
+        } else {
+            LOGGER.debug("");
+        }
+        
+        //calculate the new x coordinate and width
+        final int newWidth = Math.max(width - 2 * diff, 2);
+        final int newX = (int)((x + width / 2.0) - newWidth / 2.0);
+        return new Rectangle(newX, newY, newWidth, newHeight);
     }
 
     /**
@@ -333,13 +380,14 @@ public class BarDataModel implements Serializable {
         final int barHeight = (int)bounds.getHeight();
         //check if all elements fit side by side
         final double heightPerVal = barHeight / valRange;
-        final int startX = (int)bounds.getX();
-        final int barWidth = (int)m_barRectangle.getWidth();
+        final int barX = (int)bounds.getX();
+        final int barY = (int)bounds.getY();
+        final int barWidth = (int)bounds.getWidth();
         final int noOfBars = barElementColors.size();
         final int elementWidth = 
             calculateSideBySideElementWidth(barElementColors, barWidth);
         LOGGER.debug("Bar values (x,height,width, totalNoOf): " 
-                + startX + ", "
+                + barX + ", "
                 + barHeight + ", "
                 + barWidth 
                 + noOfBars);
@@ -347,7 +395,7 @@ public class BarDataModel implements Serializable {
                 + " height per value:" + heightPerVal);
         //the user wants the elements next to each other
         //so we have to change the x coordinate
-        int xCoord = startX 
+        int xCoord = barX 
             + AbstractHistogramVizModel.SPACE_BETWEEN_ELEMENTS / 2;
         for (Color elementColor : barElementColors) {
             final BarElementDataModel element = 
@@ -360,8 +408,14 @@ public class BarDataModel implements Serializable {
                 int elementHeight = Math.max((int)(
                         heightPerVal * Math.abs(aggrVal)), 
                         AbstractHistogramVizModel.MINIMUM_BAR_HEIGHT);
-                if (elementHeight > barHeight) {
-                    final int diff = elementHeight - barHeight;
+                final int totalHeight;
+                if (aggrVal < 0) {
+                    totalHeight = barHeight + barY - baseLine;
+                } else {
+                    totalHeight = baseLine - barY;
+                }
+                if (elementHeight > totalHeight) {
+                    final int diff = elementHeight - totalHeight;
                     elementHeight -= diff;
                     LOGGER.debug("Height diff. in side-by-side layout."
                             + " Element(Bar) higher than surrounding bar: " 
@@ -473,13 +527,6 @@ public class BarDataModel implements Serializable {
                         final double diff = barHeight - elementHeightSum;
                         elementHeight = 
                             (int)Math.round(elementHeight + diff);
-                        if (elementHeight < 1) {
-                            LOGGER.warn(
-                                    "******Unable to correct height diff. for "
-                                    + "bar " + barAggrVal
-                                    + ". Last element to low for height "
-                                    + "adjustment.");
-                        }
                         LOGGER.warn(
                                 "++++++++Height diff. for bar " + barAggrVal 
                                 + " in last element: " + diff 
@@ -487,6 +534,13 @@ public class BarDataModel implements Serializable {
                                 + " Height sum without adjustment: " 
                                 + elementHeightSum 
                                 + " No of elements: " + m_elements.size());
+                        if (elementHeight < 1) {
+                            LOGGER.warn(
+                                    "******Unable to correct height diff. for "
+                                    + "bar " + barAggrVal
+                                    + ". Last element to low for height "
+                                    + "adjustment.");
+                        }
                     }
                 }
                 LOGGER.debug("Element aggrVal: " + aggrVal
@@ -511,24 +565,29 @@ public class BarDataModel implements Serializable {
 
     /**
      * @param startX the x coordinate
-     * @param barWidth the new bar width
+     * @param newWidth the new bar width
      * @param layout the current {@link HistogramLayout}
      * @param barElementColors all element colors which define the order
      * the elements should be drawn
      * @param aggrMethod the {@link AggregationMethod} to use
      * @param baseLine the base line
      */
-    public void updateBarWidth(final int startX, final int barWidth, 
+    public void updateBarWidth(final int startX, final int newWidth, 
             final HistogramLayout layout, 
             final SortedSet<Color> barElementColors, 
             final AggregationMethod aggrMethod, final int baseLine) {
-            if (m_barRectangle == null) {
+            if (m_surroundingRectangle == null) {
                 return;
             }
             final boolean drawElementsBefore = m_drawElements;
-            final int yCoord = (int)m_barRectangle.getY();
-            final int barHeight = (int)m_barRectangle.getHeight();
-            m_barRectangle.setBounds(startX, yCoord, barWidth, barHeight);
+            final int yCoord = (int)m_surroundingRectangle.getY();
+            final int barHeight = (int)m_surroundingRectangle.getHeight();
+            m_surroundingRectangle.setBounds(startX, yCoord, newWidth, 
+                    barHeight);
+            m_barRectangle = calculateBarRectangle(m_surroundingRectangle, 
+                    baseLine);
+            final int barWidth = (int)m_barRectangle.getWidth();
+            final int barX = (int)m_barRectangle.getX();
             final int noOfElements = m_elements.size();
             m_drawElements = elementsFitInBar(layout, barElementColors,
                     noOfElements, barWidth, barHeight);
@@ -549,12 +608,12 @@ public class BarDataModel implements Serializable {
                     final BarElementDataModel element = 
                         m_elements.get(elementColor);
                     if (element != null) {
-                        element.updateElementWidth(startX, 
+                        element.updateElementWidth(barX, 
                                 barWidth, aggrMethod);
                     }
                 }
             } else if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
-                int xCoord = startX 
+                int xCoord = barX 
                     + AbstractHistogramVizModel.SPACE_BETWEEN_ELEMENTS / 2;
                 final int elementWidth = 
                     calculateSideBySideElementWidth(barElementColors, barWidth);

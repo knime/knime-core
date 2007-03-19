@@ -258,6 +258,11 @@ public class InteractiveHistogramProperties extends
      * @return all selected aggregation columns
      */
     public List<ColorColumn> getSelectedAggrColumns() {
-        return Arrays.asList(m_aggrCol.getIncludedColorNameColumns());
+        final ColorColumn[] inclCols = 
+            m_aggrCol.getIncludedColorNameColumns();
+        if (inclCols == null) {
+            return null;
+        }
+        return Arrays.asList(inclCols);
     }
 }
