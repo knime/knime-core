@@ -24,7 +24,6 @@
  */
 package org.knime.base.node.viz.histogram.util;
 
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.core.node.NodeLogger;
 
 import junit.framework.TestCase;
@@ -170,7 +169,7 @@ public class BinningUtilTest extends TestCase {
      */
     public void testMyRoundedBorders() {
         
-        int noOfDigits = AbstractHistogramVizModel.INTERVAL_DIGITS;
+        int noOfDigits = 2;
         try {
             BinningUtil.myRoundedBorders(0.0, 0, noOfDigits);
             fail("Zero or negative increment shouldn't be allowed");
