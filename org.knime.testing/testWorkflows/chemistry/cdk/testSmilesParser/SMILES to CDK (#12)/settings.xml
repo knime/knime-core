@@ -11,6 +11,7 @@
 <entry key="SmilesColumn" type="xstring" value="Col0"/>
 <entry key="replaceColumn" type="xboolean" value="true"/>
 <entry key="timeout" type="xint" value="0"/>
+<entry key="appendColName" type="xstring" value="Col0 (CDK)"/>
 </config>
 <config key="data_meta_file">
 <entry key="data_files_directory" type="xstring" value="data"/>

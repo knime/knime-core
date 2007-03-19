@@ -4,7 +4,7 @@
 <entry key="spec_name" type="xstring" value="default"/>
 <entry key="number_columns" type="xint" value="1"/>
 <config key="column_spec_0">
-<entry key="column_name" type="xstring" value="Molecules"/>
+<entry key="column_name" type="xstring" value="Col0"/>
 <config key="column_type">
 <entry key="cell_class" type="xstring" value="org.knime.ext.chem.cdk.type.CDKCell"/>
 </config>

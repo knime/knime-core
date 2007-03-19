@@ -3,7 +3,7 @@
 <config key="settings.xml">
 <entry key="name" type="xstring" value="SMILES to CDK"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
-<entry key="isExecuted" type="xboolean" value="false"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
 <config key="internal_node_subsettings">
 <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
 </config>
@@ -11,12 +11,12 @@
 <entry key="SmilesColumn" type="xstring" value="Col0"/>
 <entry key="replaceColumn" type="xboolean" value="true"/>
 <entry key="timeout" type="xint" value="0"/>
+<entry key="appendColName" type="xstring" value="Col0 (CDK)"/>
 </config>
 <config key="data_meta_file">
 <entry key="data_files_directory" type="xstring" value="data"/>
 <config key="output_0">
 <entry key="data_files_directory" type="xstring" value="data_0"/>
-<entry key="has_output_spec" type="xboolean" value="true"/>
 </config>
 </config>
 <config key="model_files"/>
