@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other">
+	<name>Model Content Difference Checker</name>
+	
+	<shortDescription>
+		Compares the two input models.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			<p>
+			Used in regression tests to test whether two models are the same
+			The node compares two incoming models during execute and 
+			fails with an exception if the models are not equal.
+			</p>
+		</intro>
+	</fullDescription>
+	
+	<ports>
+		<modelIn index="0" name="First model">The first model to compare.</modelIn>
+		<modelIn index="1" name="Second model">The second model to compare.</modelIn>
+	</ports>	
+</knimeNode>
