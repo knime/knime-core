@@ -25,6 +25,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -173,14 +174,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                     props.getSelectedAggrColumns();
                 List<ColorColumn> aggrCols = null;
                 if (selectedAggrCols != null && selectedAggrCols.length > 0) {
-                    aggrCols = 
-                        new ArrayList<ColorColumn>(selectedAggrCols.length);
-                    for (int i = 0, length = selectedAggrCols.length; 
-                        i < length; i++) {
-                        final ColorColumn column = selectedAggrCols[i];
-                        aggrCols.add(new ColorColumn(column.getColor(), 
-                                column.getColumnName()));
-                    }
+                    aggrCols = Arrays.asList(selectedAggrCols);
                 }
                 if (vizModel.setAggregationColumns(aggrCols)) {
                     //set the current hilited keys in the new bins
