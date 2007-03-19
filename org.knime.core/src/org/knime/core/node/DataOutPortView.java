@@ -301,7 +301,8 @@ final class DataOutPortView extends NodeOutPortView {
             names = new String[numCols];
             types = new DataType[numCols];
             for (int c = 0; c < numCols; c++) {
-                names[c] = "Col_" + c;
+//                names[c] = "Col_" + c;
+                names[c] = spec.getColumnSpec(c).getName();
                 types[c] = StringCell.TYPE;
             }
         } else {
@@ -336,23 +337,35 @@ final class DataOutPortView extends NodeOutPortView {
 
         int numCols = spec.getNumColumns();
 
-        // 1st row: displays the name of each column
-        DataCell[] cols = new DataCell[numCols];
-        for (int c = 0; c < numCols; c++) {
-            cols[c] = new StringCell(spec.getColumnSpec(c).getName());
-        }
-        result.addRowToTable(new DefaultRow(new StringCell("<html><b>Name"),
-                cols));
-
+//        // 1st row: displays the name of each column
+//        DataCell[] cols = new DataCell[numCols];
+//        for (int c = 0; c < numCols; c++) {
+//            cols[c] = new StringCell(spec.getColumnSpec(c).getName());
+//        }
+//        result.addRowToTable(new DefaultRow(new StringCell("<html><b>Name"),
+//                cols));
+        
+        DataCell[] cols;
+        
         // 2nd row: displays type of column
         cols = new DataCell[numCols];
         for (int c = 0; c < numCols; c++) {
             String typename = spec.getColumnSpec(c).getType().toString();
             cols[c] = new StringCell(typename);
         }
-        result.addRowToTable(new DefaultRow(new StringCell("<html><b>Type"),
+        result.addRowToTable(new DefaultRow(new StringCell("Type"),
                 cols));
 
+        
+        // 1st row: show the column number 
+        cols = new DataCell[numCols];
+        for (int c = 0; c < numCols; c++) {
+            cols[c] = new StringCell("Col_" + c);
+        }
+        result.addRowToTable(new DefaultRow(new StringCell("Column Index"), 
+                cols));
+        
+        
         // 3rd row: shows who has a color handler set
         cols = new DataCell[numCols];
         for (int c = 0; c < numCols; c++) {
@@ -538,7 +551,7 @@ final class DataOutPortView extends NodeOutPortView {
     }
 
     /**
-     * @see java.awt.Component#setVisible(boolean)
+     * {@inheritDoc}
      */
     @Override
     public void setVisible(final boolean b) {
