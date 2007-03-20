@@ -172,10 +172,11 @@ public class DialogComponentFileChooser extends DialogComponent {
                     if (validExtensions != null && validExtensions.length > 0) {
                         // disable "All Files" selection
                         chooser.setAcceptAllFileFilterUsed(false);
-                    }
-                    // set file filter for given extensions
-                    for (String extension : validExtensions) {
-                        chooser.setFileFilter(new SimpleFileFilter(extension));
+                        // set file filter for given extensions
+                        for (String extension : validExtensions) {
+                            chooser.setFileFilter(new SimpleFileFilter(
+                                    extension));
+                        }
                     }
                 }
                 int returnVal =
@@ -187,8 +188,9 @@ public class DialogComponentFileChooser extends DialogComponent {
                         newFile =
                                 chooser.getSelectedFile().getAbsoluteFile()
                                         .toString();
-                        // if ile selection and only on extension available
-                        if (!directoryOnly && validExtensions.length == 1) {
+                        // if file selection and only on extension available
+                        if (!directoryOnly && validExtensions != null 
+                                && validExtensions.length == 1) {
                             // and the file names has no this extension
                             if (!newFile.endsWith(validExtensions[0])) {
                                 // then append it
