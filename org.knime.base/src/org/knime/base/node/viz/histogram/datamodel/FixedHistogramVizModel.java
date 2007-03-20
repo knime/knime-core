@@ -75,6 +75,11 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
             throw new NullPointerException("Layout must not be null");
         }
         m_aggrColumns = aggrColumns;
+        if (aggrColumns != null && aggrColumns.size() > 1) {
+            setShowBarOutline(true);
+        } else {
+            setShowBarOutline(false);
+        }
         m_xColSpec = xColSpec;
         setBins(bins, missingValueBin);
     }

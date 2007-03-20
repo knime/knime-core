@@ -44,7 +44,7 @@ import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBarElementDataModel;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.NodeLogger;
@@ -304,16 +304,18 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         }
         //get all variables which are needed multiple times
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
-        final Collection<? extends ColorColumn> aggrColumns = 
-            vizModel.getAggrColumns();
+//        final Collection<ColorColumn> aggrColumns = 
+//            vizModel.getAggrColumns();
         final HistogramLayout layout = vizModel.getHistogramLayout();
         //if the user has selected more then one aggregation column we have to
         //draw the bar outline to how him which bar belongs to which aggregation
         //column
-        final boolean drawBarOutline = (aggrColumns != null 
-            && aggrColumns.size() > 1)
-            || HistogramLayout.SIDE_BY_SIDE.equals(
-                m_vizModel.getHistogramLayout());
+        final boolean drawBinOutline = vizModel.isShowBinOutline();
+        final boolean drawBarOutline = vizModel.isShowBarOutline();
+//            (aggrColumns != null 
+//            && aggrColumns.size() > 1)
+//            || HistogramLayout.SIDE_BY_SIDE.equals(
+//                m_vizModel.getHistogramLayout());
         final boolean showElementOutline = vizModel.isShowElementOutline();
         final LabelDisplayPolicy labelDisplayPolicy = 
             vizModel.getLabelDisplayPolicy();
@@ -325,6 +327,16 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 //fill the complete bin in black to show it to the user
                 drawBlock(g2, bin.getBinRectangle(), 
                         OVERLOADED_ELEMENT_FILLING, 0.8f);
+                if (bin instanceof InteractiveBinDataModel) {
+                    InteractiveBinDataModel interactiveBin = 
+                        (InteractiveBinDataModel)bin;
+                    drawHiliteRect(g2, interactiveBin.getHiliteRectangle());
+                }
+                if (bin.isSelected()) {
+                    drawRectangle(g2, bin.getBinRectangle(), 
+                        ELEMENT_SELECTED_OUTLINE_COLOR, 
+                        ELEMENT_SELECTED_OUTLINE_STROKE);
+                }
                 continue;
             }
             final Collection<BarDataModel> bars = bin.getBars();
@@ -339,7 +351,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     drawElements(g2, bar.getElements(), showElementOutline);
                 } else {
                     //the elements doen't fit in this bar so we have to 
-                    //fill the complete bar in black to show it to the user
+                    //fill the complete bar to show it to the user
                     final Rectangle barRectangle = bar.getBarRectangle();
                     drawBlock(g2, barRectangle, 
                             OVERLOADED_ELEMENT_FILLING, 0.8f);
@@ -360,9 +372,10 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             } //end of bar loop
             //draw the outline of the bin to debug in multiple 
             //aggregation column mode
-            if (aggrColumns != null && aggrColumns.size() > 1) {
-                drawRectangle(g2, bin.getBinRectangle(), Color.LIGHT_GRAY, 
-                        GRID_LINE_STROKE);
+//            if (aggrColumns != null && aggrColumns.size() > 1) {
+            if (drawBinOutline) {
+                drawRectangle(g2, bin.getSurroundingRectangle(), 
+                        Color.LIGHT_GRAY, GRID_LINE_STROKE);
             }
         } // end of the bin loop
 //      check if we have to draw the base line

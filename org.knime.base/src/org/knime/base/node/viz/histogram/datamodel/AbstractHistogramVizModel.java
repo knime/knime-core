@@ -46,6 +46,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.NodeLogger;
 
 /**
  * This is the basic visualization model for a histogram. It handles bin
@@ -53,6 +54,8 @@ import org.knime.core.data.def.StringCell;
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramVizModel {
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(AbstractHistogramVizModel.class);
 
     /** The caption of the bar which holds all missing values. */
     public static final String MISSING_VAL_BAR_CAPTION = "Missing_values";
@@ -60,9 +63,6 @@ public abstract class AbstractHistogramVizModel {
     /** Defines the minimum width of a bin. Should be more than the base line
      * stroke.*/
     public static final int MIN_BIN_WIDTH = 6;
-
-    /** This is the minimum space between two bins. */
-    public static final int SPACE_BETWEEN_BINS = 2;
     
     /**
      * The default number of bars which get created if the createBinnedBars
@@ -94,6 +94,12 @@ public abstract class AbstractHistogramVizModel {
     
     /**If set to true the plotter paints the grid lines for the y axis values.*/
     private boolean m_showGridLines = true;
+    
+    /**If set to true the plotter paints the bin outline.*/
+    private boolean m_showBinOutline = true;
+    
+    /**If set to true the plotter paints the bar outline.*/
+    private boolean m_showBarOutline = false;
 
     /**If set to true the plotter paints the outline of the bars. The outline
      * is always painted for highlighted blocks!.*/
@@ -128,22 +134,33 @@ public abstract class AbstractHistogramVizModel {
 
     /**Holds the actual size of the drawing space.*/
     private Dimension m_drawingSpace;
-
+    
+    /**The thickness of a bin which is used to show the different bins.*/
+    public static final int BIN_SURROUNDING_SPACE = 4;
+    
+    /** This is the minimum space between two bins. */
+    public static final int SPACE_BETWEEN_BINS = 2 * BIN_SURROUNDING_SPACE + 3;
+    
+    /**The space around a bar which is used to show the aggregation 
+     * column color.*/
+    public static final int BAR_SURROUNDING_SPACE = 
+        Math.min(BIN_SURROUNDING_SPACE, 3);
+    
     /**The space between to bars in pixel. Must be greater 0.*/
-    public static final int SPACE_BETWEEN_BARS = 8;
+    public static final int SPACE_BETWEEN_BARS = 2 * BAR_SURROUNDING_SPACE + 3;
 
     /**
      * The space between to elements in the {@link HistogramLayout.SIDE_BY_SIDE}
      * layout in  pixel. Must be greater 0.
      */
     public static final int SPACE_BETWEEN_ELEMENTS = 2;
+    
+    /**The minimum width of an bar/element.*/
+    public static final int MINIMUM_ELEMENT_WIDTH = 4;
 
     /** The minimum height of a bar.*/
-    public static final int MINIMUM_BAR_HEIGHT = 5;
+    public static final int MINIMUM_BAR_HEIGHT = 4;
 
-    /**The space around a bar which is used to show the aggregation 
-     * column color.*/
-    public static final int BAR_SURROUNDING_SPACE = 4;
     
     /**Constructor for class HistogramVizModel.
      * @param rowColors all possible colors the user has defined for a row
@@ -195,9 +212,9 @@ public abstract class AbstractHistogramVizModel {
      * bin variable is set to
      * <code>true</code>
      */
-    public Collection<BinDataModel> getBins() {
-        final BinDataModel missingValueBin = getMissingValueBin();
-        if (missingValueBin != null) {
+    public List<BinDataModel> getBins() {
+        if (containsMissingValueBin()) {
+            final BinDataModel missingValueBin = getMissingValueBin();
             if (isShowMissingValBin()) {
                 final int missingValBinIdx = m_bins.size() - 1;
                 if (missingValBinIdx < 0 
@@ -513,13 +530,9 @@ public abstract class AbstractHistogramVizModel {
     }
 
     /**
-     * @return the missingValueBin or <code>null</code> if the selected
-     * x column contains no missing values
+     * @return the missingValueBin
      */
-    public BinDataModel getMissingValueBin() {
-        if (m_missingValueBin.getMaxBarRowCount() == 0) {
-            return null;
-        }
+    protected BinDataModel getMissingValueBin() {
         return m_missingValueBin;
     }
 
@@ -527,7 +540,8 @@ public abstract class AbstractHistogramVizModel {
      * @return <code>true</code> if this model contains a missing value bin
      */
     public boolean containsMissingValueBin() {
-        return (getMissingValueBin() != null);
+        return (m_missingValueBin != null 
+                && m_missingValueBin.getMaxBarRowCount() > 0);
     }
 
     /**
@@ -647,13 +661,54 @@ public abstract class AbstractHistogramVizModel {
         return false;
     }
     
+    
     /**
-     * @param showElementOutlines the showElementOutlines to set
+     * @return the showBinOutline
+     */
+    public boolean isShowBinOutline() {
+        return m_showBinOutline;
+    }
+    
+    
+    /**
+     * @param showBinOutline the showBinOutline to set
      * @return <code>true</code> if the parameter has changed
      */
-    public boolean setShowElementOutlines(final boolean showElementOutlines) {
-        if (m_showElementOutlines != showElementOutlines) {
-            m_showElementOutlines = showElementOutlines;
+    public boolean setShowBinOutline(final boolean showBinOutline) {
+        if (m_showBinOutline != showBinOutline) {
+            m_showBinOutline = showBinOutline;
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * @return the showBarOutline
+     */
+    public boolean isShowBarOutline() {
+        return m_showBarOutline;
+    }
+    
+    
+    /**
+     * @param showBarOutline the showBarOutline to set
+     * @return <code>true</code> if the parameter has changed
+     */
+    public boolean setShowBarOutline(final boolean showBarOutline) {
+        if (m_showBarOutline != showBarOutline) {
+            m_showBarOutline = showBarOutline;
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * @param showElementOutline the showElementOutlines to set
+     * @return <code>true</code> if the parameter has changed
+     */
+    public boolean setShowElementOutline(final boolean showElementOutline) {
+        if (m_showElementOutlines != showElementOutline) {
+            m_showElementOutlines = showElementOutline;
             return true;
         }
         return false;
@@ -790,11 +845,93 @@ public abstract class AbstractHistogramVizModel {
             throw new NullPointerException("Bins must not be null");
         }
         if (missingValueBin == null) {
-            throw new NullPointerException("Bin must not be null");
+            throw new NullPointerException("MissingValueBin must not be null");
         }
         m_missingValueBin = missingValueBin;
         m_bins.clear();
         m_bins.addAll(bins);
         updateNoOfBins(m_bins.size());
     }
+
+
+    /**
+     * Calculates a surrounding rectangle with the given thickness 
+     * for the given rectangle.
+     * @param rect the rectangle to draw the surrounding for
+     * @param baseLine the base line to know if the bar is negative or
+     * positive
+     * @param thickness the  thickness of the surrounding rectangle
+     * @return the surrounding rectangle
+     */
+    public static Rectangle calculateSurroundingRectangle(
+            final Rectangle rect,
+            final int baseLine, final int thickness) {
+        if (rect == null) {
+            return null;
+        }
+        final int x = (int)rect.getX();
+        final int y = (int)rect.getY();
+        final int height = (int)rect.getHeight();
+        final int width = (int)rect.getWidth();
+        //calculate the new y coordinate and height
+        final int newHeight = Math.max(height + thickness, 1);
+        int newY = y;
+        if (y < baseLine) {
+            //it's a positive bar so we have to subtract the difference
+            newY -= newHeight - height;
+        }
+        
+        //calculate the new x coordinate and width
+        final int newWidth = Math.max(width + 2 * thickness, 2);
+        final int newX = (int)((x + width / 2.0) - newWidth / 2.0);
+        return new Rectangle(newX, newY, newWidth, newHeight);
+    }
+
+
+    /**
+         * Calculates the rectangle which fits in the given surrounding 
+         * rectangle.
+         * @param baseLine the y coordinate of the base line
+         * @param surroundingHeight the height of the surrounding rectangle
+         * @param surroundingY the y coordinate of the surrounding rectangle
+         * @param heightPerVal the height per aggregation value
+         * @param aggrVal the aggregation value of this bar
+         * @param xCoord the x coordinate of this bar
+         * @param barWidth the width of the bar
+         * @return the calculated bar
+         */
+        public static Rectangle calculateBarRectangle(final int baseLine, 
+                final int surroundingHeight, final int surroundingY, 
+                final double heightPerVal, final double aggrVal, 
+                final int xCoord, final int barWidth) {
+            int barHeight = Math.max((int)(
+                    heightPerVal * Math.abs(aggrVal)), 
+                    MINIMUM_BAR_HEIGHT);
+            final int totalHeight;
+            if (aggrVal < 0) {
+                totalHeight = surroundingHeight + surroundingY - baseLine;
+            } else {
+                totalHeight = baseLine - surroundingY;
+            }
+            if (barHeight > totalHeight) {
+                final int diff = barHeight - totalHeight;
+                barHeight -= diff;
+                LOGGER.debug("Height diff. bar higher than bin: " 
+                        + diff);
+            }
+    //                  calculate the position of the y coordinate
+            int yCoord = 0;
+            if (aggrVal >= 0) {
+                //if it's a positive value the start point is the
+                //baseline minus the height of the bar
+                yCoord = baseLine - barHeight;
+            } else {
+                //if it's a negative value the top left corner start 
+                //point is the base line
+                yCoord = baseLine;
+            }
+            final Rectangle barRect = 
+                new Rectangle(xCoord, yCoord, barWidth, barHeight);
+            return barRect;
+        }
 }

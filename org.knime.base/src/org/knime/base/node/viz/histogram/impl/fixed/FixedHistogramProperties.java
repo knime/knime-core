@@ -26,6 +26,7 @@ import java.util.Collection;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
@@ -70,7 +71,7 @@ public class FixedHistogramProperties extends
     
     private final JLabel m_xCol;
     
-    private final JLabel m_aggrCol;
+    private final JEditorPane m_aggrCol;
     
     /**
      * Constructor for class FixedColumnHistogramProperties.
@@ -82,7 +83,8 @@ public class FixedHistogramProperties extends
             final AbstractHistogramVizModel vizModel) {
         super(tableSpec, vizModel);
         m_xCol = new JLabel();
-        m_aggrCol = new JLabel();
+        m_aggrCol = new JEditorPane("text/html", "");
+        m_aggrCol.setBackground(getBackground());
         final JPanel columnPanel = createColumnSettingsPanel();
         final int tabCount = getTabCount();
         int colTabIdx = 1;
@@ -157,25 +159,37 @@ public class FixedHistogramProperties extends
             final String xColName, final Collection<ColorColumn> aggrColumns, 
             final AggregationMethod aggrMethod) {
         m_xCol.setText(xColName);
-        m_aggrCol.setText(columns2String(aggrColumns, ", "));
+        m_aggrCol.setText(createAggrColTable(aggrColumns));
     }
 
-    private static String columns2String(
-            final Collection<? extends ColorColumn> cols, 
-            final String separator) {
-        if (cols == null) {
-            return "";
+    private static String createAggrColTable(
+            final Collection<ColorColumn> cols) {
+        if (cols == null || cols.size() < 1) {
+            return "no columns selected";
         }
         StringBuilder buf = new StringBuilder();
-        boolean first = true;
+        buf.append("<table cellspacing='5'>");
+        int i = 0;
         for (ColorColumn col : cols) {
-            if (first) {
-                first = false;
-            } else {
-                buf.append(separator);
+            if (i % 2 == 0) {
+                buf.append("<tr>");
             }
+            buf.append("<td bgcolor='#");
+            buf.append(Integer.toHexString(
+                    col.getColor().getRGB() & 0x00ffffff));
+            buf.append("'>");
             buf.append(col.getColumnName());
+            buf.append("</td>");
+            if (i % 2 == 1) {
+                buf.append("</tr>");
+            }
+            i++;
         }
+        if (i % 2 == 1) {
+            //close the table line if the number of columns wasn't even
+            buf.append("<td>&nbsp;</td></tr>");
+        }
+        buf.append("</table>");
         return buf.toString();
     }
 }

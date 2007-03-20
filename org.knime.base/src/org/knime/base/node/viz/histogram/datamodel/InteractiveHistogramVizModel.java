@@ -154,6 +154,11 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         m_tableSpec = spec;
         m_dataRows = rows;
         m_aggrColumns = aggrColumns;
+        if (aggrColumns != null && aggrColumns.size() > 1) {
+            setShowBarOutline(true);
+        } else {
+            setShowBarOutline(false);
+        }
         setXColumn(xColSpec);
     }
 
@@ -234,7 +239,18 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
             return false;
         }
         m_aggrColumns = aggrCols;
-        createBins();
+//        createBins();
+        //reset all bins and add the rows to the cleaned bins
+        final boolean showMissingWas = isShowMissingValBin();
+        setShowMissingValBin(false);
+        final List<BinDataModel> bins = getBins();
+        final BinDataModel missingValueBin = getMissingValueBin();
+        for (BinDataModel bin : bins) {
+            bin.clear();
+        }
+        missingValueBin.clear();
+        addRows2Bins(bins, missingValueBin);
+        setShowMissingValBin(showMissingWas);
         return true;
     }
     
@@ -315,7 +331,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * @param missingValBin the bin for missing values
      * @param bins the different bins
      */
-    private void addRows2Bins(final List<InteractiveBinDataModel> bins, 
+    private void addRows2Bins(final List<? extends BinDataModel> bins, 
             final BinDataModel missingValBin) {
 //      add the data rows to the new bins
         int startBin = 0;

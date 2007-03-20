@@ -109,6 +109,7 @@ public class InteractiveBarDataModel extends BarDataModel {
                 barElementColors, aggrMethod, baseLine);
         calculateHiliteRectangle(aggrMethod, layout);
     }
+    
     /**
      * This calculates the proportional hilite rectangle of this bar which
      * could be displayed if the elements of this bar can't be draw.
@@ -116,7 +117,7 @@ public class InteractiveBarDataModel extends BarDataModel {
      * @param aggrMethod the current {@link AggregationMethod}
      * @param layout the current {@link HistogramLayout}
      */
-    protected void calculateHiliteRectangle(final AggregationMethod aggrMethod, 
+    private void calculateHiliteRectangle(final AggregationMethod aggrMethod, 
             final HistogramLayout layout) {
         final Rectangle barRectangle = getBarRectangle();
         if (isDrawElements() || barRectangle == null) {
@@ -194,8 +195,9 @@ public class InteractiveBarDataModel extends BarDataModel {
      * @param hilited the row keys to unhilite
      * @param aggrMethod the current {@link AggregationMethod}
      * @param layout the current {@link HistogramLayout}
+     * @return if the hilite keys have changed
      */
-    public void removeHilitedKeys(final Collection<DataCell> hilited, 
+    public boolean removeHilitedKeys(final Collection<DataCell> hilited, 
             final AggregationMethod aggrMethod, final HistogramLayout layout) {
         boolean changed = false;
         for (BarElementDataModel element : getElements()) {
@@ -206,14 +208,16 @@ public class InteractiveBarDataModel extends BarDataModel {
         if (changed) {
             calculateHiliteRectangle(aggrMethod, layout);
         }
+        return changed;
     }
 
     /**
      * @param hilited the row keys to hilite
      * @param aggrMethod the current {@link AggregationMethod}
      * @param layout the current {@link HistogramLayout}
+     * @return if the hilite keys have changed
      */
-    public void setHilitedKeys(final Collection<DataCell> hilited, 
+    public boolean setHilitedKeys(final Collection<DataCell> hilited, 
             final AggregationMethod aggrMethod, final HistogramLayout layout) {
         boolean changed = false;
         for (BarElementDataModel element : getElements()) {
@@ -224,6 +228,7 @@ public class InteractiveBarDataModel extends BarDataModel {
         if (changed) {
             calculateHiliteRectangle(aggrMethod, layout);
         }
+        return changed;
     }
 
     /**

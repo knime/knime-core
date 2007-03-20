@@ -151,13 +151,47 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     }
                 });
         
+        m_histoProps.addShowBinOutlineChangedListener(
+                new ItemListener() {
+                    public void itemStateChanged(final ItemEvent e) {
+                        final AbstractHistogramVizModel vizModel = 
+                            getHistogramVizModel();
+                        if (vizModel != null) {
+                            vizModel.setShowBinOutline(
+                                    e.getStateChange() == ItemEvent.SELECTED);
+                            final HistogramDrawingPane histoDrawingPane = 
+                                getHistogramDrawingPane();
+                            if (histoDrawingPane != null) {
+                                histoDrawingPane.repaint();
+                            }
+                        }
+                    }
+                });
+        
         m_histoProps.addShowBarOutlineChangedListener(
                 new ItemListener() {
                     public void itemStateChanged(final ItemEvent e) {
                         final AbstractHistogramVizModel vizModel = 
                             getHistogramVizModel();
                         if (vizModel != null) {
-                            vizModel.setShowElementOutlines(
+                            vizModel.setShowBarOutline(
+                                    e.getStateChange() == ItemEvent.SELECTED);
+                            final HistogramDrawingPane histoDrawingPane = 
+                                getHistogramDrawingPane();
+                            if (histoDrawingPane != null) {
+                                histoDrawingPane.repaint();
+                            }
+                        }
+                    }
+                });
+        
+        m_histoProps.addShowElementOutlineChangedListener(
+                new ItemListener() {
+                    public void itemStateChanged(final ItemEvent e) {
+                        final AbstractHistogramVizModel vizModel = 
+                            getHistogramVizModel();
+                        if (vizModel != null) {
+                            vizModel.setShowElementOutline(
                                     e.getStateChange() == ItemEvent.SELECTED);
                             final HistogramDrawingPane histoDrawingPane = 
                                 getHistogramDrawingPane();
@@ -280,38 +314,6 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         });
     }
     
-//
-//    /**
-//     * Applies the settings to the plotter model.
-//     */
-//    protected void onApply() {
-//        final HistogramVizModel histoModel = getHistogramVizModel();
-//        if (histoModel == null) {
-//            throw new IllegalStateException(
-//    "HistogramModel shouldn't be null");
-//        }
-////        boolean hasChange = 
-//    setPreferredBarWidth(m_histoProps.getBarWidth());
-//        boolean hasChange = 
-//            setAggregationMethod(m_histoProps.getSelectedAggrMethod());
-//        if (!histoModel.isBinNominal()) {
-//            // this is only available for none nominal x axis properties
-//            hasChange = hasChange 
-//            || setNumberOfBins(m_histoProps.getNoOfBars());
-//        }
-//        hasChange = hasChange 
-//        || setShowEmptyBins(m_histoProps.isShowEmptyBins());
-//        hasChange = hasChange 
-//        || setShowMissingValBin(m_histoProps.isShowMissingValBar());
-//        if (hasChange) {
-//            // force the repainting of the plotter
-//            updatePaintModel();
-//            // update the labels of the sliders and the select boxes
-//            m_histoProps.updateHistogramSettings(this);
-//        }
-//        return;
-//    }    
-//    
     /**
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#updateSize()
      */
@@ -403,7 +405,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final SortedSet<Color> barElementColors = 
             vizModel.getRowColors();
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
-        final Collection<? extends ColorColumn> aggrColumns = 
+        final Collection<ColorColumn> aggrColumns = 
             vizModel.getAggrColumns();
         for (BinDataModel bin : vizModel.getBins()) {
             final DataCell captionCell = bin.getXAxisCaptionCell();
@@ -470,7 +472,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
         final SortedSet<Color> barElementColors = 
             vizModel.getRowColors();
-        final Collection<? extends ColorColumn> aggrColumns = 
+        final Collection<ColorColumn> aggrColumns = 
             vizModel.getAggrColumns();
         final HistogramLayout layout = vizModel.getHistogramLayout();
         final double drawingWidth = drawingSpace.getWidth();

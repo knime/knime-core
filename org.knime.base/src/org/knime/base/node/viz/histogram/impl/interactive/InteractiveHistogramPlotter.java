@@ -162,6 +162,10 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                 (InteractiveHistogramProperties) abstractHistogramProperties;
                 List<ColorColumn> aggrCols = props.getSelectedAggrColumns();
                 if (vizModel.setAggregationColumns(aggrCols)) {
+                    //show the bar outline automatically depending on the 
+                    //number of selected aggregation columns
+                    vizModel.setShowBarOutline(aggrCols != null 
+                            && aggrCols.size() > 1);
                     //set the current hilited keys in the new bins
                     vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
                     setYCoordinates();

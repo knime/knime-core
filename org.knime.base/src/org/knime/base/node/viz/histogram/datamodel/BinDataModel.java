@@ -40,7 +40,6 @@ import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.node.NodeLogger;
 
 /**
  * 
@@ -50,8 +49,6 @@ public class BinDataModel implements Serializable {
 
     private static final long serialVersionUID = -5898246116408854042L;
 
-    private static final NodeLogger LOGGER = 
-        NodeLogger.getLogger(BinDataModel.class);
     
     /**The color of the bar if no aggregation column is selected.*/
     private static final Color NO_AGGR_COL_COLOR = Color.GRAY;
@@ -67,6 +64,11 @@ public class BinDataModel implements Serializable {
     //visual variables
     private boolean m_drawBar = true;
     private boolean m_isSelected = false;
+    
+    /**The surrounding rectangle is used to distinguish between the 
+        different bins.*/
+    private Rectangle m_surroundingRectangle;
+    /**The bin rectangle is the main rectangle which contains the bars.*/
     private Rectangle m_binRectangle;
 
     /**Constructor for class BinDataModel.
@@ -276,6 +278,15 @@ public class BinDataModel implements Serializable {
         return m_binRectangle;
     }
 
+    
+    /**
+     * @return the surroundingRectangle to draw to distinguish between the
+     * different bins
+     */
+    public Rectangle getSurroundingRectangle() {
+        return m_surroundingRectangle;
+    }
+    
     /**
      * THE HIGHT OF THE RECTANGLE SHOULD BE CALCULATED USING THE MIN AND
      * MAX AGGREGATION VALUE TO HANDLES BINS WITH POSITIVE AND NEGATIVE BARS!!!
@@ -292,8 +303,12 @@ public class BinDataModel implements Serializable {
     public void setBinRectangle(final Rectangle binRectangle, 
             final AggregationMethod aggrMethod, final HistogramLayout layout, 
             final int baseLine, final SortedSet<Color> barElementColors, 
-            final Collection<? extends ColorColumn> aggrColumns) {
+            final Collection<ColorColumn> aggrColumns) {
         m_binRectangle = binRectangle;
+        m_surroundingRectangle = 
+            AbstractHistogramVizModel.calculateSurroundingRectangle(
+                    m_binRectangle, baseLine, 
+                    AbstractHistogramVizModel.BIN_SURROUNDING_SPACE);
         if (aggrColumns == null || aggrColumns.size() < 1) {
             //no aggregation column selected so we have only one bar the 
             //face bar -> simply set the bin rectangle as bar rectangle
@@ -375,8 +390,7 @@ public class BinDataModel implements Serializable {
             final double heightPerVal = binHeight / valRange;
             final int binX = (int) m_binRectangle.getX();
             final int binY = (int) m_binRectangle.getY();
-            int xCoord = binX 
-                + AbstractHistogramVizModel.SPACE_BETWEEN_BARS / 2;
+            int xCoord = binX;
             for (ColorColumn aggrColumn : aggrColumns) {
                 final BarDataModel bar = 
                     m_bars.get(aggrColumn.getColor());
@@ -384,34 +398,10 @@ public class BinDataModel implements Serializable {
                     //set the rectangle only for the bars which are available
                     //in this bin
                     final double aggrVal = bar.getAggregationValue(aggrMethod);
-                    int barHeight = Math.max((int)(
-                            heightPerVal * Math.abs(aggrVal)), 
-                            AbstractHistogramVizModel.MINIMUM_BAR_HEIGHT);
-                    final int totalHeight;
-                    if (aggrVal < 0) {
-                        totalHeight = binHeight + binY - baseLine;
-                    } else {
-                        totalHeight = baseLine - binY;
-                    }
-                    if (barHeight > totalHeight) {
-                        final int diff = barHeight - totalHeight;
-                        barHeight -= diff;
-                        LOGGER.debug("Height diff. bar higher than bin: " 
-                                + diff);
-                    }
-//                  calculate the position of the y coordinate
-                    int yCoord = 0;
-                    if (aggrVal >= 0) {
-                        //if it's a positive value the start point is the
-                        //baseline minus the height of the bar
-                        yCoord = baseLine - barHeight;
-                    } else {
-                        //if it's a negative value the top left corner start 
-                        //point is the base line
-                        yCoord = baseLine;
-                    }
                     final Rectangle barRect = 
-                        new Rectangle(xCoord, yCoord, barWidth, barHeight);
+                        AbstractHistogramVizModel.calculateBarRectangle(
+                                baseLine, binHeight, binY, heightPerVal, 
+                                aggrVal, xCoord, barWidth);
                     bar.setBarRectangle(barRect, aggrMethod, layout, baseLine,
                             barElementColors);
                 }
@@ -436,7 +426,7 @@ public class BinDataModel implements Serializable {
             final HistogramLayout layout, 
             final SortedSet<Color> barElementColors, 
             final AggregationMethod aggrMethod, 
-            final Collection<? extends ColorColumn> aggrColumns, 
+            final Collection<ColorColumn> aggrColumns, 
             final int baseLine) {
             if (m_binRectangle == null) {
                 return;
@@ -445,6 +435,10 @@ public class BinDataModel implements Serializable {
             final int yCoord = (int)m_binRectangle.getY();
             final int binHeight = (int) m_binRectangle.getHeight();
             m_binRectangle.setBounds(startX, yCoord, binWidth, binHeight);
+            m_surroundingRectangle = 
+                AbstractHistogramVizModel.calculateSurroundingRectangle(
+                        m_binRectangle, baseLine, 
+                        AbstractHistogramVizModel.BIN_SURROUNDING_SPACE);
             final int noOfBars = m_bars.size();
             if (noOfBars < 1) {
                 return;
@@ -468,8 +462,7 @@ public class BinDataModel implements Serializable {
                 return;
             }
             final int barWidth = calculateBarWidth(binWidth, noOfBars);
-            int xCoord = startX 
-                + AbstractHistogramVizModel.SPACE_BETWEEN_BARS / 2;
+            int xCoord = startX;
             if (aggrColumns == null || aggrColumns.size() < 1) {
                 //the user hasn't selected a aggregation column so we use the
                 //dummy bar
@@ -496,7 +489,8 @@ public class BinDataModel implements Serializable {
             final int noOfBars) {
         return Math.max((binWidth 
                 - (AbstractHistogramVizModel.SPACE_BETWEEN_BARS 
-                        * noOfBars)) / noOfBars, 1);
+                        * (noOfBars - 1))) / noOfBars, 
+                        AbstractHistogramVizModel.MINIMUM_ELEMENT_WIDTH);
     }
     /**
      * Checks if all bars fit in the surrounding bin.
@@ -514,7 +508,7 @@ public class BinDataModel implements Serializable {
             if (noOfBars * barWidth 
                     > binWidth 
                     - (AbstractHistogramVizModel.SPACE_BETWEEN_BARS 
-                            * noOfBars)) {
+                            * (noOfBars - 1))) {
                 return false;
             }
         }
@@ -556,25 +550,45 @@ public class BinDataModel implements Serializable {
     /**
      * Selects all elements which contain the given point. 
      * @param point the {@link Point} to check
+     * @return <code>true</code> if at least one bar of the bin contains
+     * the point
      */
-    public void selectElement(final Point point) {
+    public boolean selectElement(final Point point) {
         if (m_binRectangle != null && m_binRectangle.contains(point)) {
-            for (final BarDataModel bar : getBars()) {
-               m_isSelected = bar.selectElement(point) || m_isSelected;
+            if (!m_drawBar) {
+                for (final BarDataModel bar : getBars()) {
+                    bar.setSelected(true);
+                }
+                m_isSelected = true;
+            } else {
+                for (final BarDataModel bar : getBars()) {
+                   m_isSelected = bar.selectElement(point) || m_isSelected;
+                }
             }
         }
+        return m_isSelected;
     }
 
     /**
      * Selects all elements which intersect with the given rectangle. 
      * @param rect the {@link Rectangle} to check
+     * @return <code>true</code> if at least one bar of the bin contains
+     * the rectangle
      */
-    public void selectElement(final Rectangle rect) {
+    public boolean selectElement(final Rectangle rect) {
         if (m_binRectangle != null && m_binRectangle.intersects(rect)) {
-            for (final BarDataModel bar : getBars()) {
-               m_isSelected = bar.selectElement(rect) || m_isSelected;
+            if (!m_drawBar) {
+                for (final BarDataModel bar : getBars()) {
+                    bar.setSelected(true);
+                }
+                m_isSelected = true;
+            } else {
+                for (final BarDataModel bar : getBars()) {
+                   m_isSelected = bar.selectElement(rect) || m_isSelected;
+                }
             }
         }
+        return m_isSelected;
     }
     
     /**

@@ -95,9 +95,14 @@ public abstract class AbstractHistogramProperties extends
 
     private static final String SHOW_EMPTY_BINS_LABEL = "Show empty bins";
 
-    private static final String SHOW_GRID_LABEL = "Y grid lines";
+    private static final String SHOW_GRID_LABEL = "Show grid lines";
 
+    private static final String SHOW_BIN_OUTLINE_LABEL = "Show bin outline";
+    
     private static final String SHOW_BAR_OUTLINE_LABEL = "Show bar outline";
+    
+    private static final String SHOW_ELEMENT_OUTLINE_LABEL = 
+        "Show element outline";
     
     private static final String AGGR_METHOD_DISABLED_TOOLTIP = 
         "Only available with aggregation column";
@@ -126,6 +131,10 @@ public abstract class AbstractHistogramProperties extends
 
     private final JCheckBox m_showGrid;
 
+    private final JCheckBox m_showBinOutline;
+    
+    private final JCheckBox m_showBarOutline;
+    
     private final JCheckBox m_showElementOutline;
 
     private final ButtonGroup m_labelDisplayPolicy;
@@ -226,7 +235,9 @@ public abstract class AbstractHistogramProperties extends
 //        m_applyBarSettingsButton.setHorizontalAlignment(SwingConstants.RIGHT);
         // create the visualization option elements
         m_showGrid = new JCheckBox(SHOW_GRID_LABEL, vizModel.isShowGridLines());
-        m_showElementOutline = new JCheckBox(SHOW_BAR_OUTLINE_LABEL, true);
+        m_showBinOutline = new JCheckBox(SHOW_BIN_OUTLINE_LABEL, true);
+        m_showBarOutline = new JCheckBox(SHOW_BAR_OUTLINE_LABEL, true);
+        m_showElementOutline = new JCheckBox(SHOW_ELEMENT_OUTLINE_LABEL, true);
 
         m_labelDisplayPolicy = AbstractHistogramProperties
                 .createEnumButtonGroup(LabelDisplayPolicy.values());
@@ -312,12 +323,37 @@ public abstract class AbstractHistogramProperties extends
     private JPanel createVizSettingsPanel() {
         final JPanel vizPanel = new JPanel();
 //visualisation box
-        final Box vizBox = Box.createVerticalBox();
+        final Box vizBoxLeft = Box.createVerticalBox();
+        vizBoxLeft.add(Box.createVerticalGlue());
+        vizBoxLeft.add(m_showGrid);
+        vizBoxLeft.add(Box.createVerticalGlue());
+        final Box vizBoxRight = Box.createVerticalBox();
+        vizBoxRight.add(Box.createVerticalGlue());
+        vizBoxRight.add(m_showBinOutline);
+        vizBoxRight.add(Box.createVerticalGlue());
+        vizBoxRight.add(m_showBarOutline);
+        vizBoxRight.add(Box.createVerticalGlue());
+        vizBoxRight.add(Box.createVerticalGlue());
+        vizBoxRight.add(m_showElementOutline);
+        final Box vizBox = Box.createHorizontalBox();
         vizBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Display option"));
-        vizBox.add(Box.createVerticalGlue());
-        vizBox.add(m_showGrid);
-        vizBox.add(Box.createVerticalGlue());
+        vizBox.add(Box.createHorizontalGlue());
+        vizBox.add(vizBoxLeft);
+        vizBox.add(Box.createHorizontalGlue());
+        vizBox.add(vizBoxRight);
+        vizBox.add(Box.createHorizontalGlue());
+//        vizBox.add(Box.createVerticalGlue());
+//        vizBox.add(m_showGrid);
+//        vizBox.add(Box.createVerticalGlue());
+//        vizBox.add(m_showBinOutline);
+//        vizBox.add(Box.createVerticalGlue());
+//        vizBox.add(m_showBarOutline);
+//        vizBox.add(Box.createVerticalGlue());
+//        vizBox.add(Box.createVerticalGlue());
+//        vizBox.add(m_showElementOutline);
+        
+        
 //label layout box  
         final Box labelBox = Box.createHorizontalBox();
         labelBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
@@ -332,9 +368,10 @@ public abstract class AbstractHistogramProperties extends
                         LABEL_ORIENTATION_LABEL);
         labelBox.add(labelOrientationBox);
         labelBox.add(Box.createHorizontalGlue());
+        
 //bar layout box                
         final Box layoutDisplayBox = AbstractHistogramProperties
-        .createButtonGroupBox(m_layoutDisplayPolicy, true, null);
+        .createButtonGroupBox(m_layoutDisplayPolicy, false, null);
         final Box binWidthBox = Box.createVerticalBox();
         // barWidthBox.setBorder(BorderFactory
         // .createEtchedBorder(EtchedBorder.RAISED));
@@ -351,16 +388,14 @@ public abstract class AbstractHistogramProperties extends
         binWidthSliderBox.add(m_binWidth);
         binWidthSliderBox.add(Box.createHorizontalGlue());
         binWidthBox.add(binWidthSliderBox);
-        binWidthBox.add(Box.createVerticalGlue());
-        binWidthBox.add(m_showElementOutline);
-        final Box barLayoutBox = Box.createHorizontalBox();
+        final Box barLayoutBox = Box.createVerticalBox();
         barLayoutBox.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createEtchedBorder(), "Bar Layout"));
-        barLayoutBox.add(Box.createHorizontalGlue());
-        barLayoutBox.add(layoutDisplayBox);
-        barLayoutBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
+        barLayoutBox.add(Box.createVerticalGlue());
         barLayoutBox.add(binWidthBox);
-        barLayoutBox.add(Box.createHorizontalGlue());
+        barLayoutBox.add(Box.createVerticalGlue());
+        barLayoutBox.add(layoutDisplayBox);
+        barLayoutBox.add(Box.createVerticalGlue());
 
         final Box rootBox = Box.createHorizontalBox();
         rootBox.setBorder(
@@ -737,6 +772,14 @@ public abstract class AbstractHistogramProperties extends
             m_binWidth.addChangeListener(listener);
         }
         LOGGER.debug("Bin width updated");
+        //show bin outline
+        updateCheckBox(m_showBinOutline, vizModel.isShowBinOutline(), 
+                true);
+        LOGGER.debug("Show bin outline updated");
+        //show bar outline
+        updateCheckBox(m_showBarOutline, vizModel.isShowBarOutline(), 
+                true);
+        LOGGER.debug("Show bar outline updated");
         //show element outline
         updateCheckBox(m_showElementOutline, vizModel.isShowElementOutline(), 
                 true);
@@ -828,10 +871,25 @@ public abstract class AbstractHistogramProperties extends
         return m_showGrid.isSelected();
     }
 
+
+    /**
+     * @return the current value of the show bin outline select box
+     */
+    public boolean isShowBinOutline() {
+        return m_showBinOutline.isSelected();
+    }
+    
     /**
      * @return the current value of the show bar outline select box
      */
     public boolean isShowBarOutline() {
+        return m_showBarOutline.isSelected();
+    }
+    
+    /**
+     * @return the current value of the show element outline select box
+     */
+    public boolean isShowElementOutline() {
         return m_showElementOutline.isSelected();
     }
 
@@ -923,9 +981,23 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
-     * @param listener adds a listener to the show grid lines check box.
+     * @param listener adds the listener to the show bin outline check box
      */
-    protected void addShowBarOutlineChangedListener(
+    public void addShowBinOutlineChangedListener(final ItemListener listener) {
+        m_showBinOutline.addItemListener(listener);
+    }
+
+    /**
+     * @param listener adds the listener to the show bar outline check box
+     */
+    public void addShowBarOutlineChangedListener(final ItemListener listener) {
+        m_showBarOutline.addItemListener(listener);
+    }
+    
+    /**
+     * @param listener adds a listener to the show element outline check box.
+     */
+    protected void addShowElementOutlineChangedListener(
             final ItemListener listener) {
         m_showElementOutline.addItemListener(listener);
     }
@@ -986,5 +1058,4 @@ public abstract class AbstractHistogramProperties extends
 //        m_applyAggrSettingsButton.addActionListener(listener);
 //        m_applyBarSettingsButton.addActionListener(listener);
 //    }
-
 }
