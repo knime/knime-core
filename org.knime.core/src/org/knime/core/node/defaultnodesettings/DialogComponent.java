@@ -89,9 +89,9 @@ public abstract class DialogComponent {
 
     /**
      * @return the panel in which all sub-components of this component are
-     *         arranged. This panel will be added to the dialog pane.
+     *         arranged. This panel can be added to the dialog pane.
      */
-    protected JPanel getComponentPanel() {
+    public JPanel getComponentPanel() {
         return m_panel;
     }
 
