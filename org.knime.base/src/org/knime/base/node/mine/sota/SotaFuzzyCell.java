@@ -68,7 +68,7 @@ public final class SotaFuzzyCell implements SotaCell, FuzzyIntervalValue,
     }
     
     /**
-     * @see SotaCell#adjustCell(DataCell, double)
+     * {@inheritDoc}
      */
     public void adjustCell(final DataCell cell, final double learningrate) {
         if (SotaUtil.isFuzzyIntervalType(cell.getType())) {
@@ -88,49 +88,49 @@ public final class SotaFuzzyCell implements SotaCell, FuzzyIntervalValue,
     }
 
     /**
-     * @see SotaCell#getValue()
+     * {@inheritDoc}
      */
     public double getValue() {
         return getCenterOfGravity();
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMinSupport()
+     * {@inheritDoc}
      */
     public double getMinSupport() {
         return m_minSupp;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMinCore()
+     * {@inheritDoc}
      */
     public double getMinCore() {
         return m_minCore;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMaxCore()
+     * {@inheritDoc}
      */
     public double getMaxCore() {
         return m_maxCore;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMaxSupport()
+     * {@inheritDoc}
      */
     public double getMaxSupport() {
         return m_maxSupp;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getCenterOfGravity()
+     * {@inheritDoc}
      */
     public double getCenterOfGravity() {
         return (m_maxCore + m_minCore) / 2;
     }
 
     /**
-     * @see java.lang.Object#clone()
+     * {@inheritDoc}
      */
     @Override
     public SotaCell clone() {
@@ -139,8 +139,7 @@ public final class SotaFuzzyCell implements SotaCell, FuzzyIntervalValue,
     
 
     /**
-     * @see org.knime.base.node.mine.sota.SotaCell#
-     *      loadFrom(org.knime.core.node.ModelContentRO)
+     * {@inheritDoc}
      */
     public void loadFrom(final ModelContentRO modelContent)
             throws InvalidSettingsException {
@@ -151,8 +150,7 @@ public final class SotaFuzzyCell implements SotaCell, FuzzyIntervalValue,
     }
 
     /**
-     * @see org.knime.base.node.mine.sota.SotaCell#
-     *      saveTo(org.knime.core.node.ModelContentWO)
+     * {@inheritDoc}
      */
     public void saveTo(final ModelContentWO modelContent) {
         modelContent.addDouble(CFG_KEY_MIN_SUPP, m_minSupp);
@@ -162,28 +160,28 @@ public final class SotaFuzzyCell implements SotaCell, FuzzyIntervalValue,
     }
 
     /**
-     * @see org.knime.base.node.mine.sota.SotaCell#getType()
+     * {@inheritDoc}
      */
     public String getType() {
         return SotaCellFactory.FUZZY_TYPE;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyNumberValue#getCore()
+     * {@inheritDoc}
      */
     public double getCore() {
         return getCenterOfGravity();
     }
 
     /**
-     * @see org.knime.core.data.IntervalValue#getRightBound()
+     * {@inheritDoc}
      */
     public double getRightBound() {
         return getMaxCore();
     }
 
     /**
-     * @see org.knime.core.data.IntervalValue#getLeftBound()
+     * {@inheritDoc}
      */
     public double getLeftBound() {
         return getMinCore();

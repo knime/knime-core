@@ -48,18 +48,14 @@ public class ManhattanDistanceManager implements DistanceManager {
     }
 
     /**
-     * @see org.knime.base.node.mine.sota.DistanceManager#
-     *      getDistance(org.knime.core.data.DataRow,
-     *      org.knime.base.node.mine.sota.SotaTreeCell)
+     * {@inheritDoc}
      */
     public double getDistance(final DataRow row, final SotaTreeCell cell) {
         return Distances.getManhattanDistance(row, cell, m_fuzzy);
     }
 
     /**
-     * @see org.knime.base.node.mine.sota.DistanceManager#
-     *      getDistance(org.knime.core.data.DataRow,
-     *      org.knime.core.data.DataRow)
+     * {@inheritDoc}
      */
     public double getDistance(final DataRow row1, final DataRow row2) {
         return Distances.getManhattanDistance(row1, row2, m_fuzzy);

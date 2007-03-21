@@ -450,70 +450,70 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     }
 
     /**
-     * @see Locatable#getStartX()
+     * {@inheritDoc}
      */
     public int getStartX() {
         return m_startX;
     }
 
     /**
-     * @see Locatable#getStartY()
+     * {@inheritDoc}
      */
     public int getStartY() {
         return m_startY;
     }
 
     /**
-     * @see Locatable#getEndX()
+     * {@inheritDoc}
      */
     public int getEndX() {
         return m_endX;
     }
 
     /**
-     * @see Locatable#getEndY()
+     * {@inheritDoc}
      */
     public int getEndY() {
         return m_endY;
     }
 
     /**
-     * @see Locatable#setStartX(int)
+     * {@inheritDoc}
      */
     public void setStartX(final int x) {
         m_startX = x;
     }
 
     /**
-     * @see Locatable#setStartY(int)
+     * {@inheritDoc}
      */
     public void setStartY(final int y) {
         m_startY = y;
     }
 
     /**
-     * @see Locatable#setEndX(int)
+     * {@inheritDoc}
      */
     public void setEndX(final int x) {
         m_endX = x;
     }
 
     /**
-     * @see Locatable#setEndY(int)
+     * {@inheritDoc}
      */
     public void setEndY(final int y) {
         m_endY = y;
     }
 
     /**
-     * @see Hiliteable#isHilited()
+     * {@inheritDoc}
      */
     public boolean isHilited() {
         return m_hilited;
     }
 
     /**
-     * @see Hiliteable#setHilited(boolean)
+     * {@inheritDoc}
      */
     public void setHilited(final boolean hilit) {
         setHilitedRec(this, hilit);
@@ -594,14 +594,14 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     }
 
     /**
-     * @see Selectable#isSelected()
+     * {@inheritDoc}
      */
     public boolean isSelected() {
         return m_selected;
     }
 
     /**
-     * @see Selectable#setSelected(boolean)
+     * {@inheritDoc}
      */
     public void setSelected(final boolean select) {
         setSelectedRec(this, select);

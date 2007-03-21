@@ -53,14 +53,14 @@ public class SotaDoubleCell implements SotaCell, DoubleValue, Serializable {
     }
 
     /**
-     * @see org.knime.core.data.DoubleValue#getDoubleValue()
+     * {@inheritDoc}
      */
     public double getDoubleValue() {
         return m_value;
     }
 
     /**
-     * @see SotaCell#adjustCell(DataCell, double)
+     * {@inheritDoc}
      */
     public void adjustCell(final DataCell cell, final double learningrate) {
         if (SotaUtil.isNumberType(cell.getType())) {
@@ -70,14 +70,14 @@ public class SotaDoubleCell implements SotaCell, DoubleValue, Serializable {
     }
 
     /**
-     * @see SotaCell#getValue()
+     * {@inheritDoc}
      */
     public double getValue() {
         return getDoubleValue();
     }
 
     /**
-     * @see java.lang.Object#clone()
+     * {@inheritDoc}
      */
     @Override
     public SotaCell clone() {
@@ -86,8 +86,7 @@ public class SotaDoubleCell implements SotaCell, DoubleValue, Serializable {
     
 
     /**
-     * @see org.knime.base.node.mine.sota.SotaCell#
-     *      loadFrom(org.knime.core.node.ModelContentRO)
+     * {@inheritDoc}
      */
     public void loadFrom(final ModelContentRO modelContent)
             throws InvalidSettingsException {
@@ -95,15 +94,14 @@ public class SotaDoubleCell implements SotaCell, DoubleValue, Serializable {
     }
 
     /**
-     * @see org.knime.base.node.mine.sota.SotaCell#
-     *      saveTo(org.knime.core.node.ModelContentWO)
+     * {@inheritDoc}
      */
     public void saveTo(final ModelContentWO modelContent) {
         modelContent.addDouble(CFG_KEY_VALUE, m_value);
     }
 
     /**
-     * @see org.knime.base.node.mine.sota.SotaCell#getType()
+     * {@inheritDoc}
      */
     public String getType() {
         return SotaCellFactory.DOUBLE_TYPE;

@@ -49,7 +49,7 @@ public class SotaFuzzyHelper extends SotaHelper {
     }
 
     /**
-     * @see SotaHelper#initializeDimension()
+     * {@inheritDoc}
      */
     @Override
     public int initializeDimension() {
@@ -73,7 +73,7 @@ public class SotaFuzzyHelper extends SotaHelper {
     }
 
     /**
-     * @see SotaHelper#initializeTree()
+     * {@inheritDoc}
      */
     @Override
     public SotaTreeCell initializeTree() throws CanceledExecutionException {
@@ -142,7 +142,7 @@ public class SotaFuzzyHelper extends SotaHelper {
     }
 
     /**
-     * @see SotaHelper#adjustSotaCell(SotaTreeCell, DataRow, double)
+     * {@inheritDoc}
      */
     @Override
     public void adjustSotaCell(final SotaTreeCell cell, final DataRow row,

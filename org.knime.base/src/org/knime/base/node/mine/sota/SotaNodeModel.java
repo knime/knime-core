@@ -95,7 +95,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -113,7 +113,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -122,7 +122,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -131,7 +131,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -160,7 +160,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -168,7 +168,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -292,8 +292,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File internDir,
@@ -350,8 +349,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #saveInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File internDir,
