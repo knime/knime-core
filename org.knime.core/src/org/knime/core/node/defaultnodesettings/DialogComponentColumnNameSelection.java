@@ -183,7 +183,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
         }
 
         // update the enable status
-        setEnabled(getModel().isEnabled());
+        setEnabledComponents(getModel().isEnabled());
     }
 
     /**

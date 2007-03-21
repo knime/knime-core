@@ -141,12 +141,12 @@ public abstract class DialogComponent {
         m_lastSpecs = specs;
 
         checkConfigurabilityBeforeLoad(specs);
-        
+
         if (!(m_model instanceof EmptySettingsModel)) {
             // our special empty settings model will not load anything
             m_model.dlgLoadSettingsFrom(settings, specs);
         }
-        
+
         // make sure the component displays the new value (listeners are not
         // notified if the model's value didn't change (is not different)).
         updateComponent();
@@ -193,7 +193,7 @@ public abstract class DialogComponent {
      * Will be called before the value of the component is saved into the
      * NodeSettings object. Can be used to commit values, to update the model
      * and must be used to validate the entered value. NOTE: it will be called
-     * even if the model is disabled. 
+     * even if the model is disabled.
      * 
      * @throws InvalidSettingsException if the entered values are invalid
      */
@@ -224,7 +224,10 @@ public abstract class DialogComponent {
      *            enabled
      * @see #setEnabledComponents(boolean)
      * @see java.awt.Component#setEnabled(boolean)
+     * @deprecated rather use the component's {@link SettingsModel} to
+     *             enable/disable the component.
      */
+    @Deprecated
     public final void setEnabled(final boolean enabled) {
         m_model.setEnabled(enabled);
         setEnabledComponents(enabled);
@@ -249,12 +252,12 @@ public abstract class DialogComponent {
      * @param field the component to set the color in
      */
     protected void showError(final JTextField field) {
-        
+
         if (!getModel().isEnabled()) {
             // don't show no error, if the model is not enabled.
             return;
         }
-        
+
         if (field.getText().length() == 0) {
             field.setBackground(Color.RED);
         } else {

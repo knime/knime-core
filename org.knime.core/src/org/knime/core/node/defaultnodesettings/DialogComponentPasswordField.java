@@ -154,7 +154,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
         m_containsDefaultValue = true;
 
         // update the enable status too
-        setEnabled(getModel().isEnabled());
+        setEnabledComponents(getModel().isEnabled());
     }
 
     /**

@@ -86,7 +86,7 @@ public final class DialogComponentBoolean extends DialogComponent {
     protected void updateComponent() {
         // only update component if values are off
         SettingsModelBoolean model = (SettingsModelBoolean)getModel();
-        setEnabled(model.isEnabled());
+        setEnabledComponents(model.isEnabled());
         if (model.getBooleanValue() != m_checkbox.isSelected()) {
             m_checkbox.setSelected(model.getBooleanValue());
         }

@@ -326,7 +326,7 @@ public class DialogComponentFileChooser extends DialogComponent {
         }
 
         // also update the enable status
-        setEnabled(model.isEnabled());
+        setEnabledComponents(model.isEnabled());
     }
 
     /**

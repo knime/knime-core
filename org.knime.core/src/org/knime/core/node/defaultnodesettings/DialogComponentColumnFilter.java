@@ -161,7 +161,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
         }
 
         // also update the enable status
-       setEnabled(filterModel.isEnabled());
+       setEnabledComponents(filterModel.isEnabled());
 
     }
 

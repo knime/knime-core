@@ -146,7 +146,7 @@ public class DialogComponentMultiLineString extends DialogComponent {
             m_valueField.setText(str);
         }
 
-        setEnabled(getModel().isEnabled());
+        setEnabledComponents(getModel().isEnabled());
     }
 
     /**

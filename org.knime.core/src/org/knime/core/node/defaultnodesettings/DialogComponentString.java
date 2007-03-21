@@ -164,7 +164,7 @@ public final class DialogComponentString extends DialogComponent {
             m_valueField.setText(str);
         }
 
-        setEnabled(getModel().isEnabled());
+        setEnabledComponents(getModel().isEnabled());
     }
 
     /**

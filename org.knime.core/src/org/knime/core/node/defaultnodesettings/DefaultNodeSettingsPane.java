@@ -25,6 +25,7 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,14 +48,17 @@ import org.knime.core.node.NotConfigurableException;
  * @author M. Berthold, University of Konstanz
  */
 public class DefaultNodeSettingsPane extends NodeDialogPane {
+
+    /* The tabs' names. */
+    private static final String TAB_TITLE = "Options";
+
     private final List<DialogComponent> m_dialogComponents;
 
-    private final JPanel m_compositePanel;
+    private JPanel m_compositePanel;
 
     private JPanel m_currentPanel;
 
-    /* The tabs' names. */
-    private static final String TAB_TITLE = "Default Options";
+    private String m_defaultTabTitle = TAB_TITLE;
 
     /**
      * Constructor for DefaultNodeDialogPane.
@@ -62,17 +66,79 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
     public DefaultNodeSettingsPane() {
         super();
         m_dialogComponents = new ArrayList<DialogComponent>();
+        createNewPanels();
+        super.addTab(m_defaultTabTitle, m_compositePanel);
+    }
+
+    private void createNewPanels() {
         m_compositePanel = new JPanel();
         m_compositePanel.setLayout(new BoxLayout(m_compositePanel,
                 BoxLayout.Y_AXIS));
         m_currentPanel = m_compositePanel;
-        super.addTab(TAB_TITLE, m_compositePanel);
+    }
+
+    /**
+     * Sets the title of the default tab that is created and used until you call
+     * {@link #createNewTab}. If you are planning on creating more tabs make
+     * sure to call this method before creating them (because this method moves
+     * the default tab at the (currently) last position!).
+     * 
+     * @param tabTitle the new title of the first tab. Can't be null or empty.
+     * @throws IllegalArgumentException if the title already used by another
+     *             tab, or if the specified title is null or empty.
+     */
+    public void setDefaultTabTitle(final String tabTitle) {
+        if ((tabTitle == null) || (tabTitle.length() == 0)) {
+            throw new IllegalArgumentException("The title of a tab can't be "
+                    + "null nor empty.");
+        }
+        if (tabTitle.equals(m_defaultTabTitle)) {
+            return;
+        }
+        // check if we already have a tab with the new title
+        if (super.getTab(tabTitle) != null) {
+            throw new IllegalArgumentException("A tab with the specified new"
+                    + " name (" + tabTitle + ") already exists.");
+        }
+        Component tab = super.getTab(m_defaultTabTitle);
+        super.removeTab(m_defaultTabTitle);
+        super.addTab(tabTitle, tab);
+    }
+
+    /**
+     * Creates a new tab in the dialog. All components added from now on are
+     * placed in that new tab. After creating a new tab the previous tab is no
+     * longer accessible. If a tab with the same name was created before an
+     * Exception is thrown. The new panel in the new tab has no group set (i.e.
+     * has no border).
+     * 
+     * @param tabTitle the title of the new tab to use from now on. Can't be
+     *            null or empty.
+     * @throws IllegalArgumentException if you specify a title that is already
+     *             been used by another tab. Or if the specified title is null
+     *             or empty.
+     * @see #setDefaultTabTitle(String)
+     */
+    public void createNewTab(final String tabTitle) {
+        if ((tabTitle == null) || (tabTitle.length() == 0)) {
+            throw new IllegalArgumentException("The title of a tab can't be "
+                    + "null nor empty.");
+        }
+        // check if we already have a tab with the new title
+        if (super.getTab(tabTitle) != null) {
+            throw new IllegalArgumentException("A tab with the specified new"
+                    + " name (" + tabTitle + ") already exists.");
+        }
+
+        createNewPanels();
+        super.addTab(tabTitle, m_compositePanel);
+
     }
 
     /**
      * Creates a new dialog component group and closes the current one. From now
      * on the dialog components added with the addDialogComponent method are
-     * added to the current group. The group is a titled panel.
+     * added to the current group. The group is a bordered and titled panel.
      * 
      * @param title - the title of the new group.
      */
@@ -91,7 +157,7 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
 
     /**
      * Closes the current group. Further added dialog components are added to
-     * the default panel.
+     * the default panel outside any border.
      * 
      */
     public void closeCurrentGroup() {
@@ -125,11 +191,11 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
             final DataTableSpec[] specs) throws NotConfigurableException {
         assert settings != null;
         assert specs != null;
-        
+
         for (DialogComponent comp : m_dialogComponents) {
             comp.loadSettingsFrom(settings, specs);
         }
-        
+
         loadAdditionalSettingsFrom(settings, specs);
     }
 
@@ -147,12 +213,12 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
         for (DialogComponent comp : m_dialogComponents) {
             comp.saveSettingsTo(settings);
         }
-        
+
         saveAdditionalSettingsTo(settings);
     }
 
     /**
-     * This method can be overridden to load additional settings. 
+     * This method can be overridden to load additional settings.
      * 
      * @param settings the <code>NodeSettings</code> to read from
      * @param specs the input specs
@@ -165,10 +231,10 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
         assert settings != null;
         assert specs != null;
     }
-    
+
     /**
-     * This method can be overridden to save additional settings to the 
-     * given settings object.
+     * This method can be overridden to save additional settings to the given
+     * settings object.
      * 
      * @param settings the <code>NodeSettings</code> to write into
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)

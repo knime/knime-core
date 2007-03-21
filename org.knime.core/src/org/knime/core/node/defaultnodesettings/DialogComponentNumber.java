@@ -230,7 +230,7 @@ public class DialogComponentNumber extends DialogComponent {
         }
 
         // also update the enable status
-        setEnabled(getModel().isEnabled());
+        setEnabledComponents(getModel().isEnabled());
     }
 
     /**

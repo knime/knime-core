@@ -149,7 +149,7 @@ public class DialogComponentDoubleRange extends DialogComponent {
         }
 
         // update enable status
-        setEnabled(model.isEnabled());
+        setEnabledComponents(model.isEnabled());
     }
 
     /**

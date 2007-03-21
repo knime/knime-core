@@ -161,7 +161,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
             m_valueField.setText(model.getNumberValueStr());
         }
 
-        setEnabled(model.isEnabled());
+        setEnabledComponents(model.isEnabled());
     }
 
     /**
