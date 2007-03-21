@@ -26,6 +26,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -83,8 +86,11 @@ public final class BatchExecutor {
             + " -destFile=... => ZIP file where the executed workflow should be written to\n"
             + "                  if omitted the workflow is only saved in place\n"
             + " -option=nodeID,name,value,type => set the option with name 'name' of the node with\n"
-            + "                                   ID 'nodeID' to the given value which has type 'type'\n"
-            + "                                   type can be any of the primitive Java types or String\n"
+            + "             ID 'nodeID' to the given 'value', which has type 'type'.\n"
+            + "             'type' can be any of the primitive Java types, \"String\"\n"
+            + "             or any of \"StringCell\", \"DoubleCell\" or \"IntCell\".\n"
+            + "             If 'name' addresses a nested element (for instance \"rowFilter\" ->\n"
+            + "             \"ColValRowFilterUpperBound\"), the entire path must be given, separated by \"/\".\n"
             + "\n"
             + "Some KNIME settings can also be adjusted by Java properties:\n"
             + " -Dorg.knime.core.maxThreads=n => sets the maximum number of threads used by KNIME\n");
@@ -204,29 +210,39 @@ public final class BatchExecutor {
             } else {
                 NodeSettings settings = new NodeSettings("something");
                 cont.saveSettings(settings);
+                NodeSettings model = settings.getNodeSettings(Node.CFG_MODEL);
+                String[] splitName = o.m_name.split("/");
+                String name = splitName[splitName.length - 1];
+                String[] pathElements = new String[splitName.length - 1];
+                System.arraycopy(splitName, 0, 
+                        pathElements, 0, pathElements.length);
+                for (String s : pathElements) {
+                    model = model.getNodeSettings(s);
+                }
 
                 if ("int".equals(o.m_type)) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addInt(o.m_name,
-                            Integer.parseInt(o.m_value));
+                    model.addInt(name, Integer.parseInt(o.m_value));
                 } else if ("short".equals(o.m_type)) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addShort(o.m_name,
-                            Short.parseShort(o.m_value));
+                    model.addShort(name, Short.parseShort(o.m_value));
                 } else if ("byte".equals(o.m_type)) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addByte(o.m_name,
-                            Byte.parseByte(o.m_value));
+                    model.addByte(name, Byte.parseByte(o.m_value));
                 } else if ("boolean".equals(o.m_type)) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addBoolean(
-                            o.m_name, Boolean.parseBoolean(o.m_value));
+                    model.addBoolean(name, Boolean.parseBoolean(o.m_value));
                 } else if ("char".equals(o.m_type)) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addChar(o.m_name,
-                            o.m_value.charAt(0));
-                } else if ("float".equals(o.m_type)
+                    model.addChar(name, o.m_value.charAt(0));
+                } else if ("float".equals(o.m_type) 
                         || ("double".equals(o.m_type))) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addDouble(
-                            o.m_name, Double.parseDouble(o.m_value));
+                    model.addDouble(name, Double.parseDouble(o.m_value));
                 } else if ("String".equals(o.m_type)) {
-                    settings.getNodeSettings(Node.CFG_MODEL).addString(
-                            o.m_name, o.m_value);
+                    model.addString(name, o.m_value);
+                } else if ("StringCell".equals(o.m_type)) {
+                    model.addDataCell(name, new StringCell(o.m_value));
+                } else if ("DoubleCell".equals(o.m_type)) {
+                    double d = Double.parseDouble(o.m_value);
+                    model.addDataCell(name, new DoubleCell(d));
+                } else if ("IntCell".equals(o.m_type)) {
+                    int i = Integer.parseInt(o.m_value);
+                    model.addDataCell(name, new IntCell(i));
                 } else {
                     throw new IllegalArgumentException("Unknown option type '"
                             + o.m_type + "'");                   
