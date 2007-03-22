@@ -374,7 +374,7 @@ public class BarDataModel implements Serializable {
                 final double aggrVal = 
                     element.getAggregationValue(aggrMethod);
                 final Rectangle elementRect = 
-                    AbstractHistogramVizModel.calculateBarRectangle(baseLine, 
+                    BarDataModel.calculateBarRectangle(baseLine, 
                             barHeight, barY, heightPerVal, aggrVal, xCoord, 
                             elementWidth);
                 element.setElementRectangle(elementRect, aggrMethod);
@@ -683,5 +683,52 @@ public class BarDataModel implements Serializable {
             clone.m_elements.put(elementClone.getColor(), elementClone);
         }
         return clone;
+    }
+
+    /**
+     * Calculates the rectangle which fits in the given surrounding 
+     * rectangle.
+     * @param baseLine the y coordinate of the base line
+     * @param surroundingHeight the height of the surrounding rectangle
+     * @param surroundingY the y coordinate of the surrounding rectangle
+     * @param heightPerVal the height per aggregation value
+     * @param aggrVal the aggregation value of this bar
+     * @param xCoord the x coordinate of this bar
+     * @param barWidth the width of the bar
+     * @return the calculated bar
+     */
+    private static Rectangle calculateBarRectangle(final int baseLine, 
+            final int surroundingHeight, final int surroundingY, 
+            final double heightPerVal, final double aggrVal, 
+            final int xCoord, final int barWidth) {
+        int barHeight = Math.max((int)(
+                heightPerVal * Math.abs(aggrVal)), 
+                AbstractHistogramVizModel.MINIMUM_BAR_HEIGHT);
+        final int totalHeight;
+        if (aggrVal < 0) {
+            totalHeight = surroundingHeight + surroundingY - baseLine;
+        } else {
+            totalHeight = baseLine - surroundingY;
+        }
+        if (barHeight > totalHeight) {
+            final int diff = barHeight - totalHeight;
+            barHeight -= diff;
+            LOGGER.debug("Height diff. bar higher than bin: " 
+                    + diff);
+        }
+//                  calculate the position of the y coordinate
+        int yCoord = 0;
+        if (aggrVal >= 0) {
+            //if it's a positive value the start point is the
+            //baseline minus the height of the bar
+            yCoord = baseLine - barHeight;
+        } else {
+            //if it's a negative value the top left corner start 
+            //point is the base line
+            yCoord = baseLine;
+        }
+        final Rectangle barRect = 
+            new Rectangle(xCoord, yCoord, barWidth, barHeight);
+        return barRect;
     }
 }

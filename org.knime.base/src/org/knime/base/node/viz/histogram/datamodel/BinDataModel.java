@@ -365,22 +365,11 @@ public class BinDataModel implements Serializable {
             m_drawBar = true;
             //calculate the height
             final int binHeight = (int)m_binRectangle.getHeight();
-            final double maxAggrVal = 
-                getMaxAggregationValue(aggrMethod, layout);
-            final double minAggrVal = 
-                getMinAggregationValue(aggrMethod, layout);
-            double valRange;
-            if (minAggrVal < 0 && maxAggrVal > 0) {
-                //if the bar contains negative and positive elements
-                //we have to add the min and max aggregation value
-                //to get the full range
-                valRange = maxAggrVal + Math.abs(minAggrVal);
-            } else {
-                //if the bar contains either negative or positive elements
-                //simply take the maximum since one of them is zero
-                valRange = Math.max(Math.abs(maxAggrVal), Math.abs(minAggrVal));
-            }
-            
+            final double maxAggrVal = Math.max(getMaxAggregationValue(
+                    aggrMethod, layout), 0);
+            final double minAggrVal = Math.min(getMinAggregationValue(
+                    aggrMethod, layout), 0);
+            final double valRange = maxAggrVal + Math.abs(minAggrVal);
             if (valRange <= 0) {
                 m_drawBar = false;
                 return;
@@ -389,7 +378,6 @@ public class BinDataModel implements Serializable {
             final int barWidth = calculateBarWidth(binWidth, noOfBars);
             final double heightPerVal = binHeight / valRange;
             final int binX = (int) m_binRectangle.getX();
-            final int binY = (int) m_binRectangle.getY();
             int xCoord = binX;
             for (ColorColumn aggrColumn : aggrColumns) {
                 final BarDataModel bar = 
@@ -397,11 +385,17 @@ public class BinDataModel implements Serializable {
                 if (bar != null) {
                     //set the rectangle only for the bars which are available
                     //in this bin
-                    final double aggrVal = bar.getAggregationValue(aggrMethod);
-                    final Rectangle barRect = 
-                        AbstractHistogramVizModel.calculateBarRectangle(
-                                baseLine, binHeight, binY, heightPerVal, 
-                                aggrVal, xCoord, barWidth);
+                    final double barMaxAggrVal = Math.max(
+                            bar.getMaxAggregationValue(aggrMethod, layout), 0);
+                    final double barMinAggrVal = Math.min(
+                        bar.getMinAggregationValue(aggrMethod, layout), 0);
+                    final double aggrVal = barMaxAggrVal 
+                    + Math.abs(barMinAggrVal);
+                    final int yCoord = (int)(baseLine 
+                        - (barMaxAggrVal * heightPerVal));
+                    final int barHeight = (int)(aggrVal * heightPerVal);
+                    final Rectangle barRect = new Rectangle(xCoord, yCoord, 
+                            barWidth, barHeight);
                     bar.setBarRectangle(barRect, aggrMethod, layout, baseLine,
                             barElementColors);
                 }

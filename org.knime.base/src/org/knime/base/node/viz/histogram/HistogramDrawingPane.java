@@ -327,15 +327,15 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 //fill the complete bin in black to show it to the user
                 drawBlock(g2, bin.getBinRectangle(), 
                         OVERLOADED_ELEMENT_FILLING, 0.8f);
-                if (bin instanceof InteractiveBinDataModel) {
-                    InteractiveBinDataModel interactiveBin = 
-                        (InteractiveBinDataModel)bin;
-                    drawHiliteRect(g2, interactiveBin.getHiliteRectangle());
-                }
                 if (bin.isSelected()) {
                     drawRectangle(g2, bin.getBinRectangle(), 
                         ELEMENT_SELECTED_OUTLINE_COLOR, 
                         ELEMENT_SELECTED_OUTLINE_STROKE);
+                }
+                if (bin instanceof InteractiveBinDataModel) {
+                    InteractiveBinDataModel interactiveBin = 
+                        (InteractiveBinDataModel)bin;
+                    drawHiliteRect(g2, interactiveBin.getHiliteRectangle());
                 }
                 continue;
             }
@@ -355,15 +355,15 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     final Rectangle barRectangle = bar.getBarRectangle();
                     drawBlock(g2, barRectangle, 
                             OVERLOADED_ELEMENT_FILLING, 0.8f);
-                    if (bar instanceof InteractiveBarDataModel) {
-                        InteractiveBarDataModel interactiveBar = 
-                            (InteractiveBarDataModel)bar;
-                        drawHiliteRect(g2, interactiveBar.getHiliteRectangle());
-                    }
                     if (bar.isSelected()) {
                         drawRectangle(g2, barRectangle, 
                             ELEMENT_SELECTED_OUTLINE_COLOR, 
                             ELEMENT_SELECTED_OUTLINE_STROKE);
+                    }
+                    if (bar instanceof InteractiveBarDataModel) {
+                        InteractiveBarDataModel interactiveBar = 
+                            (InteractiveBarDataModel)bar;
+                        drawHiliteRect(g2, interactiveBar.getHiliteRectangle());
                     }
                 }
                 //draw the bar label at last to have them on top

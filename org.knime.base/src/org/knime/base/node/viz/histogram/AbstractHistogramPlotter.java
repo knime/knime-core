@@ -143,129 +143,101 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             throw new IllegalStateException(
                     "Properties panel shouldn't be null");
         }
-        m_histoProps.addShowGridChangedListener(
-                new ItemListener() {
-                    public void itemStateChanged(final ItemEvent e) {
-                        setShowGridLines(
-                                e.getStateChange() == ItemEvent.SELECTED);
-                    }
-                });
-        
-        m_histoProps.addShowBinOutlineChangedListener(
-                new ItemListener() {
-                    public void itemStateChanged(final ItemEvent e) {
-                        final AbstractHistogramVizModel vizModel = 
-                            getHistogramVizModel();
-                        if (vizModel != null) {
-                            vizModel.setShowBinOutline(
-                                    e.getStateChange() == ItemEvent.SELECTED);
-                            final HistogramDrawingPane histoDrawingPane = 
-                                getHistogramDrawingPane();
-                            if (histoDrawingPane != null) {
-                                histoDrawingPane.repaint();
-                            }
-                        }
-                    }
-                });
-        
-        m_histoProps.addShowBarOutlineChangedListener(
-                new ItemListener() {
-                    public void itemStateChanged(final ItemEvent e) {
-                        final AbstractHistogramVizModel vizModel = 
-                            getHistogramVizModel();
-                        if (vizModel != null) {
-                            vizModel.setShowBarOutline(
-                                    e.getStateChange() == ItemEvent.SELECTED);
-                            final HistogramDrawingPane histoDrawingPane = 
-                                getHistogramDrawingPane();
-                            if (histoDrawingPane != null) {
-                                histoDrawingPane.repaint();
-                            }
-                        }
-                    }
-                });
-        
-        m_histoProps.addShowElementOutlineChangedListener(
-                new ItemListener() {
-                    public void itemStateChanged(final ItemEvent e) {
-                        final AbstractHistogramVizModel vizModel = 
-                            getHistogramVizModel();
-                        if (vizModel != null) {
-                            vizModel.setShowElementOutline(
-                                    e.getStateChange() == ItemEvent.SELECTED);
-                            final HistogramDrawingPane histoDrawingPane = 
-                                getHistogramDrawingPane();
-                            if (histoDrawingPane != null) {
-                                histoDrawingPane.repaint();
-                            }
-                        }
-                    }
-                });
-        
-        m_histoProps.addLabelOrientationListener(
-                new ActionListener() {
-                    public void actionPerformed(final ActionEvent e) {
-                        final AbstractHistogramVizModel vizModel = 
-                            getHistogramVizModel();
-                        if (vizModel != null) {
-                            final AbstractHistogramProperties histoProps = 
-                                getHistogramPropertiesPanel();
-                            if (histoProps != null) {
-                                vizModel.setShowLabelVertical(
-                                        histoProps.isShowLabelVertical());
-                                final HistogramDrawingPane histoDrawingPane = 
-                                    getHistogramDrawingPane();
-                                if (histoDrawingPane != null) {
-                                    histoDrawingPane.repaint();
-                                }
-                            }
-                        }
-                    }
-                });
-        
-        m_histoProps.addLabelDisplayListener(
-            new ActionListener() {
-                public void actionPerformed(final ActionEvent e) {
-                    final AbstractHistogramVizModel vizModel = 
-                        getHistogramVizModel();
-                    if (vizModel != null) {
-                        final AbstractHistogramProperties histoProps = 
-                            getHistogramPropertiesPanel();
-                        if (histoProps != null) {
-                            vizModel.setLabelDisplayPolicy(
-                                    histoProps.getLabelDisplayPolicy());
-                            final HistogramDrawingPane histoDrawingPane = 
-                                getHistogramDrawingPane();
-                            if (histoDrawingPane != null) {
-                                histoDrawingPane.repaint();
-                            }
-                        }
-                    }
+        m_histoProps.addShowGridChangedListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                setShowGridLines(
+                        e.getStateChange() == ItemEvent.SELECTED);
+            }
+        });
+        m_histoProps.addShowBinOutlineChangedListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                final AbstractHistogramVizModel vizModel = 
+                    getHistogramVizModel();
+                if (vizModel != null) {
+                    vizModel.setShowBinOutline(
+                            e.getStateChange() == ItemEvent.SELECTED);
+                    final HistogramDrawingPane histoDrawingPane = 
+                        getHistogramDrawingPane();
+                    histoDrawingPane.repaint();
                 }
-            });
-
-        m_histoProps.addLayoutListener(new ActionListener() {
-                public void actionPerformed(final ActionEvent e) {
+            }
+        });
+        m_histoProps.addShowBarOutlineChangedListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                final AbstractHistogramVizModel vizModel = 
+                    getHistogramVizModel();
+                if (vizModel != null) {
+                    vizModel.setShowBarOutline(
+                            e.getStateChange() == ItemEvent.SELECTED);
+                    final HistogramDrawingPane histoDrawingPane = 
+                        getHistogramDrawingPane();
+                    histoDrawingPane.repaint();
+                }
+            }
+        });
+        m_histoProps.addShowElementOutlineChangedListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                final AbstractHistogramVizModel vizModel = 
+                    getHistogramVizModel();
+                if (vizModel != null) {
+                    vizModel.setShowElementOutline(
+                            e.getStateChange() == ItemEvent.SELECTED);
+                    final HistogramDrawingPane histoDrawingPane = 
+                        getHistogramDrawingPane();
+                    histoDrawingPane.repaint();
+                }
+            }
+        });
+        m_histoProps.addLabelOrientationListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                final AbstractHistogramVizModel vizModel = 
+                    getHistogramVizModel();
+                if (vizModel != null) {
                     final AbstractHistogramProperties histoProps = 
                         getHistogramPropertiesPanel();
                     if (histoProps != null) {
-                        setHistogramLayout(histoProps.getHistogramLayout());
+                        vizModel.setShowLabelVertical(
+                                histoProps.isShowLabelVertical());
+                        final HistogramDrawingPane histoDrawingPane = 
+                            getHistogramDrawingPane();
+                        histoDrawingPane.repaint();
                     }
                 }
-            });
-        
+            }
+        });
+        m_histoProps.addLabelDisplayListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                final AbstractHistogramVizModel vizModel = 
+                    getHistogramVizModel();
+                if (vizModel != null) {
+                    final AbstractHistogramProperties histoProps = 
+                        getHistogramPropertiesPanel();
+                    if (histoProps != null) {
+                        vizModel.setLabelDisplayPolicy(
+                                histoProps.getLabelDisplayPolicy());
+                        final HistogramDrawingPane histoDrawingPane = 
+                            getHistogramDrawingPane();
+                        histoDrawingPane.repaint();
+                    }
+                }
+            }
+        });
+        m_histoProps.addLayoutListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                final AbstractHistogramProperties histoProps = 
+                    getHistogramPropertiesPanel();
+                if (histoProps != null) {
+                    setHistogramLayout(histoProps.getHistogramLayout());
+                }
+            }
+        });
         m_histoProps.addBinWidthChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 final JSlider source = (JSlider)e.getSource();
-                //react only when the user has set the value and not during
-                //moving the slider
-//                if (!source.getValueIsAdjusting()) {
-                    final int binWidth = source.getValue();
-                    updateBinWidth(binWidth);
-//                }
+                final int binWidth = source.getValue();
+                updateBinWidth(binWidth);
             }
         });
-        
         m_histoProps.addNoOfBinsChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 JSlider source = (JSlider)e.getSource();
@@ -277,9 +249,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     }
                 }
             }
-            
         });
-        
         m_histoProps.addAggrMethodListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 final String methodName = e.getActionCommand();
@@ -294,7 +264,6 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 }
             }
         });
-        
         m_histoProps.addShowEmptyBinListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
                 if (setShowEmptyBins(
@@ -303,7 +272,6 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 }
             }
         });
-        
         m_histoProps.addShowMissingValBinListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
                 if (setShowMissingValBin(
@@ -498,46 +466,53 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                         barElementColors, aggrColumns);
                 continue;
             }
-            //subtract half of the bar width from the start position to place
-            //the middle point of the bar on the mapped coordinate position
-            final int xCoord = (int)(labelCoord - (binWidth / 2));
+
             //if the maximum value is negative use 0 to end at the base line
             final double maxAggrVal = Math.max(
                     bin.getMaxAggregationValue(aggrMethod, layout), 0);
             //if the minimum value is positive use 0 to start at the base line
             final double minAggrVal = Math.min(
                 bin.getMinAggregationValue(aggrMethod, layout), 0);
+            //subtract half of the bar width from the start position to place
+            //the middle point of the bar on the mapped coordinate position
+            final int xCoord = (int)(labelCoord - (binWidth / 2));
             int upperY = (int)(drawingHeight 
                     - yCoordinates.calculateMappedValue(
                             new DoubleCell(maxAggrVal), drawingHeight, true));
             int lowerY = (int)(drawingHeight 
                     - yCoordinates.calculateMappedValue(
                             new DoubleCell(minAggrVal), drawingHeight, true));
-            int height = lowerY - upperY;
-            //calculate the height
-            if (height < minHeight) {
-                if (maxAggrVal > 0) {
-                    upperY = baseLine - minHeight;
-                } else if (maxAggrVal < 0) {
-                    upperY = baseLine;
-                } else {
-                    //if the aggregation value is zero we have to check
-                    //if the base line is at coordinate 0 or not
-                    if (baseLine == 0) {
-                        upperY = baseLine;
-                    } else {
-                        upperY = baseLine - minHeight;
-                    }
-                }
-                height = minHeight;
-            }
-            final Rectangle binRect = 
-                new Rectangle(xCoord, upperY, binWidth, height);
+            final Rectangle binRect = calculateBorderRectangle(xCoord, lowerY, 
+                    upperY, minHeight, binWidth, maxAggrVal, baseLine);
             bin.setBinRectangle(binRect, aggrMethod, layout, baseLine, 
                     barElementColors, aggrColumns);
         } // end of for loop over the x axis coordinates
     }
 
+    private static Rectangle calculateBorderRectangle(final int xCoord, 
+            final int lowerY, final int upperY, final int minHeight, 
+            final int width, final double maxAggrVal, final int baseLine) {
+        int height = lowerY - upperY;
+        int yCoord = upperY;
+        //calculate the height
+        if (height < minHeight) {
+            if (maxAggrVal > 0) {
+                yCoord = baseLine - minHeight;
+            } else if (maxAggrVal < 0) {
+                yCoord = baseLine;
+            } else {
+                //if the aggregation value is zero we have to check
+                //if the base line is at coordinate 0 or not
+                if (baseLine == 0) {
+                    yCoord = baseLine;
+                } else {
+                    yCoord = baseLine - minHeight;
+                }
+            }
+            height = minHeight;
+        }
+        return new Rectangle(xCoord, yCoord, width, height);
+    }
     
     /**
      * Sets the x coordinates for the current 

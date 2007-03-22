@@ -123,6 +123,10 @@ public abstract class AbstractHistogramProperties extends
 
     private final JCheckBox m_showMissingValBin;
     
+    private final JPanel m_detailsPane;
+    
+    private final JScrollPane m_detailsScrollPane;
+    
     private final JEditorPane m_detailsHtmlPane;
 
 //    private final JButton m_applyAggrSettingsButton;
@@ -264,10 +268,50 @@ public abstract class AbstractHistogramProperties extends
 
         final JPanel visOptionPanel = createVizSettingsPanel();
         addTab(VIZ_SETTINGS_TAB_LABEL, visOptionPanel);
+        
+        //create the details panel
         m_detailsHtmlPane = new JEditorPane("text/html", "");
-        final JPanel detailsPanel = createHTMLDetailsPanel(m_detailsHtmlPane);
-        addTab(DETAILS_TAB_LABEL, detailsPanel);
-//        m_detailsHtmlPane.setPreferredSize(detailsPanel.getMaximumSize());
+        //I have to subtract the tab height from the preferred size
+        Dimension tabSize = getTabSize();
+        if (tabSize == null) {
+            tabSize = new Dimension(1, 1);
+        }
+        m_detailsHtmlPane.setText("");
+        m_detailsHtmlPane.setEditable(false);
+        m_detailsHtmlPane.setBackground(getBackground());
+        m_detailsScrollPane = new JScrollPane(m_detailsHtmlPane);
+        m_detailsScrollPane.setPreferredSize(tabSize);
+        m_detailsPane = new JPanel();
+        m_detailsPane.add(m_detailsScrollPane);
+        addTab(DETAILS_TAB_LABEL, m_detailsPane);
+    }
+
+    private Dimension getTabSize() {
+        try {
+            final Dimension totalSize = getPreferredSize();
+            return new Dimension((int)totalSize.getWidth(), 
+                    (int) totalSize.getHeight() - 10);
+        } catch (Exception e) {
+            LOGGER.debug("Exception in getTabSize: " + e.getMessage());
+        }
+        return null;
+    }
+//
+//    /**
+//     * This method is called to resize the tabs. 
+//     */
+//    public void resize() {
+//        final Dimension tabSize = getTabSize();
+//        if (tabSize != null) {
+//            m_detailsScrollPane.setPreferredSize(tabSize);
+//        }
+//    }
+    
+    /**
+     * @param html the new details view
+     */
+    protected void updateHTMLDetailsPanel(final String html) {
+        m_detailsHtmlPane.setText(html);
     }
 
     /**
@@ -284,31 +328,6 @@ public abstract class AbstractHistogramProperties extends
             group.add(button);
         }
         return group;
-    }
-
-    /**
-     * The details data panel which contains information about the current
-     * selected elements.
-     * @param htmlPane the panel to write into
-     * @return the details date panel
-     */
-    private JPanel createHTMLDetailsPanel(final JEditorPane htmlPane) {
-        final JPanel detailsPanel = new JPanel();
-        StringBuilder buf = new StringBuilder();
-        buf.append("<h3 align='center'>Details data</h3>");
-        buf.append("<br>");
-        htmlPane.setText(buf.toString());
-        htmlPane.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(htmlPane);
-        detailsPanel.add(scrollPane);
-        return detailsPanel;
-    }
-    
-    /**
-     * @param html the new details view
-     */
-    protected void updateHTMLDetailsPanel(final String html) {
-        m_detailsHtmlPane.setText(html);
     }
 
     /**
@@ -1049,13 +1068,5 @@ public abstract class AbstractHistogramProperties extends
      */
     protected void addShowMissingValBinListener(final ItemListener listener) {
         m_showMissingValBin.addItemListener(listener);
-    } 
-//    /**
-//     * @param listener adds a listener to the apply button
-//     */
-//    protected void addAggregationChangedListener(
-//            final ActionListener listener) {
-//        m_applyAggrSettingsButton.addActionListener(listener);
-//        m_applyBarSettingsButton.addActionListener(listener);
-//    }
+    }
 }

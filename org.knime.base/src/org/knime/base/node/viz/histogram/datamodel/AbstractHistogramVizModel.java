@@ -46,7 +46,6 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.node.NodeLogger;
 
 /**
  * This is the basic visualization model for a histogram. It handles bin
@@ -54,8 +53,6 @@ import org.knime.core.node.NodeLogger;
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramVizModel {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(AbstractHistogramVizModel.class);
 
     /** The caption of the bar which holds all missing values. */
     public static final String MISSING_VAL_BAR_CAPTION = "Missing_values";
@@ -156,7 +153,7 @@ public abstract class AbstractHistogramVizModel {
     public static final int SPACE_BETWEEN_ELEMENTS = 2;
     
     /**The minimum width of an bar/element.*/
-    public static final int MINIMUM_ELEMENT_WIDTH = 4;
+    public static final int MINIMUM_ELEMENT_WIDTH = 6;
 
     /** The minimum height of a bar.*/
     public static final int MINIMUM_BAR_HEIGHT = 4;
@@ -824,6 +821,14 @@ public abstract class AbstractHistogramVizModel {
         final StringBuilder buf = new StringBuilder();
         buf.append("<h2>Details data</h2>");
         buf.append("Nothing selected");
+        buf.append("Nothing selected");
+        buf.append("Nothing selected");
+        buf.append("Nothing selected");
+        buf.append("Nothing selected");
+        buf.append("Nothing selected");
+        buf.append("Nothing selected");
+        buf.append("Nothing selected");
+        buf.append("<h1>Nothing selected</h1>");
         return buf.toString();
     }
 
@@ -873,12 +878,21 @@ public abstract class AbstractHistogramVizModel {
         final int y = (int)rect.getY();
         final int height = (int)rect.getHeight();
         final int width = (int)rect.getWidth();
+        final int horizontalFactor;
+        if (y < baseLine && y + height > baseLine) {
+            //the rectangle is above and below the base line so we have to
+            //add the thickness on top and end of the rectangle
+            horizontalFactor = 2;
+        } else {
+            horizontalFactor = 1;
+        }
         //calculate the new y coordinate and height
-        final int newHeight = Math.max(height + thickness, 1);
+        final int newHeight = 
+            Math.max(height + thickness * horizontalFactor, 1);
         int newY = y;
         if (y < baseLine) {
             //it's a positive bar so we have to subtract the difference
-            newY -= newHeight - height;
+            newY -= (newHeight - height) / horizontalFactor;
         }
         
         //calculate the new x coordinate and width
@@ -886,52 +900,4 @@ public abstract class AbstractHistogramVizModel {
         final int newX = (int)((x + width / 2.0) - newWidth / 2.0);
         return new Rectangle(newX, newY, newWidth, newHeight);
     }
-
-
-    /**
-         * Calculates the rectangle which fits in the given surrounding 
-         * rectangle.
-         * @param baseLine the y coordinate of the base line
-         * @param surroundingHeight the height of the surrounding rectangle
-         * @param surroundingY the y coordinate of the surrounding rectangle
-         * @param heightPerVal the height per aggregation value
-         * @param aggrVal the aggregation value of this bar
-         * @param xCoord the x coordinate of this bar
-         * @param barWidth the width of the bar
-         * @return the calculated bar
-         */
-        public static Rectangle calculateBarRectangle(final int baseLine, 
-                final int surroundingHeight, final int surroundingY, 
-                final double heightPerVal, final double aggrVal, 
-                final int xCoord, final int barWidth) {
-            int barHeight = Math.max((int)(
-                    heightPerVal * Math.abs(aggrVal)), 
-                    MINIMUM_BAR_HEIGHT);
-            final int totalHeight;
-            if (aggrVal < 0) {
-                totalHeight = surroundingHeight + surroundingY - baseLine;
-            } else {
-                totalHeight = baseLine - surroundingY;
-            }
-            if (barHeight > totalHeight) {
-                final int diff = barHeight - totalHeight;
-                barHeight -= diff;
-                LOGGER.debug("Height diff. bar higher than bin: " 
-                        + diff);
-            }
-    //                  calculate the position of the y coordinate
-            int yCoord = 0;
-            if (aggrVal >= 0) {
-                //if it's a positive value the start point is the
-                //baseline minus the height of the bar
-                yCoord = baseLine - barHeight;
-            } else {
-                //if it's a negative value the top left corner start 
-                //point is the base line
-                yCoord = baseLine;
-            }
-            final Rectangle barRect = 
-                new Rectangle(xCoord, yCoord, barWidth, barHeight);
-            return barRect;
-        }
 }
