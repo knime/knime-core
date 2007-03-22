@@ -310,7 +310,7 @@ public abstract class AbstractHistogramProperties extends
     /**
      * @param html the new details view
      */
-    protected void updateHTMLDetailsPanel(final String html) {
+    public void updateHTMLDetailsPanel(final String html) {
         m_detailsHtmlPane.setText(html);
     }
 

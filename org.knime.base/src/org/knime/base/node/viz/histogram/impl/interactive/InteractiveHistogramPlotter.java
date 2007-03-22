@@ -125,8 +125,12 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
 //             set the new axis
                setXCoordinates();
                setYCoordinates();
+               //update the details tab
+               getHistogramPropertiesPanel().updateHTMLDetailsPanel(
+                       vizModel.getHTMLDetailData());
                // repaint the plotter
                updatePaintModel();
+               
            }
         } else {
             throw new IllegalStateException(
@@ -172,6 +176,9 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                     if (vizModel.containsNotPresentableBin()) {
                         vizModel.setBinWidth(vizModel.getMaxBinWidth());
                     }
+                    //update the details tab
+                    getHistogramPropertiesPanel().updateHTMLDetailsPanel(
+                            vizModel.getHTMLDetailData());
                     updatePaintModel();
                 }
             } else {

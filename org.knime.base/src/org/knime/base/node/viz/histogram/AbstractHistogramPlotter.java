@@ -540,7 +540,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      * {@link AbstractHistogramVizModel}.
      */
     protected void setYCoordinates() {
-        DataColumnSpec aggrColSpec = getAggregationColSpec();
+        final DataColumnSpec aggrColSpec = getAggregationColSpec();
 //        setYColName(aggrColSpec.getName());
 //         tell the headers to display the new column names
         final Coordinate yCoordinate = Coordinate.createCoordinate(aggrColSpec);
@@ -577,6 +577,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 //is side-by-side
                     vizModel.setBinWidth(vizModel.getMaxBinWidth());
                 }
+            //update the details tab
+            getHistogramPropertiesPanel().updateHTMLDetailsPanel(
+                    vizModel.getHTMLDetailData());
             return true;
         }
         return false;

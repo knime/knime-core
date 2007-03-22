@@ -534,6 +534,7 @@ public class BinDataModel implements Serializable {
         m_rowCounter = 0;
         m_binRectangle = null;
         m_presentable = false;
+        m_isSelected = false;
     }
 
     /**
