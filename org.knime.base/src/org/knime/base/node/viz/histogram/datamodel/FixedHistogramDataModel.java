@@ -115,7 +115,7 @@ public class FixedHistogramDataModel {
         m_missingValueBin  = new BinDataModel(
                 AbstractHistogramVizModel.MISSING_VAL_BAR_CAPTION, 0, 0);
         m_rowColors  = 
-            new TreeSet<Color>(new HSBColorComparator());
+            new TreeSet<Color>(HSBColorComparator.getInstance());
         LOGGER.debug("Exiting HistogramDataModel(xColSpec, aggrColumns) "
                 + "of class HistogramDataModel.");
     }

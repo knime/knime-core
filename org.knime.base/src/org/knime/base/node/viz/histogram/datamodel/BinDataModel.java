@@ -32,6 +32,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
@@ -174,9 +175,9 @@ public class BinDataModel implements Serializable {
     /**
      * @return all selected bars of this bin
      */
-    public Collection<BarDataModel> getSelectedBars() {
+    public List<BarDataModel> getSelectedBars() {
         final Collection<BarDataModel> bars = getBars();
-        final Collection<BarDataModel> selectedBars = 
+        final List<BarDataModel> selectedBars = 
             new ArrayList<BarDataModel>(bars.size());
         for (BarDataModel bar : bars) {
             if (bar.isSelected()) {

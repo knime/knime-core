@@ -34,7 +34,8 @@ import java.util.Comparator;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-class HSBColorComparator implements Comparator<Color>, Serializable {
+public final class HSBColorComparator implements Comparator<Color>, 
+Serializable {
     
     private static final long serialVersionUID = -2017351242977651036L;
     
@@ -43,7 +44,22 @@ class HSBColorComparator implements Comparator<Color>, Serializable {
     private static final int BRIGHTNESS_IDX = 2;
     //used to set the split of the hue circle in the blue area
     private static final float HUE_SPLITT = 0.5f;
+    
+    private static HSBColorComparator instance;
+    
+    private HSBColorComparator() {
+        //nothing to do
+    }
 
+    /**
+     * @return the only instance of this comparator
+     */
+    public static HSBColorComparator getInstance() {
+        if (instance == null) {
+            instance = new HSBColorComparator();
+        }
+        return instance;
+    }
 
     /**
      * @see java.util.Comparator#compare

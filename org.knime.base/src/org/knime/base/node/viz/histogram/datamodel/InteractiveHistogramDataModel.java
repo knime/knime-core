@@ -45,7 +45,7 @@ public class InteractiveHistogramDataModel {
     private final DataTableSpec m_tableSpec;
     
     private final SortedSet<Color> m_rowColors = 
-        new TreeSet<Color>(new HSBColorComparator());
+        new TreeSet<Color>(HSBColorComparator.getInstance());
     
     private final List<DataRow> m_dataRows;
     

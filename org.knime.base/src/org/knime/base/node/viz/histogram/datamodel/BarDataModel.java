@@ -32,6 +32,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 
@@ -186,9 +187,9 @@ public class BarDataModel implements Serializable {
     /**
      * @return all selected elements
      */
-    public Collection<BarElementDataModel> getSelectedElements() {
+    public List<BarElementDataModel> getSelectedElements() {
         final Collection<BarElementDataModel> elements = getElements();
-        Collection<BarElementDataModel> selectedElements = 
+        List<BarElementDataModel> selectedElements = 
             new ArrayList<BarElementDataModel>(elements.size());
         for (BarElementDataModel element : elements) {
             if (element.isSelected()) {

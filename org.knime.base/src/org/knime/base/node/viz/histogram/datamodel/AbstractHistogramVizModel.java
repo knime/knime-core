@@ -854,7 +854,7 @@ public abstract class AbstractHistogramVizModel {
             buf.append(bin.getXAxisCaption());
             buf.append("</td>");
             buf.append("<td>");
-            final Collection<BarDataModel> selectedBars = 
+            final List<BarDataModel> selectedBars = 
                 bin.getSelectedBars();
             if (selectedBars == null || selectedBars.size() < 1) {
                 buf.append("No bars selected");
