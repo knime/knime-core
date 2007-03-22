@@ -29,6 +29,7 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,18 +51,24 @@ public class BarDataModel implements Serializable {
 
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(BarDataModel.class);
+    private final String m_barName;
     
     private final Color m_color;
+    
     private final Map<Color, BarElementDataModel> m_elements = 
         new HashMap<Color, BarElementDataModel>();
+    
     /**The number of rows including empty value rows.*/
     private int m_rowCounter = 0;
+    
     /**The number of values without missing values!*/
     private int m_valueCount = 0;
+    
     private double m_aggrSum = 0;
     
     //visual variables
-    private boolean m_drawElements = true;
+    private boolean m_presentable = true;
+    
     private boolean m_isSelected = false;
     
     /**The surrounding rectangle is used to distinguish between multiple
@@ -71,9 +78,11 @@ public class BarDataModel implements Serializable {
     private Rectangle m_barRectangle;
 
     /**Constructor for class BarDataModel.
+     * @param barName the name of this bar
      * @param color the color to use for this bar
      */
-    protected BarDataModel(final Color color) {
+    protected BarDataModel(final String barName, final Color color) {
+        m_barName = barName;
         m_color = color;
     }
     
@@ -145,6 +154,13 @@ public class BarDataModel implements Serializable {
     }
     
     /**
+     * @return the barName
+     */
+    public String getBarName() {
+        return m_barName;
+    }
+    
+    /**
      * @return the color to use
      */
     public Color getColor() {
@@ -167,6 +183,21 @@ public class BarDataModel implements Serializable {
         return m_elements.values();
     }
 
+    /**
+     * @return all selected elements
+     */
+    public Collection<BarElementDataModel> getSelectedElements() {
+        final Collection<BarElementDataModel> elements = getElements();
+        Collection<BarElementDataModel> selectedElements = 
+            new ArrayList<BarElementDataModel>(elements.size());
+        for (BarElementDataModel element : elements) {
+            if (element.isSelected()) {
+                selectedElements.add(element);
+            }
+        }
+        return selectedElements;
+    }
+    
     /**
      * @return the number of elements
      */
@@ -323,9 +354,9 @@ public class BarDataModel implements Serializable {
         final int barHeight = (int)m_barRectangle.getHeight();
         final int barWidth = (int)m_barRectangle.getWidth();
         final int noOfElements = m_elements.size();
-        m_drawElements = elementsFitInBar(layout, barElementColors, 
+        m_presentable = elementsFitInBar(layout, barElementColors, 
                 noOfElements, barWidth, barHeight);
-        if (!m_drawElements) {
+        if (!m_presentable) {
             return;
         }
         if (HistogramLayout.STACKED.equals(layout)) {
@@ -517,7 +548,7 @@ public class BarDataModel implements Serializable {
             if (m_barRectangle == null) {
                 return;
             }
-            final boolean drawElementsBefore = m_drawElements;
+            final boolean drawElementsBefore = m_presentable;
             final int yCoord = (int)m_barRectangle.getY();
             final int barHeight = (int)m_barRectangle.getHeight();
             m_barRectangle.setBounds(startX, yCoord, newWidth, 
@@ -529,9 +560,9 @@ public class BarDataModel implements Serializable {
             final int barWidth = (int)m_barRectangle.getWidth();
             final int barX = (int)m_barRectangle.getX();
             final int noOfElements = m_elements.size();
-            m_drawElements = elementsFitInBar(layout, barElementColors,
+            m_presentable = elementsFitInBar(layout, barElementColors,
                     noOfElements, barWidth, barHeight);
-            if (!m_drawElements) {
+            if (!m_presentable) {
                 //if the elements doesn't fit any way return here
                 return;
             }
@@ -587,8 +618,8 @@ public class BarDataModel implements Serializable {
     /**
      * @return <code>true</code> if the elements should be drawn
      */
-    public boolean isDrawElements() {
-        return m_drawElements;
+    public boolean isPresentable() {
+        return m_presentable;
     }
 
     /**
@@ -622,7 +653,7 @@ public class BarDataModel implements Serializable {
     //          if the bar is to small to draw the different
                 //elements we have to select all elements 
                 //of this bar
-                if (!m_drawElements) {
+                if (!m_presentable) {
                     for (final BarElementDataModel element : getElements()) {
                         element.setSelected(true);
                     }
@@ -651,7 +682,7 @@ public class BarDataModel implements Serializable {
     //          if the bar is to small to draw the different
                 //elements we have to select all elements 
                 //of this bar
-                if (!m_drawElements) {
+                if (!m_presentable) {
                     for (final BarElementDataModel element : getElements()) {
                         element.setSelected(true);
                     }
@@ -673,7 +704,7 @@ public class BarDataModel implements Serializable {
      */
     @Override
     protected BarDataModel clone() {
-        final BarDataModel clone = new BarDataModel(m_color);
+        final BarDataModel clone = new BarDataModel(m_barName, m_color);
         clone.m_aggrSum = m_aggrSum;
         clone.m_rowCounter = m_rowCounter;
         clone.m_valueCount = m_valueCount;

@@ -58,7 +58,7 @@ import org.knime.core.node.NodeLogger;
  */
 public class HistogramDrawingPane extends AbstractDrawingPane {
     
-    private static final long serialVersionUID = 7881989778083295425L;
+        private static final long serialVersionUID = 7881989778083295425L;
     
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(HistogramDrawingPane.class);
@@ -87,14 +87,25 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         OVERLOADED_ELEMENT_FILLING = new TexturePaint(img, rect);
     }
     
+    /**The alpa value of the overloaded element block.*/
+    private static final float OVERLOADED_ELEMENT_ALPHA = 0.8f;
+    
     /**This stroke is used to draw the rectangle around each element.*/
     private static final BasicStroke ELEMENT_OUTLINE_STROKE = 
         new BasicStroke(1f);
-
-//    /**This stroke is used to draw the rectangle around each aggregation
-//     * column bar.*/
-//    private static final BasicStroke AGGR_COLUM_OUTLINE_STROKE = 
-//        new BasicStroke(1f);
+    
+    private static final float[] BIN_SURROUNDING_DACH = {10.0f}; 
+    /** Defines the stroke of the bin surrounding rectangle. */
+    private static final BasicStroke BIN_SURROUNDING_STROKE = 
+        new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 
+                10.0f, BIN_SURROUNDING_DACH, 0.0f);
+    
+    /**The color of the bin surrounding rectangle.*/
+    private static final Color BIN_SURROUNDING_COLOR = Color.LIGHT_GRAY;
+    
+    /**The alpha value of the bar surrounding block.*/
+    private static final float BAR_SURROUNDING_ALPHA = 0.2f;
+    
     /**The color of the element outline.*/
     private static final Color ELEMENT_OUTLINE_COLOR = Color.BLACK;
 
@@ -322,11 +333,15 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         final boolean showLabelVertical = vizModel.isShowLabelVertical();
         // loop over all bins and paint them
         for (BinDataModel bin : vizModel.getBins()) {
-            if (!bin.isDrawBar()) {
+            if (drawBinOutline) {
+                drawRectangle(g2, bin.getSurroundingRectangle(), 
+                        BIN_SURROUNDING_COLOR , BIN_SURROUNDING_STROKE);
+            }
+            if (!bin.isPresentable()) {
                 //the bars doen't fit in this bin so we have to 
                 //fill the complete bin in black to show it to the user
                 drawBlock(g2, bin.getBinRectangle(), 
-                        OVERLOADED_ELEMENT_FILLING, 0.8f);
+                        OVERLOADED_ELEMENT_FILLING, OVERLOADED_ELEMENT_ALPHA);
                 if (bin.isSelected()) {
                     drawRectangle(g2, bin.getBinRectangle(), 
                         ELEMENT_SELECTED_OUTLINE_COLOR, 
@@ -345,16 +360,17 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     //draw the outline of the bar if we have multiple
                     //aggregation columns
                     drawBlock(g2, bar.getSurroundingRectangle(), 
-                            bar.getColor(), 0.2f);
+                            bar.getColor(), BAR_SURROUNDING_ALPHA);
                 }
-                if (bar.isDrawElements()) {
+                if (bar.isPresentable()) {
                     drawElements(g2, bar.getElements(), showElementOutline);
                 } else {
                     //the elements doen't fit in this bar so we have to 
                     //fill the complete bar to show it to the user
                     final Rectangle barRectangle = bar.getBarRectangle();
                     drawBlock(g2, barRectangle, 
-                            OVERLOADED_ELEMENT_FILLING, 0.8f);
+                            OVERLOADED_ELEMENT_FILLING, 
+                            OVERLOADED_ELEMENT_ALPHA);
                     if (bar.isSelected()) {
                         drawRectangle(g2, barRectangle, 
                             ELEMENT_SELECTED_OUTLINE_COLOR, 
@@ -370,13 +386,6 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 drawLabels(g2, bar, aggrMethod, layout, bounds, 
                         labelDisplayPolicy, showLabelVertical);
             } //end of bar loop
-            //draw the outline of the bin to debug in multiple 
-            //aggregation column mode
-//            if (aggrColumns != null && aggrColumns.size() > 1) {
-            if (drawBinOutline) {
-                drawRectangle(g2, bin.getSurroundingRectangle(), 
-                        Color.LIGHT_GRAY, GRID_LINE_STROKE);
-            }
         } // end of the bin loop
 //      check if we have to draw the base line
         if (m_baseLine != null) {
@@ -438,7 +447,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 || (LabelDisplayPolicy.SELECTED.equals(
                         displayPolicy) && bar.isSelected())) {
             if (HistogramLayout.STACKED.equals(layout) 
-                    || !bar.isDrawElements()) {
+                    || !bar.isPresentable()) {
                 paintLabel(g2, bar.getBarRectangle(), 
                         bar.getAggregationValue(aggrMethod), aggrMethod, 
                         bounds, showVertical);

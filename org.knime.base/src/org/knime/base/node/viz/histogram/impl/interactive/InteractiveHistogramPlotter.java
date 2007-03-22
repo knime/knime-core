@@ -166,9 +166,12 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                     //number of selected aggregation columns
                     vizModel.setShowBarOutline(aggrCols != null 
                             && aggrCols.size() > 1);
+                    setYCoordinates();
                     //set the current hilited keys in the new bins
                     vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
-                    setYCoordinates();
+                    if (vizModel.containsNotPresentableBin()) {
+                        vizModel.setBinWidth(vizModel.getMaxBinWidth());
+                    }
                     updatePaintModel();
                 }
             } else {
@@ -229,6 +232,9 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
                                 props.getSelectedAggrColumns();
                             interactiveVizModel.setAggregationColumns(
                                     selectedAggrCols);
+                            //set the current hilited keys in the new bins
+                            vizModel.updateHiliteInfo(delegateGetHiLitKeys(), 
+                                    true);
                             found = true;
                             break;
                         }

@@ -53,10 +53,11 @@ public class InteractiveBarDataModel extends BarDataModel {
     private Rectangle m_hiliteRectangle;
     
     /**Constructor for class BarDataModel.
+     * @param barName the name of this bar
      * @param color the color to use for this bar
      */
-    protected InteractiveBarDataModel(final Color color) {
-        super(color);
+    protected InteractiveBarDataModel(final String barName, final Color color) {
+        super(barName, color);
     }
 
     /**
@@ -120,7 +121,7 @@ public class InteractiveBarDataModel extends BarDataModel {
     private void calculateHiliteRectangle(final AggregationMethod aggrMethod, 
             final HistogramLayout layout) {
         final Rectangle barRectangle = getBarRectangle();
-        if (isDrawElements() || barRectangle == null) {
+        if (isPresentable() || barRectangle == null) {
             m_hiliteRectangle = null;
             return;
         }

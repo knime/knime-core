@@ -68,8 +68,8 @@ public class InteractiveBinDataModel extends BinDataModel {
      * #createBar(java.awt.Color)
      */
     @Override
-    protected BarDataModel createBar(final Color color) {
-        return new InteractiveBarDataModel(color);
+    protected BarDataModel createBar(final String barName, final Color color) {
+        return new InteractiveBarDataModel(barName, color);
     }
     /**
      * @see org.knime.base.node.viz.histogram.datamodel.BinDataModel
@@ -192,7 +192,7 @@ public class InteractiveBinDataModel extends BinDataModel {
     private void calculateHiliteRectangle(final AggregationMethod aggrMethod, 
             final HistogramLayout layout) {
         final Rectangle binRectangle = getBinRectangle();
-        if (isDrawBar() || binRectangle == null) {
+        if (isPresentable() || binRectangle == null) {
             m_hiliteRectangle = null;
             return;
         }

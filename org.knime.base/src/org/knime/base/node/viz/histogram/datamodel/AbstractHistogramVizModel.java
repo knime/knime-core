@@ -231,6 +231,21 @@ public abstract class AbstractHistogramVizModel {
         }
         return m_bins;
     }
+    
+    /**
+     * @return all bins which are selected
+     */
+    public List<BinDataModel> getSelectedBins() {
+        final List<BinDataModel> bins = getBins();
+        final List<BinDataModel> selectedBins = 
+            new ArrayList<BinDataModel>(bins.size());
+        for (BinDataModel model : bins) {
+            if (model.isSelected()) {
+                selectedBins.add(model);
+            }
+        }
+        return selectedBins;
+    }
 
     /**
      * @return the aggregation columns. Could be null!
@@ -818,17 +833,95 @@ public abstract class AbstractHistogramVizModel {
      * about the current selected elements
      */
     public String getHTMLDetailData() {
+        final List<BinDataModel> selectedBins = getSelectedBins();
+        if (selectedBins == null || selectedBins.size() < 1) {
+            return ("Nothing selected");
+        }
+        final AggregationMethod[] aggrMethods = AggregationMethod.values();
+        final StringBuilder aggrHeadBuf = new StringBuilder();
+        for (AggregationMethod method : aggrMethods) {
+            aggrHeadBuf.append("<th>");
+            aggrHeadBuf.append(method.name());
+            aggrHeadBuf.append("</th>");
+        }
+        final String aggrMethodHead = aggrHeadBuf.toString();
         final StringBuilder buf = new StringBuilder();
-        buf.append("<h2>Details data</h2>");
-        buf.append("Nothing selected");
-        buf.append("Nothing selected");
-        buf.append("Nothing selected");
-        buf.append("Nothing selected");
-        buf.append("Nothing selected");
-        buf.append("Nothing selected");
-        buf.append("Nothing selected");
-        buf.append("Nothing selected");
-        buf.append("<h1>Nothing selected</h1>");
+        buf.append("<table border='1'>");
+        for (BinDataModel bin : selectedBins) {
+            buf.append("<tr>");
+            buf.append("<td>");
+            buf.append("Bin: ");
+            buf.append(bin.getXAxisCaption());
+            buf.append("</td>");
+            buf.append("<td>");
+            final Collection<BarDataModel> selectedBars = 
+                bin.getSelectedBars();
+            if (selectedBars == null || selectedBars.size() < 1) {
+                buf.append("No bars selected");
+            } else {
+                //bar table
+                buf.append("<table border='1'>");
+                for (BarDataModel bar : selectedBars) {
+                    final String barBgColor = "#" + Integer.toHexString(
+                            bar.getColor().getRGB() & 0x00ffffff);
+                    buf.append("<tr>");
+                    buf.append("<td rowspan='2' bgcolor='");
+                    buf.append(barBgColor);
+                    buf.append("'>");
+                    buf.append("&nbsp;");
+                    buf.append("</td>");
+                    buf.append("<td bgcolor='");
+                    buf.append(barBgColor);
+                    buf.append("'>");
+                    buf.append(bar.getBarName());
+                    buf.append("</td>");
+                    buf.append("</tr>");
+                    buf.append("<tr>");
+                    buf.append("<td>");
+                    final Collection<BarElementDataModel> selectedElements = 
+                        bar.getSelectedElements();
+                    if (selectedElements == null) {
+                        buf.append("No elements selected");
+                    } else {
+                        //element table
+                        buf.append("<table border='1'>");
+                        //display all aggregation values of the 
+                        //selected element
+                        buf.append("<tr>");
+                        buf.append("<th>");
+                        buf.append("&nbsp;");
+                        buf.append("</th>");
+                        buf.append(aggrMethodHead);
+                        buf.append("</tr>");
+                        for (BarElementDataModel element : selectedElements) {
+                            String bgColor = "#" + Integer.toHexString(
+                                    element.getColor().getRGB() & 0x00ffffff);
+                        
+                            buf.append("<tr>");
+                            buf.append("<td bgcolor='");
+                            buf.append(bgColor);
+                            buf.append("'>");
+                            buf.append("&nbsp;");
+                            buf.append("</td>");
+                            for (AggregationMethod method : aggrMethods) {
+                                buf.append("<td>");
+                                buf.append(element.getAggregationValue(method));
+                                buf.append("</td>");
+                            }
+                            buf.append("</tr>");
+                        }
+                        buf.append("</table>");        
+                    }
+                    buf.append("</td>");
+                    buf.append("</tr>");
+                }
+                buf.append("</table>");
+                //bar table end
+            }
+            buf.append("</td>");
+            buf.append("</tr>");
+        }
+        buf.append("</table>");
         return buf.toString();
     }
 

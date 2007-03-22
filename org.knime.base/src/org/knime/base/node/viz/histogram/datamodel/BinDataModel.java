@@ -29,6 +29,7 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,7 +63,7 @@ public class BinDataModel implements Serializable {
     private int m_rowCounter = 0;
 
     //visual variables
-    private boolean m_drawBar = true;
+    private boolean m_presentable = true;
     private boolean m_isSelected = false;
     
     /**The surrounding rectangle is used to distinguish between the 
@@ -110,7 +111,7 @@ public class BinDataModel implements Serializable {
                 //at least the count aggregation method
                 BarDataModel bar = m_bars.get(NO_AGGR_COL_COLOR);
                 if (bar == null) {
-                    bar = createBar(NO_AGGR_COL_COLOR);
+                    bar = createBar("", NO_AGGR_COL_COLOR);
                     m_bars.put(NO_AGGR_COL_COLOR, bar);
                 }
                 bar.addDataRow(rowColor, id, new DoubleCell(0));
@@ -121,7 +122,7 @@ public class BinDataModel implements Serializable {
                     final Color barColor = column.getColor();
                     BarDataModel bar = m_bars.get(barColor);
                     if (bar == null) {
-                        bar = createBar(barColor);
+                        bar = createBar(column.getColumnName(), barColor);
                         m_bars.put(barColor, bar);
                     }
                     bar.addDataRow(rowColor, id, cell);   
@@ -146,11 +147,12 @@ public class BinDataModel implements Serializable {
 
     /**
      * Creates a new {@link BarDataModel} with the given color.
+     * @param barName the name of this bar
      * @param color the {@link Color} of the bar
      * @return the created bar
      */
-    protected BarDataModel createBar(final Color color) {
-        return new BarDataModel(color);
+    protected BarDataModel createBar(final String barName, final Color color) {
+        return new BarDataModel(barName, color);
     }
     
     /**
@@ -169,6 +171,21 @@ public class BinDataModel implements Serializable {
         return m_bars.values();
     }
 
+    /**
+     * @return all selected bars of this bin
+     */
+    public Collection<BarDataModel> getSelectedBars() {
+        final Collection<BarDataModel> bars = getBars();
+        final Collection<BarDataModel> selectedBars = 
+            new ArrayList<BarDataModel>(bars.size());
+        for (BarDataModel bar : bars) {
+            if (bar.isSelected()) {
+                selectedBars.add(bar);
+            }
+        }
+        return selectedBars;
+    }
+    
     /**
      * @return the number of bars in this bin
      */
@@ -264,10 +281,10 @@ public class BinDataModel implements Serializable {
     }
 
     /**
-     * @return <code>true</code> if the bars should be drawn
+     * @return <code>true</code> if the bars are presentable
      */
-    public boolean isDrawBar() {
-        return m_drawBar;
+    public boolean isPresentable() {
+        return m_presentable;
     }
 
     /**
@@ -349,8 +366,8 @@ public class BinDataModel implements Serializable {
             }
             final int binWidth = (int)m_binRectangle.getWidth();
             final int noOfBars = aggrColumns.size();
-            m_drawBar = elementsFitInBin(noOfBars, binWidth);
-            if (!m_drawBar) {
+            m_presentable = elementsFitInBin(noOfBars, binWidth);
+            if (!m_presentable) {
                 //the total bin width is not enough to draw all bars so we don't
                 //need to calculate any further and reset all previous 
                 //bar rectangles
@@ -359,10 +376,10 @@ public class BinDataModel implements Serializable {
     //                bar.setBarRectangle(null, aggrMethod, layout, baseLine, 
     //                        barElementColors);
     //            }
-                m_drawBar = false;
+                m_presentable = false;
                 return;
             }
-            m_drawBar = true;
+            m_presentable = true;
             //calculate the height
             final int binHeight = (int)m_binRectangle.getHeight();
             final double maxAggrVal = Math.max(getMaxAggregationValue(
@@ -371,7 +388,7 @@ public class BinDataModel implements Serializable {
                     aggrMethod, layout), 0);
             final double valRange = maxAggrVal + Math.abs(minAggrVal);
             if (valRange <= 0) {
-                m_drawBar = false;
+                m_presentable = false;
                 return;
             }
 
@@ -425,7 +442,7 @@ public class BinDataModel implements Serializable {
             if (m_binRectangle == null) {
                 return;
             }
-            final boolean drawBarBefore = m_drawBar;
+            final boolean drawBarBefore = m_presentable;
             final int yCoord = (int)m_binRectangle.getY();
             final int binHeight = (int) m_binRectangle.getHeight();
             m_binRectangle.setBounds(startX, yCoord, binWidth, binHeight);
@@ -437,8 +454,8 @@ public class BinDataModel implements Serializable {
             if (noOfBars < 1) {
                 return;
             }
-            m_drawBar = elementsFitInBin(noOfBars, binWidth);
-            if (!m_drawBar) {
+            m_presentable = elementsFitInBin(noOfBars, binWidth);
+            if (!m_presentable) {
                 //the total bin width is not enough to draw all bars so we don't
                 //need to calculate any further and reset all previous 
                 //bar rectangles
@@ -447,7 +464,7 @@ public class BinDataModel implements Serializable {
     //            }
                 return;
             }
-            m_drawBar = true;
+            m_presentable = true;
             if (!drawBarBefore) {
                 //if the bar couldn't be draw before but now we have to 
                 //recalculate them
@@ -515,7 +532,7 @@ public class BinDataModel implements Serializable {
         m_bars.clear();
         m_rowCounter = 0;
         m_binRectangle = null;
-        m_drawBar = false;
+        m_presentable = false;
     }
 
     /**
@@ -549,7 +566,7 @@ public class BinDataModel implements Serializable {
      */
     public boolean selectElement(final Point point) {
         if (m_binRectangle != null && m_binRectangle.contains(point)) {
-            if (!m_drawBar) {
+            if (!m_presentable) {
                 for (final BarDataModel bar : getBars()) {
                     bar.setSelected(true);
                 }
@@ -571,7 +588,7 @@ public class BinDataModel implements Serializable {
      */
     public boolean selectElement(final Rectangle rect) {
         if (m_binRectangle != null && m_binRectangle.intersects(rect)) {
-            if (!m_drawBar) {
+            if (!m_presentable) {
                 for (final BarDataModel bar : getBars()) {
                     bar.setSelected(true);
                 }
