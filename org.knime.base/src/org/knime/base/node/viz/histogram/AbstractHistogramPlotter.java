@@ -1081,7 +1081,6 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         }
         final Set<DataCell> selectedKeys = 
             vizModel.getSelectedKeys();
-        vizModel.updateHiliteInfo(selectedKeys, true);
         delegateHiLite(selectedKeys);
         repaint();
     }
@@ -1098,7 +1097,6 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         }
         final Set<DataCell> selectedKeys = 
             vizModel.getSelectedKeys();
-        vizModel.updateHiliteInfo(selectedKeys, false);
         delegateUnHiLite(selectedKeys);
         repaint();
     }

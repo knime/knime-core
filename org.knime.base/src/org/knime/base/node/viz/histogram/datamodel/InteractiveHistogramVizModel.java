@@ -447,9 +447,12 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     @Override
     public void updateHiliteInfo(final Set<DataCell> hilited,
             final boolean hilite) {
+        LOGGER.debug("Entering updateHiliteInfo(hilited, hilite) "
+                + "of class InteractiveHistogramVizModel.");
         if (hilited == null || hilited.size() < 1) {
             return;
         }
+        final long startTime = System.currentTimeMillis();
         final AggregationMethod aggrMethod = getAggregationMethod();
         final HistogramLayout layout = getHistogramLayout();
         for (final BinDataModel bin : getBins()) {
@@ -461,6 +464,11 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
                         aggrMethod, layout);
             }
         }
+        final long endTime = System.currentTimeMillis();
+        final long durationTime = endTime - startTime;
+        LOGGER.debug("Time for updateHiliteInfo: " + durationTime + " ms");
+        LOGGER.debug("Exiting updateHiliteInfo(hilited, hilite) "
+                + "of class InteractiveHistogramVizModel.");
     }
 
     /**

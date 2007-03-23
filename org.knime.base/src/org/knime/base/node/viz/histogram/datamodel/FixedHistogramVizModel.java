@@ -27,7 +27,6 @@ package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -129,7 +128,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
      */
     @Override
     public Set<DataCell> getHilitedKeys() {
-        return new HashSet<DataCell>(1);
+        throw new UnsupportedOperationException("Hiliting not supported");
     }
 
 
@@ -139,7 +138,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
      */
     @Override
     public Set<DataCell> getSelectedKeys() {
-        return new HashSet<DataCell>(1);
+        throw new UnsupportedOperationException("Hiliting not supported");
     }
 
     /**
@@ -148,7 +147,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
      */
     @Override
     public void unHiliteAll() {
-        //not supported in this implementation
+        throw new UnsupportedOperationException("Hiliting not supported");
     }
 
 
@@ -159,6 +158,6 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
     @Override
     public void updateHiliteInfo(final Set<DataCell> hilited, 
             final boolean hilite) {
-        //not supported in this implementation
+        throw new UnsupportedOperationException("Hiliting not supported");
     }
 }

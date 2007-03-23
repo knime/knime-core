@@ -852,7 +852,9 @@ public abstract class AbstractHistogramVizModel {
         buf.append("<table border='1'>");
         for (BinDataModel bin : selectedBins) {
             buf.append("<tr>");
-            buf.append("<td>");
+            buf.append("<td title='");
+            buf.append(bin.getXAxisCaption());
+            buf.append("'>");
             buf.append("Bin: ");
             buf.append(bin.getXAxisCaption());
             buf.append("</td>");
