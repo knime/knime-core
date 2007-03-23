@@ -289,9 +289,9 @@ public abstract class NodeView {
                 if (!extension.equals(".png")) {
                     fileName = fileName + ".png";
                 }
-                path = new File(fileName).toURI().toURL().toString();
+                path = fileName;
             } catch (Exception e) {
-                path = "<Error: Couldn't create URL for file>";
+                path = "<Error: Couldn't create file>";
             }
             exportDir = path;
         } else {
@@ -309,7 +309,7 @@ public abstract class NodeView {
 
         // write image to file
         try {
-            File exportFile = new File(new URL(exportDir).getFile());
+            File exportFile = new File(exportDir);
             exportFile.createNewFile();
             ImageIO.write(image, "png", exportFile);
         } catch (Exception e) {
@@ -319,6 +319,7 @@ public abstract class NodeView {
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
 
             m_logger.warn("View could not be exported due to io problems: ", e);
+            return;
         }
 
         JOptionPane.showConfirmDialog(m_frame, "View successfully exported.",
