@@ -859,7 +859,6 @@ public abstract class AbstractHistogramVizModel {
             buf.append("<td title='");
             buf.append(bin.getXAxisCaption());
             buf.append("'>");
-            buf.append("Bin: ");
             buf.append(bin.getXAxisCaption());
             buf.append("</td>");
             buf.append("<td>");
