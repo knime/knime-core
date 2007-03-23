@@ -232,6 +232,7 @@ public final class BinningUtil {
      * @param noOfDigits the number of
      * decimal places we want for less then 1 values 
      * @param isInteger <code>true</code> if the given number is an integer
+     * @param roundUp if the value should be rounded up
      * @return the rounded value of the given value
      */
     public static double smallValueRounder(final double doubleVal,

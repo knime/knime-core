@@ -54,6 +54,10 @@ import org.knime.core.data.def.StringCell;
  */
 public abstract class AbstractHistogramVizModel {
 
+    /**This message is displayed in the details tab if no element is selected.*/
+    public static final String NO_ELEMENT_SELECTED_TEXT = 
+        "Select an element for detailed information";
+
     /** The caption of the bar which holds all missing values. */
     public static final String MISSING_VAL_BAR_CAPTION = "Missing_values";
     
@@ -835,7 +839,7 @@ public abstract class AbstractHistogramVizModel {
     public String getHTMLDetailData() {
         final List<BinDataModel> selectedBins = getSelectedBins();
         if (selectedBins == null || selectedBins.size() < 1) {
-            return ("Select an element for detailed information");
+            return (NO_ELEMENT_SELECTED_TEXT);
         }
         final StringBuilder aggrHeadBuf = new StringBuilder();
         aggrHeadBuf.append("<th>");

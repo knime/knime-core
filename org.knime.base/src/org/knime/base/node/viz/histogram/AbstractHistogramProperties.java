@@ -276,7 +276,8 @@ public abstract class AbstractHistogramProperties extends
         if (tabSize == null) {
             tabSize = new Dimension(1, 1);
         }
-        m_detailsHtmlPane.setText("");
+        m_detailsHtmlPane.setText(
+                AbstractHistogramVizModel.NO_ELEMENT_SELECTED_TEXT);
         m_detailsHtmlPane.setEditable(false);
         m_detailsHtmlPane.setBackground(getBackground());
         m_detailsScrollPane = new JScrollPane(m_detailsHtmlPane);
@@ -644,7 +645,6 @@ public abstract class AbstractHistogramProperties extends
         int maxNoOfBins = vizModel.getMaxNoOfBins();
         final int currentNoOfBins = vizModel.getNoOfBins();
         final ChangeListener[] noOfListeners = m_noOfBins.getChangeListeners();
-        LOGGER.debug("No of noOfBins listener: " + noOfListeners.length);
         for (ChangeListener listener : noOfListeners) {
             m_noOfBins.removeChangeListener(listener);
         }
@@ -670,16 +670,12 @@ public abstract class AbstractHistogramProperties extends
         for (ChangeListener listener : noOfListeners) {
             m_noOfBins.addChangeListener(listener);
         }
-        LOGGER.debug("No of bins updated");
         //show empty bins box
         updateCheckBox(m_showEmptyBins, vizModel.isShowEmptyBins(),
                 vizModel.containsEmptyBins());
-        LOGGER.debug("Show empty bins updated");
         //show missing value bin box
         updateCheckBox(m_showMissingValBin, vizModel.isShowMissingValBin(), 
                 vizModel.containsMissingValueBin());
-        LOGGER.debug("Show missing value bin updated");
-        
 //update the aggregation settings tab        
 //      set the right aggregation method settings
         //since the set selected method doesn't trigger an event
@@ -719,12 +715,9 @@ public abstract class AbstractHistogramProperties extends
                 }
             }
         }
-        LOGGER.debug("Aggregation method updated");
-        
 //update the visualization settings tab
         //show grid lines
         updateCheckBox(m_showGrid, vizModel.isShowGridLines(), true);
-        LOGGER.debug("Show grid line updated");
         //Labels group
         //select the current display policy
         //since the set selected method doesn't trigger an event
@@ -737,7 +730,6 @@ public abstract class AbstractHistogramProperties extends
                 button.setSelected(true);
             }
         }
-        LOGGER.debug("Label display policy updated");
         //select the current label orientation
         //since the set selected method doesn't trigger an event
         //we don't need to remove/add the action listener
@@ -754,7 +746,6 @@ public abstract class AbstractHistogramProperties extends
                 button.setSelected(true);
             }
         }
-        LOGGER.debug("Label orientation updated");
         //Bar layout group
         //select the current layout
         //since the set selected method doesn't trigger an event
@@ -767,7 +758,6 @@ public abstract class AbstractHistogramProperties extends
                 button.setSelected(true);
             }
         }
-        LOGGER.debug("Layout updated");
         final int currentBinWidth = vizModel.getBinWidth();
         final int maxBinWidth = vizModel.getMaxBinWidth();
         int minBinWidth = AbstractHistogramVizModel.MIN_BIN_WIDTH;
@@ -776,7 +766,6 @@ public abstract class AbstractHistogramProperties extends
         }
         // update the bin width values        
         final ChangeListener[] widthListeners = m_binWidth.getChangeListeners();
-        LOGGER.debug("No of bin width listener: " + widthListeners.length);
         for (ChangeListener listener : widthListeners) {
             m_binWidth.removeChangeListener(listener);
         }
@@ -790,20 +779,15 @@ public abstract class AbstractHistogramProperties extends
         for (ChangeListener listener : widthListeners) {
             m_binWidth.addChangeListener(listener);
         }
-        LOGGER.debug("Bin width updated");
         //show bin outline
         updateCheckBox(m_showBinOutline, vizModel.isShowBinOutline(), 
                 true);
-        LOGGER.debug("Show bin outline updated");
         //show bar outline
         updateCheckBox(m_showBarOutline, vizModel.isShowBarOutline(), 
                 true);
-        LOGGER.debug("Show bar outline updated");
         //show element outline
         updateCheckBox(m_showElementOutline, vizModel.isShowElementOutline(), 
                 true);
-        LOGGER.debug("Show element outline updated");
-        
         final long endTime = System.currentTimeMillis();
         final long durationTime = endTime - startTime;
         LOGGER.debug("Time for updateHistogramSettings. " 
