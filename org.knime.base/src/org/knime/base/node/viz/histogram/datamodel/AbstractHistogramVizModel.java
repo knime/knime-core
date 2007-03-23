@@ -999,6 +999,20 @@ public abstract class AbstractHistogramVizModel {
 
 
     /**
+     * @return <code>true</code> if at least one bin is not presentable since
+     * the number of aggregation columns doesn't fit into the bin
+     */
+    public boolean containsNotPresentableBin() {
+        for (final BinDataModel bin : getBins()) {
+            if (!bin.isPresentable()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /**
      * Calculates a surrounding rectangle with the given thickness 
      * for the given rectangle.
      * @param rect the rectangle to draw the surrounding for

@@ -481,16 +481,4 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
             ((InteractiveBinDataModel)bin).clearHilite();
         }
     }
-
-    /**
-     * @return <code>true</code> if the bin is not presentable
-     */
-    public boolean containsNotPresentableBin() {
-        for (final BinDataModel bin : getBins()) {
-            if (!bin.isPresentable()) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

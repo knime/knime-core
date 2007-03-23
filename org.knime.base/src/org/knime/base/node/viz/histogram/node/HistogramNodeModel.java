@@ -169,7 +169,7 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
         if (m_model == null) {
             return null;
         }
-        final InteractiveHistogramVizModel vizModel = 
+        final AbstractHistogramVizModel vizModel = 
             new InteractiveHistogramVizModel(m_model.getRowColors(), 
                 AggregationMethod.getDefaultMethod(), 
                 HistogramLayout.getDefaultLayout(), getTableSpec(),
