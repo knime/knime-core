@@ -1002,8 +1002,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
        m_histoProps.updateColumnSelection(m_tableSpec, 
                vizModel.getXColumnName(), vizModel.getAggrColumns(),
                vizModel.getAggregationMethod());
-       //set the hilite info
-       vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
+       if (!vizModel.isFixed()) {
+           //set the hilite information
+           vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
+       }
        updatePaintModel();
     }
 
