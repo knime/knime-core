@@ -31,10 +31,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
 import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
@@ -320,6 +322,32 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                 throw new InvalidSettingsException(
                         "Please define the x column name.");
             }
+        }
+        //check if the table contains value which don't have a valid domain 
+        //and display a warning that they are ignored
+        final ColumnFilter filter = NoDomainColumnFilter.getInstance();
+        final int numColumns = tableSpec.getNumColumns();
+        List<DataColumnSpec> invalidCols = 
+            new ArrayList<DataColumnSpec>(numColumns);
+        for (int i = 0; i < numColumns; i++) {
+            final DataColumnSpec columnSpec = tableSpec.getColumnSpec(i);
+            if (!filter.includeColumn(columnSpec)) {
+                invalidCols.add(columnSpec);
+            }
+        }
+        if (invalidCols.size() > 0) {
+            StringBuilder buf = new StringBuilder();
+            if (invalidCols.size() == 1) {
+                buf.append("Column ");
+                buf.append(invalidCols.get(0).getName());
+                buf.append(" contains no valid domain an will be ignored.");
+            } else {
+                buf.append(invalidCols.size());
+                buf.append(" columns without a valid domain will be ignored.");
+            }
+            buf.append(" In order to calculate the domain use the" 
+                    + " Nominal Values or Domain Calculator node.");
+            setWarningMessage(buf.toString());
         }
         return new DataTableSpec[0];
     }
