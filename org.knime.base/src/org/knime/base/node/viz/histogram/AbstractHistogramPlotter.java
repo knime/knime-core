@@ -297,9 +297,11 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             return;
         }
         if (HistogramLayout.SIDE_BY_SIDE.equals(
-                vizModel.getHistogramLayout())) {
+                vizModel.getHistogramLayout()) 
+                || vizModel.containsNotPresentableBin()) {
             //set the bin with to the maximum bin if the layout
-            //is side-by-side
+            //is side-by-side or the bin is not presentable with 
+            //the current width
             vizModel.setBinWidth(vizModel.getMaxBinWidth());
         }
         updatePaintModel();
