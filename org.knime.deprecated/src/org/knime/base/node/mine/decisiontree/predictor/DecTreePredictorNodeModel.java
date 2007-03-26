@@ -95,7 +95,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -103,7 +103,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -111,7 +111,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -124,7 +124,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -194,7 +194,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadModelContent(int, ModelContentRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadModelContent(final int index,
@@ -211,7 +211,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -219,7 +219,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)

@@ -111,8 +111,7 @@ public class TimePlotNodeModel extends DefaultVisualizationNodeModel implements
 
 
     /**
-     * @see org.knime.base.node.viz.plotter.DataProvider
-     * #getDataArray(int)
+     * {@inheritDoc}
      */
     @Override
     public DataArray getDataArray(final int index) {
@@ -316,8 +315,7 @@ public class TimePlotNodeModel extends DefaultVisualizationNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#validateSettings(
-     * org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)

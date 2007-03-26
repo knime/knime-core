@@ -83,7 +83,7 @@ public class DecTreePredictorNodeView extends NodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#modelChanged()
+     * {@inheritDoc}
      */
     @Override
     protected void modelChanged() {
@@ -108,7 +108,7 @@ public class DecTreePredictorNodeView extends NodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onClose()
+     * {@inheritDoc}
      */
     @Override
     protected void onClose() {
@@ -116,7 +116,7 @@ public class DecTreePredictorNodeView extends NodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onOpen()
+     * {@inheritDoc}
      */
     @Override
     protected void onOpen() {

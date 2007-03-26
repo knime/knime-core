@@ -181,9 +181,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     private transient int m_previousIndex = -1;
 
     /**
-     * @see DecisionTreeNode
-     *      #getClassCounts(org.knime.core.data.DataRow,
-     *      org.knime.core.data.DataTableSpec)
+     * {@inheritDoc}
      */
     @Override
     public final HashMap<DataCell, Double> getClassCounts(final DataRow row,
@@ -249,9 +247,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             throws Exception;
 
     /**
-     * @see DecisionTreeNode
-     *      #addCoveredPattern(org.knime.core.data.DataRow,
-     *      org.knime.core.data.DataTableSpec)
+     * {@inheritDoc}
      */
     @Override
     public final void addCoveredPattern(final DataRow row,
@@ -297,9 +293,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             DataTableSpec spec) throws Exception;
 
     /**
-     * @see DecisionTreeNode
-     *      #addCoveredColor(org.knime.core.data.DataRow,
-     *      org.knime.core.data.DataTableSpec)
+     * {@inheritDoc}
      */
     @Override
     public final void addCoveredColor(final DataRow row,
@@ -344,22 +338,19 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             DataTableSpec spec) throws Exception;
 
     /**
-     * @see DecisionTreeNode
-     *      #coveredPattern()
+     * {@inheritDoc}
      */
     @Override
     public abstract Set<DataCell> coveredPattern();
 
     /**
-     * @see DecisionTreeNode
-     *      #coveredColors()
+     * {@inheritDoc}
      */
     @Override
     public abstract HashMap<Color, Double> coveredColors();
 
     /**
-     * @see DecisionTreeNode
-     *      #saveNodeInternalsToPredParams(org.knime.core.node.ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
     public final void saveNodeInternalsToPredParams(
@@ -383,8 +374,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             final ModelContentWO pConf);
 
     /**
-     * @see DecisionTreeNode
-     *      #loadNodeInternalsFromPredParams(org.knime.core.node.ModelContentRO)
+     * {@inheritDoc}
      */
     @Override
     public final void loadNodeInternalsFromPredParams(
@@ -423,7 +413,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             final ModelContentRO pConf) throws InvalidSettingsException;
 
     /**
-     * @see javax.swing.tree.TreeNode#getChildCount()
+     * {@inheritDoc}
      */
     @Override
     public int getChildCount() {
@@ -434,7 +424,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     }
 
     /**
-     * @see javax.swing.tree.TreeNode#getIndex(javax.swing.tree.TreeNode)
+     * {@inheritDoc}
      */
     @Override
     public int getIndex(final TreeNode node) {
@@ -453,7 +443,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     }
 
     /**
-     * @see javax.swing.tree.TreeNode#getChildAt(int)
+     * {@inheritDoc}
      */
     @Override
     public TreeNode getChildAt(final int pos) {
@@ -463,7 +453,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     }
 
     /**
-     * @see javax.swing.tree.TreeNode#isLeaf()
+     * {@inheritDoc}
      */
     @Override
     public boolean isLeaf() {
@@ -485,7 +475,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     }
 
     /**
-     * @see javax.swing.tree.TreeNode#getAllowsChildren()
+     * {@inheritDoc}
      */
     @Override
     public boolean getAllowsChildren() {

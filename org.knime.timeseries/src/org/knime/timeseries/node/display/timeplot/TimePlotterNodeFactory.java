@@ -37,7 +37,7 @@ import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
 public class TimePlotterNodeFactory extends NodeFactory {
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeDialogPane()
+     * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
@@ -45,7 +45,7 @@ public class TimePlotterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
@@ -53,8 +53,7 @@ public class TimePlotterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeView(int, 
-     * org.knime.core.node.NodeModel)
+     * {@inheritDoc}
      */
     @Override
     public NodeView createNodeView(final int viewIndex, 
@@ -63,7 +62,7 @@ public class TimePlotterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
+     * {@inheritDoc}
      */
     @Override
     protected int getNrNodeViews() {
@@ -71,7 +70,7 @@ public class TimePlotterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#hasDialog()
+     * {@inheritDoc}
      */
     @Override
     protected boolean hasDialog() {

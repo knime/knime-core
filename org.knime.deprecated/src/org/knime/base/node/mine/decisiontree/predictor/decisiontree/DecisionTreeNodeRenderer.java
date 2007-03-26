@@ -38,9 +38,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
  */
 public class DecisionTreeNodeRenderer extends DefaultTreeCellRenderer {
     /**
-     * @see javax.swing.tree.TreeCellRenderer
-     *      #getTreeCellRendererComponent(javax.swing.JTree, java.lang.Object,
-     *      boolean, boolean, boolean, int, boolean)
+     * {@inheritDoc}
      */
     @Override
     public Component getTreeCellRendererComponent(final JTree tree,

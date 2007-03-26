@@ -38,7 +38,7 @@ import org.knime.core.node.NodeView;
 public class FilterWindowsNodeFactory extends NodeFactory {
 
     /**
-     * @see NodeFactory#createNodeDialogPane()
+     * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
@@ -46,7 +46,7 @@ public class FilterWindowsNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
@@ -54,7 +54,7 @@ public class FilterWindowsNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#createNodeView(int, NodeModel)
+     * {@inheritDoc}
      */
     @Override
     public NodeView createNodeView(
@@ -63,7 +63,7 @@ public class FilterWindowsNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#getNrNodeViews()
+     * {@inheritDoc}
      */
     @Override
     protected int getNrNodeViews() {
@@ -71,7 +71,7 @@ public class FilterWindowsNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#hasDialog()
+     * {@inheritDoc}
      */
     @Override
     protected boolean hasDialog() {

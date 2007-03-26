@@ -77,7 +77,7 @@ public class DecisionTreeNodeView extends JPanel {
         }
 
         /**
-         * @see java.awt.Component#paint(java.awt.Graphics)
+         * {@inheritDoc}
          */
         @Override
         public void paint(final Graphics g) {
@@ -139,7 +139,7 @@ public class DecisionTreeNodeView extends JPanel {
         }
 
         /**
-         * @see java.awt.Component#paint(java.awt.Graphics)
+         * {@inheritDoc}
          */
         @Override
         public void paint(final Graphics g) {

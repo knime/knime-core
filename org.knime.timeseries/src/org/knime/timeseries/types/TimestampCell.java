@@ -103,7 +103,7 @@ public class TimestampCell extends DataCell implements TimestampValue {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -122,8 +122,7 @@ public class TimestampCell extends DataCell implements TimestampValue {
     }
 
     /**
-     * @see org.knime.core.data.DataCell
-     *      #equalsDataCell(org.knime.core.data.DataCell)
+     * {@inheritDoc}
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
@@ -131,7 +130,7 @@ public class TimestampCell extends DataCell implements TimestampValue {
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {

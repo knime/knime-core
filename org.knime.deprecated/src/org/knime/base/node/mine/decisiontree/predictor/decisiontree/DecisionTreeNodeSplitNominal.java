@@ -101,8 +101,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNodeSplit#getClassCounts(org.knime.core.data.DataCell,
-     *      org.knime.core.data.DataRow, org.knime.core.data.DataTableSpec)
+     * {@inheritDoc}
      */
     @Override
     public HashMap<DataCell, Double> getClassCounts(final DataCell cell,
@@ -120,9 +119,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNodeSplit
-     *      #addCoveredPattern(org.knime.core.data.DataCell,
-     *      org.knime.core.data.DataRow, org.knime.core.data.DataTableSpec)
+     * {@inheritDoc}
      */
     @Override
     public void addCoveredPattern(final DataCell cell, final DataRow row,
@@ -188,7 +185,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
     
     /**
-     * @see DecisionTreeNode#coveredColors()
+     * {@inheritDoc}
      */
     @Override
     public HashMap<Color, Double> coveredColors() {
@@ -196,7 +193,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNode#coveredPattern()
+     * {@inheritDoc}
      */
     @Override
     public Set<DataCell> coveredPattern() {
@@ -212,7 +209,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNode#getStringSummary()
+     * {@inheritDoc}
      */
     @Override
     public String getStringSummary() {
@@ -220,7 +217,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNode #addNodeToTreeDepthFirst(DecisionTreeNode, int)
+     * {@inheritDoc}
      */
     @Override
     public boolean addNodeToTreeDepthFirst(final DecisionTreeNode node,
@@ -238,8 +235,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNodeSplit #saveNodeSplitInternalsToPredParams(
-     *      org.knime.core.node.ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
     public void saveNodeSplitInternalsToPredParams(final ModelContentWO pConf) {
@@ -247,8 +243,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNodeSplit #loadNodeSplitInternalsFromPredParams(
-     *      org.knime.core.node.ModelContentRO)
+     * {@inheritDoc}
      */
     @Override
     public void loadNodeSplitInternalsFromPredParams(final ModelContentRO pConf)

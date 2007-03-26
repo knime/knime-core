@@ -166,16 +166,14 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * @see DecisionTreeNode
-     *      #saveNodeInternalsToPredParams(org.knime.core.node.ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
     public void saveNodeInternalsToPredParams(final ModelContentWO pConf) {
     }
 
     /**
-     * @see DecisionTreeNode
-     *      #loadNodeInternalsFromPredParams(org.knime.core.node.ModelContentRO)
+     * {@inheritDoc}
      */
     @Override
     public void loadNodeInternalsFromPredParams(final ModelContentRO pConf)
@@ -183,7 +181,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * @see javax.swing.tree.TreeNode#getChildCount()
+     * {@inheritDoc}
      */
     @Override
     public int getChildCount() {
@@ -191,7 +189,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * @see javax.swing.tree.TreeNode#getIndex(javax.swing.tree.TreeNode)
+     * {@inheritDoc}
      */
     @Override
     public int getIndex(final TreeNode node) {
@@ -199,7 +197,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * @see javax.swing.tree.TreeNode#getChildAt(int)
+     * {@inheritDoc}
      */
     @Override
     public TreeNode getChildAt(final int pos) {
@@ -207,8 +205,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * 
-     * @see javax.swing.tree.TreeNode#isLeaf()
+     * {@inheritDoc}
      */
     @Override
     public boolean isLeaf() {
@@ -216,7 +213,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * @see javax.swing.tree.TreeNode#children()
+     * {@inheritDoc}
      */
     @Override
     public Enumeration<DecisionTreeNode> children() {
@@ -224,7 +221,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * @see javax.swing.tree.TreeNode#getAllowsChildren()
+     * {@inheritDoc}
      */
     @Override
     public boolean getAllowsChildren() {
