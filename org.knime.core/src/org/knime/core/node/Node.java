@@ -878,7 +878,9 @@ public final class Node {
     }
 
     /**
-     * {@inheritDoc}
+     * @see #execute(ExecutionContext)
+     * @return <code>true</code> if execution was successful otherwise
+     *         <code>false</code>.
      */
     public boolean execute() {
         ExecutionContext exe = new ExecutionContext(null, this);

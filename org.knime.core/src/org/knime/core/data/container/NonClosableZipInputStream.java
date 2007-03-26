@@ -69,7 +69,7 @@ class NonClosableZipInputStream extends InputStream {
     }
 
     /**
-     * {@inheritDoc}
+     * @see ZipInputStream#closeEntry()
      */
     public void closeEntry() throws IOException {
         m_zipIn.closeEntry();

@@ -50,7 +50,7 @@ public class ThreadPool {
     private class MyFuture<T> extends FutureTask<T> {
 
         /**
-         * {@inheritDoc}
+         * @see FutureTask#FutureTask(Callable)
          */
         public MyFuture(final Callable<T> callable) {
             super(callable);

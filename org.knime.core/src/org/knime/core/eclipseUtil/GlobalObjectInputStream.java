@@ -38,7 +38,7 @@ import java.io.ObjectStreamClass;
 public class GlobalObjectInputStream extends ObjectInputStream {
 
     /**
-     * {@inheritDoc}
+     * @see ObjectInputStream#ObjectInputStream(InputStream)
      */
     public GlobalObjectInputStream(final InputStream in) throws IOException {
         super(in);

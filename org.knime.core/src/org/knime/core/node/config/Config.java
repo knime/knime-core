@@ -1692,7 +1692,7 @@ public abstract class Config extends AbstractConfigEntry
         if (className == null) {
             ois = new GlobalObjectInputStream(bais);
         } else {
-            final Class cl = GlobalClassCreator.createClass(className);
+            final Class<?> cl = GlobalClassCreator.createClass(className);
             if (cl == null) {
                 throw new ClassNotFoundException("Could not find class: " + cl);
             }

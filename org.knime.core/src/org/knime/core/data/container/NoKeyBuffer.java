@@ -77,7 +77,7 @@ class NoKeyBuffer extends Buffer {
     }
     
     /**
-     * {@inheritDoc}
+     * @see Buffer#Buffer(File, File, DataTableSpec, InputStream, int, Map)
      */
     NoKeyBuffer(final File binFile, final File blobDir, 
             final DataTableSpec spec, final InputStream metaIn, 

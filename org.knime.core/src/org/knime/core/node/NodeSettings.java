@@ -57,7 +57,7 @@ public final class NodeSettings extends Config
     }
 
     /**
-     * {@inheritDoc}
+     * @see Config#readFromFile(java.io.ObjectInputStream)
      */
     public static synchronized NodeSettings readFromFile(
             final ObjectInputStream ois) throws IOException {

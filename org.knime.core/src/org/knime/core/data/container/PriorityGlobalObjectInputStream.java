@@ -40,7 +40,7 @@ class PriorityGlobalObjectInputStream extends GlobalObjectInputStream {
     private ClassLoader m_classLoader;
     
     /**
-     * {@inheritDoc}
+     * @see GlobalObjectInputStream#GlobalObjectInputStream(InputStream)
      */
     PriorityGlobalObjectInputStream(final InputStream in) 
         throws IOException {

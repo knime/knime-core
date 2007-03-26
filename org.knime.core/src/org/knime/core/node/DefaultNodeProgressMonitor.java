@@ -30,63 +30,63 @@ import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * The default node progress monitor which keep a progress value between 0 and 
- * 1, and a progress message. Both can be <code>null</code> if not available or 
- * set wrong (progress value out of range). Furthermore, it holds a flag which 
- * indicates that the task during execution was interrupted.
+ * The default node progress monitor which keep a progress value between 0 and
+ * 1, and a progress message. Both can be <code>null</code> if not available
+ * or set wrong (progress value out of range). Furthermore, it holds a flag
+ * which indicates that the task during execution was interrupted.
  * <p>
  * This progress monitor uses a static timer task looking every 250 milliseconds
- * if progress information has changed. The <code>ProgressEvent</code> is fired
- * if either the value or message has changed only.
+ * if progress information has changed. The <code>ProgressEvent</code> is
+ * fired if either the value or message has changed only.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(DefaultNodeProgressMonitor.class);
-    
+            NodeLogger.getLogger(DefaultNodeProgressMonitor.class);
+
     /** The cancel requested flag. */
     private boolean m_cancelExecute;
 
-    /** Progress of the execution between 0 and 1, or null if not available. 
+    /**
+     * Progress of the execution between 0 and 1, or null if not available.
      */
     private Double m_progress;
 
     /** The progress message. */
     private String m_message;
-    
+
     /** The message to append; used by SubNodeProgressMonitor. */
     private String m_append;
-    
+
     /** A set of progress listeners. */
     private final CopyOnWriteArrayList<NodeProgressListener> m_listeners;
-    
+
     /** Timer period looking for changed progress information. */
     private static final int TIMER_PERIOD = 250;
-    
+
     /**
      * Keeps a static list of these progress monitors if they are active. The
-     * timer task iterates over this list and informs the monitors about
-     * new progress information. 
+     * timer task iterates over this list and informs the monitors about new
+     * progress information.
      */
-    private static final 
-        List<WeakReference<DefaultNodeProgressMonitor>> PROGMONS = new 
-        CopyOnWriteArrayList<WeakReference<DefaultNodeProgressMonitor>>();
-    
+    private static final List<WeakReference<DefaultNodeProgressMonitor>> PROGMONS =
+            new CopyOnWriteArrayList<WeakReference<DefaultNodeProgressMonitor>>();
+
     /** If progress has changed. */
     private boolean m_changed = false;
-    
+
     /**
-     * The timer task which informs all currently active progress monitors
-     * about new progress information.
+     * The timer task which informs all currently active progress monitors about
+     * new progress information.
      */
     private static final TimerTask TASK = new TimerTask() {
         @Override
         public void run() {
             // for maintenance only
-            List<WeakReference<DefaultNodeProgressMonitor>> deadList = 
-                new ArrayList<WeakReference<DefaultNodeProgressMonitor>>();
-            for (Iterator<WeakReference<DefaultNodeProgressMonitor>> it = 
+            List<WeakReference<DefaultNodeProgressMonitor>> deadList =
+                    new ArrayList<WeakReference<DefaultNodeProgressMonitor>>();
+            for (Iterator<WeakReference<DefaultNodeProgressMonitor>> it =
                     PROGMONS.iterator(); it.hasNext();) {
                 WeakReference<DefaultNodeProgressMonitor> next = it.next();
                 DefaultNodeProgressMonitor p = next.get();
@@ -97,8 +97,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                     try {
                         p.fireProgressChanged(); // something has changed
                     } catch (Exception e) {
-                        LOGGER.warn("Exception (\"" 
-                                + e.getClass().getSimpleName() + "\") " 
+                        LOGGER.warn("Exception (\""
+                                + e.getClass().getSimpleName() + "\") "
                                 + " during event notification.", e);
                     }
                 }
@@ -106,17 +106,17 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             if (!deadList.isEmpty()) {
                 PROGMONS.removeAll(deadList);
             }
-        }  
+        }
     };
-    
+
     /** Timer used to schedule the task. */
     private static final Timer TIMER = new Timer("KNIME Progress Timer", true);
-        
+
     static {
         // start timer once with the given task, starting time, and time period
         TIMER.scheduleAtFixedRate(TASK, 0, TIMER_PERIOD);
     }
-    
+
     /**
      * Creates a new progress monitor with an empty set of listeners.
      * 
@@ -141,7 +141,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         this();
         addProgressListener(l);
     }
-    
+
     /**
      * @return <code>true</code> if the execution of the
      *         <code>NodeModel</code> has been canceled.
@@ -171,9 +171,10 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     public synchronized void setExecuteCanceled() {
         m_cancelExecute = true;
     }
-    
+
     /**
      * Updates the progress value and message if different from the current one.
+     * 
      * @see #setProgress(double)
      * @param progress The (new) progress value.
      * @param message The text message shown in the progress monitor.
@@ -206,6 +207,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     /**
      * Sets a new message according to the argument.
+     * 
      * @param message The text message shown in the progress monitor.
      */
     public void setProgress(final String message) {
@@ -213,7 +215,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             m_changed = true;
         }
     }
-    
+
     private void appendMessage(final String append) {
         if (setMessageIntern(m_message, append)) {
             m_changed = true;
@@ -221,7 +223,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     }
 
     /**
-     * Sets progress internally, returns <code>true</code> if old value has 
+     * Sets progress internally, returns <code>true</code> if old value has
      * changed.
      */
     private boolean setProgressIntern(final double progress) {
@@ -229,16 +231,15 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         if (progress >= 0.0 && progress <= 1.0) {
             m_progress = progress;
         }
-        boolean changed = oldProgress == null 
-            || oldProgress.doubleValue() != progress;
+        boolean changed =
+                oldProgress == null || oldProgress.doubleValue() != progress;
         return changed;
     }
 
     /**
      * Sets message internally, returns if old value has changed.
      */
-    private boolean setMessageIntern(final String message, 
-            final String append) {
+    private boolean setMessageIntern(final String message, final String append) {
         if (message == m_message && append == m_append) {
             return false;
         }
@@ -257,9 +258,10 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         m_append = append;
         return changed;
     }
-    
+
     /**
-     * @return The current progress value, or <code>null</code> if not yet set.
+     * @return The current progress value, or <code>null</code> if not yet
+     *         set.
      */
     public Double getProgress() {
         return m_progress;
@@ -269,9 +271,9 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @return The current progress message.
      */
     public String getMessage() {
-        return m_message; 
+        return m_message;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -299,19 +301,20 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     private void fireProgressChanged() {
         m_changed = false;
-        NodeProgressEvent pe = new NodeProgressEvent(getProgress(), 
-                createMessage(m_message, m_append));
+        NodeProgressEvent pe =
+                new NodeProgressEvent(getProgress(), createMessage(m_message,
+                        m_append));
         for (NodeProgressListener l : m_listeners) {
             try {
                 l.progressChanged(pe);
             } catch (Throwable t) {
                 LOGGER.error("Exception while notifying listeners", t);
-            }                
+            }
         }
     }
-    
-    private static String createMessage(
-            final String message, final String append) {
+
+    private static String createMessage(final String message,
+            final String append) {
         String result = "";
         if (message != null) {
             result = message;
@@ -323,27 +326,33 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         }
         return result;
     }
-    
-    /** Progress monitor that is used by "sub-progresses", it doesn't have
-     * the range [0, 1] but only [0, b] where b is user-defined. 
+
+    /**
+     * Progress monitor that is used by "sub-progresses", it doesn't have the
+     * range [0, 1] but only [0, b] where b is user-defined.
      */
     static class SubNodeProgressMonitor implements NodeProgressMonitor {
-        
+
         private final NodeProgressMonitor m_parent;
+
         private final double m_maxProg;
+
         private double m_lastProg;
+
         private String m_message;
+
         private String m_append;
-        
+
         /**
          * Creates new sub progress monitor.
+         * 
          * @param parent The parent of this monitor, i.e. where to report
-         * progress to and get the canceled status from.
+         *            progress to and get the canceled status from.
          * @param max The maximum progress (w.r.t parent) that this monitor
-         * should report.
+         *            should report.
          */
-        SubNodeProgressMonitor(
-                final NodeProgressMonitor parent, final double max) {
+        SubNodeProgressMonitor(final NodeProgressMonitor parent,
+                final double max) {
             m_maxProg = max;
             m_parent = parent;
             m_message = null;
@@ -351,6 +360,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Must not be called. Throws IllegalStateException.
+         * 
          * @see NodeProgressMonitor#addProgressListener(NodeProgressListener)
          */
         public void addProgressListener(final NodeProgressListener l) {
@@ -359,6 +369,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Delegates to parent.
+         * 
          * @see NodeProgressMonitor#checkCanceled()
          */
         public void checkCanceled() throws CanceledExecutionException {
@@ -378,6 +389,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Get the subprogress, the value scaled to [0, 1].
+         * 
          * @see NodeProgressMonitor#getProgress()
          */
         public Double getProgress() {
@@ -386,6 +398,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Must not be called. Throws IllegalStateException.
+         * 
          * @see NodeProgressMonitor#removeAllProgressListener()
          */
         public void removeAllProgressListener() {
@@ -394,6 +407,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Must not be called. Throws IllegalStateException.
+         * 
          * @see NodeProgressMonitor#removeProgressListener(NodeProgressListener)
          */
         public void removeProgressListener(final NodeProgressListener l) {
@@ -402,6 +416,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Must not be called. Throws IllegalStateException.
+         * 
          * @see NodeProgressMonitor#setExecuteCanceled()
          */
         public void setExecuteCanceled() {
@@ -414,15 +429,16 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         public void setMessage(final String message) {
             setProgress(message);
         }
-        
+
         /**
          * Delegates to parent.
+         * 
          * @see NodeProgressMonitor#setProgress(String)
          */
         public void setProgress(final String message) {
             setProgress(message, true);
         }
-        
+
         private void setProgress(final String message, final boolean append) {
             synchronized (m_parent) {
                 m_message = message;
@@ -431,17 +447,16 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                 }
                 String create = createMessage(m_message, m_append);
                 if (m_parent instanceof DefaultNodeProgressMonitor) {
-                    ((DefaultNodeProgressMonitor) m_parent).appendMessage(
-                            create);
+                    ((DefaultNodeProgressMonitor)m_parent)
+                            .appendMessage(create);
                 } else if (m_parent instanceof SubNodeProgressMonitor) {
-                    ((SubNodeProgressMonitor) m_parent).appendMessage(
-                            create);
+                    ((SubNodeProgressMonitor)m_parent).appendMessage(create);
                 } else {
                     m_parent.setMessage(create);
-                }            
+                }
             }
         }
-        
+
         private void appendMessage(final String append) {
             m_append = append;
             setProgress(m_message, false);
@@ -450,8 +465,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /**
          * {@inheritDoc}
          */
-        public void setProgress(
-                final double progress, final String message) {
+        public void setProgress(final double progress, final String message) {
             synchronized (m_parent) {
                 this.setProgress(progress);
                 this.setMessage(message);
@@ -467,8 +481,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                 m_parent.setProgress(subProgress);
             }
         }
-        
-        
+
         private double calcSubProgress(final double progress) {
             Double progressOfParent = m_parent.getProgress();
             // diff to the last progress update
@@ -482,7 +495,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             }
         }
     }
-    
+
     /**
      * Silent progress monitor which does only forward changed of the progress
      * value rather than progress message.
@@ -491,13 +504,14 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             SubNodeProgressMonitor {
 
         /**
-         * {@inheritDoc}
+         * @see SubNodeProgressMonitor
+         *      #SubNodeProgressMonitor(NodeProgressMonitor, double)
          */
         SilentSubNodeProgressMonitor(final NodeProgressMonitor parent,
                 final double max) {
             super(parent, max);
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -505,7 +519,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         public void setProgress(final double prog, final String message) {
             super.setProgress(prog);
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -514,5 +528,5 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             // do nothing here
         }
     }
-    
+
 }
