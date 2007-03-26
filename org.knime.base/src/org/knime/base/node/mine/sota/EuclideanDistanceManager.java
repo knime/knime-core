@@ -47,14 +47,14 @@ public class EuclideanDistanceManager implements DistanceManager {
     }
 
     /**
-     * @see DistanceManager#getDistance(DataRow, SotaTreeCell)
+     * {@inheritDoc}
      */
     public double getDistance(final DataRow row, final SotaTreeCell cell) {
         return Distances.getEuclideanDistance(row, cell, m_fuzzy);
     }
 
     /**
-     * @see DistanceManager#getDistance(DataRow, DataRow)
+     * {@inheritDoc}
      */
     public double getDistance(final DataRow row1, final DataRow row2) {
         return Distances.getEuclideanDistance(row1, row2, m_fuzzy);

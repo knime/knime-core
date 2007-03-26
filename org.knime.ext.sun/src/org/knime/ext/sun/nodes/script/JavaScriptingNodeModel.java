@@ -71,7 +71,7 @@ public class JavaScriptingNodeModel extends NodeModel {
 
     private String m_expression;
 
-    private Class m_returnType;
+    private Class<?> m_returnType;
 
     private String m_colName;
 
@@ -232,7 +232,7 @@ public class JavaScriptingNodeModel extends NodeModel {
      * @return the associated class
      * @throws InvalidSettingsException if the argument is invalid
      */
-    static Class getReturnType(final String returnType)
+    static Class<?> getReturnType(final String returnType)
             throws InvalidSettingsException {
         if (Integer.class.getName().equals(returnType)) {
             return Integer.class;
@@ -259,7 +259,7 @@ public class JavaScriptingNodeModel extends NodeModel {
      * @throws InvalidSettingsException if settings are missing
      */
     static Expression compile(final String expression,
-            final DataTableSpec spec, final Class rType, final File tempFile)
+            final DataTableSpec spec, final Class<?> rType, final File tempFile)
             throws CompilationFailedException, InvalidSettingsException {
         int offset = 0;
         HashMap<String, String> nameValueMap = new HashMap<String, String>();
@@ -286,7 +286,7 @@ public class JavaScriptingNodeModel extends NodeModel {
             String colId = colIdPound.substring(off, colIdPound.length() - off);
             correctedExp.append(expression.substring(offset, start));
             String colFieldName;
-            Class type;
+            Class<?> type;
             if (isOrdinaryColumn) {
                 int colIndex = spec.findColumnIndex(colId);
                 if (colIndex < 0) {
@@ -335,7 +335,8 @@ public class JavaScriptingNodeModel extends NodeModel {
     @Override
     protected void finalize() throws Throwable {
         try {
-            if (m_tempFile.exists() && !m_tempFile.delete()) {
+            if ((m_tempFile != null) && m_tempFile.exists()
+                    && !m_tempFile.delete()) {
                 LOGGER.warn("Unable to delete temp file "
                         + m_tempFile.getAbsolutePath());
             }

@@ -209,7 +209,7 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
     }
 
     /**
-     * @see DataArray#getRow(int)
+     * {@inheritDoc}
      */
     public DataRow getRow(final int idx) {
         if (idx >= m_meta.get(m_hierarchyLevel).getSize()) {
@@ -232,14 +232,14 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
     }
 
     /**
-     * @see DataArray#getValues(int)
+     * {@inheritDoc}
      */
     public Set<DataCell> getValues(final int colIdx) {
         return null;
     }
 
     /**
-     * @see DataArray#getMinValue(int)
+     * {@inheritDoc}
      */
     public DataCell getMinValue(final int colIdx) {
         DataCell cell = null;
@@ -252,7 +252,7 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
     }
 
     /**
-     * @see DataArray#getMaxValue(int)
+     * {@inheritDoc}
      */
     public DataCell getMaxValue(final int colIdx) {
         DataCell cell = null;
@@ -265,28 +265,28 @@ public class FuzzyHierarchyFilterRowContainer implements DataArray {
     }
 
     /**
-     * @see DataArray#size()
+     * {@inheritDoc}
      */
     public int size() {
         return m_meta.get(m_hierarchyLevel).getSize();
     }
 
     /**
-     * @see DataArray#getFirstRowNumber()
+     * {@inheritDoc}
      */
     public int getFirstRowNumber() {
         return 0;
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         return m_rc.iterator();
     }
 
     /**
-     * @see DataArray#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_rc.getDataTableSpec();

@@ -146,6 +146,9 @@ public class FileTokenizer {
 
     /* the current line number (not accurate if token got pushed back) */
     private int m_lineNo;
+    
+    /* the number of bytes read so far */
+    private long m_readBytes;
 
     /* dont change settings after reading rom the tokenizer */
     private boolean m_settingsLocked;
@@ -177,6 +180,7 @@ public class FileTokenizer {
         m_eobIdx = 0;
 
         m_lineNo = 1;
+        m_readBytes = 0;
 
         m_charType = new int[MAX_CHAR + 1];
 
@@ -405,7 +409,8 @@ public class FileTokenizer {
                 if ((m_readBuffer[m_currIdx] = m_source.read()) == -1) {
                     // seen the EOF. Any further read will cause IOException.
                     m_source.close();
-                }   
+                } 
+                m_readBytes++;
                 if (m_readBuffer[m_currIdx] == CR) {
                     // read the next char to see if we need to swallow the CR
                     m_eobIdx = (m_eobIdx + 1) % BUFFER_LENGTH;
@@ -413,6 +418,7 @@ public class FileTokenizer {
                         m_currIdx = m_eobIdx;
                         // incr currIdx as well, which makes them equal again...
                     }
+                    m_readBytes++;
                 }
             } else {
                 // take the next character from the buffer
@@ -1026,6 +1032,17 @@ public class FileTokenizer {
      */
     public int getLineNumber() {
         return m_lineNo;
+    }
+    
+    /**
+     * Returns the number of bytes returned so far. Due to the buffering the
+     * number of bytes read from the disk and the number of bytes returned by
+     * this tokenizer can differ.
+     * 
+     * @return the number of bytes returned so far by this tokenizer
+     */
+    public long getReadBytes() {
+        return m_readBytes;
     }
 
     /**

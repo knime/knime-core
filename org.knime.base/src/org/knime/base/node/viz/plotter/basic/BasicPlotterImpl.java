@@ -41,6 +41,15 @@ public class BasicPlotterImpl extends BasicPlotter {
      * 
      * @param pane the drawing pane
      */
+    public BasicPlotterImpl(final BasicDrawingPane pane, 
+            final AbstractPlotterProperties props) {
+        super(pane, props);
+    }
+
+    /**
+     * 
+     * @param pane the drawing pane
+     */
     public BasicPlotterImpl(final BasicDrawingPane pane) {
         super(pane, new AbstractPlotterProperties());
     }

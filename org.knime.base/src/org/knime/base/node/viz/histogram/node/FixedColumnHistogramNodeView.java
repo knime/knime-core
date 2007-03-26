@@ -24,9 +24,10 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramDataModel;
-import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramPlotter;
-import org.knime.base.node.viz.histogram.impl.fixed.FixedColumnHistogramProperties;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramPlotter;
+import org.knime.base.node.viz.histogram.impl.fixed.FixedHistogramProperties;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
@@ -38,9 +39,9 @@ import org.knime.core.node.NodeView;
  */
 public class FixedColumnHistogramNodeView extends NodeView {
     
-    private final FixedColumnHistogramNodeModel m_nodeModel;
+    private final AbstractHistogramNodeModel m_nodeModel;
     
-    private FixedColumnHistogramPlotter m_plotter;
+    private FixedHistogramPlotter m_plotter;
 
     /**
      * Creates a new view instance for the histogram node.
@@ -52,9 +53,9 @@ public class FixedColumnHistogramNodeView extends NodeView {
         if (!(nodeModel instanceof FixedColumnHistogramNodeModel)) {
             throw new IllegalArgumentException(NodeModel.class.getName()
                     + " not an instance of "
-                    + HistogramNodeModel.class.getName());
+                    + AbstractHistogramNodeModel.class.getName());
         }
-        m_nodeModel = (FixedColumnHistogramNodeModel)nodeModel;
+        m_nodeModel = (AbstractHistogramNodeModel)nodeModel;
     }
 
     /**
@@ -73,26 +74,28 @@ public class FixedColumnHistogramNodeView extends NodeView {
         if (m_nodeModel == null) {
             return;
         }
-        final FixedColumnHistogramDataModel histogramModel = 
-            m_nodeModel.getHistogramModelClone();
-        if (histogramModel == null) {
+        final DataTableSpec tableSpec = m_nodeModel.getTableSpec();
+        if (m_plotter != null) {
+            m_plotter.reset();
+        }
+        final AbstractHistogramVizModel vizModel = 
+            m_nodeModel.getHistogramVizModel();
+        if (vizModel == null) {
             return;
         }
         if (m_plotter == null) {
-            final FixedColumnHistogramProperties props =
-                new FixedColumnHistogramProperties(
-                        histogramModel.getAggregationMethod());
-            m_plotter = new FixedColumnHistogramPlotter(props, histogramModel, 
+            final FixedHistogramProperties props =
+                new FixedHistogramProperties(tableSpec, vizModel);
+            m_plotter = new FixedHistogramPlotter(props, 
                     m_nodeModel.getInHiLiteHandler(0));
+            //hiliting is not supported in the fixed column histogram
             // add the hilite menu to the menu bar of the node view
-            getJMenuBar().add(m_plotter.getHiLiteMenu());
+//            getJMenuBar().add(m_plotter.getHiLiteMenu());
             setComponent(m_plotter);
-        } else {
-            m_plotter.reset();
-            m_plotter.setHistogramDataModel(histogramModel);
-            m_plotter.setHiLiteHandler(m_nodeModel.getInHiLiteHandler(0));
-            m_plotter.updatePaintModel();
         }
+        m_plotter.setHiLiteHandler(m_nodeModel.getInHiLiteHandler(0));
+        m_plotter.setHistogramVizModel(tableSpec, vizModel);
+        m_plotter.updatePaintModel();
     }
 
     /**

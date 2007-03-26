@@ -26,6 +26,12 @@
  */
 package org.knime.core.data;
 
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
@@ -120,12 +126,130 @@ public class DataColumnSpecCreator {
         m_shapeHandler = cspec.getShapeHandler();
         // property color
         m_colorHandler = cspec.getColorHandler();
+    }
+    
+    /**
+     * Merges the existing {@link DataColumnSpec} with a second
+     * {@link DataColumnSpec}. If they have equal structure, the domain
+     * information from both DataColumnSpecs is merged, Color, Shape and
+     * Size-Handlers are compared (must be equal).
+     * 
+     * @param cspec2 the second {@link DataColumnSpec}.
+     * 
+     * @see DataTableSpec#mergeDataTableSpecs(DataTableSpec...)
+     * @throws IllegalArgumentException if the structure (type and name) does
+     *             not match, if the domain can not be merged, if the Color-,
+     *             Shape- or SizeHandlers are different or if a property with
+     *             different values exists.
+     */
+    public void merge(final DataColumnSpec cspec2) {
+        if (!cspec2.getName().equals(m_name)
+                || !cspec2.getType().equals(m_type)) {
+            throw new IllegalArgumentException("Structures of DataColumnSpecs"
+                    + " do not match.");
+        }
+
+        DataColumnDomain domain2 = cspec2.getDomain();
+        boolean hasDomainChanged = false;
+        final Set<DataCell> myValues = m_domain.getValues();
+        final Set<DataCell> oValues = m_domain.getValues();
+        Set<DataCell> newValues;
+        if (myValues == null || oValues == null) {
+            newValues = null;
+            hasDomainChanged |= myValues != null;
+        } else if (myValues.equals(oValues)) {
+            newValues = myValues;
+        } else {
+            newValues = new LinkedHashSet<DataCell>(myValues);
+            newValues.addAll(oValues);
+            hasDomainChanged = true;
+        }
+        
+        DataValueComparator comparator = m_type.getComparator();
+
+        final DataCell myLower = m_domain.getLowerBound();
+        final DataCell oLower = domain2.getLowerBound();
+        DataCell newLower;
+        if (myLower == null || oLower == null) {
+            newLower = null;
+            hasDomainChanged |= myLower != null;
+        } else if (myLower.equals(oLower)) {
+            newLower = myLower;
+        } else if (comparator.compare(myLower, oLower) > 0) {
+            newLower = oLower;
+            hasDomainChanged = true;
+        } else {
+            newLower = myLower;
+        }
+
+        final DataCell myUpper = m_domain.getLowerBound();
+        final DataCell oUpper = domain2.getLowerBound();
+        DataCell newUpper;
+        if (myUpper == null || oUpper == null) {
+            newUpper = null;
+            hasDomainChanged |= myUpper != null;
+        } else if (myUpper.equals(oUpper)) {
+            newUpper = myUpper;
+        } else if (comparator.compare(myUpper, oUpper) < 0) {
+            newUpper = oUpper;
+            hasDomainChanged = true;
+        } else {
+            newUpper = myUpper;
+        }
+        
+        
+        if (hasDomainChanged) {
+            setDomain(new DataColumnDomain(newLower, newUpper, newValues));
+        }
+
+        ColorHandler colorHandler2 = cspec2.getColorHandler();
+        if ((m_colorHandler != null && !m_colorHandler.equals(colorHandler2))
+                || (m_colorHandler == null && colorHandler2 != null)) {
+                throw new IllegalArgumentException("Will not merge. "
+                        + "Different color handlers for column: " + m_name);
+        }
+        
+        ShapeHandler shapeHandler2 = cspec2.getShapeHandler();
+        if ((m_shapeHandler != null && !m_shapeHandler.equals(shapeHandler2))
+                || (m_shapeHandler == null && shapeHandler2 != null)) {
+            throw new IllegalArgumentException("Will not merge. "
+                    + "Different shape handlers for column: " + m_name);
+        }
+
+        SizeHandler sizeHandler2 = cspec2.getSizeHandler();
+        if ((m_sizeHandler != null && !m_sizeHandler.equals(sizeHandler2))
+                || (m_sizeHandler == null && sizeHandler2 != null)) {
+            throw new IllegalArgumentException("Will not merge. "
+                    + "Different size handlers for column: " + m_name);
+        }
+        
+        // Properties
+        DataColumnProperties prop2 = cspec2.getProperties();
+        Map<String, String> mergedProps = new HashMap<String, String>();
+        Enumeration e = m_properties.properties();
+        while (e.hasMoreElements()) {
+            String key = (String)e.nextElement();
+            String value = m_properties.getProperty(key);
+            mergedProps.put(key, value);
+        }
+        e = prop2.properties();
+        while (e.hasMoreElements()) {
+            String key = (String)e.nextElement();
+            String prop1value = m_properties.getProperty(key);
+            String prop2value = prop2.getProperty(key);
+            if ((prop1value != null) && prop1value.equals(prop2value)) {
+                mergedProps.put(key, prop2value);
+            }
+        }
+        if (mergedProps.size() != m_properties.size()) {
+            setProperties(new DataColumnProperties(mergedProps));
+        }
 
     }
 
     /**
-     * Set (new) column name. If the column name is empty or consists only
-     * of whitespaces, a warning is logged and an artificial name is created.
+     * Set (new) column name. If the column name is empty or consists only of
+     * whitespaces, a warning is logged and an artificial name is created.
      * 
      * @param name the (new) column name
      * @throws NullPointerException if the column name is <code>null</code>

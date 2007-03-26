@@ -23,58 +23,35 @@
  */
 package org.knime.base.data.bitvector;
 
+import java.util.List;
+
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.container.SingleCellFactory;
 
 /**
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public abstract class BitVectorRowCellFactory  extends SingleCellFactory {
+public abstract class BitVectorRowCellFactory  extends BitVectorCellFactory {
     
-    private int m_nrOfProcessedRows;
+    private final List<String> m_nameMapping;
     
     /**
      * 
      * @param newColumnSpec column spec of the newly created column
+     * @param nameMapping optional mapping of the bit positions to strings
      */
-    public BitVectorRowCellFactory(final DataColumnSpec newColumnSpec) {
+    public BitVectorRowCellFactory(final DataColumnSpec newColumnSpec, 
+            final List<String> nameMapping) {
         super(newColumnSpec);
-    }
-    
-    /**
-     * Increments the number of processed rows.
-     *
-     */
-    public void incrementNrOfRows() {
-        m_nrOfProcessedRows++;
-    }
-    
-    /**
-     * Returns the number of processed rows.
-     * 
-     * @return the number of processed rows.
-     */
-    public int getNrOfProcessedRows() {
-        return m_nrOfProcessedRows;
+        m_nameMapping = nameMapping;
     }
     
     /**
      * 
-     * @return the number of set bits.
+     * @return the optional bitposition column name mapping
      */
-    public abstract int getNumberOfSetBits();
-    
-    /**
-     * 
-     * @return the number of not set bits.
-     */
-    public abstract int getNumberOfNotSetBits();
-    
-    
-    /**
-     * 
-     * @return true if at least one conversion was successful, false otherwise.
-     */
-    public abstract boolean wasSuccessful();
+    public List<String> getNameMapping() {
+        return m_nameMapping;
+    }
+
 }

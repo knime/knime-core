@@ -104,7 +104,7 @@ public abstract class AbstractPainterDataValueRenderer
     public boolean accepts(final DataColumnSpec spec) {
         return true;
     }
-
+    
     /**
      * Sets the object to be rendered next. This method is invoked from
      * the {@link #getRendererComponent(Object)}, 

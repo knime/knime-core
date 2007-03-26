@@ -34,6 +34,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
@@ -46,6 +47,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import org.knime.core.util.FileReaderFileFilter;
@@ -287,9 +289,9 @@ public abstract class NodeView {
                 if (!extension.equals(".png")) {
                     fileName = fileName + ".png";
                 }
-                path = new File(fileName).toURL().toString();
+                path = fileName;
             } catch (Exception e) {
-                path = "<Error: Couldn't create URL for file>";
+                path = "<Error: Couldn't create file>";
             }
             exportDir = path;
         } else {
@@ -307,7 +309,7 @@ public abstract class NodeView {
 
         // write image to file
         try {
-            File exportFile = new File(new URL(exportDir).getFile());
+            File exportFile = new File(exportDir);
             exportFile.createNewFile();
             ImageIO.write(image, "png", exportFile);
         } catch (Exception e) {
@@ -317,6 +319,7 @@ public abstract class NodeView {
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
 
             m_logger.warn("View could not be exported due to io problems: ", e);
+            return;
         }
 
         JOptionPane.showConfirmDialog(m_frame, "View successfully exported.",
@@ -363,22 +366,44 @@ public abstract class NodeView {
      * <code>#modelChanged()</code> method.
      */
     final void callModelChanged() {
-        setComponent(m_comp);
-        try {
-            modelChanged();
-        } catch (NullPointerException npe) {
-            throw new IllegalStateException(
-                    "Implementation error of NodeView.modelChanged(). "
-                            + "NullPointerException during notification of a "
-                            + "changed model: " + npe.getMessage(), npe);
-        } catch (Exception e) {
-            throw new IllegalStateException("Error during notification "
-                    + "of a changed model (in NodeView.modelChanged()). "
-                    + "Reason: " + e.getMessage(), e);
-        } finally {
-            // repaint and pack if the view has not been opened or the 
-            // underlying view component was added
-            relayoutFrame(!m_wasOpened || m_componentSet);
+        synchronized (m_nodeModel) {
+            final Runnable run = new Runnable() {
+                public void run() {
+                    // set new component into derived view
+                    setComponent(m_comp);
+                }
+            };
+            // if event dispatch thread, run directly
+            if (SwingUtilities.isEventDispatchThread()) {
+                run.run();
+            } else {
+                try {
+                    // otherwise queue into event dispatch thread
+                    SwingUtilities.invokeAndWait(run);
+                } catch (InvocationTargetException ite) {
+                	m_logger.error("Exception during view update", ite);
+                } catch (InterruptedException ie) {
+                	m_logger.error(Thread.currentThread() 
+                            + " was interrupted", ie);
+                }
+            }
+            try {
+                // CALL abstract model changed
+                modelChanged();   
+            } catch (NullPointerException npe) {
+                m_logger.coding("NodeView.modelChanged() causes "
+                       + "NullPointerException during notification of a "
+                       + "changed model, reason: " + npe.getMessage(), npe);
+            } catch (Exception e) {
+                m_logger.error("NodeView.modelChanged() causes "
+                       + "Exception during notification of a changed "
+                       + "model, reason: " + e.getMessage(), e);
+            } finally {
+                // repaint and pack if the view has not been opened yet or 
+                // the underlying view component was added
+                // ensured to happen in the EDT thread
+                relayoutFrame(!m_wasOpened || m_componentSet);
+            }
         }
     }
 
@@ -612,12 +637,29 @@ public abstract class NodeView {
      *        just validated and repainted
      */
     private void relayoutFrame(final boolean doPack) {
-        if (doPack) {
-            m_frame.pack();
+        final Runnable run = new Runnable() {
+            public void run() {
+                if (doPack) {
+                    m_frame.pack();
+                } else {
+                    m_frame.invalidate();
+                    m_frame.validate();
+                    m_frame.repaint();
+                }
+            }
+        };
+        // if event dispatch thread, run directly
+        if (SwingUtilities.isEventDispatchThread()) {
+            run.run();
         } else {
-            m_frame.invalidate();
-            m_frame.validate();
-            m_frame.repaint();
+            try {
+                // otherwise queue into event dispatch thread
+                SwingUtilities.invokeAndWait(run);
+            } catch (InvocationTargetException ite) {
+                m_logger.error("Exception during view update", ite);
+            } catch (InterruptedException ie) {
+                m_logger.error(Thread.currentThread() + " was interrupted", ie);
+            }
         }   
     }
 

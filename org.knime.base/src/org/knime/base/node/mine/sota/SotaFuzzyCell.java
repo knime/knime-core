@@ -24,18 +24,27 @@
  */
 package org.knime.base.node.mine.sota;
 
-import java.io.Serializable;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.FuzzyIntervalValue;
+import org.knime.core.data.FuzzyNumberValue;
+import org.knime.core.data.IntervalValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
 
 
 /**
  * 
  * @author Kilian Thiel, University of Konstanz
  */
-public class SotaFuzzyCell implements SotaCell, FuzzyIntervalValue, 
-Serializable {
+public final class SotaFuzzyCell implements SotaCell, FuzzyIntervalValue, 
+        FuzzyNumberValue, IntervalValue {
+    
+    private static final String CFG_KEY_MIN_SUPP = "FuzzyMinSupp";
+    private static final String CFG_KEY_MAX_SUPP = "FuzzyMaxSupp";
+    private static final String CFG_KEY_MIN_CORE = "FuzzyMincore";
+    private static final String CFG_KEY_MAX_CORE = "FuzzyMaxCore";
+    
     private double m_minSupp;
     private double m_maxSupp;
     
@@ -59,7 +68,7 @@ Serializable {
     }
     
     /**
-     * @see SotaCell#adjustCell(DataCell, double)
+     * {@inheritDoc}
      */
     public void adjustCell(final DataCell cell, final double learningrate) {
         if (SotaUtil.isFuzzyIntervalType(cell.getType())) {
@@ -79,52 +88,102 @@ Serializable {
     }
 
     /**
-     * @see SotaCell#getValue()
+     * {@inheritDoc}
      */
     public double getValue() {
         return getCenterOfGravity();
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMinSupport()
+     * {@inheritDoc}
      */
     public double getMinSupport() {
         return m_minSupp;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMinCore()
+     * {@inheritDoc}
      */
     public double getMinCore() {
         return m_minCore;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMaxCore()
+     * {@inheritDoc}
      */
     public double getMaxCore() {
         return m_maxCore;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMaxSupport()
+     * {@inheritDoc}
      */
     public double getMaxSupport() {
         return m_maxSupp;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getCenterOfGravity()
+     * {@inheritDoc}
      */
     public double getCenterOfGravity() {
         return (m_maxCore + m_minCore) / 2;
     }
 
     /**
-     * @see java.lang.Object#clone()
+     * {@inheritDoc}
      */
     @Override
     public SotaCell clone() {
         return new SotaFuzzyCell(m_minSupp, m_minCore, m_maxCore, m_maxSupp);
     }
+    
+
+    /**
+     * {@inheritDoc}
+     */
+    public void loadFrom(final ModelContentRO modelContent)
+            throws InvalidSettingsException {
+        m_minSupp = modelContent.getDouble(CFG_KEY_MIN_SUPP);
+        m_maxSupp = modelContent.getDouble(CFG_KEY_MAX_SUPP);
+        m_minCore = modelContent.getDouble(CFG_KEY_MIN_CORE);
+        m_maxCore = modelContent.getDouble(CFG_KEY_MAX_CORE);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void saveTo(final ModelContentWO modelContent) {
+        modelContent.addDouble(CFG_KEY_MIN_SUPP, m_minSupp);
+        modelContent.addDouble(CFG_KEY_MAX_SUPP, m_maxSupp);
+        modelContent.addDouble(CFG_KEY_MIN_CORE, m_minCore);
+        modelContent.addDouble(CFG_KEY_MAX_CORE, m_maxCore);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getType() {
+        return SotaCellFactory.FUZZY_TYPE;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public double getCore() {
+        return getCenterOfGravity();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public double getRightBound() {
+        return getMaxCore();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public double getLeftBound() {
+        return getMinCore();
+    }     
 }

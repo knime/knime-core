@@ -26,13 +26,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 
+import org.knime.base.data.append.row.AppendedRowsIterator;
 import org.knime.base.data.append.row.AppendedRowsTable;
 import org.knime.base.data.append.row.AppendedRowsIterator.RuntimeCanceledExecutionException;
 import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -103,9 +103,9 @@ public class AppendedRowsNodeModel extends NodeModel {
         AppendedRowsTable out = new AppendedRowsTable(
                 (m_isAppendSuffix ? m_suffix : null), corrected);
         // note, this iterator throws runtime exceptions when canceled.
-        RowIterator it = out.iterator(exec, totalRowCount);
-        BufferedDataContainer c = exec.createDataContainer(out
-                .getDataTableSpec());
+        AppendedRowsIterator it = out.iterator(exec, totalRowCount);
+        BufferedDataContainer c = 
+            exec.createDataContainer(out.getDataTableSpec());
         try {
             while (it.hasNext()) {
                 // may throw exception, also sets progress
@@ -115,6 +115,10 @@ public class AppendedRowsNodeModel extends NodeModel {
             throw rcee.getCause();
         } finally {
             c.close();
+        }
+        if (it.getNrRowsSkipped() > 0) {
+            setWarningMessage("Filtered out " + it.getNrRowsSkipped() 
+                    + " duplicate row(s).");
         }
         return new BufferedDataTable[]{c.getTable()};
     }

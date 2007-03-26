@@ -492,13 +492,9 @@ public class ColValRowFilter extends RowFilter {
                         + "column type. (Col#:"
                         + m_colIndex
                         + ",ColType:"
-                        + colType.getClass().getName().substring(
-                                colType.getClass().getName().lastIndexOf('.'))
+                        + colType
                         + ",RangeType:"
-                        + m_lowerBound.getType().getClass().getName()
-                                .substring(
-                                        m_lowerBound.getType().getClass()
-                                                .getName().lastIndexOf('.')));
+                        + m_lowerBound.getType());
             }
         }
         if (m_upperBound != null) {
@@ -508,13 +504,9 @@ public class ColValRowFilter extends RowFilter {
                         + "column type. (Col#:"
                         + m_colIndex
                         + ",ColType:"
-                        + colType.getClass().getName().substring(
-                                colType.getClass().getName().lastIndexOf('.'))
+                        + colType
                         + ",RangeType:"
-                        + m_upperBound.getType().getClass().getName()
-                                .substring(
-                                        m_upperBound.getType().getClass()
-                                                .getName().lastIndexOf('.')));
+                        + m_upperBound.getType());
             }
         }
 

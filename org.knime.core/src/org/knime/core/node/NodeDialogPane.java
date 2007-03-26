@@ -65,7 +65,21 @@ import org.knime.core.node.Node.MemoryPolicy;
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodeDialogPane {
-    
+    // This listener needs to be static and not an anonymous inner class
+    // because it stays registered in some static Swing classes. Thus a long
+    // reference chain will prevent quite a lot of memory to get garbage
+    // collected even if all workflows are closed.
+    private static final HierarchyListener HIERARCHY_LISTENER =
+        new HierarchyListener() {
+            /**
+             * @see java.awt.event.HierarchyListener
+             *      #hierarchyChanged(java.awt.event.HierarchyEvent)
+             */
+            public void hierarchyChanged(final HierarchyEvent e) {
+                noLightWeight(e.getComponent());
+            }
+        };
+        
     private static final String TAB_NAME_MISCELLANEOUS = 
         "General Node Settings";
 
@@ -84,6 +98,7 @@ public abstract class NodeDialogPane {
     /** Node reference set once which is informed about the dialog's apply. 
      * @deprecated This member as NodeContainer will be moved into the 
      *             {@link NodeDialog}. */
+    @Deprecated
     private Node m_node;
     
     /** The additional tab in which the user can set the memory options. 
@@ -93,14 +108,6 @@ public abstract class NodeDialogPane {
 
     /** The underlying panel which keeps all the tabs. */
     private final JPanel m_panel;
-    
-    /** Added to all components and listens for new added once components. */
-    private static final HierarchyListener HIERARCHY_LISTENER = 
-            new HierarchyListener() { 
-        public void hierarchyChanged(final HierarchyEvent e) {
-            noLightWeight(e.getComponent());
-        }
-    };
     
     /**
      * Creates a new dialog with the given title. The pane holds a tabbed pane
@@ -125,6 +132,7 @@ public abstract class NodeDialogPane {
      * @deprecated The <code>Node</code> member inside the dialog pane is
      *             obsolete.
      */
+    @Deprecated
     final void setNode(final Node node) {
         assert (m_node == null && node != null);
         m_node = node;

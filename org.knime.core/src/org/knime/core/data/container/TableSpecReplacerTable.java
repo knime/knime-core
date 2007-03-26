@@ -191,10 +191,10 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
     }
     
     /**
-     * Get handle to reference table.
+     * Get handle to reference table in an array of length 1.
      * @return Reference to that table.
      */
-    public BufferedDataTable getReferenceTable() {
-        return m_reference;
+    public BufferedDataTable[] getReferenceTables() {
+        return new BufferedDataTable[]{m_reference};
     }
 }

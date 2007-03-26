@@ -35,7 +35,7 @@ import org.knime.core.data.DataCell;
  * Abstract <b>B</b>inary <b>l</b>arge <b>ob</b>ject cell used to handle
  * potentially large cells. 
  * 
- * <p>Cell implementations extending from this class will be seperately written
+ * <p>Cell implementations extending from this class will be separately written
  * when a table is buffered on disc (each cell into a separate file). 
  * This has two advantages:
  * <ul>
@@ -109,7 +109,7 @@ public abstract class BlobDataCell extends DataCell {
         m_blobAddress = blobAddress;
     }
     
-    /** Utitility class that holds information where the blob is located. 
+    /** Utility class that holds information where the blob is located. 
      * This contains: bufferID, column index, index of blob in the column. */
     static final class BlobAddress {
         

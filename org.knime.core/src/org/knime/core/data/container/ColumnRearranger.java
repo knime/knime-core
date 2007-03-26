@@ -46,7 +46,7 @@ import org.knime.core.data.DataTableSpec;
  * The following example demonstrates the usage of a
  * <code>ColumnRearranger</code> to append a column to a given table, which
  * contains the sum of the first two columns of the input table (given that
- * these colums are numeric). The node model implementation would contain code
+ * these columns are numeric). The node model implementation would contain code
  * as follows.
  * 
  * <pre>
@@ -284,11 +284,47 @@ public final class ColumnRearranger {
         return -1;
     }
     
+    /**
+     * Moves the column at index <code>from</code> to the index <code>to</code>.
+     * This method can be used to re-sort the set of columns.
+     * 
+     * If <code>from</code> is greater than <code>to</code>, then the column 
+     * indices will be affected as follows:
+     * <ul>
+     * <li>Any column before <code>to</code> (excl) and after <code>from</code>
+     * (excl) will have the index it had previously.</li>
+     * <li>Any column between <code>to</code> (incl) and <code>from</code>
+     * will have an index shifted upward by one.</li>
+     * </ul>
+     * If the <code>from</code> is smaller than <code>to</code>, the column
+     * indices will change as follows:
+     * <ul>
+     * <li>The columns before <code>from</code> (excl) and after <code>to</code>
+     * (incl) will have the index they had previously.</li>
+     * <li>The columns between <code>from</code> and <code>to</code> (excl)
+     * will have an index one less than they had before.</li>
+     * </ul>
+     * @param from The from index. 
+     * @param to The destination index.
+     * @throws IndexOutOfBoundsException If any of the values is out of range,
+     * i.e. less than 0 or greater or equal to the current set of columns. 
+     */
+    public void move(final int from, final int to) {
+        if (from < to) {
+            SpecAndFactoryObject val = m_includes.get(from);
+            m_includes.insertElementAt(val, to);
+            m_includes.remove(from);
+        } else {
+            SpecAndFactoryObject val = m_includes.remove(from);
+            m_includes.insertElementAt(val, to);
+        }
+    }
+    
     /** Inserts the columns provided by <code>fac</code> at a given position.
      * Any columns before that position stay where they are, the column at
      * the position and any thereafter are shifted to the right by the number
      * of columns provided by <code>fac</code>.
-     * @param position The position (index) where to insert the new colums.
+     * @param position The position (index) where to insert the new columns.
      * @param fac The factory from which we get the new columns.
      * @throws IndexOutOfBoundsException If position is invalid.
      * @throws NullPointerException If <code>fac</code> is <code>null</code>.
@@ -367,14 +403,14 @@ public final class ColumnRearranger {
         }
     }
     
-    /** Access method for the internal datastructure.
+    /** Access method for the internal data structure.
      * @return The current set of columns.
      */
     Vector<SpecAndFactoryObject> getIncludes() {
         return m_includes;
     }
     
-    /** Access method for the internal datastructure.
+    /** Access method for the internal data structure.
      * @return The original spec as passed in the constructor.
      */
     DataTableSpec getOriginalSpec() {

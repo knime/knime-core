@@ -28,9 +28,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InvalidClassException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 import org.knime.base.data.filter.column.FilterColumnTable;
@@ -45,6 +42,8 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -67,10 +66,18 @@ public class SotaNodeModel extends NodeModel {
     private ArrayList<String> m_excludeList;
 
     private String m_hierarchieLevelCell;
-
+    
+    private static final String CFG_KEY_USE_FUZZY_HIERARCHY = "FuzzyHierarchy";
+    
+    private static final String CFG_KEY_MAX_FUZZY_LEVEL = "MaxFuzzyLevel";
+    
+    private static final String CFG_KEY_INDATA_SIZE = "InDataContainerSize";
+    
+    private static final String CFG_KEY_ORIGDATA_SIZE = "OrigDataContainerSize";
+    
+    private static final String INTERNAL_MODEL = "SotaModel";
+    
     private static final String TREE_FILE = "tree.sota";
-
-    private static final String SETTINGS_FILE = "settings.sota";
 
     private static final String IN_DATA_FILE = "indata.sota";
 
@@ -88,7 +95,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -106,7 +113,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -115,7 +122,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -124,7 +131,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -153,7 +160,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -161,7 +168,7 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -285,41 +292,34 @@ public class SotaNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
+        
+        File file = new File(internDir, TREE_FILE);
+        FileInputStream fis = new FileInputStream(file);
+        ModelContentRO modelContent = ModelContent.loadFromXML(fis);        
 
-        // Load Settings
-        int origDataSize = 0;
+        // Load settings
         int inDataSize = 0;
-        int numberOfCells = 0;
-        FileInputStream in = new FileInputStream(new File(internDir,
-                SETTINGS_FILE));
-        ObjectInputStream s = new ObjectInputStream(in);
+        int origDataSize = 0;
         try {
-            Object isHierarchicalFuzzyData = s.readObject();
-            Object maxHierarchicalLevel = s.readObject();
-
-            m_sota.setUseHierarchicalFuzzyData(((Boolean)
-                    isHierarchicalFuzzyData).booleanValue());
-            m_sota.setMaxHierarchicalLevel(((Integer)maxHierarchicalLevel)
-                    .intValue());
-
-            inDataSize = ((Integer)s.readObject()).intValue();
-            origDataSize = ((Integer)s.readObject()).intValue();
-            numberOfCells = ((Integer)s.readObject()).intValue();
-        } catch (ClassNotFoundException e) {
-            IOException ioe = new IOException("Could not load internal settings"
-                    + " due to missing class!");
-            ioe.initCause(e);
+            m_sota.setUseHierarchicalFuzzyData(modelContent.getBoolean(
+                    CFG_KEY_USE_FUZZY_HIERARCHY));
+            m_sota.setMaxHierarchicalLevel(modelContent.getInt(
+                    CFG_KEY_MAX_FUZZY_LEVEL));
+            inDataSize = modelContent.getInt(CFG_KEY_INDATA_SIZE);
+            origDataSize = modelContent.getInt(CFG_KEY_ORIGDATA_SIZE);
+        } catch (InvalidSettingsException e1) {
+            IOException ioe = new IOException("Could not load settings," 
+                    + "due to invalid settings in model content !");
+            ioe.initCause(e1);
+            fis.close();
             throw ioe;
-        } finally {
-            in.close();
         }
-
+        
         // Load in data
         DataTable table = DataContainer.readFromZip(new File(internDir,
                 IN_DATA_FILE));
@@ -331,40 +331,25 @@ public class SotaNodeModel extends NodeModel {
         final DataArray origData = new DefaultDataArray(table, 1, origDataSize);
         m_sota.setOriginalData(origData);
 
-        // Load Tree
-        in = new FileInputStream(new File(internDir, TREE_FILE));
-        s = new ObjectInputStream(in);
+        
+        // Load tree
+        SotaTreeCell root = new SotaTreeCell(0, false);
         try {
-            for (int i = 1; i < numberOfCells; i++) {
-                s.readObject();
-            }
-
-            Object root = s.readObject();
-            m_sota.setRoot((SotaTreeCell)root);
-
-        } catch (ClassNotFoundException e) {
-            IOException ioe = new IOException("Could not load internal cell "
-                    + "data due to missing class!");
+            root.loadFrom(modelContent, 0, null, false);
+        } catch (InvalidSettingsException e) {
+            IOException ioe = new IOException("Could not load tree cells,"
+                    + "due to invalid settings in model content !");
             ioe.initCause(e);
+            fis.close();
             throw ioe;
-        } catch (InvalidClassException e) {
-            IOException ioe = new IOException("Could not load internal cell "
-                    + "data due to a version conflict!");
-            ioe.initCause(e);
-            throw ioe;
-        } catch (IOException e) {
-            IOException ioe = new IOException("Could not load internal cell "
-                    + "data due to a io problem!");
-            ioe.initCause(e);
-            throw ioe;
-        } finally {
-            in.close();
         }
+        m_sota.setRoot(root);
+        
+        fis.close();
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #saveInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File internDir,
@@ -379,24 +364,24 @@ public class SotaNodeModel extends NodeModel {
         DataContainer.writeToZip(m_sota.getOriginalData(), new File(
                     internDir, ORIG_DATA_FILE), exec);
 
-        FileOutputStream out;
-        ObjectOutputStream s;
-        
         // Save tree
-        out = new FileOutputStream(new File(internDir, TREE_FILE));
-        s = new ObjectOutputStream(out);
-        int cells = m_sota.getRoot().writeToFile(s, 0);
-        out.close();
+        ModelContent modelContent = new ModelContent(INTERNAL_MODEL);
+        m_sota.getRoot().saveTo(modelContent, 0);
 
         // Save settings
-        out = new FileOutputStream(new File(internDir, SETTINGS_FILE));
-        s = new ObjectOutputStream(out);
-        s.writeObject(m_sota.isUseHierarchicalFuzzyData());
-        s.writeObject(m_sota.getMaxHierarchicalLevel());
-        s.writeObject(m_sota.getInDataContainer().size());
-        s.writeObject(m_sota.getOriginalData().size());
-        s.writeObject(cells);
-        s.flush();
-        out.close();
+        modelContent.addBoolean(CFG_KEY_USE_FUZZY_HIERARCHY, 
+                m_sota.isUseHierarchicalFuzzyData());
+        modelContent.addInt(CFG_KEY_MAX_FUZZY_LEVEL, 
+                m_sota.getMaxHierarchicalLevel());
+        modelContent.addInt(CFG_KEY_INDATA_SIZE,
+                m_sota.getInDataContainer().size());
+        modelContent.addInt(CFG_KEY_ORIGDATA_SIZE,
+                m_sota.getOriginalData().size());
+        
+        
+        File file = new File(internDir, TREE_FILE);
+        FileOutputStream fos = new FileOutputStream(file);
+        modelContent.saveToXML(fos);
+        fos.close();
     }
 }

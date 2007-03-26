@@ -65,7 +65,7 @@ public class FixedColumnHistogramNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new FixedColumnHistogramNodeDialog();
+        return new FixedColumnHistogramDialogPane();
     }
 
     /**

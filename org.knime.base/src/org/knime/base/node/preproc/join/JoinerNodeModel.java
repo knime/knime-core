@@ -31,7 +31,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.knime.base.data.filter.column.FilterColumnTable;
-import org.knime.base.data.join.JoinedRow;
 import org.knime.base.data.join.JoinedTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -41,6 +40,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.JoinedRow;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;

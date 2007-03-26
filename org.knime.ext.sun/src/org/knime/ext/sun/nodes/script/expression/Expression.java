@@ -67,10 +67,10 @@ public class Expression implements Serializable {
      * Properties, i.e. fields in the source file with their corresponding
      * class.
      */
-    private final Map<String, Class> m_properties;
+    private final Map<String, Class<?>> m_properties;
 
     /** The compiled class for the instance of the expression. */
-    private final Class m_compiled;
+    private final Class<?> m_compiled;
 
     /**
      * Constructor for an expression with fields.
@@ -87,20 +87,20 @@ public class Expression implements Serializable {
      *             elements
      */
     public Expression(final String body, final Map<String, String> props,
-            final Class rType, final File tempFile)
+            final Class<?> rType, final File tempFile)
             throws CompilationFailedException {
         if (!tempFile.getName().endsWith(".java")) {
             throw new IllegalArgumentException("No java file: "
                     + tempFile.getName());
         }
         m_javaFile = tempFile;
-        m_properties = new Hashtable<String, Class>();
+        m_properties = new Hashtable<String, Class<?>>();
         m_compiled = createClass(body, props, rType);
     }
 
     /* Called from the constructor. */
-    private Class createClass(final String body,
-            final Map<String, String> props, final Class rType)
+    private Class<?> createClass(final String body,
+            final Map<String, String> props, final Class<?> rType)
             throws CompilationFailedException {
 
         // Remember the properties
@@ -108,7 +108,7 @@ public class Expression implements Serializable {
             // Here's the property name and type
             String propName = entry.getKey();
             String propClass = entry.getValue();
-            Class clazz;
+            Class<?> clazz;
 
             // .. might be a type or a type-name
             if (propClass == null) {
@@ -155,9 +155,9 @@ public class Expression implements Serializable {
         m_classFile = new File(classAbsoluteName);
         assert (m_classFile.exists());
         m_classFile.deleteOnExit();
-        Class compiled;
+        Class<?> compiled;
         try {
-            URL[] urls = new URL[]{m_classFile.getParentFile().toURL()};
+            URL[] urls = new URL[]{m_classFile.getParentFile().toURI().toURL()};
             ClassLoader parent = getClass().getClassLoader();
             ClassLoader load = URLClassLoader.newInstance(urls, parent);
             compiled = load.loadClass(javaClassName);
@@ -167,8 +167,19 @@ public class Expression implements Serializable {
             c.initCause(mue);
             throw c;
         } catch (ClassNotFoundException cfe) {
+            StringBuilder addInfo = new StringBuilder("(Class file ");
+            addInfo.append(m_classFile.getAbsolutePath());
+            if (m_classFile.exists()) {
+                addInfo.append("does exist - ");
+                addInfo.append(m_classFile.length());
+                addInfo.append(" bytes");
+            } else {
+                addInfo.append("does not exist");
+            }
+            addInfo.append(")");
             CompilationFailedException c = new CompilationFailedException(
-                    "Can't load class file " + classAbsoluteName);
+                    "Can't load class file " + classAbsoluteName
+                    + addInfo.toString());
             c.initCause(cfe);
             throw c;
         }
@@ -196,7 +207,7 @@ public class Expression implements Serializable {
      * Creates the source for given expression classname, body & properties.
      */
     private String generateSource(final String filename, final String body,
-            final Class rType) {
+            final Class<?> rType) {
         String copy = body;
         StringBuilder buffer = new StringBuilder(4096);
 
@@ -214,9 +225,9 @@ public class Expression implements Serializable {
         buffer.append("\n");
 
         /* Add the source fields */
-        for (Map.Entry<String, Class> entry : m_properties.entrySet()) {
+        for (Map.Entry<String, Class<?>> entry : m_properties.entrySet()) {
             String name = entry.getKey();
-            Class type = entry.getValue();
+            Class<?> type = entry.getValue();
             buffer.append("  public " + type.getName() + " " + name + ";");
             buffer.append("\n");
         }

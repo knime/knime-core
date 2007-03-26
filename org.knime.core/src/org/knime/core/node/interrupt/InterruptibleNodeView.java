@@ -35,8 +35,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeView;
 
@@ -81,7 +79,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
         // add the menu entry to the menu bar
         super.getJMenuBar().add(createInterruptMenu());
         // TODO: this is still a hack!
-        // setComponent(getControlPanel());
+//         setComponent(getControlPanel());
     }
 
     /**
@@ -150,28 +148,12 @@ public abstract class InterruptibleNodeView extends NodeView implements
      */
     public void actionPerformed(final ActionEvent e) {
         if (e.getActionCommand().equals(InterruptControlPanel.RUN)) {
-            LOGGER.debug("run");
-            ((InterruptibleNodeModel)getNodeModel()).pause(false);
+            ((InterruptibleNodeModel)getNodeModel()).run();
         } else if (e.getActionCommand().equals(InterruptControlPanel.BREAK)) {
-            LOGGER.debug("break");
-            ((InterruptibleNodeModel)getNodeModel()).pause(true);
-            updateModel(getNodeModel());
+            ((InterruptibleNodeModel)getNodeModel()).pause();
         } else if (e.getActionCommand().equals(InterruptControlPanel.NEXT)) {
-            assert ((InterruptibleNodeModel)getNodeModel()).isPaused();
-            LOGGER.debug("next step");
-            ExecutionContext exec = ((InterruptibleNodeModel)getNodeModel())
-                    .getExecutionContext();
-            try {
-                ((InterruptibleNodeModel)getNodeModel())
-                        .executeOneIteration(exec);
-                ((InterruptibleNodeModel)getNodeModel())
-                        .incrementIterationCounter();
-                updateModel(getNodeModel());
-            } catch (CanceledExecutionException ce) {
-                LOGGER.info(ce);
-            }
+            ((InterruptibleNodeModel)getNodeModel()).next(1);
         } else if (e.getActionCommand().equals(InterruptControlPanel.FINISH)) {
-            LOGGER.debug("finish");
             ((InterruptibleNodeModel)getNodeModel()).finish();
         }
         refreshInterruptMenu();
@@ -220,6 +202,8 @@ public abstract class InterruptibleNodeView extends NodeView implements
         getControlPanel().getNextStepButton().setEnabled(
                 model.isPaused() && !model.isFinished());
         getControlPanel().getFinishButton().setEnabled(!model.isFinished());
+        
+        getControlPanel().setCurrentIteration(model.getNumberOfIterations());
     }
 
     /**
@@ -230,9 +214,16 @@ public abstract class InterruptibleNodeView extends NodeView implements
      */
     @Override
     public void onClose() {
-        ((InterruptibleNodeModel)getNodeModel()).pause(true);
         ((InterruptibleNodeModel)getNodeModel()).finish();
-        refreshInterruptMenu();
+    }
+    
+    /**
+     * 
+     * @see org.knime.core.node.NodeView#onOpen()
+     */
+    @Override
+    protected void onOpen() {
+        refreshInterruptMenu();   
     }
 
     /**
@@ -265,6 +256,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
      */
     @Override
     public void updateModel(final Object model) {
+        refreshInterruptMenu();
         modelChanged();
     }
 

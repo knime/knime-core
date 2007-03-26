@@ -19,11 +19,12 @@
 			<li>Bar size</li>
 			<li>Show empty intervals</li>
 			<li>Show missing value bar</li>
+			<li>Layout</li>			
 			<li>Zooming</li>
 			<li>...</li>
 			</ol>
-			The bars are colored according to the number of rows per color 
-			attribute.
+			The bars are colored in proportion to the aggregation value.
+			Hiliting is supported.
 		</p>
 		<p>All automatically created bins, with exception to the first one, are
 		left open intervals (a,b] where a is excluded and b is included in 
@@ -32,6 +33,8 @@
 		<p><b>Please note: This node caches all data in the main memory to 
 		provide interactive functions. In order to work with huge data sets 
 		use the "Histogram" node.</b></p>
+		<p><b>Only columns with a valid domain are available in this view.
+		To set the domain use the DomainCalculator or ColumnFilter node!</b></p>
 		</intro>
 		<option name="Display all rows">
 		    If selected the histogram view displays all rows of the incoming data.

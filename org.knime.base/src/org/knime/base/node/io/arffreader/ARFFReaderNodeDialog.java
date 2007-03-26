@@ -294,8 +294,8 @@ public class ARFFReaderNodeDialog extends NodeDialogPane implements
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             String path;
             try {
-                path = chooser.getSelectedFile().getAbsoluteFile().toURL()
-                        .toString();
+                path = chooser.getSelectedFile().getAbsoluteFile()
+                        .toURI().toURL().toString();
             } catch (Exception e) {
                 path = "<Error: Couldn't create URL for file>";
             }

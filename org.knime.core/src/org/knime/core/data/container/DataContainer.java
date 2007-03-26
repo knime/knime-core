@@ -51,6 +51,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -188,6 +189,29 @@ public class DataContainer implements RowAppender {
     @SuppressWarnings ("unchecked")
     public DataContainer(final DataTableSpec spec, final boolean initDomain,
             final int maxCellsInMemory) {
+        this(spec, initDomain, maxCellsInMemory, true);
+    }
+    
+    /**
+     * Opens the container so that rows can be added by 
+     * <code>addRowToTable(DataRow)</code>. 
+     * @param spec Table spec of the final table. Rows that are added to the
+     *        container must comply with this spec.
+     * @param initDomain if set to true, the column domains in the 
+     *        container are initialized with the domains from spec. 
+     * @param maxCellsInMemory Maximum count of cells in memory before swapping.
+     * @param enableKeyHashing If <code>true</code> the row keys are hashed
+     * to check for duplicates. (Highly advisable for sanity checks, but 
+     * requires additional memory).
+     * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0.
+     * @throws NullPointerException If <code>spec</code> is <code>null</code>.
+     * @deprecated enableKeyHashing option won't be available in the future. 
+     * We added this feature to get around with bug #1090 (memory problem)
+     */
+    @SuppressWarnings ("unchecked")
+    @Deprecated
+    public DataContainer(final DataTableSpec spec, final boolean initDomain,
+            final int maxCellsInMemory, final boolean enableKeyHashing) {
         if (maxCellsInMemory < 0) {
             throw new IllegalArgumentException(
                     "Cell count must be positive: " + maxCellsInMemory); 
@@ -197,7 +221,7 @@ public class DataContainer implements RowAppender {
         }
         DataTableSpec oldSpec = m_spec;
         m_spec = spec;
-        m_keySet = new HashSet<RowKey>();
+        m_keySet = enableKeyHashing ? new HashSet<RowKey>() : null;
         if (m_buffer != null) {
             m_buffer.close(oldSpec);
         }
@@ -377,7 +401,7 @@ public class DataContainer implements RowAppender {
         if (!isOpen()) {
             throw new IllegalStateException("Container is not open.");
         }
-        return m_buffer.size();
+        return m_buffer != null ? m_buffer.size() : 0;
     }
 
     /**
@@ -477,13 +501,11 @@ public class DataContainer implements RowAppender {
             updateMinMax(c, value);
             
         } // for all cells
-        if (m_keySet.contains(key)) {
+        if (m_keySet != null && !m_keySet.add(key)) {
             throw new IllegalArgumentException("Container contains already a"
                     + " row with key \"" + key + "\".");
         }
 
-        // all test passed, add row
-        m_keySet.add(key);
         m_buffer.addRow(row);
     } // addRowToTable(DataRow)
     
@@ -611,7 +633,7 @@ public class DataContainer implements RowAppender {
     }
     
     /** Convenience method that will buffer the entire argument table. This is
-     * usefull if you have a wrapper table at hand and want to make sure that 
+     * useful if you have a wrapper table at hand and want to make sure that 
      * all calculations are done here 
      * @param table The table to cache.
      * @param exec The execution monitor to report progress to and to check
@@ -643,7 +665,7 @@ public class DataContainer implements RowAppender {
     }
     
     /** Convenience method that will buffer the entire argument table. This is
-     * usefull if you have a wrapper table at hand and want to make sure that 
+     * useful if you have a wrapper table at hand and want to make sure that 
      * all calculations are done here 
      * @param table The table to cache.
      * @param exec The execution monitor to report progress to and to check
@@ -805,7 +827,23 @@ public class DataContainer implements RowAppender {
         String date = DATE_FORMAT.format(new Date());
         String fileName = "knime_container_" + date + "_";
         String suffix = ".bin.gz";
-        File f = File.createTempFile(fileName, suffix);
+        // the preference page contains an entry to set the temp dir
+        // we evaluate it here explicitly as the environment variable may
+        // not have been set by the preference page when File.createTempFile
+        // is called the very first time (may happen in some early plugin load)
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        File tmpDirFile = null;
+        if (tmpDir != null) {
+            tmpDirFile = new File(tmpDir);
+            if (!tmpDirFile.isDirectory()) {
+                NodeLogger.getLogger(DataContainer.class).warn(
+                        "System property \"java.io.tmpdir\" (\""
+                        + tmpDir + "\") does not point to existing directory," 
+                        + " using default");
+                tmpDir = null;
+            }
+        }
+        File f = File.createTempFile(fileName, suffix, tmpDirFile);
         f.deleteOnExit();
         return f;
     }

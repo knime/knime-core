@@ -77,7 +77,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
     // private JLabel m_precision;
 
     private boolean[][] m_cellHilited;
-
+    
     /**
      * Creates a new ScorerNodeView displaying the table with the score.
      * 
@@ -187,7 +187,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         updateHilitedCells();
 
         ConfusionTableModel dataModel = new ConfusionTableModel(scoreCount,
-                headerNames,rowHeaderDescription, columnHeaderDescription);
+                headerNames, rowHeaderDescription, columnHeaderDescription);
 
         m_tableView.setModel(dataModel);
 
@@ -416,7 +416,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      * @see HiLiteListener#hiLite(KeyEvent)
      */
     public void hiLite(final KeyEvent event) {
-
+        
         updateHilitedCells();
 
         m_tableView.repaint();
@@ -443,7 +443,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      * @see HiLiteListener#unHiLite(KeyEvent)
      */
     public void unHiLite(final KeyEvent event) {
-
+        
         for (int i = 0; i < m_cellHilited.length; i++) {
             for (int j = 0; j < m_cellHilited[i].length; j++) {
                 if (m_cellHilited[i][j]) {

@@ -81,7 +81,7 @@ public final class FileAnalyzer {
             final FileReaderNodeSettings userSettings) throws IOException {
         if (userSettings.getDataFileLocation() == null) {
             throw new IllegalArgumentException("Must specify a valid file "
-                    + "location for the file anaylizer");
+                    + "location for the file analyzer");
         }
 
         // create the new and empty settings
@@ -135,6 +135,9 @@ public final class FileAnalyzer {
             result.addWhiteSpaceCharacter("\t");
             result.setWhiteSpaceUserSet(false);
         }
+        
+        // for now we just take over this flag:
+        result.setSupportShortLines(userSettings.getSupportShortLines());
 
         // sets delimiter and column numbers (as many columns as it gets with
         // the delimiters - regardless of any row headers); honors user settings
@@ -322,7 +325,8 @@ public final class FileAnalyzer {
             }
             // and now, see if the headers to be are nicely formatted - that is
             // all have the same prefix and a growing index.
-            if ((columnHeaders.length > 0) && consecutiveHeaders(columnHeaders)) {
+            if ((columnHeaders.length > 0) 
+                    && consecutiveHeaders(columnHeaders)) {
                 result.setFileHasColumnHeaders(true);
                 return createColProps(columnHeaders, userColProps, columnTypes);
             }
@@ -668,7 +672,6 @@ public final class FileAnalyzer {
                 break;
             }
             colIdx++;
-
             if (result.getFileHasRowHeaders() && (colIdx == 0)
                     && (!result.isRowDelimiter(token))) {
                 // ignore the row header - get the next token/column
@@ -679,8 +682,8 @@ public final class FileAnalyzer {
             }
             if (!result.isRowDelimiter(token)) {
                 if ((linesRead < 1)
-                        && (!userSettings.isFileHasColumnHeadersUserSet() || userSettings
-                                .getFileHasColumnHeaders())) {
+                        && (!userSettings.isFileHasColumnHeadersUserSet() 
+                                || userSettings.getFileHasColumnHeaders())) {
                     // skip the first line - could be column headers - unless
                     // we know it's not
                     continue;
@@ -762,7 +765,6 @@ public final class FileAnalyzer {
             if (types[t] == null) {
                 cols += "#" + t + ", ";
                 types[t] = StringCell.TYPE;
-
             }
         }
         if (cols.length() > 0) {
@@ -775,9 +777,7 @@ public final class FileAnalyzer {
 
     /**
      * Looks at the first character of the first lines of the file and
-     * determines what kind of single line comment we should support. If no
-     * suspect character appears it adds C-style comment to the settings object
-     * passed in.
+     * determines what kind of single line comment we should support. 
      * 
      * @param settings object containing the data file location. The method will
      *            add comment patterns to this object.
@@ -803,7 +803,6 @@ public final class FileAnalyzer {
                     + settings.getDataFileLocation() + "'.");
         }
 
-        boolean commentFound = false;
         String line;
         int linesRead = 0;
 
@@ -820,19 +819,16 @@ public final class FileAnalyzer {
 
             if (line.charAt(0) == '#') {
                 settings.addSingleLineCommentPattern("#", false, false);
-                commentFound = true;
                 break;
             }
             if (line.charAt(0) == '%') {
                 settings.addSingleLineCommentPattern("%", false, false);
-                commentFound = true;
                 break;
             }
 
             if ((line.charAt(0) == '/') && (line.charAt(1) == '/')) {
                 settings.addSingleLineCommentPattern("//", false, false);
                 settings.addBlockCommentPattern("/*", "*/", false, false);
-                commentFound = true;
                 break;
             }
 
@@ -843,11 +839,14 @@ public final class FileAnalyzer {
             settings.setAnalyzeUsedAllRows(false);
         }
 
-        if (!commentFound) {
-            // haven't seen any line comment, set C-style comment.
-            settings.addSingleLineCommentPattern("//", false, false);
-            settings.addBlockCommentPattern("/*", "*/", false, false);
-        }
+        // as of ver1.2.++ I am removing this. Comment in data files is not
+        // really common. If we didn't see comment in the first few lines there
+        // probably isn't any.
+//        if (!commentFound) {
+//            // haven't seen any line comment, set C-style comment.
+//            settings.addSingleLineCommentPattern("//", false, false);
+//            settings.addBlockCommentPattern("/*", "*/", false, false);
+//        }
     }
 
     /**
@@ -1208,10 +1207,11 @@ public final class FileAnalyzer {
                             }
                         } else {
                             if (settings.ignoreEmptyTokensAtEndOfRow()) {
-                                if ((columns - consEmptyTokens) > maxNumOfCols) {
-                                    // we read more non-emtpy columns than we
+                                if ((columns - consEmptyTokens) 
+                                        > maxNumOfCols) {
+                                    // we read more non-empty columns than we
                                     // could
-                                    // fill (in other rows) with emtpy tokens
+                                    // fill (in other rows) with empty tokens
                                     useSettings = false;
                                     break;
                                 }

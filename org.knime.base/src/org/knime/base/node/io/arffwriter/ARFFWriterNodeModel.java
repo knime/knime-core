@@ -278,7 +278,7 @@ public class ARFFWriterNodeModel extends NodeModel {
         writer.flush();
         writer.close();
 
-        ARFFReaderNodeModel.addToFileHistory(m_file.toURL().toString());
+        ARFFReaderNodeModel.addToFileHistory(m_file.toURI().toURL().toString());
         
         // execution successful return empty array
         return new BufferedDataTable[0];

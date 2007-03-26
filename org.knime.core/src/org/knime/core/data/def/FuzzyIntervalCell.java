@@ -34,6 +34,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.FuzzyIntervalValue;
+import org.knime.core.data.IntervalValue;
 
 
 /**
@@ -47,7 +48,7 @@ import org.knime.core.data.FuzzyIntervalValue;
  * @author Michael Berthold, University of Konstanz
  */
 public final class FuzzyIntervalCell extends DataCell implements
-        FuzzyIntervalValue {
+        FuzzyIntervalValue, IntervalValue {
 
     /** Convenience access member for 
      * <code>DataType.getType(FuzzyIntervalCell.class)</code>. 
@@ -94,7 +95,7 @@ public final class FuzzyIntervalCell extends DataCell implements
      * core.
      * 
      * @param minSupp Minimum support value.
-     * @param minCore Minumum core value.
+     * @param minCore Minimum core value.
      * @param maxCore Maximum core value.
      * @param maxSupp Maximum support value.
      * @throws IllegalArgumentException If not <code>a <= b <= c <= d</code>.
@@ -229,6 +230,20 @@ public final class FuzzyIntervalCell extends DataCell implements
             return new FuzzyIntervalCell(
                     minSupp, minCore, maxCore, maxSupp);
         }
+    }
+
+    /**
+     * @see org.knime.core.data.IntervalValue#getRightBound()
+     */
+    public double getRightBound() {
+        return getMaxCore();
+    }
+
+    /**
+     * @see org.knime.core.data.IntervalValue#getLeftBound()
+     */
+    public double getLeftBound() {
+        return getMinCore();
     }
 
 }

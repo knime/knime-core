@@ -103,11 +103,11 @@ public class DialogComponentFileChooser extends DialogComponent {
      * accepted.
      * 
      * @param stringModel the model holding the value
+     * @param historyID id for the file history
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
      *            {@link JFileChooser#CUSTOM_DIALOG}
      * @param validExtensions only show files with those extensions
-     * @param historyID id for the file history
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final int dialogType,
@@ -121,13 +121,13 @@ public class DialogComponentFileChooser extends DialogComponent {
      * non-existing paths are accepted.
      * 
      * @param stringModel the model holding the value
+     * @param historyID to identify the file histroy
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
      *            {@link JFileChooser#CUSTOM_DIALOG}
      * @param directoryOnly <code>true</code> if only directories should be
      *            selectable, otherwise only files can be selected
      * @param validExtensions only show files with those extensions
-     * @param historyID to identify the file histroy
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final int dialogType,
@@ -172,22 +172,25 @@ public class DialogComponentFileChooser extends DialogComponent {
                     if (validExtensions != null && validExtensions.length > 0) {
                         // disable "All Files" selection
                         chooser.setAcceptAllFileFilterUsed(false);
-                    }
-                    // set file filter for given extensions
-                    for (String extension : validExtensions) {
-                        chooser.setFileFilter(new SimpleFileFilter(extension));
+                        // set file filter for given extensions
+                        for (String extension : validExtensions) {
+                            chooser.setFileFilter(new SimpleFileFilter(
+                                    extension));
+                        }
                     }
                 }
-                int returnVal = chooser.showDialog(
-                        getComponentPanel().getParent(), null);
+                int returnVal =
+                        chooser.showDialog(getComponentPanel().getParent(),
+                                null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String newFile;
                     try {
                         newFile =
                                 chooser.getSelectedFile().getAbsoluteFile()
                                         .toString();
-                        // if ile selection and only on extension available
-                        if (!directoryOnly && validExtensions.length == 1) {
+                        // if file selection and only on extension available
+                        if (!directoryOnly && validExtensions != null 
+                                && validExtensions.length == 1) {
                             // and the file names has no this extension
                             if (!newFile.endsWith(validExtensions[0])) {
                                 // then append it
@@ -264,6 +267,10 @@ public class DialogComponentFileChooser extends DialogComponent {
      */
     private void showError(final JComboBox box) {
 
+        if (!getModel().isEnabled()) {
+            // don't flag an error in disabled components.
+            return;
+        }
         String selection = (String)box.getSelectedItem();
 
         if ((selection == null) || (selection.length() == 0)) {
@@ -284,11 +291,24 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
 
     /**
+     * Sets the coloring of the specified component back to normal.
+     * 
+     * @param box the component to clear the error status for.
+     */
+    protected void clearError(final JComboBox box) {
+        box.setForeground(DEFAULT_FG);
+        box.setBackground(DEFAULT_BG);
+    }
+
+    /**
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #updateComponent()
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
+
+        clearError(m_fileComboBox);
+
         // update the component only if model and component are out of sync
         SettingsModelString model = (SettingsModelString)getModel();
         String newValue = model.getStringValue();
@@ -304,13 +324,17 @@ public class DialogComponentFileChooser extends DialogComponent {
             m_fileComboBox.addItem(newValue);
             m_fileComboBox.setSelectedItem(newValue);
         }
+
+        // also update the enable status
+        setEnabledComponents(model.isEnabled());
     }
 
     /**
      * @see DialogComponent#validateStettingsBeforeSave()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         // just in case we didn't get notified about the last change...
         updateModel(false); // mark the erroneous component red.
         // store the saved filename in the history
@@ -322,7 +346,7 @@ public class DialogComponentFileChooser extends DialogComponent {
      *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         // we're always good - independent of the incoming spec
     }

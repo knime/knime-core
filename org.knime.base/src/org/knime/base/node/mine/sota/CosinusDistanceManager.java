@@ -51,14 +51,14 @@ public class CosinusDistanceManager implements DistanceManager {
     }
 
     /**
-     * @see DistanceManager#getDistance(DataRow, SotaTreeCell)
+     * {@inheritDoc}
      */
     public double getDistance(final DataRow row, final SotaTreeCell cell) {
         return Distances.getCosinusDistance(row, cell, m_offset, m_fuzzy);
     }
 
     /**
-     * @see DistanceManager#getDistance(DataRow, DataRow)
+     * {@inheritDoc}
      */
     public double getDistance(final DataRow row1, final DataRow row2) {
         return Distances.getCosinusDistance(row1, row2, m_offset, m_fuzzy);

@@ -236,7 +236,7 @@ public class ARFFReaderNodeModel extends NodeModel {
             File tmp = new File(url);
 
             // if that blows off we let the exception go up the stack.
-            newURL = tmp.getAbsoluteFile().toURL();
+            newURL = tmp.getAbsoluteFile().toURI().toURL();
         }
         return newURL;
     }

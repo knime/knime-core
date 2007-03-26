@@ -55,11 +55,11 @@ public class DialogComponentNumberEdit extends DialogComponent {
      * the minimum and default width of the text field, if not set otherwise.
      */
     private static final int FIELD_MINWIDTH = 2;
-    
+
     private static final int FIELD_DEFWIDTH = 10;
 
     private final JTextField m_valueField;
-    
+
     private final JLabel m_label;
 
     /**
@@ -70,11 +70,10 @@ public class DialogComponentNumberEdit extends DialogComponent {
      */
     public DialogComponentNumberEdit(final SettingsModelNumber numberModel,
             final String label) {
-        this(numberModel, label, 
-                calcDefaultWidth(numberModel.getNumberValueStr()));
+        this(numberModel, label, calcDefaultWidth(numberModel
+                .getNumberValueStr()));
     }
-    
-    
+
     /**
      * Constructor that puts label and JTextField into panel.
      * 
@@ -85,8 +84,8 @@ public class DialogComponentNumberEdit extends DialogComponent {
     public DialogComponentNumberEdit(final SettingsModelNumber numberModel,
             final String label, final int compWidth) {
         super(numberModel);
-        
-        m_label = new JLabel(label); 
+
+        m_label = new JLabel(label);
         getComponentPanel().add(m_label);
         m_valueField = new JTextField();
         String defValue = numberModel.getNumberValueStr();
@@ -143,7 +142,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
             return FIELD_MINWIDTH;
         }
         return defaultValue.length();
-        
+
     }
 
     /**
@@ -151,13 +150,18 @@ public class DialogComponentNumberEdit extends DialogComponent {
      *      #updateComponent()
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
+        
+        clearError(m_valueField);
+        
         // update component only if its out of sync with model
         SettingsModelNumber model = (SettingsModelNumber)getModel();
         String compString = m_valueField.getText();
         if (!model.getNumberValueStr().equals(compString)) {
             m_valueField.setText(model.getNumberValueStr());
         }
+
+        setEnabledComponents(model.isEnabled());
     }
 
     /**
@@ -189,7 +193,8 @@ public class DialogComponentNumberEdit extends DialogComponent {
      * @see DialogComponent#validateStettingsBeforeSave()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         // make sure the component contains a valid value
         updateModel();
     }
@@ -199,7 +204,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
      *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         // we're always good - independent of the incoming spec
     }
@@ -221,7 +226,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
     public void setSizeComponents(final int width, final int height) {
         m_valueField.setPreferredSize(new Dimension(width, height));
     }
-    
+
     /**
      * @see org.knime.core.node.defaultnodesettings.DialogComponent
      *      #setToolTipText(java.lang.String)
@@ -231,6 +236,5 @@ public class DialogComponentNumberEdit extends DialogComponent {
         m_label.setToolTipText(text);
         m_valueField.setToolTipText(text);
     }
-
 
 }

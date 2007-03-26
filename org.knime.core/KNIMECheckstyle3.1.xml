@@ -56,6 +56,9 @@
 <module name="MethodLength">
 </module>
 <module name="ParameterNumber">
+<metadata name="com.atlassw.tools.eclipse.checkstyle.comment" value="Constructor parameter list"/>
+<property name="max" value="10"/>
+<property name="tokens" value="CTOR_DEF"/>
 </module>
 <module name="EmptyForIteratorPad">
 </module>
@@ -151,6 +154,10 @@
 <property name="severity" value="ignore"/>
 </module>
 <module name="UpperEll">
+</module>
+<module name="ParameterNumber">
+<metadata name="com.atlassw.tools.eclipse.checkstyle.comment" value="Method parameter list"/>
+<property name="tokens" value="METHOD_DEF"/>
 </module>
 </module>
 <module name="PackageHtml">

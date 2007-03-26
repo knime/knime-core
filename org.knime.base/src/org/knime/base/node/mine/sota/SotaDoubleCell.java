@@ -28,6 +28,9 @@ import java.io.Serializable;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
 
 
 /**
@@ -35,6 +38,9 @@ import org.knime.core.data.DoubleValue;
  * @author Kilian Thiel, University of Konstanz
  */
 public class SotaDoubleCell implements SotaCell, DoubleValue, Serializable {
+    
+    private static final String CFG_KEY_VALUE = "DoubleValue";
+    
     private double m_value;
 
     /**
@@ -47,14 +53,14 @@ public class SotaDoubleCell implements SotaCell, DoubleValue, Serializable {
     }
 
     /**
-     * @see org.knime.core.data.DoubleValue#getDoubleValue()
+     * {@inheritDoc}
      */
     public double getDoubleValue() {
         return m_value;
     }
 
     /**
-     * @see SotaCell#adjustCell(DataCell, double)
+     * {@inheritDoc}
      */
     public void adjustCell(final DataCell cell, final double learningrate) {
         if (SotaUtil.isNumberType(cell.getType())) {
@@ -64,17 +70,40 @@ public class SotaDoubleCell implements SotaCell, DoubleValue, Serializable {
     }
 
     /**
-     * @see SotaCell#getValue()
+     * {@inheritDoc}
      */
     public double getValue() {
         return getDoubleValue();
     }
 
     /**
-     * @see java.lang.Object#clone()
+     * {@inheritDoc}
      */
     @Override
     public SotaCell clone() {
         return new SotaDoubleCell(m_value);
     }
+    
+
+    /**
+     * {@inheritDoc}
+     */
+    public void loadFrom(final ModelContentRO modelContent)
+            throws InvalidSettingsException {
+        m_value = modelContent.getDouble(CFG_KEY_VALUE);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void saveTo(final ModelContentWO modelContent) {
+        modelContent.addDouble(CFG_KEY_VALUE, m_value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public String getType() {
+        return SotaCellFactory.DOUBLE_TYPE;
+    }    
 }

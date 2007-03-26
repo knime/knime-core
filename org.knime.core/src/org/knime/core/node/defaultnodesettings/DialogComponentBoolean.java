@@ -83,9 +83,10 @@ public final class DialogComponentBoolean extends DialogComponent {
      *      #updateComponent()
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
         // only update component if values are off
         SettingsModelBoolean model = (SettingsModelBoolean)getModel();
+        setEnabledComponents(model.isEnabled());
         if (model.getBooleanValue() != m_checkbox.isSelected()) {
             m_checkbox.setSelected(model.getBooleanValue());
         }
@@ -95,7 +96,8 @@ public final class DialogComponentBoolean extends DialogComponent {
      * @see DialogComponent#validateStettingsBeforeSave()
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         // nothing to do.
     }
 
@@ -104,7 +106,7 @@ public final class DialogComponentBoolean extends DialogComponent {
      *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         // we're always good.
     }

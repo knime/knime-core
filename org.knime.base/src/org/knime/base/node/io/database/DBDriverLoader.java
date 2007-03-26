@@ -174,7 +174,7 @@ final class DBDriverLoader {
     private static void readZip(final File file, final ZipFile zipFile) 
             throws Exception {
         final ClassLoader cl = new URLClassLoader(
-                new URL[]{file.toURL()}, CLASS_LOADER);
+                new URL[]{file.toURI().toURL()}, CLASS_LOADER);
         for (Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
             zipEntries.hasMoreElements();) {
             ZipEntry e = zipEntries.nextElement();

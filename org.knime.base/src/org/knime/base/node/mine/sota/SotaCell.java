@@ -25,6 +25,9 @@
 package org.knime.base.node.mine.sota;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
 
 /**
  * 
@@ -54,4 +57,29 @@ public interface SotaCell {
      * @return the clone of the SotaCell instance
      */
     public SotaCell clone();
+    
+    /**
+     * Saves the value of the <code>SotaCell</code> to the given 
+     * <code>ModelContentWO</code>.
+     * 
+     * @param modelContent The <code>ModelContentWO</code> to save the values
+     * to. 
+     */
+    public void saveTo(final ModelContentWO modelContent);
+    
+    /**
+     * Loads the values from the given <code>ModelContentWO</code>.
+     * 
+     * @param modelContent The <code>ModelContentWO</code> to load the values 
+     * from.
+     * 
+     * @throws InvalidSettingsException If setting to load is not valid.
+     */
+    public void loadFrom(final ModelContentRO modelContent) 
+    throws InvalidSettingsException;    
+    
+    /**
+     * @return Returns the cells type.
+     */
+    public String getType();
 }

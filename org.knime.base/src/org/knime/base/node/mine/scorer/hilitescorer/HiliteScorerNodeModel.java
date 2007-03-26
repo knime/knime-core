@@ -236,7 +236,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                 + incorrect + ", #rows=" + nrRows + ", #missing=" + missing);
         // our view displays the table - we must keep a reference in the model.
         BufferedDataTable result = container.getTable();
-        return new BufferedDataTable[] { result };
+        return new BufferedDataTable[] {result};
 
     } // execute(DataTable[],ExecutionMonitor)
 
@@ -276,7 +276,6 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-
         if (inSpecs[INPORT].getNumColumns() < 2) {
             throw new InvalidSettingsException(
                     "The input table must have at least two colums to compare");

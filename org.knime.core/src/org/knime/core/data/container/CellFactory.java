@@ -53,7 +53,7 @@ public interface CellFactory {
      * the return value. The length of the returned array must match the 
      * length of the array returned by the getCells(DataRow) method and also
      * the types must match, i.e. the type of the respective DataColumnSpec
-     * must be of the same type or a syper type of the cell as returned
+     * must be of the same type or a super type of the cell as returned
      * by getCells(DataRow).
      * @return The specs to the newly created cells.
      */

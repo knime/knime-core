@@ -27,8 +27,10 @@ import org.knime.base.node.mine.cluster.hierarchical.distfunctions.DistanceFunct
 import org.knime.base.node.mine.cluster.hierarchical.distfunctions.EuclideanDist;
 import org.knime.base.node.mine.cluster.hierarchical.distfunctions.ManhattanDist;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -94,6 +96,11 @@ class HierarchicalClusterNodeDialog extends DefaultNodeSettingsPane {
                         HierarchicalClusterNodeModel.LINKAGETYPE_KEY,
                         HierarchicalClusterNodeModel.Linkage.SINGLE.name()),
                         "Linkage type:", linkageTypes)); 
+
+        addDialogComponent(new DialogComponentBoolean(
+                new SettingsModelBoolean(
+                        HierarchicalClusterNodeModel.USE_CACHE_KEY, true),
+                        "Cache distances")); 
     }  
 
 }    // HierarchicalClusterNodeDialog

@@ -39,6 +39,7 @@ import javax.swing.event.TableModelListener;
 
 import org.knime.base.node.io.csvwriter.CSVFilesHistoryPanel;
 import org.knime.base.node.io.csvwriter.CSVWriter;
+import org.knime.base.node.io.csvwriter.FileWriterSettings;
 import org.knime.base.node.preproc.filter.row.RowFilterTable;
 import org.knime.base.node.preproc.filter.row.rowfilter.EndOfTableException;
 import org.knime.base.node.preproc.filter.row.rowfilter.IncludeFromNowOn;
@@ -392,11 +393,15 @@ public class TableNodeView extends NodeView {
                     table = hilightOnlyTable;
                 }
                 try {
-                    CSVWriter writer = new CSVWriter(new FileWriter(m_file));
-                    writer.setWriteColHeader(true);
-                    writer.setWriteRowHeader(true);
-                    writer.setSepChar(';', true);
-                    writer.setMissing("");
+                    FileWriterSettings settings = new FileWriterSettings();
+                    settings.setWriteColumnHeader(true);
+                    settings.setWriteRowID(true);
+                    settings.setColSeparator(";");
+                    settings.setSeparatorReplacement("");
+                    settings.setReplaceSeparatorInStrings(true);
+                    settings.setMissValuePattern("");
+                    CSVWriter writer = new CSVWriter(new FileWriter(m_file), 
+                            settings);
                     try {
                         writer.write(table, m_exec);
                         writer.close();

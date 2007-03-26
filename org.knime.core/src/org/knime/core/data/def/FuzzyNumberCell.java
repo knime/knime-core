@@ -35,6 +35,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
+import org.knime.core.data.IntervalValue;
 
 /**
  * A data cell implementation holding a Fuzzy number by storing this value in
@@ -47,7 +48,7 @@ import org.knime.core.data.FuzzyNumberValue;
  * @author Michael Berthold, University of Konstanz
  */
 public final class FuzzyNumberCell extends DataCell implements
-        FuzzyNumberValue, FuzzyIntervalValue {
+        FuzzyNumberValue, FuzzyIntervalValue, IntervalValue {
 
     /**
      * Convenience access member for
@@ -226,6 +227,20 @@ public final class FuzzyNumberCell extends DataCell implements
             double maxSupp = input.readDouble();
             return new FuzzyNumberCell(minSupp, core, maxSupp);
         }
+    }
+
+    /**
+     * @see org.knime.core.data.IntervalValue#getRightBound()
+     */
+    public double getRightBound() {
+        return getCore();
+    }
+
+    /**
+     * @see org.knime.core.data.IntervalValue#getLeftBound()
+     */
+    public double getLeftBound() {
+        return getCore();
     }
 
 }

@@ -165,7 +165,7 @@ public class SotaHierarchicalFuzzySettings extends JPanel {
     class SotaHierarchicalFuzzySettingsController implements ActionListener {
 
         /**
-         * @see java.awt.event.ActionListener#actionPerformed(ActionEvent)
+         * {@inheritDoc}
          */
         public void actionPerformed(final ActionEvent e) {
             enableComboBox();

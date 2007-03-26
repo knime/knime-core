@@ -101,6 +101,14 @@ public class SotaNodeView extends NodeView {
 
     
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void updateModel(final Object arg) {
+        modelChanged();
+    }
+    
+    /**
      * @see org.knime.core.node.NodeView#onClose()
      */
     @Override

@@ -221,7 +221,7 @@ public class AggregateOutputNodeModel extends NodeModel {
         }
         DataRow stats = new DefaultRow(
                 new RowKey("fold " + m_foldStatistics.size()), 
-                new DoubleCell(incorrect / (double)rowCount),
+                new DoubleCell(100.0 * incorrect / rowCount),
                 new IntCell(rowCount),
                 new IntCell(incorrect));
         BufferedDataContainer bufOut2 = 

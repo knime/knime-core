@@ -60,7 +60,7 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
  * {@link ColumnRearranger} and the {@link org.knime.core.node.ExecutionContext}
  * that is provided in the NodeModel's execute method. See 
  * {@link ColumnRearranger} for more details on how to use them.
- * @author wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     
@@ -121,7 +121,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      *         the table.
      * @param loadID The load ID to get the reference table from the global
      *         table repository. This is a random number that is generated
-     *         when the worbench loading starts.
+     *         when the workbench loading starts.
      * @param spec The data table spec of the resulting table. This argument
      * is <code>null</code> when the data to restore is written using 
      * KNIME 1.1.x or before.
@@ -197,15 +197,15 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
         m_spec = new DataTableSpec(colSpecs);
     }
     
-    /** Get handle to the reference table.
+    /** Get handle to the reference table in an array of length 1.
      * @return The table providing likely most of the columns and the rowkeys.
      */
-    public BufferedDataTable getReferenceTable() {
-        return m_reference;
+    public BufferedDataTable[] getReferenceTables() {
+        return new BufferedDataTable[]{m_reference};
     }
     
     /** Get reference to the appended table. This table must not be used
-     * publically as the append table is corrupted: It does not contain proper
+     * publicly as the append table is corrupted: It does not contain proper
      * row keys (it contains only the appended columns). This method returns
      * null if this table only filters out some of the columns.
      * @return Reference to append table.
