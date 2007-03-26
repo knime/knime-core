@@ -95,7 +95,7 @@ public abstract class NodeDialogPane {
     private final JPanel m_panel;
     
     /** Added to all components and listens for new added once components. */
-    private static final HierarchyListener HIERACHY_LISTENER = 
+    private static final HierarchyListener HIERARCHY_LISTENER = 
             new HierarchyListener() { 
         public void hierarchyChanged(final HierarchyEvent e) {
             noLightWeight(e.getComponent());
@@ -387,7 +387,7 @@ public abstract class NodeDialogPane {
             throw new NullPointerException();
         }
         // listens to components which are added/removed from this dialog
-        comp.addHierarchyListener(HIERACHY_LISTENER);
+        comp.addHierarchyListener(HIERARCHY_LISTENER);
         m_tabs.put(title, comp);
         int miscIndex = m_pane.indexOfComponent(m_miscTab);
         // make sure the miscellaneous tab is always the last tab
@@ -449,7 +449,7 @@ public abstract class NodeDialogPane {
     protected final void removeTab(final String name) {
         Component comp = getTab(name);
         if (comp != null) {
-            comp.removeHierarchyListener(HIERACHY_LISTENER);
+            comp.removeHierarchyListener(HIERARCHY_LISTENER);
             m_pane.remove(comp);
             m_tabs.remove(name);
         }
