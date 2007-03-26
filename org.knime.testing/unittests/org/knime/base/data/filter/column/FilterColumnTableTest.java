@@ -56,14 +56,14 @@ public final class FilterColumnTableTest extends TestCase {
                 StringCell.TYPE});
 
         /**
-         * @see org.knime.core.data.DataTable#getDataTableSpec()
+         * {@inheritDoc}
          */
         public DataTableSpec getDataTableSpec() {
             return m_spec;
         }
 
         /**
-         * @see org.knime.core.data.DataTable#iterator()
+         * {@inheritDoc}
          */
         public RowIterator iterator() {
             return new MyTestRowIterator(m_spec.getNumColumns());
@@ -99,7 +99,7 @@ public final class FilterColumnTableTest extends TestCase {
         }
 
         /**
-         * @see org.knime.core.data.RowIterator#hasNext()
+         * {@inheritDoc}
          */
         @Override
         public boolean hasNext() {
@@ -107,7 +107,7 @@ public final class FilterColumnTableTest extends TestCase {
         }
 
         /**
-         * @see org.knime.core.data.RowIterator#next()
+         * {@inheritDoc}
          */
         @Override
         public DataRow next() {

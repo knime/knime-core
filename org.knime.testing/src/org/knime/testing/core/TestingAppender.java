@@ -70,9 +70,7 @@ public class TestingAppender extends AppenderSkeleton {
     }
 
     /**
-     * 
-     * @see org.apache.log4j.AppenderSkeleton#
-     *      append(org.apache.log4j.spi.LoggingEvent)
+     * {@inheritDoc}
      */
     @Override
     protected void append(final LoggingEvent aEvent) {
@@ -161,8 +159,7 @@ public class TestingAppender extends AppenderSkeleton {
     }
 
     /**
-     * 
-     * @see org.apache.log4j.AppenderSkeleton#close()
+     * {@inheritDoc}
      */
     @Override
     public void close() {

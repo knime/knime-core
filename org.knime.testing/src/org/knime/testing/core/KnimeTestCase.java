@@ -158,8 +158,7 @@ public class KnimeTestCase extends TestCase {
     }
 
     /**
-     * 
-     * @see junit.framework.TestCase#runTest()
+     * {@inheritDoc}
      */
     @Override
     public void runTest() {

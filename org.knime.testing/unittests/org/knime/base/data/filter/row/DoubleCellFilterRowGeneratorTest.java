@@ -87,7 +87,7 @@ public final class DoubleCellFilterRowGeneratorTest extends TestCase {
         }
 
         /**
-         * @see java.lang.Iterable#iterator()
+         * {@inheritDoc}
          */
         public Iterator<DataCell> iterator() {
             return new DefaultCellIterator(this);

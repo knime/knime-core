@@ -85,7 +85,7 @@ public class KnimeTestRegistry extends TestSuite {
     private static class DirectoryFilter implements FileFilter {
 
         /**
-         * @see java.io.FileFilter#accept(java.io.File)
+         * {@inheritDoc}
          */
         public boolean accept(final File pathname) {
             return pathname.isDirectory();

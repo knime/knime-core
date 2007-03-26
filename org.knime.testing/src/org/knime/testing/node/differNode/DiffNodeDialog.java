@@ -212,9 +212,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
     }
 
     /**
-     * @see org.knime.core.node.NodeDialogPane#loadSettingsFrom(
-     * org.knime.core.node.NodeSettings,
-     * org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(NodeSettingsRO settings, DataTableSpec[] specs)
@@ -244,8 +242,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
     }
 
     /**
-     * @see org.knime.core.node.NodeDialogPane#saveSettingsTo(
-     * org.knime.core.node.NodeSettings)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(NodeSettingsWO settings)
@@ -263,9 +260,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
     }
 
     /**
-     * 
-     * @see java.awt.event.ActionListener#actionPerformed(
-     * java.awt.event.ActionEvent)
+     * {@inheritDoc}
      */
     public void actionPerformed(ActionEvent e) {
         showSpinners(getEvalCombo().getSelectedItem().equals(

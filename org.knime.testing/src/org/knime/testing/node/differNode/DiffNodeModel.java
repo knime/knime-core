@@ -73,8 +73,7 @@ public class DiffNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveSettingsTo(
-     *      org.knime.core.node.NodeSettings)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -91,8 +90,7 @@ public class DiffNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#validateSettings(
-     *      org.knime.core.node.NodeSettings)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -116,8 +114,7 @@ public class DiffNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadValidatedSettingsFrom(
-     *      org.knime.core.node.NodeSettings)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -133,10 +130,7 @@ public class DiffNodeModel extends NodeModel {
     }
 
     /**
-     * 
-     * @see org.knime.core.node.NodeModel#execute(
-     * org.knime.core.node.BufferedDataTable[], 
-     * org.knime.core.node.ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -153,15 +147,14 @@ public class DiffNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#configure(
-     *      org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -179,8 +172,7 @@ public class DiffNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir, 
@@ -191,8 +183,7 @@ public class DiffNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir, 

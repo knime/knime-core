@@ -74,7 +74,7 @@ public class TestFileReaderDialog extends GUITestCase {
     }
 
     /**
-     * @see junit.framework.TestCase#setUp()
+     * {@inheritDoc}
      */
     @Override
     public void setUp() {
@@ -109,7 +109,7 @@ public class TestFileReaderDialog extends GUITestCase {
     }
 
     /**
-     * @see junit.framework.TestCase#tearDown()
+     * {@inheritDoc}
      */
     @Override
     public void tearDown() {

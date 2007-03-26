@@ -52,7 +52,7 @@ public final class NodeSettingsTest extends TestCase {
     private static final NodeSettings SETT = new NodeSettings("test-settings");
 
     /**
-     * @see junit.framework.TestCase#tearDown()
+     * {@inheritDoc}
      */
     @Override
     public void tearDown() {
