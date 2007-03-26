@@ -43,7 +43,7 @@ public class DiffModelContentFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
@@ -51,7 +51,7 @@ public class DiffModelContentFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
+     * {@inheritDoc}
      */
     @Override
     public int getNrNodeViews() {
@@ -59,7 +59,7 @@ public class DiffModelContentFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeView(int, org.knime.core.node.NodeModel)
+     * {@inheritDoc}
      */
     @Override
     public NodeView createNodeView(int viewIndex, NodeModel nodeModel) {
@@ -67,7 +67,7 @@ public class DiffModelContentFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#hasDialog()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasDialog() {
@@ -75,7 +75,7 @@ public class DiffModelContentFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeDialogPane()
+     * {@inheritDoc}
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
