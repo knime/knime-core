@@ -192,8 +192,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter#
-     * setAggregationMethod(org.knime.base.node.viz.histogram.AggregationMethod)
+     * {@inheritDoc}
      */
     @Override
     public boolean setAggregationMethod(final AggregationMethod aggrMethod) {

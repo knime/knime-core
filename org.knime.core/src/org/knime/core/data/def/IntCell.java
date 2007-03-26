@@ -95,78 +95,77 @@ public class IntCell extends DataCell implements IntValue, DoubleValue,
     }
 
     /**
-     * @see org.knime.core.data.IntValue#getIntValue()
+     * {@inheritDoc}
      */
     public int getIntValue() {
         return m_int;
     }
 
     /**
-     * @see org.knime.core.data.DoubleValue#getDoubleValue()
+     * {@inheritDoc}
      */
     public double getDoubleValue() {
         return m_int;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyNumberValue#getCore()
+     * {@inheritDoc}
      */
     public double getCore() {
         return m_int;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMaxSupport()
+     * {@inheritDoc}
      */
     public double getMaxSupport() {
         return m_int;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMinSupport()
+     * {@inheritDoc}
      */
     public double getMinSupport() {
         return m_int;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMaxCore()
+     * {@inheritDoc}
      */
     public double getMaxCore() {
         return m_int;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMinCore()
+     * {@inheritDoc}
      */
     public double getMinCore() {
         return m_int;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getCenterOfGravity()
+     * {@inheritDoc}
      */
     public double getCenterOfGravity() {
         return m_int;
     }
 
     /**
-     * @see org.knime.core.data.ComplexNumberValue#getImaginaryValue()
+     * {@inheritDoc}
      */
     public double getImaginaryValue() {
         return 0.0;
     }
     
     /**
-     * @see org.knime.core.data.ComplexNumberValue#getRealValue()
+     * {@inheritDoc}
      */
     public double getRealValue() {
         return m_int;
     }
     
     /**
-     * @see org.knime.core.data.DataCell
-     *      #equalsDataCell(org.knime.core.data.DataCell)
+     * {@inheritDoc}
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
@@ -174,7 +173,7 @@ public class IntCell extends DataCell implements IntValue, DoubleValue,
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -182,7 +181,7 @@ public class IntCell extends DataCell implements IntValue, DoubleValue,
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -193,7 +192,7 @@ public class IntCell extends DataCell implements IntValue, DoubleValue,
     private static class IntSerializer implements DataCellSerializer<IntCell> {
 
         /**
-         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         * {@inheritDoc}
          */
         public void serialize(final IntCell cell, final DataOutput output)
                 throws IOException {
@@ -201,7 +200,7 @@ public class IntCell extends DataCell implements IntValue, DoubleValue,
         }
 
         /**
-         * @see DataCellSerializer#deserialize(DataInput)
+         * {@inheritDoc}
          */
         public IntCell deserialize(final DataInput input) throws IOException {
             int i = input.readInt();

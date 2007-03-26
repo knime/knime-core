@@ -37,7 +37,7 @@ import org.knime.core.node.NodeView;
 public class HierarchicalClusterNodeFactory extends NodeFactory {
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
@@ -46,7 +46,7 @@ public class HierarchicalClusterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
+     * {@inheritDoc}
      */
     @Override
     public int getNrNodeViews() {
@@ -54,7 +54,7 @@ public class HierarchicalClusterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeView(int, NodeModel)
+     * {@inheritDoc}
      */
     @Override
     public NodeView createNodeView(final int i, final NodeModel nodeModel) {
@@ -76,7 +76,7 @@ public class HierarchicalClusterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeDialogPane()
+     * {@inheritDoc}
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {

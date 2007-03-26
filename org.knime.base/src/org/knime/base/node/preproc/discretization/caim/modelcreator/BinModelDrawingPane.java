@@ -33,7 +33,6 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseEvent;
 
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
-import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 
 /**
  * The actual drawing pain, rendering the binned column model. The binned
@@ -78,16 +77,16 @@ public class BinModelDrawingPane extends AbstractDrawingPane {
     }
 
     /**
-     * @see ScatterPlotterDrawingPane#paintContent(java.awt.Graphics)
+     * {@inheritDoc}
      */
     @Override
     public void paintContent(final Graphics g) {
-    	if (m_binningSchemes == null) {
-    		return;
-    	}
-    	// set text antialias on
-    	((Graphics2D)g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-    			RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        if (m_binningSchemes == null) {
+            return;
+        }
+        // set text antialias on
+        ((Graphics2D)g).setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
         // set the preferred size to the needed height
         int width = getPreferredSize().width;

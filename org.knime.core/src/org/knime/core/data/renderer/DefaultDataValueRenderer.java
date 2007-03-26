@@ -60,15 +60,14 @@ public class DefaultDataValueRenderer
     }
     
     /**
-     * @see DataValueRenderer#getDescription()
+     * {@inheritDoc}
      */
     public String getDescription() {
         return "Default";
     }
     
     /**
-     * @see javax.swing.ListCellRenderer#getListCellRendererComponent(
-     * JList, Object, int, boolean, boolean)
+     * {@inheritDoc}
      */
     public Component getListCellRendererComponent(
             final JList list, final Object value, final int index, 
@@ -93,7 +92,7 @@ public class DefaultDataValueRenderer
     }
     
     /**
-     * @see DataValueRenderer#getRendererComponent(Object)
+     * {@inheritDoc}
      */
     public Component getRendererComponent(final Object val) {
         setValue(val);

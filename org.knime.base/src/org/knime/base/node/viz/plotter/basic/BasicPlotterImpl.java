@@ -65,7 +65,7 @@ public class BasicPlotterImpl extends BasicPlotter {
     
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#getHiLiteMenu()
+     * {@inheritDoc}
      */
     @Override
     public JMenu getHiLiteMenu() {
@@ -73,8 +73,7 @@ public class BasicPlotterImpl extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLite(
-     * org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     @Override
     public void hiLite(final KeyEvent event) {
@@ -82,8 +81,7 @@ public class BasicPlotterImpl extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLite(
-     * org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     @Override
     public void unHiLite(final KeyEvent event) {
@@ -92,7 +90,7 @@ public class BasicPlotterImpl extends BasicPlotter {
  
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
+     * {@inheritDoc}
      */
     public void unHiLiteAll() {
 
@@ -101,21 +99,21 @@ public class BasicPlotterImpl extends BasicPlotter {
     
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void hiLiteSelected() {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void unHiLiteSelected() {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()
+     * {@inheritDoc}
      */
     @Override
     public void updatePaintModel() {
@@ -123,7 +121,7 @@ public class BasicPlotterImpl extends BasicPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
+     * {@inheritDoc}
      */
     @Override
     public void reset() {
@@ -133,23 +131,21 @@ public class BasicPlotterImpl extends BasicPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#selectElementsIn(
-     * java.awt.Rectangle)
+     * {@inheritDoc}
      */
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter
-     * #selectClickedElement(java.awt.Point)
+     * {@inheritDoc}
      */
     @Override
     public void selectClickedElement(final Point clicked) {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#clearSelection()
+     * {@inheritDoc}
      */
     @Override
     public void clearSelection() {

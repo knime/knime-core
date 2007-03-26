@@ -59,7 +59,7 @@ public class ShuffleNodeDialogPane extends NodeDialogPane {
     public ShuffleNodeDialogPane() {
         m_seedField = new JFormattedTextField(new AbstractFormatter() {
             /**
-             * @see AbstractFormatter#stringToValue(String)
+             * {@inheritDoc}
              */
             @Override
             public Object stringToValue(
@@ -71,7 +71,7 @@ public class ShuffleNodeDialogPane extends NodeDialogPane {
                 }
             }
             /**
-             * @see AbstractFormatter#valueToString(Object)
+             * {@inheritDoc}
              */
             @Override
             public String valueToString(
@@ -116,7 +116,7 @@ public class ShuffleNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
@@ -138,7 +138,7 @@ public class ShuffleNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)

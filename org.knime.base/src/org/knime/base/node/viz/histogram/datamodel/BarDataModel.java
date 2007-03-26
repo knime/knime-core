@@ -701,7 +701,7 @@ public class BarDataModel implements Serializable {
         }
 
     /**
-     * @see java.lang.Object#clone()
+     * {@inheritDoc}
      */
     @Override
     protected BarDataModel clone() {

@@ -179,7 +179,7 @@ public final class IntervalCell extends DataCell implements
         implements DataCellSerializer<IntervalCell> {
         
         /**
-         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         * {@inheritDoc}
          */
         public void serialize(final IntervalCell cell, 
                 final DataOutput output) throws IOException {
@@ -188,7 +188,7 @@ public final class IntervalCell extends DataCell implements
         }
         
         /**
-         * @see DataCellSerializer#deserialize(DataInput)
+         * {@inheritDoc}
          */
         public IntervalCell deserialize(
                 final DataInput input) throws IOException {
@@ -197,14 +197,14 @@ public final class IntervalCell extends DataCell implements
     }
 
     /**
-     * @see org.knime.core.data.IntervalValue#getRightBound()
+     * {@inheritDoc}
      */
     public double getRightBound() {
         return m_right;
     }
 
     /**
-     * @see org.knime.core.data.IntervalValue#getLeftBound()
+     * {@inheritDoc}
      */
     public double getLeftBound() {
         return m_left;

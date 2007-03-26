@@ -128,8 +128,7 @@ public abstract class AbstractParallelNodeModel extends NodeModel {
             throws Exception;
 
     /**
-     * @see org.knime.core.node.NodeModel #execute(BufferedDataTable[],
-     *      ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected final BufferedDataTable[] execute(final BufferedDataTable[] data,

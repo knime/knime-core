@@ -42,21 +42,21 @@ class NonClosableZipOutputStream extends OutputStream {
         m_zipOut = zipOut;
     }
     /**
-     * @see java.io.OutputStream#close()
+     * {@inheritDoc}
      */
     @Override
     public void close() throws IOException {
         m_zipOut.closeEntry();
     }
     /**
-     * @see java.io.OutputStream#flush()
+     * {@inheritDoc}
      */
     @Override
     public void flush() throws IOException {
         m_zipOut.flush();
     }
     /**
-     * @see java.io.OutputStream#write(byte[], int, int)
+     * {@inheritDoc}
      */
     @Override
     public void write(final byte[] b, final int off, final int len) 
@@ -64,14 +64,14 @@ class NonClosableZipOutputStream extends OutputStream {
         m_zipOut.write(b, off, len);
     }
     /**
-     * @see java.io.OutputStream#write(byte[])
+     * {@inheritDoc}
      */
     @Override
     public void write(final byte[] b) throws IOException {
         m_zipOut.write(b);
     }
     /**
-     * @see java.io.OutputStream#write(int)
+     * {@inheritDoc}
      */
     @Override
     public void write(final int b) throws IOException {

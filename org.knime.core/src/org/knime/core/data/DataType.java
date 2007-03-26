@@ -114,9 +114,7 @@ public final class DataType {
         }
         
         /**
-         * 
-         * @see org.knime.core.data.DataCell#equalsDataCell(
-         * org.knime.core.data.DataCell)
+         * {@inheritDoc}
          */
         @Override
         public boolean equalsDataCell(final DataCell dc) {
@@ -125,8 +123,7 @@ public final class DataType {
         }
 
         /**
-         * 
-         * @see org.knime.core.data.DataCell#hashCode()
+         * {@inheritDoc}
          */
         @Override
         public int hashCode() {
@@ -134,8 +131,7 @@ public final class DataType {
         }
 
         /**
-         * 
-         * @see org.knime.core.data.DataCell#isMissingInternal()
+         * {@inheritDoc}
          */
         @Override
         boolean isMissingInternal() {
@@ -151,8 +147,7 @@ public final class DataType {
         }
         
         /**
-         * 
-         * @see org.knime.core.data.DataCell#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {

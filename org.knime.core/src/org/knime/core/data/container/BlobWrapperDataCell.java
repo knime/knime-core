@@ -85,7 +85,7 @@ final class BlobWrapperDataCell extends DataCell {
     }
 
     /**
-     * @see DataCell#equalsDataCell(DataCell)
+     * {@inheritDoc}
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
@@ -94,7 +94,7 @@ final class BlobWrapperDataCell extends DataCell {
     }
 
     /**
-     * @see org.knime.core.data.DataCell#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -103,7 +103,7 @@ final class BlobWrapperDataCell extends DataCell {
     }
 
     /**
-     * @see org.knime.core.data.DataCell#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

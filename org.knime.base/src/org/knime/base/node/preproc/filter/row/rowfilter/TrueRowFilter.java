@@ -38,7 +38,7 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class TrueRowFilter extends RowFilter {
     /**
-     * @see RowFilter#matches(DataRow, int)
+     * {@inheritDoc}
      */
     @Override
     public boolean matches(final DataRow row, final int rowIndex)
@@ -48,7 +48,7 @@ public class TrueRowFilter extends RowFilter {
     }
 
     /**
-     * @see RowFilter#loadSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     public void loadSettingsFrom(final NodeSettingsRO cfg)
@@ -57,7 +57,7 @@ public class TrueRowFilter extends RowFilter {
     }
 
     /**
-     * @see RowFilter#saveSettings(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettings(final NodeSettingsWO cfg) {
@@ -65,7 +65,7 @@ public class TrueRowFilter extends RowFilter {
     }
 
     /**
-     * @see RowFilter#configure(org.knime.core.data.DataTableSpec)
+     * {@inheritDoc}
      */
     @Override
     public DataTableSpec configure(final DataTableSpec inSpec)
@@ -74,7 +74,7 @@ public class TrueRowFilter extends RowFilter {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

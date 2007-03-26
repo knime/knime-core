@@ -120,7 +120,7 @@ public abstract class AbstractPainterDataValueRenderer
     protected abstract void setValue(Object value);
     
     /**
-     * @see DataValueRenderer#getRendererComponent(Object)
+     * {@inheritDoc}
      */
     public Component getRendererComponent(final Object val) {
         setValue(val);
@@ -128,8 +128,7 @@ public abstract class AbstractPainterDataValueRenderer
     }
 
     /**
-     * @see javax.swing.table.TableCellRenderer#getTableCellRendererComponent(
-     * JTable, Object, boolean, boolean, int, int)
+     * {@inheritDoc}
      */
     public Component getTableCellRendererComponent(final JTable table,
             final Object value, final boolean isSelected,
@@ -173,8 +172,7 @@ public abstract class AbstractPainterDataValueRenderer
     }
 
     /**
-     * @see javax.swing.ListCellRenderer#getListCellRendererComponent(
-     * JList, Object, int, boolean, boolean)
+     * {@inheritDoc}
      */
     public Component getListCellRendererComponent(final JList list,
             final Object value, final int index, final boolean isSelected,

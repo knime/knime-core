@@ -95,22 +95,21 @@ public final class ComplexNumberCell extends DataCell implements
     }
 
     /**
-     * @see org.knime.core.data.ComplexNumberValue#getRealValue()
+     * {@inheritDoc}
      */
     public double getRealValue() {
         return m_real;
     }
 
     /**
-     * @see org.knime.core.data.ComplexNumberValue#getRealValue()
+     * {@inheritDoc}
      */
     public double getImaginaryValue() {
         return m_imag;
     }
 
     /**
-     * @see org.knime.core.data.DataCell
-     *      #equalsDataCell(org.knime.core.data.DataCell)
+     * {@inheritDoc}
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
@@ -119,7 +118,7 @@ public final class ComplexNumberCell extends DataCell implements
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -130,7 +129,7 @@ public final class ComplexNumberCell extends DataCell implements
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -149,8 +148,7 @@ public final class ComplexNumberCell extends DataCell implements
             DataCellSerializer<ComplexNumberCell> {
 
         /**
-         * @see org.knime.core.data.DataCellSerializer
-         *      #serialize(org.knime.core.data.DataCell, java.io.DataOutput)
+         * {@inheritDoc}
          */
         public void serialize(final ComplexNumberCell cell,
                 final DataOutput output) throws IOException {
@@ -159,7 +157,7 @@ public final class ComplexNumberCell extends DataCell implements
         }
 
         /**
-         * @see DataCellSerializer#deserialize(DataInput)
+         * {@inheritDoc}
          */
         public ComplexNumberCell deserialize(final DataInput input)
                 throws IOException {

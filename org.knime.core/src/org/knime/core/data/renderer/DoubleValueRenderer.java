@@ -110,7 +110,7 @@ public class DoubleValueRenderer extends DefaultDataValueRenderer {
     }
     
     /**
-     * @see DefaultDataValueRenderer#getDescription()
+     * {@inheritDoc}
      */
     @Override
     public String getDescription() {

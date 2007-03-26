@@ -47,7 +47,7 @@ public class SimpleFileFilter extends FileFilter {
     }
 
     /**
-     * @see java.io.FileFilter#accept(java.io.File)
+     * {@inheritDoc}
      */
     @Override
     public boolean accept(final File f) {
@@ -66,7 +66,7 @@ public class SimpleFileFilter extends FileFilter {
     }
 
     /**
-     * @see javax.swing.filechooser.FileFilter#getDescription()
+     * {@inheritDoc}
      */
     @Override
     public String getDescription() {

@@ -151,14 +151,14 @@ public class XMLProperties implements ErrorHandler {
     }
     
     /**
-     * @see org.xml.sax.ErrorHandler#warning(org.xml.sax.SAXParseException)
+     * {@inheritDoc}
      */
     public void warning(final SAXParseException spe) throws SAXException {
         LOGGER.warn(getParseExceptionInfo(spe), spe);
     }
     
     /**
-     * @see org.xml.sax.ErrorHandler#error(org.xml.sax.SAXParseException)
+     * {@inheritDoc}
      */ 
     public void error(final SAXParseException spe) throws SAXException {
         final String message = "Error: " + getParseExceptionInfo(spe);
@@ -166,7 +166,7 @@ public class XMLProperties implements ErrorHandler {
     }
 
     /**
-     * @see org.xml.sax.ErrorHandler#fatalError(org.xml.sax.SAXParseException)
+     * {@inheritDoc}
      */
     public void fatalError(final SAXParseException spe) throws SAXException {
         final String message = "Fatal Error: " + getParseExceptionInfo(spe);

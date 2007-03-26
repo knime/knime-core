@@ -100,7 +100,7 @@ public enum LabelDisplayPolicy implements HistogramProperty {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.HistogramProperty#isDefault()
+     * {@inheritDoc}
      */
     public boolean isDefault() {
         return m_default;

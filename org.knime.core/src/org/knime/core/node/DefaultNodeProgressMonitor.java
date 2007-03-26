@@ -198,7 +198,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     }
 
     /**
-     * @see #setProgress(String)
+     * {@inheritDoc}
      */
     public synchronized void setMessage(final String message) {
         setProgress(message);
@@ -273,7 +273,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     }
     
     /**
-     * @see NodeProgressMonitor#addProgressListener(NodeProgressListener)
+     * {@inheritDoc}
      */
     public void addProgressListener(final NodeProgressListener l) {
         if ((l != null) && !m_listeners.contains(l)) {
@@ -282,7 +282,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     }
 
     /**
-     * @see NodeProgressMonitor#removeProgressListener(NodeProgressListener)
+     * {@inheritDoc}
      */
     public void removeProgressListener(final NodeProgressListener l) {
         if (l != null) {
@@ -291,7 +291,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     }
 
     /**
-     * @see NodeProgressMonitor#removeAllProgressListener()
+     * {@inheritDoc}
      */
     public void removeAllProgressListener() {
         m_listeners.clear();
@@ -366,7 +366,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         }
 
         /**
-         * @see NodeProgressMonitor#getMessage()
+         * {@inheritDoc}
          */
         public String getMessage() {
             if (m_message == null) {
@@ -409,7 +409,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         }
 
         /**
-         * @see #setProgress(String)
+         * {@inheritDoc}
          */
         public void setMessage(final String message) {
             setProgress(message);
@@ -448,7 +448,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         }
 
         /**
-         * @see NodeProgressMonitor#setProgress(double, String)
+         * {@inheritDoc}
          */
         public void setProgress(
                 final double progress, final String message) {
@@ -459,7 +459,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         }
 
         /**
-         * @see NodeProgressMonitor#setProgress(double)
+         * {@inheritDoc}
          */
         public void setProgress(final double progress) {
             synchronized (m_parent) {
@@ -491,10 +491,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             SubNodeProgressMonitor {
 
         /**
-         * @see SubNodeProgressMonitor #SubNodeProgressMonitor(
-         *      NodeProgressMonitor, double)
-         * @param parent
-         * @param max
+         * {@inheritDoc}
          */
         SilentSubNodeProgressMonitor(final NodeProgressMonitor parent,
                 final double max) {
@@ -502,7 +499,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         }
         
         /**
-         * @see NodeProgressMonitor#setProgress(double, java.lang.String)
+         * {@inheritDoc}
          */
         @Override
         public void setProgress(final double prog, final String message) {
@@ -510,7 +507,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         }
         
         /**
-         * @see NodeProgressMonitor#setMessage(java.lang.String)
+         * {@inheritDoc}
          */
         @Override
         public void setMessage(final String arg0) {

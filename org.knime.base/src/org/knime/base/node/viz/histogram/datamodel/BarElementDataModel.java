@@ -200,7 +200,7 @@ public class BarElementDataModel implements Serializable {
     }
 
     /**
-     * @see java.lang.Object#clone()
+     * {@inheritDoc}
      */
     @Override
     protected BarElementDataModel clone() {

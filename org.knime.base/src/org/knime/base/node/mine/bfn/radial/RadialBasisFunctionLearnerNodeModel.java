@@ -65,8 +65,7 @@ class RadialBasisFunctionLearnerNodeModel
     }
 
     /**
-     * @see BasisFunctionLearnerNodeModel
-     *      #getFactory(org.knime.core.data.DataTableSpec)
+     * {@inheritDoc}
      */
     @Override
     protected BasisFunctionFactory getFactory(final DataTableSpec spec) {
@@ -77,7 +76,7 @@ class RadialBasisFunctionLearnerNodeModel
     }
 
     /**
-     * @see #configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] ins)
@@ -86,8 +85,7 @@ class RadialBasisFunctionLearnerNodeModel
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -101,7 +99,7 @@ class RadialBasisFunctionLearnerNodeModel
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -114,7 +112,7 @@ class RadialBasisFunctionLearnerNodeModel
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -143,8 +141,7 @@ class RadialBasisFunctionLearnerNodeModel
     }
 
     /**
-     * @see BasisFunctionLearnerNodeModel
-     *      #getModelType()
+     * {@inheritDoc}
      */
     @Override
     protected final DataType getModelType() {

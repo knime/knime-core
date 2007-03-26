@@ -87,8 +87,7 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
     private static final String ZIP_ENTRY_SPEC = "newspec.xml";
     
     /**
-     * @see org.knime.core.node.BufferedDataTable.KnowsRowCountTable
-     * #saveToFile(File, NodeSettingsWO, ExecutionMonitor)
+     * {@inheritDoc}
      */
     public void saveToFile(final File f, final NodeSettingsWO s,
             final ExecutionMonitor exec) throws IOException,
@@ -169,22 +168,21 @@ public class TableSpecReplacerTable implements KnowsRowCountTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_newSpec;
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         return m_reference.iterator();
     }
 
     /**
-     * @see org.knime.core.node.BufferedDataTable.KnowsRowCountTable
-     * #getRowCount()
+     * {@inheritDoc}
      */
     public int getRowCount() {
         return m_reference.getRowCount();

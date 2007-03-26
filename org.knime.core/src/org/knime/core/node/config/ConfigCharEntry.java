@@ -75,7 +75,7 @@ final class ConfigCharEntry extends AbstractConfigEntry {
     }
     
     /**
-     * @see AbstractConfigEntry#hasIdenticalValue(AbstractConfigEntry)
+     * {@inheritDoc}
      */
     @Override
     protected boolean hasIdenticalValue(final AbstractConfigEntry ace) {

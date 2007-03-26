@@ -76,8 +76,7 @@ public class PlotterPropertiesPanel extends JPanel {
         final JCheckBox crossHair = new JCheckBox("Use crosshair cursor", true);
         crossHair.addItemListener(new ItemListener() {
             /**
-             * @see java.awt.event.ItemListener#itemStateChanged(
-             * java.awt.event.ItemEvent)
+             * {@inheritDoc}
              */
             public void itemStateChanged(final ItemEvent arg0) {
                 m_plotter.setCrosshairCursorEnabled(
@@ -91,8 +90,7 @@ public class PlotterPropertiesPanel extends JPanel {
         
         final ActionListener okListener = new ActionListener() {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
                 Color newBackground = m_chooser.getColor();
@@ -106,8 +104,7 @@ public class PlotterPropertiesPanel extends JPanel {
         chooseBackground.addActionListener(new ActionListener() {
 
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
                 JDialog dialog = JColorChooser.createDialog(

@@ -107,8 +107,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
         ((ScatterMatrixProperties)getProperties()).getColumnFilter();
             colFilter.addChangeListener(new ChangeListener() {
                 /**
-                 * @see javax.swing.event.ChangeListener#stateChanged(
-                 * javax.swing.event.ChangeEvent)
+                 * {@inheritDoc}
                  */
                 public void stateChanged(final ChangeEvent e) {
                     m_selectedColumns = colFilter.getIncludedColumnSet();
@@ -120,8 +119,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
             ((ScatterMatrixProperties)getProperties()).addDotSizeChangeListener(
                     new ChangeListener() {
                         /**
-                         * @see javax.swing.event.ChangeListener#stateChanged(
-                         * javax.swing.event.ChangeEvent)
+                         * {@inheritDoc}
                          */
                         public void stateChanged(final ChangeEvent e) {
                             setDotSize(
@@ -139,8 +137,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                     new MouseAdapter() {
 
                         /**
-                         * @see java.awt.event.MouseAdapter#mouseReleased(
-                         *      java.awt.event.MouseEvent)
+                         * {@inheritDoc}
                          */
                         @Override
                         public void mouseReleased(final MouseEvent e) {
@@ -359,8 +356,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
 
 
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotter#updateSize()
+     * {@inheritDoc}
      */
     @Override
     public void updateSize() {
@@ -384,8 +380,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
         private final Cursor m_default = Cursor.getDefaultCursor();
         
         /**
-         * 
-         * @see java.lang.Object#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -393,7 +388,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
         }
 
         /**
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#getCursor()
+         * {@inheritDoc}
          */
         @Override
         public Cursor getCursor() {
@@ -401,8 +396,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
         }
 
         /**
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener
-         * #mouseDragged(java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mouseDragged(final MouseEvent e) {
@@ -411,8 +405,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
         }
 
         /**
-         * @see java.awt.event.MouseAdapter#mousePressed(
-         * java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mousePressed(final MouseEvent e) {
@@ -424,8 +417,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
         }
 
         /**
-         * @see java.awt.event.MouseAdapter#mouseReleased(
-         * java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mouseReleased(final MouseEvent e) {

@@ -69,9 +69,7 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
-     * #createHistogramModel(org.knime.core.node.ExecutionContext, 
-     * org.knime.core.data.DataTable)
+     * {@inheritDoc}
      */
     @Override
     protected void createHistogramModel(final ExecutionContext exec, 
@@ -100,8 +98,7 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
-     * #reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -110,8 +107,7 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
-     * #configure(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) 
@@ -161,8 +157,7 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
-     * #getHistogramVizModel()
+     * {@inheritDoc}
      */
     @Override
     protected AbstractHistogramVizModel getHistogramVizModel() {
@@ -179,9 +174,7 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
-     * #loadHistogramInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadHistogramInternals(final File dataDir, 
@@ -190,9 +183,7 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
-     * #saveHistogramInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveHistogramInternals(final File dataDir, 

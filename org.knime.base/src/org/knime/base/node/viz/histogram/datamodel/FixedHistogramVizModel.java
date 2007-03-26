@@ -85,8 +85,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
 
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#getXColumnName()
+     * {@inheritDoc}
      */
     @Override
     public String getXColumnName() {
@@ -94,8 +93,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#getXColumnSpec()
+     * {@inheritDoc}
      */
     @Override
     public DataColumnSpec getXColumnSpec() {
@@ -103,8 +101,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#getAggrColumns()
+     * {@inheritDoc}
      */
     @Override
     public Collection<ColorColumn> getAggrColumns() {
@@ -112,8 +109,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#isFixed()
+     * {@inheritDoc}
      */
     @Override
     public boolean isFixed() {
@@ -123,8 +119,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
     // hiliting stuff
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#getHilitedKeys()
+     * {@inheritDoc}
      */
     @Override
     public Set<DataCell> getHilitedKeys() {
@@ -133,8 +128,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
 
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#getSelectedKeys()
+     * {@inheritDoc}
      */
     @Override
     public Set<DataCell> getSelectedKeys() {
@@ -142,8 +136,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#unHiliteAll()
+     * {@inheritDoc}
      */
     @Override
     public void unHiliteAll() {
@@ -152,8 +145,7 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
 
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#updateHiliteInfo(java.util.Set, boolean)
+     * {@inheritDoc}
      */
     @Override
     public void updateHiliteInfo(final Set<DataCell> hilited, 

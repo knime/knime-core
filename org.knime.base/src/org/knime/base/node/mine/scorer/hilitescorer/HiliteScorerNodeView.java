@@ -212,7 +212,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onClose()
+     * {@inheritDoc}
      */
     @Override
     protected void onClose() {
@@ -221,7 +221,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onOpen()
+     * {@inheritDoc}
      */
     @Override
     protected void onOpen() {
@@ -413,7 +413,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
     }
 
     /**
-     * @see HiLiteListener#hiLite(KeyEvent)
+     * {@inheritDoc}
      */
     public void hiLite(final KeyEvent event) {
         

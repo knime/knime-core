@@ -41,9 +41,7 @@ public class ShapeSelectionListRenderer extends DefaultListCellRenderer {
     
 
     /**
-     * 
-     * @see javax.swing.ListCellRenderer#getListCellRendererComponent(
-     * javax.swing.JList, java.lang.Object, int, boolean, boolean)
+     * {@inheritDoc}
      */
     @Override
     public Component getListCellRendererComponent(final JList list, 
@@ -80,8 +78,7 @@ public class ShapeSelectionListRenderer extends DefaultListCellRenderer {
         }
         
         /**
-         * 
-         * @see java.awt.Component#paint(java.awt.Graphics)
+         * {@inheritDoc}
          */
         @Override
         public void paint(final Graphics g) {

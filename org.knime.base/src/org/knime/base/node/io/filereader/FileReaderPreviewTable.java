@@ -75,7 +75,7 @@ public class FileReaderPreviewTable extends FileTable {
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     @Override
     public RowIterator iterator() {

@@ -419,8 +419,7 @@ public class WorkflowManager implements WorkflowListener {
         }
 
         /**
-         * @see org.knime.core.node.NodeStateListener
-         *      #stateChanged(org.knime.core.node.NodeStatus, int)
+         * {@inheritDoc}
          */
         public void stateChanged(final NodeStatus state, final int id) {
             if ((state instanceof NodeStatus.EndExecute)

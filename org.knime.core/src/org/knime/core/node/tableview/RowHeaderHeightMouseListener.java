@@ -105,7 +105,7 @@ class RowHeaderHeightMouseListener extends MouseInputAdapter {
     }
 
     /**
-     * @see java.awt.event.MouseListener#mousePressed(MouseEvent)
+     * {@inheritDoc}
      */
     @Override
     public void mousePressed(final MouseEvent e) {
@@ -125,7 +125,7 @@ class RowHeaderHeightMouseListener extends MouseInputAdapter {
     }
 
     /**
-     * @see java.awt.event.MouseMotionListener#mouseMoved(MouseEvent)
+     * {@inheritDoc}
      */
     @Override
     public void mouseMoved(final MouseEvent e) {
@@ -151,7 +151,7 @@ class RowHeaderHeightMouseListener extends MouseInputAdapter {
     }
 
     /**
-     * @see java.awt.event.MouseMotionListener#mouseDragged(MouseEvent)
+     * {@inheritDoc}
      */
     @Override
     public void mouseDragged(final MouseEvent e) {
@@ -173,7 +173,7 @@ class RowHeaderHeightMouseListener extends MouseInputAdapter {
     }
     
     /**
-     * @see java.awt.event.MouseListener#mouseReleased(MouseEvent)
+     * {@inheritDoc}
      */
     @Override
     public void mouseReleased(final MouseEvent e) {

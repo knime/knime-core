@@ -131,8 +131,7 @@ public class DialogComponentColumnSelection extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodedialog.DialogComponent
-     *      #setEnabledComponents(boolean)
+     * {@inheritDoc}
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {

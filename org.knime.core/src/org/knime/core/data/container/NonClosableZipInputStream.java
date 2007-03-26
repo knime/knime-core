@@ -51,7 +51,7 @@ class NonClosableZipInputStream extends InputStream {
     }
 
     /**
-     * @see InputStream#available()
+     * {@inheritDoc}
      */
     @Override
     public int available() throws IOException {
@@ -69,8 +69,7 @@ class NonClosableZipInputStream extends InputStream {
     }
 
     /**
-     * @see ZipInputStream#closeEntry()
-     * @throws IOException Delegates only.
+     * {@inheritDoc}
      */
     public void closeEntry() throws IOException {
         m_zipIn.closeEntry();
@@ -86,7 +85,7 @@ class NonClosableZipInputStream extends InputStream {
     }
 
     /**
-     * @see InputStream#mark(int)
+     * {@inheritDoc}
      */
     @Override
     public void mark(final int readlimit) {
@@ -94,7 +93,7 @@ class NonClosableZipInputStream extends InputStream {
     }
 
     /**
-     * @see InputStream#markSupported()
+     * {@inheritDoc}
      */
     @Override
     public boolean markSupported() {
@@ -102,7 +101,7 @@ class NonClosableZipInputStream extends InputStream {
     }
 
     /**
-     * @see InputStream#read()
+     * {@inheritDoc}
      */
     @Override
     public int read() throws IOException {
@@ -110,7 +109,7 @@ class NonClosableZipInputStream extends InputStream {
     }
 
     /**
-     * @see InputStream#read(byte[], int, int)
+     * {@inheritDoc}
      */
     @Override
     public int read(final byte[] b, final int off, final int len) 
@@ -119,7 +118,7 @@ class NonClosableZipInputStream extends InputStream {
     }
 
     /**
-     * @see InputStream#read(byte[])
+     * {@inheritDoc}
      */
     @Override
     public int read(final byte[] b) throws IOException {
@@ -127,7 +126,7 @@ class NonClosableZipInputStream extends InputStream {
     }
 
     /**
-     * @see InputStream#reset()
+     * {@inheritDoc}
      */
     @Override
     public void reset() throws IOException {
@@ -135,7 +134,7 @@ class NonClosableZipInputStream extends InputStream {
     }
 
     /**
-     * @see InputStream#skip(long)
+     * {@inheritDoc}
      */
     @Override
     public long skip(final long n) throws IOException {

@@ -41,9 +41,7 @@ public class RepositoryViewFilter extends ViewerFilter {
     private String m_query;
 
     /**
-     * @see org.eclipse.jface.viewers.ViewerFilter
-     *      #select(org.eclipse.jface.viewers.Viewer, java.lang.Object,
-     *      java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public boolean select(final Viewer viewer, final Object parentElement,

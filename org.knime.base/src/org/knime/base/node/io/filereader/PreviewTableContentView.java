@@ -57,7 +57,7 @@ public class PreviewTableContentView extends TableContentView {
     }
 
     /**
-     * @see TableContentView#onMouseClickInHeader(MouseEvent)
+     * {@inheritDoc}
      */
     @Override
     protected void onMouseClickInHeader(final MouseEvent e) {

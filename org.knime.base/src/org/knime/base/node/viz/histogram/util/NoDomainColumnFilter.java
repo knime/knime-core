@@ -56,15 +56,14 @@ public final class NoDomainColumnFilter implements ColumnFilter {
     }
     
     /**
-     * @see org.knime.core.node.util.ColumnFilter#allFilteredMsg()
+     * {@inheritDoc}
      */
     public String allFilteredMsg() {
         return "No domain values available";
     }
 
     /**
-     * @see org.knime.core.node.util.ColumnFilter#includeColumn(
-     * org.knime.core.data.DataColumnSpec)
+     * {@inheritDoc}
      */
     public boolean includeColumn(final DataColumnSpec colSpec) {
         if (colSpec == null) {

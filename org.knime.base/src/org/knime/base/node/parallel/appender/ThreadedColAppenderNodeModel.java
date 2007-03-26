@@ -79,7 +79,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
         }
 
         /**
-         * @see java.lang.Runnable#run()
+         * {@inheritDoc}
          */
         public void run() {
             final double max = m_data[0].getRowCount();
@@ -206,8 +206,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
             final DataTable[] data) throws Exception;
 
     /**
-     * @see org.knime.core.node.NodeModel #execute(BufferedDataTable[],
-     *      ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected final BufferedDataTable[] execute(final BufferedDataTable[] data,

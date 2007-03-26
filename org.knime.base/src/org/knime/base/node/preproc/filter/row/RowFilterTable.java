@@ -63,14 +63,14 @@ public class RowFilterTable implements DataTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_table.getDataTableSpec();
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         return new RowFilterIterator(m_table, (RowFilter)m_filter.clone());

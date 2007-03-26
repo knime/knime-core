@@ -39,7 +39,7 @@ public class ShapeSelectionComboBoxRenderer extends DefaultTableCellRenderer {
     private final ShapeSelectionComboBox m_combo = new ShapeSelectionComboBox();
 
     /**
-     * @see javax.swing.table.DefaultTableCellRenderer#setValue(Object)
+     * {@inheritDoc}
      */
     @Override
     protected void setValue(final Object value) {

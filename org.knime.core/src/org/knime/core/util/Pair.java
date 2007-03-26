@@ -59,7 +59,7 @@ public final class Pair<T, M> {
     public M getSecond() { return m_second; }
 
     /**
-     * @see java.lang.Object#equals(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {
@@ -72,7 +72,7 @@ public final class Pair<T, M> {
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {

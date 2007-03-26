@@ -57,8 +57,7 @@ public class InteractiveBarElementDataModel extends BarElementDataModel {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.BarElementDataModel
-     * #addDataRow(org.knime.core.data.DataCell, org.knime.core.data.DataCell)
+     * {@inheritDoc}
      */
     @Override
     protected void addDataRow(final DataCell rowKey, 
@@ -68,9 +67,7 @@ public class InteractiveBarElementDataModel extends BarElementDataModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.BarElementDataModel
-     * #setElementRectangle(java.awt.Rectangle, 
-     * org.knime.base.node.viz.histogram.AggregationMethod)
+     * {@inheritDoc}
      */
     @Override
     protected void setElementRectangle(final Rectangle elementRect, 
@@ -80,9 +77,7 @@ public class InteractiveBarElementDataModel extends BarElementDataModel {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.BarElementDataModel
-     * #updateElementWidth(int, int, 
-     * org.knime.base.node.viz.histogram.AggregationMethod)
+     * {@inheritDoc}
      */
     @Override
     public void updateElementWidth(final int xCoord, final int elementWidth, 

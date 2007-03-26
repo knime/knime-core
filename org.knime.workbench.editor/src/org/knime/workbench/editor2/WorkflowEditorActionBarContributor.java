@@ -44,7 +44,7 @@ import org.eclipse.ui.actions.ActionFactory;
  */
 public class WorkflowEditorActionBarContributor extends ActionBarContributor {
     /**
-     * @see org.eclipse.gef.ui.actions.ActionBarContributor#buildActions()
+     * {@inheritDoc}
      */
     @Override
     protected void buildActions() {
@@ -57,8 +57,7 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
     }
 
     /**
-     * @see org.eclipse.gef.ui.actions.ActionBarContributor
-     *      #declareGlobalActionKeys()
+     * {@inheritDoc}
      */
     @Override
     protected void declareGlobalActionKeys() {
@@ -70,8 +69,7 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
     }
 
     /**
-     * @see org.eclipse.ui.part.EditorActionBarContributor
-     *      #contributeToToolBar(IToolBarManager)
+     * {@inheritDoc}
      */
     @Override
     public void contributeToToolBar(final IToolBarManager tbm) {
@@ -85,8 +83,7 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
     }
 
     /**
-     * @see org.eclipse.ui.part.EditorActionBarContributor
-     *      #contributeToMenu(IMenuManager)
+     * {@inheritDoc}
      */
     @Override
     public void contributeToMenu(final IMenuManager menubar) {

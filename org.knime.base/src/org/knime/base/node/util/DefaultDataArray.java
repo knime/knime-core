@@ -277,7 +277,7 @@ public class DefaultDataArray implements DataArray {
     }
 
     /**
-     * @see org.knime.base.node.util.DataArray#getRow(int)
+     * {@inheritDoc}
      */
     public DataRow getRow(final int idx) {
         return m_rows.get(idx);
@@ -285,21 +285,21 @@ public class DefaultDataArray implements DataArray {
     }
 
     /**
-     * @see org.knime.base.node.util.DataArray#getValues(int)
+     * {@inheritDoc}
      */
     public Set<DataCell> getValues(final int colIdx) {
         return m_possVals.get(colIdx);
     }
 
     /**
-     * @see org.knime.base.node.util.DataArray#getMinValue(int)
+     * {@inheritDoc}
      */
     public DataCell getMinValue(final int colIdx) {
         return m_minVal[colIdx];
     }
 
     /**
-     * @see org.knime.base.node.util.DataArray#getMaxValue(int)
+     * {@inheritDoc}
      */
     public DataCell getMaxValue(final int colIdx) {
         return m_maxVal[colIdx];
@@ -345,28 +345,28 @@ public class DefaultDataArray implements DataArray {
     }
 
     /**
-     * @see org.knime.base.node.util.DataArray#size()
+     * {@inheritDoc}
      */
     public int size() {
         return m_rows.size();
     }
 
     /**
-     * @see org.knime.base.node.util.DataArray#getFirstRowNumber()
+     * {@inheritDoc}
      */
     public int getFirstRowNumber() {
         return m_firstRow;
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         return new DefaultRowIterator(m_rows);
     }
 
     /**
-     * @see DataArray#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_tSpec;

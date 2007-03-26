@@ -96,8 +96,7 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
     }
 
     /**
-     * @see org.knime.core.node.workflow.ConnectionExtraInfo
-     *      #save(NodeSettingsWO)
+     * {@inheritDoc}
      */
     public void save(final NodeSettingsWO config) {
         config.addInt(KEY_BENDPOINTS + "_size", m_bendpoints.size());
@@ -109,8 +108,7 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
     }
 
     /**
-     * @see org.knime.core.node.workflow.ConnectionExtraInfo
-     *      #load(NodeSettingsRO)
+     * {@inheritDoc}
      */
     public void load(final NodeSettingsRO config)
             throws InvalidSettingsException {

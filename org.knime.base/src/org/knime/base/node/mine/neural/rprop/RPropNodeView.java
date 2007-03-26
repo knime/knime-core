@@ -51,7 +51,7 @@ public class RPropNodeView extends NodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#modelChanged()
+     * {@inheritDoc}
      */
     @Override
     protected void modelChanged() {
@@ -64,14 +64,14 @@ public class RPropNodeView extends NodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onClose()
+     * {@inheritDoc}
      */
     @Override
     protected void onClose() {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onOpen()
+     * {@inheritDoc}
      */
     @Override
     protected void onOpen() {

@@ -267,8 +267,7 @@ public class ClusterNode {
     }
 
     /**
-     * 
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

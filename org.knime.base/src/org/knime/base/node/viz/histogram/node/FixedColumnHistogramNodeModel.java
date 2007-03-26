@@ -76,7 +76,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         super(1, 0); // one input, no outputs
     }
     /**
-     * @see org.knime.core.node.NodeModel #validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings) 
@@ -86,8 +86,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) 
@@ -97,7 +96,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -106,9 +105,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
-     * #createHistogramModel(org.knime.core.node.ExecutionContext, 
-     * org.knime.core.data.DataTable)
+     * {@inheritDoc}
      */
     @Override
     protected void createHistogramModel(final ExecutionContext exec, 
@@ -167,7 +164,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -176,8 +173,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel
-     * #getHistogramVizModel()
+     * {@inheritDoc}
      */
     @Override
     protected AbstractHistogramVizModel getHistogramVizModel() {
@@ -194,9 +190,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel#
-     * loadHistogramInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadHistogramInternals(final File dataDir, 
@@ -214,9 +208,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         }
     }
     /**
-     * @see org.knime.base.node.viz.histogram.node.AbstractHistogramNodeModel#
-     * saveHistogramInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveHistogramInternals(final File dataDir, 

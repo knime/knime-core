@@ -94,14 +94,14 @@ implements StringValue, NominalValue {
     }
 
     /**
-     * @see org.knime.core.data.StringValue#getStringValue()
+     * {@inheritDoc}
      */
     public String getStringValue() {
         return m_string;
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -109,8 +109,7 @@ implements StringValue, NominalValue {
     }
 
     /**
-     * @see org.knime.core.data.DataCell
-     *      #equalsDataCell(org.knime.core.data.DataCell)
+     * {@inheritDoc}
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
@@ -118,7 +117,7 @@ implements StringValue, NominalValue {
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -129,7 +128,7 @@ implements StringValue, NominalValue {
     private static class StringSerializer implements
             DataCellSerializer<StringCell> {
         /**
-         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         * {@inheritDoc}
          */
         public void serialize(final StringCell cell, final DataOutput output)
                 throws IOException {
@@ -137,7 +136,7 @@ implements StringValue, NominalValue {
         }
 
         /**
-         * @see DataCellSerializer#deserialize(DataInput)
+         * {@inheritDoc}
          */
         public StringCell deserialize(final DataInput input) throws IOException {
             String s = input.readUTF();

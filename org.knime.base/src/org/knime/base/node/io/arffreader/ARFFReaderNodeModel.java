@@ -95,7 +95,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -119,7 +119,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -141,7 +141,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -155,7 +155,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -163,8 +163,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #saveInternals(java.io.File,
-     *      ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
@@ -174,8 +173,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #loadInternals(java.io.File,
-     *      ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -185,7 +183,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -200,7 +198,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -301,7 +299,7 @@ public class ARFFReaderNodeModel extends NodeModel {
     public static class ARFFFileFilter extends FileFilter {
 
         /**
-         * @see javax.swing.filechooser.FileFilter#accept(java.io.File)
+         * {@inheritDoc}
          */
         @Override
         public boolean accept(final File f) {
@@ -317,7 +315,7 @@ public class ARFFReaderNodeModel extends NodeModel {
         }
 
         /**
-         * @see javax.swing.filechooser.FileFilter#getDescription()
+         * {@inheritDoc}
          */
         @Override
         public String getDescription() {

@@ -146,14 +146,14 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
         private double m_value = 0;
 
         /**
-         * @see javax.swing.Icon#getIconHeight()
+         * {@inheritDoc}
          */
         public int getIconHeight() {
             return getHeight();
         }
 
         /**
-         * @see javax.swing.Icon#getIconWidth()
+         * {@inheritDoc}
          */
         public int getIconWidth() {
             return getWidth();
@@ -168,8 +168,7 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
         }
 
         /**
-         * @see javax.swing.Icon#paintIcon( java.awt.Component,
-         *      java.awt.Graphics, int, int)
+         * {@inheritDoc}
          */
         public void paintIcon(final Component c, final Graphics g, final int x,
                 final int y) {

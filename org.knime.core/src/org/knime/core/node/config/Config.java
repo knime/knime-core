@@ -127,14 +127,14 @@ public abstract class Config extends AbstractConfigEntry
              */
             public static final Class<StringCell> CLASS = StringCell.class;
             /**
-             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             * {@inheritDoc}
              */
             public void saveToConfig(final DataCell cell, final Config config) {
                 config.addString(CLASS.getSimpleName(), 
                         ((StringCell) cell).getStringValue());
             }
             /**
-             * @see Config.DataCellEntry#createCell(ConfigRO)
+             * {@inheritDoc}
              */
             public DataCell createCell(final ConfigRO config) 
                     throws InvalidSettingsException {
@@ -151,14 +151,14 @@ public abstract class Config extends AbstractConfigEntry
              */
             public static final Class<DoubleCell> CLASS = DoubleCell.class;
             /**
-             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             * {@inheritDoc}
              */
             public void saveToConfig(final DataCell cell, final Config config) {
                 config.addDouble(CLASS.getSimpleName(), 
                         ((DoubleCell) cell).getDoubleValue());
             }
             /**
-             * @see Config.DataCellEntry#createCell(ConfigRO)
+             * {@inheritDoc}
              */
             public DataCell createCell(final ConfigRO config) 
                     throws InvalidSettingsException {
@@ -175,14 +175,14 @@ public abstract class Config extends AbstractConfigEntry
              */
             public static final Class<IntCell> CLASS = IntCell.class;
             /**
-             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             * {@inheritDoc}
              */
             public void saveToConfig(final DataCell cell, final Config config) {
                 config.addInt(CLASS.getSimpleName(), 
                         ((IntCell) cell).getIntValue());
             }
             /**
-             * @see Config.DataCellEntry#createCell(ConfigRO)
+             * {@inheritDoc}
              */
             public DataCell createCell(final ConfigRO config) 
                     throws InvalidSettingsException {
@@ -200,13 +200,13 @@ public abstract class Config extends AbstractConfigEntry
             public static final Class<? extends DataCell> CLASS = 
                 DataType.getMissingCell().getClass();
             /**
-             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             * {@inheritDoc}
              */
             public void saveToConfig(final DataCell cell, final Config config) {
                 // nothing to save here
             }
             /**
-             * @see Config.DataCellEntry#createCell(ConfigRO)
+             * {@inheritDoc}
              */
             public DataCell createCell(final ConfigRO config) 
                     throws InvalidSettingsException {
@@ -227,7 +227,7 @@ public abstract class Config extends AbstractConfigEntry
             public static final Class<ComplexNumberCell> CLASS = 
                 ComplexNumberCell.class;
             /**
-             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             * {@inheritDoc}
              */
             public void saveToConfig(final DataCell cell, final Config config) {
                 ComplexNumberCell ocell = (ComplexNumberCell) cell;
@@ -235,7 +235,7 @@ public abstract class Config extends AbstractConfigEntry
                 config.addDouble(CFG_IMAG, ocell.getImaginaryValue());
             }
             /**
-             * @see Config.DataCellEntry#createCell(ConfigRO)
+             * {@inheritDoc}
              */
             public DataCell createCell(final ConfigRO config) 
                     throws InvalidSettingsException {
@@ -258,7 +258,7 @@ public abstract class Config extends AbstractConfigEntry
             public static final Class<FuzzyIntervalCell> CLASS = 
                 FuzzyIntervalCell.class;
             /**
-             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             * {@inheritDoc}
              */
             public void saveToConfig(final DataCell cell, final Config config) {
                 FuzzyIntervalCell ocell = 
@@ -269,7 +269,7 @@ public abstract class Config extends AbstractConfigEntry
                 config.addDouble(CFG_MAX_SUPP, ocell.getMaxSupport());
             }
             /**
-             * @see Config.DataCellEntry#createCell(ConfigRO)
+             * {@inheritDoc}
              */
             public DataCell createCell(final ConfigRO config) 
                     throws InvalidSettingsException {
@@ -294,7 +294,7 @@ public abstract class Config extends AbstractConfigEntry
             public static final Class<FuzzyNumberCell> CLASS = 
                 FuzzyNumberCell.class;
             /**
-             * @see Config.DataCellEntry#saveToConfig(DataCell, Config)
+             * {@inheritDoc}
              */
             public void saveToConfig(final DataCell cell, final Config config) {
                 FuzzyNumberCell ocell = (FuzzyNumberCell) cell;
@@ -304,7 +304,7 @@ public abstract class Config extends AbstractConfigEntry
                 config.addDouble(CFG_RIGHT, ocell.getMaxSupport());
             }
             /**
-             * @see Config.DataCellEntry#createCell(ConfigRO)
+             * {@inheritDoc}
              */
             public DataCell createCell(final ConfigRO config) 
                     throws InvalidSettingsException {
@@ -1505,14 +1505,14 @@ public abstract class Config extends AbstractConfigEntry
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public final Iterator<String> iterator() {
         return keySet().iterator();
     }
 
     /**
-     * @see #toString()
+     * {@inheritDoc}
      */
     @Override
     public final String toStringValue() {
@@ -1530,7 +1530,7 @@ public abstract class Config extends AbstractConfigEntry
     }
     
     /**
-     * @see AbstractConfigEntry#getKey()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

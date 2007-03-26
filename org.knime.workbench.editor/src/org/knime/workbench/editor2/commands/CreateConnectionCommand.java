@@ -199,7 +199,7 @@ public class CreateConnectionCommand extends Command {
     }
 
     /**
-     * @see org.eclipse.gef.commands.Command#execute()
+     * {@inheritDoc}
      */
     @Override
     public void execute() {
@@ -234,7 +234,7 @@ public class CreateConnectionCommand extends Command {
     }
 
     /**
-     * @see org.eclipse.gef.commands.Command#undo()
+     * {@inheritDoc}
      */
     @Override
     public void undo() {

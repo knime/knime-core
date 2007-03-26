@@ -77,7 +77,7 @@ public interface IntervalValue extends DataValue {
         }
 
         /**
-         * @see DataValue.UtilityFactory#getIcon()
+         * {@inheritDoc}
          */
         @Override
         public Icon getIcon() {
@@ -85,7 +85,7 @@ public interface IntervalValue extends DataValue {
         }
 
         /**
-         * @see UtilityFactory#getComparator()
+         * {@inheritDoc}
          */
         @Override
         protected DataValueComparator getComparator() {

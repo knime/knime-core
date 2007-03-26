@@ -64,19 +64,14 @@ public class InteractiveBinDataModel extends BinDataModel {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.BinDataModel
-     * #createBar(java.awt.Color)
+     * {@inheritDoc}
      */
     @Override
     protected BarDataModel createBar(final String barName, final Color color) {
         return new InteractiveBarDataModel(barName, color);
     }
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.BinDataModel
-     * #setBinRectangle(java.awt.Rectangle, 
-     * org.knime.base.node.viz.histogram.AggregationMethod, 
-     * org.knime.base.node.viz.histogram.HistogramLayout, int, 
-     * java.util.SortedSet, java.util.Collection)
+     * {@inheritDoc}
      */
     @Override
     public void setBinRectangle(final Rectangle binRectangle, 
@@ -89,12 +84,7 @@ public class InteractiveBinDataModel extends BinDataModel {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.BinDataModel
-     * #updateBinWidth(int, int, 
-     * org.knime.base.node.viz.histogram.HistogramLayout, 
-     * java.util.SortedSet, 
-     * org.knime.base.node.viz.histogram.AggregationMethod, 
-     * java.util.Collection, int)
+     * {@inheritDoc}
      */
     @Override
     public void updateBinWidth(final int startX, final int binWidth, 

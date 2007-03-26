@@ -144,7 +144,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.DataProvider#getDataArray(int)
+     * {@inheritDoc}
      */
     public DataArray getDataArray(final int index) {
         if (index == 0) {
@@ -485,7 +485,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -598,7 +598,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(File, ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -624,7 +624,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(File, ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

@@ -205,7 +205,7 @@ public final class ConsoleViewAppender extends Writer {
         new ConsoleWriteJob();
 
     /**
-     * @see java.io.Writer#write(char[], int, int)
+     * {@inheritDoc}
      */
     @Override
     public void write(final char[] cbuf, final int off, final int len)
@@ -220,7 +220,7 @@ public final class ConsoleViewAppender extends Writer {
     }
 
     /**
-     * @see java.io.Writer#flush()
+     * {@inheritDoc}
      */
     @Override
     public void flush() throws IOException {
@@ -228,7 +228,7 @@ public final class ConsoleViewAppender extends Writer {
     }
 
     /**
-     * @see java.io.Writer#close()
+     * {@inheritDoc}
      */
     @Override
     public void close() throws IOException {
@@ -270,7 +270,7 @@ public final class ConsoleViewAppender extends Writer {
         }
         
         /**
-         * @see Job#run(IProgressMonitor)
+         * {@inheritDoc}
          */
         @Override
         protected IStatus run(final IProgressMonitor monitor) {

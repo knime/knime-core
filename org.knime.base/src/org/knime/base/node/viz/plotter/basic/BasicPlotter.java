@@ -97,7 +97,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
 
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
+     * {@inheritDoc}
      */
     @Override
     public void reset() {

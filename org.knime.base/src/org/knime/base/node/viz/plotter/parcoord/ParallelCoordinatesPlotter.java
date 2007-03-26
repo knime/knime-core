@@ -110,8 +110,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
             props.getColumnFilter()
                     .addChangeListener(new ChangeListener() {
                         /**
-                         * @see javax.swing.event.ChangeListener#stateChanged(
-                         *      javax.swing.event.ChangeEvent)
+                         * {@inheritDoc}
                          */
                         public void stateChanged(final ChangeEvent e) {
                             Set<String>incl = props.getColumnFilter()
@@ -134,8 +133,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 .getShowDotsBox();
             showBox.addItemListener(new ItemListener() {
                     /**
-                     * @see java.awt.event.ItemListener#itemStateChanged(
-                     * java.awt.event.ItemEvent)
+                     * {@inheritDoc}
                      */
                     public void itemStateChanged(final ItemEvent e) {
                         ((ParallelCoordinateDrawingPane)getDrawingPane())
@@ -147,8 +145,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                     getProperties()).getSkipRowButton();
             skipRow.addItemListener(new ItemListener() {
                 /**
-                 * @see java.awt.event.ItemListener#itemStateChanged(
-                 * java.awt.event.ItemEvent)
+                 * {@inheritDoc}
                  */
                 public void itemStateChanged(final ItemEvent e) {
                     boolean changed = (m_skipMissingValues != skipRow.
@@ -164,8 +161,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                    .getSkipValueButton();
             skipValue.addItemListener(new ItemListener() {
                 /**
-                 * @see java.awt.event.ItemListener#itemStateChanged(
-                 * java.awt.event.ItemEvent)
+                 * {@inheritDoc}
                  */
                 public void itemStateChanged(final ItemEvent e) {
                     ((ParallelCoordinateDrawingPane)getDrawingPane())
@@ -177,8 +173,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                     getProperties()).getShowMissingValsButton();
             showBtn.addItemListener(new ItemListener() {
                 /**
-                 * @see java.awt.event.ItemListener#itemStateChanged(
-                 * java.awt.event.ItemEvent)
+                 * {@inheritDoc}
                  */
                 public void itemStateChanged(final ItemEvent e) { 
                     ((ParallelCoordinateDrawingPane)getDrawingPane())
@@ -190,8 +185,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                     getProperties()).getDrawCurvesBox();
             curves.addItemListener(new ItemListener() {
                 /**
-                 * @see java.awt.event.ItemListener#itemStateChanged(
-                 * java.awt.event.ItemEvent)
+                 * {@inheritDoc}
                  */
                 public void itemStateChanged(final ItemEvent e) {
                     ((ParallelCoordinateDrawingPane)getDrawingPane())
@@ -204,8 +198,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                     getProperties()).getThicknessSpinner();
             thickness.addChangeListener(new ChangeListener() {
                 /**
-                 * @see javax.swing.event.ChangeListener#stateChanged(
-                 * javax.swing.event.ChangeEvent)
+                 * {@inheritDoc}
                  */
                 public void stateChanged(final ChangeEvent e) {
                      ((ParallelCoordinateDrawingPane)getDrawingPane())
@@ -247,8 +240,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     public Action getShowAllAction() {
         Action show = new AbstractAction(AbstractPlotter.SHOW_ALL) {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
                 m_hide = false;
@@ -268,8 +260,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     public Action getHideAction() {
         Action hide = new AbstractAction(AbstractPlotter.HIDE_UNHILITED) {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
                 m_hide = true;
@@ -289,8 +280,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     public Action getFadeAction() {
         Action fade = new AbstractAction(AbstractPlotter.FADE_UNHILITED) {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
                 m_hide = false;
@@ -318,8 +308,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#fillPopupMenu(
-     * javax.swing.JPopupMenu)
+     * {@inheritDoc}
      */
     @Override
     public void fillPopupMenu(final JPopupMenu popupMenu) {
@@ -333,7 +322,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     // ------------ selection -------------------
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#clearSelection()
+     * {@inheritDoc}
      */
     @Override
     public void clearSelection() {
@@ -345,8 +334,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter
-     *      #selectClickedElement(java.awt.Point)
+     * {@inheritDoc}
      */
     @Override
     public void selectClickedElement(final Point clicked) {
@@ -363,8 +351,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
 
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter
-     * #selectElementsIn(java.awt.Rectangle)
+     * {@inheritDoc}
      */
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {
@@ -383,8 +370,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     // ---------- hilite ---------------
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLite(
-     * org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     @Override
     public void hiLite(final KeyEvent event) {
@@ -398,8 +384,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter
-     * #unHiLite(org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     @Override
     public void unHiLite(final KeyEvent event) {
@@ -413,7 +398,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     }
     
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
+     * {@inheritDoc}
      */
     public void unHiLiteAll() {
         for (LineInfo line : m_lines) {
@@ -424,8 +409,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     
 
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void hiLiteSelected() {
@@ -433,8 +417,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     }
     
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void unHiLiteSelected() {
@@ -607,7 +590,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter#updateSize()
+     * {@inheritDoc}
      */
     @Override
     public synchronized void updateSize() {
@@ -635,8 +618,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         private int m_oldX;
 
         /**
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener
-         * #mouseDragged(java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mouseDragged(final MouseEvent e) {
@@ -649,8 +631,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         }
 
         /**
-         * @see java.awt.event.MouseAdapter#mousePressed(
-         * java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mousePressed(final MouseEvent e) {
@@ -673,8 +654,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         }
 
         /**
-         * @see java.awt.event.MouseAdapter#mouseReleased(
-         * java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mouseReleased(final MouseEvent e) {
@@ -736,8 +716,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         }  
         
         /**
-         * 
-         * @see java.lang.Object#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {

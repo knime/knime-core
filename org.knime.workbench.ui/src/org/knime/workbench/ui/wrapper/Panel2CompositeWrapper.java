@@ -83,7 +83,7 @@ public class Panel2CompositeWrapper extends Composite {
     }
 
     /**
-     * @see org.eclipse.swt.widgets.Widget#dispose()
+     * {@inheritDoc}
      */
     @Override
     public void dispose() {
@@ -91,7 +91,7 @@ public class Panel2CompositeWrapper extends Composite {
     }
 
     /**
-     * @see org.eclipse.swt.widgets.Widget#checkSubclass()
+     * {@inheritDoc}
      */
     @Override
     protected void checkSubclass() {

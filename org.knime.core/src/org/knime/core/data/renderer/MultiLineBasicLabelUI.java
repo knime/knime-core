@@ -72,7 +72,7 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
     private String[] m_splittedStrings;
     
     /**
-     * @see BasicLabelUI#getPreferredSize(JComponent)
+     * {@inheritDoc}
      */
     @Override
     public Dimension getPreferredSize(final JComponent c) {
@@ -101,7 +101,7 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
     }
 
     /**
-     * @see BasicLabelUI#paint(Graphics, JComponent)
+     * {@inheritDoc}
      */
     @Override
     public void paint(final Graphics g, final JComponent c) {

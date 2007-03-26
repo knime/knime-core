@@ -64,7 +64,7 @@ public abstract class NoSettingsNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected final void saveSettingsTo(final NodeSettingsWO settings) {
@@ -73,7 +73,7 @@ public abstract class NoSettingsNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected final void validateSettings(final NodeSettingsRO settings)
@@ -82,7 +82,7 @@ public abstract class NoSettingsNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected final void loadValidatedSettingsFrom(
@@ -92,7 +92,7 @@ public abstract class NoSettingsNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {

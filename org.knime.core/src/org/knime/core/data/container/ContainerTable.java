@@ -85,7 +85,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         if (m_buffer != null) {
@@ -95,7 +95,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         ensureBufferOpen();
@@ -103,7 +103,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
     
     /**
-     * @see KnowsRowCountTable#getRowCount()
+     * {@inheritDoc}
      */
     public int getRowCount() {
         ensureBufferOpen();
@@ -147,7 +147,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
     
     /**
-     * @see KnowsRowCountTable#putIntoTableRepository(HashMap)
+     * {@inheritDoc}
      */
     public void putIntoTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
@@ -155,7 +155,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
     
     /**
-     * @see KnowsRowCountTable#removeFromTableRepository(HashMap)
+     * {@inheritDoc}
      */
     public void removeFromTableRepository(
             final HashMap<Integer, ContainerTable> rep) {

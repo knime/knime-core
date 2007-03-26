@@ -184,11 +184,7 @@ public class InteractiveHistogramProperties extends
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.
-     * AbstractHistogramProperties#updateColumnSelection(
-     * org.knime.core.data.DataTableSpec, java.lang.String, 
-     * java.util.Collection, 
-     * org.knime.base.node.viz.histogram.AggregationMethod)
+     * {@inheritDoc}
      */
     @Override
     public void updateColumnSelection(final DataTableSpec spec,
@@ -234,8 +230,7 @@ public class InteractiveHistogramProperties extends
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.
-     * AbstractHistogramProperties#onSelectAggrMethod(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     protected void onSelectAggrMethod(final String actionCommand) {

@@ -70,7 +70,7 @@ public class ColorColumn implements Serializable {
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -83,7 +83,7 @@ public class ColorColumn implements Serializable {
     }
 
     /**
-     * @see java.lang.Object#equals(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object obj) {

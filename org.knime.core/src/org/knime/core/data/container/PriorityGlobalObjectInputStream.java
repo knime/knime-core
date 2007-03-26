@@ -40,7 +40,7 @@ class PriorityGlobalObjectInputStream extends GlobalObjectInputStream {
     private ClassLoader m_classLoader;
     
     /**
-     * @see GlobalObjectInputStream#GlobalObjectInputStream(InputStream)
+     * {@inheritDoc}
      */
     PriorityGlobalObjectInputStream(final InputStream in) 
         throws IOException {
@@ -48,7 +48,7 @@ class PriorityGlobalObjectInputStream extends GlobalObjectInputStream {
     }
     
     /**
-     * @see java.io.ObjectInputStream#resolveClass(ObjectStreamClass)
+     * {@inheritDoc}
      */
     @Override
     protected Class<?> resolveClass(final ObjectStreamClass desc) 

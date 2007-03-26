@@ -50,7 +50,7 @@ public class ThreadPool {
     private class MyFuture<T> extends FutureTask<T> {
 
         /**
-         * @see FutureTask#FutureTask(java.util.concurrent.Callable)
+         * {@inheritDoc}
          */
         public MyFuture(final Callable<T> callable) {
             super(callable);
@@ -519,7 +519,7 @@ public class ThreadPool {
     }
 
     /**
-     * @see java.lang.Object#finalize()
+     * {@inheritDoc}
      */
     @Override
     protected void finalize() throws Throwable {

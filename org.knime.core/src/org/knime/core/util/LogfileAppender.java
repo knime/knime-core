@@ -64,7 +64,7 @@ public class LogfileAppender extends FileAppender {
     }
 
     /**
-     * @see org.apache.log4j.FileAppender#activateOptions()
+     * {@inheritDoc}
      */
     @Override
     public void activateOptions() {
@@ -140,8 +140,7 @@ public class LogfileAppender extends FileAppender {
     }
 
     /**
-     * @see org.apache.log4j.WriterAppender
-     *      #subAppend(org.apache.log4j.spi.LoggingEvent)
+     * {@inheritDoc}
      */
     @Override
     protected void subAppend(final LoggingEvent event) {

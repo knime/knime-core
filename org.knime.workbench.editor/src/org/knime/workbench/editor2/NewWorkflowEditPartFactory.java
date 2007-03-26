@@ -61,9 +61,7 @@ public final class NewWorkflowEditPartFactory implements EditPartFactory {
     }
 
     /**
-     * 
-     * @see org.eclipse.gef.EditPartFactory#
-     *      createEditPart(org.eclipse.gef.EditPart, java.lang.Object)
+     * {@inheritDoc}
      */
     public EditPart createEditPart(final EditPart context, final Object model) {
         EditPart part = null;

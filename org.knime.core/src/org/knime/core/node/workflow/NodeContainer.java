@@ -370,21 +370,21 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#closeAllViews()
+     * {@inheritDoc}
      */
     public void closeAllViews() {
         m_node.closeAllViews();
     }
 
     /**
-     * @see Node#closeAllPortViews()
+     * {@inheritDoc}
      */
     public void closeAllPortViews() {
         m_node.closeAllPortViews();
     }
 
     /**
-     * @see Node#configure()
+     * {@inheritDoc}
      */
     void configure() {
         m_node.configure();
@@ -418,21 +418,21 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#removeInternals()
+     * {@inheritDoc}
      */
     void removeInternals() {
         m_node.removeInternals();
     }
 
     /**
-     * @see Node#detach()
+     * {@inheritDoc}
      */
     void detach() {
         m_node.detach();
     }
 
     /**
-     * @see Node#cleanup()
+     * {@inheritDoc}
      */
     void cleanup() {
         m_node.cleanup();
@@ -520,7 +520,7 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see org.knime.core.node.Node#getFullHTMLDescription()
+     * {@inheritDoc}
      */
     public String getFullHTMLNodeDescription() {
         return m_node.getFullHTMLDescription();
@@ -559,28 +559,28 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#getInportName(int)
+     * {@inheritDoc}
      */
     public String getInportName(final int port) {
         return m_node.getInportName(port);
     }
 
     /**
-     * @see Node#getModelClass()
+     * {@inheritDoc}
      */
     public Class<? extends NodeModel> getModelClass() {
         return m_node.getModelClass();
     }
 
     /**
-     * @see Node#getName()
+     * {@inheritDoc}
      */
     public String getName() {
         return m_node.getName();
     }
 
     /**
-     * @see Node#getType()
+     * {@inheritDoc}
      */
     public NodeType getType() {
         return m_node.getType();
@@ -594,56 +594,56 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#getNrDataInPorts()
+     * {@inheritDoc}
      */
     public int getNrDataInPorts() {
         return m_node.getNrDataInPorts();
     }
 
     /**
-     * @see Node#getNrDataOutPorts()
+     * {@inheritDoc}
      */
     public int getNrDataOutPorts() {
         return m_node.getNrDataOutPorts();
     }
 
     /**
-     * @see Node#getNrInPorts()
+     * {@inheritDoc}
      */
     public int getNrInPorts() {
         return m_node.getNrInPorts();
     }
 
     /**
-     * @see Node#getNrOutPorts()
+     * {@inheritDoc}
      */
     public int getNrOutPorts() {
         return m_node.getNrOutPorts();
     }
 
     /**
-     * @see Node#getNrModelContentInPorts()
+     * {@inheritDoc}
      */
     public int getNrModelContentInPorts() {
         return m_node.getNrModelContentInPorts();
     }
 
     /**
-     * @see Node#getNrModelContentOutPorts()
+     * {@inheritDoc}
      */
     public int getNrModelContentOutPorts() {
         return m_node.getNrModelContentOutPorts();
     }
 
     /**
-     * @see Node#getNumViews()
+     * {@inheritDoc}
      */
     public int getNumViews() {
         return m_node.getNumViews();
     }
 
     /**
-     * @see Node#getOneLineDescription()
+     * {@inheritDoc}
      */
     public String getOneLineDescription() {
         return m_node.getOneLineDescription();
@@ -684,7 +684,7 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#getStatus()
+     * {@inheritDoc}
      */
     public NodeStatus getStatus() {
         return m_node.getStatus();
@@ -709,56 +709,56 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#getView(int, String)
+     * {@inheritDoc}
      */
     public NodeView getView(final int viewIndex) {
         return m_node.getView(viewIndex, getNameWithID());
     }
 
     /**
-     * @see Node#getViewName(int)
+     * {@inheritDoc}
      */
     public String getViewName(final int viewIndex) {
         return m_node.getViewName(viewIndex);
     }
 
     /**
-     * @see Node#hasDialog()
+     * {@inheritDoc}
      */
     public boolean hasDialog() {
         return m_node.hasDialog();
     }
 
     /**
-     * @see Node#isAutoExecutable()
+     * {@inheritDoc}
      */
     public boolean isAutoExecutable() {
         return m_node.isAutoExecutable();
     }
 
     /**
-     * @see Node#isConfigured()
+     * {@inheritDoc}
      */
     public boolean isConfigured() {
         return m_node.isConfigured();
     }
 
     /**
-     * @see Node#isDataInPort(int)
+     * {@inheritDoc}
      */
     public boolean isDataInPort(final int inPort) {
         return m_node.isDataInPort(inPort);
     }
 
     /**
-     * @see Node#isDataOutPort(int)
+     * {@inheritDoc}
      */
     public boolean isDataOutPort(final int outPort) {
         return m_node.isDataOutPort(outPort);
     }
 
     /**
-     * @see Node#isExecutable()
+     * {@inheritDoc}
      */
     public boolean isExecutable() {
         return m_node.isExecutable();
@@ -807,7 +807,7 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#isExecuted()
+     * {@inheritDoc}
      */
     public boolean isExecuted() {
         return m_node.isExecuted();
@@ -842,21 +842,21 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#isInterruptible()
+     * {@inheritDoc}
      */
     public boolean isInterruptible() {
         return m_node.isInterruptible();
     }
 
     /**
-     * @see Node#isModelContentInPort(int)
+     * {@inheritDoc}
      */
     public boolean isPredictorInPort(final int portNumber) {
         return m_node.isModelContentInPort(portNumber);
     }
 
     /**
-     * @see Node#isModelContentOutPort(int)
+     * {@inheritDoc}
      */
     public boolean isPredictorOutPort(final int portNumber) {
         return m_node.isModelContentOutPort(portNumber);
@@ -999,7 +999,7 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#resetAndConfigure()
+     * {@inheritDoc}
      */
     void resetAndConfigure() {
         m_node.resetAndConfigure();
@@ -1075,7 +1075,7 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#showDialog()
+     * {@inheritDoc}
      */
     public void showDialog() {
         m_node.showDialog("Dialog - " + getNameWithID());
@@ -1236,14 +1236,14 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#retrieveModel(MetaNodeModel)
+     * {@inheritDoc}
      */
     public void retrieveModel(final MetaNodeModel metaModel) {
         m_node.retrieveModel(metaModel);
     }
 
     /**
-     * @see Node#isFullyConnected()
+     * {@inheritDoc}
      */
     public boolean isFullyConnected() {
         return m_node.isFullyConnected();

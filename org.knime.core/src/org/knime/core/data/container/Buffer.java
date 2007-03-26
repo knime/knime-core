@@ -1371,7 +1371,7 @@ class Buffer {
         }
 
         /**
-         * @see org.knime.core.data.RowIterator#hasNext()
+         * {@inheritDoc}
          */
         @Override
         public boolean hasNext() {
@@ -1390,7 +1390,7 @@ class Buffer {
         }
         
         /**
-         * @see org.knime.core.data.RowIterator#next()
+         * {@inheritDoc}
          */
         @Override
         public synchronized DataRow next() {
@@ -1441,7 +1441,7 @@ class Buffer {
         }
         
         /**
-         * @see java.lang.Object#finalize()
+         * {@inheritDoc}
          */
         @Override
         protected void finalize() throws Throwable {
@@ -1462,7 +1462,7 @@ class Buffer {
         private Iterator<BlobSupportDataRow> m_it = m_list.iterator();
 
         /**
-         * @see org.knime.core.data.RowIterator#hasNext()
+         * {@inheritDoc}
          */
         @Override
         public boolean hasNext() {
@@ -1470,7 +1470,7 @@ class Buffer {
         }
 
         /**
-         * @see org.knime.core.data.RowIterator#next()
+         * {@inheritDoc}
          */
         @Override
         public DataRow next() {
@@ -1533,7 +1533,7 @@ class Buffer {
         }
         
         /**
-         * @see java.lang.Thread#run()
+         * {@inheritDoc}
          */
         @Override
         public void run() {

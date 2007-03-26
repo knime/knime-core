@@ -128,10 +128,48 @@ public final class MathUtils {
         return resultMatrix;
     }
 
+
+    /**
+     * Multiplies two matrices. Matrix 1 is multiplied from the left to matrix
+     * 2. Therefore, result matrix = matrix 1 * matrix 2. The matrices must be
+     * compatible, i.e. the number of columns of matrix 1 must equal to the
+     * number of rows of matrix 2.
+     * 
+     * @param matrix the matrix on the left side
+     * @param vector the vector on the right side
+     * @return the result matrix
+     * @throws IllegalArgumentException if the matrices are not compatible
+     */
+    public static double[] multiply(final double[][] matrix,
+            final double[] vector) throws IllegalArgumentException {
+        final int numColsMatrix = matrix[0].length;
+        final int numRowsMatrix = matrix.length;
+        final int numRowsVector = vector.length;
+
+        // check dimension compatibility
+        if (numColsMatrix != numRowsVector) {
+            throw new IllegalArgumentException(
+                    "Matrix must have the same number of columns as the vector "
+                    + "has rows.");
+        }
+
+        double[] resultVector = new double[numRowsVector];
+
+        for (int i = 0; i < numRowsMatrix; i++) {
+            double tmp = 0;
+            for (int j = 0; j < numColsMatrix; j++) {
+                tmp += matrix[i][j] * vector[j];
+            }
+            resultVector[i] = tmp;
+        }
+
+        return resultVector;
+    }
+
     
     /**
      * Multiplies a matrix with its transposed matrix. The transposed matrix
-     * is multiplied to the <em>lefft</em> of the original matrix.
+     * is multiplied to the <em>left</em> of the original matrix.
      * 
      * @param mat the matrix
      * @return the result matrix
@@ -321,6 +359,23 @@ public final class MathUtils {
         return normMatrix;
     }
 
+    
+    /**
+     * Normalizes the matrix relative to the mean and standard deviation of the
+     * input data.
+     * 
+     * @param matrix the matrix to normalize
+     * 
+     * @return the normalized matrix
+     */
+    public static double[][] normalizeMatrix(final double[][] matrix) {
+        double[] mean = StatisticUtils.mean(matrix);
+        double[] stdev = StatisticUtils.standardDeviation(matrix);
+        
+        return normalizeMatrix(matrix, stdev, mean);
+    }
+    
+    
     /**
      * Denormalizes the matrix relativ to the mean of the input data and to the
      * standard deviation.

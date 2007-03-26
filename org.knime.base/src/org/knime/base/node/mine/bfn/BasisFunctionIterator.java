@@ -118,8 +118,7 @@ public final class BasisFunctionIterator extends RowIterator {
     }
 
     /**
-     * @see #nextBasisFunction()
-     * @return the next row in the iteration
+     * {@inheritDoc}
      */
     @Override
     public DataRow next() {

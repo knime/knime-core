@@ -67,8 +67,7 @@ public class ExecutionMonitor {
     }
 
     /**
-     * @see NodeProgressMonitor#checkCanceled()
-     * @return <code>true</code> if the execution has been canceled.
+     * {@inheritDoc}
      */
     boolean isCanceled() {
         try {
@@ -80,42 +79,35 @@ public class ExecutionMonitor {
     }
 
     /**
-     * @see NodeProgressMonitor#checkCanceled()
-     * @throws CanceledExecutionException which indicated the execution will be
-     *             canceled by this call.
+     * {@inheritDoc}
      */
     public void checkCanceled() throws CanceledExecutionException {
         m_progress.checkCanceled();
     }
 
     /**
-     * @see NodeProgressMonitor#setProgress(double)
-     * @param progress The progress values to set in the monitor.
+     * {@inheritDoc}
      */
     public void setProgress(final double progress) {
         m_progress.setProgress(progress);
     }
 
     /**
-     * @see NodeProgressMonitor#setProgress(double)
-     * @param progress The progress values to set in the monitor.
-     * @param message The message to be shown in the progress monitor.
+     * {@inheritDoc}
      */
     public void setProgress(final double progress, final String message) {
         m_progress.setProgress(progress, message);
     }
 
     /**
-     * @see NodeProgressMonitor#setMessage(String)
-     * @param message The message to be shown in the progress monitor.
+     * {@inheritDoc}
      */
     public void setMessage(final String message) {
         m_progress.setMessage(message);
     }
     
     /**
-     * @see NodeProgressMonitor#setProgress(String)
-     * @param message The message to be shown in the progress monitor.
+     * {@inheritDoc}
      */
     public void setProgress(final String message) {
         m_progress.setProgress(message);

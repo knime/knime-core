@@ -67,7 +67,7 @@ import embedding.tools.AbstractObjectReader;
 public class ProjectTeamXMLReader extends AbstractObjectReader {
 
     /**
-     * @see org.xml.sax.XMLReader#parse(InputSource)
+     * {@inheritDoc}
      */
     public void parse(InputSource input) throws IOException, SAXException {
         if (input instanceof ProjectTeamInputSource) {

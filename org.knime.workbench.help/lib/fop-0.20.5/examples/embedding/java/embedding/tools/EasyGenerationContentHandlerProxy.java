@@ -154,7 +154,7 @@ public class EasyGenerationContentHandlerProxy implements ContentHandler {
     /* =========== ContentHandler interface =========== */
 
     /**
-     * @see org.xml.sax.ContentHandler#setDocumentLocator(Locator)
+     * {@inheritDoc}
      */
     public void setDocumentLocator(Locator locator) {
         target.setDocumentLocator(locator);
@@ -162,7 +162,7 @@ public class EasyGenerationContentHandlerProxy implements ContentHandler {
 
 
     /**
-     * @see org.xml.sax.ContentHandler#startDocument()
+     * {@inheritDoc}
      */
     public void startDocument() throws SAXException {
         target.startDocument();
@@ -170,7 +170,7 @@ public class EasyGenerationContentHandlerProxy implements ContentHandler {
 
 
     /**
-     * @see org.xml.sax.ContentHandler#endDocument()
+     * {@inheritDoc}
      */
     public void endDocument() throws SAXException {
         target.endDocument();
@@ -178,7 +178,7 @@ public class EasyGenerationContentHandlerProxy implements ContentHandler {
 
 
     /**
-     * @see org.xml.sax.ContentHandler#startPrefixMapping(String, String)
+     * {@inheritDoc}
      */
     public void startPrefixMapping(String prefix, String uri) throws SAXException {
         target.startPrefixMapping(prefix, uri);
@@ -186,7 +186,7 @@ public class EasyGenerationContentHandlerProxy implements ContentHandler {
 
 
     /**
-     * @see org.xml.sax.ContentHandler#endPrefixMapping(String)
+     * {@inheritDoc}
      */
     public void endPrefixMapping(String prefix) throws SAXException {
         target.endPrefixMapping(prefix);
@@ -194,7 +194,7 @@ public class EasyGenerationContentHandlerProxy implements ContentHandler {
 
 
     /**
-     * @see org.xml.sax.ContentHandler#startElement(String, String, String, Attributes)
+     * {@inheritDoc}
      */
     public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException {
         target.startElement(namespaceURI, localName, qName, atts);
@@ -202,7 +202,7 @@ public class EasyGenerationContentHandlerProxy implements ContentHandler {
 
 
     /**
-     * @see org.xml.sax.ContentHandler#endElement(String, String, String)
+     * {@inheritDoc}
      */
     public void endElement(String namespaceURI, String localName, String qName) throws SAXException {
         target.endElement(namespaceURI, localName, qName);
@@ -210,7 +210,7 @@ public class EasyGenerationContentHandlerProxy implements ContentHandler {
 
 
     /**
-     * @see org.xml.sax.ContentHandler#characters(char[], int, int)
+     * {@inheritDoc}
      */
     public void characters(char[] ch, int start, int length) throws SAXException {
         target.characters(ch, start, length);
@@ -218,7 +218,7 @@ public class EasyGenerationContentHandlerProxy implements ContentHandler {
 
 
     /**
-     * @see org.xml.sax.ContentHandler#ignorableWhitespace(char[], int, int)
+     * {@inheritDoc}
      */
     public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {
         target.ignorableWhitespace(ch, start, length);
@@ -226,7 +226,7 @@ public class EasyGenerationContentHandlerProxy implements ContentHandler {
 
 
     /**
-     * @see org.xml.sax.ContentHandler#processingInstruction(String, String)
+     * {@inheritDoc}
      */
     public void processingInstruction(String target, String data) throws SAXException {
         this.target.processingInstruction(target, data);
@@ -234,7 +234,7 @@ public class EasyGenerationContentHandlerProxy implements ContentHandler {
 
 
     /**
-     * @see org.xml.sax.ContentHandler#skippedEntity(String)
+     * {@inheritDoc}
      */
     public void skippedEntity(String name) throws SAXException {
         target.skippedEntity(name);

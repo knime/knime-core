@@ -78,23 +78,21 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
     }
 
     /**
-     * @see org.knime.core.node.workflow.NodeExtraInfo
-     *      #save(NodeSettingsWO)
+     * {@inheritDoc}
      */
     public void save(final NodeSettingsWO config) {
         config.addIntArray(KEY_BOUNDS, m_bounds);
     }
 
     /**
-     * @see org.knime.core.node.workflow.NodeExtraInfo
-     *      #load(NodeSettingsRO)
+     * {@inheritDoc}
      */
     public void load(final NodeSettingsRO conf) throws InvalidSettingsException {
         m_bounds = conf.getIntArray(KEY_BOUNDS);
     }
 
     /**
-     * @see org.knime.core.node.workflow.NodeExtraInfo#isFilledProperly()
+     * {@inheritDoc}
      */
     public boolean isFilledProperly() {
         if (m_bounds == null) {
@@ -148,7 +146,7 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
     }
 
     /**
-     * @see java.lang.Object#clone()
+     * {@inheritDoc}
      */
     @Override
     public Object clone() throws CloneNotSupportedException {

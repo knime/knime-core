@@ -82,7 +82,7 @@ public class DeleteNodeContainerCommand extends Command {
     }
 
     /**
-     * @see org.eclipse.gef.commands.Command#execute()
+     * {@inheritDoc}
      */
     @Override
     public void execute() {

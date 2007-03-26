@@ -39,9 +39,7 @@ import org.knime.core.node.workflow.WorkflowManager;
  */
 public class KnimeResourcePatternFilter extends ResourcePatternFilter {
     /**
-     * @see org.eclipse.jface.viewers.ViewerFilter#
-     *      select(org.eclipse.jface.viewers.Viewer, java.lang.Object,
-     *      java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public boolean select(final Viewer viewer, final Object parentElement,

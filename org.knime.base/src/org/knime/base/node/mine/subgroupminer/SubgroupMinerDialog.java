@@ -157,8 +157,7 @@ public class SubgroupMinerDialog extends NodeDialogPane {
     }
 
     /**
-     * @see org.knime.core.node.NodeDialogPane#loadSettingsFrom(
-     *      NodeSettingsRO, org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
@@ -176,8 +175,7 @@ public class SubgroupMinerDialog extends NodeDialogPane {
     }
 
     /**
-     * @see org.knime.core.node.NodeDialogPane#saveSettingsTo(
-     *      NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)

@@ -37,7 +37,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  */
 public class UserNodeNameDirectEditPolicy extends DirectEditPolicy {
     /**
-     * @see DirectEditPolicy#getDirectEditCommand(DirectEditRequest)
+     * {@inheritDoc}
      */
     @Override
     protected Command getDirectEditCommand(final DirectEditRequest edit) {
@@ -51,7 +51,7 @@ public class UserNodeNameDirectEditPolicy extends DirectEditPolicy {
     }
 
     /**
-     * @see DirectEditPolicy#showCurrentEditValue(DirectEditRequest)
+     * {@inheritDoc}
      */
     @Override
     protected void showCurrentEditValue(final DirectEditRequest request) {

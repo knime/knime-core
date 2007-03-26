@@ -36,7 +36,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
  */
 public class WorkflowLayout extends FreeformLayout {
     /**
-     * @see org.eclipse.draw2d.LayoutManager#layout(org.eclipse.draw2d.IFigure)
+     * {@inheritDoc}
      */
     @Override
     public void layout(final IFigure container) {

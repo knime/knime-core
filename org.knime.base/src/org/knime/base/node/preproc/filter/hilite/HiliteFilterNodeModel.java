@@ -58,7 +58,7 @@ public class HiliteFilterNodeModel extends NodeModel {
     }
     
     /**
-     * @see org.knime.core.node.NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -68,7 +68,7 @@ public class HiliteFilterNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -87,7 +87,7 @@ public class HiliteFilterNodeModel extends NodeModel {
     }
     
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -95,21 +95,21 @@ public class HiliteFilterNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -118,7 +118,7 @@ public class HiliteFilterNodeModel extends NodeModel {
 
     
     /**
-     * @see NodeModel#loadInternals(File, ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir, 
@@ -127,7 +127,7 @@ public class HiliteFilterNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveInternals(File, ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir, 

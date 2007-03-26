@@ -120,7 +120,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     /* The following methods all delegate to the internal ObjectOutputStream */
     
     /**
-     * @see ObjectOutputStream#close()
+     * {@inheritDoc}
      */
     @Override
     public void close() throws IOException {
@@ -128,7 +128,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#defaultWriteObject()
+     * {@inheritDoc}
      */
     @Override
     public void defaultWriteObject() throws IOException {
@@ -136,7 +136,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#flush()
+     * {@inheritDoc}
      */
     @Override
     public void flush() throws IOException {
@@ -144,7 +144,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#putFields()
+     * {@inheritDoc}
      */
     @Override
     public PutField putFields() throws IOException {
@@ -152,7 +152,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#reset()
+     * {@inheritDoc}
      */
     @Override
     public void reset() throws IOException {
@@ -160,7 +160,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -168,7 +168,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#useProtocolVersion(int)
+     * {@inheritDoc}
      */
     @Override
     public void useProtocolVersion(final int version) throws IOException {
@@ -176,7 +176,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#write(byte[], int, int)
+     * {@inheritDoc}
      */
     @Override
     public void write(final byte[] buf, final int off, final int len) 
@@ -185,7 +185,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#write(byte[])
+     * {@inheritDoc}
      */
     @Override
     public void write(final byte[] buf) throws IOException {
@@ -193,7 +193,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#write(int)
+     * {@inheritDoc}
      */
     @Override
     public void write(final int val) throws IOException {
@@ -201,7 +201,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeBoolean(boolean)
+     * {@inheritDoc}
      */
     @Override
     public void writeBoolean(final boolean val) throws IOException {
@@ -209,7 +209,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeByte(int)
+     * {@inheritDoc}
      */
     @Override
     public void writeByte(final int val) throws IOException {
@@ -217,7 +217,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeBytes(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public void writeBytes(final String str) throws IOException {
@@ -225,7 +225,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeChar(int)
+     * {@inheritDoc}
      */
     @Override
     public void writeChar(final int val) throws IOException {
@@ -233,7 +233,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeChars(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public void writeChars(final String str) throws IOException {
@@ -241,7 +241,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeDouble(double)
+     * {@inheritDoc}
      */
     @Override
     public void writeDouble(final double val) throws IOException {
@@ -249,7 +249,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeFields()
+     * {@inheritDoc}
      */
     @Override
     public void writeFields() throws IOException {
@@ -257,7 +257,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeFloat(float)
+     * {@inheritDoc}
      */
     @Override
     public void writeFloat(final float val) throws IOException {
@@ -265,7 +265,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeInt(int)
+     * {@inheritDoc}
      */
     @Override
     public void writeInt(final int val) throws IOException {
@@ -273,7 +273,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeLong(long)
+     * {@inheritDoc}
      */
     @Override
     public void writeLong(final long val) throws IOException {
@@ -281,7 +281,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeObjectOverride(Object)
+     * {@inheritDoc}
      */
     @Override
     public void writeObjectOverride(final Object obj) throws IOException {
@@ -289,7 +289,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeShort(int)
+     * {@inheritDoc}
      */
     @Override
     public void writeShort(final int val) throws IOException {
@@ -297,7 +297,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeUnshared(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public void writeUnshared(final Object obj) throws IOException {
@@ -305,7 +305,7 @@ class DCObjectOutputStream extends ObjectOutputStream {
     }
 
     /**
-     * @see ObjectOutputStream#writeUTF(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public void writeUTF(final String str) throws IOException {

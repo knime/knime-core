@@ -95,14 +95,14 @@ public abstract class AbstractObjectReader implements XMLReader {
     /* ============ XMLReader interface ============ */
 
     /**
-     * @see org.xml.sax.XMLReader#getContentHandler()
+     * {@inheritDoc}
      */
     public ContentHandler getContentHandler() {
         return this.orgHandler;
     }
 
     /**
-     * @see org.xml.sax.XMLReader#setContentHandler(ContentHandler)
+     * {@inheritDoc}
      */
     public void setContentHandler(ContentHandler handler) {
         this.orgHandler = handler;
@@ -110,60 +110,60 @@ public abstract class AbstractObjectReader implements XMLReader {
     }
 
     /**
-     * @see org.xml.sax.XMLReader#getErrorHandler()
+     * {@inheritDoc}
      */
     public ErrorHandler getErrorHandler() {
         return this.errorHandler;
     }
 
     /**
-     * @see org.xml.sax.XMLReader#setErrorHandler(ErrorHandler)
+     * {@inheritDoc}
      */
     public void setErrorHandler(ErrorHandler handler) {
         this.errorHandler = handler;
     }
 
     /**
-     * @see org.xml.sax.XMLReader#getDTDHandler()
+     * {@inheritDoc}
      */
     public DTDHandler getDTDHandler() {
         return null;
     }
 
     /**
-     * @see org.xml.sax.XMLReader#setDTDHandler(DTDHandler)
+     * {@inheritDoc}
      */
     public void setDTDHandler(DTDHandler handler) {
     }
 
     /**
-     * @see org.xml.sax.XMLReader#getEntityResolver()
+     * {@inheritDoc}
      */
     public EntityResolver getEntityResolver() {
         return null;
     }
 
     /**
-     * @see org.xml.sax.XMLReader#setEntityResolver(EntityResolver)
+     * {@inheritDoc}
      */
     public void setEntityResolver(EntityResolver resolver) {
     }
 
     /**
-     * @see org.xml.sax.XMLReader#getProperty(String)
+     * {@inheritDoc}
      */
     public Object getProperty(java.lang.String name) {
         return null;
     }
 
     /**
-     * @see org.xml.sax.XMLReader#setProperty(String, Object)
+     * {@inheritDoc}
      */
     public void setProperty(java.lang.String name, java.lang.Object value) {
     }
 
     /**
-     * @see org.xml.sax.XMLReader#getFeature(String)
+     * {@inheritDoc}
      */
     public boolean getFeature(java.lang.String name) {
         return ((Boolean) features.get(name)).booleanValue();
@@ -186,14 +186,14 @@ public abstract class AbstractObjectReader implements XMLReader {
     }
 
     /**
-     * @see org.xml.sax.XMLReader#setFeature(String, boolean)
+     * {@inheritDoc}
      */
     public void setFeature(java.lang.String name, boolean value) {
         this.features.put(name, new Boolean(value));
     }
 
     /**
-     * @see org.xml.sax.XMLReader#parse(String)
+     * {@inheritDoc}
      */
     public void parse(String systemId) throws IOException, SAXException {
         throw new SAXException(
@@ -202,7 +202,7 @@ public abstract class AbstractObjectReader implements XMLReader {
     }
 
     /**
-     * @see org.xml.sax.XMLReader#parse(InputSource)
+     * {@inheritDoc}
      */
     public abstract void parse(InputSource input)
         throws IOException, SAXException;

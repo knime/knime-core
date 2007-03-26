@@ -37,8 +37,7 @@ import org.knime.core.node.NodeLogger;
 public class CorePlugin extends org.eclipse.core.runtime.Plugin {
 
     /**
-     * @see org.eclipse.core.runtime.Plugin
-     *      #start(org.osgi.framework.BundleContext)
+     * {@inheritDoc}
      */
     @Override
     public void start(final org.osgi.framework.BundleContext context) 

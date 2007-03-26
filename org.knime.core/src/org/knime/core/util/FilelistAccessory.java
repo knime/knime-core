@@ -102,8 +102,7 @@ public class FilelistAccessory extends JPanel
     }
 
     /**
-     * @see java.beans.PropertyChangeListener
-     *      #propertyChange(java.beans.PropertyChangeEvent)
+     * {@inheritDoc}
      */
     public void propertyChange(final PropertyChangeEvent e) {
         String prop = e.getPropertyName();
@@ -155,8 +154,7 @@ public class FilelistAccessory extends JPanel
         }
 
         /**
-         * @see javax.swing.ListCellRenderer#getListCellRendererComponent(
-         *      JList, Object, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public Component getListCellRendererComponent(final JList list,
@@ -190,8 +188,7 @@ public class FilelistAccessory extends JPanel
             DefaultListSelectionModel {
 
         /**
-         * @see javax.swing.DefaultListSelectionModel#insertIndexInterval(int,
-         *      int, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void insertIndexInterval(final int index, final int length,
@@ -200,8 +197,7 @@ public class FilelistAccessory extends JPanel
         }
 
         /**
-         * @see javax.swing.DefaultListSelectionModel
-         * #moveLeadSelectionIndex(int)
+         * {@inheritDoc}
          */
         @Override
         public void moveLeadSelectionIndex(final int leadIndex) {
@@ -209,8 +205,7 @@ public class FilelistAccessory extends JPanel
         }
 
         /**
-         * @see javax.swing.DefaultListSelectionModel#removeIndexInterval(int,
-         *      int)
+         * {@inheritDoc}
          */
         @Override
         public void removeIndexInterval(final int index0, final int index1) {
@@ -218,8 +213,7 @@ public class FilelistAccessory extends JPanel
         }
 
         /**
-         * @see javax.swing.DefaultListSelectionModel
-         * #setAnchorSelectionIndex(int)
+         * {@inheritDoc}
          */
         @Override
         public void setAnchorSelectionIndex(final int anchorIndex) {
@@ -227,7 +221,7 @@ public class FilelistAccessory extends JPanel
         }
 
         /**
-         * @see javax.swing.DefaultListSelectionModel#setLeadSelectionIndex(int)
+         * {@inheritDoc}
          */
         @Override
         public void setLeadSelectionIndex(final int leadIndex) {
@@ -235,8 +229,7 @@ public class FilelistAccessory extends JPanel
         }
 
         /**
-         * @see javax.swing.DefaultListSelectionModel#setSelectionInterval(int,
-         *      int)
+         * {@inheritDoc}
          */
         @Override
         public void setSelectionInterval(final int index0, final int index1) {
@@ -244,8 +237,7 @@ public class FilelistAccessory extends JPanel
         }
 
         /**
-         * @see javax.swing.DefaultListSelectionModel
-         *      #addSelectionInterval(int, int)
+         * {@inheritDoc}
          */
         @Override
         public void addSelectionInterval(final int index0, final int index1) {
@@ -253,8 +245,7 @@ public class FilelistAccessory extends JPanel
         }
 
         /**
-         * @see javax.swing.DefaultListSelectionModel
-         *      #removeSelectionInterval(int, int)
+         * {@inheritDoc}
          */
         @Override
         public void removeSelectionInterval(final int index0, 
@@ -263,7 +254,7 @@ public class FilelistAccessory extends JPanel
         }
 
         /**
-         * @see javax.swing.DefaultListSelectionModel#setSelectionMode(int)
+         * {@inheritDoc}
          */
         @Override
         public void setSelectionMode(final int selectionMode) {

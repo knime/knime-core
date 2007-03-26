@@ -38,7 +38,7 @@ import org.knime.workbench.repository.model.NodeTemplate;
  */
 public class RepositoryLabelProvider extends LabelProvider {
     /**
-     * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public String getText(final Object element) {
@@ -52,7 +52,7 @@ public class RepositoryLabelProvider extends LabelProvider {
     }
 
     /**
-     * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public Image getImage(final Object element) {

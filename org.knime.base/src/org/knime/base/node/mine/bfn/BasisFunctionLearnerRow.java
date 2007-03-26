@@ -105,7 +105,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getNumCells()
+     * {@inheritDoc}
      */
     public final int getNumCells() {
         if (m_hierarchy) {
@@ -116,8 +116,8 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
         }
     }
 
-    /** 
-     * @see org.knime.core.data.DataRow#getKey()
+    /**
+     * {@inheritDoc}
      */
     public RowKey getKey() {
         return m_key;
@@ -131,7 +131,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getCell(int)
+     * {@inheritDoc}
      */
     public final DataCell getCell(final int index) {
         if (index < m_centroid.getNumCells()) {
@@ -150,7 +150,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);

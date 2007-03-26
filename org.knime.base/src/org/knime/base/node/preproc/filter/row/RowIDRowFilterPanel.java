@@ -138,7 +138,7 @@ public class RowIDRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * @see RowFilterPanel#loadSettingsFromFilter(RowFilter)
+     * {@inheritDoc}
      */
     @Override
     public void loadSettingsFromFilter(final RowFilter filter)
@@ -157,7 +157,7 @@ public class RowIDRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * @see RowFilterPanel#createFilter(boolean)
+     * {@inheritDoc}
      */
     @Override
     public RowFilter createFilter(final boolean include)

@@ -86,8 +86,7 @@ public class BinModelPlotter extends AbstractPlotter {
                 ((MultiColumnPlotterProperties)getProperties()).getColumnFilter();
         colFilter.addChangeListener(new ChangeListener() {
             /**
-             * @see javax.swing.event.ChangeListener#stateChanged(
-             *      javax.swing.event.ChangeEvent)
+             * {@inheritDoc}
              */
             public void stateChanged(final ChangeEvent e) {
                 m_selectedColumns = colFilter.getIncludedColumnSet();
@@ -125,7 +124,7 @@ public class BinModelPlotter extends AbstractPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotter#reset()
+     * {@inheritDoc}
      */
     @Override
     public void reset() {
@@ -133,7 +132,7 @@ public class BinModelPlotter extends AbstractPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()
+     * {@inheritDoc}
      */
     @Override
     public synchronized void updatePaintModel() {
@@ -296,8 +295,8 @@ public class BinModelPlotter extends AbstractPlotter {
 	}
 
 	/**
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter#updateSize()
-     */
+	 * {@inheritDoc}
+	 */
     @Override
     public void updateSize() {
         updatePaintModel();

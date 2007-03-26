@@ -76,7 +76,7 @@ public abstract class RowFilterPanel extends JPanel {
     }
 
     /**
-     * @see java.awt.Container#add(java.awt.Component)
+     * {@inheritDoc}
      */
     @Override
     public Component add(final Component comp) {

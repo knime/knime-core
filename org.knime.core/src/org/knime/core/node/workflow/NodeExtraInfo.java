@@ -50,7 +50,7 @@ public interface NodeExtraInfo extends ExtraInfo {
     public void changePosition(final int moveDist);
 
     /**
-     * @see Object#clone()
+     * {@inheritDoc}
      */
     public Object clone() throws CloneNotSupportedException;
 }

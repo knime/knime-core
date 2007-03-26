@@ -68,9 +68,7 @@ public class FilterViewContributionItem extends ControlContribution implements
     }
 
     /**
-     * 
-     * @see org.eclipse.jface.action.ControlContribution
-     *      #createControl(org.eclipse.swt.widgets.Composite)
+     * {@inheritDoc}
      */
     @Override
     protected Control createControl(final Composite parent) {
@@ -94,8 +92,7 @@ public class FilterViewContributionItem extends ControlContribution implements
     }
     
     /**
-     * @see org.eclipse.jface.action.ControlContribution
-     *  #computeWidth(org.eclipse.swt.widgets.Control)
+     * {@inheritDoc}
      */
     @Override
     protected int computeWidth(final Control control) {
@@ -103,16 +100,14 @@ public class FilterViewContributionItem extends ControlContribution implements
     }
 
     /**
-     * @see org.eclipse.swt.events.KeyListener
-     *      #keyPressed(org.eclipse.swt.events.KeyEvent)
+     * {@inheritDoc}
      */
     public void keyPressed(final KeyEvent e) {
 
     }
 
     /**
-     * @see org.eclipse.swt.events.KeyListener
-     *      #keyReleased(org.eclipse.swt.events.KeyEvent)
+     * {@inheritDoc}
      */
     public void keyReleased(final KeyEvent e) {
         String str = m_combo.getText();

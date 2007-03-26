@@ -271,7 +271,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -345,7 +345,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -356,7 +356,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -369,7 +369,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -595,8 +595,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File internDir,
@@ -630,8 +629,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #saveInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File internDir,
@@ -687,7 +685,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.DataProvider #getDataArray(int)
+     * {@inheritDoc}
      */
     public DataArray getDataArray(final int index) {
         // only to make the Plotter happy

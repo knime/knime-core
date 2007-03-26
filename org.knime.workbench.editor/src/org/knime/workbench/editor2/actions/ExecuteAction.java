@@ -53,7 +53,7 @@ public class ExecuteAction extends AbstractNodeAction {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getId()
+     * {@inheritDoc}
      */
     @Override
     public String getId() {
@@ -61,7 +61,7 @@ public class ExecuteAction extends AbstractNodeAction {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getText()
+     * {@inheritDoc}
      */
     @Override
     public String getText() {
@@ -69,7 +69,7 @@ public class ExecuteAction extends AbstractNodeAction {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getImageDescriptor()
+     * {@inheritDoc}
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
@@ -79,7 +79,7 @@ public class ExecuteAction extends AbstractNodeAction {
     
 
     /**
-     * @see org.eclipse.jface.action.Action#getDisabledImageDescriptor()
+     * {@inheritDoc}
      */
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
@@ -87,7 +87,7 @@ public class ExecuteAction extends AbstractNodeAction {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getToolTipText()
+     * {@inheritDoc}
      */
     @Override
     public String getToolTipText() {

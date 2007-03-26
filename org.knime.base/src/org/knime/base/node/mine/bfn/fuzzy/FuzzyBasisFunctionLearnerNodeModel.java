@@ -75,8 +75,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
     }
 
     /**
-     * @see BasisFunctionLearnerNodeModel
-     *      #getFactory(org.knime.core.data.DataTableSpec)
+     * {@inheritDoc}
      */
     @Override
     protected BasisFunctionFactory getFactory(final DataTableSpec spec) {
@@ -87,7 +86,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
     }
 
     /**
-     * @see #configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] ins)
@@ -96,8 +95,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -110,7 +108,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -122,7 +120,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)

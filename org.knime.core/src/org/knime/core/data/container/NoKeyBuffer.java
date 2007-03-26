@@ -77,7 +77,7 @@ class NoKeyBuffer extends Buffer {
     }
     
     /**
-     * @see Buffer#Buffer(File, File, DataTableSpec, InputStream, int, Map)
+     * {@inheritDoc}
      */
     NoKeyBuffer(final File binFile, final File blobDir, 
             final DataTableSpec spec, final InputStream metaIn, 
@@ -87,7 +87,7 @@ class NoKeyBuffer extends Buffer {
     }
     
     /**
-     * @see org.knime.core.data.container.Buffer#getVersion()
+     * {@inheritDoc}
      */
     @Override
     public String getVersion() {
@@ -95,7 +95,7 @@ class NoKeyBuffer extends Buffer {
     }
 
     /**
-     * @see Buffer#validateVersion(String)
+     * {@inheritDoc}
      */
     @Override
     public int validateVersion(final String version) throws IOException {

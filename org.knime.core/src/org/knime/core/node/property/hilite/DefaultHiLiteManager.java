@@ -248,8 +248,7 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
 
 
     /**
-     * @see org.knime.core.node.property.hilite.DefaultHiLiteHandler
-     * #fireClearHiLiteEvent()
+     * {@inheritDoc}
      */
     @Override
     public synchronized void fireClearHiLiteEvent() {
@@ -259,9 +258,7 @@ public class DefaultHiLiteManager extends DefaultHiLiteHandler implements
     }
     
     /**
-     * 
-     * @see DefaultHiLiteHandler#unHiLiteAll()
-     * @deprecated Use {@link #fireClearHiLiteEvent()} instead
+     * {@inheritDoc}
      */
     @Override
     public void unHiLiteAll() {

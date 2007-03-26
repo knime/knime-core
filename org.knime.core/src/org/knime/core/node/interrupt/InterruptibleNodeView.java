@@ -218,8 +218,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
     }
     
     /**
-     * 
-     * @see org.knime.core.node.NodeView#onOpen()
+     * {@inheritDoc}
      */
     @Override
     protected void onOpen() {

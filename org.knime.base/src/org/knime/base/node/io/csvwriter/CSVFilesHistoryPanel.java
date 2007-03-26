@@ -208,8 +208,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
     /** renderer that also supports to show customized tooltip. */
     private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
         /**
-         * @see BasicComboBoxRenderer#getListCellRendererComponent(
-         *      javax.swing.JList, java.lang.Object, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public Component getListCellRendererComponent(final JList list,

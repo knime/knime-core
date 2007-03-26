@@ -172,14 +172,14 @@ public class StatisticsNodeView extends NodeView {
     }
 
     /**
-     * @see NodeView#onClose()
+     * {@inheritDoc}
      */
     @Override
     protected void onClose() {
     }
 
     /**
-     * @see NodeView#onOpen()
+     * {@inheritDoc}
      */
     @Override
     protected void onOpen() {

@@ -61,8 +61,7 @@ public class KNIMEProjectBuilder extends IncrementalProjectBuilder {
     }
 
     /**
-     * @see org.eclipse.core.internal.events.InternalBuilder #build(int,
-     *      java.util.Map, org.eclipse.core.runtime.IProgressMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected IProject[] build(final int kind, final Map args,

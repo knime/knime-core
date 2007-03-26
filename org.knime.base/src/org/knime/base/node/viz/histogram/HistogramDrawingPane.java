@@ -281,7 +281,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     // **********************************************
 
     /**
-     * @see AbstractDrawingPane#paintContent(java.awt.Graphics)
+     * {@inheritDoc}
      */
     @Override
     public void paintContent(final Graphics g) {

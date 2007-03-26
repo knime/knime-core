@@ -63,9 +63,7 @@ public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
 
 
     /**
-     * 
-     * @see org.knime.core.data.container.SingleCellFactory#getCell(
-     * org.knime.core.data.DataRow)
+     * {@inheritDoc}
      */
     @Override
     public DataCell getCell(final DataRow row) {
@@ -117,8 +115,7 @@ public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
 
     
     /**
-     * 
-     * @see org.knime.base.data.bitvector.BitVectorColumnCellFactory#wasSuccessful()
+     * {@inheritDoc}
      */
     @Override
     public boolean wasSuccessful() {

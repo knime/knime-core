@@ -58,7 +58,7 @@ public class BinDataModelComparator implements Comparator<BinDataModel> {
     }
     
     /**
-     * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+     * {@inheritDoc}
      */
     public int compare(final BinDataModel o1, final BinDataModel o2) {
         switch (m_compareMethod) {

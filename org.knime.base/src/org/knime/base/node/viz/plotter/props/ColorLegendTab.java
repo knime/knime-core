@@ -76,8 +76,7 @@ public class ColorLegendTab extends PropertiesTab {
     }
     
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.props.PropertiesTab#getDefaultName()
+     * {@inheritDoc}
      */
     @Override
     public String getDefaultName() {
@@ -178,8 +177,7 @@ public class ColorLegendTab extends PropertiesTab {
         final JColorChooser chooser = new JColorChooser(currColor);
         final ActionListener okListener = new ActionListener() {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
                 // set the new color in the mapping 
@@ -196,8 +194,7 @@ public class ColorLegendTab extends PropertiesTab {
         btn.addActionListener(new ActionListener() {
 
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
                 JDialog dialog = JColorChooser.createDialog(

@@ -38,8 +38,7 @@ class RadialBasisFunctionPredictorNodeModel extends
         BasisFunctionPredictorNodeModel {
 
     /**
-     * @see BasisFunctionPredictorNodeModel
-     *      #createPredictorRow(org.knime.core.node.ModelContentRO)
+     * {@inheritDoc}
      */
     @Override
     protected BasisFunctionPredictorRow createPredictorRow(

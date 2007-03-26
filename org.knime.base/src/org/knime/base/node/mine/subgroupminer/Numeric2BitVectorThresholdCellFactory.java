@@ -62,9 +62,7 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorRowCellFacto
 
 
     /**
-     * 
-     * @see org.knime.base.data.bitvector.BitVectorRowCellFactory
-     * #getNumberOfNotSetBits()
+     * {@inheritDoc}
      */
     @Override
     public int getNumberOfNotSetBits() {
@@ -72,9 +70,7 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorRowCellFacto
     }
 
     /**
-     * 
-     * @see org.knime.base.data.bitvector.BitVectorRowCellFactory
-     * #getNumberOfSetBits()
+     * {@inheritDoc}
      */
     @Override
     public int getNumberOfSetBits() {
@@ -83,9 +79,7 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorRowCellFacto
 
 
     /**
-     * 
-     * @see org.knime.base.data.bitvector.BitVectorRowCellFactory
-     * #wasSuccessful()
+     * {@inheritDoc}
      */
     @Override
     public boolean wasSuccessful() {
@@ -93,8 +87,7 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorRowCellFacto
     }
 
     /**
-     * @see org.knime.core.data.container.SingleCellFactory#getCell(
-     * org.knime.core.data.DataRow)
+     * {@inheritDoc}
      */
     @Override
     public DataCell getCell(DataRow row) {

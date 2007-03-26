@@ -219,14 +219,14 @@ public final class BufferedDataTable implements DataTable {
     }
     
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_delegate.getDataTableSpec();
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         return m_delegate.iterator();

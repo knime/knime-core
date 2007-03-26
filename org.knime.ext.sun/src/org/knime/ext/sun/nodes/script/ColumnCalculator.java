@@ -113,21 +113,21 @@ public class ColumnCalculator implements CellFactory {
     }
 
     /**
-     * @see org.knime.core.data.container.CellFactory#getColumnSpecs()
+     * {@inheritDoc}
      */
     public DataColumnSpec[] getColumnSpecs() {
         return m_colSpec;
     }
 
     /**
-     * @see CellFactory#getCells(DataRow)
+     * {@inheritDoc}
      */
     public DataCell[] getCells(final DataRow row) {
         return new DataCell[]{calculate(row)};
     }
 
     /**
-     * @see CellFactory#setProgress(int, int, RowKey, ExecutionMonitor)
+     * {@inheritDoc}
      */
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {

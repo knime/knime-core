@@ -225,8 +225,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
                 new ActionListener() {
 
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
                 JDialog dialog = JColorChooser.createDialog(
@@ -555,8 +554,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     public Action getHiliteAction() {
         Action hilite = new AbstractAction(HiLiteHandler.HILITE_SELECTED) {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
                 hiLiteSelected();
@@ -578,8 +576,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     public Action getUnhiliteAction() {
         Action unhilite = new AbstractAction(HiLiteHandler.UNHILITE_SELECTED) {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
                   unHiLiteSelected();
@@ -600,8 +597,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     public Action getClearHiliteAction() {
         Action clear = new AbstractAction(HiLiteHandler.CLEAR_HILITE) {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
                 delegateUnHiLiteAll();
@@ -644,14 +640,12 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     
     /* --------------------- hiliting ----------------- */
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#hiLite(
-     * org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     public abstract void hiLite(final KeyEvent event);
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLite(
-     * org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     public abstract void unHiLite(final KeyEvent event);
 
@@ -886,8 +880,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         }
 
         /**
-         * @see java.awt.event.MouseAdapter#mousePressed(
-         * java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mousePressed(final MouseEvent e) {
@@ -897,8 +890,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         }
 
         /**
-         * @see java.awt.event.MouseAdapter#mouseReleased(
-         * java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mouseReleased(final MouseEvent e) {
@@ -928,9 +920,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         }
 
         /**
-         * 
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener
-         * #mouseDragged(java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mouseDragged(final MouseEvent e) {
@@ -942,8 +932,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         }
         
         /**
-         * 
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#getCursor()
+         * {@inheritDoc}
          */
         @Override
         public Cursor getCursor() {
@@ -951,8 +940,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         }
         
         /**
-         * 
-         * @see java.lang.Object#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -980,8 +968,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         private Cursor m_zoomCursor;
         
         /**
-         * @see java.awt.event.MouseAdapter#mousePressed(
-         * java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mousePressed(final MouseEvent e) {
@@ -990,8 +977,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         }
 
         /**
-         * @see java.awt.event.MouseAdapter#mouseReleased(
-         * java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mouseReleased(final MouseEvent e) {
@@ -1018,9 +1004,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
 
 
         /**
-         * 
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener
-         * #mouseDragged(java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mouseDragged(final MouseEvent e) {
@@ -1033,8 +1017,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         }
         
         /**
-         * 
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#getCursor()
+         * {@inheritDoc}
          */
         @Override
         public Cursor getCursor() {
@@ -1060,8 +1043,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         }
         
         /**
-         * 
-         * @see java.lang.Object#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -1079,8 +1061,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     public class MovingMouseListener extends PlotterMouseListener {
 
         /**
-         * @see java.awt.event.MouseAdapter#mousePressed(
-         * java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mousePressed(final MouseEvent e) {
@@ -1089,8 +1070,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         }
 
         /**
-         * @see java.awt.event.MouseAdapter#mouseReleased(
-         * java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mouseReleased(final MouseEvent e) {
@@ -1105,9 +1085,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
 
 
         /**
-         * 
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener
-         * #mouseDragged(java.awt.event.MouseEvent)
+         * {@inheritDoc}
          */
         @Override
         public void mouseDragged(final MouseEvent e) {
@@ -1128,8 +1106,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         }
 
         /**
-         * 
-         * @see org.knime.base.node.viz.plotter.PlotterMouseListener#getCursor()
+         * {@inheritDoc}
          */
         @Override
         public Cursor getCursor() {
@@ -1137,8 +1114,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         }
         
         /**
-         * 
-         * @see java.lang.Object#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -1351,22 +1327,19 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     /* --------------- ignore methods ------------------*/
 
     /**
-     * @see java.awt.event.ComponentListener#componentHidden(
-     * java.awt.event.ComponentEvent)
+     * {@inheritDoc}
      */
     public void componentHidden(final ComponentEvent e) {
     }
 
     /**
-     * @see java.awt.event.ComponentListener#componentMoved(
-     * java.awt.event.ComponentEvent)
+     * {@inheritDoc}
      */
     public void componentMoved(final ComponentEvent e) {
     }
 
     /**
-     * @see java.awt.event.ComponentListener#componentShown(
-     * java.awt.event.ComponentEvent)
+     * {@inheritDoc}
      */
     public void componentShown(final ComponentEvent e) {
     }

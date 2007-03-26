@@ -146,7 +146,7 @@ class RadialBasisFunctionLearnerNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,

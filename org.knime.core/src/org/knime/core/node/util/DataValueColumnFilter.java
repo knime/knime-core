@@ -61,8 +61,7 @@ public class DataValueColumnFilter implements ColumnFilter {
     }
 
     /**
-     * @see org.knime.core.node.util.ColumnFilter#includeColumn(
-     * org.knime.core.data.DataColumnSpec)
+     * {@inheritDoc}
      */
     public boolean includeColumn(final DataColumnSpec colSpec) {
         if (colSpec == null) {
@@ -78,7 +77,7 @@ public class DataValueColumnFilter implements ColumnFilter {
     }
     
     /**
-     * @see org.knime.core.node.util.ColumnFilter#allFilteredMsg()
+     * {@inheritDoc}
      */
     public String allFilteredMsg() {
         StringBuffer error = new StringBuffer(

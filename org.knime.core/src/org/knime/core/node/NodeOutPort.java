@@ -201,7 +201,7 @@ public abstract class NodeOutPort extends NodePort {
     }
 
     /**
-     * @see java.lang.Object#finalize()
+     * {@inheritDoc}
      */
     @Override
     protected void finalize() throws Throwable {

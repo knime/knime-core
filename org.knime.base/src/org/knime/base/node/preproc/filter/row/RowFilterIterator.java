@@ -127,7 +127,7 @@ public class RowFilterIterator extends RowIterator {
     }
 
     /**
-     * @see org.knime.core.data.RowIterator#hasNext()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasNext() {

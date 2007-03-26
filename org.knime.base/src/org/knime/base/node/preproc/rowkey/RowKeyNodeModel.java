@@ -154,8 +154,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #execute(BufferedDataTable[],
-     *      ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -278,7 +277,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -333,7 +332,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#getOutHiLiteHandler(int)
+     * {@inheritDoc}
      */
     @Override
     public HiLiteHandler getOutHiLiteHandler(final int outPortID) {
@@ -342,7 +341,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -356,8 +355,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -377,7 +375,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -428,7 +426,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(File, ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -437,7 +435,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(File, ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

@@ -104,8 +104,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
 
 
     /**
-     * @see org.knime.base.node.viz.plotter.DataProvider
-     * #getDataArray(int)
+     * {@inheritDoc}
      */
     public DataArray getDataArray(final int index) {
         return m_input;
@@ -267,8 +266,7 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#validateSettings(
-     * org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)

@@ -61,7 +61,7 @@ public class JoinedRow implements DataRow {
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getNumCells()
+     * {@inheritDoc}
      */
     public int getNumCells() {
         return m_left.getNumCells() + m_right.getNumCells();
@@ -77,7 +77,7 @@ public class JoinedRow implements DataRow {
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getCell(int)
+     * {@inheritDoc}
      */
     public DataCell getCell(final int index) {
         final int leftCellCount = m_left.getNumCells();
@@ -91,7 +91,7 @@ public class JoinedRow implements DataRow {
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);

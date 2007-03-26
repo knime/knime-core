@@ -36,7 +36,7 @@ import org.knime.core.node.NodeView;
  */
 public class BitVectorGeneratorNodeFactory extends NodeFactory {
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
@@ -44,7 +44,7 @@ public class BitVectorGeneratorNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
+     * {@inheritDoc}
      */
     @Override
     public int getNrNodeViews() {
@@ -52,8 +52,7 @@ public class BitVectorGeneratorNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeView(int,
-     *      org.knime.core.node.NodeModel)
+     * {@inheritDoc}
      */
     @Override
     public NodeView createNodeView(final int viewIndex,
@@ -63,7 +62,7 @@ public class BitVectorGeneratorNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#hasDialog()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasDialog() {
@@ -71,7 +70,7 @@ public class BitVectorGeneratorNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeDialogPane()
+     * {@inheritDoc}
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {

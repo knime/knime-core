@@ -61,8 +61,7 @@ public class InteractiveBarDataModel extends BarDataModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.BarDataModel
-     * #createElement(java.awt.Color)
+     * {@inheritDoc}
      */
     @Override
     protected BarElementDataModel createElement(final Color color) {
@@ -79,11 +78,7 @@ public class InteractiveBarDataModel extends BarDataModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.BarDataModel
-     * #setBarRectangle(java.awt.Rectangle, 
-     * org.knime.base.node.viz.histogram.AggregationMethod, 
-     * org.knime.base.node.viz.histogram.HistogramLayout, int, 
-     * java.util.SortedSet)
+     * {@inheritDoc}
      */
     @Override
     protected void setBarRectangle(final Rectangle barRect, 
@@ -95,11 +90,7 @@ public class InteractiveBarDataModel extends BarDataModel {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.BarDataModel
-     * #updateBarWidth(int, int, 
-     * org.knime.base.node.viz.histogram.HistogramLayout, 
-     * java.util.SortedSet, 
-     * org.knime.base.node.viz.histogram.AggregationMethod, int)
+     * {@inheritDoc}
      */
     @Override
     public void updateBarWidth(final int startX, final int barWidth, 

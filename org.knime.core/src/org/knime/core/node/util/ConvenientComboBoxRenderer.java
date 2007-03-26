@@ -37,8 +37,7 @@ import javax.swing.plaf.basic.BasicComboBoxRenderer;
  */
 public class ConvenientComboBoxRenderer extends BasicComboBoxRenderer {
     /**
-     * @see BasicComboBoxRenderer#getListCellRendererComponent(
-     *      javax.swing.JList, java.lang.Object, int, boolean, boolean)
+     * {@inheritDoc}
      */
     @Override
     public Component getListCellRendererComponent(final JList list,

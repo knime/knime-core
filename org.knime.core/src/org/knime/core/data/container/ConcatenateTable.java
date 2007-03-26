@@ -63,35 +63,35 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     }
 
     /**
-     * @see BufferedDataTable.KnowsRowCountTable#clear()
+     * {@inheritDoc}
      */
     public void clear() {
         // left empty, it's up to the node to clear our underlying tables.
     }
 
     /**
-     * @see KnowsRowCountTable#getReferenceTables()
+     * {@inheritDoc}
      */
     public BufferedDataTable[] getReferenceTables() {
         return m_tables;
     }
 
     /**
-     * @see KnowsRowCountTable#getRowCount()
+     * {@inheritDoc}
      */
     public int getRowCount() {
         return m_rowCount;
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         return new MyIterator();
@@ -112,8 +112,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
     }
 
     /**
-     * @see KnowsRowCountTable#saveToFile(
-     * File, NodeSettingsWO, ExecutionMonitor)
+     * {@inheritDoc}
      */
     public void saveToFile(final File f, final NodeSettingsWO s,
             final ExecutionMonitor exec) throws IOException,
@@ -184,7 +183,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         }
         
         /**
-         * @see RowIterator#hasNext()
+         * {@inheritDoc}
          */
         @Override
         public boolean hasNext() {
@@ -192,7 +191,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
         }
         
         /**
-         * @see RowIterator#next()
+         * {@inheritDoc}
          */
         @Override
         public DataRow next() {

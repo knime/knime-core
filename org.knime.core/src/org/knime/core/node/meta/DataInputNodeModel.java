@@ -102,7 +102,7 @@ public class DataInputNodeModel extends MetaInputModel {
     }
 
     /**
-     * @see org.knime.core.node.meta.MetaInputModel#canBeExecuted()
+     * {@inheritDoc}
      */
     @Override
     public boolean canBeExecuted() {
@@ -110,8 +110,7 @@ public class DataInputNodeModel extends MetaInputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *  #saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -119,8 +118,7 @@ public class DataInputNodeModel extends MetaInputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *  #validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -129,8 +127,7 @@ public class DataInputNodeModel extends MetaInputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *  #loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -139,7 +136,7 @@ public class DataInputNodeModel extends MetaInputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {

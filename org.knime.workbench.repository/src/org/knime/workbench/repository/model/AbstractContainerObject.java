@@ -311,8 +311,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     }
 
     /**
-     * @see org.knime.workbench.repository.model.IContainerObject#
-     *      getChildByID(String, boolean)
+     * {@inheritDoc}
      */
     public IRepositoryObject getChildByID(final String id, final boolean rec) {
         // The slash and the empty string represent 'this'

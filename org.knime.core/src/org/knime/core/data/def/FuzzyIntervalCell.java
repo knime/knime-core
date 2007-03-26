@@ -169,8 +169,7 @@ public final class FuzzyIntervalCell extends DataCell implements
     }
 
     /**
-     * @see org.knime.core.data.DataCell
-     *      #equalsDataCell(org.knime.core.data.DataCell)
+     * {@inheritDoc}
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
@@ -195,7 +194,7 @@ public final class FuzzyIntervalCell extends DataCell implements
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -208,7 +207,7 @@ public final class FuzzyIntervalCell extends DataCell implements
         implements DataCellSerializer<FuzzyIntervalCell> {
         
         /**
-         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         * {@inheritDoc}
          */
         public void serialize(final FuzzyIntervalCell cell, 
                 final DataOutput output) throws IOException {
@@ -219,7 +218,7 @@ public final class FuzzyIntervalCell extends DataCell implements
         }
         
         /**
-         * @see DataCellSerializer#deserialize(DataInput)
+         * {@inheritDoc}
          */
         public FuzzyIntervalCell deserialize(
                 final DataInput input) throws IOException {
@@ -233,14 +232,14 @@ public final class FuzzyIntervalCell extends DataCell implements
     }
 
     /**
-     * @see org.knime.core.data.IntervalValue#getRightBound()
+     * {@inheritDoc}
      */
     public double getRightBound() {
         return getMaxCore();
     }
 
     /**
-     * @see org.knime.core.data.IntervalValue#getLeftBound()
+     * {@inheritDoc}
      */
     public double getLeftBound() {
         return getMinCore();

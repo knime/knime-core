@@ -83,7 +83,7 @@ public class XValidateModel extends MetaNodeModel {
     }
 
     /**
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -103,7 +103,7 @@ public class XValidateModel extends MetaNodeModel {
     }
 
     /**
-     * @see NodeModel #execute(BufferedDataTable[], ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -145,8 +145,7 @@ public class XValidateModel extends MetaNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.meta.MetaNodeModel
-     *      #validateSettings(java.io.File, org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final File nodeFile,
@@ -156,10 +155,7 @@ public class XValidateModel extends MetaNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.meta.MetaNodeModel
-     *      #loadValidatedSettingsFrom(java.io.File,
-     *      org.knime.core.node.NodeSettingsRO,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final File nodeDir,
@@ -217,7 +213,7 @@ public class XValidateModel extends MetaNodeModel {
     }
 
     /**
-     * @see NodeModel#saveInternals(File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File internDir,
@@ -226,9 +222,7 @@ public class XValidateModel extends MetaNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.meta.MetaNodeModel #saveSettingsTo(java.io.File,
-     *      org.knime.core.node.NodeSettingsWO,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final File nodeDir,
@@ -247,7 +241,7 @@ public class XValidateModel extends MetaNodeModel {
     }
 
     /**
-     * @see MetaNodeModel#addInternalConnections()
+     * {@inheritDoc}
      */
     @Override
     protected void addInternalConnections() {
@@ -261,7 +255,7 @@ public class XValidateModel extends MetaNodeModel {
     }
 
     /**
-     * @see MetaNodeModel#addInternalNodes()
+     * {@inheritDoc}
      */
     @Override
     protected void addInternalNodes() {
@@ -277,7 +271,7 @@ public class XValidateModel extends MetaNodeModel {
     }
 
     /**
-     * @see MetaNodeModel#receiveModel(NodeModel)
+     * {@inheritDoc}
      */
     @Override
     public void receiveModel(final NodeModel model) {
@@ -290,7 +284,7 @@ public class XValidateModel extends MetaNodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -298,7 +292,7 @@ public class XValidateModel extends MetaNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.meta.MetaNodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {

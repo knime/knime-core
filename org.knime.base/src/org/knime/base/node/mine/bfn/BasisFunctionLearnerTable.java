@@ -412,7 +412,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
         }
 
         /**
-         * @see java.lang.Iterable#iterator()
+         * {@inheritDoc}
          */
         public Iterator<DataCell> iterator() {
             return new DefaultCellIterator(this);
@@ -582,14 +582,14 @@ public final class BasisFunctionLearnerTable implements DataTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         return getBasisFunctionIterator();
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return getFactory().getModelSpec();
@@ -776,8 +776,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
 final class IncorpMissingValueReplacementFunction implements
         BasisFunctionLearnerTable.MissingValueReplacementFunction {
     /**
-     * @see #getMissing(BasisFunctionLearnerTable.FilteredClassRow,int,
-     *      BasisFunctionLearnerTable)
+     * {@inheritDoc}
      */
     public DataCell getMissing(
             final BasisFunctionLearnerTable.FilteredClassRow row,
@@ -801,8 +800,7 @@ final class IncorpMissingValueReplacementFunction implements
 final class BestGuessMissingValueReplacementFunction implements
         BasisFunctionLearnerTable.MissingValueReplacementFunction {
     /**
-     * @see #getMissing(BasisFunctionLearnerTable.FilteredClassRow,int,
-     *      BasisFunctionLearnerTable)
+     * {@inheritDoc}
      */
     public DataCell getMissing(
             final BasisFunctionLearnerTable.FilteredClassRow row,
@@ -858,8 +856,7 @@ final class BestGuessMissingValueReplacementFunction implements
 final class MinimumMissingValueReplacementFunction implements
         BasisFunctionLearnerTable.MissingValueReplacementFunction {
     /**
-     * @see #getMissing(BasisFunctionLearnerTable.FilteredClassRow,int,
-     *      BasisFunctionLearnerTable)
+     * {@inheritDoc}
      */
     public DataCell getMissing(
             final BasisFunctionLearnerTable.FilteredClassRow row,
@@ -886,8 +883,7 @@ final class MinimumMissingValueReplacementFunction implements
 final class MaximumMissingValueReplacementFunction implements
         BasisFunctionLearnerTable.MissingValueReplacementFunction {
     /**
-     * @see #getMissing(BasisFunctionLearnerTable.FilteredClassRow,int,
-     *      BasisFunctionLearnerTable)
+     * {@inheritDoc}
      */
     public DataCell getMissing(
             final BasisFunctionLearnerTable.FilteredClassRow row,
@@ -914,8 +910,7 @@ final class MaximumMissingValueReplacementFunction implements
 final class MeanMissingValueReplacementFunction implements
         BasisFunctionLearnerTable.MissingValueReplacementFunction {
     /**
-     * @see #getMissing(BasisFunctionLearnerTable.FilteredClassRow,int,
-     *      BasisFunctionLearnerTable)
+     * {@inheritDoc}
      */
     public DataCell getMissing(
             final BasisFunctionLearnerTable.FilteredClassRow row,
@@ -947,8 +942,7 @@ final class ZeroMissingValueReplacementFunction implements
     static final DataCell ZERO = new DoubleCell(0.0);
 
     /**
-     * @see #getMissing(BasisFunctionLearnerTable.FilteredClassRow,int,
-     *      BasisFunctionLearnerTable)
+     * {@inheritDoc}
      */
     public DataCell getMissing(
             final BasisFunctionLearnerTable.FilteredClassRow row,
@@ -975,8 +969,7 @@ final class OneMissingValueReplacementFunction implements
     static final DataCell ONE = new DoubleCell(1.0);
 
     /**
-     * @see #getMissing(BasisFunctionLearnerTable.FilteredClassRow,int,
-     *      BasisFunctionLearnerTable)
+     * {@inheritDoc}
      */
     public DataCell getMissing(
             final BasisFunctionLearnerTable.FilteredClassRow row,

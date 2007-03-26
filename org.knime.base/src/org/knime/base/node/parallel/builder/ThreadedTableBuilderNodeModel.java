@@ -213,8 +213,7 @@ public abstract class ThreadedTableBuilderNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #execute(BufferedDataTable[],
-     *      ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected final BufferedDataTable[] execute(final BufferedDataTable[] data,

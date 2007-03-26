@@ -95,8 +95,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
             getScatterPlotterProperties().addDotSizeChangeListener(
                     new ChangeListener() {
                         /**
-                         * @see javax.swing.event.ChangeListener#
-                         *      stateChanged(javax.swing.event.ChangeEvent)
+                         * {@inheritDoc}
                          */
                         public void stateChanged(final ChangeEvent e) {
                             setDotSize(getScatterPlotterProperties()
@@ -112,8 +111,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
                     new MouseAdapter() {
 
                         /**
-                         * @see java.awt.event.MouseAdapter#mouseReleased(
-                         *      java.awt.event.MouseEvent)
+                         * {@inheritDoc}
                          */
                         @Override
                         public void mouseReleased(final MouseEvent e) {
@@ -214,8 +212,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     public Action getShowAllAction() {
         Action show = new AbstractAction(AbstractPlotter.SHOW_ALL) {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             *      java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
                 m_hide = false;
@@ -243,8 +240,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     public Action getHideAction() {
         Action hide = new AbstractAction(AbstractPlotter.HIDE_UNHILITED) {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             *      java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
                 m_hide = true;
@@ -288,8 +284,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     public Action getFadeAction() {
         Action fade = new AbstractAction(AbstractPlotter.FADE_UNHILITED) {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             *      java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
                 if (getDrawingPane() instanceof ScatterPlotterDrawingPane) {
@@ -697,8 +692,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
 
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter#updateSize()
+     * {@inheritDoc}
      */
     @Override
     public void updateSize() {
@@ -711,8 +705,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter
-     *      #selectElementsIn(java.awt.Rectangle)
+     * {@inheritDoc}
      */
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {
@@ -725,9 +718,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
 
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter
-     *      #selectClickedElement(java.awt.Point)
+     * {@inheritDoc}
      */
     @Override
     public void selectClickedElement(final Point p) {
@@ -739,8 +730,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
 
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter#clearSelection()
+     * {@inheritDoc}
      */
     @Override
     public void clearSelection() {
@@ -750,8 +740,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
 
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void hiLiteSelected() {
@@ -762,8 +751,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
 
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void unHiLiteSelected() {
@@ -796,7 +784,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
+     * {@inheritDoc}
      */
     public void unHiLiteAll() {
         if (isScatterPlotterDrawingPane()) {
@@ -813,8 +801,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLite(
-     *      org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     @Override
     public void hiLite(final KeyEvent event) {
@@ -822,8 +809,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLite(
-     *      org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     @Override
     public void unHiLite(final KeyEvent event) {

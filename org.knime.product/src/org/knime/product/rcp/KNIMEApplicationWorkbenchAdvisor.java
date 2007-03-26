@@ -33,9 +33,7 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
  */
 public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
     /**
-     * 
-     * @see org.eclipse.ui.application.WorkbenchAdvisor
-     *      #getInitialWindowPerspectiveId()
+     * {@inheritDoc}
      */
     @Override
     public String getInitialWindowPerspectiveId() {

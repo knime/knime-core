@@ -126,7 +126,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     }
 
     /**
-     * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
+     * {@inheritDoc}
      */
     @Override
     public void dispose() {
@@ -166,7 +166,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     }
 
     /**
-     * @see org.eclipse.jface.viewers.ILabelProvider#getImage(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public final Image getImage(final Object element) {
@@ -200,7 +200,7 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     }
 
     /**
-     * @see org.eclipse.jface.viewers.ILabelProvider#getText(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public final String getText(final Object element) {
@@ -216,23 +216,21 @@ public class KnimeResourceLableProvider extends LabelProvider implements
     }
 
     /**
-     * @see org.eclipse.jface.viewers.IColorProvider
-     *      #getForeground(java.lang.Object)
+     * {@inheritDoc}
      */
     public Color getForeground(final Object element) {
         return getColor(element, true);
     }
 
     /**
-     * @see org.eclipse.jface.viewers.IColorProvider
-     *      #getBackground(java.lang.Object)
+     * {@inheritDoc}
      */
     public Color getBackground(final Object element) {
         return getColor(element, false);
     }
 
     /**
-     * @see org.eclipse.jface.viewers.IFontProvider#getFont(java.lang.Object)
+     * {@inheritDoc}
      */
     public Font getFont(final Object element) {
         IWorkbenchAdapter2 adapter = getAdapter2(element);

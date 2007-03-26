@@ -443,8 +443,8 @@ public class DataContainer implements RowAppender {
         throw new IllegalStateException("Cannot get spec: container not open.");
     }
     
-    /** 
-     * @see RowAppender#addRowToTable(DataRow)
+    /**
+     * {@inheritDoc}
      */
     public void addRowToTable(final DataRow row) {
         if (!isOpen()) {

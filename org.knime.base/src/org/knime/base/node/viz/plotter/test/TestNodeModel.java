@@ -80,7 +80,7 @@ public class TestNodeModel extends NodeModel implements DataProvider {
     
 
     /**
-     * @see DataProvider#getDataArray(int)
+     * {@inheritDoc}
      */
     public DataArray getDataArray(final int index) {
         return m_input;
@@ -90,8 +90,7 @@ public class TestNodeModel extends NodeModel implements DataProvider {
 
 
     /**
-     * @see org.knime.core.node.NodeModel#configure(
-     * org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -100,9 +99,7 @@ public class TestNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#execute(
-     * org.knime.core.node.BufferedDataTable[], 
-     * org.knime.core.node.ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -112,8 +109,7 @@ public class TestNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir, 
@@ -126,8 +122,7 @@ public class TestNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadValidatedSettingsFrom(
-     * org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -135,7 +130,7 @@ public class TestNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -145,8 +140,7 @@ public class TestNodeModel extends NodeModel implements DataProvider {
     
 
     /**
-     * @see org.knime.core.node.NodeModel#setInHiLiteHandler(int,
-     *      org.knime.core.node.property.hilite.HiLiteHandler)
+     * {@inheritDoc}
      */
     @Override
     protected void setInHiLiteHandler(final int inIndex,
@@ -166,8 +160,7 @@ public class TestNodeModel extends NodeModel implements DataProvider {
 
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir, 
@@ -179,16 +172,14 @@ public class TestNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveSettingsTo(
-     * org.knime.core.node.NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#validateSettings(
-     * org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)

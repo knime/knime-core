@@ -474,7 +474,7 @@ public interface ConfigRO extends TreeNode, Iterable<String> {
     public DataType[] getDataTypeArray(final String key, final DataType... v);
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public Iterator<String> iterator();
 

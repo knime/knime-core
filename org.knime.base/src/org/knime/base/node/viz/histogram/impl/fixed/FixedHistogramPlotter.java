@@ -54,8 +54,7 @@ public class FixedHistogramPlotter extends AbstractHistogramPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter
-     * #fillPopupMenu(javax.swing.JPopupMenu)
+     * {@inheritDoc}
      */
     @Override
     public void fillPopupMenu(final JPopupMenu popupMenu) {

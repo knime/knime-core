@@ -161,7 +161,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -193,7 +193,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -201,7 +201,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -209,14 +209,14 @@ public class MLPPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -268,9 +268,7 @@ public class MLPPredictorNodeModel extends NodeModel {
         }
 
         /**
-         * 
-         * @see org.knime.base.data.append.column.AppendedCellFactory
-         *      #getAppendedCell(org.knime.core.data.DataRow)
+         * {@inheritDoc}
          */
         public DataCell[] getCells(final DataRow row) {
             double[] inputs = new double[m_faccolumns.length];
@@ -301,8 +299,7 @@ public class MLPPredictorNodeModel extends NodeModel {
         }
 
         /**
-         * 
-         * @see org.knime.core.data.container.CellFactory#getColumnSpecs()
+         * {@inheritDoc}
          */
         public DataColumnSpec[] getColumnSpecs() {
             String name = "PredClass";
@@ -342,9 +339,7 @@ public class MLPPredictorNodeModel extends NodeModel {
         }
 
         /**
-         * @see org.knime.core.data.container.CellFactory# setProgress(int, int,
-         *      org.knime.core.data.RowKey,
-         *      org.knime.core.node.ExecutionMonitor)
+         * {@inheritDoc}
          */
         public void setProgress(final int curRowNr, final int rowCount,
                 final RowKey lastKey, final ExecutionMonitor exec) {
@@ -353,8 +348,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -363,8 +357,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

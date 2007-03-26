@@ -164,7 +164,7 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
     abstract boolean hasIdenticalValue(AbstractConfigEntry ace);
     
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public final int hashCode() {

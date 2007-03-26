@@ -92,7 +92,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         }
         
         /**
-         * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+         * {@inheritDoc}
          */
         public int compare(final DataRow o1, final DataRow o2) {
             return m_colComparator.compare(o1.getCell(m_colIdx),
@@ -163,8 +163,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#setNoOfBins(int)
+     * {@inheritDoc}
      */
     @Override
     public boolean setNoOfBins(final int noOfBins) {
@@ -255,8 +254,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#getXColumnName()
+     * {@inheritDoc}
      */
     @Override
     public String getXColumnName() {
@@ -264,8 +262,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#getXColumnSpec()
+     * {@inheritDoc}
      */
     @Override
     public DataColumnSpec getXColumnSpec() {
@@ -274,8 +271,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
 
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#getAggrColumns()
+     * {@inheritDoc}
      */
     @Override
     public Collection<ColorColumn> getAggrColumns() {
@@ -373,8 +369,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#isFixed()
+     * {@inheritDoc}
      */
     @Override
     public boolean isFixed() {
@@ -390,8 +385,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#getHilitedKeys()
+     * {@inheritDoc}
      */
     @Override
     public Set<DataCell> getHilitedKeys() {
@@ -413,8 +407,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#getSelectedKeys()
+     * {@inheritDoc}
      */
     @Override
     public Set<DataCell> getSelectedKeys() {
@@ -441,8 +434,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#updateHiliteInfo(java.util.Set, boolean)
+     * {@inheritDoc}
      */
     @Override
     public void updateHiliteInfo(final Set<DataCell> hilited,
@@ -472,8 +464,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     }
 
     /**
-     * @see org.knime.base.node.viz.histogram.datamodel.
-     * AbstractHistogramVizModel#unHiliteAll()
+     * {@inheritDoc}
      */
     @Override
     public void unHiliteAll() {

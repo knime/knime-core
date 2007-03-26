@@ -161,7 +161,7 @@ public final class TIDItemSet {
     }
 
     /**
-     * @see java.lang.Object#clone()
+     * {@inheritDoc}
      */
     @Override
     protected TIDItemSet clone() {
@@ -178,7 +178,7 @@ public final class TIDItemSet {
     }
 
     /**
-     * @see java.lang.Object#equals(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {
@@ -188,7 +188,7 @@ public final class TIDItemSet {
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -196,7 +196,7 @@ public final class TIDItemSet {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

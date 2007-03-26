@@ -1032,7 +1032,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     }
 
     /**
-     * @see HiLiteListener#unHiLiteAll()
+     * {@inheritDoc}
      */
     public void unHiLiteAll() {
         if (m_root != null) {

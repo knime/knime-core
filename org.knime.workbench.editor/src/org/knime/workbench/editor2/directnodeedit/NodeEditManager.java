@@ -76,7 +76,7 @@ public class NodeEditManager extends DirectEditManager {
     }
 
     /**
-     * @see org.eclipse.gef.tools.DirectEditManager#bringDown()
+     * {@inheritDoc}
      */
     @Override
     protected void bringDown() {
@@ -101,8 +101,7 @@ public class NodeEditManager extends DirectEditManager {
     }
 
     /**
-     * @see org.eclipse.gef.tools.DirectEditManager#
-     *      createCellEditorOn(org.eclipse.swt.widgets.Composite)
+     * {@inheritDoc}
      */
     @Override
     protected CellEditor createCellEditorOn(final Composite composite) {

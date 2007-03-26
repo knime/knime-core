@@ -215,14 +215,14 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         RowIterator appendIt;
@@ -370,16 +370,14 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
-     * @see org.knime.core.node.BufferedDataTable.KnowsRowCountTable
-     * #getRowCount()
+     * {@inheritDoc}
      */
     public int getRowCount() {
         return m_reference.getRowCount();
     }
     
     /**
-     * @see KnowsRowCountTable#saveToFile(
-     * File, NodeSettingsWO, ExecutionMonitor)
+     * {@inheritDoc}
      */
     public void saveToFile(
             final File f, final NodeSettingsWO s, final ExecutionMonitor exec) 
@@ -406,7 +404,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
-     * @see KnowsRowCountTable#putIntoTableRepository(HashMap)
+     * {@inheritDoc}
      */
     public void putIntoTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
@@ -416,7 +414,7 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
     }
     
     /**
-     * @see KnowsRowCountTable#removeFromTableRepository(HashMap)
+     * {@inheritDoc}
      */
     public void removeFromTableRepository(
             final HashMap<Integer, ContainerTable> rep) {

@@ -43,8 +43,7 @@ public class DataColumnSpecListCellRenderer extends DefaultListCellRenderer {
     private static final long serialVersionUID = 1156595670217009312L;
 
     /**
-     * @see javax.swing.ListCellRenderer#getListCellRendererComponent(
-     * JList, Object, int, boolean, boolean)
+     * {@inheritDoc}
      */
     @Override
     public Component getListCellRendererComponent(

@@ -33,7 +33,7 @@ import org.knime.core.data.DataRow;
  */
 public class BasisFunctionRowInclusion implements DegreeOfAffinity {
     /**
-     * @see DegreeOfAffinity#getAffinityDegree(DataRow, DataRow)
+     * {@inheritDoc}
      */
     public double getAffinityDegree(final DataRow row1, final DataRow row2) {
         BasisFunctionLearnerRow bf1 = (BasisFunctionLearnerRow)row1;
@@ -47,7 +47,7 @@ public class BasisFunctionRowInclusion implements DegreeOfAffinity {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

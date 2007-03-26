@@ -170,7 +170,7 @@ public class HiLiteTranslator implements HiLiteListener {
     }
 
     /**
-     * @see HiLiteListener#hiLite(KeyEvent)
+     * {@inheritDoc}
      */
     public void hiLite(final KeyEvent event) {
         if (m_mapper != null && m_toHandlers.size() > 0) {
@@ -192,7 +192,7 @@ public class HiLiteTranslator implements HiLiteListener {
     }
 
     /**
-     * @see HiLiteListener#unHiLite(KeyEvent)
+     * {@inheritDoc}
      */
     public void unHiLite(final KeyEvent event) {
         if (m_mapper != null && m_toHandlers.size() > 0) {
@@ -214,7 +214,7 @@ public class HiLiteTranslator implements HiLiteListener {
     }
 
     /**
-     * @see HiLiteListener#unHiLiteAll()
+     * {@inheritDoc}
      */
     public void unHiLiteAll() {
         for (HiLiteHandler h : m_toHandlers) {

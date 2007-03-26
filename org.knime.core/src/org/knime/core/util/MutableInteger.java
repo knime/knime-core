@@ -47,7 +47,7 @@ public final class MutableInteger extends Number {
     }
 
     /**
-     * @see java.lang.Number#intValue()
+     * {@inheritDoc}
      */
     @Override
     public int intValue() {
@@ -55,7 +55,7 @@ public final class MutableInteger extends Number {
     }
 
     /**
-     * @see java.lang.Number#longValue()
+     * {@inheritDoc}
      */
     @Override
     public long longValue() {
@@ -63,7 +63,7 @@ public final class MutableInteger extends Number {
     }
 
     /**
-     * @see java.lang.Number#floatValue()
+     * {@inheritDoc}
      */
     @Override
     public float floatValue() {
@@ -71,7 +71,7 @@ public final class MutableInteger extends Number {
     }
 
     /**
-     * @see java.lang.Number#doubleValue()
+     * {@inheritDoc}
      */
     @Override
     public double doubleValue() {
@@ -115,7 +115,7 @@ public final class MutableInteger extends Number {
     }
 
     /**
-     * @see java.lang.Object#equals(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object obj) {
@@ -126,7 +126,7 @@ public final class MutableInteger extends Number {
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -134,7 +134,7 @@ public final class MutableInteger extends Number {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

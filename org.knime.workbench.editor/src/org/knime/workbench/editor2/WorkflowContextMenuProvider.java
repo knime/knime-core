@@ -85,8 +85,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
     }
 
     /**
-     * @see org.eclipse.gef.ContextMenuProvider
-     *      #buildContextMenu(org.eclipse.jface.action.IMenuManager)
+     * {@inheritDoc}
      */
     @Override
     public void buildContextMenu(final IMenuManager manager) {

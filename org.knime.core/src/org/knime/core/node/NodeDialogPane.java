@@ -72,8 +72,7 @@ public abstract class NodeDialogPane {
     private static final HierarchyListener HIERARCHY_LISTENER =
         new HierarchyListener() {
             /**
-             * @see java.awt.event.HierarchyListener
-             *      #hierarchyChanged(java.awt.event.HierarchyEvent)
+             * {@inheritDoc}
              */
             public void hierarchyChanged(final HierarchyEvent e) {
                 noLightWeight(e.getComponent());
@@ -538,8 +537,7 @@ public abstract class NodeDialogPane {
     static class MiscNodeDialogPane extends NodeDialogPane {
         
         /**
-         * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, 
-         *      DataTableSpec[])
+         * {@inheritDoc}
          */
         @Override
         protected void loadSettingsFrom(final NodeSettingsRO settings, 
@@ -548,7 +546,7 @@ public abstract class NodeDialogPane {
         }
 
         /**
-         * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
+         * {@inheritDoc}
          */
         @Override
         protected void saveSettingsTo(final NodeSettingsWO settings)

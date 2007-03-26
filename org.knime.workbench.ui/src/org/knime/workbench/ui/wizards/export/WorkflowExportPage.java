@@ -79,8 +79,7 @@ public class WorkflowExportPage extends WizardPage {
     }
 
     /**
-     * @see org.eclipse.jface.dialogs.IDialogPage
-     *      #createControl(org.eclipse.swt.widgets.Composite)
+     * {@inheritDoc}
      */
     public void createControl(final Composite parent) {
         Composite container = new Composite(parent, SWT.NULL);

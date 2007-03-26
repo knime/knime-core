@@ -115,8 +115,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #updateComponent()
+     * {@inheritDoc}
      */
     @Override
     protected void updateComponent() {
@@ -174,7 +173,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * {@inheritDoc}
      */
     @Override
     protected void validateStettingsBeforeSave()
@@ -183,8 +182,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent
-     *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
@@ -193,7 +191,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent #setEnabledComponents(boolean)
+     * {@inheritDoc}
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
@@ -211,8 +209,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #setToolTipText(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public void setToolTipText(final String text) {

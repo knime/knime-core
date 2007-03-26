@@ -58,7 +58,7 @@ public class SettingsModelString extends SettingsModel {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.SettingsModel#createClone()
+     * {@inheritDoc}
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -67,7 +67,7 @@ public class SettingsModelString extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel#getModelTypeID()
+     * {@inheritDoc}
      */
     @Override
     protected String getModelTypeID() {
@@ -75,7 +75,7 @@ public class SettingsModelString extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel#getConfigName()
+     * {@inheritDoc}
      */
     @Override
     protected String getConfigName() {
@@ -83,9 +83,7 @@ public class SettingsModelString extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel
-     *      #loadSettingsForDialog(org.knime.core.node.NodeSettingsRO,
-     *      org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsForDialog(final NodeSettingsRO settings,
@@ -99,8 +97,7 @@ public class SettingsModelString extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel
-     *      #saveSettingsForDialog(org.knime.core.node.NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsForDialog(final NodeSettingsWO settings)
@@ -138,8 +135,7 @@ public class SettingsModelString extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel
-     *      #validateSettingsForModel(org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettingsForModel(final NodeSettingsRO settings)
@@ -148,8 +144,7 @@ public class SettingsModelString extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel
-     *      #loadSettingsForModel(org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings)
@@ -163,8 +158,7 @@ public class SettingsModelString extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel
-     *      #saveSettingsForModel(org.knime.core.node.NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
@@ -172,7 +166,7 @@ public class SettingsModelString extends SettingsModel {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

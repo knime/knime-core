@@ -39,7 +39,7 @@ import org.knime.core.node.NodeView;
 public class ScatterPlotterNodeFactory extends NodeFactory {
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeDialogPane()
+     * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
@@ -47,7 +47,7 @@ public class ScatterPlotterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
@@ -55,8 +55,7 @@ public class ScatterPlotterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeView(
-     * int, org.knime.core.node.NodeModel)
+     * {@inheritDoc}
      */
     @Override
     public NodeView createNodeView(final int viewIndex, 
@@ -68,7 +67,7 @@ public class ScatterPlotterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
+     * {@inheritDoc}
      */
     @Override
     protected int getNrNodeViews() {
@@ -76,7 +75,7 @@ public class ScatterPlotterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#hasDialog()
+     * {@inheritDoc}
      */
     @Override
     protected boolean hasDialog() {

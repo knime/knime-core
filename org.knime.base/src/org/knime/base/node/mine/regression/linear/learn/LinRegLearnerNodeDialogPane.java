@@ -126,7 +126,7 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
@@ -171,7 +171,7 @@ public class LinRegLearnerNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)

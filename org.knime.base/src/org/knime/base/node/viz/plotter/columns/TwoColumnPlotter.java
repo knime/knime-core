@@ -82,8 +82,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
             properties2D.addXColumnListener(new ItemListener() {
 
                 /**
-                 * @see java.awt.event.ItemListener#itemStateChanged(
-                 *      java.awt.event.ItemEvent)
+                 * {@inheritDoc}
                  */
                 public void itemStateChanged(final ItemEvent e) {
                     DataColumnSpec x = ((TwoColumnProperties)
@@ -96,8 +95,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
             properties2D.addYColumnListener(new ItemListener() {
 
                 /**
-                 * @see java.awt.event.ItemListener#itemStateChanged(
-                 *      java.awt.event.ItemEvent)
+                 * {@inheritDoc}
                  */
                 public void itemStateChanged(final ItemEvent e) {
                     DataColumnSpec y = ((TwoColumnProperties)
@@ -135,8 +133,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
         final TwoColumnProperties props = (TwoColumnProperties)getProperties();
         props.addXMinListener(new ChangeListener() {
             /**
-             * @see javax.swing.event.ChangeListener#stateChanged(
-             * javax.swing.event.ChangeEvent)
+             * {@inheritDoc}
              */
             public void stateChanged(final ChangeEvent e) {
                 double newXMin = props.getXMinValue();
@@ -149,8 +146,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
         });
         props.addXMaxListener(new ChangeListener() {
             /**
-             * @see javax.swing.event.ChangeListener#stateChanged(
-             * javax.swing.event.ChangeEvent)
+             * {@inheritDoc}
              */
             public void stateChanged(final ChangeEvent e) {
                 double newXMax = props.getXMaxValue();
@@ -163,8 +159,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
         });
         props.addYMinListener(new ChangeListener() {
             /**
-             * @see javax.swing.event.ChangeListener#stateChanged(
-             * javax.swing.event.ChangeEvent)
+             * {@inheritDoc}
              */
             public void stateChanged(final ChangeEvent e) {
                 double newYMin = props.getYMinValue();
@@ -177,8 +172,7 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
         });
         props.addYMaxListener(new ChangeListener() {
             /**
-             * @see javax.swing.event.ChangeListener#stateChanged(
-             * javax.swing.event.ChangeEvent)
+             * {@inheritDoc}
              */
             public void stateChanged(final ChangeEvent e) {
                 double newYMax = props.getYMaxValue();

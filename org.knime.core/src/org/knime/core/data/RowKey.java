@@ -103,7 +103,7 @@ public final class RowKey implements Serializable {
     }
 
     /**
-     * @see DataCell#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {

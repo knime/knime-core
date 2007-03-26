@@ -514,8 +514,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * 
-     * @see org.eclipse.draw2d.IFigure#getMinimumSize(int, int)
+     * {@inheritDoc}
      */
     @Override
     public Dimension getMinimumSize(final int whint, final int hhint) {
@@ -523,7 +522,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
+     * {@inheritDoc}
      */
     @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
@@ -548,7 +547,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * @see org.eclipse.draw2d.IFigure#getBackgroundColor()
+     * {@inheritDoc}
      */
     @Override
     public Color getBackgroundColor() {
@@ -556,7 +555,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * @see org.eclipse.draw2d.IFigure#getForegroundColor()
+     * {@inheritDoc}
      */
     @Override
     public Color getForegroundColor() {
@@ -589,7 +588,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+     * {@inheritDoc}
      */
     @Override
     public void paintFigure(final Graphics graphics) {
@@ -772,8 +771,7 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         /**
-         * 
-         * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
+         * {@inheritDoc}
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
@@ -975,8 +973,7 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         /**
-         * 
-         * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
+         * {@inheritDoc}
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
@@ -1063,7 +1060,7 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         /**
-         * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
+         * {@inheritDoc}
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {

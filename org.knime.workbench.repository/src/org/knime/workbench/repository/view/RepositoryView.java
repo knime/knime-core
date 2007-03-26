@@ -231,7 +231,7 @@ public class RepositoryView extends ViewPart {
     }
 
     /**
-     * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
+     * {@inheritDoc}
      */
     @Override
     public Object getAdapter(final Class adapter) {

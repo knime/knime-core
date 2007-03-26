@@ -300,7 +300,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
     } // end execute()
 
     /**
-     * @see NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     public void reset() {
@@ -565,8 +565,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File internDir,
@@ -591,8 +590,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #saveInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File internDir,

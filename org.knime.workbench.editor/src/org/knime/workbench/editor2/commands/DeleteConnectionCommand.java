@@ -58,7 +58,7 @@ public class DeleteConnectionCommand extends Command {
     }
 
     /**
-     * @see org.eclipse.gef.commands.Command#canExecute()
+     * {@inheritDoc}
      */
     @Override
     public boolean canExecute() {
@@ -73,7 +73,7 @@ public class DeleteConnectionCommand extends Command {
     }
 
     /**
-     * @see org.eclipse.gef.commands.Command#execute()
+     * {@inheritDoc}
      */
     @Override
     public void execute() {

@@ -76,7 +76,7 @@ public class ModelInputNodeModel extends MetaInputModel {
     }
 
     /**
-     * @see org.knime.core.node.meta.MetaInputModel#canBeExecuted()
+     * {@inheritDoc}
      */
     @Override
     public boolean canBeExecuted() {
@@ -84,8 +84,7 @@ public class ModelInputNodeModel extends MetaInputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *  #saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -93,8 +92,7 @@ public class ModelInputNodeModel extends MetaInputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *  #validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -103,8 +101,7 @@ public class ModelInputNodeModel extends MetaInputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *  #loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -113,7 +110,7 @@ public class ModelInputNodeModel extends MetaInputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -130,9 +127,8 @@ public class ModelInputNodeModel extends MetaInputModel {
         m_predictorParams = predParams;
     }
 
-    /** 
-     * @see org.knime.core.node.NodeModel
-     *  #saveModelContent(int, ModelContentWO)
+    /**
+     * {@inheritDoc}
      */
     @Override
     protected void saveModelContent(final int index,

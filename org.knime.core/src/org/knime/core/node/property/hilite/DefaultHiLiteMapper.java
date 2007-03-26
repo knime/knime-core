@@ -65,14 +65,14 @@ public class DefaultHiLiteMapper implements HiLiteMapper {
     }
 
     /**
-     * @see HiLiteMapper#getKeys(org.knime.core.data.DataCell)
+     * {@inheritDoc}
      */
     public Set<DataCell> getKeys(final DataCell key) {
         return m_map.get(key);
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public Set<DataCell> keySet() {
         return Collections.unmodifiableSet(m_map.keySet());

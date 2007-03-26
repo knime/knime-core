@@ -70,8 +70,7 @@ public class SettingsModelDoubleBounded extends SettingsModelDouble {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.SettingsModelDouble
-     *      #createClone()
+     * {@inheritDoc}
      */
     @Override
     protected SettingsModelDoubleBounded createClone() {
@@ -94,8 +93,7 @@ public class SettingsModelDoubleBounded extends SettingsModelDouble {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.SettingsModelDouble
-     *      #validateValue(double)
+     * {@inheritDoc}
      */
     @Override
     protected void validateValue(final double value)
@@ -109,7 +107,7 @@ public class SettingsModelDoubleBounded extends SettingsModelDouble {
     }
 
     /**
-     * @see SettingsModelDouble#setDoubleValue(double)
+     * {@inheritDoc}
      */
     @Override
     public void setDoubleValue(final double newValue) {

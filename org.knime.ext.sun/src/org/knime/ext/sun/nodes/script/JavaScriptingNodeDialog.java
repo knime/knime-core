@@ -142,7 +142,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
@@ -194,7 +194,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
@@ -268,8 +268,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
      */
     private static class ListRenderer extends DataColumnSpecListCellRenderer {
         /**
-         * @see DataColumnSpecListCellRenderer#getListCellRendererComponent(
-         *      JList, Object, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public Component getListCellRendererComponent(final JList list,

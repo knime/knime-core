@@ -141,8 +141,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
         JMenuItem item = new JMenuItem(HILITE);
         item.addActionListener(new ActionListener() {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             *      java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
                 ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
@@ -153,8 +152,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
         item = new JMenuItem(UNHILITE);
         item.addActionListener(new ActionListener() {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             *      java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
                 ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
@@ -165,8 +163,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
         item = new JMenuItem(UNHILITE_ALL);
         item.addActionListener(new ActionListener() {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             *      java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
                 ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
@@ -183,8 +180,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
         item.addActionListener(new ActionListener() {
 
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             *      java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
                 ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
@@ -197,8 +193,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
         item.addActionListener(new ActionListener() {
 
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             *      java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
                 ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
@@ -211,8 +206,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
         item.addActionListener(new ActionListener() {
 
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             *      java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
                 ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
@@ -224,8 +218,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
     }
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#hiLite(
-     *      org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     public void hiLite(final KeyEvent event) {
         getComponent().repaint();
@@ -234,8 +227,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
     }
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLite(
-     *      org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     public void unHiLite(final KeyEvent event) {
         getComponent().repaint();
@@ -245,8 +237,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
 
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener
-     *      #unHiLiteAll()
+     * {@inheritDoc}
      */
     public void unHiLiteAll() {
         ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
@@ -255,7 +246,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onOpen()
+     * {@inheritDoc}
      */
     @Override
     protected void onOpen() {
@@ -264,7 +255,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onClose()
+     * {@inheritDoc}
      */
     @Override
     protected void onClose() {
@@ -346,9 +337,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
         private boolean m_isHilite = false;
 
         /**
-         * @see javax.swing.tree.DefaultTreeCellRenderer
-         *      #getTreeCellRendererComponent(javax.swing.JTree,
-         *      java.lang.Object, boolean, boolean, boolean, int, boolean)
+         * {@inheritDoc}
          */
         @Override
         public Component getTreeCellRendererComponent(final JTree tree,

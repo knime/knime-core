@@ -223,28 +223,28 @@ public class DefaultRow implements DataRow {
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getNumCells()
+     * {@inheritDoc}
      */
     public final int getNumCells() {
         return m_row.length;
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getKey()
+     * {@inheritDoc}
      */
     public final RowKey getKey() {
         return m_rowKey;
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getCell(int)
+     * {@inheritDoc}
      */
     public final DataCell getCell(final int index) {
         return m_row[index];
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);
@@ -297,7 +297,7 @@ public class DefaultRow implements DataRow {
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {

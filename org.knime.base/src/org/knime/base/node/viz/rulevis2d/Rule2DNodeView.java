@@ -51,8 +51,7 @@ public class Rule2DNodeView extends NodeView {
     // the pane holding the always visible controls
     private ScatterProps m_properties = new ScatterProps() {
         /**
-         * @see org.knime.base.node.viz.scatterplot.ScatterProps#
-         *      setSelectables(org.knime.core.data.DataTableSpec)
+         * {@inheritDoc}
          */
         @Override
         public void setSelectables(final DataTableSpec tSpec) {

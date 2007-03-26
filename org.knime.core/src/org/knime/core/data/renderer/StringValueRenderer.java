@@ -60,7 +60,7 @@ public final class StringValueRenderer extends DefaultDataValueRenderer {
         super.setValue(newValue);
     }    
     /**
-     * @see DefaultDataValueRenderer#getDescription()
+     * {@inheritDoc}
      */
     @Override
     public String getDescription() {

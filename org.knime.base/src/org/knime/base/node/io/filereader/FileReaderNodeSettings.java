@@ -815,8 +815,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @see FileReaderSettings
-     *      #getStatusOfSettings()
+     * {@inheritDoc}
      */
     @Override
     public SettingsStatus getStatusOfSettings() {
@@ -958,7 +957,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

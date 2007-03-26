@@ -97,8 +97,7 @@ public class Category extends AbstractContainerObject {
     }
 
     /**
-     * @see org.knime.workbench.repository.model.AbstractRepositoryObject#
-     *      getAdapter(java.lang.Class)
+     * {@inheritDoc}
      */
     public Object getAdapter(final Class adapter) {
         if (adapter == IPropertySource.class) {
@@ -125,7 +124,7 @@ public class Category extends AbstractContainerObject {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

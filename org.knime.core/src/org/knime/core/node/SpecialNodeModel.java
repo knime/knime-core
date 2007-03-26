@@ -236,8 +236,7 @@ public abstract class SpecialNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected final void loadValidatedSettingsFrom(final NodeSettingsRO setts)
@@ -250,7 +249,7 @@ public abstract class SpecialNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected final void validateSettings(final NodeSettingsRO settings)

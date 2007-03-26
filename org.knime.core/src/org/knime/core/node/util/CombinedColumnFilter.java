@@ -52,7 +52,7 @@ public class CombinedColumnFilter implements ColumnFilter {
     }
     
     /**
-     * @see org.knime.core.node.util.ColumnFilter#allFilteredMsg()
+     * {@inheritDoc}
      */
     public String allFilteredMsg() {
         final StringBuilder buf = new StringBuilder();
@@ -63,8 +63,7 @@ public class CombinedColumnFilter implements ColumnFilter {
     }
 
     /**
-     * @see org.knime.core.node.util.ColumnFilter
-     * #includeColumn(org.knime.core.data.DataColumnSpec)
+     * {@inheritDoc}
      */
     public boolean includeColumn(final DataColumnSpec colSpec) {
         for (ColumnFilter filter : m_filters) {

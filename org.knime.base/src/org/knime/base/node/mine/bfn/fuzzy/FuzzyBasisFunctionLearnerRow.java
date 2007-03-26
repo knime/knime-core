@@ -87,7 +87,7 @@ final class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     }
 
     /**
-     * @see BasisFunctionLearnerRow#getPredictorRow()
+     * {@inheritDoc}
      */
     @Override
     public FuzzyBasisFunctionPredictorRow getPredictorRow() {
@@ -483,7 +483,7 @@ final class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     }
 
     /**
-     * @see BasisFunctionLearnerRow#getFinalCell(int)
+     * {@inheritDoc}
      */
     @Override
     protected DataCell getFinalCell(final int index) {
@@ -491,8 +491,7 @@ final class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     }
 
     /**
-     * @see BasisFunctionLearnerRow
-     *      #computeActivation(org.knime.core.data.DataRow)
+     * {@inheritDoc}
      */
     @Override
     public double computeActivation(final DataRow row) {

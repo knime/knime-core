@@ -89,8 +89,7 @@ public final class DialogComponentTextField extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodedialog.DialogComponent
-     *      #setEnabledComponents(boolean)
+     * {@inheritDoc}
      */
     @Override
     public void setEnabledComponents(final boolean enabled) {

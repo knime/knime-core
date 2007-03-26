@@ -165,8 +165,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #updateComponent()
+     * {@inheritDoc}
      */
     @Override
     protected void updateComponent() {
@@ -195,8 +194,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent
-     *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
@@ -236,7 +234,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * {@inheritDoc}
      */
     @Override
     protected void validateStettingsBeforeSave()
@@ -246,7 +244,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent#setEnabledComponents(boolean)
+     * {@inheritDoc}
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
@@ -254,8 +252,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #setToolTipText(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public void setToolTipText(final String text) {

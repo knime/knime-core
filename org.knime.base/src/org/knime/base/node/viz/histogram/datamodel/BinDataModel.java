@@ -605,7 +605,7 @@ public class BinDataModel implements Serializable {
     }
     
     /**
-     * @see java.lang.Object#clone()
+     * {@inheritDoc}
      */
     @Override
     protected BinDataModel clone() {

@@ -90,8 +90,7 @@ public class BoxPlotter extends BasicPlotter {
             .getNormalizeCheckBox();
         box.addItemListener(new ItemListener() {
             /**
-             * @see java.awt.event.ItemListener#itemStateChanged(
-             * java.awt.event.ItemEvent)
+             * {@inheritDoc}
              */
             public void itemStateChanged(final ItemEvent e) {
                 m_normalize = box.isSelected();
@@ -102,8 +101,7 @@ public class BoxPlotter extends BasicPlotter {
         ((BoxPlotterProperties)getProperties()).getColumnFilter()
             .addChangeListener(new ChangeListener() {
                 /**
-                 * @see javax.swing.event.ChangeListener#stateChanged(
-                 * javax.swing.event.ChangeEvent)
+                 * {@inheritDoc}
                  */
                 public void stateChanged(final ChangeEvent e) {
                     m_selectedColumns = ((BoxPlotterProperties)getProperties())
@@ -124,7 +122,7 @@ public class BoxPlotter extends BasicPlotter {
     
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
+     * {@inheritDoc}
      */
     @Override
     public void reset() {
@@ -135,7 +133,7 @@ public class BoxPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()
+     * {@inheritDoc}
      */
     @Override
     public void updatePaintModel() {
@@ -204,7 +202,7 @@ public class BoxPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#updateSize()
+     * {@inheritDoc}
      */
     @Override
     public void updateSize() {
@@ -349,7 +347,7 @@ public class BoxPlotter extends BasicPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#clearSelection()
+     * {@inheritDoc}
      */
     @Override
     public void clearSelection() {
@@ -357,8 +355,7 @@ public class BoxPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLite(
-     * org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     @Override
     public void hiLite(final KeyEvent event) {
@@ -369,7 +366,7 @@ public class BoxPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void hiLiteSelected() {
@@ -379,8 +376,7 @@ public class BoxPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter
-     * #selectClickedElement(java.awt.Point)
+     * {@inheritDoc}
      */
     @Override
     public void selectClickedElement(final Point clicked) {
@@ -388,8 +384,7 @@ public class BoxPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter
-     * #selectElementsIn(java.awt.Rectangle)
+     * {@inheritDoc}
      */
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {
@@ -400,8 +395,7 @@ public class BoxPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLite(
-     * org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     @Override
     public void unHiLite(final KeyEvent event) {
@@ -412,7 +406,7 @@ public class BoxPlotter extends BasicPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void unHiLiteSelected() {
@@ -422,7 +416,7 @@ public class BoxPlotter extends BasicPlotter {
     }    
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
+     * {@inheritDoc}
      */
     public void unHiLiteAll() {
         updatePaintModel();

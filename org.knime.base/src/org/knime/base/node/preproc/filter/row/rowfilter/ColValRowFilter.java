@@ -329,7 +329,7 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
-     * @see RowFilter#matches(org.knime.core.data.DataRow, int)
+     * {@inheritDoc}
      */
     @Override
     public boolean matches(final DataRow row, final int rowIndex)
@@ -439,8 +439,7 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
-     * @see RowFilter
-     *      #saveSettings(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettings(final NodeSettingsWO cfg) {
@@ -515,7 +514,7 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

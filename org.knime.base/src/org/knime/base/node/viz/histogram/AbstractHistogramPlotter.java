@@ -283,7 +283,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#updateSize()
+     * {@inheritDoc}
      */
     @Override
     public void updateSize() {
@@ -308,7 +308,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()
+     * {@inheritDoc}
      */
     @Override
     public void updatePaintModel() {
@@ -1028,8 +1028,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 //Selection and hiliting section
 //*************************************************************************
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#hiLite(
-     *      org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     @Override
     public void hiLite(final KeyEvent event) {
@@ -1061,7 +1060,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
+     * {@inheritDoc}
      */
     public void unHiLiteAll() {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
@@ -1074,7 +1073,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void hiLiteSelected() {
@@ -1090,7 +1089,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void unHiLiteSelected() {
@@ -1106,7 +1105,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
     
     /**
-     * @see AbstractPlotter#selectClickedElement(java.awt.Point)
+     * {@inheritDoc}
      */
     @Override
     public void selectClickedElement(final Point clicked) {
@@ -1122,7 +1121,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
     /**
-     * @see AbstractPlotter#selectElementsIn(java.awt.Rectangle)
+     * {@inheritDoc}
      */
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {
@@ -1138,7 +1137,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#clearSelection()
+     * {@inheritDoc}
      */
     @Override
     public void clearSelection() {

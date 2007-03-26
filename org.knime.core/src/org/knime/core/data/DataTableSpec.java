@@ -605,7 +605,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {

@@ -198,8 +198,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
     }
 
     /**
-     * @see java.awt.event.ItemListener
-     *      #itemStateChanged(java.awt.event.ItemEvent)
+     * {@inheritDoc}
      */
     public void itemStateChanged(final ItemEvent e) {
         updateFileError();
@@ -294,7 +293,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
     }
 
     /**
-     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
@@ -310,7 +309,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
     }
 
     /**
-     * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
@@ -338,8 +337,7 @@ public class ARFFWriterNodeDialog extends NodeDialogPane implements
     private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
 
         /**
-         * @see BasicComboBoxRenderer#getListCellRendererComponent(
-         *      javax.swing.JList, java.lang.Object, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public Component getListCellRendererComponent(final JList list,

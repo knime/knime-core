@@ -185,7 +185,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     }
 
     /**
-     * @see org.eclipse.gef.EditPolicy#eraseSourceFeedback(Request)
+     * {@inheritDoc}
      */
     @Override
     public void eraseSourceFeedback(final Request request) {
@@ -434,9 +434,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     }
 
     /**
-     * @see org.eclipse.gef.editpolicies.BendpointEditPolicy
-     *      #getCreateBendpointCommand
-     *      (org.eclipse.gef.requests.BendpointRequest)
+     * {@inheritDoc}
      */
     protected Command getCreateBendpointCommand(final BendpointRequest req) {
         int index = req.getIndex();
@@ -450,9 +448,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     }
 
     /**
-     * @see org.eclipse.gef.editpolicies.BendpointEditPolicy
-     *      #getDeleteBendpointCommand
-     *      (org.eclipse.gef.requests.BendpointRequest)
+     * {@inheritDoc}
      */
     protected Command getDeleteBendpointCommand(final BendpointRequest req) {
         // get the index of the bendpoint to delete
@@ -463,8 +459,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     }
 
     /**
-     * @see org.eclipse.gef.editpolicies.BendpointEditPolicy
-     *      #getMoveBendpointCommand(org.eclipse.gef.requests.BendpointRequest)
+     * {@inheritDoc}
      */
     protected Command getMoveBendpointCommand(final BendpointRequest request) {
         // index of the bendpoint to move

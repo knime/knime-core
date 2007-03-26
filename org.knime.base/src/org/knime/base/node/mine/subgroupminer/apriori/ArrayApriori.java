@@ -281,9 +281,7 @@ public class ArrayApriori implements AprioriAlgorithm {
      * association rule (i, s', counterFor(s), confidence) store it
      */
     /**
-     * 
-     * @see AprioriAlgorithm
-     *      #getAssociationRules(double)
+     * {@inheritDoc}
      */
     public List<AssociationRule> getAssociationRules(final double confidence) {
         List<FrequentItemSet> frequentItemSets = getFrequentItemSets(
@@ -344,8 +342,7 @@ public class ArrayApriori implements AprioriAlgorithm {
     }
 
     /**
-     * @see AprioriAlgorithm#getFrequentItemSets(
-     *      FrequentItemSet.Type)
+     * {@inheritDoc}
      */
     public List<FrequentItemSet> getFrequentItemSets(final Type type) {
         List<FrequentItemSet> list = new ArrayList<FrequentItemSet>();
