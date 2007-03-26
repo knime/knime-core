@@ -76,7 +76,6 @@ public final class ShapeFactory {
     static {
         shapes = new LinkedHashMap<String, Shape>();
         shapes.put(RECTANGLE, new Rectangle());
-        shapes.put(DEFAULT, new Rectangle());
         shapes.put(CIRCLE, new Circle());
         shapes.put(TRIANGLE, new Triangle());
         shapes.put(REVERSE_TRIANGLE, new ReverseTriangle());
@@ -98,9 +97,7 @@ public final class ShapeFactory {
      * @return all registered shapes.
      */
     public static Set<Shape> getShapes() {
-        Set<Shape> result = new LinkedHashSet<Shape>();
-        result.addAll(shapes.values());
-        return result;
+        return new LinkedHashSet<Shape>(shapes.values());
     }
     
     /**
@@ -111,7 +108,7 @@ public final class ShapeFactory {
     public static Shape getShape(final String name) {
         Shape result = shapes.get(name);
         if (result == null) {
-            return shapes.get(ShapeFactory.DEFAULT);
+            return shapes.get(ShapeFactory.RECTANGLE);
         }
         return result;
     }

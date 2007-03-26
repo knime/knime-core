@@ -94,6 +94,14 @@ public abstract class NodeDialogPane {
     /** The underlying panel which keeps all the tabs. */
     private final JPanel m_panel;
     
+    /** Added to all components and listens for new added once components. */
+    private static final HierarchyListener HIERACHY_LISTENER = 
+            new HierarchyListener() { 
+        public void hierarchyChanged(final HierarchyEvent e) {
+            noLightWeight(e.getComponent());
+        }
+    };
+    
     /**
      * Creates a new dialog with the given title. The pane holds a tabbed pane
      * ready to take additional components needed by the derived class 
@@ -379,14 +387,10 @@ public abstract class NodeDialogPane {
             throw new NullPointerException();
         }
         // listens to components which are added/removed from this dialog
-        comp.addHierarchyListener(new HierarchyListener() {
-            public void hierarchyChanged(final HierarchyEvent e) {
-                noLightWeight(e.getComponent());
-            }
-        });
+        comp.addHierarchyListener(HIERACHY_LISTENER);
         m_tabs.put(title, comp);
         int miscIndex = m_pane.indexOfComponent(m_miscTab);
-        // make sure the Miscallaneous tab is always the last tab.
+        // make sure the miscellaneous tab is always the last tab
         if (miscIndex >= 0) {
             m_pane.insertTab(title, null, comp, null, miscIndex);
         } else {
@@ -443,8 +447,12 @@ public abstract class NodeDialogPane {
      * @see #getTab(String)
      */
     protected final void removeTab(final String name) {
-        m_pane.remove(getTab(name));
-        m_tabs.remove(name);
+        Component comp = getTab(name);
+        if (comp != null) {
+            comp.removeHierarchyListener(HIERACHY_LISTENER);
+            m_pane.remove(comp);
+            m_tabs.remove(name);
+        }
     }
     
     private static class MiscSettingsTab extends JPanel {
@@ -459,7 +467,7 @@ public abstract class NodeDialogPane {
             m_group.add(cacheAll);
             cacheAll.setToolTipText(
                     "All generated output data is kept in main memory, " 
-                    + "resulting in faster execution of successing nodes but "
+                    + "resulting in faster execution of successor nodes but "
                     + "also in more memory usage.");
             JRadioButton cacheSmall = new JRadioButton(
                     "Keep only small tables in memory.", true);
