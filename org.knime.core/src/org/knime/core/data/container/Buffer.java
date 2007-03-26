@@ -82,6 +82,15 @@ import org.knime.core.util.FileUtil;
  */
 class Buffer {
     
+    /** Static field to enable/disable the usage of a GZipInput/OutpuStream
+     * when writing the binary data. This option defaults to true, meaning
+     * that we read/write to a compressed stream. 
+     * 
+     * Note: Changing this parameter makes it impossible to read workflows
+     * written previously. It's only used for internal testing purposes.
+     */
+    private static final boolean IS_USE_GZIP = true;
+    
     /** The node logger for this class. */
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(Buffer.class);
@@ -1076,7 +1085,13 @@ class Buffer {
      */
     private DCObjectOutputStream initOutFile(
             final OutputStream outStream) throws IOException {
-        return new DCObjectOutputStream(new GZIPOutputStream(outStream));
+        OutputStream wrap;
+        if (IS_USE_GZIP) {
+            wrap = new GZIPOutputStream(outStream);
+        } else {
+            wrap = outStream;
+        }
+        return new DCObjectOutputStream(wrap);
     }
     
     private void ensureBlobDirExists() throws IOException {
@@ -1346,7 +1361,8 @@ class Buffer {
                 BufferedInputStream bufferedStream =
                     new BufferedInputStream(new FileInputStream(m_binFile));
                 InputStream in;
-                if (m_version < 3) { // stream was not zipped in KNIME 1.1.x 
+                // stream was not zipped in KNIME 1.1.x
+                if (!IS_USE_GZIP || m_version < 3) { 
                     in = bufferedStream;
                 } else {
                     in = new GZIPInputStream(bufferedStream);
