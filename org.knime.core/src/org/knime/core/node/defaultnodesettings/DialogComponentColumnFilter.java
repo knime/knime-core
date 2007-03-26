@@ -180,7 +180,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
     /**
      * We store the values from the panel in the model now.
      * 
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * {@inheritDoc}
      */
     @Override
     protected void validateStettingsBeforeSave()

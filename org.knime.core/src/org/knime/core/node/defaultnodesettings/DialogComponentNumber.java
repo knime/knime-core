@@ -96,8 +96,8 @@ public class DialogComponentNumber extends DialogComponent {
         SpinnerNumberModel spinnerModel;
         if (numberModel instanceof SettingsModelDouble) {
             SettingsModelDouble dblModel = (SettingsModelDouble)numberModel;
-            Comparable min = null;
-            Comparable max = null;
+            Double min = null;
+            Double max = null;
             if (dblModel instanceof SettingsModelDoubleBounded) {
                 min = ((SettingsModelDoubleBounded)dblModel).getLowerBound();
                 max = ((SettingsModelDoubleBounded)dblModel).getUpperBound();
@@ -107,8 +107,8 @@ public class DialogComponentNumber extends DialogComponent {
                             stepSize);
         } else if (numberModel instanceof SettingsModelInteger) {
             SettingsModelInteger intModel = (SettingsModelInteger)numberModel;
-            Comparable min = null;
-            Comparable max = null;
+            Integer min = null;
+            Integer max = null;
             if (intModel instanceof SettingsModelIntegerBounded) {
                 min = ((SettingsModelIntegerBounded)intModel).getLowerBound();
                 max = ((SettingsModelIntegerBounded)intModel).getUpperBound();

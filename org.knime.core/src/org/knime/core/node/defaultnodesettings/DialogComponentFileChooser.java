@@ -26,10 +26,13 @@
 package org.knime.core.node.defaultnodesettings;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
@@ -41,6 +44,10 @@ import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -142,7 +149,8 @@ public class DialogComponentFileChooser extends DialogComponent {
         m_fileComboBox.setPreferredSize(new Dimension(300, m_fileComboBox
                 .getPreferredSize().height));
         m_fileComboBox.setRenderer(new ConvenientComboBoxRenderer());
-
+        m_fileComboBox.setEditable(true);
+        
         for (String fileName : m_fileHistory.getHistory()) {
             m_fileComboBox.addItem(fileName);
         }
@@ -159,8 +167,9 @@ public class DialogComponentFileChooser extends DialogComponent {
         m_browseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 // sets the path in the file text field.
-                String selectedFile = (String)m_fileComboBox.getSelectedItem();
-                if (selectedFile == null) {
+                String selectedFile = 
+                    m_fileComboBox.getEditor().getItem().toString();
+                if (selectedFile.length() == 0) { 
                     selectedFile = (String)m_fileComboBox.getItemAt(0);
                 }
                 JFileChooser chooser = new JFileChooser(selectedFile);
@@ -211,14 +220,47 @@ public class DialogComponentFileChooser extends DialogComponent {
 
         m_fileComboBox.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                // transfer the new filename into the settings model
-                try {
-                    updateModel(true); // don't color the combobox red.
-                } catch (InvalidSettingsException ise) {
-                    // ignore it here.
-                }
+                filenameChanged();            }
+        });
+        m_fileComboBox.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                filenameChanged();
             }
         });
+
+        /* install action listeners */
+        // set stuff to update preview when file location changes
+        m_fileComboBox.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(final FocusEvent e) {
+                filenameChanged();
+            }
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void focusGained(final FocusEvent e) {
+                filenameChanged();
+            }
+        });
+        Component editor = m_fileComboBox.getEditor().getEditorComponent();
+        if (editor instanceof JTextComponent) {
+            Document d = ((JTextComponent)editor).getDocument();
+            d.addDocumentListener(new DocumentListener() {
+                public void changedUpdate(final DocumentEvent e) {
+                    filenameChanged();
+                }
+
+                public void insertUpdate(final DocumentEvent e) {
+                    filenameChanged();
+                }
+
+                public void removeUpdate(final DocumentEvent e) {
+                    filenameChanged();
+                }
+            });
+        }
+
 
         getModel().prependChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
@@ -227,18 +269,30 @@ public class DialogComponentFileChooser extends DialogComponent {
         });
     }
 
+    // called by all action/change listeners to transfer the new filename into
+    // the settings model. (And ignore any invalid situations.)
+    private void filenameChanged() {
+        // transfer the new filename into the settings model
+        try {
+            clearError(m_fileComboBox);
+            updateModel(true); // don't color the combobox red.
+        } catch (InvalidSettingsException ise) {
+            // ignore it here.
+        } 
+    }
+    
     /**
      * Transfers the value from the component into the settings model.
      * 
      * @param noColoring if set true, the component will not be marked red, even
      *            if the entered value was erroneous.
      * @throws InvalidSettingsException if the entered filename is null or
-     *             emtpy.
+     *             empty.
      */
     private void updateModel(final boolean noColoring)
             throws InvalidSettingsException {
 
-        String file = (String)m_fileComboBox.getSelectedItem();
+        String file = m_fileComboBox.getEditor().getItem().toString();
         if ((file != null) && (file.trim().length() > 0)) {
 
             try {
@@ -271,7 +325,7 @@ public class DialogComponentFileChooser extends DialogComponent {
             // don't flag an error in disabled components.
             return;
         }
-        String selection = (String)box.getSelectedItem();
+        String selection = box.getEditor().getItem().toString();
 
         if ((selection == null) || (selection.length() == 0)) {
             box.setBackground(Color.RED);
@@ -315,7 +369,8 @@ public class DialogComponentFileChooser extends DialogComponent {
         if (newValue == null) {
             update = (m_fileComboBox.getSelectedItem() != null);
         } else {
-            update = !newValue.equals(m_fileComboBox.getSelectedItem());
+            String file = m_fileComboBox.getEditor().getItem().toString();
+            update = !newValue.equals(file);
         }
         if (update) {
             // to avoid multiply added items...

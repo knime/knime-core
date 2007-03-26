@@ -195,7 +195,7 @@ public class SettingsModelFilterString extends SettingsModel {
     /**
      * set the value of the stored include list.
      * 
-     * @param newValue the new value to store as include list.
+     * @param newValue the new value to store as include list. Can't be null.
      */
     public void setIncludeList(final Collection<String> newValue) {
         // figure out if we need to notify listeners
@@ -213,10 +213,8 @@ public class SettingsModelFilterString extends SettingsModel {
 
         // now take over the new list
         m_inclList.clear();
-        if (newValue != null) {
-            m_inclList.addAll(newValue);
-        }
-        
+        m_inclList.addAll(newValue);
+                
         // if we got a different list we need to let all listeners know.
         if (notify) {
             notifyChangeListeners();
@@ -243,7 +241,7 @@ public class SettingsModelFilterString extends SettingsModel {
     /**
      * set the value of the stored exclude list.
      * 
-     * @param newValue the new value to store as exclude list.
+     * @param newValue the new value to store as exclude list. Can't be null.
      */
     public void setExcludeList(final Collection<String> newValue) {
         // figure out if we need to notify listeners
@@ -261,10 +259,8 @@ public class SettingsModelFilterString extends SettingsModel {
         
         // now take over the new list
         m_exclList.clear();
-        if (newValue != null) {
-            m_exclList.addAll(newValue);
-        }
-        
+        m_exclList.addAll(newValue);
+                
         // if we got a different list we need to let all listeners know.
         if (notify) {
             notifyChangeListeners();

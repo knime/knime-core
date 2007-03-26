@@ -441,7 +441,7 @@ public abstract class SettingsModel {
      * nice and useful error messages. Like that,<br>
      * return getClass().getSimpleName() + " ('" + m_configName + "')";
      * 
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public abstract String toString();
