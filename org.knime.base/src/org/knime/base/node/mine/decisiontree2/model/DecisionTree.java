@@ -22,7 +22,7 @@
  * History
  *   26.10.2005 M. Berthold: created
  */
-package org.knime.base.node.mine.decisiontree.predictor.decisiontree;
+package org.knime.base.node.mine.decisiontree2.model;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -138,12 +138,14 @@ public class DecisionTree implements Serializable {
      * Save decision tree to a ModelContent object.
      * 
      * @param pConf configuration object to attach decision tree to
+     * @param saveKeysAndPatterns whether to save the keys and patterns
      */
-    public void saveToPredictorParams(final ModelContentWO pConf) {
+    public void saveToPredictorParams(final ModelContentWO pConf, 
+            final boolean saveKeysAndPatterns) {
         pConf.addString("type", "DecisionTree");
         pConf.addString("version", "0.0");
         ModelContentWO newNodeConf = pConf.addModelContent("rootNode");
-        m_rootNode.saveToPredictorParams(newNodeConf);
+        m_rootNode.saveToPredictorParams(newNodeConf, saveKeysAndPatterns);
     }
 
     /**
@@ -167,5 +169,30 @@ public class DecisionTree implements Serializable {
         ModelContentRO newNodeConf = pConf.getModelContent("rootNode");
         m_rootNode = DecisionTreeNode.createNodeFromPredictorParams(
                 newNodeConf, null);
+    }
+    
+    /**
+     * Returns the number decision tree nodes.
+     * 
+     * @return the number decision tree nodes
+     */
+    public int getNumberNodes() {
+        // traverse the tree and count the nodes
+        return m_rootNode.getCountOfSubtree();
+
+    }
+    
+    /**
+     * Returns the first leaf according to a depth first traversal.
+     * 
+     * @return the first leaf according to a depth first traversal
+     */
+    public DecisionTreeNodeLeaf getFirstLeafDFS() {
+        
+        DecisionTreeNode node = m_rootNode;
+        while (!node.isLeaf()) {
+            node = (DecisionTreeNode)node.getChildAt(0);
+        }
+        return (DecisionTreeNodeLeaf)node;
     }
 }

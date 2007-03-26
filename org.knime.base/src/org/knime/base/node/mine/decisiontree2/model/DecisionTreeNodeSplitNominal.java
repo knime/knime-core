@@ -23,7 +23,7 @@
  * History
  *   06.08.2005 (mb): created
  */
-package org.knime.base.node.mine.decisiontree.predictor.decisiontree;
+package org.knime.base.node.mine.decisiontree2.model;
 
 import java.awt.Color;
 import java.util.HashMap;
@@ -47,12 +47,10 @@ import org.w3c.dom.NodeList;
  */
 public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     /** The node logger for this class. */
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(DecisionTreeNodeSplitContinuous.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(DecisionTreeNodeSplitNominal.class);
 
     private DataCell[] m_splitValues = null;
-
-    private HashMap<Color, Double> m_coveredColors = new HashMap<Color, Double>();
 
     /**
      * Empty Constructor visible only within package.
@@ -73,8 +71,9 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
         // now read information related to a split on a continuous attribute
         Node splitNode = xmlNode.getChildNodes().item(3);
         assert splitNode.getNodeName().equals("SPLIT");
-        String nrBranches = splitNode.getAttributes().getNamedItem("branches")
-                .getNodeValue();
+        String nrBranches =
+                splitNode.getAttributes().getNamedItem("branches")
+                        .getNodeValue();
 
         // make room for branches and split values
         int nrSplits = Integer.parseInt(nrBranches);
@@ -86,16 +85,58 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
         for (int i = 0; i < splitKids.getLength(); i++) {
             if (splitKids.item(i).getNodeName().equals("BRANCH")) {
                 Node branchNode = splitKids.item(i);
-                String id = branchNode.getAttributes().getNamedItem("id")
-                        .getNodeValue();
-                String nodeId = branchNode.getAttributes().getNamedItem(
-                        "nodeId").getNodeValue();
-                String val = branchNode.getAttributes().getNamedItem("val")
-                        .getNodeValue();
+                String id =
+                        branchNode.getAttributes().getNamedItem("id")
+                                .getNodeValue();
+                String nodeId =
+                        branchNode.getAttributes().getNamedItem("nodeId")
+                                .getNodeValue();
+                String val =
+                        branchNode.getAttributes().getNamedItem("val")
+                                .getNodeValue();
                 int pos = Integer.parseInt(id) - 1;
                 assert (pos >= 0 && pos < nrSplits);
                 super.setChildNodeIndex(pos, Integer.parseInt(nodeId));
                 m_splitValues[pos] = mapper.stringToDataCell(val);
+            }
+        }
+    }
+
+    /**
+     * Constructor of base class. The necessary data is provided directly in the
+     * constructor.
+     * 
+     * @param nodeId the id of this node
+     * @param majorityClass the majority class of the records in this node
+     * @param classCounts the class distribution of the data in this node
+     * @param splitAttribute the attribute name on which to split
+     * @param splitValues the split values used to partition the data
+     * @param children the children split according to the split values
+     */
+    public DecisionTreeNodeSplitNominal(final int nodeId,
+            final DataCell majorityClass,
+            final HashMap<DataCell, Double> classCounts,
+            final String splitAttribute, final DataCell[] splitValues,
+            final DecisionTreeNode[] children) {
+        super(nodeId, majorityClass, classCounts, splitAttribute);
+
+        assert splitValues.length == children.length;
+        // make room for branches and split values
+        int nrSplits = children.length;
+        assert (nrSplits >= 1);
+        super.makeRoomForKids(nrSplits);
+        m_splitValues = splitValues;
+
+        for (int i = 0; i < children.length; i++) {
+            super.setChildNodeIndex(i, children[i].getOwnIndex());
+            addNode(children[i], i);
+            children[i].setParent(this);
+        }
+        
+        for (int i = 0; i < m_splitValues.length; i++) {
+            if (super.getChildNodeAt(i) != null) {
+                super.getChildNodeAt(i).setPrefix(
+                        getSplitAttr() + " = " + m_splitValues[i]);
             }
         }
     }
@@ -143,20 +184,13 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
                     + "Ignoring pattern.");
         }
         Color col = spec.getRowColor(row).getColor();
-        if (m_coveredColors.containsKey(col)) {
-            Double oldCount = m_coveredColors.get(col);
-            m_coveredColors.remove(col);
-            m_coveredColors.put(col, new Double(
-                    oldCount.doubleValue() + 1.0));
-        } else {
-            m_coveredColors.put(col, new Double(1.0));
-        }
+        addColorToMap(col);
         return;
     }
 
     /**
-     * Add colors for a pattern given as a row of values.
-     * This is a leaf so we will simply add the color to our list.
+     * Add colors for a pattern given as a row of values. This is a leaf so we
+     * will simply add the color to our list.
      * 
      * @param cell the cell to be used for the split at this level
      * @param row input pattern
@@ -170,14 +204,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
             if (m_splitValues[i].equals(cell)) {
                 super.getChildNodeAt(i).addCoveredColor(row, spec);
                 Color col = spec.getRowColor(row).getColor();
-                if (m_coveredColors.containsKey(col)) {
-                    Double oldCount = m_coveredColors.get(col);
-                    m_coveredColors.remove(col);
-                    m_coveredColors.put(col, new Double(
-                            oldCount.doubleValue() + 1.0));
-                } else {
-                    m_coveredColors.put(col, new Double(1.0));
-                }
+                addColorToMap(col);
                 return;
             }
         }
@@ -185,14 +212,6 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
                 + " Could not find branch for value '" + cell.toString()
                 + "' for attribute '" + getSplitAttr().toString() + "'."
                 + "Ignoring pattern.");
-    }
-    
-    /**
-     * @see DecisionTreeNode#coveredColors()
-     */
-    @Override
-    public HashMap<Color, Double> coveredColors() {
-        return m_coveredColors;
     }
 
     /**
@@ -203,8 +222,8 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
         if (m_splitValues == null) {
             return null;
         }
-        HashSet<DataCell> result = new HashSet<DataCell>(super
-                .getChildNodeAt(0).coveredPattern());
+        HashSet<DataCell> result =
+                new HashSet<DataCell>(super.getChildNodeAt(0).coveredPattern());
         for (int i = 1; i < m_splitValues.length; i++) {
             result.addAll(super.getChildNodeAt(i).coveredPattern());
         }
@@ -254,5 +273,14 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     public void loadNodeSplitInternalsFromPredParams(final ModelContentRO pConf)
             throws InvalidSettingsException {
         m_splitValues = pConf.getDataCellArray("splitValues");
+    }
+    
+    /**
+     * Returns the values array of this nodes split attribute.
+     * 
+     * @return the values array of this nodes split attribute
+     */
+    DataCell[] getSplitValues() {
+        return m_splitValues;
     }
 }

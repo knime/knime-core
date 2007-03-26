@@ -23,9 +23,8 @@
  * History
  *   28.09.2005 (User): created
  */
-package org.knime.base.node.mine.decisiontree.predictor.decisiontree;
+package org.knime.base.node.mine.decisiontree2.model;
 
-import java.awt.Color;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Set;
@@ -50,8 +49,8 @@ import org.w3c.dom.Node;
  */
 public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     /** The node logger for this class. */
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(DecisionTreeNodeSplitContinuous.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(DecisionTreeNodeSplitContinuous.class);
 
     private String m_splitAttr;
 
@@ -80,9 +79,29 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
         // now read information related to a split on a continuous attribute
         Node splitNode = xmlNode.getChildNodes().item(3);
         assert splitNode.getNodeName().equals("SPLIT");
-        String splitAttr = splitNode.getAttributes().getNamedItem("attribute")
-                .getNodeValue();
+        String splitAttr =
+                splitNode.getAttributes().getNamedItem("attribute")
+                        .getNodeValue();
         m_splitAttr = mapper.stringToOrigString(splitAttr);
+    }
+
+    /**
+     * Constructor of base class. The necessary data is provided directly in the
+     * constructor.
+     * 
+     * @param nodeId the id of this node
+     * @param majorityClass the majority class of the records in this node
+     * @param classCounts the class distribution of the data in this node
+     * @param splitAttribute the attribute name on which to split
+     */
+    protected DecisionTreeNodeSplit(final int nodeId,
+            final DataCell majorityClass,
+            final HashMap<DataCell, Double> classCounts,
+            final String splitAttribute) {
+        super(nodeId, majorityClass, classCounts);
+        makeRoomForKids(2);
+        // now read information related to a split on an attribute
+        m_splitAttr = splitAttribute;
     }
 
     /**
@@ -126,6 +145,16 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
         assert m_child != null;
         assert pos >= 0 && pos < m_child.length;
         return m_child[pos];
+    }
+
+    /**
+     * Add the given node to this node at the given branch index.
+     * 
+     * @param node node to be inserted
+     * @param index of the child array where to insert the given node
+     */
+    public void addNode(final DecisionTreeNode node, final int index) {
+        m_child[index] = node;
     }
 
     /**
@@ -181,8 +210,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     private transient int m_previousIndex = -1;
 
     /**
-     * @see DecisionTreeNode
-     *      #getClassCounts(org.knime.core.data.DataRow,
+     * @see DecisionTreeNode #getClassCounts(org.knime.core.data.DataRow,
      *      org.knime.core.data.DataTableSpec)
      */
     @Override
@@ -207,18 +235,19 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
                 // value is missing, we have to combine all class weights
                 // from _all_ branches
                 // initialize result HashMap
-                HashMap<DataCell, Double> result 
-                    = new HashMap<DataCell, Double>();
+                HashMap<DataCell, Double> result =
+                        new HashMap<DataCell, Double>();
                 // check each branch for it's counts and add them up
                 for (DecisionTreeNode nodeIt : m_child) {
-                    HashMap<DataCell, Double> thisNodeCounts = nodeIt
-                            .getClassCounts();
+                    HashMap<DataCell, Double> thisNodeCounts =
+                            nodeIt.getClassCounts();
                     for (DataCell cellIt : thisNodeCounts.keySet()) {
                         // if entry for this class already exist, modify
                         // value, otherwise insert new one
                         if (result.containsKey(cellIt)) {
-                            double newCount = thisNodeCounts.get(cellIt)
-                                    + result.get(cellIt);
+                            double newCount =
+                                    thisNodeCounts.get(cellIt)
+                                            + result.get(cellIt);
                             result.remove(cellIt);
                             result.put(cellIt, newCount);
                         } else {
@@ -249,8 +278,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             throws Exception;
 
     /**
-     * @see DecisionTreeNode
-     *      #addCoveredPattern(org.knime.core.data.DataRow,
+     * @see DecisionTreeNode #addCoveredPattern(org.knime.core.data.DataRow,
      *      org.knime.core.data.DataTableSpec)
      */
     @Override
@@ -263,7 +291,8 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
                 if (m_previousIndex == -1) {
                     LOGGER.error(spec.toString());
                     throw new Exception("Decision Tree Prediction failed."
-                           + " Could not find attribute '" + m_splitAttr + "'");
+                            + " Could not find attribute '" 
+                            + m_splitAttr + "'");
                 }
                 m_previousSpec = spec;
             }
@@ -297,8 +326,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             DataTableSpec spec) throws Exception;
 
     /**
-     * @see DecisionTreeNode
-     *      #addCoveredColor(org.knime.core.data.DataRow,
+     * @see DecisionTreeNode #addCoveredColor(org.knime.core.data.DataRow,
      *      org.knime.core.data.DataTableSpec)
      */
     @Override
@@ -311,7 +339,8 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
                 if (m_previousIndex == -1) {
                     LOGGER.error(spec.toString());
                     throw new Exception("Decision Tree Prediction failed."
-                           + " Could not find attribute '" + m_splitAttr + "'");
+                            + " Could not find attribute '" 
+                            + m_splitAttr + "'");
                 }
                 m_previousSpec = spec;
             }
@@ -332,8 +361,8 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     }
 
     /**
-     * Add colors for patterns given as a row of values if they fall
-     * within a specific node. 
+     * Add colors for patterns given as a row of values if they fall within a
+     * specific node.
      * 
      * @param cell the call to be used for classification at this node
      * @param row input pattern
@@ -344,33 +373,24 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             DataTableSpec spec) throws Exception;
 
     /**
-     * @see DecisionTreeNode
-     *      #coveredPattern()
+     * @see DecisionTreeNode #coveredPattern()
      */
     @Override
     public abstract Set<DataCell> coveredPattern();
 
     /**
-     * @see DecisionTreeNode
-     *      #coveredColors()
+     *  {@inheritDoc}
      */
     @Override
-    public abstract HashMap<Color, Double> coveredColors();
-
-    /**
-     * @see DecisionTreeNode
-     *      #saveNodeInternalsToPredParams(org.knime.core.node.ModelContentWO)
-     */
-    @Override
-    public final void saveNodeInternalsToPredParams(
-            final ModelContentWO pConf) {
+    public final void saveNodeInternalsToPredParams(final ModelContentWO pConf,
+            final boolean saveKeysAndPatterns) {
         saveNodeSplitInternalsToPredParams(pConf);
         pConf.addString("splitAttribute", m_splitAttr);
         pConf.addInt("nrChildren", m_child.length);
         for (int i = 0; i < m_child.length; i++) {
             ModelContentWO newChildConf = pConf.addModelContent("child" + i);
             newChildConf.addInt("index", m_childIndex[i]);
-            m_child[i].saveToPredictorParams(newChildConf);
+            m_child[i].saveToPredictorParams(newChildConf, saveKeysAndPatterns);
         }
     }
 
@@ -397,14 +417,16 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
         m_childIndex = new int[nrKids];
         for (int i = 0; i < nrKids; i++) {
             ModelContentRO newChildConf = pConf.getModelContent("child" + i);
-            m_child[i] = DecisionTreeNode.createNodeFromPredictorParams(
-                    newChildConf, this);
-            int kidIndex = newChildConf.getInt("index");
-            if (kidIndex != m_child[i].getOwnIndex()) {
-                throw new InvalidSettingsException("DecisionTreeNode: Expected"
-                        + " index does not match real index: " + kidIndex
-                        + " != " + m_child[i].getOwnIndex());
-            }
+            m_child[i] =
+                    DecisionTreeNode.createNodeFromPredictorParams(
+                            newChildConf, this);
+           // int kidIndex = newChildConf.getInt("index");
+//            if (!getPrefix().equals("root") 
+//                    && kidIndex != m_child[i].getOwnIndex()) {
+//               throw new InvalidSettingsException("DecisionTreeNode: Expected"
+//                        + " index does not match real index: " + kidIndex
+//                        + " != " + m_child[i].getOwnIndex());
+//            }
         }
 
         // no need to store or load these, since they are only used to
@@ -483,6 +505,15 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
          */
         return null;
     }
+    
+    /**
+     * Returns the children.
+     * 
+     * @return the children
+     */
+    public DecisionTreeNode[] getChildren() {
+        return m_child;
+    }
 
     /**
      * @see javax.swing.tree.TreeNode#getAllowsChildren()
@@ -490,5 +521,36 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     @Override
     public boolean getAllowsChildren() {
         return m_child != null;
+    }
+    
+    /**
+     * Replace the given child by the new given one.
+     * 
+     * @param oldNode the node to replace
+     * @param newNode the new node
+     */
+    public void replaceChild(final DecisionTreeNode oldNode, 
+            final DecisionTreeNode newNode) {
+        
+        int count = 0;
+        for (DecisionTreeNode child : m_child) {
+            if (child == oldNode) {
+                m_child[count] = newNode;
+            }
+            count++;
+        }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getCountOfSubtree() {
+        int childCounts = 0;
+        for (DecisionTreeNode node : m_child) {
+            childCounts += node.getCountOfSubtree();
+        }
+        
+        return childCounts + 1;
     }
 }

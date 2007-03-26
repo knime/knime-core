@@ -22,16 +22,18 @@
  * History
  *   27.07.2005 (mb): created
  */
-package org.knime.base.node.mine.decisiontree.predictor;
+package org.knime.base.node.mine.decisiontree2.predictor;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
-import org.knime.base.node.mine.decisiontree.predictor.decisiontree.DecisionTree;
+import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -45,6 +47,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -256,20 +259,26 @@ public class DecTreePredictorNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-        File f = new File(nodeInternDir, INTERNALS_FILE_NAME);
-        if (!f.exists()) {
-            m_decTree = null;
+        
+        // read the decision tree
+        File internalsFile = new File(nodeInternDir, INTERNALS_FILE_NAME);
+        if (!internalsFile.exists()) {
+            // file to load internals from not available
+            setWarningMessage("Internal model could not be loaded.");
+            return;
         }
-        ObjectInputStream in = new ObjectInputStream(new FileInputStream(f));
+
+        BufferedInputStream in2 =
+                new BufferedInputStream(new GZIPInputStream(
+                        new FileInputStream(internalsFile)));
+
+        ModelContentRO binModel = ModelContent.loadFromXML(in2);
+
         try {
-            m_decTree = (DecisionTree)in.readObject();
-        } catch (ClassNotFoundException e) {
-            LOGGER.error(e);
-            IOException ioe = new IOException();
-            ioe.initCause(e);
-            throw ioe;
-        } finally {
-            in.close();
+            m_decTree = new DecisionTree(binModel);
+        } catch (InvalidSettingsException ise) {
+            LOGGER.warn("Model (internals) could not be loaded.", ise);
+            setWarningMessage("Internal model could not be loaded.");
         }
     }
 
@@ -286,10 +295,17 @@ public class DecTreePredictorNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-        File f = new File(nodeInternDir, INTERNALS_FILE_NAME);
-        ObjectOutputStream out =
-                new ObjectOutputStream(new FileOutputStream(f));
-        out.writeObject(m_decTree);
-        out.close();
+        
+        // write the tree as pred params
+        ModelContent model = new ModelContent(INTERNALS_FILE_NAME);
+        m_decTree.saveToPredictorParams(model, true);
+
+        File internalsFile = new File(nodeInternDir, INTERNALS_FILE_NAME);
+        BufferedOutputStream out2 =
+                new BufferedOutputStream(new GZIPOutputStream(
+                        new FileOutputStream(internalsFile)));
+
+        model.saveToXML(out2);
+        out2.close();
     }
 }

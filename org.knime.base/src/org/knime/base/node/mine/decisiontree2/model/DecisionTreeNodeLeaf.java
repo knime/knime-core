@@ -23,7 +23,7 @@
  * History
  *   23.07.2005 (mb): created
  */
-package org.knime.base.node.mine.decisiontree.predictor.decisiontree;
+package org.knime.base.node.mine.decisiontree2.model;
 
 import java.awt.Color;
 import java.util.Enumeration;
@@ -33,27 +33,30 @@ import java.util.Set;
 
 import javax.swing.tree.TreeNode;
 
+import org.knime.base.data.util.DataCellStringMapper;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.config.Config;
 import org.w3c.dom.Node;
-
-import org.knime.base.data.util.DataCellStringMapper;
 
 /**
  * The Leaf of a decision tree. It stores class information and also some
  * information about the patterns this leaf "coveres".
  * 
  * @author Michael Berthold, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public class DecisionTreeNodeLeaf extends DecisionTreeNode {
-    private HashSet<DataCell> m_coveredPattern = new HashSet<DataCell>();
 
-    private HashMap<Color, Double> m_coveredColors 
-       = new HashMap<Color, Double>();
+    private static final String CONFIG_KEY_PATTERNS = "patterns";
+
+    private static final String CONFIG_KEY_PATTERN = "pattern";
+
+    private HashSet<DataCell> m_coveredPattern = new HashSet<DataCell>();
 
     /**
      * Empty Constructor visible only within package.
@@ -73,6 +76,21 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
             final DataCellStringMapper mapper) {
         super(xmlNode, mapper); // let super read all type-invariant info
         // no additional information read at this time
+    }
+
+    /**
+     * Constructor of base class. The necessary data is provided directly in the
+     * constructor.
+     * 
+     * @param nodeId the id of this node
+     * @param majorityClass the majority class of the records in this node
+     * @param classCounts the class distribution of the data in this node
+     */
+    public DecisionTreeNodeLeaf(final int nodeId, final DataCell majorityClass,
+            final HashMap<DataCell, Double> classCounts) {
+
+        // everything is done in the super constructor up to now
+        super(nodeId, majorityClass, classCounts);
     }
 
     /**
@@ -120,8 +138,8 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * Add colors for a pattern given as a row of values.
-     * This is a leaf so we will simply add the color to our list.
+     * Add colors for a pattern given as a row of values. This is a leaf so we
+     * will simply add the color to our list.
      * 
      * @param row input pattern
      * @param spec the corresponding table spec
@@ -131,13 +149,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     public final void addCoveredColor(final DataRow row,
             final DataTableSpec spec) throws Exception {
         Color col = spec.getRowColor(row).getColor();
-        if (m_coveredColors.containsKey(col)) {
-            Double oldCount = m_coveredColors.get(col);
-            m_coveredColors.remove(col);
-            m_coveredColors.put(col, new Double(oldCount.doubleValue() + 1.0));
-        } else {
-            m_coveredColors.put(col, new Double(1.0));
-        }
+        addColorToMap(col);
     }
 
     /**
@@ -150,14 +162,6 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * @return list of colors and coverage counts covered by this leaf node
-     */
-    @Override
-    public HashMap<Color, Double> coveredColors() {
-        return m_coveredColors;
-    }
-
-    /**
      * @return string summary of node content (class of leaf)
      */
     @Override
@@ -166,11 +170,22 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     }
 
     /**
-     * @see DecisionTreeNode
-     *      #saveNodeInternalsToPredParams(org.knime.core.node.ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
-    public void saveNodeInternalsToPredParams(final ModelContentWO pConf) {
+    public void saveNodeInternalsToPredParams(final ModelContentWO pConf,
+            final boolean saveKeysAndPatterns) {
+
+        // if the keys and colors are supposed to be stored
+        if (saveKeysAndPatterns) {
+            Config patternsConfig = pConf.addConfig(CONFIG_KEY_PATTERNS);
+            int counter = 0;
+            for (DataCell entry : m_coveredPattern) {
+                patternsConfig.addDataCell(CONFIG_KEY_PATTERN + "_" + counter,
+                        entry);
+                counter++;
+            }
+        }
     }
 
     /**
@@ -180,6 +195,16 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     @Override
     public void loadNodeInternalsFromPredParams(final ModelContentRO pConf)
             throws InvalidSettingsException {
+
+        // if the keys and colors are available for loadeding
+        if (pConf.containsKey(CONFIG_KEY_PATTERNS)) {
+            Config patternsConfig = pConf.getConfig(CONFIG_KEY_PATTERNS);
+            m_coveredPattern.clear();
+            for (String key : patternsConfig) {
+                DataCell keyCell = patternsConfig.getDataCell(key);
+                m_coveredPattern.add(keyCell);
+            }
+        }
     }
 
     /**
@@ -229,5 +254,13 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     @Override
     public boolean getAllowsChildren() {
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getCountOfSubtree() {
+        return 1;
     }
 }

@@ -22,7 +22,7 @@
  * History
  *   27.07.2005 (mb): created
  */
-package org.knime.base.node.mine.decisiontree.predictor;
+package org.knime.base.node.mine.decisiontree2.predictor;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

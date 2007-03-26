@@ -23,7 +23,7 @@
  * History
  *   05.08.2005 (mb): created
  */
-package org.knime.base.node.mine.decisiontree.predictor.decisiontree;
+package org.knime.base.node.mine.decisiontree2.model;
 
 import java.awt.Component;
 

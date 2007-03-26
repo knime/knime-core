@@ -308,8 +308,8 @@
             id="org.knime.base.node.preproc.transpose.TransposeTableNodeFactory"/>
       <node
             category-path="/mining/dtree"
-            factory-class="org.knime.base.node.mine.decisiontree.predictor.DecTreePredictorNodeFactory"
-            id="org.knime.base.node.mine.decisiontree.predictor.DecTreePredictorNodeFactory"/>
+            factory-class="org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeFactory"
+            id="org.knime.base.node.mine.decisiontreenew.predictor.DecTreePredictorNodeFactory"/>
       <node
             category-path="/view"
             factory-class="org.knime.base.node.viz.rulevis2d.Rule2DNodeFactory"

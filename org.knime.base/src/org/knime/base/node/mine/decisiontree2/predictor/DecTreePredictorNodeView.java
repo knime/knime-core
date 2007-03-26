@@ -23,7 +23,7 @@
  * History
  *   04.11.2005 (mb): created
  */
-package org.knime.base.node.mine.decisiontree.predictor;
+package org.knime.base.node.mine.decisiontree2.predictor;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -37,9 +37,9 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import org.knime.base.node.mine.decisiontree.predictor.decisiontree.DecisionTree;
-import org.knime.base.node.mine.decisiontree.predictor.decisiontree.DecisionTreeNode;
-import org.knime.base.node.mine.decisiontree.predictor.decisiontree.DecisionTreeNodeRenderer;
+import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeRenderer;
 import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;

@@ -23,7 +23,7 @@
  * History
  *   30.10.2005 (mb): created
  */
-package org.knime.base.node.mine.decisiontree.predictor.decisiontree;
+package org.knime.base.node.mine.decisiontree2.model;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -148,7 +148,7 @@ public class DecisionTreeNodeView extends JPanel {
             int height = dim.height;
             g.setColor(this.getParent().getBackground());
             g.fillRect(0, 0, width - 1, height - 1);
-            if (m_node.coveredColors().size() > 0) {
+           // if (m_node.coveredColors().size() > 0) {
                 // we need to do this check for colors to determine if any
                 // patterns actually made it into this node. C4.5 keeps
                 // counts of parent node for empty nodes!
@@ -163,8 +163,9 @@ public class DecisionTreeNodeView extends JPanel {
                 int fillHeight = (int)(ownCount * barHeight / parentCount);
                 g.drawRect(0, 1, width - 4, barHeight + 1);
                 g.setColor(Color.ORANGE);
-                g.fillRect(1, 2 + barHeight - fillHeight, width - 5, fillHeight);
-            }
+                g.fillRect(1, 2 + barHeight - fillHeight, 
+                            width - 5, fillHeight);
+          //  }
         }
     }
 }

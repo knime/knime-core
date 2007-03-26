@@ -23,7 +23,7 @@
  * History
  *   21.07.2005 (mb): created
  */
-package org.knime.base.node.mine.decisiontree.predictor.decisiontree;
+package org.knime.base.node.mine.decisiontree2.model;
 
 import java.awt.Color;
 import java.io.Serializable;
@@ -34,6 +34,7 @@ import java.util.Map.Entry;
 
 import javax.swing.tree.TreeNode;
 
+import org.knime.base.data.util.DataCellStringMapper;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -42,22 +43,33 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.config.Config;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import org.knime.base.data.util.DataCellStringMapper;
 
 /**
  * The base abstract implementations of a node of a decision tree. Separate
  * implementations for a leaf and a split node (abstract) exist.
  * 
  * @author Michael Berthold, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public abstract class DecisionTreeNode implements TreeNode, Serializable {
+    
     /** The node logger for this class. */
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(DecisionTreeNode.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(DecisionTreeNode.class);
+    
+    private static final String CONFIG_KEY_COLORS = "colors";
+    private static final String CONFIG_KEY_COLOR = "color";
+    private static final String CONFIG_KEY_RED = "red";
+    private static final String CONFIG_KEY_GREEN = "green";
+    private static final String CONFIG_KEY_BLUE = "blue";
+    private static final String CONFIG_KEY_COUNT = "count";
+    
+    private HashMap<Color, Double> m_coveredColors 
+                = new HashMap<Color, Double>();
 
     private HashMap<DataCell, Double> m_classCounts;
 
@@ -72,6 +84,8 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     private DecisionTreeNode m_parent = null;
 
     private String m_prefix = "root";
+    
+    private Object m_customData;
 
     /**
      * Empty Constructor visible only within package.
@@ -90,11 +104,12 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     protected DecisionTreeNode(final Node xmlNode,
             final DataCellStringMapper mapper) {
         // read index of this node
-        m_ownIndex = Integer.parseInt(xmlNode.getAttributes()
-                .getNamedItem("id").getNodeValue());
+        m_ownIndex =
+                Integer.parseInt(xmlNode.getAttributes().getNamedItem("id")
+                        .getNodeValue());
         // and also the majority class up to here
-        String cls = xmlNode.getAttributes().getNamedItem("class")
-                .getNodeValue();
+        String cls =
+                xmlNode.getAttributes().getNamedItem("class").getNodeValue();
         m_class = mapper.stringToDataCell(cls);
         assert m_class != null;
         // Create HashMap for all class-frequency pairs
@@ -135,6 +150,46 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     }
 
     /**
+     * Constructor of base class. The necessary data is provided directly in the
+     * constructor.
+     * 
+     * @param nodeId the id of this node
+     * @param majorityClass the majority class of the records in this node
+     * @param classCounts the class distribution of the data in this node
+     */
+    protected DecisionTreeNode(final int nodeId, final DataCell majorityClass,
+            final HashMap<DataCell, Double> classCounts) {
+
+        // read index of this node
+        m_ownIndex = nodeId;
+
+        // and also the majority class up to here
+        m_class = majorityClass;
+        assert m_class != null;
+
+        // initialize counter for frequencies of all and this node's class
+        m_ownClassFreq = 0.0;
+        m_allClassFreq = 0.0;
+        // init HashTable and write Class-Frequency pairs
+        m_classCounts = classCounts;
+        // initialize counter for frequencies of all and this node's class
+        m_ownClassFreq = 0.0;
+        m_allClassFreq = 0.0;
+        for (Entry<DataCell, Double> entry : m_classCounts.entrySet()) {
+            // add the count to the overall counter
+            m_allClassFreq += entry.getValue();
+
+            // if the class is the "own" class, add to the "own class" counter
+            if (entry.getKey().equals(m_class)) {
+
+                m_ownClassFreq += entry.getValue();
+            }
+        }
+        // done with all the non node-invariant information. All other info
+        // needs to be extracted by the constructor of the derived classes.
+    }
+
+    /**
      * Create new node from XML-information. Note that this constructor only
      * constructs the node itself and does not generate any other nodes
      * connected to it - it will solely read it's children's indices from the
@@ -151,8 +206,8 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      */
     public static DecisionTreeNode createNewNode(final Node xmlNode,
             final DataCellStringMapper mapper) {
-        String type = xmlNode.getAttributes().getNamedItem("type")
-                .getNodeValue();
+        String type =
+                xmlNode.getAttributes().getNamedItem("type").getNodeValue();
         if (type.equals("Leaf")) {
             return new DecisionTreeNodeLeaf(xmlNode, mapper);
         }
@@ -274,9 +329,8 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
     /**
      * Add colors for a row of values if they fall within a specific
-     * node/branch. Used if we don't want to (or can't anymore) store
-     * the pattern itself. We still want the color pie chart to be
-     * correct.
+     * node/branch. Used if we don't want to (or can't anymore) store the
+     * pattern itself. We still want the color pie chart to be correct.
      * 
      * @param row input pattern
      * @param spec the corresponding table spec
@@ -294,7 +348,10 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     /**
      * @return list of colors and coverage counts covered by this node
      */
-    public abstract HashMap<Color, Double> coveredColors();
+    public final HashMap<Color, Double> coveredColors() {
+        return m_coveredColors;
+    }
+    
 
     /**
      * @return index of this node itself
@@ -344,8 +401,10 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * Save node to a model content object.
      * 
      * @param predParams configuration object to attach decision tree to
+     * @param saveColorsAndKeys whether to save the colors and the row keys
      */
-    public void saveToPredictorParams(final ModelContentWO predParams) {
+    public void saveToPredictorParams(final ModelContentWO predParams,
+            final boolean saveColorsAndKeys) {
         predParams.addDataCell("class", m_class);
         predParams.addDouble("allClassFreq", m_allClassFreq);
         predParams.addDouble("ownClassFreq", m_ownClassFreq);
@@ -375,16 +434,32 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
                     + " know this node type: " + this.getClass().getName());
         }
         // and finally save all internals of the derived class as well
-        saveNodeInternalsToPredParams(predParams);
+        saveNodeInternalsToPredParams(predParams, saveColorsAndKeys);
+        
+        // if the keys and colors are supposed to be stored
+        if (saveColorsAndKeys) {
+            Config colorsConfig = predParams.addConfig(CONFIG_KEY_COLORS);
+            int counter = 0;
+            for (Entry<Color, Double> entry : m_coveredColors.entrySet()) {
+                Config colorConfig = colorsConfig.addConfig(CONFIG_KEY_COLOR 
+                        + "_" + counter);
+                colorConfig.addInt(CONFIG_KEY_RED, entry.getKey().getRed());
+                colorConfig.addInt(CONFIG_KEY_GREEN, entry.getKey().getGreen());
+                colorConfig.addInt(CONFIG_KEY_BLUE, entry.getKey().getBlue());
+                colorConfig.addDouble(CONFIG_KEY_COUNT, entry.getValue());
+                counter++;
+            }
+        }
     }
 
     /**
      * Save internal node settings to a model content object.
      * 
      * @param pConf configuration object to attach decision tree to
+     * @param saveKeysAndPatterns whether to save the keys and patterns
      */
     public abstract void saveNodeInternalsToPredParams(
-            final ModelContentWO pConf);
+            final ModelContentWO pConf, final boolean saveKeysAndPatterns);
 
     /**
      * Load node from a model content object.
@@ -411,6 +486,21 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         }
         // and finally load all internals of the derived class as well
         loadNodeInternalsFromPredParams(predParams);
+        
+ 
+        // if the keys and colors are stored load them
+        if (predParams.containsKey(CONFIG_KEY_COLORS)) {
+            m_coveredColors.clear();
+            Config colorsConfig = predParams.getConfig(CONFIG_KEY_COLORS);
+            for (String key : colorsConfig) {
+                Config colorConfig = colorsConfig.getConfig(key);
+                int red = colorConfig.getInt(CONFIG_KEY_RED);
+                int green = colorConfig.getInt(CONFIG_KEY_GREEN);
+                int blue = colorConfig.getInt(CONFIG_KEY_BLUE);
+                double count = colorConfig.getDouble(CONFIG_KEY_COUNT);
+                m_coveredColors.put(new Color(red, green, blue), count);
+            }
+        }
     }
 
     /**
@@ -433,7 +523,12 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         } else if (className.equals("ContinuousSplit")) {
             newNode = new DecisionTreeNodeSplitContinuous();
         } else if (className.equals("NominalSplit")) {
-            newNode = new DecisionTreeNodeSplitNominal();
+            // if this is a binary nominal split
+            if (predParams.containsKey("childIndices0")) {
+                newNode = new DecisionTreeNodeSplitNominalBinary();
+            } else {
+                newNode = new DecisionTreeNodeSplitNominal();
+            }
         }
         if (newNode == null) {
             throw new InvalidSettingsException("Load DecisionTreeNode failed!"
@@ -483,6 +578,13 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     public final TreeNode getParent() {
         return m_parent;
     }
+    
+    /**
+     * Returns the count of the subtree.
+     * 
+     * @return the count of the subtree
+     */
+    public abstract int getCountOfSubtree();
 
     /**
      * @return <code>true</code> if node is a leaf
@@ -498,4 +600,56 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * @return <code>true</code> if the receiver allows children
      */
     public abstract boolean getAllowsChildren();
+
+    /**
+     * Returns the prefix of this node representing the condition.
+     * 
+     * @return the prefix of this node representing the condition
+     */
+    public String getPrefix() {
+        return m_prefix;
+    }
+    
+    /**
+     * Adds the given color to the color map.
+     * 
+     * @param col the color to add
+     */
+    protected void addColorToMap(final Color col) {
+        if (m_coveredColors.containsKey(col)) {
+            Double oldCount = m_coveredColors.get(col);
+            m_coveredColors.remove(col);
+            m_coveredColors.put(col, new Double(
+                    oldCount.doubleValue() + 1.0));
+        } else {
+            m_coveredColors.put(col, new Double(1.0));
+        }
+    }
+
+    /**
+     * To get the custom data object.
+     * 
+     * @return the custom data object
+     */
+    public Object getCustomData() {
+        return m_customData;
+    }
+
+    /**
+     * To set a custom data object.
+     * 
+     * @param customData the custom data object to set
+     */
+    public void setCustomData(final Object customData) {
+        m_customData = customData;
+    }
+
+    /**
+     * Sets the covered colors distribution directly.
+     * 
+     * @param coveredColors the color distribution to set
+     */
+    public void setCoveredColors(final HashMap<Color, Double> coveredColors) {
+        m_coveredColors = coveredColors;
+    }
 }

@@ -23,7 +23,7 @@
  * History
  *   23.07.2005 (mb): created
  */
-package org.knime.base.node.mine.decisiontree.predictor.decisiontree;
+package org.knime.base.node.mine.decisiontree2.model;
 
 import java.awt.Color;
 import java.util.HashMap;
@@ -45,15 +45,13 @@ import org.knime.base.data.util.DataCellStringMapper;
 /**
  * 
  * @author Michael Berthold, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     /** The node logger for this class. */
     // private static final NodeLogger LOGGER =
     // NodeLogger.getLogger(DecisionTreeNodeSplitContinuous.class);
     private double m_threshold = 0.0;
-
-    private HashMap<Color, Double> m_coveredColors 
-        = new HashMap<Color, Double>();
 
     /**
      * Empty Constructor visible only within package.
@@ -75,19 +73,23 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
         // now read information related to a split on a continuous attribute
         Node splitNode = xmlNode.getChildNodes().item(3);
         assert splitNode.getNodeName().equals("SPLIT");
-        String nrBranches = splitNode.getAttributes().getNamedItem("branches")
-                .getNodeValue();
+        String nrBranches =
+                splitNode.getAttributes().getNamedItem("branches")
+                        .getNodeValue();
         assert (nrBranches.equals("2"));
         NodeList splitKids = splitNode.getChildNodes();
         for (int i = 0; i < splitKids.getLength(); i++) {
             if (splitKids.item(i).getNodeName().equals("BRANCH")) {
                 Node branchNode = splitKids.item(i);
-                String id = branchNode.getAttributes().getNamedItem("id")
-                        .getNodeValue();
-                String nodeId = branchNode.getAttributes().getNamedItem(
-                        "nodeId").getNodeValue();
-                String cond = branchNode.getAttributes().getNamedItem("cond")
-                        .getNodeValue();
+                String id =
+                        branchNode.getAttributes().getNamedItem("id")
+                                .getNodeValue();
+                String nodeId =
+                        branchNode.getAttributes().getNamedItem("nodeId")
+                                .getNodeValue();
+                String cond =
+                        branchNode.getAttributes().getNamedItem("cond")
+                                .getNodeValue();
                 if (id.equals("1")) {
                     super.setChildNodeIndex(0, Integer.parseInt(nodeId));
                     // branch no. 0 (left) should always tbe the "<=" one
@@ -101,16 +103,63 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
             }
             if (splitKids.item(i).getNodeName().equals("CONTINUOUS")) {
                 Node contNode = splitKids.item(i);
-                String cut = contNode.getAttributes().getNamedItem("Cut")
-                        .getNodeValue();
-                String lower = contNode.getAttributes().getNamedItem("Lower")
-                        .getNodeValue();
-                String upper = contNode.getAttributes().getNamedItem("Upper")
-                        .getNodeValue();
+                String cut =
+                        contNode.getAttributes().getNamedItem("Cut")
+                                .getNodeValue();
+                String lower =
+                        contNode.getAttributes().getNamedItem("Lower")
+                                .getNodeValue();
+                String upper =
+                        contNode.getAttributes().getNamedItem("Upper")
+                                .getNodeValue();
                 assert cut.equals(lower);
                 assert cut.equals(upper);
                 m_threshold = Double.parseDouble(cut);
             }
+        }
+    }
+
+    /**
+     * Constructor of base class. The necessary data is provided directly in the
+     * constructor.
+     * 
+     * @param nodeId the id of this node
+     * @param majorityClass the majority class of the records in this node
+     * @param classCounts the class distribution of the data in this node
+     * @param splitAttribute the attribute name on which to split
+     * @param children the children of this decission tree node
+     * @param splitThreshold the split point of the given split attribute that
+     *            partitions the data of this node
+     */
+    public DecisionTreeNodeSplitContinuous(final int nodeId,
+            final DataCell majorityClass,
+            final HashMap<DataCell, Double> classCounts,
+            final String splitAttribute, final DecisionTreeNode[] children,
+            final double splitThreshold) {
+
+        super(nodeId, majorityClass, classCounts, splitAttribute);
+        super.makeRoomForKids(2);
+
+        assert children.length == 2;
+        // branch no. 0 (left) should always tbe the "<=" one
+        super.setChildNodeIndex(0, children[0].getOwnIndex());
+        addNode(children[0], 0);
+        children[0].setParent(this);
+
+        // branch no. 1 (right) should always tbe the ">" one
+        super.setChildNodeIndex(1, children[1].getOwnIndex());
+        addNode(children[1], 1);
+        children[1].setParent(this);
+
+        m_threshold = splitThreshold;
+        
+        if (super.getChildNodeAt(0) != null) {
+            super.getChildNodeAt(0).setPrefix(
+                    getSplitAttr() + " <= " + m_threshold);
+        }
+        if (super.getChildNodeAt(1) != null) {
+            super.getChildNodeAt(1).setPrefix(
+                    getSplitAttr() + " > " + m_threshold);
         }
     }
 
@@ -159,18 +208,12 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
             super.getChildNodeAt(1).addCoveredPattern(row, spec);
         }
         Color col = spec.getRowColor(row).getColor();
-        if (m_coveredColors.containsKey(col)) {
-            Double oldCount = m_coveredColors.get(col);
-            m_coveredColors.remove(col);
-            m_coveredColors.put(col, new Double(oldCount.doubleValue() + 1.0));
-        } else {
-            m_coveredColors.put(col, new Double(1.0));
-        }
+        addColorToMap(col);
     }
 
     /**
-     * Add colors for a pattern given as a row of values.
-     * This is a leaf so we will simply add the color to our list.
+     * Add colors for a pattern given as a row of values. This is a leaf so we
+     * will simply add the color to our list.
      * 
      * @param cell the cell to be used for the split at this level
      * @param row input pattern
@@ -187,22 +230,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
             super.getChildNodeAt(1).addCoveredColor(row, spec);
         }
         Color col = spec.getRowColor(row).getColor();
-        if (m_coveredColors.containsKey(col)) {
-            Double oldCount = m_coveredColors.get(col);
-            m_coveredColors.remove(col);
-            m_coveredColors.put(col, new Double(oldCount.doubleValue() + 1.0));
-        } else {
-            m_coveredColors.put(col, new Double(1.0));
-        }
-    }
-
-    /**
-     * @see DecisionTreeNode
-     *      #coveredColors()
-     */
-    @Override
-    public HashMap<Color, Double> coveredColors() {
-        return m_coveredColors;
+        addColorToMap(col);
     }
 
     /**
@@ -230,8 +258,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNode
-     *      #getStringSummary()
+     * @see DecisionTreeNode #getStringSummary()
      */
     @Override
     public String getStringSummary() {
@@ -240,9 +267,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNode
-     *      #addNodeToTreeDepthFirst(DecisionTreeNode,
-     *      int)
+     * @see DecisionTreeNode #addNodeToTreeDepthFirst(DecisionTreeNode, int)
      */
     @Override
     public boolean addNodeToTreeDepthFirst(final DecisionTreeNode node,
@@ -262,8 +287,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNodeSplit
-     *      #saveNodeSplitInternalsToPredParams(
+     * @see DecisionTreeNodeSplit #saveNodeSplitInternalsToPredParams(
      *      org.knime.core.node.ModelContentWO)
      */
     @Override
@@ -273,8 +297,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
 
     /**
      * 
-     * @see DecisionTreeNodeSplit
-     *      #loadNodeSplitInternalsFromPredParams(
+     * @see DecisionTreeNodeSplit #loadNodeSplitInternalsFromPredParams(
      *      org.knime.core.node.ModelContentRO)
      */
     @Override
