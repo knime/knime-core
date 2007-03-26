@@ -19,7 +19,7 @@
 <entry key="0" type="xstring" value="CI"/>
 </config>
 <entry key="Complement Support (%)" type="xdouble" value="1.0"/>
-<entry key="Focus Support (%)" type="xdouble" value="14.0"/>
+<entry key="Focus Support (%)" type="xdouble" value="15.0"/>
 <entry key="Max embs# (0: disabled)" type="xint" value="0"/>
 <entry key="Minimum fragment size" type="xint" value="1"/>
 <entry key="Maximum fragment size" type="xint" value="256"/>
