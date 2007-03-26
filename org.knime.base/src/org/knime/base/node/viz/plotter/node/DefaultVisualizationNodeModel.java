@@ -137,8 +137,8 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         int currColIdx = 0;
         for (DataColumnSpec colSpec : inSpecs[0]) {
             // nominal value
-            if (!colSpec.getType().isCompatible(NominalValue.class) &&
-                    !colSpec.getType().isCompatible(DoubleValue.class)) {
+            if (!colSpec.getType().isCompatible(NominalValue.class) 
+                    && !colSpec.getType().isCompatible(DoubleValue.class)) {
                     excludedCols.add(currColIdx);
             }
             if (colSpec.getType().isCompatible(NominalValue.class)) {
@@ -151,10 +151,10 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
             }
             // for numeric columns check if the lower and upper bounds are 
             // available
-            if (colSpec.getType().isCompatible(DoubleValue.class)){
-            	if (!colSpec.getDomain().hasBounds()){
-            		excludedCols.add(currColIdx);
-            	}
+            if (colSpec.getType().isCompatible(DoubleValue.class)) {
+                if (!colSpec.getDomain().hasBounds()) {
+                    excludedCols.add(currColIdx);
+                }
             }
             currColIdx++;
         }
@@ -165,12 +165,12 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
         if (excludedCols.size() > 0) {
             setWarningMessage("Some columns are ignored! Not compatible " 
                     + "with DoubleValue or NominalValue or no or too many" 
-                    + " possible values or no lower and upper bound provided.");   
+                    + " possible values or no lower and upper bound provided.");
         }
         // check for empty table
-        if (inSpecs[0].getNumColumns() - excludedCols.size() <= 0){
-        	throw new InvalidSettingsException(
-        			"No columns to visualize are available!");
+        if (inSpecs[0].getNumColumns() - excludedCols.size() <= 0) {
+            throw new InvalidSettingsException(
+                "No columns to visualize are available!");
         }
         return new DataTableSpec[0];
     }
@@ -275,6 +275,20 @@ public class DefaultVisualizationNodeModel extends NodeModel implements
             throws InvalidSettingsException {
         settings.getInt(CFG_END);
         settings.getBoolean(CFG_ANTIALIAS);
+    }
+
+    /**
+     * @return the excludedColumns
+     */
+    public int[] getExcludedColumns() {
+        return m_excludedColumns;
+    }
+
+    /**
+     * @return the last
+     */
+    public int getEndIndex() {
+        return m_last;
     }
 
 }
