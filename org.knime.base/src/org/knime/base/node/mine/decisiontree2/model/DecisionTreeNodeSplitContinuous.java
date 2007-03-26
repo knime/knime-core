@@ -234,7 +234,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNode#coveredPattern()
+     * {@inheritDoc}
      */
     @Override
     public Set<DataCell> coveredPattern() {
@@ -258,7 +258,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNode #getStringSummary()
+     * {@inheritDoc}
      */
     @Override
     public String getStringSummary() {
@@ -267,7 +267,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNode #addNodeToTreeDepthFirst(DecisionTreeNode, int)
+     * {@inheritDoc}
      */
     @Override
     public boolean addNodeToTreeDepthFirst(final DecisionTreeNode node,
@@ -287,8 +287,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * @see DecisionTreeNodeSplit #saveNodeSplitInternalsToPredParams(
-     *      org.knime.core.node.ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
     public void saveNodeSplitInternalsToPredParams(final ModelContentWO pConf) {
@@ -296,9 +295,7 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
     }
 
     /**
-     * 
-     * @see DecisionTreeNodeSplit #loadNodeSplitInternalsFromPredParams(
-     *      org.knime.core.node.ModelContentRO)
+     * {@inheritDoc}
      */
     @Override
     public void loadNodeSplitInternalsFromPredParams(final ModelContentRO pConf)

@@ -62,7 +62,7 @@ Serializable {
     }
 
     /**
-     * @see java.util.Comparator#compare
+     * {@inheritDoc}
      */
     public int compare(final Color o1, final Color o2) {
         if (o1 == o2) {

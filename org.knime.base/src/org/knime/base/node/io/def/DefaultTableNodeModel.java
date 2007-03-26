@@ -52,7 +52,10 @@ public class DefaultTableNodeModel extends NodeModel {
     private final DataTable m_table;
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.core.data.def.DefaultTable
+     * @param rows see DefaultTable constructor
+     * @param columnNames see DefaultTable constructor
+     * @param columnTypes see DefaultTable constructor
      */
     public DefaultTableNodeModel(final DataRow[] rows,
             final String[] columnNames, final DataType[] columnTypes) {
@@ -76,7 +79,10 @@ public class DefaultTableNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.core.data.def.DefaultTable
+     * @param data see DefaultTable constructor
+     * @param rowHeader see DefaultTable constructor
+     * @param colHeader see DefaultTable constructor
      */
     public DefaultTableNodeModel(final Object[][] data,
             final String[] rowHeader, final String[] colHeader) {

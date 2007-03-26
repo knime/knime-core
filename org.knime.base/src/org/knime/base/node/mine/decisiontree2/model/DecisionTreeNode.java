@@ -370,7 +370,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public final String toString() {
