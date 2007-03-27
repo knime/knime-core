@@ -111,7 +111,7 @@ public class DecisionTreeNodeView extends JPanel {
                 int orgAngle = 0;
                 for (Color c : colorCounts.keySet()) {
                     double thisCount = colorCounts.get(c).doubleValue();
-                    int deltaAngle = (int)(thisCount * 360.0 / totalSum);
+                    int deltaAngle = (int)Math.round(thisCount * 360.0 / totalSum);
                     if (deltaAngle > 0) {
                         // only paint if it's worth it... (bugfix #892)
                         g.setColor(c);
