@@ -25,24 +25,20 @@
 package org.knime.base.node.io.filereader;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
-import java.util.zip.GZIPInputStream;
 
+import org.knime.base.node.io.filetokenizer.Delimiter;
+import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-
-import org.knime.base.node.io.filetokenizer.Delimiter;
-import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 
 /**
  * Contains all settings needed to read in a ASCII data file. This includes the
@@ -64,13 +60,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
     private URL m_dataFileLocation;
 
-    private static final String ZIP_ENDING = ".gz";
-
     /* the table name (derived from the filename if not overridden) */
     private String m_tableName;
-
-    /* the size of the data file */
-    private long m_dataFileSize;
 
     /*
      * in tokens read for a double column, this char gets replaced with a "."
@@ -505,41 +496,10 @@ public class FileReaderSettings extends FileTokenizerSettings {
      *         a buffered reader, and for locations ending on ".gz" a GZIP one.
      *         If the data location is not set an exception will fly.
      * @throws NullPointerException if the data location is not set
-     * @throws IOException if an IO Error occured when opening the stream
+     * @throws IOException if an IO Error occurred when opening the stream
      */
-    public BufferedReader createNewInputReader() throws IOException {
-        if (getDataFileLocation() == null) {
-            throw new NullPointerException("Can't open a stream on a null "
-                    + "location");
-        }
-
-        BufferedReader result = null;
-
-        if (getDataFileLocation().toString().endsWith(ZIP_ENDING)) {
-            // if the file ends with ".gz" try opening a zip stream on it
-            try {
-                result =
-                        new BufferedReader(new InputStreamReader(
-                                new GZIPInputStream(getDataFileLocation()
-                                        .openStream()), "ISO-8859-1"));
-            } catch (IOException ioe) {
-                // the exception will fly if the specified file is not a zip
-                // file.
-            }
-        }
-        if (result == null) {
-            result =
-                    new BufferedReader(new InputStreamReader(
-                            getDataFileLocation().openStream()));
-        }
-
-        // get the file size
-        File dataFile = new File(getDataFileLocation().getFile());
-        if (dataFile.exists()) {
-            m_dataFileSize = dataFile.length();
-        }
-
-        return result;
+    public BufferedFileReader createNewInputReader() throws IOException {
+        return BufferedFileReader.createNewReader(getDataFileLocation());
     }
 
     /**
@@ -560,17 +520,6 @@ public class FileReaderSettings extends FileTokenizerSettings {
      */
     public String getTableName() {
         return m_tableName;
-    }
-
-    /**
-     * Returns the size of the data file. If the file size can not be determined
-     * (e.g. the URL is a http source) the size is 0. In case the reader has not
-     * been initialized yet, the size will also be 0.
-     * 
-     * @return the size of the data file
-     */
-    public long getDataFileSize() {
-        return m_dataFileSize;
     }
 
     /**

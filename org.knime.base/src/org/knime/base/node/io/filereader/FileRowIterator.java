@@ -55,6 +55,8 @@ final class FileRowIterator extends RowIterator {
     /* The tokenizer reads the next token from the input stream. */
     private final FileTokenizer m_tokenizer;
 
+    private final BufferedFileReader m_source;
+    
     // keep a reference for the filereader settings.
     private final FileReaderSettings m_frSettings;
 
@@ -110,7 +112,8 @@ final class FileRowIterator extends RowIterator {
         m_exec = exec;
         m_lastReport = 0;
 
-        m_tokenizer = new FileTokenizer(m_frSettings.createNewInputReader());
+        m_source = m_frSettings.createNewInputReader();
+        m_tokenizer = new FileTokenizer(m_source);
 
         // set the tokenizer related settings in the tokenizer
         m_tokenizer.setSettings(frSettings);
@@ -312,12 +315,11 @@ final class FileRowIterator extends RowIterator {
         // report progress
         // only if an execution context exists an if the underlying
         // URL is a file whose size can be determined
-        double readBytes = (double)m_tokenizer.getReadBytes();
-        if (m_exec != null && m_frSettings.getDataFileSize() > 0
+        double readBytes = m_source.getNumberOfBytesRead();
+        if (m_exec != null && m_source.getFileSize() > 0
                 && readBytes / PROGRESS_JUNK_SIZE > m_lastReport) {
             // assert readBytes <= m_frSettings.getDataFileSize();
-            m_exec.setProgress((double)readBytes
-                    / (double)m_frSettings.getDataFileSize());
+            m_exec.setProgress(readBytes / (double)m_source.getFileSize());
             m_lastReport++;
         }
         

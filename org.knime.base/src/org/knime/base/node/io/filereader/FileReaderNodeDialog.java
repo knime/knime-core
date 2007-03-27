@@ -1442,7 +1442,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         try {
             URL newURL = textToURL(tryThis);
             if (newURL.getProtocol().equals("file")) {
-                File tmpFile = new File(newURL.getPath());
+                File tmpFile = new File(newURL.toURI().getPath());
                 startingDir = tmpFile.getAbsolutePath();
             }
         } catch (Exception e) {
