@@ -47,7 +47,6 @@ import org.knime.base.node.viz.histogram.datamodel.InteractiveBarElementDataMode
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.property.ColorAttr;
-import org.knime.core.node.NodeLogger;
 
 /**
  * The view class of a Histogram visualisation. It simply uses the given
@@ -59,9 +58,6 @@ import org.knime.core.node.NodeLogger;
 public class HistogramDrawingPane extends AbstractDrawingPane {
     
         private static final long serialVersionUID = 7881989778083295425L;
-    
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(HistogramDrawingPane.class);
     
     /**Used to format the aggregation value for the aggregation method count.*/
     private static final DecimalFormat AGGREGATION_LABEL_FORMATER_COUNT = 
@@ -285,7 +281,6 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      */
     @Override
     public void paintContent(final Graphics g) {
-        LOGGER.debug("Entering paintContent(g) of class HistogramDrawingPane.");
         final Graphics2D g2 = (Graphics2D)g;
         final Rectangle bounds = getBounds();
         String msg = m_infoMsg;
@@ -393,7 +388,6 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     (int) bounds.getWidth(), BASE_LINE_COLOR, 
                     BASE_LINE_STROKE);
         }
-        LOGGER.debug("Exiting paintContent(g) of class HistogramDrawingPane.");
         return;
     }
 
