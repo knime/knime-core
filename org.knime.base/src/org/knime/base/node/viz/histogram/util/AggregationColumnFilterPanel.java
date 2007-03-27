@@ -26,6 +26,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,6 +44,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -51,6 +53,7 @@ import javax.swing.event.ChangeListener;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ColumnFilter;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
@@ -351,6 +354,32 @@ public class AggregationColumnFilterPanel extends JPanel {
     public void update(final DataTableSpec spec,
             final Collection<? extends ColorColumn> incl) {
         assert (spec != null && incl != null);
+        if (SwingUtilities.isEventDispatchThread()) {
+            updateInternal(spec, incl);
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(new Runnable() {
+                   public void run() {
+                       updateInternal(spec, incl);
+                   } 
+                });
+            } catch (InterruptedException ie) {
+                NodeLogger.getLogger(getClass()).warn(
+                "Exception while updating AggregationColumnFilterPanel.", ie);
+            } catch (InvocationTargetException ite) {
+                NodeLogger.getLogger(getClass()).warn(
+                "Exception while updating AggregationColumnFilterPanel.", ite);
+            }
+        }
+        repaint();
+    }
+    
+    /**
+     * @param spec the new <code>DataTableSpec</code>
+     * @param incl all columns which should be included
+     */
+    protected void updateInternal(final DataTableSpec spec, 
+            final Collection<? extends ColorColumn> incl) {
         m_order.clear();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
@@ -377,7 +406,6 @@ public class AggregationColumnFilterPanel extends JPanel {
                 m_exclMdl.addElement(cSpec);
             }
         }
-        repaint();
     }
 
     /**
