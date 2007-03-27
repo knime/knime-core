@@ -71,7 +71,7 @@ public final class ConsoleViewAppender extends Writer {
 
     /** Color: debug. * */
     public static final Color COLOR_DEBUG = Display.getDefault()
-            .getSystemColor(SWT.COLOR_GRAY);
+            .getSystemColor(SWT.COLOR_DARK_GRAY);
     
     private final Color m_color;
 
@@ -94,7 +94,7 @@ public final class ConsoleViewAppender extends Writer {
 
     /** Appender: debug. */
     public static final ConsoleViewAppender DEBUG_APPENDER
-        = new ConsoleViewAppender(COLOR_DEBUG, "DEBUG", NodeLogger.LEVEL.DEBUG);
+        = new ConsoleViewAppender(COLOR_DEBUG, "Debug", NodeLogger.LEVEL.DEBUG);
 
     private final String m_name;
     
