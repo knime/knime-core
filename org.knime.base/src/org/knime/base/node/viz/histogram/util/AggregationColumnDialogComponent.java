@@ -119,7 +119,7 @@ public class AggregationColumnDialogComponent extends DialogComponent {
             m_panel.update(getLastTableSpec(0), inclCols);
         }
         // update the enable status
-        setEnabled(colModel.isEnabled());
+        setEnabledComponents(colModel.isEnabled());
     }
 
     /**

@@ -215,8 +215,7 @@ public class AggregationColumnFilterPanel extends JPanel {
     } // ColumnFilterPanel()
     
     /**
-     * Enables or disables all components on this panel.
-     * @see javax.swing.JComponent#setEnabled(boolean)
+     * {@inheritDoc}
      */
     @Override
     public void setEnabled(final boolean enabled) {

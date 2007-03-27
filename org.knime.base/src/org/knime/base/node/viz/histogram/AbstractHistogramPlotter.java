@@ -1043,8 +1043,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
     /**
-     * @see 
-     * org.knime.core.node.property.hilite.HiLiteListener#unHiLite(KeyEvent)
+     * {@inheritDoc}
      */
     @Override
     public void unHiLite(final KeyEvent event) {

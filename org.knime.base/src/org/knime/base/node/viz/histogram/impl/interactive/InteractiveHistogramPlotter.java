@@ -114,7 +114,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
            LOGGER.debug("VizModel was null");
            return;
        }
-       if (abstractVizModel instanceof AbstractHistogramVizModel) {
+       if (abstractVizModel instanceof InteractiveHistogramVizModel) {
            final InteractiveHistogramVizModel vizModel = 
                (InteractiveHistogramVizModel)abstractVizModel;
            final DataColumnSpec xColSpec = 
@@ -157,7 +157,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
             LOGGER.debug("ProeprtiesPanel was null");
             return;
         }
-        if (abstractVizModel instanceof AbstractHistogramVizModel) {
+        if (abstractVizModel instanceof InteractiveHistogramVizModel) {
             final InteractiveHistogramVizModel vizModel = 
                 (InteractiveHistogramVizModel)abstractVizModel;
             if (abstractHistogramProperties 
@@ -208,7 +208,7 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
             //have to set a default one if he has changed the aggregation
             //method form sum to something else where we need an 
             //aggregation column
-            if (vizModel instanceof AbstractHistogramVizModel) {
+            if (vizModel instanceof InteractiveHistogramVizModel) {
                 final InteractiveHistogramVizModel interactiveVizModel = 
                     (InteractiveHistogramVizModel)vizModel;
                 final AbstractHistogramProperties abstHistoProps = 

@@ -44,7 +44,7 @@ public enum AggregationMethod {
      * @return the enumeration fields as a String list of their names
      */
     public static List<String> asStringList() {
-        Enum[] values = values();
+        Enum<AggregationMethod>[] values = values();
         List<String> list = new ArrayList<String>();
         for (int i = 0; i < values.length; i++) {
             list.add(values[i].name());
