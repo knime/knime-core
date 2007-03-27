@@ -160,6 +160,8 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
                 // selected column in the component.
                 m_chooser.setSelectedColumn(((SettingsModelString)getModel())
                         .getStringValue());
+//              update the enable status
+                setEnabledComponents(getModel().isEnabled());
             }
         });
     }
