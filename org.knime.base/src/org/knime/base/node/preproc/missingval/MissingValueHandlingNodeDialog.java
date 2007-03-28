@@ -24,8 +24,10 @@ package org.knime.base.node.preproc.missingval;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -33,12 +35,14 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.Scrollable;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -100,7 +104,7 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
         m_colList.setCellRenderer(new DataColumnSpecListCellRenderer());
         JPanel tabPanel = new JPanel(new BorderLayout());
         tabPanel.add(new JScrollPane(m_colList), BorderLayout.WEST);
-        m_individualsPanel = new JPanel(new GridLayout(0, 1));
+        m_individualsPanel = new IndividualsPanel();
         JScrollPane scroller = new JScrollPane(m_individualsPanel);
         tabPanel.add(scroller, BorderLayout.CENTER);
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -208,5 +212,62 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
                 });
         m_individualsPanel.add(panel);
         m_individualsPanel.revalidate();
+    }
+    
+    /** Panel hosting the individual panels. It implements {@link Scrollable}
+     * to allow for correct jumping to the next enclosed panel. It allows
+     * overwrites getPreferredSize() to return the sum of all individual
+     * heights. 
+     */
+    private static class IndividualsPanel extends JPanel implements Scrollable {
+        
+        /** Set box layout. */
+        public IndividualsPanel() {
+            BoxLayout layout = new BoxLayout(this, BoxLayout.Y_AXIS);
+            setLayout(layout);
+        }
+
+        /** {@inheritDoc} */
+        public Dimension getPreferredScrollableViewportSize() {
+            return getPreferredSize(); 
+        }
+
+        /** {@inheritDoc} */
+        public int getScrollableBlockIncrement(final Rectangle visibleRect, 
+                final int orientation, final int direction) {
+            int rh = getComponentCount() > 0 
+                ? getComponent(0).getHeight() : 0;
+            return (rh > 0) ? Math.max(rh, (visibleRect.height / rh) * rh) 
+                    : visibleRect.height;
+        }
+
+        /** {@inheritDoc} */
+        public boolean getScrollableTracksViewportHeight() {
+            return false;
+        }
+
+        /** {@inheritDoc} */
+        public boolean getScrollableTracksViewportWidth() {
+            return false;
+        }
+
+        /** {@inheritDoc} */
+        public int getScrollableUnitIncrement(final Rectangle visibleRect, 
+                final int orientation, final int direction) {
+            return getComponentCount() > 0 ? getComponent(0).getHeight() : 100;
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public Dimension getPreferredSize() {
+            int height = 0;
+            for (Component c : getComponents()) {
+                Dimension h = c.getPreferredSize();
+                height += h.height;
+            }
+            int width = super.getPreferredSize().width;
+            return new Dimension(width, height);
+        }
+        
     }
 }
