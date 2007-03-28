@@ -367,6 +367,9 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                     "Table specification must not be null");
         }
         final int maxNoOfRows = table.getRowCount();
+        if (maxNoOfRows < 1) {
+            throw new IllegalArgumentException("Table contains no rows");
+        }
         if (maxNoOfRows < 0) {
             throw new IllegalArgumentException(
                     "Maximum number of rows must be a positive integer");
