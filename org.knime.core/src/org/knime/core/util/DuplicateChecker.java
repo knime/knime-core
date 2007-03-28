@@ -179,7 +179,7 @@ public class DuplicateChecker {
                 Helper top = heap.poll();
                 if (top.m_s.equals(lastKey)) {
                     out.close();
-                    StringBuilder b = new StringBuilder(lastKey.length());
+                    StringBuilder b = new StringBuilder(top.m_s.length());
                     for (int k = 0; k < lastKey.length(); k++) {
                         char c = lastKey.charAt(k);
                         switch (c) {
@@ -277,13 +277,12 @@ public class DuplicateChecker {
             m_streamIndex = streamIdx;
         }
 
-        /**
-         * @see java.lang.Comparable#compareTo(java.lang.Object)
-         */
+        /** {@inheritDoc} */
         public int compareTo(final Helper o) {
             return m_s.compareTo(o.m_s);
         }
 
+        /** {@inheritDoc} */
         @Override
         public String toString() {
             return m_s;
