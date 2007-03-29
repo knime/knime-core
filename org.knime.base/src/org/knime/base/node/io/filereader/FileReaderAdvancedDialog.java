@@ -73,6 +73,8 @@ public class FileReaderAdvancedDialog extends JDialog {
     private IgnoreDelimsPanel m_ignoreDelimsPanel;
     
     private ShortLinesPanel m_shortLinesSupport;
+    
+    private UniquifyPanel m_uniquifyPanel;
 
     /**
      * This is the default constructor.
@@ -112,6 +114,7 @@ public class FileReaderAdvancedDialog extends JDialog {
         getDecSepPanel().overrideSettings(settings);
         getIngoreWSatEORPanel().overrideSettings(settings);
         getShortLinesPanel().overrideSettings(settings);
+        getUniquifyPanel().overrideSettings(settings);
     }
 
     /**
@@ -294,6 +297,14 @@ public class FileReaderAdvancedDialog extends JDialog {
         }
         return m_shortLinesSupport;
     }
+    
+    private UniquifyPanel getUniquifyPanel() {
+        if (m_uniquifyPanel == null) {
+            m_uniquifyPanel = new UniquifyPanel(m_settings);
+        }
+        return m_uniquifyPanel;
+    }
+    
     /**
      * This method initializes jTabbedPane.
      * 
@@ -311,6 +322,8 @@ public class FileReaderAdvancedDialog extends JDialog {
                     "Ignore extra whitespaces at end of rows.");
             m_jTabbedPane.addTab("Short Lines", null, getShortLinesPanel(),
                     "Add support for incomplete rows");
+            m_jTabbedPane.addTab("unique RowIDs", null, getUniquifyPanel(),
+                    "Disable unique making of row IDs");
         }
         return m_jTabbedPane;
     }

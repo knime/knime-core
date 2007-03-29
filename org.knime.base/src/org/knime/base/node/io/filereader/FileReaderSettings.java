@@ -100,6 +100,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private String m_rowHeaderPrefix;
 
     /*
+     * true by default. The Reader makes IDs it read from file unique.
+     */
+    private boolean m_uniquifyRowIDs;
+    
+    /*
      * for each column a string (or null) that will be replaced - if read - with
      * a missing cell.
      */
@@ -121,6 +126,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private static final String CFGKEY_HASROW = "hasRowHdr";
 
     private static final String CFGKEY_ROWPREF = "rowPrefix";
+    
+    private static final String CFGKEY_UNIQUIFYID = "uniquifyRowID";
 
     private static final String CFGKEY_IGNOREEMPTY = "ignoreEmptyLines";
 
@@ -166,7 +173,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
         m_supportShortLines = false;
 
         m_rowHeaderPrefix = null;
-
+        m_uniquifyRowIDs = true;
+        
         m_rowDelimiters = new HashSet<String>();
         m_missingPatterns = new Vector<String>();
     }
@@ -279,6 +287,9 @@ public class FileReaderSettings extends FileTokenizerSettings {
             // default is false, for backward compatibility.
             m_supportShortLines = cfg.getBoolean(CFGKEY_SHORTLINES, false);
             
+            // default to true, for backward compatibility
+            m_uniquifyRowIDs = cfg.getBoolean(CFGKEY_UNIQUIFYID, true);
+            
             readRowDelimitersFromConfig(rowDelimConf);
 
         } // if (cfg != null)
@@ -318,6 +329,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
         cfg.addChar(CFGKEY_DECIMALSEP, m_decimalSeparator);
         cfg.addBoolean(CFGKEY_IGNOREATEOR, m_ignoreEmptyTokensAtEOR);
         cfg.addBoolean(CFGKEY_SHORTLINES, m_supportShortLines);
+        cfg.addBoolean(CFGKEY_UNIQUIFYID, m_uniquifyRowIDs);
     }
 
     /*
@@ -607,6 +619,20 @@ public class FileReaderSettings extends FileTokenizerSettings {
         return m_rowHeaderPrefix;
     }
 
+    /**
+     * @return true if the reader should make rowIDs read from file unique.
+     */
+    public boolean uniquifyRowIDs() {
+        return m_uniquifyRowIDs;
+    }
+    
+    /**
+     * @param uniquify the new value of the "uniquify row IDs from file" flag.
+     */
+    public void setUniquifyRowIDs(final boolean uniquify) {
+        m_uniquifyRowIDs = uniquify;
+    }
+    
     /**
      * Will add a delimiter pattern that will terminate a row. Row delimiters
      * are always token (=column) delimiters. Row delimiters will always be

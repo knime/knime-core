@@ -46,8 +46,10 @@
 	    	will indicate the start of a comment (ended by a new line).
 			</option>
 	    <option name="Advanced...">Opens a new dialog with advanced settings.
-	    	At the current time, there is more advanced support for quotes and for the
-	    	decimal separator in floating point numbers.	    
+	    	There is more advanced support for quotes, support for different
+	    	decimal separators in floating point numbers, for ignoring whitespaces,
+	    	for allowing rows with too few data items, and for no row ID checking
+	    	in huge files.	    
 			</option>
 	    <option name="Click on the table header">If the column header in the 
 	    	preview table is clicked, a new dialog 

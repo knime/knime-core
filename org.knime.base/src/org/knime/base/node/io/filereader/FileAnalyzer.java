@@ -90,7 +90,8 @@ public final class FileAnalyzer {
                 .getDataFileLocation());
         result.setTableName(userSettings.getTableName());
         result.setDecimalSeparator(userSettings.getDecimalSeparator());
-
+        result.setUniquifyRowIDs(userSettings.uniquifyRowIDs());
+        
         result.setAnalyzeUsedAllRows(true); // default is true, to avoid warning
 
         if (!userSettings.isCommentUserSet()) {

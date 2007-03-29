@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 
+import org.knime.base.node.io.filetokenizer.FileTokenizer;
+import org.knime.base.node.io.filetokenizer.FileTokenizerException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -37,9 +39,6 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
-
-import org.knime.base.node.io.filetokenizer.FileTokenizer;
-import org.knime.base.node.io.filetokenizer.FileTokenizerException;
 
 /**
  * Row iterator for the {@link FileTable}.
@@ -477,8 +476,11 @@ final class FileRowIterator extends RowIterator {
             } else {
                 newRowHeader = fileHeader;
             }
-            // see if it's unique - and if not make it unique.
-            newRowHeader = uniquifyRowHeader(newRowHeader);
+            
+            if (m_frSettings.uniquifyRowIDs()) {
+                // see if it's unique - and if not make it unique.
+                newRowHeader = uniquifyRowHeader(newRowHeader);
+            }
 
             return new StringCell(newRowHeader);
 
