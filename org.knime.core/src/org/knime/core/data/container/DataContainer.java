@@ -189,29 +189,6 @@ public class DataContainer implements RowAppender {
     @SuppressWarnings ("unchecked")
     public DataContainer(final DataTableSpec spec, final boolean initDomain,
             final int maxCellsInMemory) {
-        this(spec, initDomain, maxCellsInMemory, true);
-    }
-    
-    /**
-     * Opens the container so that rows can be added by 
-     * <code>addRowToTable(DataRow)</code>. 
-     * @param spec Table spec of the final table. Rows that are added to the
-     *        container must comply with this spec.
-     * @param initDomain if set to true, the column domains in the 
-     *        container are initialized with the domains from spec. 
-     * @param maxCellsInMemory Maximum count of cells in memory before swapping.
-     * @param enableKeyHashing If <code>true</code> the row keys are hashed
-     * to check for duplicates. (Highly advisable for sanity checks, but 
-     * requires additional memory).
-     * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0.
-     * @throws NullPointerException If <code>spec</code> is <code>null</code>.
-     * @deprecated enableKeyHashing option won't be available in the future. 
-     * We added this feature to get around with bug #1090 (memory problem)
-     */
-    @SuppressWarnings ("unchecked")
-    @Deprecated
-    public DataContainer(final DataTableSpec spec, final boolean initDomain,
-            final int maxCellsInMemory, final boolean enableKeyHashing) {
         if (maxCellsInMemory < 0) {
             throw new IllegalArgumentException(
                     "Cell count must be positive: " + maxCellsInMemory); 
@@ -221,7 +198,7 @@ public class DataContainer implements RowAppender {
         }
         DataTableSpec oldSpec = m_spec;
         m_spec = spec;
-        m_keySet = enableKeyHashing ? new HashSet<RowKey>() : null;
+        m_keySet = new HashSet<RowKey>();
         if (m_buffer != null) {
             m_buffer.close(oldSpec);
         }
@@ -501,11 +478,13 @@ public class DataContainer implements RowAppender {
             updateMinMax(c, value);
             
         } // for all cells
-        if (m_keySet != null && !m_keySet.add(key)) {
+        if (m_keySet.contains(key)) {
             throw new IllegalArgumentException("Container contains already a"
                     + " row with key \"" + key + "\".");
         }
 
+        // all test passed, add row
+        m_keySet.add(key);
         m_buffer.addRow(row);
     } // addRowToTable(DataRow)
     
