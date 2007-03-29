@@ -543,7 +543,7 @@ public class DataContainer implements RowAppender {
         } catch (DuplicateKeyException dke) {
             throw new DuplicateKeyException("Encountered duplicate row ID  \"" 
                     + dke.getKey() + "\" at row index " 
-                    + (m_buffer.size() + 1));
+                    + (m_buffer.size() + 1), dke.getKey());
         }
     }
     
