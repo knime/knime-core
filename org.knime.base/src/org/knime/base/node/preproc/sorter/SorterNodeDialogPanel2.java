@@ -199,8 +199,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
             });
             memorybox.add(m_memorycheckb);
             super.add(memorybox);
-            super.validate();
-            repaint();
+            revalidate();
         }
     }
 
