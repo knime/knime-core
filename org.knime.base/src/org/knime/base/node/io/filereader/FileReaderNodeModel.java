@@ -39,6 +39,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.StringHistory;
+import org.knime.core.util.DuplicateKeyException;
 
 
 /**
@@ -145,8 +146,15 @@ public class FileReaderNodeModel extends NodeModel {
         // the error message is printed during filereader execution (were it
         // belongs to) and not some time later when a node uses the row
         // iterator from the file table.
-        BufferedDataTable cacheTable = exec.createBufferedDataTable(fTable,
-                exec);
+        BufferedDataTable cacheTable = null;
+        try {
+            cacheTable = exec.createBufferedDataTable(fTable, exec);
+        } catch (DuplicateKeyException dke) {
+            setWarningMessage("Duplicate row IDs. Consider making IDs unique in"
+                    + " the advanced settings.");
+            throw dke;
+        }
+            
         return new BufferedDataTable[]{cacheTable};
     }
 
@@ -351,4 +359,5 @@ public class FileReaderNodeModel extends NodeModel {
         }
         return validLoc.toArray(new String[0]);
     }
+    
 }

@@ -173,7 +173,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
         m_supportShortLines = false;
 
         m_rowHeaderPrefix = null;
-        m_uniquifyRowIDs = true;
+        m_uniquifyRowIDs = false;
         
         m_rowDelimiters = new HashSet<String>();
         m_missingPatterns = new Vector<String>();
@@ -287,8 +287,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
             // default is false, for backward compatibility.
             m_supportShortLines = cfg.getBoolean(CFGKEY_SHORTLINES, false);
             
-            // default to true, for backward compatibility
-            m_uniquifyRowIDs = cfg.getBoolean(CFGKEY_UNIQUIFYID, true);
+            // default to false, for backward compatibility
+            m_uniquifyRowIDs = cfg.getBoolean(CFGKEY_UNIQUIFYID, false);
             
             readRowDelimitersFromConfig(rowDelimConf);
 
