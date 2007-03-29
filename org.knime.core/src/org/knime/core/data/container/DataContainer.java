@@ -339,6 +339,8 @@ public class DataContainer implements RowAppender {
      * <code>getTable()</code>. Successive calls of <code>addRowToTable</code>
      * will fail with an exception.
      * @throws IllegalStateException If container is not open.
+     * @throws RuntimeException If the final check for duplicate row keys fails
+     * or can't be performed (because of IO problems).
      */
     public void close() {
         if (isClosed()) {
@@ -491,15 +493,7 @@ public class DataContainer implements RowAppender {
             updateMinMax(c, value);
             
         } // for all cells
-        try {
-            m_duplicateChecker.addKey(key.toString());
-        } catch (IOException ioe) { 
-            throw new RuntimeException(ioe.getClass().getSimpleName() 
-                    + " while checking for duplicate row keys", ioe);
-        } catch (DuplicateKeyException dke) {
-            throw new RuntimeException("Container contains already a"
-                    + " row with key \"" + dke.getKey() + "\".");
-        }
+        addRowKeyForDuplicateCheck(key);
         m_buffer.addRow(row);
     } // addRowToTable(DataRow)
     
@@ -524,6 +518,34 @@ public class DataContainer implements RowAppender {
     }
     
     /**
+     * Method being called when {@link #addRowToTable(DataRow)} is called. This
+     * method will add the given row key to the internal row key hashing 
+     * structure, which allows for duplicate checking.
+     * 
+     * <p>This method may be overridden to disable duplicate checks. The 
+     * overriding class must ensure that there are no duplicates being added
+     * whatsoever.
+     * @param key Key being added. This implementation extracts the string 
+     * representation from it and adds it to an internal 
+     * {@link DuplicateChecker} instance.
+     * @throws RuntimeException This implementation may throw a generic 
+     * <code>RuntimeException</code> when 
+     * {@link DuplicateChecker#addKey(String)} throws an {@link IOException}.
+     * @throws IllegalArgumentException If a duplicate is encountered.
+     */
+    protected void addRowKeyForDuplicateCheck(final RowKey key) {
+        try {
+            m_duplicateChecker.addKey(key.toString());
+        } catch (IOException ioe) { 
+            throw new RuntimeException(ioe.getClass().getSimpleName() 
+                    + " while checking for duplicate row keys", ioe);
+        } catch (DuplicateKeyException dke) {
+            throw new IllegalArgumentException("Container contains already a"
+                    + " row with key \"" + dke.getKey() + "\".");
+        }
+    }
+    
+    /**
      * Get the map of buffers that potentially have written blob objects. 
      * If m_buffer needs to serialize a blob, it will check if any other buffer
      * has written the blob already and then reference to this buffer rather 
@@ -545,8 +567,7 @@ public class DataContainer implements RowAppender {
     
     /**
      * Get the local repository. Overridden in 
-     * {@link 
-     * org.knime.core.node.BufferedDataContainer#getLocalTableRepository()}
+     * {@link org.knime.core.node.BufferedDataContainer}
      * @return A local repository to which tables are added that have been
      * created during the node's execution.
      */
@@ -841,11 +862,6 @@ public class DataContainer implements RowAppender {
         f.deleteOnExit();
         return f;
     }
-    
-    /**
-     * Get the next running index of the table id counter. This id is supposed
-     * to be unique.
-     */
     
     /** Returns <code>true</code> if the given argument table has been created
      * by the DataContainer, <code>false</code> otherwise.
