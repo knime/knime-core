@@ -30,7 +30,6 @@ import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -54,6 +53,8 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.util.DuplicateChecker;
+import org.knime.core.util.DuplicateKeyException;
 
 
 /**
@@ -104,7 +105,7 @@ public class DataContainer implements RowAppender {
     private int m_maxRowsInMemory; 
     
     /** Holds the keys of the added rows to check for duplicates. */
-    private HashSet<RowKey> m_keySet;
+    private DuplicateChecker m_duplicateChecker;
     
     /** The tablespec of the return table. */
     private DataTableSpec m_spec;
@@ -198,7 +199,7 @@ public class DataContainer implements RowAppender {
         }
         DataTableSpec oldSpec = m_spec;
         m_spec = spec;
-        m_keySet = new HashSet<RowKey>();
+        m_duplicateChecker = new DuplicateChecker();
         if (m_buffer != null) {
             m_buffer.close(oldSpec);
         }
@@ -358,7 +359,19 @@ public class DataContainer implements RowAppender {
         getLocalTableRepository().put(m_table.getBufferID(), m_table);
         m_buffer = null;
         m_spec = null;
-        m_keySet = null;
+        if (m_duplicateChecker != null) {
+            try {
+                m_duplicateChecker.checkForDuplicates();
+            } catch (IOException ioe) {
+                throw new RuntimeException(
+                        "Failed to check for duplicate row keys", ioe);
+            } catch (DuplicateKeyException dke) {
+                throw new RuntimeException("Table contains duplicate row keys: "
+                        + "\"" + dke.getKey() + "\"");
+            }
+            m_duplicateChecker.clear();
+            m_duplicateChecker = null;
+        }
         m_possibleValues = null;
         m_minCells = null;
         m_maxCells = null;
@@ -478,13 +491,15 @@ public class DataContainer implements RowAppender {
             updateMinMax(c, value);
             
         } // for all cells
-        if (m_keySet.contains(key)) {
-            throw new IllegalArgumentException("Container contains already a"
-                    + " row with key \"" + key + "\".");
+        try {
+            m_duplicateChecker.addKey(key.toString());
+        } catch (IOException ioe) { 
+            throw new RuntimeException(ioe.getClass().getSimpleName() 
+                    + " while checking for duplicate row keys", ioe);
+        } catch (DuplicateKeyException dke) {
+            throw new RuntimeException("Container contains already a"
+                    + " row with key \"" + dke.getKey() + "\".");
         }
-
-        // all test passed, add row
-        m_keySet.add(key);
         m_buffer.addRow(row);
     } // addRowToTable(DataRow)
     
