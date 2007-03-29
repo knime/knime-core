@@ -27,7 +27,7 @@ package org.knime.core.util;
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class DuplicateKeyException extends Exception {
+public class DuplicateKeyException extends RuntimeException {
     private final String m_key;
     
     /**

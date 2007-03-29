@@ -339,8 +339,10 @@ public class DataContainer implements RowAppender {
      * <code>getTable()</code>. Successive calls of <code>addRowToTable</code>
      * will fail with an exception.
      * @throws IllegalStateException If container is not open.
-     * @throws RuntimeException If the final check for duplicate row keys fails
-     * or can't be performed (because of IO problems).
+     * @throws DuplicateKeyException If the final check for duplicate row 
+     * keys fails.
+     * @throws RuntimeException If the duplicate check fails for an unknown IO
+     * problem
      */
     public void close() {
         if (isClosed()) {
@@ -367,9 +369,6 @@ public class DataContainer implements RowAppender {
             } catch (IOException ioe) {
                 throw new RuntimeException(
                         "Failed to check for duplicate row keys", ioe);
-            } catch (DuplicateKeyException dke) {
-                throw new RuntimeException("Table contains duplicate row keys: "
-                        + "\"" + dke.getKey() + "\"");
             }
             m_duplicateChecker.clear();
             m_duplicateChecker = null;
@@ -493,6 +492,8 @@ public class DataContainer implements RowAppender {
             updateMinMax(c, value);
             
         } // for all cells
+        // do not swap the following two lines:
+        // addRowKeyForDuplicateCheck relies on m_buffer.size()
         addRowKeyForDuplicateCheck(key);
         m_buffer.addRow(row);
     } // addRowToTable(DataRow)
@@ -531,7 +532,7 @@ public class DataContainer implements RowAppender {
      * @throws RuntimeException This implementation may throw a generic 
      * <code>RuntimeException</code> when 
      * {@link DuplicateChecker#addKey(String)} throws an {@link IOException}.
-     * @throws IllegalArgumentException If a duplicate is encountered.
+     * @throws DuplicateKeyException If a duplicate is encountered.
      */
     protected void addRowKeyForDuplicateCheck(final RowKey key) {
         try {
@@ -540,8 +541,8 @@ public class DataContainer implements RowAppender {
             throw new RuntimeException(ioe.getClass().getSimpleName() 
                     + " while checking for duplicate row IDs", ioe);
         } catch (DuplicateKeyException dke) {
-            throw new IllegalArgumentException("Container contains already a"
-                    + " row with ID \"" + dke.getKey() + "\".");
+            throw new DuplicateKeyException("Encountered duplicate row ID  \"" 
+                    + dke.getKey() + "\" at index " + (m_buffer.size() + 1));
         }
     }
     
