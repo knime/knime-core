@@ -29,6 +29,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.StringValue;
 
 /**
  * 
@@ -90,5 +91,17 @@ public final class SotaUtil {
      */
     public static boolean isIntType(final DataType type) {
         return type.isCompatible(IntValue.class);
+    }
+    
+    /**
+     * Returns <code>true</code> if given DataType is a StringTyoe, otherwise
+     * <code>false</code>.
+     * 
+     * @param type DataType to check.
+     * @return <code>true</code> if given DataType is a StringType, otherwise
+     * <code>false</code>
+     */
+    public static boolean isStringType(final DataType type) {
+        return type.isCompatible(StringValue.class);
     }
 }
