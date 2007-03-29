@@ -494,10 +494,10 @@ public class DataContainer implements RowAppender {
             m_duplicateChecker.addKey(key.toString());
         } catch (IOException ioe) { 
             throw new RuntimeException(ioe.getClass().getSimpleName() 
-                    + " while checking for duplicate row keys", ioe);
+                    + " while checking for duplicate row IDs", ioe);
         } catch (DuplicateKeyException dke) {
             throw new RuntimeException("Container contains already a"
-                    + " row with key \"" + dke.getKey() + "\".");
+                    + " row with ID \"" + dke.getKey() + "\".");
         }
         m_buffer.addRow(row);
     } // addRowToTable(DataRow)
