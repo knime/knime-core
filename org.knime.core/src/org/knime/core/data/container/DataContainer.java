@@ -338,6 +338,10 @@ public class DataContainer implements RowAppender {
      * <code>getTable()</code>. Successive calls of <code>addRowToTable</code>
      * will fail with an exception.
      * @throws IllegalStateException If container is not open.
+     * @throws DuplicateKeyException If the final check for duplicate row 
+     * keys fails.
+     * @throws RuntimeException If the duplicate check fails for an unknown IO
+     * problem    
      */
     public void close() {
         if (isClosed()) {
@@ -358,19 +362,19 @@ public class DataContainer implements RowAppender {
         getLocalTableRepository().put(m_table.getBufferID(), m_table);
         m_buffer = null;
         m_spec = null;
-        if (m_duplicateChecker != null) {
-            try {
-                m_duplicateChecker.checkForDuplicates();
-            } catch (IOException ioe) {
-                throw new RuntimeException(
-                        "Failed to check for duplicate row keys", ioe);
-            } catch (DuplicateKeyException dke) {
-                throw new RuntimeException("Table contains duplicate row keys: "
-                        + "\"" + dke.getKey() + "\"");
-            }
-            m_duplicateChecker.clear();
-            m_duplicateChecker = null;
+        try {
+            m_duplicateChecker.checkForDuplicates();
+        } catch (IOException ioe) {
+            throw new RuntimeException(
+                    "Failed to check for duplicate row IDs", ioe);
+        } catch (DuplicateKeyException dke) {
+            String key = dke.getKey();
+            throw new DuplicateKeyException("Found duplicate row ID \"" 
+                    + key + "\" (at unknown position)", key);
         }
+        m_duplicateChecker.clear();
+        m_duplicateChecker = null;
+
         m_possibleValues = null;
         m_minCells = null;
         m_maxCells = null;
@@ -496,8 +500,9 @@ public class DataContainer implements RowAppender {
             throw new RuntimeException(ioe.getClass().getSimpleName() 
                     + " while checking for duplicate row IDs", ioe);
         } catch (DuplicateKeyException dke) {
-            throw new RuntimeException("Container contains already a"
-                    + " row with ID \"" + dke.getKey() + "\".");
+            throw new DuplicateKeyException("Encountered duplicate row ID  \"" 
+                    + dke.getKey() + "\" at row number " 
+                    + (m_buffer.size() + 1), dke.getKey());
         }
         m_buffer.addRow(row);
     } // addRowToTable(DataRow)
