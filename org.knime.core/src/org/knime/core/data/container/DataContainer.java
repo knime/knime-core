@@ -363,16 +363,18 @@ public class DataContainer implements RowAppender {
         getLocalTableRepository().put(m_table.getBufferID(), m_table);
         m_buffer = null;
         m_spec = null;
-        if (m_duplicateChecker != null) {
-            try {
-                m_duplicateChecker.checkForDuplicates();
-            } catch (IOException ioe) {
-                throw new RuntimeException(
-                        "Failed to check for duplicate row keys", ioe);
-            }
-            m_duplicateChecker.clear();
-            m_duplicateChecker = null;
+        try {
+            m_duplicateChecker.checkForDuplicates();
+        } catch (IOException ioe) {
+            throw new RuntimeException(
+                    "Failed to check for duplicate row IDs", ioe);
+        } catch (DuplicateKeyException dke) {
+            String key = dke.getKey();
+            throw new DuplicateKeyException("Found duplicate row ID \"" 
+                    + key + "\" (at unknown position)", key);
         }
+        m_duplicateChecker.clear();
+        m_duplicateChecker = null;
         m_possibleValues = null;
         m_minCells = null;
         m_maxCells = null;
@@ -542,7 +544,7 @@ public class DataContainer implements RowAppender {
                     + " while checking for duplicate row IDs", ioe);
         } catch (DuplicateKeyException dke) {
             throw new DuplicateKeyException("Encountered duplicate row ID  \"" 
-                    + dke.getKey() + "\" at row index " 
+                    + dke.getKey() + "\" at row number " 
                     + (m_buffer.size() + 1), dke.getKey());
         }
     }
