@@ -27,15 +27,26 @@ package org.knime.core.util;
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class DuplicateKeyException extends Exception {
+public class DuplicateKeyException extends RuntimeException {
     private final String m_key;
     
     /**
-     * Creates a new exception.
+     * Creates a new exception with predefined message.
      * 
      * @param key the duplicate key
      */
     public DuplicateKeyException(final String key) {
+        this("Duplicate key detected: \"" + key + "\"", key); 
+    }
+    
+    /**
+     * Creates a new exception.
+     * @param message The exception message, may or may not include 
+     * <code>key</code>
+     * @param key the duplicate key
+     */
+    public DuplicateKeyException(final String message, final String key) {
+        super(message);
         m_key = key;
     }
     
@@ -48,11 +59,4 @@ public class DuplicateKeyException extends Exception {
         return m_key;
     }
     
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        return "Duplicate key detected: \"" + m_key + "\"";
-    }
 }
