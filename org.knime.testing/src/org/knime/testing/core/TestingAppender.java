@@ -81,30 +81,32 @@ public class TestingAppender extends AppenderSkeleton {
         // try recognizing Stacktraces in warning messages.
         if ((msgLevel == Level.ERROR) || (msgLevel == Level.WARN)
                 || (msgLevel == Level.FATAL)) {
+            if (msg != null) {
+                boolean exceptionStartLine = false;
+                String lines[] = msg.replace("\r", "").split("\n");
 
-            boolean exceptionStartLine = false;
-            String lines[] = msg.replace("\r", "").split("\n");
-
-            /*
-             * An Exception starts with a line containing "....Exception: ..."
-             * followed by a line starting with "TABat ...blah...:<linenumber>)"
-             */
-            for (String line : lines) {
-                if (line.indexOf("Exception: ") > 0) {
-                    exceptionStartLine = true;
-                } else {
-                    if (exceptionStartLine == true) {
-                        // if the previous line started an exception dump
-                        // this should be the first line of the stackstrace
-                        if (line.matches("^\\tat .*\\(.*\\)$")) {
-                            m_exceptions.add(lines[0]);
-                            // make sure list won't get too long
-                            if (m_exceptions.size() > m_maxlines) {
-                                m_exceptions.removeFirst();
+                /*
+                 * An Exception starts with a line containing 
+                 * "....Exception: ..." followed by a line starting with 
+                 * "TABat ...blah...:<linenumber>)"
+                 */
+                for (String line : lines) {
+                    if (line.indexOf("Exception: ") > 0) {
+                        exceptionStartLine = true;
+                    } else {
+                        if (exceptionStartLine == true) {
+                            // if the previous line started an exception dump
+                            // this should be the first line of the stackstrace
+                            if (line.matches("^\\tat .*\\(.*\\)$")) {
+                                m_exceptions.add(lines[0]);
+                                // make sure list won't get too long
+                                if (m_exceptions.size() > m_maxlines) {
+                                    m_exceptions.removeFirst();
+                                }
                             }
                         }
+                        exceptionStartLine = false;
                     }
-                    exceptionStartLine = false;
                 }
             }
         }
