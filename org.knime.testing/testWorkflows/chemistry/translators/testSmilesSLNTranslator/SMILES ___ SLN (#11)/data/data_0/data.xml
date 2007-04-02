@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
 <config key="table_meta_info">
-<entry key="table_ID" type="xint" value="65806"/>
+<entry key="table_ID" type="xint" value="65820"/>
 <entry key="table_type" type="xstring" value="rearrange_columns_table"/>
 <config key="table_references">
 <entry key="array-size" type="xint" value="0"/>
