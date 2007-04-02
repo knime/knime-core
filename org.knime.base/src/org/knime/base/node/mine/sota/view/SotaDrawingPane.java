@@ -45,8 +45,8 @@ import javax.swing.JPanel;
 import javax.swing.JToolTip;
 import javax.swing.ToolTipManager;
 
-import org.knime.base.node.mine.sota.SotaManager;
-import org.knime.base.node.mine.sota.SotaTreeCell;
+import org.knime.base.node.mine.sota.logic.SotaManager;
+import org.knime.base.node.mine.sota.logic.SotaTreeCell;
 import org.knime.base.node.util.DataArray;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -77,12 +77,14 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
     private static final int PIXEL_HEIGHT = 20;
 
     private static final int HILITE_HEIGHT = 7;
+    
+    private static final int DATA_SEPARATOR_HEIGHT = 0;
 
     private int m_pixelWidth = 6;
 
     private final int m_defPixelWidth = 3;
 
-    // Line height and rectangle width of cluster lines and rectabgles
+    // Line height and rectangle width of cluster lines and rectangles
     private int m_clusterLineHeight = 50;
 
     private int m_clusterRectWidth = 4;
@@ -387,7 +389,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
         int startX = 0;
         int startY = m_jpHeight - PIXEL_HEIGHT;
         int tmpStartY = startY;
-        int clusterSeparatorHeight = 10;
+        int clusterSeparatorHeight = DATA_SEPARATOR_HEIGHT;
 
         int count = 0;
         // through all cells

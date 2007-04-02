@@ -22,7 +22,7 @@
  * History
  *   Jan 19, 2006 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.logic;
 
 import java.util.Hashtable;
 

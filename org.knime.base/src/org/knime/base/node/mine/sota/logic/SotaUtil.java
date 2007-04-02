@@ -22,7 +22,7 @@
  * History
  *   Mar 6, 2006 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.logic;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
@@ -66,7 +66,12 @@ public final class SotaUtil {
      *         otherwise <code>false</code>
      */
     public static boolean isFuzzyIntervalType(final DataType type) {
-        return type.isCompatible(FuzzyIntervalValue.class);
+        if (type.isCompatible(DoubleValue.class)) {
+            return false;
+        } else if (type.isCompatible(FuzzyIntervalValue.class)) {
+            return true;
+        }
+        return false;
     }
 
     /**

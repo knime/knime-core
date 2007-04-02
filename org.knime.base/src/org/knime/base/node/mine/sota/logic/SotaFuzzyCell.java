@@ -22,7 +22,7 @@
  * History
  *   Nov 23, 2005 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.logic;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.FuzzyIntervalValue;
@@ -38,7 +38,7 @@ import org.knime.core.node.ModelContentWO;
  * @author Kilian Thiel, University of Konstanz
  */
 public final class SotaFuzzyCell implements SotaCell, FuzzyIntervalValue, 
-        FuzzyNumberValue, IntervalValue {
+FuzzyNumberValue, IntervalValue {
     
     private static final String CFG_KEY_MIN_SUPP = "FuzzyMinSupp";
     private static final String CFG_KEY_MAX_SUPP = "FuzzyMaxSupp";

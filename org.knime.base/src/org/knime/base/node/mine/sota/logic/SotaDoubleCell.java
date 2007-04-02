@@ -22,7 +22,7 @@
  * History
  *   Nov 21, 2005 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.logic;
 
 import java.io.Serializable;
 

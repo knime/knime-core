@@ -21,7 +21,7 @@
  * History
  *   20.02.2007 (thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.logic;
 
 /**
  * 

@@ -22,7 +22,7 @@
  * History
  *   Nov 21, 2005 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.logic;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.node.InvalidSettingsException;
@@ -42,8 +42,9 @@ public interface SotaCell {
      * @param cell cell to adjust SotaCell with
      * @param learningrate learningrate to adjust cell value with
      */
-    public void adjustCell(DataCell cell, double learningrate);
-
+    public void adjustCell(final DataCell cell, final double learningrate);
+    
+    
     /**
      * Returns a double value of the cell.
      * 
@@ -65,7 +66,8 @@ public interface SotaCell {
      * @param modelContent The <code>ModelContentWO</code> to save the values
      * to. 
      */
-    public void saveTo(final ModelContentWO modelContent);
+    public abstract void saveTo(final ModelContentWO modelContent);
+    
     
     /**
      * Loads the values from the given <code>ModelContentWO</code>.
@@ -75,11 +77,12 @@ public interface SotaCell {
      * 
      * @throws InvalidSettingsException If setting to load is not valid.
      */
-    public void loadFrom(final ModelContentRO modelContent) 
+    public abstract void loadFrom(final ModelContentRO modelContent) 
     throws InvalidSettingsException;    
+    
     
     /**
      * @return Returns the cells type.
      */
-    public String getType();
+    public abstract String getType();
 }

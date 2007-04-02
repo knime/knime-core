@@ -22,7 +22,7 @@
  * History
  *   Nov 16, 2005 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota.dialog;
+package org.knime.base.node.mine.sota;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -36,9 +36,8 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
-import org.knime.base.node.mine.sota.DistanceManagerFactory;
-import org.knime.base.node.mine.sota.SotaConfigKeys;
-import org.knime.base.node.mine.sota.SotaManager;
+import org.knime.base.node.mine.sota.distances.DistanceManagerFactory;
+import org.knime.base.node.mine.sota.logic.SotaManager;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;

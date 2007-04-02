@@ -31,6 +31,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.knime.base.data.filter.column.FilterColumnTable;
+import org.knime.base.node.mine.sota.logic.SotaManager;
+import org.knime.base.node.mine.sota.logic.SotaTreeCell;
+import org.knime.base.node.mine.sota.logic.SotaUtil;
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.core.data.DataTable;
@@ -44,9 +47,12 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * 
@@ -59,6 +65,52 @@ public class SotaNodeModel extends NodeModel {
      */
     public static final int INPORT = 0;
 
+    /**
+     * The default value for the usage of out data.
+     */
+    public static final boolean DEFAULT_USE_OUTDATA = false;
+
+    /**
+     * The configuration key for the usage of hierarchical fuzzy data.
+     */
+    public static final String CFG_KEY_USE_FUZZY_HIERARCHY = "FuzzyHierarchy";
+    
+    /**
+     * The configuration key for the maximal fuzzy hierarchy level.
+     */
+    public static final String CFG_KEY_MAX_FUZZY_LEVEL = "MaxFuzzyLevel";
+    
+    /**
+     * The configuration key for the size of the in data container.
+     */
+    public static final String CFG_KEY_INDATA_SIZE = "InDataContainerSize";
+    
+    /**
+     * The configuration key for the size of the original data container.
+     */
+    public static final String CFG_KEY_ORIGDATA_SIZE = "OrigDataContainerSize";
+    
+    /**
+     * The configuration key for the internal model of SOTA.
+     */
+    public static final String INTERNAL_MODEL = "SotaModel";
+    
+    /**
+     * The file to save the internal structire of SOTA.
+     */
+    private static final String TREE_FILE = "tree.sota";
+
+    /**
+     * The file to save the in data for SOTA.
+     */
+    private static final String IN_DATA_FILE = "indata.sota";
+
+    /**
+     * The file to save the original data for SOTA.
+     */
+    private static final String ORIG_DATA_FILE = "origdata.sota";    
+    
+    
     private SotaManager m_sota;
 
     private ArrayList<String> m_includeList;
@@ -66,107 +118,30 @@ public class SotaNodeModel extends NodeModel {
     private ArrayList<String> m_excludeList;
 
     private String m_hierarchieLevelCell;
-    
-    private static final String CFG_KEY_USE_FUZZY_HIERARCHY = "FuzzyHierarchy";
-    
-    private static final String CFG_KEY_MAX_FUZZY_LEVEL = "MaxFuzzyLevel";
-    
-    private static final String CFG_KEY_INDATA_SIZE = "InDataContainerSize";
-    
-    private static final String CFG_KEY_ORIGDATA_SIZE = "OrigDataContainerSize";
-    
-    private static final String INTERNAL_MODEL = "SotaModel";
-    
-    private static final String TREE_FILE = "tree.sota";
+   
 
-    private static final String IN_DATA_FILE = "indata.sota";
-
-    private static final String ORIG_DATA_FILE = "origdata.sota";
-
+    
+    private SettingsModelString m_classCol =
+        new SettingsModelString(SotaConfigKeys.CFGKEY_CLASSCOL, "");
+    
+    private SettingsModelBoolean m_useOutData =
+        new SettingsModelBoolean(SotaConfigKeys.CFGKEY_USE_CLASS_DATA, 
+                SotaNodeModel.DEFAULT_USE_OUTDATA);    
+    
+    
     /**
      * Constructor of SoteNodeModel. Creates new instance of SotaNodeModel, with
      * default settings.
      */
     public SotaNodeModel() {
-        super(1, 0, 0, 0);
+        super(1, 0, 0, 1);
         m_sota = new SotaManager();
         m_includeList = new ArrayList<String>();
         m_excludeList = new ArrayList<String>();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_sota.saveSettingsTo(settings);
-
-        // Save ColumnFilterPanel settings
-        settings.addStringArray(SotaConfigKeys.CFGKEY_INCLUDE, m_includeList
-                .toArray(new String[m_includeList.size()]));
-        settings.addStringArray(SotaConfigKeys.CFGKEY_EXCLUDE, m_excludeList
-                .toArray(new String[m_excludeList.size()]));
-        settings.addBoolean(SotaConfigKeys.CFGKEY_HIERARCHICAL_FUZZY_DATA,
-                m_sota.isUseHierarchicalFuzzyData());
-        settings.addString(SotaConfigKeys.CFGKEY_HIERARCHICAL_FUZZY_LEVEL,
-                m_hierarchieLevelCell);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        readSettings(settings, /* validateOnly= */true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        readSettings(settings, /* validateOnly= */false);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-
-        final DataArray origRowContainer = new DefaultDataArray(
-                inData[SotaNodeModel.INPORT], 1, Integer.MAX_VALUE);
-        DataTable dataTableToUse = inData[SotaNodeModel.INPORT];
-        if (m_includeList != null) {
-            if (m_sota.isUseHierarchicalFuzzyData()) {
-                if (m_hierarchieLevelCell != null) {
-                    m_includeList.add(m_hierarchieLevelCell);
-                }
-            }
-
-            DataTable filteredDataTable = new FilterColumnTable(
-                    inData[SotaNodeModel.INPORT], m_includeList
-                            .toArray(new String[m_includeList.size()]));
-            dataTableToUse = filteredDataTable;
-        }
-
-        m_sota.initializeTree(dataTableToUse, origRowContainer, exec);
-        m_sota.doTraining();
-
-        return new BufferedDataTable[]{};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
-        m_sota.reset();
-    }
-
+    
+    
     /**
      * {@inheritDoc}
      */
@@ -206,21 +181,21 @@ public class SotaNodeModel extends NodeModel {
         }
 
         if (numberCells > 0 && fuzzyCells > 0) {
-            buffer.append("FuzzyIntervalCells and NumberCells are mixed !");
+            buffer.append("FuzzyIntervalCells and NumberCells are mixed ! ");
         }
 
         if (numberCells <= 0 && fuzzyCells <= 0) {
             buffer.append("Number of columns has to be "
-                    + "greater than zero !");
+                    + "greater than zero ! ");
         }
 
         if (fuzzyCells <= 0 && m_sota.isUseHierarchicalFuzzyData()) {
-            buffer.append("No fuzzy cells selected !");
+            buffer.append("No fuzzy cells selected ! ");
         }
 
         if (m_sota.isUseHierarchicalFuzzyData()
                 && m_hierarchieLevelCell == null) {
-            buffer.append("No hierarchy column selected !");
+            buffer.append("No hierarchy column selected ! ");
         }
 
         // if buffer throw exception
@@ -229,8 +204,125 @@ public class SotaNodeModel extends NodeModel {
         }
 
         return new DataTableSpec[]{};
+    }    
+    
+    
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+            final ExecutionContext exec) throws Exception {
+
+        final DataArray origRowContainer = new DefaultDataArray(
+                inData[SotaNodeModel.INPORT], 1, Integer.MAX_VALUE);
+        DataTable dataTableToUse = inData[SotaNodeModel.INPORT];
+        
+        if (m_includeList != null) {
+            if (m_sota.isUseHierarchicalFuzzyData()) {
+                if (m_hierarchieLevelCell != null) {
+                    m_includeList.add(m_hierarchieLevelCell);
+                }
+            }
+            
+            if (m_useOutData.getBooleanValue() 
+                    && !m_includeList.contains(m_classCol.getStringValue())) {
+                m_includeList.add(m_classCol.getStringValue());
+            }
+
+            DataTable filteredDataTable = new FilterColumnTable(
+                    inData[SotaNodeModel.INPORT], m_includeList
+                            .toArray(new String[m_includeList.size()]));
+            dataTableToUse = filteredDataTable;
+        
+            // get index of column containing class information
+            int indexOfClassCol = -1;
+            if (m_useOutData.getBooleanValue()) {
+                for (int i = 0; 
+                i < filteredDataTable.getDataTableSpec().getNumColumns(); i++) {
+                    String colName = filteredDataTable.getDataTableSpec()
+                        .getColumnSpec(i).getName();
+                    if (colName.equals(m_classCol.getStringValue())) {
+                        indexOfClassCol = i;
+                        break;
+                    }
+                }
+            }
+            
+            m_sota.initializeTree(dataTableToUse, origRowContainer, exec, 
+                    indexOfClassCol);
+            m_sota.doTraining();
+        }
+
+        return new BufferedDataTable[]{};
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void reset() {
+        m_sota.reset();
+    }
+
+    /**
+     * @return the m_sota
+     */
+    public SotaManager getSotaManager() {
+        return m_sota;
+    }
+
+    
+    
+    
+    
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_sota.saveSettingsTo(settings);
+
+        // Save ColumnFilterPanel settings
+        settings.addStringArray(SotaConfigKeys.CFGKEY_INCLUDE, m_includeList
+                .toArray(new String[m_includeList.size()]));
+        settings.addStringArray(SotaConfigKeys.CFGKEY_EXCLUDE, m_excludeList
+                .toArray(new String[m_excludeList.size()]));
+        settings.addBoolean(SotaConfigKeys.CFGKEY_HIERARCHICAL_FUZZY_DATA,
+                m_sota.isUseHierarchicalFuzzyData());
+        settings.addString(SotaConfigKeys.CFGKEY_HIERARCHICAL_FUZZY_LEVEL,
+                m_hierarchieLevelCell);
+        
+        m_classCol.saveSettingsTo(settings);
+        m_useOutData.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        readSettings(settings, /* validateOnly= */true);
+        
+        m_classCol.validateSettings(settings);
+        m_useOutData.validateSettings(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        readSettings(settings, /* validateOnly= */false);
+        
+        m_classCol.loadSettingsFrom(settings);
+        m_useOutData.loadSettingsFrom(settings);
+    }
+    
     private void readSettings(final NodeSettingsRO settings,
             final boolean validateOnly) throws InvalidSettingsException {
         m_sota.readSettings(settings, validateOnly);
@@ -283,14 +375,10 @@ public class SotaNodeModel extends NodeModel {
             m_sota.setUseHierarchicalFuzzyData(useHFD);
         }
     }
-
-    /**
-     * @return the m_sota
-     */
-    public SotaManager getSotaManager() {
-        return m_sota;
-    }
-
+    
+    
+    
+    
     /**
      * {@inheritDoc}
      */
@@ -384,4 +472,26 @@ public class SotaNodeModel extends NodeModel {
         modelContent.saveToXML(fos);
         fos.close();
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveModelContent(final int index,
+            final ModelContentWO modelContent) throws InvalidSettingsException {
+        assert modelContent == modelContent;
+
+        // Save tree
+        m_sota.getRoot().saveTo(modelContent, 0);
+
+        // Save settings
+        modelContent.addBoolean(CFG_KEY_USE_FUZZY_HIERARCHY, 
+                m_sota.isUseHierarchicalFuzzyData());
+        modelContent.addInt(CFG_KEY_MAX_FUZZY_LEVEL, 
+                m_sota.getMaxHierarchicalLevel());
+        modelContent.addInt(CFG_KEY_INDATA_SIZE,
+                m_sota.getInDataContainer().size());
+        modelContent.addInt(CFG_KEY_ORIGDATA_SIZE,
+                m_sota.getOriginalData().size());
+    }    
 }

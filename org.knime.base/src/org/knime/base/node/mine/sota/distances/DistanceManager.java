@@ -22,8 +22,9 @@
  * History
  *   Nov 23, 2005 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.distances;
 
+import org.knime.base.node.mine.sota.logic.SotaTreeCell;
 import org.knime.core.data.DataRow;
 
 /**

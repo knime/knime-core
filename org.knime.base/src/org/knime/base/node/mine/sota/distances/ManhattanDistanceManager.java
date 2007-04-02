@@ -1,5 +1,4 @@
-/* 
- * -------------------------------------------------------------------
+/* ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -17,36 +16,35 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  * 
  * History
- *   Jan 12, 2006 (Kilian Thiel): created
+ *   02.02.2007 (thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.distances;
 
+import org.knime.base.node.mine.sota.logic.SotaTreeCell;
 import org.knime.core.data.DataRow;
 
 /**
  * 
  * @author Kilian Thiel, University of Konstanz
  */
-public class CosinusDistanceManager implements DistanceManager {
-    private double m_offset;
+public class ManhattanDistanceManager implements DistanceManager {
 
     private boolean m_fuzzy;
 
     /**
-     * Creates new instance of CosinusDistanceManager with given offset and
-     * fuzzy flag. If fuzzy is set <code>true</code>, only fuzzy columns are
-     * considered to compute distance, if <code>false</code> only number
+     * Creates instance of <code>ManhattanDistanceManager</code>, which
+     * computes manhattan distances between <code>DataRow</code>s and
+     * <code>SotaTreeCell</code>s. If fuzzy is set <code>true</code>, only
+     * fuzzy columns are considered, if <code>false</code> only number
      * columns.
      * 
-     * @param offset offset to use for distance calculation
      * @param fuzzy if <code>true</code> only fuzzy data is respected, if
      *            <code>false</code> only number data
      */
-    public CosinusDistanceManager(final double offset, final boolean fuzzy) {
-        m_offset = offset;
+    public ManhattanDistanceManager(final boolean fuzzy) {
         m_fuzzy = fuzzy;
     }
 
@@ -54,13 +52,14 @@ public class CosinusDistanceManager implements DistanceManager {
      * {@inheritDoc}
      */
     public double getDistance(final DataRow row, final SotaTreeCell cell) {
-        return Distances.getCosinusDistance(row, cell, m_offset, m_fuzzy);
+        return Distances.getManhattanDistance(row, cell, m_fuzzy);
     }
 
     /**
      * {@inheritDoc}
      */
     public double getDistance(final DataRow row1, final DataRow row2) {
-        return Distances.getCosinusDistance(row1, row2, m_offset, m_fuzzy);
+        return Distances.getManhattanDistance(row1, row2, m_fuzzy);
     }
+
 }

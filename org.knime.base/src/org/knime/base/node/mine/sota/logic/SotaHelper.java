@@ -22,7 +22,7 @@
  * History
  *   Nov 23, 2005 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.logic;
 
 import org.knime.base.node.util.DataArray;
 import org.knime.core.data.DataRow;
@@ -105,15 +105,17 @@ public abstract class SotaHelper {
         throws CanceledExecutionException;
 
     /**
-     * Adjusts the given SotaTreeCell related to the given DataRow and
-     * learningrate.
+     * Adjusts the given <code>SotaTreeCell</code> related to the given 
+     * DataRow and learningrate and assigns the given class.
      * 
      * @param cell cell to adjust
      * @param row row to adjust the cell with
      * @param learningrate learningrate to adjust the cell with
+     * @param cellClass The class to assign to the cell.
      */
-    public abstract void adjustSotaCell(SotaTreeCell cell, DataRow row,
-            double learningrate);
+    public abstract void adjustSotaCell(final SotaTreeCell cell, 
+            final DataRow row, final double learningrate, 
+            final String cellClass);
 
     /**
      * @return the <code>ExecutionMonitor</code>

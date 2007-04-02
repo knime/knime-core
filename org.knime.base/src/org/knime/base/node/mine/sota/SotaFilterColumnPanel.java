@@ -22,14 +22,14 @@
  * History
  *   Nov 24, 2005 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota.dialog;
+package org.knime.base.node.mine.sota;
 
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.util.Set;
 
 import javax.swing.JPanel;
 
-import org.knime.base.node.mine.sota.SotaConfigKeys;
-import org.knime.base.node.mine.sota.SotaNodeModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.FuzzyIntervalValue;
@@ -42,19 +42,23 @@ import org.knime.core.node.util.ColumnFilterPanel;
  * @author Kilian Thiel, University of Konstanz
  */
 public class SotaFilterColumnPanel extends JPanel {
-    private static final long serialVersionUID = 4053372436104609508L;
-
+    
     private final ColumnFilterPanel m_filterPanel;
-
+    
     /**
      * Constructor.
      */
     @SuppressWarnings("unchecked")
     public SotaFilterColumnPanel() {
-        super();
+        super(new GridBagLayout());
+        GridBagConstraints gbc;
+        
         m_filterPanel = new ColumnFilterPanel(DoubleValue.class,
                 FuzzyIntervalValue.class);
-        this.add(m_filterPanel);
+        gbc = new GridBagConstraints();
+        gbc.gridy = 0;
+        gbc.gridx = 0;
+        this.add(m_filterPanel, gbc);        
     }
 
     /**
@@ -88,4 +92,6 @@ public class SotaFilterColumnPanel extends JPanel {
         settings.addStringArray(SotaConfigKeys.CFGKEY_EXCLUDE, listEx
                 .toArray(new String[listEx.size()]));
     }
+    
+  
 }

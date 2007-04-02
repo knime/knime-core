@@ -22,12 +22,13 @@
  * History
  *   Nov 16, 2005 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota.view;
+package org.knime.base.node.mine.sota;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
-import org.knime.base.node.mine.sota.SotaNodeModel;
+import org.knime.base.node.mine.sota.view.SotaDrawingPane;
+import org.knime.base.node.mine.sota.view.SotaTreeViewPropsPanel;
 import org.knime.core.node.NodeView;
 
 /**

@@ -19,46 +19,60 @@
  * ---------------------------------------------------------------------
  * 
  * History
- *   02.02.2007 (thiel): created
+ *   30.03.2007 (thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.predictor;
 
-import org.knime.core.data.DataRow;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author Kilian Thiel, University of Konstanz
  */
-public class ManhattanDistanceManager implements DistanceManager {
-
-    private boolean m_fuzzy;
+public class SotaPredictorNodeFactory extends NodeFactory {
 
     /**
-     * Creates instance of <code>ManhattanDistanceManager</code>, which
-     * computes manhattan distances between <code>DataRow</code>s and
-     * <code>SotaTreeCell</code>s. If fuzzy is set <code>true</code>, only
-     * fuzzy columns are considered, if <code>false</code> only number
-     * columns.
-     * 
-     * @param fuzzy if <code>true</code> only fuzzy data is respected, if
-     *            <code>false</code> only number data
+     * {@inheritDoc}
      */
-    public ManhattanDistanceManager(final boolean fuzzy) {
-        m_fuzzy = fuzzy;
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new SotaPredictorNodeDialog();
     }
 
     /**
      * {@inheritDoc}
      */
-    public double getDistance(final DataRow row, final SotaTreeCell cell) {
-        return Distances.getManhattanDistance(row, cell, m_fuzzy);
+    @Override
+    public NodeModel createNodeModel() {
+        return new SotaPredictorNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
-    public double getDistance(final DataRow row1, final DataRow row2) {
-        return Distances.getManhattanDistance(row1, row2, m_fuzzy);
+    @Override
+    public NodeView createNodeView(final int viewIndex, 
+            final NodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
     }
 
 }

@@ -22,7 +22,7 @@
  * History
  *   Nov 16, 2005 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.logic;
 
 import java.io.Serializable;
 import java.text.DecimalFormat;
@@ -46,6 +46,8 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     private static final String CFG_KEY_IS_CELL = "IsCell";
     
     private static final String CFG_KEY_DATA = "Data";
+    
+    private static final String CFG_KEY_CLASS = "CellClass";
     
     private static final String CFG_KEY_LEFT = "Left";
     
@@ -73,6 +75,10 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     
     private static final String CFG_KEY_END_Y = "EndY";
     
+    /**
+     * Default cell class.
+     */
+    public static final String DEFAULT_CLASS = "NoClassDefined";
     
     private SotaCell[] m_data;
 
@@ -97,6 +103,8 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     private int m_levelInHierarchy = 0;
 
     private ArrayList<Integer> m_dataIds;
+    
+    private CellClassCounter m_classCounter = new CellClassCounter();
 
     // this list is only used when dealing with hierarchical fuzzy data.
     // It stores the RowKeys of the fuzzy rules of the prior levels, so that
@@ -173,6 +181,26 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
      */
     public SotaTreeCell(final SotaCell[] dat, final boolean isCell) {
         this(dat, 0, isCell);
+    }
+    
+    /**
+     * @return the class of the tree cell.
+     */
+    public String getTreeCellClass() {
+        String cellClass = m_classCounter.getMostFrequentClass();
+        if (cellClass == null) {
+            return DEFAULT_CLASS;
+        }
+        return cellClass;
+    }
+
+    /**
+     * @param treeCellClass the class to assign to the tree cell.
+     */
+    public void addTreeCellClass(final String treeCellClass) {
+        if (treeCellClass != null) {
+            m_classCounter.addClass(treeCellClass);
+        }
     }
 
     /**
@@ -578,6 +606,16 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
     }
 
     /**
+     * @return the type of the cells data (fuzzy or double / number).
+     */
+    public String getCellType() {
+        if (m_data.length > 0) {
+            return m_data[0].getType();
+        }
+        return null;
+    }
+    
+    /**
      * Returns the RowKeys as a string separated with ",".
      * 
      * @return the RowKeys as a string separated with ","
@@ -690,7 +728,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
             rowKeyCount++;
         }
         
-        // save data
+        // save cell data
         modelContent.addInt(CFG_KEY_DATA + "SIZE", m_data.length);
         if (m_data.length > 0) {
             modelContent.addString(CFG_KEY_DATA + "TYPE", m_data[0].getType());
@@ -701,6 +739,10 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
             m_data[i].saveTo(subContent);
         }
                 
+        // save data
+        modelContent.addString(CFG_KEY_CLASS, 
+                m_classCounter.getMostFrequentClass());
+        
         // save left and right
         if (m_left != null) {
             modelContent.addBoolean("HAS" + CFG_KEY_LEFT, true);
@@ -740,7 +782,7 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
         int ind = index;
         ind++;
                 
-        // load resource ect.
+        // load resource etc.
         m_isCell = modelContent.getBoolean(CFG_KEY_IS_CELL);
         m_resource = modelContent.getDouble(CFG_KEY_RESOURCE);
         m_maxDistance = modelContent.getDouble(CFG_KEY_MAX_DISTANCE);
@@ -789,6 +831,10 @@ public class SotaTreeCell implements Locatable, Hiliteable, Selectable,
             m_data[i].loadFrom(subContent);
         }        
         
+        // load data
+        String cellClass = modelContent.getString(CFG_KEY_CLASS);
+        m_classCounter = new CellClassCounter();
+        m_classCounter.addClass(cellClass);
         
         // load left and right
         boolean hasLeft = modelContent.getBoolean("HAS" + CFG_KEY_LEFT);

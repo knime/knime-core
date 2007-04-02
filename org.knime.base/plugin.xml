@@ -446,7 +446,11 @@
    <node
          category-path="/mining/clustering"
          factory-class="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"
-         id="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"/>         
+         id="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"/>
+   <node
+         category-path="/mining/clustering"
+         factory-class="org.knime.base.node.mine.sota.predictor.SotaPredictorNodeFactory"
+         id="org.knime.base.node.mine.sota.predictor.SotaPredictorNodeFactory"/>         
             
    </extension>
    

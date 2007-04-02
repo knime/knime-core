@@ -22,12 +22,12 @@
  * History
  *   Nov 23, 2005 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.logic;
 
 import org.knime.base.node.util.DataArray;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
-import org.knime.core.data.FuzzyIntervalValue;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
@@ -35,15 +35,15 @@ import org.knime.core.node.ExecutionMonitor;
  * 
  * @author Kilian Thiel, University of Konstanz
  */
-public class SotaFuzzyHelper extends SotaHelper {
+public class SotaNumberHelper extends SotaHelper {
     /**
-     * Creates new instance of SotaFuzzyHelper with given DataArray with the
-     * training data.
+     * Creates an instance of SotaNumberHelper with given DataArray with the
+     * trainingdata.
      * 
      * @param rowContainer the DataArray with the training data
      * @param exec the <code>ExecutionMonitor</code> to set.
      */
-    public SotaFuzzyHelper(final DataArray rowContainer, 
+    public SotaNumberHelper(final DataArray rowContainer, 
             final ExecutionMonitor exec) {
         super(rowContainer, exec);
     }
@@ -63,7 +63,7 @@ public class SotaFuzzyHelper extends SotaHelper {
             DataType type = this.getRowContainer().getDataTableSpec()
                     .getColumnSpec(i).getType();
 
-            if (SotaUtil.isFuzzyIntervalType(type)) {
+            if (SotaUtil.isNumberType(type)) {
                 dimension++;
             }
         }
@@ -80,16 +80,9 @@ public class SotaFuzzyHelper extends SotaHelper {
         //
         // / Calculate the mean values of each column of the row container
         //
-        double[] meanMinSupp = new double[this.getDimension()];
-        double[] meanMinCore = new double[this.getDimension()];
-        double[] meanMaxCore = new double[this.getDimension()];
-        double[] meanMaxSupp = new double[this.getDimension()];
-
-        for (int i = 0; i < this.getDimension(); i++) {
-            meanMinSupp[i] = 0;
-            meanMinCore[i] = 0;
-            meanMaxCore[i] = 0;
-            meanMaxSupp[i] = 0;
+        double[] means = new double[this.getDimension()];
+        for (int i = 0; i < means.length; i++) {
+            means[i] = 0;
         }
 
         int col = 0;
@@ -103,39 +96,26 @@ public class SotaFuzzyHelper extends SotaHelper {
                 DataType type = this.getRowContainer().getDataTableSpec()
                         .getColumnSpec(j).getType();
 
-                if (SotaUtil.isFuzzyIntervalType(type)
+                if (SotaUtil.isNumberType(type)
                         && !SotaUtil.hasMissingValues(getRowContainer().getRow(
                                 i))) {
-                    meanMinSupp[col] += ((FuzzyIntervalValue)this
-                            .getRowContainer().getRow(i).getCell(j))
-                            .getMinSupport();
-                    meanMinCore[col] += ((FuzzyIntervalValue)this
-                            .getRowContainer().getRow(i).getCell(j))
-                            .getMinCore();
-                    meanMaxCore[col] += ((FuzzyIntervalValue)this
-                            .getRowContainer().getRow(i).getCell(j))
-                            .getMaxCore();
-                    meanMaxSupp[col] += ((FuzzyIntervalValue)this
-                            .getRowContainer().getRow(i).getCell(j))
-                            .getMaxSupport();
+                    means[col] += ((DoubleValue)this.getRowContainer()
+                            .getRow(i).getCell(j)).getDoubleValue();
                     col++;
                 }
             }
         }
 
-        for (int i = 0; i < this.getDimension(); i++) {
-            meanMinSupp[i] = meanMinSupp[i] / this.getRowContainer().size();
-            meanMinCore[i] = meanMinCore[i] / this.getRowContainer().size();
-            meanMaxCore[i] = meanMaxCore[i] / this.getRowContainer().size();
-            meanMaxSupp[i] = meanMaxSupp[i] / this.getRowContainer().size();
+        for (int i = 0; i < means.length; i++) {
+            means[i] = means[i] / this.getRowContainer().size();
         }
 
         //
         // / initialize root and children node/cells
         //
         SotaTreeCell root = SotaTreeCellFactory.initCellFactory(
-                this.getDimension()).createCell(meanMinSupp, meanMinCore,
-                meanMaxCore, meanMaxSupp, 0);
+                this.getDimension()).createCell(means, 0);
+
         root.split();
 
         return root;
@@ -146,20 +126,22 @@ public class SotaFuzzyHelper extends SotaHelper {
      */
     @Override
     public void adjustSotaCell(final SotaTreeCell cell, final DataRow row,
-            final double learningrate) {
+            final double learningrate, final String cellClass) {
         int col = 0;
 
         if (SotaUtil.hasMissingValues(row)) {
             return;
         }
 
+        cell.addTreeCellClass(cellClass);
+        
         for (int i = 0; i < row.getNumCells(); i++) {
             DataType type = row.getCell(i).getType();
 
-            if (SotaUtil.isFuzzyIntervalType(type)) {
+            if (SotaUtil.isNumberType(type)) {
                 if (col < cell.getData().length) {
-                    cell.getData()[col]
-                            .adjustCell(row.getCell(i), learningrate);
+                    cell.getData()[col].adjustCell(
+                            row.getCell(i), learningrate);
                     col++;
                 }
             }

@@ -24,8 +24,6 @@
  */
 package org.knime.base.node.mine.sota;
 
-import org.knime.base.node.mine.sota.dialog.SotaNodeDialog;
-import org.knime.base.node.mine.sota.view.SotaNodeView;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;

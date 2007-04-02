@@ -20,29 +20,34 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Nov 23, 2005 (Kilian Thiel): created
+ *   Jan 12, 2006 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.distances;
 
+import org.knime.base.node.mine.sota.logic.SotaTreeCell;
 import org.knime.core.data.DataRow;
 
 /**
  * 
- * @author Kilian thiel, University of Konstanz
+ * @author Kilian Thiel, University of Konstanz
  */
-public class EuclideanDistanceManager implements DistanceManager {
+public class CosinusDistanceManager implements DistanceManager {
+    private double m_offset;
+
     private boolean m_fuzzy;
 
     /**
-     * Creates instance of EuclideanDistanceManager, which computes euclidean
-     * distances between rows and cells. If fuzzy is set <code>true</code>,
-     * only fuzzy columns are considered to compute distance, if
-     * <code>false</code> only number columns.
+     * Creates new instance of CosinusDistanceManager with given offset and
+     * fuzzy flag. If fuzzy is set <code>true</code>, only fuzzy columns are
+     * considered to compute distance, if <code>false</code> only number
+     * columns.
      * 
+     * @param offset offset to use for distance calculation
      * @param fuzzy if <code>true</code> only fuzzy data is respected, if
      *            <code>false</code> only number data
      */
-    public EuclideanDistanceManager(final boolean fuzzy) {
+    public CosinusDistanceManager(final double offset, final boolean fuzzy) {
+        m_offset = offset;
         m_fuzzy = fuzzy;
     }
 
@@ -50,13 +55,13 @@ public class EuclideanDistanceManager implements DistanceManager {
      * {@inheritDoc}
      */
     public double getDistance(final DataRow row, final SotaTreeCell cell) {
-        return Distances.getEuclideanDistance(row, cell, m_fuzzy);
+        return Distances.getCosinusDistance(row, cell, m_offset, m_fuzzy);
     }
 
     /**
      * {@inheritDoc}
      */
     public double getDistance(final DataRow row1, final DataRow row2) {
-        return Distances.getEuclideanDistance(row1, row2, m_fuzzy);
+        return Distances.getCosinusDistance(row1, row2, m_offset, m_fuzzy);
     }
 }

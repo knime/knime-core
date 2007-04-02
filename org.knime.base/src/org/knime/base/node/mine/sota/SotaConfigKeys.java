@@ -91,4 +91,16 @@ public final class SotaConfigKeys {
      * Settings object key for the use of hierarchical fuzzy level.
      */
     public static final String CFGKEY_HIERARCHICAL_FUZZY_LEVEL = "HFL";
+    
+    
+    /**
+     * Settings object key for the specification of the calls column.
+     */
+    public static final String CFGKEY_CLASSCOL = "CallColumn";
+    
+    /**
+     * Settings object key for the specification of the usage of the class 
+     * column.
+     */
+    public static final String CFGKEY_USE_CLASS_DATA = "UseClassColumn";
 }

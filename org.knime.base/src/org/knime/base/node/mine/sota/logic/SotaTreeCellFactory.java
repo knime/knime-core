@@ -22,7 +22,7 @@
  * History
  *   Nov 16, 2005 (Kilian Thiel): created
  */
-package org.knime.base.node.mine.sota;
+package org.knime.base.node.mine.sota.logic;
 
 import org.knime.core.data.FuzzyIntervalValue;
 

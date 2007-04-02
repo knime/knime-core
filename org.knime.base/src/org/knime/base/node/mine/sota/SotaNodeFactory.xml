@@ -11,8 +11,10 @@
 	<intro>		
 	<p>Clusters numerical and fuzzy data hierarchically with the self organizing 
 	tree algorithm and visualizes the cluster tree similarly like a dendogram.
+	Additionally it builds a model for class prediction of new data. The model can be
+	load into the Sota predictor node.
 	</p>	
-	<p>This node has a dialog, in which you can choose the winner, ancestor and
+	<p>The Sota node has a dialog, in which you can choose the winner, ancestor and
 	sister learning rate, to adjust the cluster representants: with the 
 	minimal resource and variability value to stop the growing of the tree; the
 	minimal error, to end a cycle and the distance metric (cosinus, euclidean).
@@ -21,6 +23,8 @@
 	visualized by the view afterwards, similar to a dendogram.
 	The data is also displayed and can be hilited, as well as each cluster 
 	representative.
+	Class information can be trained too by selecting the "Use class column"
+	option for uses of class prediction by the Sota predictor node.
 	</p>
 	<p>For more information about the Sota clustering see:
 	Herrero J., Valencia A., Dopazo J.:
@@ -89,10 +93,24 @@
 		rules, the column with the fuzzy rule level must be choosen by 
 		selecting it in the drop down menu.
 	</option>
+	<option name="Use class column">
+		Check to use the class data specified by the drop down box below.
+		The class data will be trained too for the use of class prediction by the
+		SotaPredictor node.
+	</option>	
+	<option name="Class column">
+		Specifies the column containing the class data. Only string columns can
+		be choosen as class columns.
+	</option>		
 	</fullDescription>
 		
 	<ports>
-		<dataIn name="Any input table" index="0">Datatable with integer columns to do clustering on</dataIn>
+		<dataIn name="Any input table" index="0">
+			Datatable with integer columns to do clustering on
+		</dataIn>
+		<modelOut index="0" name="The model of the trained SOTA" type="sotaModel">
+			The model of the trained SOTA.
+		</modelOut>
 	</ports>	
 		
 	<views>
