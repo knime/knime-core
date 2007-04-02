@@ -130,7 +130,7 @@ public class SorterNodeModel extends NodeModel {
         // If no columns are set, we do not start the sorting process
         if (m_inclList.size() == 0) {
             setWarningMessage("No columns were selected - returning "
-                    + " original table");
+                    + "original table");
             return new BufferedDataTable[]{inData[INPORT]};
         }
 
@@ -205,14 +205,23 @@ public class SorterNodeModel extends NodeModel {
 
         String[] inclList = settings.getStringArray(INCLUDELIST_KEY);
         if (inclList == null) {
-            throw new InvalidSettingsException("StringArray " + INCLUDELIST_KEY
-                    + " is null");
+            throw new InvalidSettingsException("No column selected.");
+        }
+        
+        // scan fur duplicate entries in include list
+        for (int i = 0; i < inclList.length; i++) {
+            String entry = inclList[i];
+            for (int j = i + 1; j < inclList.length; j++) {
+                if (entry.equals(inclList[j])) {
+                    throw new InvalidSettingsException("Duplicate column '"
+                            + entry + "' at positions " + i + " and " + j);
+                }
+            }
         }
 
         boolean[] sortorder = settings.getBooleanArray(SORTORDER_KEY);
         if (sortorder == null) {
-            throw new InvalidSettingsException("Boolean array " + SORTORDER_KEY
-                    + " is null");
+            throw new InvalidSettingsException("No sort order specified.");
         }
     }
 

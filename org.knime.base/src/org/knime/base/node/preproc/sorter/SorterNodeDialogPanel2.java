@@ -24,6 +24,7 @@
  */
 package org.knime.base.node.preproc.sorter;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -36,9 +37,11 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.JSpinner.NumberEditor;
 import javax.swing.border.Border;
 
 import org.knime.core.data.DataTableSpec;
@@ -77,8 +80,8 @@ public class SorterNodeDialogPanel2 extends JPanel {
      * Corresponding checkbox
      */
     private JCheckBox m_memorycheckb;
-
-    /**
+    
+     /**
      * Constructs a new empty JPanel used for displaying the three first
      * selected columns in the according order and the sorting order for each.
      * 
@@ -149,11 +152,28 @@ public class SorterNodeDialogPanel2 extends JPanel {
                     .createTitledBorder("Add columns");
             buttonbox.setBorder(addColumnBorder);
             int maxCols = m_spec.getNumColumns() - m_components.size();
-            SpinnerNumberModel snm = new SpinnerNumberModel(0, 0, maxCols, 1);
-            final JSpinner spinner = new JSpinner(snm);
+            
+            JButton addSortItemButton = new JButton("new columns");
+            final JSpinner spinner = new JSpinner();
+            SpinnerNumberModel snm;
+            if (maxCols == 0) {
+                snm = new SpinnerNumberModel(0, 0, maxCols, 1);
+                spinner.setEnabled(false);
+                addSortItemButton.setEnabled(false);
+            } else {
+                snm = new SpinnerNumberModel(1, 1, maxCols, 1);
+            }
+            spinner.setModel(snm);
             spinner.setMaximumSize(new Dimension(100, 30));
             spinner.setPreferredSize(new Dimension(100, 30));
-            JButton addSortItemButton = new JButton("new columns");
+            NumberEditor ne = (NumberEditor)spinner.getEditor();
+            final JFormattedTextField spinnertextfield = ne.getTextField();
+            // workaround to ensure same background color
+            Color backColor = spinnertextfield.getBackground();
+            // when spinner's text field is editable false
+            spinnertextfield.setEditable(false);
+            spinnertextfield.setBackground(backColor);
+
             addSortItemButton.addActionListener(new ActionListener() {
                 public void actionPerformed(final ActionEvent ae) {
                     ArrayList<String> newlist = new ArrayList<String>();
@@ -165,7 +185,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
                     String temp = spinner.getValue().toString();
                     int newsize = Integer.parseInt(temp);
                     for (int n = oldsize; n < oldsize + newsize; n++) {
-                        newlist.add(m_spec.getColumnSpec(n).getName());
+                        newlist.add(NOSORT);
                     }
                     boolean[] oldbool = new boolean[oldsize];
                     boolean[] newbool = new boolean[oldsize + newsize];
