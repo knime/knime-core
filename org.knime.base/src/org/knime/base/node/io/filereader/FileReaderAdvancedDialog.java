@@ -71,6 +71,10 @@ public class FileReaderAdvancedDialog extends JDialog {
     private DecSepPanel m_decSepPanel;
 
     private IgnoreDelimsPanel m_ignoreDelimsPanel;
+    
+    private ShortLinesPanel m_shortLinesSupport;
+    
+    private UniquifyPanel m_uniquifyPanel;
 
     /**
      * This is the default constructor.
@@ -109,6 +113,8 @@ public class FileReaderAdvancedDialog extends JDialog {
         getQuotePanel().overrideSettings(settings);
         getDecSepPanel().overrideSettings(settings);
         getIngoreWSatEORPanel().overrideSettings(settings);
+        getShortLinesPanel().overrideSettings(settings);
+        getUniquifyPanel().overrideSettings(settings);
     }
 
     /**
@@ -206,7 +212,8 @@ public class FileReaderAdvancedDialog extends JDialog {
                                     + "settings and read new setings "
                                     + "from the file.\n" + "DO YOU WANT THIS?",
                             "Override confirm", JOptionPane.YES_NO_OPTION,
-                            JOptionPane.WARNING_MESSAGE, null) == JOptionPane.YES_OPTION) {
+                            JOptionPane.WARNING_MESSAGE, null) 
+                            == JOptionPane.YES_OPTION) {
                         // we just close the dialog and expect the main dlg
                         // to read our result.
                         m_closedViaReadXML = true;
@@ -284,6 +291,20 @@ public class FileReaderAdvancedDialog extends JDialog {
         return m_ignoreDelimsPanel;
     }
 
+    private ShortLinesPanel getShortLinesPanel() {
+        if (m_shortLinesSupport == null) {
+            m_shortLinesSupport = new ShortLinesPanel(m_settings);
+        }
+        return m_shortLinesSupport;
+    }
+    
+    private UniquifyPanel getUniquifyPanel() {
+        if (m_uniquifyPanel == null) {
+            m_uniquifyPanel = new UniquifyPanel(m_settings);
+        }
+        return m_uniquifyPanel;
+    }
+    
     /**
      * This method initializes jTabbedPane.
      * 
@@ -296,9 +317,13 @@ public class FileReaderAdvancedDialog extends JDialog {
                     "Adjust settings for quote characters here");
             m_jTabbedPane.addTab("Decimal Separator", null, getDecSepPanel(),
                     "Set the decimal separator here");
-            m_jTabbedPane.addTab("Ingore spaces", null,
+            m_jTabbedPane.addTab("Ignore spaces", null,
                     getIngoreWSatEORPanel(),
                     "Ignore extra whitespaces at end of rows.");
+            m_jTabbedPane.addTab("Short Lines", null, getShortLinesPanel(),
+                    "Add support for incomplete rows");
+            m_jTabbedPane.addTab("unique RowIDs", null, getUniquifyPanel(),
+                    "Disable unique making of row IDs");
         }
         return m_jTabbedPane;
     }

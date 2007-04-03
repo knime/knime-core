@@ -31,6 +31,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 
 
@@ -61,18 +62,20 @@ public class FileReaderPreviewTable extends FileTable {
      * 
      * @param settings settings for the underlying <code>FileTable</code>
      * @param tableSpec table spec for the underlying <code>FileTable</code>
+     * @param exec the execution context the progress is reported to
      * @see FileTable
      */
     FileReaderPreviewTable(final DataTableSpec tableSpec,
-            final FileReaderNodeSettings settings) {
-        super(tableSpec, settings);
+            final FileReaderNodeSettings settings, 
+            final ExecutionContext exec) {
+        super(tableSpec, settings, exec);
         m_listeners = new CopyOnWriteArrayList<ChangeListener>();
         m_errorMsg = null;
         m_errorLine = -1;
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     @Override
     public RowIterator iterator() {

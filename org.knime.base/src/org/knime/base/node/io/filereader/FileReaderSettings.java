@@ -26,45 +26,39 @@ package org.knime.base.node.io.filereader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
-import java.util.zip.GZIPInputStream;
 
+import org.knime.base.node.io.filetokenizer.Delimiter;
+import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-import org.knime.base.node.io.filetokenizer.Delimiter;
-import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
-
 /**
  * Contains all settings needed to read in a ASCII data file. This includes the
  * location of the data file, the settings for the tokenizer (like column
  * delimiter, comment patterns etc.) as well as the row headers and more. This
- * object combined with a {@link org.knime.core.data.DataTableSpec} can be
- * used to create a {@link FileTable} from. A <code>FileTable</code> will
- * represent then the data of the file in a
- * {@link org.knime.core.data.DataTable}.
+ * object combined with a {@link org.knime.core.data.DataTableSpec} can be used
+ * to create a {@link FileTable} from. A <code>FileTable</code> will represent
+ * then the data of the file in a {@link org.knime.core.data.DataTable}.
  * 
  * @author ohl, University of Konstanz
  */
 public class FileReaderSettings extends FileTokenizerSettings {
 
     /** The node logger fot this class. */
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(FileReaderSettings.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(FileReaderSettings.class);
 
     /* the list of settings that are stored in here. */
 
     private URL m_dataFileLocation;
-
-    private static final String ZIP_ENDING = ".gz";
 
     /* the table name (derived from the filename if not overridden) */
     private String m_tableName;
@@ -78,6 +72,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * if set, the reader will eat all surplus empty tokens at the end of a row.
      */
     private boolean m_ignoreEmptyTokensAtEOR;
+
+    /*
+     * if set, lines with too few data item are filled with missing values
+     */
+    private boolean m_supportShortLines;
 
     /*
      * if set, the first row in the file will be considered column names - and
@@ -101,6 +100,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private String m_rowHeaderPrefix;
 
     /*
+     * true by default. The Reader makes IDs it read from file unique.
+     */
+    private boolean m_uniquifyRowIDs;
+    
+    /*
      * for each column a string (or null) that will be replaced - if read - with
      * a missing cell.
      */
@@ -122,10 +126,14 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private static final String CFGKEY_HASROW = "hasRowHdr";
 
     private static final String CFGKEY_ROWPREF = "rowPrefix";
+    
+    private static final String CFGKEY_UNIQUIFYID = "uniquifyRowID";
 
     private static final String CFGKEY_IGNOREEMPTY = "ignoreEmptyLines";
 
     private static final String CFGKEY_IGNOREATEOR = "ignEmtpyTokensAtEOR";
+    
+    private static final String CFGKEY_SHORTLINES = "acceptShortLines";
 
     private static final String CFGKEY_ROWDELIMS = "RowDelims";
 
@@ -142,8 +150,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
     /**
      * Creates a new object holding all settings needed to read the specified
      * file. The file must be an ASCII representation of the data to read. We
-     * are not specifying any default behaviour of that newly created object,
-     * you really need to set all parameters before reading the file with these
+     * are not specifying any default behavior of that newly created object, you
+     * really need to set all parameters before reading the file with these
      * settings.
      */
     public FileReaderSettings() {
@@ -162,9 +170,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
         m_fileHasRowHeaders = false;
         m_ignoreEmptyLines = false;
         m_ignoreEmptyTokensAtEOR = false;
+        m_supportShortLines = false;
 
         m_rowHeaderPrefix = null;
-
+        m_uniquifyRowIDs = false;
+        
         m_rowDelimiters = new HashSet<String>();
         m_missingPatterns = new Vector<String>();
     }
@@ -271,9 +281,15 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
             // ignore empty tokens at end of row?
             // It'S optional and default to false, for backward compatibility.
-            m_ignoreEmptyTokensAtEOR = cfg
-                    .getBoolean(CFGKEY_IGNOREATEOR, false);
+            m_ignoreEmptyTokensAtEOR =
+                    cfg.getBoolean(CFGKEY_IGNOREATEOR, false);
 
+            // default is false, for backward compatibility.
+            m_supportShortLines = cfg.getBoolean(CFGKEY_SHORTLINES, false);
+            
+            // default to false, for backward compatibility
+            m_uniquifyRowIDs = cfg.getBoolean(CFGKEY_UNIQUIFYID, false);
+            
             readRowDelimitersFromConfig(rowDelimConf);
 
         } // if (cfg != null)
@@ -312,13 +328,16 @@ public class FileReaderSettings extends FileTokenizerSettings {
         saveMissingPatternsToConfig(cfg.addNodeSettings(CFGKEY_MISSINGS));
         cfg.addChar(CFGKEY_DECIMALSEP, m_decimalSeparator);
         cfg.addBoolean(CFGKEY_IGNOREATEOR, m_ignoreEmptyTokensAtEOR);
+        cfg.addBoolean(CFGKEY_SHORTLINES, m_supportShortLines);
+        cfg.addBoolean(CFGKEY_UNIQUIFYID, m_uniquifyRowIDs);
     }
 
     /*
      * read the patterns, one for each column, that will be replaced by missing
      * cells from the configuration object.
      */
-    private void readMissingPatternsFromConfig(final NodeSettingsRO missPattConf) {
+    private void readMissingPatternsFromConfig(
+            final NodeSettingsRO missPattConf) {
         if (missPattConf == null) {
             throw new NullPointerException(
                     "Can't read missing patterns from null config object");
@@ -461,7 +480,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * 
      * @param dataFileLocation the URL of the data file these settings are for
      */
-    public void setDataFileLocationAndUpdateTableName(final URL dataFileLocation) {
+    public void setDataFileLocationAndUpdateTableName(
+            final URL dataFileLocation) {
         if (dataFileLocation == null) {
             setTableName("");
         } else {
@@ -474,7 +494,6 @@ public class FileReaderSettings extends FileTokenizerSettings {
             }
         }
         m_dataFileLocation = dataFileLocation;
-
     }
 
     /**
@@ -489,40 +508,18 @@ public class FileReaderSettings extends FileTokenizerSettings {
      *         a buffered reader, and for locations ending on ".gz" a GZIP one.
      *         If the data location is not set an exception will fly.
      * @throws NullPointerException if the data location is not set
-     * @throws IOException if an IO Error occured when opening the stream
+     * @throws IOException if an IO Error occurred when opening the stream
      */
-    public BufferedReader createNewInputReader() throws IOException {
-        if (getDataFileLocation() == null) {
-            throw new NullPointerException("Can't open a stream on a null "
-                    + "location");
-        }
-
-        BufferedReader result = null;
-
-        if (getDataFileLocation().toString().endsWith(ZIP_ENDING)) {
-            // if the file ends with ".gz" try opening a zip stream on it
-            try {
-                result = new BufferedReader(
-                        new InputStreamReader(new GZIPInputStream(
-                                getDataFileLocation().openStream()),
-                                "ISO-8859-1"));
-            } catch (IOException ioe) {
-                // the exception will fly if the specified file is not a zip
-                // file.
-            }
-        }
-        if (result == null) {
-            result = new BufferedReader(new InputStreamReader(
-                    getDataFileLocation().openStream()));
-        }
-        return result;
+    public BufferedFileReader createNewInputReader() throws IOException {
+        return BufferedFileReader.createNewReader(getDataFileLocation());
     }
 
     /**
      * Sets a new name for the table created by this node.
      * 
      * 
-     * @param newName the new name to set. Valid names are not <code>null</code>.
+     * @param newName the new name to set. 
+     *          Valid names are not <code>null</code>.
      */
     public void setTableName(final String newName) {
         m_tableName = newName;
@@ -623,6 +620,20 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
+     * @return true if the reader should make rowIDs read from file unique.
+     */
+    public boolean uniquifyRowIDs() {
+        return m_uniquifyRowIDs;
+    }
+    
+    /**
+     * @param uniquify the new value of the "uniquify row IDs from file" flag.
+     */
+    public void setUniquifyRowIDs(final boolean uniquify) {
+        m_uniquifyRowIDs = uniquify;
+    }
+    
+    /**
      * Will add a delimiter pattern that will terminate a row. Row delimiters
      * are always token (=column) delimiters. Row delimiters will always be
      * returned as separate token by the filereader. You can define a row
@@ -653,8 +664,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
             }
         }
 
-        Delimiter newDelim = new Delimiter(rowDelimPattern, skipEmptyRows,
-                true, false);
+        Delimiter newDelim =
+                new Delimiter(rowDelimPattern, skipEmptyRows, true, false);
         // returnAsSeparate, includeInToken);
 
         m_rowDelimiters.add(rowDelimPattern);
@@ -756,7 +767,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
      *            for the specified column. Can be <code>null</code> to delete
      *            a previously set pattern.
      */
-    public void setMissingValueForColumn(final int colIdx, final String pattern) {
+    public void setMissingValueForColumn(final int colIdx, 
+            final String pattern) {
         if (m_missingPatterns.size() <= colIdx) {
             m_missingPatterns.setSize(colIdx + 1);
         }
@@ -818,6 +830,23 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
+     * @param supportShortLines if set true lines with too few data elements
+     *            will be accepted and filled with missing values.
+     */
+    public void setSupportShortLines(final boolean supportShortLines) {
+        m_supportShortLines = supportShortLines;
+    }
+
+    /**
+     * @return true, if lines with too few data items are accepted (they will be
+     *         filled with missing values, if read), or false, it the reader
+     *         fails when it comes across a short line (the default).
+     */
+    public boolean getSupportShortLines() {
+        return m_supportShortLines;
+    }
+
+    /**
      * Method to check consistency and completeness of the current settings. It
      * will return a {@link SettingsStatus} object which contains info, warning
      * and error messages. Or if the settings are alright it will return null.
@@ -844,7 +873,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * @see FileTokenizerSettings#getStatusOfSettings()
+     * {@inheritDoc}
      */
     @Override
     public SettingsStatus getStatusOfSettings() {
@@ -952,7 +981,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 status.addError("There are more patterns for missing values"
                         + " defined than columns in the table.");
             } else {
-                for (Iterator<String> pIter = m_missingPatterns.iterator();
+                for (Iterator<String> pIter = m_missingPatterns.iterator(); 
                         pIter.hasNext();) {
                     if (pIter.next() == null) {
                         status.addInfo("Not all columns have patterns for "
@@ -963,8 +992,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 }
             }
         } else {
-            for (Iterator<String> pIter = m_missingPatterns.iterator();
-                    pIter.hasNext();) {
+            for (Iterator<String> pIter = m_missingPatterns.iterator(); pIter
+                    .hasNext();) {
                 if (pIter.next() == null) {
                     status.addInfo("Not all columns have patterns for missing"
                             + " values assigned.");
@@ -980,7 +1009,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -999,6 +1028,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
         }
         res.append("Ignore empty tokens at the end of row: "
                 + m_ignoreEmptyTokensAtEOR + "\n");
+        res.append("Fill short lines with missVals: " + m_supportShortLines
+                + "\n");
         res.append("RowPrefix:");
         res.append(m_rowHeaderPrefix + "\n");
         res.append("RowHeaders:" + m_fileHasRowHeaders);

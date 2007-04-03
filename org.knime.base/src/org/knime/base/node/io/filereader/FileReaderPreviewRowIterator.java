@@ -62,7 +62,7 @@ class FileReaderPreviewRowIterator extends RowIterator {
     }
 
     /**
-     * @see java.util.Iterator#hasNext()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasNext() {
@@ -70,7 +70,7 @@ class FileReaderPreviewRowIterator extends RowIterator {
     }
 
     /**
-     * @see java.util.Iterator#next()
+     * {@inheritDoc}
      */
     @Override
     public DataRow next() {

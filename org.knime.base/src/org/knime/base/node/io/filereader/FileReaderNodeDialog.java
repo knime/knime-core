@@ -1196,7 +1196,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         }
         DataTableSpec tSpec = m_frSettings.createDataTableSpec();
         tSpec = modifyPreviewColNames(tSpec);
-        m_previewTable = new FileReaderPreviewTable(tSpec, m_frSettings);
+        m_previewTable = new FileReaderPreviewTable(tSpec, m_frSettings, null);
         m_previewTable.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 setErrorLabelText(m_previewTable.getErrorMsg());
@@ -1442,7 +1442,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         try {
             URL newURL = textToURL(tryThis);
             if (newURL.getProtocol().equals("file")) {
-                File tmpFile = new File(newURL.getPath());
+                File tmpFile = new File(newURL.toURI().getPath());
                 startingDir = tmpFile.getAbsolutePath();
             }
         } catch (Exception e) {
@@ -1461,8 +1461,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             String path;
             try {
-                path = chooser.getSelectedFile().getAbsoluteFile().toURL()
-                        .toString();
+                path = chooser.getSelectedFile().getAbsoluteFile()
+                        .toURI().toURL().toString();
             } catch (Exception e) {
                 path = "<Error: Couldn't create URL for file>";
             }
@@ -1493,7 +1493,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             File tmp = new File(url);
 
             // if that blows off we let the exception go up the stack.
-            newURL = tmp.getAbsoluteFile().toURL();
+            newURL = tmp.getAbsoluteFile().toURI().toURL();
         }
         return newURL;
     }
@@ -1518,8 +1518,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     /** Renderer that also supports to show customized tooltip. */
     private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
         /**
-         * @see BasicComboBoxRenderer#getListCellRendererComponent(
-         *      javax.swing.JList, java.lang.Object, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public Component getListCellRendererComponent(final JList list,

@@ -402,7 +402,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
             try {
                 // if this blows up we give up
-                xmlURL = tmp.getAbsoluteFile().toURL();
+                xmlURL = tmp.getAbsoluteFile().toURI().toURL();
             } catch (MalformedURLException mue) {
                 throw new IllegalStateException("Cannot convert '"
                         + xmlLocation + "' to a valid URL.");
@@ -549,7 +549,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         }
         DataTableSpec dts = new DataTableSpec(colSpec);
 
-        DataTable dt = new FileTable(dts, this);
+        DataTable dt = new FileTable(dts, this, null);
         RowIterator rowIter = dt.iterator();
         if (rowIter == null) {
             throw new IOException("Couldn't read from col headers from "
@@ -815,8 +815,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @see FileReaderSettings
-     *      #getStatusOfSettings()
+     * {@inheritDoc}
      */
     @Override
     public SettingsStatus getStatusOfSettings() {
@@ -958,7 +957,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

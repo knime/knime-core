@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 
+import org.knime.base.node.io.filetokenizer.FileTokenizer;
+import org.knime.base.node.io.filetokenizer.FileTokenizerException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -35,10 +37,8 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
-
-import org.knime.base.node.io.filetokenizer.FileTokenizer;
-import org.knime.base.node.io.filetokenizer.FileTokenizerException;
 
 /**
  * Row iterator for the {@link FileTable}.
@@ -54,6 +54,8 @@ final class FileRowIterator extends RowIterator {
     /* The tokenizer reads the next token from the input stream. */
     private final FileTokenizer m_tokenizer;
 
+    private final BufferedFileReader m_source;
+    
     // keep a reference for the filereader settings.
     private final FileReaderSettings m_frSettings;
 
@@ -73,6 +75,9 @@ final class FileRowIterator extends RowIterator {
 
     // Used in the above hash to indicate that duplicate of that row was found.
     private static final Integer NOSUFFIX = new Integer(0);
+    
+    // The junk size after which a new progress is reported. (yet 512 KByte)
+    private static final long PROGRESS_JUNK_SIZE = 1024 * 512;
 
     // if that is true we don't return any more rows.
     private boolean m_exceptionThrown;
@@ -81,21 +86,33 @@ final class FileRowIterator extends RowIterator {
     private boolean m_customDecimalSeparator;
 
     private char m_decSeparator;
+    
+    /* the execution context the progress is reported to */
+    private ExecutionContext m_exec;
+    
+    /* counts the progress reportings */
+    private long m_lastReport;
 
     /**
      * The RowIterator for the FileTable.
      * 
      * @param tableSpec the spec defining the structure of the rows to create
      * @param frSettings object containing the wheres and hows to read the data
+     * @param exec the execution context to report the progess to
      * @throws IOException if it couldn't open the data file
      */
     FileRowIterator(final FileReaderSettings frSettings,
-            final DataTableSpec tableSpec) throws IOException {
+            final DataTableSpec tableSpec, final ExecutionContext exec)
+            throws IOException {
 
         m_tableSpec = tableSpec;
         m_frSettings = frSettings;
 
-        m_tokenizer = new FileTokenizer(m_frSettings.createNewInputReader());
+        m_exec = exec;
+        m_lastReport = 0;
+
+        m_source = m_frSettings.createNewInputReader();
+        m_tokenizer = new FileTokenizer(m_source);
 
         // set the tokenizer related settings in the tokenizer
         m_tokenizer.setSettings(frSettings);
@@ -139,7 +156,7 @@ final class FileRowIterator extends RowIterator {
     } // FileRowIterator(FileTableSpec)
 
     /**
-     * @see org.knime.core.data.RowIterator#hasNext()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasNext() {
@@ -172,7 +189,7 @@ final class FileRowIterator extends RowIterator {
     }
 
     /**
-     * @see org.knime.core.data.RowIterator#next()
+     * {@inheritDoc}
      */
     @Override
     public DataRow next() {
@@ -249,17 +266,24 @@ final class FileRowIterator extends RowIterator {
 
         } // end of while(createdCols < noOfCols)
 
-        // In case we've seen a row delimiter before the row was complete:
-        // puke and die
         int lineNr = m_tokenizer.getLineNumber();
         if ((lineNr > 0) && (token != null) && (token.equals("\n"))) {
             lineNr--;
         }
-        if (createdCols < noOfCols) {
-            throw prepareForException("Too few data elements in row "
-                    + "(line: " + lineNr + " (" + rowHeader + "), source: '"
-                    + m_frSettings.getDataFileLocation() + "')", lineNr,
-                    rowHeader, row);
+        // In case we've seen a row delimiter before the row was complete:
+        // puke and die - unless we are told otherwise
+        if (m_frSettings.getSupportShortLines()) {
+            // pad the row with missing values
+            while (createdCols < noOfCols) {
+                row[createdCols++] = DataType.getMissingCell();
+            }
+        } else {
+            if (createdCols < noOfCols) {
+                throw prepareForException("Too few data elements in row "
+                        + "(line: " + lineNr + " (" + rowHeader
+                        + "), source: '" + m_frSettings.getDataFileLocation()
+                        + "')", lineNr, rowHeader, row);
+            }
         }
 
         token = m_tokenizer.nextToken();
@@ -287,6 +311,17 @@ final class FileRowIterator extends RowIterator {
         }
         m_rowNumber++;
 
+        // report progress
+        // only if an execution context exists an if the underlying
+        // URL is a file whose size can be determined
+        double readBytes = m_source.getNumberOfBytesRead();
+        if (m_exec != null && m_source.getFileSize() > 0
+                && readBytes / PROGRESS_JUNK_SIZE > m_lastReport) {
+            // assert readBytes <= m_frSettings.getDataFileSize();
+            m_exec.setProgress(readBytes / (double)m_source.getFileSize());
+            m_lastReport++;
+        }
+        
         return new DefaultRow(rowHeader, row);
     } // next()
 
@@ -441,8 +476,11 @@ final class FileRowIterator extends RowIterator {
             } else {
                 newRowHeader = fileHeader;
             }
-            // see if it's unique - and if not make it unique.
-            newRowHeader = uniquifyRowHeader(newRowHeader);
+            
+            if (m_frSettings.uniquifyRowIDs()) {
+                // see if it's unique - and if not make it unique.
+                newRowHeader = uniquifyRowHeader(newRowHeader);
+            }
 
             return new StringCell(newRowHeader);
 

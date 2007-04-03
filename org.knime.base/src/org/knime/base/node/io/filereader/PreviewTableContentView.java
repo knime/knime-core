@@ -41,7 +41,7 @@ import org.knime.core.node.tableview.TableContentView;
 public class PreviewTableContentView extends TableContentView {
 
     /** Property event ID when table spec has changed. */
-    static final String PROPERTY_SPEC_CHANGED = "TableSpecChanged";
+    public static final String PROPERTY_SPEC_CHANGED = "TableSpecChanged";
 
     /**
      * Disallows reordering.
@@ -57,7 +57,7 @@ public class PreviewTableContentView extends TableContentView {
     }
 
     /**
-     * @see TableContentView#onMouseClickInHeader(MouseEvent)
+     * {@inheritDoc}
      */
     @Override
     protected void onMouseClickInHeader(final MouseEvent e) {

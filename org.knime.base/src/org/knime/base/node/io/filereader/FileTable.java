@@ -34,6 +34,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 
 
@@ -58,6 +59,9 @@ public class FileTable implements DataTable {
 
     // the settings for the file reader and tokenizer
     private final FileReaderSettings m_frSettings;
+    
+    // the execution context to which the progress is reported
+    private final ExecutionContext m_exec;
 
     /**
      * Inits a new file table with the structure defined in tableSpec and using
@@ -67,9 +71,11 @@ public class FileTable implements DataTable {
      *            create
      * @param frSettings FileReaderSettings specifying the wheres and hows for
      *            reading the ASCII data file
+     * @param exec the execution context the progress is reported to; if null,
+     *            no progress is reported
      */
     public FileTable(final DataTableSpec tableSpec,
-            final FileReaderSettings frSettings) {
+            final FileReaderSettings frSettings, final ExecutionContext exec) {
 
         if ((tableSpec == null) || (frSettings == null)) {
             throw new NullPointerException("Must specify non-null table spec"
@@ -77,15 +83,16 @@ public class FileTable implements DataTable {
         }
         m_tableSpec = tableSpec;
         m_frSettings = frSettings;
+        m_exec = exec;
 
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         try {
-            return new FileRowIterator(m_frSettings, m_tableSpec);
+            return new FileRowIterator(m_frSettings, m_tableSpec, m_exec);
         } catch (IOException ioe) {
             LOGGER.error("I/O Error occured while trying to open a stream"
                     + " to '" + m_frSettings.getDataFileLocation().toString()
@@ -95,7 +102,7 @@ public class FileTable implements DataTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_tableSpec;
