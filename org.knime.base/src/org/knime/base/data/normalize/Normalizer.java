@@ -71,13 +71,34 @@ public final class Normalizer {
     private int[] m_colindices;
 
     /**
-     * Create new wrapper Table from an existing one.
+     * Prepares a Normalizer to process the buffered data table 
+     * <code>table</code>. Only columns as contained in the array argument
+     * are considered.
      * 
      * @param table table to be wrapped
      * @param columns to work on
      * @see DataTable#getDataTableSpec()
      */
     public Normalizer(final BufferedDataTable table, final String[] columns) {
+        this((DataTable)table, columns);
+    }
+
+    /**
+     * Prepares a Normalizer to process the StatisticsTable 
+     * <code>table</code> (actually no traversing is done here).
+
+     * @param table table to be wrapped
+     * @param columns to work on
+     * @see DataTable#getDataTableSpec()
+     */
+    public Normalizer(final StatisticsTable table, final String[] columns) {
+        this((DataTable)table, columns);
+    }
+    
+    /**
+     * Internal delegator.
+     */
+    private Normalizer(final DataTable table, final String[] columns) {
         m_table = table;
         DataTableSpec spec = table.getDataTableSpec();
         m_colindices = findNumericalColumns(spec, columns);
@@ -165,7 +186,12 @@ public final class Normalizer {
             final double newmax, final double newmin,
             final ExecutionMonitor exec) throws CanceledExecutionException {
         ExecutionMonitor statisticsExec = exec.createSubProgress(.5);
-        StatisticsTable st = new StatisticsTable(m_table, statisticsExec);
+        StatisticsTable st;
+        if (m_table instanceof StatisticsTable) {
+            st = (StatisticsTable)m_table;
+        } else {
+            st = new StatisticsTable(m_table, statisticsExec);
+        }
         DataTableSpec spec = st.getDataTableSpec();
         DataCell[] max = st.getMax();
         DataCell[] min = st.getMin();
@@ -215,7 +241,12 @@ public final class Normalizer {
     public AffineTransTable doZScoreNorm(final ExecutionMonitor exec)
             throws CanceledExecutionException {
         ExecutionMonitor statisticsExec = exec.createSubProgress(.5);
-        StatisticsTable st = new StatisticsTable(m_table, statisticsExec);
+        StatisticsTable st;
+        if (m_table instanceof StatisticsTable) {
+            st = (StatisticsTable)m_table;
+        } else {
+            st = new StatisticsTable(m_table, statisticsExec);
+        }
         double[] mean = st.getMean();
         double[] stddev = st.getStandardDeviation();
 
@@ -253,7 +284,12 @@ public final class Normalizer {
      */
     public AffineTransTable doDecimalScaling(final ExecutionMonitor exec)
             throws CanceledExecutionException {
-        StatisticsTable st = new StatisticsTable(m_table, exec);
+        StatisticsTable st;
+        if (m_table instanceof StatisticsTable) {
+            st = (StatisticsTable)m_table;
+        } else {
+            st = new StatisticsTable(m_table, exec);
+        }
         String[] includes = getNames();
         double[] max = st.getdoubleMax();
         double[] min = st.getdoubleMin();
