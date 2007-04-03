@@ -117,17 +117,29 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
                 min = 0.0;
                 max = 1.0;
             }
-            float gray = (float)((val - min) / (max - min));
-            gray = Math.max(0.0f, gray);
-            gray = Math.min(1.0f, gray);
-            gray = 1.0f - gray;
-            c = new Color(gray, gray, gray);
+            c = setDoubleValue(val, min, max);
             setIconColor(c);
             setTextInternal(null);
         } else {
             setIcon(null);
             setTextInternal(DataType.getMissingCell().toString());
         }
+    }
+    
+    /** Method that may be overwritten to return a more specific color.
+     * @param val The current value
+     * @param min The minimum according the column spec.
+     * @param max The maximum according the column spec.
+     * @return The color for the current value, never <code>null</code>.
+     */
+    protected Color setDoubleValue(final double val, 
+            final double min, final double max) {
+        float gray = (float)((val - min) / (max - min));
+        gray = Math.max(0.0f, gray);
+        gray = Math.min(1.0f, gray);
+        gray = 1.0f - gray;
+        return new Color(gray, gray, gray);
+        
     }
     
     /** Returns "Gray Scale".
