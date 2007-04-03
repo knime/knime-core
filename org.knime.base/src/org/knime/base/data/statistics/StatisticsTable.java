@@ -185,7 +185,33 @@ public class StatisticsTable implements DataTable {
      * @throws CanceledExecutionException if user canceled
      */
     protected void calculateAllMoments(final ExecutionMonitor exec)
-            throws CanceledExecutionException {
+        throws CanceledExecutionException {
+        double nrRows;
+        if (m_table instanceof BufferedDataTable) {
+            nrRows = ((BufferedDataTable)m_table).getRowCount();
+        } else {
+            nrRows = Double.NaN;
+        }
+        calculateAllMoments(nrRows, exec); 
+    }
+    
+    /**
+     * Calculates <b>all the statistical moments in one pass </b>. After the
+     * call of this operation, the statistical moments can be obtained very fast
+     * from all the other methods.
+     * 
+     * @param rowCount Row count of table for progress, may be NaN if unknown.
+     * @param exec object to check with if user canceled the operation
+     * @throws CanceledExecutionException if user canceled
+     * @throws IllegalArgumentException if rowCount argument < 0
+     */
+    protected void calculateAllMoments(final double rowCount, 
+            final ExecutionMonitor exec) throws CanceledExecutionException {
+
+        if (rowCount < 0.0) {
+            throw new IllegalArgumentException(
+                    "rowCount argument must not < 0: " + rowCount);
+        }
 
         DataTableSpec origSpec = m_table.getDataTableSpec();
         int numOfCols = origSpec.getNumColumns();
@@ -205,20 +231,14 @@ public class StatisticsTable implements DataTable {
             assert comp[i] != null;
         }
 
-        if (m_table instanceof BufferedDataTable) {
-            m_nrRows = ((BufferedDataTable)m_table).getRowCount();
-        } else {
-            m_nrRows = Integer.MAX_VALUE;
-        }
         int nrRows = 0;
         DataRow row;
         for (RowIterator rowIt = m_table.iterator(); 
             rowIt.hasNext(); nrRows++) {
             row = rowIt.next();
             if (exec != null) {
-                exec.setProgress(Math.max(0.1, (double)nrRows
-                        / (double)m_nrRows),
-                        "Calculating statistics, processing row "
+                double prog = Double.isNaN(rowCount) ? 0.0 : nrRows / rowCount;
+                exec.setProgress(prog, "Calculating statistics, processing row "
                                 + (nrRows + 1) + " (\"" + row.getKey() + "\")");
                 exec.checkCanceled(); // throws exception if user canceled
             }
