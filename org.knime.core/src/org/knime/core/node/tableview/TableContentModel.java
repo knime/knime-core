@@ -568,8 +568,7 @@ public class TableContentModel extends AbstractTableModel
 
     /** 
      * Returns DataCell.class.
-     * 
-     * @see AbstractTableModel#getColumnClass(int)
+     * {@inheritDoc}
      */
     @Override
     public Class<DataCell> getColumnClass(final int column) {

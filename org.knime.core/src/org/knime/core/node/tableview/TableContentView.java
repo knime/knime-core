@@ -34,6 +34,8 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.ButtonGroup;
@@ -54,6 +56,7 @@ import javax.swing.table.TableModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
+import org.knime.core.data.DataType;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.renderer.DataValueRendererFamily;
@@ -182,8 +185,7 @@ public class TableContentView extends JTable {
     /**
      * Overridden in order to set the correct selection color (depending on
      * hilite status).
-     * 
-     * @see JTable#prepareRenderer(TableCellRenderer, int, int)
+     * {@inheritDoc}
      */
     @Override
     public Component prepareRenderer(final TableCellRenderer renderer, 
@@ -355,7 +357,7 @@ public class TableContentView extends JTable {
     /**
      * Overridden so that we can attach a mouse listener to it and set
      * the proper renderer. The mouse listener is used to display a popup menu.
-     * @see javax.swing.JTable#setTableHeader(javax.swing.table.JTableHeader)
+     * {@inheritDoc}
      */
     @Override
     public void setTableHeader(final JTableHeader newTableHeader) {
@@ -379,7 +381,7 @@ public class TableContentView extends JTable {
      * a repaint if the color has changed. Since that happens frequently (and
      * also within the repaint) this causes an infinite loop.
      * 
-     * @see javax.swing.JTable#setSelectionBackground(java.awt.Color)
+     * {@inheritDoc}
      */
     @Override
     public void setSelectionBackground(final Color back) {
@@ -391,17 +393,14 @@ public class TableContentView extends JTable {
             m_tempHSBColor = new float[3];
         }
         float[] hsb = m_tempHSBColor;
-        if (back != null) {
-            Color.RGBtoHSB(back.getRed(), back.getGreen(), back.getBlue(), 
-                    hsb);
-            if (hsb[2] > 0.5f) {
-                fore = Color.BLACK;
-            } else {
-                fore = Color.WHITE;
-            }
-            super.selectionForeground = fore;
+        Color.RGBtoHSB(back.getRed(), back.getGreen(), back.getBlue(), 
+                hsb);
+        if (hsb[2] > 0.5f) {
+            fore = Color.BLACK;
+        } else {
+            fore = Color.WHITE;
         }
-        super.selectionBackground = back;
+        super.selectionForeground = fore;
     }
     
     /**
@@ -422,8 +421,7 @@ public class TableContentView extends JTable {
         DataTable data = getContentModel().getDataTable();
         DataColumnSpec headerValue = data.getDataTableSpec().getColumnSpec(i);
         aColumn.setHeaderValue(headerValue);
-        DataValueRendererFamily renderer = 
-            headerValue.getType().getRenderer(headerValue);
+        DataValueRendererFamily renderer = getRendererFamily(headerValue);
         for (String s : renderer.getRendererDescriptions()) {
             if (renderer.accepts(s, headerValue)) {
                 renderer.setActiveRenderer(s);
@@ -432,6 +430,17 @@ public class TableContentView extends JTable {
         }
         aColumn.setCellRenderer(renderer);
         super.addColumn(aColumn);
+    }
+    
+    /** Method being invoked when the table is (re-)constructed to get
+     * the available renderer for a column. This method may be overwritten
+     * to make the list of renderers more specific or general.
+     * @param colSpec The spec of the column, never <code>null</code>.
+     * @return The renderer family for the argument, not <code>null</code>.
+     */
+    protected DataValueRendererFamily getRendererFamily(
+            final DataColumnSpec colSpec) {
+        return colSpec.getType().getRenderer(colSpec);
     }
     
     /**
@@ -585,6 +594,83 @@ public class TableContentView extends JTable {
             availRenderer = new String[0];
         }
         return availRenderer;
+    }
+    
+    /** Changes the renderer in all columns whose type is 
+     * equal to <code>type</code>. This is a convenient way to change the
+     * renderer of several columns at once. This method does nothing if
+     * the type is unknown or the identifier is invalid.
+     * @param type the target type
+     * @param ident The identifier for the renderer to use
+     * @see #getTypeRendererMap()
+     */
+    public void changeRenderer(final DataType type, final String ident) {
+        for (Enumeration<TableColumn> e = getColumnModel().getColumns(); 
+            e.hasMoreElements();) {
+            TableColumn tc = e.nextElement();
+            Object headerValue = tc.getHeaderValue();
+            TableCellRenderer ren = tc.getCellRenderer();
+            if (headerValue instanceof DataColumnSpec 
+                    && ren instanceof DataValueRendererFamily) {
+                DataColumnSpec c = (DataColumnSpec)headerValue;
+                DataValueRendererFamily r = (DataValueRendererFamily)ren;
+                DataType t = c.getType();
+                if (t.equals(type)) {
+                    r.setActiveRenderer(ident);
+                }
+            }
+        }
+        repaint();
+    }
+    
+    /** Sets the width of all columns to the argument width.
+     * @param width The new width.
+     * @see TableColumn#setWidth(int)
+     */
+    public void setColumnWidth(final int width) {
+        for (Enumeration<TableColumn> e = getColumnModel().getColumns(); 
+            e.hasMoreElements();) {
+            TableColumn next = e.nextElement();
+            if (width < next.getMinWidth()) {
+                next.setMinWidth(width);
+            }
+            next.setPreferredWidth(width);
+            next.setWidth(width);
+        }
+    }
+    
+    /** Creates a new map containing DataType&lt;-&gt;available renderer 
+     * identifiers. The size of this map is equal to the number of different
+     * <@link {@link DataColumnSpec#getType() column types}, i.e. if the table
+     * only contains, e.g. double values (represented by 
+     * {@link org.knime.core.data.def.DoubleCell}), this map will have only one
+     * entry. The values in this map correspond to the renderer descriptions
+     * that are {@link DataType#getRenderer(DataColumnSpec) available for the 
+     * type at hand}.
+     * 
+     * <p>This map is used to switch the renderer for a set of columns.
+     * @return Such a (new) map.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<DataType, String[]> getTypeRendererMap() {
+        LinkedHashMap<DataType, String[]> result = 
+            new LinkedHashMap<DataType, String[]>();
+        for (Enumeration<TableColumn> e = getColumnModel().getColumns(); 
+            e.hasMoreElements();) {
+            TableColumn tc = e.nextElement();
+            Object headerValue = tc.getHeaderValue();
+            TableCellRenderer ren = tc.getCellRenderer();
+            if (headerValue instanceof DataColumnSpec 
+                    && ren instanceof DataValueRendererFamily) {
+                DataColumnSpec c = (DataColumnSpec)headerValue;
+                DataValueRendererFamily r = (DataValueRendererFamily)ren;
+                DataType t = c.getType();
+                if (!result.containsKey(t)) {
+                    result.put(t, r.getRendererDescriptions());
+                }
+            }
+        }
+        return result;
     }
     
     /**

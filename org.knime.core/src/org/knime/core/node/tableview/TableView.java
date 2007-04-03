@@ -24,6 +24,7 @@
 package org.knime.core.node.tableview;
 
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -49,6 +50,8 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.MouseInputAdapter;
+import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 import org.knime.core.data.DataCell;
@@ -73,9 +76,20 @@ public class TableView extends JScrollPane {
     // and add functionality to mouse-drag the header width 
     /** Header column's width in pixel. */
     private static final int ROWHEADER_WIDTH = 100;
+
+    /** Cursor that is shown when the column header is resized (north-south). */
+    private static final Cursor RESIZE_CURSOR = 
+        Cursor.getPredefinedCursor(Cursor.S_RESIZE_CURSOR);
+
     
     /** The popup menu which allows to trigger hilite events. */
     private JPopupMenu m_popup;
+    
+    /** Enables the resizing of the column header. Instantiated lazily. */
+    private ColumnHeaderResizeMouseHandler m_columnHeaderResizeHandler;
+    
+    /** Whether or not column header resizing is allowed. Defaults to false. */
+    private boolean m_isColumnHeaderResizingAllowed;
     
     /** 
      * Creates new empty <code>TableView</code>. Content and handlers are set
@@ -101,6 +115,7 @@ public class TableView extends JScrollPane {
     public TableView(final TableContentView contentView) {
         // disallow null arguments
         super(checkNull(contentView));
+        m_isColumnHeaderResizingAllowed = false;
         // if not "off", the horizontal scroll bar is never shown (reduces
         // size of columns to minimum)
         contentView.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
@@ -250,6 +265,28 @@ public class TableView extends JScrollPane {
             }
         }
         return viewPort;
+    }
+    
+    /** Overwritten to add (north-south) resize listener to upper left corner.  
+     * {@inheritDoc} */
+    @Override
+    public void setCorner(final String key, final Component corner) {
+        if (UPPER_LEFT_CORNER.equals(key)) {
+            Component old = getCorner(UPPER_LEFT_CORNER); 
+            if (old != null && m_columnHeaderResizeHandler != null) {
+                old.removeMouseListener(m_columnHeaderResizeHandler);
+                old.removeMouseMotionListener(m_columnHeaderResizeHandler);
+            } 
+            if (corner != null && isColumnHeaderResizingAllowed()) {
+                if (m_columnHeaderResizeHandler == null) {
+                    m_columnHeaderResizeHandler = 
+                        new ColumnHeaderResizeMouseHandler();
+                }
+                corner.addMouseListener(m_columnHeaderResizeHandler);
+                corner.addMouseMotionListener(m_columnHeaderResizeHandler);
+            }
+        }
+        super.setCorner(key, corner);
     }
 
     /** 
@@ -402,7 +439,11 @@ public class TableView extends JScrollPane {
     public void setColumnWidth(final int width) {
         TableColumnModel colModel = getContentTable().getColumnModel();
         for (int i = 0; i < colModel.getColumnCount(); i++) {
-            colModel.getColumn(i).setPreferredWidth(width);
+            TableColumn c = colModel.getColumn(i);
+            if (width < c.getMinWidth()) {
+                c.setMinWidth(width);
+            }
+            c.setPreferredWidth(width);
         }
     }
     
@@ -457,6 +498,45 @@ public class TableView extends JScrollPane {
         return getContentTable().isShowIconInColumnHeader();
     }
     
+    /**
+     * Whether or not the resizing of the column header height is allowed.
+     * The default is <code>false</code>.
+     * @return the isColumnHeaderResizingAllowed.
+     * @see #setColumnHeaderResizingAllowed(boolean)
+     */
+    public boolean isColumnHeaderResizingAllowed() {
+        return m_isColumnHeaderResizingAllowed;
+    }
+
+    /**
+     * Enable or disable the resizing of the column header height.
+     * @param isColumnHeaderResizingAllowed If <code>true</code> resizing is
+     * allowed.
+     */
+    public void setColumnHeaderResizingAllowed(
+            final boolean isColumnHeaderResizingAllowed) {
+        if (m_isColumnHeaderResizingAllowed == isColumnHeaderResizingAllowed) {
+            return;
+        }
+        m_isColumnHeaderResizingAllowed = isColumnHeaderResizingAllowed;
+        Component corner = getCorner(UPPER_LEFT_CORNER);
+        if (m_isColumnHeaderResizingAllowed) {
+            if (corner != null) {
+                if (m_columnHeaderResizeHandler == null) {
+                    m_columnHeaderResizeHandler = 
+                        new ColumnHeaderResizeMouseHandler();
+                }
+                corner.addMouseListener(m_columnHeaderResizeHandler);
+                corner.addMouseMotionListener(m_columnHeaderResizeHandler);
+            }
+        } else {
+            if (corner != null && m_columnHeaderResizeHandler != null) {
+                corner.removeMouseListener(m_columnHeaderResizeHandler);
+                corner.removeMouseMotionListener(m_columnHeaderResizeHandler);
+            }
+        }
+    }
+
     /**
      * Tries to find a row key that matches on the given pattern starting
      * at position <code>startRow</code>. If a matching row is found, the view
@@ -778,4 +858,64 @@ public class TableView extends JScrollPane {
             source.setEnabled(data && hilite);
         }
     }
+    
+    /** Mouse handler that takes care of the column header resizing. */
+    private class ColumnHeaderResizeMouseHandler extends MouseInputAdapter {
+        
+        private int m_oldMouseY;
+        
+        private Cursor m_swapCursor = RESIZE_CURSOR; 
+        
+        /** {@inheritDoc} */
+        @Override
+        public void mouseMoved(final MouseEvent e) {
+            Component c = (Component)e.getSource();
+            if (canResize(c, e) != c.getCursor().equals(RESIZE_CURSOR)) {
+                swapCursor(c);
+            }
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public void mousePressed(final MouseEvent e) {
+            Component c = (Component)e.getSource();
+            if (canResize(c, e)) {
+                m_oldMouseY = e.getPoint().y;
+            }
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public void mouseDragged(final MouseEvent e) {
+            Component c = (Component)e.getSource();
+            if (m_oldMouseY > 0) {
+                JViewport colHeader = getColumnHeader();
+                Component colHeaderView = 
+                    colHeader != null ? colHeader.getView() : null;
+                int diff = e.getPoint().y - m_oldMouseY;
+                Dimension o = c.getSize();
+                Dimension n = new Dimension(o.width, o.height + diff);
+                colHeaderView.setSize(n);
+                colHeaderView.setPreferredSize(n);
+                m_oldMouseY = colHeaderView.getSize().height;
+            }
+        }
+        
+        /** {@inheritDoc} */
+        @Override
+        public void mouseReleased(final MouseEvent e) {
+            m_oldMouseY = -1;
+        }
+        
+        private void swapCursor(final Component c) {
+            Cursor oldCursor = c.getCursor();
+            c.setCursor(m_swapCursor);
+            m_swapCursor = oldCursor;
+        }
+        
+        private boolean canResize(final Component c, final MouseEvent e) {
+            return (c.getHeight() - e.getPoint().y <= 3);
+        }
+    }
+    
 }   // TableView
