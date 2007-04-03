@@ -66,6 +66,7 @@ public final class TableRowHeaderView extends JTable {
      */
     private TableRowHeaderView(final TableRowHeaderModel dm) {
         super(dm);
+        getTableHeader().setReorderingAllowed(false);
         new RowHeaderHeightMouseListener(this);
     } // TableRowHeaderView
     
