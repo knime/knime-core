@@ -69,11 +69,10 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.SettingsModelInteger
-     *      #createClone()
+     * {@inheritDoc}
      */
     @Override
-    SettingsModelIntegerBounded createClone() {
+    protected SettingsModelIntegerBounded createClone() {
         return new SettingsModelIntegerBounded(getConfigName(), getIntValue(),
                 m_minValue, m_maxValue);
     }
@@ -93,8 +92,7 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.SettingsModelInteger
-     *      #validateValue(int)
+     * {@inheritDoc}
      */
     @Override
     protected void validateValue(final int value)
@@ -108,8 +106,7 @@ public class SettingsModelIntegerBounded extends SettingsModelInteger {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.SettingsModelInteger
-     *      #setIntValue(int)
+     * {@inheritDoc}
      */
     @Override
     public void setIntValue(final int newValue) {

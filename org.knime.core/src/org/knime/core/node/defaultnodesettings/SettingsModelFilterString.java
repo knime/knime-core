@@ -66,8 +66,8 @@ public class SettingsModelFilterString extends SettingsModel {
      * @param defaultExclList the initial value for the exclude list.
      */
     public SettingsModelFilterString(final String configName,
-            final List<String> defaultInclList,
-            final List<String> defaultExclList) {
+            final Collection<String> defaultInclList,
+            final Collection<String> defaultExclList) {
         if ((configName == null) || (configName == "")) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
@@ -118,39 +118,47 @@ public class SettingsModelFilterString extends SettingsModel {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.SettingsModel#createClone()
+     * Constructs a new model with initially empty include and exclude lists.  
+     *
+     * @param configName the identifier the values are stored with in the
+     *            {@link org.knime.core.node.NodeSettings} object
+     */
+    public SettingsModelFilterString(final String configName) {
+        this(configName, (Collection<String>)null, (Collection<String>)null); 
+    }
+    
+    /**
+     * {@inheritDoc}
      */
     @SuppressWarnings("unchecked")
     @Override
-    SettingsModelFilterString createClone() {
+    protected SettingsModelFilterString createClone() {
         return new SettingsModelFilterString(m_configName,
                 new LinkedList<String>(m_inclList), new LinkedList<String>(
                         m_exclList));
     }
 
     /**
-     * @see SettingsModel#getModelTypeID()
+     * {@inheritDoc}
      */
     @Override
-    String getModelTypeID() {
+    protected String getModelTypeID() {
         return "SMID_filterString";
     }
 
     /**
-     * @see SettingsModel#getConfigName()
+     * {@inheritDoc}
      */
     @Override
-    String getConfigName() {
+    protected String getConfigName() {
         return m_configName;
     }
 
     /**
-     * @see SettingsModel
-     *      #loadSettingsForDialog(org.knime.core.node.NodeSettingsRO,
-     *      org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
-    void loadSettingsForDialog(final NodeSettingsRO settings,
+    protected void loadSettingsForDialog(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         try {
             Config lists = settings.getConfig(m_configName);
@@ -167,11 +175,10 @@ public class SettingsModelFilterString extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel
-     *      #saveSettingsForDialog(org.knime.core.node.NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
-    void saveSettingsForDialog(final NodeSettingsWO settings)
+    protected void saveSettingsForDialog(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         saveSettingsForModel(settings);
     }
@@ -188,7 +195,7 @@ public class SettingsModelFilterString extends SettingsModel {
     /**
      * set the value of the stored include list.
      * 
-     * @param newValue the new value to store as include list.
+     * @param newValue the new value to store as include list. Can't be null.
      */
     public void setIncludeList(final Collection<String> newValue) {
         // figure out if we need to notify listeners
@@ -206,10 +213,8 @@ public class SettingsModelFilterString extends SettingsModel {
 
         // now take over the new list
         m_inclList.clear();
-        if (newValue != null) {
-            m_inclList.addAll(newValue);
-        }
-        
+        m_inclList.addAll(newValue);
+                
         // if we got a different list we need to let all listeners know.
         if (notify) {
             notifyChangeListeners();
@@ -236,7 +241,7 @@ public class SettingsModelFilterString extends SettingsModel {
     /**
      * set the value of the stored exclude list.
      * 
-     * @param newValue the new value to store as exclude list.
+     * @param newValue the new value to store as exclude list. Can't be null.
      */
     public void setExcludeList(final Collection<String> newValue) {
         // figure out if we need to notify listeners
@@ -254,10 +259,8 @@ public class SettingsModelFilterString extends SettingsModel {
         
         // now take over the new list
         m_exclList.clear();
-        if (newValue != null) {
-            m_exclList.addAll(newValue);
-        }
-        
+        m_exclList.addAll(newValue);
+                
         // if we got a different list we need to let all listeners know.
         if (notify) {
             notifyChangeListeners();
@@ -272,11 +275,10 @@ public class SettingsModelFilterString extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel
-     *      #loadSettingsForModel(org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
-    void loadSettingsForModel(final NodeSettingsRO settings)
+    protected void loadSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         try {
             // no default value, throw an exception instead
@@ -291,10 +293,10 @@ public class SettingsModelFilterString extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel #saveSettingsForModel(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
-    void saveSettingsForModel(final NodeSettingsWO settings) {
+    protected void saveSettingsForModel(final NodeSettingsWO settings) {
         Config lists = settings.addConfig(m_configName);
         lists.addStringArray(CFGKEY_INCL, getIncludeList().toArray(
                 new String[0]));
@@ -303,11 +305,10 @@ public class SettingsModelFilterString extends SettingsModel {
     }
 
     /**
-     * @see SettingsModel
-     *      #validateSettingsForModel(org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
-    void validateSettingsForModel(final NodeSettingsRO settings)
+    protected void validateSettingsForModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // expect a sub-config with two string arrays: include and exclude list
         Config lists = settings.getConfig(m_configName);
@@ -316,7 +317,7 @@ public class SettingsModelFilterString extends SettingsModel {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

@@ -79,38 +79,38 @@ public final class DialogComponentBoolean extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #updateComponent()
+     * {@inheritDoc}
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
         // only update component if values are off
         SettingsModelBoolean model = (SettingsModelBoolean)getModel();
+        setEnabledComponents(model.isEnabled());
         if (model.getBooleanValue() != m_checkbox.isSelected()) {
             m_checkbox.setSelected(model.getBooleanValue());
         }
     }
 
     /**
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * {@inheritDoc}
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         // nothing to do.
     }
 
     /**
-     * @see DialogComponent
-     *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         // we're always good.
     }
 
     /**
-     * @see DialogComponent#setEnabledComponents(boolean)
+     * {@inheritDoc}
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
@@ -126,8 +126,7 @@ public final class DialogComponentBoolean extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #setToolTipText(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public void setToolTipText(final String text) {

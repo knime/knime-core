@@ -26,10 +26,13 @@
 package org.knime.core.node.defaultnodesettings;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
@@ -41,6 +44,10 @@ import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -103,11 +110,11 @@ public class DialogComponentFileChooser extends DialogComponent {
      * accepted.
      * 
      * @param stringModel the model holding the value
+     * @param historyID id for the file history
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
      *            {@link JFileChooser#CUSTOM_DIALOG}
      * @param validExtensions only show files with those extensions
-     * @param historyID id for the file history
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final int dialogType,
@@ -121,13 +128,13 @@ public class DialogComponentFileChooser extends DialogComponent {
      * non-existing paths are accepted.
      * 
      * @param stringModel the model holding the value
+     * @param historyID to identify the file histroy
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
      *            {@link JFileChooser#CUSTOM_DIALOG}
      * @param directoryOnly <code>true</code> if only directories should be
      *            selectable, otherwise only files can be selected
      * @param validExtensions only show files with those extensions
-     * @param historyID to identify the file histroy
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final int dialogType,
@@ -142,7 +149,8 @@ public class DialogComponentFileChooser extends DialogComponent {
         m_fileComboBox.setPreferredSize(new Dimension(300, m_fileComboBox
                 .getPreferredSize().height));
         m_fileComboBox.setRenderer(new ConvenientComboBoxRenderer());
-
+        m_fileComboBox.setEditable(true);
+        
         for (String fileName : m_fileHistory.getHistory()) {
             m_fileComboBox.addItem(fileName);
         }
@@ -159,8 +167,9 @@ public class DialogComponentFileChooser extends DialogComponent {
         m_browseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 // sets the path in the file text field.
-                String selectedFile = (String)m_fileComboBox.getSelectedItem();
-                if (selectedFile == null) {
+                String selectedFile = 
+                    m_fileComboBox.getEditor().getItem().toString();
+                if (selectedFile.length() == 0) { 
                     selectedFile = (String)m_fileComboBox.getItemAt(0);
                 }
                 JFileChooser chooser = new JFileChooser(selectedFile);
@@ -172,22 +181,25 @@ public class DialogComponentFileChooser extends DialogComponent {
                     if (validExtensions != null && validExtensions.length > 0) {
                         // disable "All Files" selection
                         chooser.setAcceptAllFileFilterUsed(false);
-                    }
-                    // set file filter for given extensions
-                    for (String extension : validExtensions) {
-                        chooser.setFileFilter(new SimpleFileFilter(extension));
+                        // set file filter for given extensions
+                        for (String extension : validExtensions) {
+                            chooser.setFileFilter(new SimpleFileFilter(
+                                    extension));
+                        }
                     }
                 }
-                int returnVal = chooser.showDialog(
-                        getComponentPanel().getParent(), null);
+                int returnVal =
+                        chooser.showDialog(getComponentPanel().getParent(),
+                                null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String newFile;
                     try {
                         newFile =
                                 chooser.getSelectedFile().getAbsoluteFile()
                                         .toString();
-                        // if ile selection and only on extension available
-                        if (!directoryOnly && validExtensions.length == 1) {
+                        // if file selection and only on extension available
+                        if (!directoryOnly && validExtensions != null 
+                                && validExtensions.length == 1) {
                             // and the file names has no this extension
                             if (!newFile.endsWith(validExtensions[0])) {
                                 // then append it
@@ -208,14 +220,47 @@ public class DialogComponentFileChooser extends DialogComponent {
 
         m_fileComboBox.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                // transfer the new filename into the settings model
-                try {
-                    updateModel(true); // don't color the combobox red.
-                } catch (InvalidSettingsException ise) {
-                    // ignore it here.
-                }
+                filenameChanged();            }
+        });
+        m_fileComboBox.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                filenameChanged();
             }
         });
+
+        /* install action listeners */
+        // set stuff to update preview when file location changes
+        m_fileComboBox.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(final FocusEvent e) {
+                filenameChanged();
+            }
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void focusGained(final FocusEvent e) {
+                filenameChanged();
+            }
+        });
+        Component editor = m_fileComboBox.getEditor().getEditorComponent();
+        if (editor instanceof JTextComponent) {
+            Document d = ((JTextComponent)editor).getDocument();
+            d.addDocumentListener(new DocumentListener() {
+                public void changedUpdate(final DocumentEvent e) {
+                    filenameChanged();
+                }
+
+                public void insertUpdate(final DocumentEvent e) {
+                    filenameChanged();
+                }
+
+                public void removeUpdate(final DocumentEvent e) {
+                    filenameChanged();
+                }
+            });
+        }
+
 
         getModel().prependChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
@@ -224,18 +269,30 @@ public class DialogComponentFileChooser extends DialogComponent {
         });
     }
 
+    // called by all action/change listeners to transfer the new filename into
+    // the settings model. (And ignore any invalid situations.)
+    private void filenameChanged() {
+        // transfer the new filename into the settings model
+        try {
+            clearError(m_fileComboBox);
+            updateModel(true); // don't color the combobox red.
+        } catch (InvalidSettingsException ise) {
+            // ignore it here.
+        } 
+    }
+    
     /**
      * Transfers the value from the component into the settings model.
      * 
      * @param noColoring if set true, the component will not be marked red, even
      *            if the entered value was erroneous.
      * @throws InvalidSettingsException if the entered filename is null or
-     *             emtpy.
+     *             empty.
      */
     private void updateModel(final boolean noColoring)
             throws InvalidSettingsException {
 
-        String file = (String)m_fileComboBox.getSelectedItem();
+        String file = m_fileComboBox.getEditor().getItem().toString();
         if ((file != null) && (file.trim().length() > 0)) {
 
             try {
@@ -264,7 +321,11 @@ public class DialogComponentFileChooser extends DialogComponent {
      */
     private void showError(final JComboBox box) {
 
-        String selection = (String)box.getSelectedItem();
+        if (!getModel().isEnabled()) {
+            // don't flag an error in disabled components.
+            return;
+        }
+        String selection = box.getEditor().getItem().toString();
 
         if ((selection == null) || (selection.length() == 0)) {
             box.setBackground(Color.RED);
@@ -284,11 +345,23 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #updateComponent()
+     * Sets the coloring of the specified component back to normal.
+     * 
+     * @param box the component to clear the error status for.
+     */
+    protected void clearError(final JComboBox box) {
+        box.setForeground(DEFAULT_FG);
+        box.setBackground(DEFAULT_BG);
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
+
+        clearError(m_fileComboBox);
+
         // update the component only if model and component are out of sync
         SettingsModelString model = (SettingsModelString)getModel();
         String newValue = model.getStringValue();
@@ -296,7 +369,8 @@ public class DialogComponentFileChooser extends DialogComponent {
         if (newValue == null) {
             update = (m_fileComboBox.getSelectedItem() != null);
         } else {
-            update = !newValue.equals(m_fileComboBox.getSelectedItem());
+            String file = m_fileComboBox.getEditor().getItem().toString();
+            update = !newValue.equals(file);
         }
         if (update) {
             // to avoid multiply added items...
@@ -304,13 +378,17 @@ public class DialogComponentFileChooser extends DialogComponent {
             m_fileComboBox.addItem(newValue);
             m_fileComboBox.setSelectedItem(newValue);
         }
+
+        // also update the enable status
+        setEnabledComponents(model.isEnabled());
     }
 
     /**
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * {@inheritDoc}
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         // just in case we didn't get notified about the last change...
         updateModel(false); // mark the erroneous component red.
         // store the saved filename in the history
@@ -318,17 +396,16 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent
-     *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         // we're always good - independent of the incoming spec
     }
 
     /**
-     * @see DialogComponent#setEnabledComponents(boolean)
+     * {@inheritDoc}
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
@@ -354,8 +431,7 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #setToolTipText(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public void setToolTipText(final String text) {

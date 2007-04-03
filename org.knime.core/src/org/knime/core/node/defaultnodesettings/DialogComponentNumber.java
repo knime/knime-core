@@ -53,11 +53,11 @@ public class DialogComponentNumber extends DialogComponent {
 
     // the default width of the spinner if no width and no default value is set
     private static final int FIELD_DEFWIDTH = 10;
-    
+
     private static final int FIELD_MINWIDTH = 2;
 
     private JSpinner m_spinner;
-    
+
     private final JLabel m_label;
 
     /**
@@ -70,8 +70,7 @@ public class DialogComponentNumber extends DialogComponent {
      */
     public DialogComponentNumber(final SettingsModelNumber numberModel,
             final String label, final Number stepSize) {
-        this(numberModel, label, stepSize, 
-                calcDefaultWidth(numberModel));
+        this(numberModel, label, stepSize, calcDefaultWidth(numberModel));
     }
 
     /**
@@ -97,8 +96,8 @@ public class DialogComponentNumber extends DialogComponent {
         SpinnerNumberModel spinnerModel;
         if (numberModel instanceof SettingsModelDouble) {
             SettingsModelDouble dblModel = (SettingsModelDouble)numberModel;
-            Comparable min = null;
-            Comparable max = null;
+            Double min = null;
+            Double max = null;
             if (dblModel instanceof SettingsModelDoubleBounded) {
                 min = ((SettingsModelDoubleBounded)dblModel).getLowerBound();
                 max = ((SettingsModelDoubleBounded)dblModel).getUpperBound();
@@ -108,8 +107,8 @@ public class DialogComponentNumber extends DialogComponent {
                             stepSize);
         } else if (numberModel instanceof SettingsModelInteger) {
             SettingsModelInteger intModel = (SettingsModelInteger)numberModel;
-            Comparable min = null;
-            Comparable max = null;
+            Integer min = null;
+            Integer max = null;
             if (intModel instanceof SettingsModelIntegerBounded) {
                 min = ((SettingsModelIntegerBounded)intModel).getLowerBound();
                 max = ((SettingsModelIntegerBounded)intModel).getUpperBound();
@@ -125,13 +124,12 @@ public class DialogComponentNumber extends DialogComponent {
         if (numberModel instanceof SettingsModelDouble) {
             m_spinner.setEditor(new JSpinner.NumberEditor(m_spinner,
                     "#.0################################################"));
-        }        
+        }
         JSpinner.DefaultEditor editor =
                 (JSpinner.DefaultEditor)m_spinner.getEditor();
         editor.getTextField().setColumns(compWidth);
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
-        
-        
+
         m_spinner.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 try {
@@ -159,6 +157,7 @@ public class DialogComponentNumber extends DialogComponent {
      * Tries to calculate a field width from the model specified. If the model
      * is a bounded int/double model, is uses the max value to determine the
      * width, if its not bounded, it uses the actual value.
+     * 
      * @param model number model to derive field width from
      * @return the width of the spinner, derived from the values in the model.
      */
@@ -168,32 +167,39 @@ public class DialogComponentNumber extends DialogComponent {
             // no model, return the default width of 10
             return FIELD_DEFWIDTH;
         }
-        
+
         String value = "12";
         if (model instanceof SettingsModelIntegerBounded) {
-            value = Integer.toString(
-                    ((SettingsModelIntegerBounded)model).getUpperBound());
+            value =
+                    Integer.toString(((SettingsModelIntegerBounded)model)
+                            .getUpperBound());
         } else if (model instanceof SettingsModelDoubleBounded) {
-            value = Double.toString(
-                    ((SettingsModelDoubleBounded)model).getUpperBound());
+            value =
+                    Double.toString(((SettingsModelDoubleBounded)model)
+                            .getUpperBound());
         } else {
             value = model.getNumberValueStr();
         }
-        
+
         if (value.length() < FIELD_MINWIDTH) {
             // spinner should be at least 2 columns wide.
             return FIELD_MINWIDTH;
         }
         return value.length();
-        
+
     }
-    
+
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #updateComponent()
+     * {@inheritDoc}
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
+        
+        JComponent editor = m_spinner.getEditor();
+        if (editor instanceof DefaultEditor) {
+            clearError(((DefaultEditor)editor).getTextField());
+        }
+        
         // update the component only if it contains a different value than the
         // model
         try {
@@ -221,11 +227,14 @@ public class DialogComponentNumber extends DialogComponent {
                 m_spinner.setValue(new Integer(model.getIntValue()));
             }
         }
+
+        // also update the enable status
+        setEnabledComponents(getModel().isEnabled());
     }
 
     /**
      * Transfers the value from the spinner into the model. Colors the spinner
-     * red, if the number is not accepted by the settingsmodel. And throws an
+     * red, if the number is not accepted by the settings model. And throws an
      * exception then.
      * 
      * @throws InvalidSettingsException if the number was not accepted by the
@@ -261,25 +270,25 @@ public class DialogComponentNumber extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * {@inheritDoc}
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         updateModel();
     }
 
     /**
-     * @see DialogComponent
-     *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         // we're always good - independent of the incoming spec
     }
 
     /**
-     * @see DialogComponent#setEnabledComponents(boolean)
+     * {@inheritDoc}
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
@@ -287,8 +296,7 @@ public class DialogComponentNumber extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #setToolTipText(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public void setToolTipText(final String text) {
@@ -297,4 +305,3 @@ public class DialogComponentNumber extends DialogComponent {
     }
 
 }
-

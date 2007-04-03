@@ -1,5 +1,4 @@
-/* 
- * -------------------------------------------------------------------
+/* ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -17,18 +16,20 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  * 
  * History
- *   16.11.2005 (gdf): created
+ *   12.01.2007 (thiel): created
  */
-
 package org.knime.core.node.defaultnodesettings;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 
 import javax.swing.JLabel;
-import javax.swing.JTextField;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -39,59 +40,62 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 
 /**
- * Provide a standard component for a dialog that allows to edit a text field.
  * 
- * @author Thomas Gabriel, University of Konstanz
- * 
+ * @author Kilian Thiel, University of Konstanz
  */
-public final class DialogComponentString extends DialogComponent {
+public class DialogComponentMultiLineString extends DialogComponent {
 
     // the min/max and default width of the editfield, if not set explicitly
-    private static final int FIELD_MINWIDTH = 5;
+    private static final int FIELD_DEFCOLS = 50;
 
-    private static final int FIELD_DEFWIDTH = 15;
+    private static final int FIELD_DEFROWS = 3;
 
-    private static final int FIELD_MAXWIDTH = 30;
-
-    private final JTextField m_valueField;
+    private final JTextArea m_valueField;
 
     private final JLabel m_label;
 
     private final boolean m_disallowEmtpy;
 
     /**
-     * Constructor put label and JTextField into panel. It will accept empty
+     * Constructor put label and JTextArea into panel. It will accept empty
      * strings as legal input.
      * 
-     * @param label label for dialog in front of JTextField
+     * @param label label for dialog in front of JTextArea
      * @param stringModel the model that stores the value for this component.
      */
-    public DialogComponentString(final SettingsModelString stringModel,
-            final String label) {
-        this(stringModel, label, false, calcDefaultWidth(stringModel
-                .getStringValue()));
+    public DialogComponentMultiLineString(
+            final SettingsModelString stringModel, final String label) {
+        this(stringModel, label, false, FIELD_DEFCOLS, FIELD_DEFROWS);
     }
 
     /**
-     * Constructor put label and JTextField into panel.
+     * Constructor put label and JTextArea into panel.
      * 
-     * @param label label for dialog in front of JTextField
+     * @param label label for dialog in front of JTextArea
      * @param stringModel the model that stores the value for this component.
      * @param disallowEmptyString if set true, the component request a non-empty
      *            string from the user.
-     * @param compWidth the width of the edit field (in columns/characters)
+     * @param cols the number of columns.
+     * @param rows the number of rows.
      */
-    public DialogComponentString(final SettingsModelString stringModel,
-            final String label, final boolean disallowEmptyString,
-            final int compWidth) {
+    public DialogComponentMultiLineString(
+            final SettingsModelString stringModel, final String label,
+            final boolean disallowEmptyString, final int cols, final int rows) {
         super(stringModel);
 
         m_disallowEmtpy = disallowEmptyString;
 
+        getComponentPanel().setLayout(new BorderLayout());
+
         m_label = new JLabel(label);
-        getComponentPanel().add(m_label);
-        m_valueField = new JTextField();
-        m_valueField.setColumns(compWidth);
+        getComponentPanel().add(m_label, BorderLayout.NORTH);
+
+        m_valueField = new JTextArea();
+        m_valueField.setColumns(cols);
+        m_valueField.setRows(rows);
+
+        JScrollPane jsp = new JScrollPane(m_valueField);
+        getComponentPanel().add(jsp, BorderLayout.CENTER);
 
         m_valueField.getDocument().addDocumentListener(new DocumentListener() {
             public void removeUpdate(final DocumentEvent e) {
@@ -125,28 +129,6 @@ public final class DialogComponentString extends DialogComponent {
                 updateComponent();
             }
         });
-
-        getComponentPanel().add(m_valueField);
-    }
-
-    /**
-     * @param defaultValue the default value in the component
-     * @return the width of the spinner, derived from the defaultValue.
-     */
-    private static int calcDefaultWidth(final String defaultValue) {
-        if ((defaultValue == null) || (defaultValue.length() == 0)) {
-            // no default value, return the default width of 15
-            return FIELD_DEFWIDTH;
-        }
-        if (defaultValue.length() < FIELD_MINWIDTH) {
-            // the editfield should be at least 15 columns wide
-            return FIELD_MINWIDTH;
-        }
-        if (defaultValue.length() > FIELD_MAXWIDTH) {
-            return FIELD_MAXWIDTH;
-        }
-        return defaultValue.length();
-
     }
 
     /**
@@ -182,6 +164,55 @@ public final class DialogComponentString extends DialogComponent {
         // we transfer the value from the field into the model
         ((SettingsModelString)getModel())
                 .setStringValue(m_valueField.getText());
+    }
+
+    private void showError(final JTextArea field) {
+        
+        if (!getModel().isEnabled()) {
+            // don't flag an error in disabled components.
+            return;
+        }
+
+        if (field.getText().length() == 0) {
+            field.setBackground(Color.RED);
+        } else {
+            field.setForeground(Color.RED);
+        }
+        field.requestFocusInWindow();
+
+        // change the color back as soon as he changes something
+        field.getDocument().addDocumentListener(new DocumentListener() {
+
+            public void removeUpdate(final DocumentEvent e) {
+                field.setForeground(DEFAULT_FG);
+                field.setBackground(DEFAULT_BG);
+                field.getDocument().removeDocumentListener(this);
+            }
+
+            public void insertUpdate(final DocumentEvent e) {
+                field.setForeground(DEFAULT_FG);
+                field.setBackground(DEFAULT_BG);
+                field.getDocument().removeDocumentListener(this);
+            }
+
+            public void changedUpdate(final DocumentEvent e) {
+                field.setForeground(DEFAULT_FG);
+                field.setBackground(DEFAULT_BG);
+                field.getDocument().removeDocumentListener(this);
+            }
+
+        });
+    }
+
+    /**
+     * Clears the error status of the specified component by reseting its color
+     * to the normal default colors.
+     * 
+     * @param field the component to set the colors back to normal for.
+     */
+    private void clearError(final JTextArea field) {
+        field.setForeground(DEFAULT_FG);
+        field.setBackground(DEFAULT_BG);
     }
 
     /**

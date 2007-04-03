@@ -32,7 +32,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -55,6 +55,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
     private JComboBox m_combobox;
 
     private final JLabel m_label;
+
     /**
      * Constructor that puts label and combobox into panel. It expects the user
      * to make a selection, thus, at least one item in the list of selectable
@@ -70,7 +71,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
      */
     public DialogComponentStringSelection(
             final SettingsModelString stringModel, final String label,
-            final List<String> list) {
+            final Collection<String> list) {
         super(stringModel);
 
         if ((list == null) || (list.size() == 0)) {
@@ -114,11 +115,10 @@ public final class DialogComponentStringSelection extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #updateComponent()
+     * {@inheritDoc}
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
         String val = ((SettingsModelString)getModel()).getStringValue();
         boolean update;
         if (val == null) {
@@ -129,6 +129,9 @@ public final class DialogComponentStringSelection extends DialogComponent {
         if (update) {
             m_combobox.setSelectedItem(val);
         }
+
+        // also update the enable status
+        setEnabledComponents(getModel().isEnabled());
     }
 
     /**
@@ -170,25 +173,25 @@ public final class DialogComponentStringSelection extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * {@inheritDoc}
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         updateModel();
     }
 
     /**
-     * @see DialogComponent
-     *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         // we are always good.
     }
 
     /**
-     * @see DialogComponent #setEnabledComponents(boolean)
+     * {@inheritDoc}
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
@@ -206,8 +209,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #setToolTipText(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public void setToolTipText(final String text) {
@@ -215,4 +217,46 @@ public final class DialogComponentStringSelection extends DialogComponent {
         m_combobox.setToolTipText(text);
     }
 
+    /**
+     * Replaces the list of selectable strings in the component. If
+     * <code>select</code> is specified (not null) and it exists in the
+     * collection it will be selected. If <code>select</code> is null, the
+     * previous value will stay selected (if it exists in the new list).
+     * 
+     * @param newItems new strings for the combo box
+     * @param select the item to select after the replace. Can be null, in which
+     *            case the previous selection remains - if it exists in the new
+     *            list.
+     */
+    public void replaceListItems(final Collection<String> newItems,
+            final String select) {
+        if (newItems == null) {
+            throw new NullPointerException("The container with the new items"
+                    + " can't be null");
+        }
+        String sel = select;
+        if (sel == null) {
+            sel = ((SettingsModelString)getModel()).getStringValue();
+        }
+
+        m_combobox.removeAllItems();
+
+        for (String s : newItems) {
+            if (s == null) {
+                throw new NullPointerException("Strings in the selection"
+                        + " list can't be null");
+            }
+            m_combobox.addItem(s);
+        }
+
+        if (!newItems.contains(sel) && (newItems.size() > 0)) {
+            m_combobox.setSelectedIndex(0);
+        } else {
+            m_combobox.setSelectedItem(sel);
+        }
+        //update the size of the comboBox and force the repainting
+        //of the whole panel
+        m_combobox.setSize(m_combobox.getPreferredSize());
+        getComponentPanel().validate();
+    }
 }

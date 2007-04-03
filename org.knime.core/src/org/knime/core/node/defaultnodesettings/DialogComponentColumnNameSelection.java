@@ -27,8 +27,6 @@ package org.knime.core.node.defaultnodesettings;
 
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.Arrays;
-import java.util.List;
 
 import javax.swing.JLabel;
 import javax.swing.border.Border;
@@ -40,7 +38,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.ColumnFilter;
 import org.knime.core.node.util.ColumnSelectionPanel;
+import org.knime.core.node.util.DataValueColumnFilter;
 
 /**
  * Provides a standard component for a dialog that allows to select a column in
@@ -56,11 +56,31 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     private final ColumnSelectionPanel m_chooser;
 
     private final JLabel m_label;
-    
+
     private final int m_specIndex;
 
-    private final List<Class<? extends DataValue>> m_typeList;
+    private final ColumnFilter m_columnFilter;
+    
+    private final boolean m_isRequired;
 
+    /**
+     * Constructor that puts label and combobox into the panel. The dialog will
+     * not open until the incoming table spec contains a column compatible to
+     * one of the specified {@link DataValue} classes.
+     * 
+     * @param model the model holding the value of this component
+     * @param label label for dialog in front of checkbox
+     * @param specIndex index of (input) port listing available columns
+     * @param columnFilter {@link ColumnFilter}. The combo box
+     *            will allow to select only columns compatible with the 
+     *            column filter. All other columns will be ignored.
+     */
+    public DialogComponentColumnNameSelection(final SettingsModelString model,
+            final String label, final int specIndex,
+            final ColumnFilter columnFilter) {
+        this(model, label, specIndex, true, columnFilter);
+    }
+    
     /**
      * Constructor that puts label and combobox into the panel. The dialog will
      * not open until the incoming table spec contains a column compatible to
@@ -90,15 +110,35 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     public DialogComponentColumnNameSelection(final SettingsModelString model,
             final String label, final int specIndex, final boolean isRequired,
             final Class<? extends DataValue>... classFilter) {
+        this(model, label, specIndex, isRequired, 
+                new DataValueColumnFilter(classFilter));
+    }
+    
+    /**
+     * Constructor that puts label and combobox into the panel.
+     * 
+     * @param model the model holding the value of this component
+     * @param label label for dialog in front of checkbox
+     * @param specIndex index of (input) port listing available columns
+     * @param isRequired true, if the component should throw an exception in
+     *            case of no available compatible column, false otherwise.
+     * @param columnFilter {@link ColumnFilter}. The combo box
+     *            will allow to select only columns compatible with the 
+     *            column filter. All other columns will be ignored.
+     */
+    public DialogComponentColumnNameSelection(final SettingsModelString model,
+            final String label, final int specIndex, final boolean isRequired,
+            final ColumnFilter columnFilter) {
         super(model);
         m_label = new JLabel(label);
         getComponentPanel().add(m_label);
-        m_chooser = new ColumnSelectionPanel((Border)null, classFilter);
-        m_chooser.setRequired(isRequired);
+        m_isRequired = isRequired;
+        m_columnFilter = columnFilter;
+        m_chooser = new ColumnSelectionPanel((Border)null, m_columnFilter);
+        m_chooser.setRequired(m_isRequired);
         getComponentPanel().add(m_chooser);
 
         m_specIndex = specIndex;
-        m_typeList = Arrays.asList(classFilter);
 
         // we are not listening to the selection panel and not updating the
         // model on a selection change. We set the value in the model right
@@ -120,16 +160,17 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
                 // selected column in the component.
                 m_chooser.setSelectedColumn(((SettingsModelString)getModel())
                         .getStringValue());
+//              update the enable status
+                setEnabledComponents(getModel().isEnabled());
             }
         });
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #updateComponent()
+     * {@inheritDoc}
      */
     @Override
-    void updateComponent() {
+    protected void updateComponent() {
         String classCol = ((SettingsModelString)getModel()).getStringValue();
         if ((classCol == null) || (classCol.length() == 0)) {
             classCol = "** Unknown column **";
@@ -141,6 +182,9 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             // this exception shouldn't fly.
             assert false;
         }
+
+        // update the enable status
+        setEnabledComponents(getModel().isEnabled());
     }
 
     /**
@@ -152,11 +196,10 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     }
 
     /**
-     * @see DialogComponent
-     *      #checkConfigurabilityBeforeLoad(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
-    void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
+    protected void checkConfigurabilityBeforeLoad(final DataTableSpec[] specs)
             throws NotConfigurableException {
         /*
          * this is a bit of code duplication: if the selection panel is set to
@@ -176,47 +219,34 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
                     + "configure dialog. Configure or execute predecessor "
                     + "nodes.");
         }
-        // now check if at least one column is compatible to at least
-        // one of the types we accept
+        //if it's not required we don't need to check if at least one column
+        //matches the criteria
+        if (!m_isRequired) {
+            return;
+        }
+        // now check if at least one column is compatible to the column filter
         for (DataColumnSpec col : spec) {
-            for (Class<? extends DataValue> t : m_typeList) {
-                if (col.getType().isCompatible(t)) {
-                    // we found one acceptable type we are compatible to - cool!
-                    return;
-                }
+            if (m_columnFilter.includeColumn(col)) {
+                // we found one column we are compatible to - cool!
+                return;
             }
         }
-
-        String typeList = "";
-        int count = 0;
-        for (Class<? extends DataValue> t : m_typeList) {
-            if (count == 3) {
-                typeList += "...";
-                break;
-            }
-            if (count > 0) {
-                typeList += ", ";
-            }
-            typeList += t.getSimpleName();
-            count++;
-        }
-
-        // here none of the columns are compatible to the acceptable types.
-        throw new NotConfigurableException("The input table doesn't contain"
-                + " a column with the expected type(s): " + typeList + ".");
+        //no column compatible to the current filter
+        throw new NotConfigurableException(m_columnFilter.allFilteredMsg());
     }
 
     /**
-     * @see DialogComponent#validateStettingsBeforeSave()
+     * {@inheritDoc}
      */
     @Override
-    void validateStettingsBeforeSave() throws InvalidSettingsException {
+    protected void validateStettingsBeforeSave()
+            throws InvalidSettingsException {
         // just in case we didn't get notified about the last selection ...
         updateModel();
     }
 
     /**
-     * @see DialogComponent#setEnabledComponents(boolean)
+     * {@inheritDoc}
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
@@ -224,8 +254,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodesettings.DialogComponent
-     *      #setToolTipText(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public void setToolTipText(final String text) {
