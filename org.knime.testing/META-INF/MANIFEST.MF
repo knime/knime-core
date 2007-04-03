@@ -21,7 +21,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.chem.base,
  org.knime.chem.types,
  org.knime.exp.chem,
- org.knime.dev
+ org.knime.dev,
+ org.knime.ext.c45r8
 Eclipse-RegisterBuddy: org.knime.base
 Eclipse-AutoStart: true
 Export-Package: org.knime.testing,
