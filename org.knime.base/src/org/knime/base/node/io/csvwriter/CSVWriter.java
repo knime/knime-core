@@ -198,6 +198,7 @@ public class CSVWriter extends BufferedWriter {
                 }
             }
             newLine();
+            i++;
         }
     }
 
