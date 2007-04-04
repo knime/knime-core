@@ -35,7 +35,8 @@ import org.knime.core.data.renderer.AbstractPainterDataValueRenderer;
  * little bar, which is either painted (bit = set) or not.
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class BitVectorValuePixelRenderer extends AbstractPainterDataValueRenderer {
+final class BitVectorValuePixelRenderer extends 
+    AbstractPainterDataValueRenderer {
     
     private BitSet m_bitSet;
     private int m_length;
