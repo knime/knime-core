@@ -111,24 +111,22 @@ public class TimePlotNodeModel extends DefaultVisualizationNodeModel implements
 
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.base.node.viz.plotter.DataProvider
+     * #getDataArray(int)
      */
     @Override
     public DataArray getDataArray(final int index) {
         return m_input;
     }
 
+    /**
+     * Returns the index of the column in the input table 
+     * to report on the x-axis
+     * @return m_xColIndex
+     */
     public int getColXIndex() {
         return m_xColIndex;
     }
-
-    /**
-     * True, if antialiasing should be used, false otherwise.
-     * @return true, if antialiasing should be used, false otherwise
-     */
-//    public boolean antiAliasingOn() {
-//        return m_antialiasing;
-//    }
 
     /**
      * All nominal columns without possible values or with more than 60
@@ -315,7 +313,8 @@ public class TimePlotNodeModel extends DefaultVisualizationNodeModel implements
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.core.node.NodeModel#validateSettings(
+     * org.knime.core.node.NodeSettingsRO)
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)

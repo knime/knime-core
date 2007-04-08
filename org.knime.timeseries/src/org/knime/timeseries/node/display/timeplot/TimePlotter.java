@@ -20,7 +20,9 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   21.09.2006 (Fabian Dill): created
+ *   13.02.2007 (Rosaria Silipo): created
+ *   This class implments a line plotter but reports the price dates 
+ *   on the x-axis.
  */
 package org.knime.timeseries.node.display.timeplot;
 
@@ -44,14 +46,10 @@ import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.base.node.viz.plotter.columns.MultiColumnPlotterProperties;
-//import org.knime.base.node.viz.plotter.line.LinePlotter;
-import org.knime.base.node.viz.plotter.line.LinePlotterDrawingPane;
-import org.knime.base.node.viz.plotter.line.LinePlotterProperties;
+import org.knime.base.node.viz.plotter.line.LinePlotter;
 import org.knime.base.node.viz.plotter.props.ColorLegendTab;
 import org.knime.base.node.viz.plotter.scatter.DotInfo;
 import org.knime.base.node.viz.plotter.scatter.DotInfoArray;
-import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
-//import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -78,13 +76,13 @@ import org.knime.core.node.util.ColumnFilterPanel;
  * 
  * @author Rosaria Silipo
  */
-public class TimePlotter extends ScatterPlotter {
+public class TimePlotter extends LinePlotter {
 
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            LinePlotter.class);
     
     /** Initial dot size. */
-    public static final int SIZE = 4;
+    //public static final int SIZE = 4;
 
     private static final int DEFAULT_NR_COLS = 5;
     
@@ -110,15 +108,17 @@ public class TimePlotter extends ScatterPlotter {
         super(panel, properties);
         setDotSize(SIZE);
         m_columns2Draw = new ArrayList<Integer>();
-        if (getProperties() instanceof LinePlotterProperties) {
-            final ColumnFilterPanel columnFilter = ((LinePlotterProperties)
+        if (getProperties() instanceof TimePlotterProperties) {
+            final ColumnFilterPanel columnFilter = ((TimePlotterProperties)
                     getProperties()).getColumnFilter(); 
             columnFilter.addChangeListener(
                     new ChangeListener() {
+                       
                         /**
-                         * {@inheritDoc}
+                         * @see javax.swing.event.ChangeListener#stateChanged(
+                         * javax.swing.event.ChangeEvent)
                          */
-                        public void stateChanged(final ChangeEvent e) {
+                       public void stateChanged(final ChangeEvent e) {
                             if (getDataProvider() != null 
                                 && getDataProvider().getDataArray(0) != null) {
                                 DataTableSpec spec = getDataProvider()
@@ -135,65 +135,77 @@ public class TimePlotter extends ScatterPlotter {
                         }
                     });
             final ColorLegendTab legend 
-                = ((LinePlotterProperties)getProperties()).getColorLegend();
+                = ((TimePlotterProperties)getProperties()).getColorLegend();
             legend.addChangeListener(new ChangeListener() {
+            
                 /**
-                 * {@inheritDoc}
+                 * @see javax.swing.event.ChangeListener#stateChanged(
+                 * javax.swing.event.ChangeEvent)
                  */
-                public void stateChanged(final ChangeEvent e) {
+               public void stateChanged(final ChangeEvent e) {
                     // get the mapping and update model
                     m_colorMapping = legend.getColorMapping();
                     updatePaintModel();
                 }        
             });
-            final JCheckBox box = ((LinePlotterProperties)getProperties())
+            final JCheckBox box = ((TimePlotterProperties)getProperties())
                 .getInterpolationCheckBox();
             box.addItemListener(new ItemListener() {
+            
                 /**
-                 * {@inheritDoc}
+                 * @see java.awt.event.ItemListener#itemStateChanged(
+                 * java.awt.event.ItemEvent)
                  */
+        
                 public void itemStateChanged(final ItemEvent e) {
                     setInterpolation(box.isSelected());
                     updatePaintModel();
                 }
             });
             final JCheckBox showDotsBox 
-                = ((LinePlotterProperties)getProperties()).getShowDotsBox();
+                = ((TimePlotterProperties)getProperties()).getShowDotsBox();
             showDotsBox.addItemListener(new ItemListener() {
+           
                 /**
-                 * {@inheritDoc}
+                 * @see java.awt.event.ItemListener#itemStateChanged(
+                 * java.awt.event.ItemEvent)
                  */
                 public void itemStateChanged(final ItemEvent e) {
-                    ((LinePlotterDrawingPane)getDrawingPane()).setShowDots(
+                    ((TimePlotterDrawingPane)getDrawingPane()).setShowDots(
                             showDotsBox.isSelected());
                     getDrawingPane().repaint();
                 }
             });
-            final JSpinner dotSize = ((LinePlotterProperties)getProperties())
+            final JSpinner dotSize = ((TimePlotterProperties)getProperties())
                 .getDotSizeSpinner();
             dotSize.addChangeListener(new ChangeListener() {
+           
                 /**
-                 * {@inheritDoc}
+                 * @see javax.swing.event.ChangeListener#stateChanged(
+                 * javax.swing.event.ChangeEvent)
                  */
-                public void stateChanged(final ChangeEvent e) {
+               public void stateChanged(final ChangeEvent e) {
                     setDotSize((Integer)dotSize.getValue());
                     getDrawingPane().repaint();
                 }
             });
-            final JSpinner thickness = ((LinePlotterProperties)getProperties())
+            final JSpinner thickness = ((TimePlotterProperties)getProperties())
                 .getThicknessSpinner();
             thickness.addChangeListener(new ChangeListener() {
+            
             /**
-             * {@inheritDoc}
+             * @see javax.swing.event.ChangeListener#stateChanged(
+             * javax.swing.event.ChangeEvent)
              */
             public void stateChanged(final ChangeEvent e) {
-                ((LinePlotterDrawingPane)getDrawingPane()).setLineThickness(
+                ((TimePlotterDrawingPane)getDrawingPane()).setLineThickness(
                         (Integer)thickness.getValue());
                 getDrawingPane().repaint();
             }
             
         });
         }
+        
     }
     
     /**
@@ -201,7 +213,7 @@ public class TimePlotter extends ScatterPlotter {
      *
      */
     public TimePlotter() {
-        this(new LinePlotterDrawingPane(), new LinePlotterProperties());
+        this(new TimePlotterDrawingPane(), new TimePlotterProperties());
     }
     
     /**
@@ -222,20 +234,7 @@ public class TimePlotter extends ScatterPlotter {
         m_colorMapping = null;
         m_columnNames = null;
         m_columns2Draw.clear();
-    }
-    
-    /**
-     * Missing values may be linearly interpolated, if true they will be 
-     * interpolated, if false missing values will be left out and the line
-     * will be interrupted.
-     * 
-     * @param enable true if missing values should be interpolated(linear), 
-     * false otherwise
-     */
-    public void setInterpolation(final boolean enable) {
-        m_interpolate = enable;
-    }
-    
+    }    
     
     /**
      * Creates the color mapping by dividing the hue circle of the HSB color 
@@ -272,10 +271,10 @@ public class TimePlotter extends ScatterPlotter {
             calculateCoordinates(array);
             calculateDots();
             // if we have line plotter properties update them
-            if (getProperties() instanceof LinePlotterProperties) {
-                ((LinePlotterProperties)getProperties()).updateColumnSelection(
+            if (getProperties() instanceof TimePlotterProperties) {
+                ((TimePlotterProperties)getProperties()).updateColumnSelection(
                         array.getDataTableSpec(), m_columnNames);
-                ((LinePlotterProperties)getProperties()).updateColorLegend(
+                ((TimePlotterProperties)getProperties()).updateColorLegend(
                         m_colorMapping);
             }
             getDrawingPane().repaint();
@@ -312,7 +311,7 @@ public class TimePlotter extends ScatterPlotter {
      *
      */
     protected void calculateDots() {
-        if (!(getDrawingPane() instanceof LinePlotterDrawingPane)) {
+        if (!(getDrawingPane() instanceof TimePlotterDrawingPane)) {
             return;
         }
         if (m_columnNames == null) {
@@ -325,7 +324,7 @@ public class TimePlotter extends ScatterPlotter {
             
             // set the empty dots to delete the old ones 
             // if we have no columns to display
-            ((LinePlotterDrawingPane)getDrawingPane()).setDotInfoArray(
+            ((TimePlotterDrawingPane)getDrawingPane()).setDotInfoArray(
                     new DotInfoArray(new DotInfo[0]));
            
             // first store them in a list to avoid keep tracking of indices
@@ -376,7 +375,8 @@ public class TimePlotter extends ScatterPlotter {
                                 array.getRow(row).getKey(),
                                 delegateIsHiLit(array.getRow(row).getKey()
                                         .getId()), color, 1, row);
-                        dot.setXDomainValue(array.getRow(row).getKey().getId());
+//                        dot.setXDomainValue(array.getRow(row).getKey().getId());
+                        dot.setXDomainValue(dc);
                         dot.setYDomainValue(cell);
                         dotList.add(dot);
                     } else if (!m_interpolate) {
@@ -395,9 +395,9 @@ public class TimePlotter extends ScatterPlotter {
             }
             DotInfo[] dots = new DotInfo[dotList.size()];
             dotList.toArray(dots);
-            ((LinePlotterDrawingPane)getDrawingPane()).setNumberOfLines(
+            ((TimePlotterDrawingPane)getDrawingPane()).setNumberOfLines(
                     nrOfRows);
-            ((LinePlotterDrawingPane)getDrawingPane()).setDotInfoArray(
+            ((TimePlotterDrawingPane)getDrawingPane()).setDotInfoArray(
                     new DotInfoArray(dots));
         }
     }
@@ -437,37 +437,13 @@ public class TimePlotter extends ScatterPlotter {
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotter#updateSize()
      */
     @Override
     public void updateSize() {
         calculateDots();
     }
-    
-    /**
-     * The nr of intermediate points and the last row index is used to 
-     * determine the x value (only the y value is interpolated).
-     * @param p1 the domain value 1
-     * @param p2 the domain value 2
-     * @param xValues an array containing opoints with the right x value but 
-     * missing y value.
-     * @return the interpolated domain values.
-     */
-    public DotInfo[] interpolate(final Point p1, 
-            final Point p2, final List<DotInfo> xValues) {
-        DotInfo[] interpolated = new DotInfo[xValues.size()];
-        for (int i = 0; i < xValues.size(); i++) {
-            int x = xValues.get(i).getXCoord();
-            double m = ((p2.getY() - p1.getY()) / (p2.getX() - p1.getX()));
-            double y = (m * x) - (m * p1.getX()) + p1.getY();
-            DotInfo newDot = xValues.get(i);
-            newDot.setYCoord((int)getScreenYCoordinate(y));
-            interpolated[i] = newDot;
-            x++;
-        }
-        return interpolated;
-    }
-    
+   
     
     
 }
