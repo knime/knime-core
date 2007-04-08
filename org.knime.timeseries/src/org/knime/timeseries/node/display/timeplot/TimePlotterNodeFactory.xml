@@ -4,14 +4,14 @@
 	<name>Time Plot</name>
 	
 	<shortDescription>
-	    Plots the numeric columns as lines with corresponding times on the x-axis.
+	    Plots the numeric columns as lines with corresponding dates on the x-axis.
 	</shortDescription>
 	
 	<fullDescription>
 	
 		<intro>		
 	    <p>Plots the numeric columns of the input table as lines and reports the
-	    corresponding times on the x-axis.
+	    corresponding dates on the x-axis.
 	    All values are
 	    mapped to a single y coordinate. This may distort the visualization if the
 	    difference of the values in the columns is large.  
@@ -31,7 +31,7 @@
 		<h3>Tooltip</h3>
 		<p>
 		Move the mouse over the data points to get detailed information about 
-		the data point (Row ID, and the x and y value).
+		the data point (RowID, and the date and y value).
 		</p>
 		
 		<h3>Properties: </h3>
