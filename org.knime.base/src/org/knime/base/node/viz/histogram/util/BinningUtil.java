@@ -115,7 +115,7 @@ public final class BinningUtil {
      */
     public static double getNumericValue(final DataCell cell) {
         if (cell == null) {
-            throw new IllegalArgumentException("Cell shouldn't be null.");
+            throw new IllegalArgumentException("Cell must not be null.");
         }
         if (!(cell.getType().isCompatible(DoubleValue.class))) {
             throw new IllegalArgumentException("Cell type not "
