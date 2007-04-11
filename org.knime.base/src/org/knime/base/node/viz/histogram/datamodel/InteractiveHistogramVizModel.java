@@ -75,7 +75,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
                 final int colIdx) {
             if (comparator == null) {
                 throw new IllegalArgumentException(
-                        "Column comparator shouldn't be null");
+                        "Column comparator must not be null");
             }
             m_colComparator = comparator;
             m_colIdx = colIdx;
@@ -134,14 +134,14 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         super(rowColors, aggrMethod, layout, noOfBins);
         if (spec == null) {
             throw new IllegalArgumentException(
-                    "Table specification shouldn't be null");
+                    "Table specification must not be null");
         }
         if (xColSpec == null) {
             throw new IllegalArgumentException(
             "No column specification found for selected x column");
         }
         if (rows == null) {
-            throw new IllegalArgumentException("Rows shouldn't be null");
+            throw new IllegalArgumentException("Rows must not be null");
         }
 //        if (aggrColumns == null || aggrColumns.size() < 1) {
 //            throw new IllegalArgumentException("At least one aggregation "
@@ -181,7 +181,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     public boolean setXColumn(final DataColumnSpec xColSpec) {
         if (xColSpec == null) {
             throw new IllegalArgumentException(
-                    "X column specification shouldn't be null");
+                    "X column specification must not be null");
         }
         final int xColIdx = m_tableSpec.findColumnIndex(xColSpec.getName());
         if (xColIdx < 0) {
@@ -224,7 +224,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
             final Collection<ColorColumn> aggrCols) {
 //        if (aggrCols == null || aggrCols.size() < 1) {
 //            throw new IllegalArgumentException(
-//                    "Aggregation column shouldn't be null");
+//                    "Aggregation column must not be null");
 //        }
         if (aggrCols == null || aggrCols.size() < 1) {
             //force the aggregation method to be count

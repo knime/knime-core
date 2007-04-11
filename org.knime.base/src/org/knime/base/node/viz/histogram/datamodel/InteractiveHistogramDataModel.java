@@ -69,7 +69,7 @@ public class InteractiveHistogramDataModel {
      */
     public void addDataRow(final DataRow row) {
         if (row == null) {
-            throw new IllegalArgumentException("Row shouldn't be null");
+            throw new IllegalArgumentException("Row must not be null");
         }
         m_dataRows.add(row);
         final Color color = m_tableSpec.getRowColor(row).getColor(false, false);

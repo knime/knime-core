@@ -174,7 +174,7 @@ public abstract class AbstractHistogramVizModel {
             final int noOfBins) {
         if (rowColors == null) {
             throw new IllegalArgumentException(
-                    "Bar elements shouldn't be null");
+                    "Bar elements must not be null");
         }
         m_rowColors = rowColors;
         m_aggrMethod = aggrMethod;
@@ -198,7 +198,7 @@ public abstract class AbstractHistogramVizModel {
     public boolean setDrawingSpace(final Dimension drawingSpace) {
         if (drawingSpace == null) {
             throw new IllegalArgumentException(
-                    "Drawing space shouldn't be null");
+                    "Drawing space must not be null");
         }
         if (drawingSpace == null || drawingSpace.equals(m_drawingSpace)) {
             return false;
@@ -404,12 +404,12 @@ public abstract class AbstractHistogramVizModel {
             final DataColumnDomain domain = xColSpec.getDomain();
             if (domain == null) {
                 throw new IllegalStateException(
-                        "X column domain shouldn't be null");
+                        "X column domain must not be null");
             }
             final Set<DataCell> values = domain.getValues();
             if (values == null) {
                 throw new IllegalStateException(
-                        "Values of x column domain shouldn't be null");
+                        "Values of x column domain must not be null");
             }
             m_maxNoOfBins = values.size();
             return;

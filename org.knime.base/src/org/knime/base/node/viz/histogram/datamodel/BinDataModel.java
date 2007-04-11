@@ -81,7 +81,7 @@ public class BinDataModel implements Serializable {
     public BinDataModel(final String xAxisCaption, final double lowerBound, 
             final double upperBound) {
         if (xAxisCaption == null) {
-            throw new IllegalArgumentException("Caption shouldn't be null");
+            throw new IllegalArgumentException("Caption must not be null");
         }
         m_xAxisCaption = xAxisCaption;
         m_xAxisCaptionCell = new StringCell(xAxisCaption);

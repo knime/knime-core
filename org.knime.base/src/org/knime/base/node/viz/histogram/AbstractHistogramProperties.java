@@ -163,10 +163,10 @@ public abstract class AbstractHistogramProperties extends
     public AbstractHistogramProperties(final DataTableSpec tableSpec, 
             final AbstractHistogramVizModel vizModel) {
         if (vizModel == null) {
-            throw new IllegalArgumentException("VizModel shouldn't be null");
+            throw new IllegalArgumentException("VizModel must not be null");
         }
         if (tableSpec == null) {
-            throw new IllegalArgumentException("TableSpec shouldn't be null");
+            throw new IllegalArgumentException("TableSpec must not be null");
         }
      
         // create the additional settings components which get added to the

@@ -141,7 +141,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     private void registerPropertiesChangeListener() {
         if (m_histoProps == null) {
             throw new IllegalStateException(
-                    "Properties panel shouldn't be null");
+                    "Properties panel must not be null");
         }
         m_histoProps.addShowGridChangedListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
@@ -359,7 +359,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         }
         final Dimension drawingSpace = vizModel.getDrawingSpace();
         if (drawingSpace == null) {
-            throw new IllegalStateException("Drawing space shouldn't be null");
+            throw new IllegalStateException("Drawing space must not be null");
         }
         final double drawingWidth = drawingSpace.getWidth();
         final double drawingHeight = drawingSpace.getHeight();
@@ -399,11 +399,11 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     private Coordinate getXCoordinate() {
         final Axis xAxis = getXAxis();
         if (xAxis == null) {
-            throw new IllegalStateException("X axis shouldn't be null");
+            throw new IllegalStateException("X axis must not be null");
         }
         final Coordinate xCoordinate = xAxis.getCoordinate();
         if (xCoordinate == null) {
-            throw new IllegalStateException("X coordinate shouldn't be null");
+            throw new IllegalStateException("X coordinate must not be null");
         }
         return xCoordinate;
     }
@@ -415,12 +415,12 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final Axis aggrAxis = getYAxis();
         if (aggrAxis == null) {
             throw new IllegalStateException(
-                    "Aggregation axis shouldn't be null");
+                    "Aggregation axis must not be null");
         }
         final Coordinate aggrCoordinate = aggrAxis.getCoordinate();
         if (aggrCoordinate == null) {
             throw new IllegalStateException(
-                    "Aggregation coordinate shouldn't be null");
+                    "Aggregation coordinate must not be null");
         }
         return aggrCoordinate;
     }
@@ -566,7 +566,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             LOGGER.debug("VizModel was null");
             throw new IllegalStateException(
                     "Exception in setNumberOfBins: "
-                    + "Viz model shouldn't be null");
+                    + "Viz model must not be null");
         }
         if (vizModel.setNoOfBins(noOfBins)) {
             setXCoordinates();
@@ -622,7 +622,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     protected HistogramDrawingPane getHistogramDrawingPane() {
         HistogramDrawingPane myPane = (HistogramDrawingPane)getDrawingPane();
         if (myPane == null) {
-            throw new IllegalStateException("Drawing pane shouldn't be null");
+            throw new IllegalStateException("Drawing pane must not be null");
         }
         return myPane;
     }
@@ -643,7 +643,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             LOGGER.debug("VizModel was null");
             throw new IllegalStateException(
                     "Exception in getAggregationColSpec: "
-                    + "Viz model shouldn't be null");
+                    + "Viz model must not be null");
         }
         double lowerBound = vizModel.getMinAggregationValue();
         double upperBound = vizModel.getMaxAggregationValue();
@@ -701,7 +701,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (vizModel == null) {
             throw new IllegalStateException(
                     "Exception in getXColumnSpec: "
-                    + "Viz model shouldn't be null");
+                    + "Viz model must not be null");
         }
         final DataColumnSpec xColSpec = vizModel.getXColumnSpec();
         String colName = xColSpec.getName();
@@ -810,7 +810,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (vizModel == null) {
             throw new IllegalStateException(
                     "Exception in setShowGridLines: "
-                    + "Viz model shouldn't be null");
+                    + "Viz model must not be null");
         }
         if (vizModel.setShowGridLines(showGridLines)) {
             final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
@@ -891,7 +891,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             LOGGER.debug("VizModel was null");
             throw new IllegalStateException(
                     "Exception in setShowEmptyBins: "
-                    + "Viz model shouldn't be null");
+                    + "Viz model must not be null");
         }
         if (vizModel.setShowEmptyBins(showEmptyBins)) {
             setXCoordinates();
@@ -911,7 +911,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             LOGGER.debug("VizModel was null");
             throw new IllegalStateException(
                     "Exception in setShowMissingValBin: "
-                    + "Viz model shouldn't be null");
+                    + "Viz model must not be null");
         }
         if (vizModel.setShowMissingValBin(showMissingValBin)) {
             // set the coordinates to the new boundaries
@@ -944,7 +944,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     public void setHiLiteHandler(final HiLiteHandler hiLiteHandler) {
         if (hiLiteHandler == null) {
             throw new IllegalArgumentException(
-                    "HiliteHandler shouldn't be null");
+                    "HiliteHandler must not be null");
         }
         super.setHiLiteHandler(hiLiteHandler);
     }
@@ -966,7 +966,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      */
     public AbstractHistogramVizModel getHistogramVizModel() {
 //        if (m_vizModel == null) {
-//            throw new IllegalStateException("VizModel shouldn't be null");
+//            throw new IllegalStateException("VizModel must not be null");
 //        }
         return m_vizModel;
     }
@@ -988,10 +988,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             final AbstractHistogramVizModel vizModel) {
         if (tableSpec == null) {
             throw new IllegalArgumentException(
-                    "Table specification shouldn't be null");
+                    "Table specification must not be null");
         }
         if (vizModel == null) {
-            throw new IllegalArgumentException("Viz model shouldn't be null");
+            throw new IllegalArgumentException("Viz model must not be null");
         }
         m_tableSpec = tableSpec;
         m_vizModel = vizModel;
@@ -1020,7 +1020,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             LOGGER.debug("VizModel was null");
             throw new IllegalStateException(
                     "Exception in getAggregationColSpec: "
-                    + "Viz model shouldn't be null");
+                    + "Viz model must not be null");
         }
         return vizModel.getXColumnName();
     }
