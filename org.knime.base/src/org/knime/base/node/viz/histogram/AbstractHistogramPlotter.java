@@ -574,11 +574,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             //set the current hilited keys in the new bins
             vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
             if (HistogramLayout.SIDE_BY_SIDE.equals(
-                    vizModel.getHistogramLayout())) {
-                //set the bin with to the maximum bin if the layout
-                //is side-by-side
-                    vizModel.setBinWidth(vizModel.getMaxBinWidth());
-                }
+                    vizModel.getHistogramLayout())
+                    || vizModel.containsNotPresentableBin()) {
+                vizModel.setBinWidth(vizModel.getMaxBinWidth());
+            }
             //update the details tab
             getHistogramPropertiesPanel().updateHTMLDetailsPanel(
                     vizModel.getHTMLDetailData());
@@ -896,6 +895,11 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (vizModel.setShowEmptyBins(showEmptyBins)) {
             setXCoordinates();
             setYCoordinates();
+            if (HistogramLayout.SIDE_BY_SIDE.equals(
+                    vizModel.getHistogramLayout())
+                    || vizModel.containsNotPresentableBin()) {
+                vizModel.setBinWidth(vizModel.getMaxBinWidth());
+            }
             return true;
         }
         return false;
@@ -917,6 +921,11 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             // set the coordinates to the new boundaries
             setXCoordinates();
             setYCoordinates();
+            if (HistogramLayout.SIDE_BY_SIDE.equals(
+                    vizModel.getHistogramLayout())
+                    || vizModel.containsNotPresentableBin()) {
+                vizModel.setBinWidth(vizModel.getMaxBinWidth());
+            }
             return true;
         }
         return false;
