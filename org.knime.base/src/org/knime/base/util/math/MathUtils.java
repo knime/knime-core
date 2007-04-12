@@ -85,14 +85,13 @@ public final class MathUtils {
      */
     public static double[][] multiply(final double[][] matrix1,
             final double[][] matrix2) throws IllegalArgumentException {
-
-        // set the number of columns for both matrices M1 and M2
-        int numColsM1 = matrix1[0].length;
-        int numColsM2 = matrix2[0].length;
-
         // set the number of rows for both matrices M1 and M2
         int numRowsM1 = matrix1.length;
         int numRowsM2 = matrix2.length;
+
+        // set the number of columns for both matrices M1 and M2
+        int numColsM1 = numRowsM1 > 0 ? matrix1[0].length : numRowsM2;
+        int numColsM2 = numRowsM2 > 0 ? matrix2[0].length : 0;
 
         // check matrix compatibility
         if (numColsM1 != numRowsM2) {
@@ -142,8 +141,8 @@ public final class MathUtils {
      */
     public static double[] multiply(final double[][] matrix,
             final double[] vector) throws IllegalArgumentException {
-        final int numColsMatrix = matrix[0].length;
         final int numRowsMatrix = matrix.length;
+        final int numColsMatrix = numRowsMatrix > 0 ? matrix[0].length : 0;
         final int numRowsVector = vector.length;
 
         // check dimension compatibility
@@ -209,7 +208,9 @@ public final class MathUtils {
      *         changed according to the given matrix
      */
     public static double[][] transpose(final double[][] inputMatrix) {
-
+        if (inputMatrix.length == 0) {
+            return inputMatrix;
+        }
         int numCols = inputMatrix[0].length;
         int numRows = inputMatrix.length;
 
@@ -320,6 +321,9 @@ public final class MathUtils {
      */
     public static double[][] normalizeMatrix(final double[][] matrix,
             final double[] standardDev, final double[] mean) {
+        if (matrix.length == 0) {
+            return matrix;
+        }
 
         double[][] normMatrix = new double[matrix.length][matrix[0].length];
 
@@ -345,6 +349,9 @@ public final class MathUtils {
      */
     public static double[][] normalizeMatrix(final double[][] matrix,
             final double[] mean) {
+        if (matrix.length == 0) {
+            return matrix;
+        }
 
         double[][] normMatrix = new double[matrix.length][matrix[0].length];
 
@@ -388,6 +395,9 @@ public final class MathUtils {
      */
     public static double[][] denormalizeMatrix(final double[][] y,
             final double[] standardDev, final double[] mean) {
+        if (y.length == 0) {
+            return y;
+        }
 
         double[][] denormMatrix = new double[y.length][y[0].length];
 
@@ -441,6 +451,9 @@ public final class MathUtils {
      */
     public static double[][] denormalizeMatrix(final double[][] y,
             final double[] mean) {
+        if (y.length == 0) {
+            return y;
+        }
 
         double[][] denormMatrix = new double[y.length][y[0].length];
 
