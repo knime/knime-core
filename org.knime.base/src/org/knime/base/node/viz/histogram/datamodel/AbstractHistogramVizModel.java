@@ -632,6 +632,12 @@ public abstract class AbstractHistogramVizModel {
      */
     public boolean setHistogramLayout(final HistogramLayout layout) {
         if (layout != null && !m_layout.equals(layout)) {
+            if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
+                setShowBinOutline(true);
+            } else if (getAggrColumns() == null 
+                    || getAggrColumns().size() < 2) {
+                setShowBinOutline(false);
+            }
             m_layout = layout;
             return true;
         }
