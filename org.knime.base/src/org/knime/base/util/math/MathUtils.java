@@ -68,7 +68,7 @@ public final class MathUtils {
         } else {
             result = 0.0;
         }
-        
+
         return result;
     }
 
@@ -127,7 +127,6 @@ public final class MathUtils {
         return resultMatrix;
     }
 
-
     /**
      * Multiplies two matrices. Matrix 1 is multiplied from the left to matrix
      * 2. Therefore, result matrix = matrix 1 * matrix 2. The matrices must be
@@ -149,7 +148,7 @@ public final class MathUtils {
         if (numColsMatrix != numRowsVector) {
             throw new IllegalArgumentException(
                     "Matrix must have the same number of columns as the vector "
-                    + "has rows.");
+                            + "has rows.");
         }
 
         double[] resultVector = new double[numRowsVector];
@@ -165,10 +164,9 @@ public final class MathUtils {
         return resultVector;
     }
 
-    
     /**
-     * Multiplies a matrix with its transposed matrix. The transposed matrix
-     * is multiplied to the <em>left</em> of the original matrix.
+     * Multiplies a matrix with its transposed matrix. The transposed matrix is
+     * multiplied to the <em>left</em> of the original matrix.
      * 
      * @param mat the matrix
      * @return the result matrix
@@ -199,7 +197,6 @@ public final class MathUtils {
         return resultMatrix;
     }
 
-    
     /**
      * Transposes the given matrix.
      * 
@@ -289,8 +286,8 @@ public final class MathUtils {
                 if (rowOrder[r1] != l) {
                     for (int c1 = 0; c1 < size; c1++) {
                         if (c1 != c) {
-                            a[rowOrder[r1]][c1] -= a[rowOrder[r1]][c]
-                                    * a[l][c1];
+                            a[rowOrder[r1]][c1] -=
+                                    a[rowOrder[r1]][c] * a[l][c1];
                         }
                         e[rowOrder[r1]][c1] -= a[rowOrder[r1]][c] * e[l][c1];
                     }
@@ -308,7 +305,7 @@ public final class MathUtils {
         }
         return inverse;
     }
-    
+
     /**
      * Normalizes the matrix relative to the mean of the input data and to the
      * standard deviation.
@@ -331,8 +328,9 @@ public final class MathUtils {
 
             for (int column = 0; column < normMatrix[row].length; column++) {
 
-                normMatrix[row][column] = (matrix[row][column] - mean[column])
-                        / standardDev[column];
+                normMatrix[row][column] =
+                        (matrix[row][column] - mean[column])
+                                / standardDev[column];
             }
         }
 
@@ -366,7 +364,6 @@ public final class MathUtils {
         return normMatrix;
     }
 
-    
     /**
      * Normalizes the matrix relative to the mean and standard deviation of the
      * input data.
@@ -378,11 +375,10 @@ public final class MathUtils {
     public static double[][] normalizeMatrix(final double[][] matrix) {
         double[] mean = StatisticUtils.mean(matrix);
         double[] stdev = StatisticUtils.standardDeviation(matrix);
-        
+
         return normalizeMatrix(matrix, stdev, mean);
     }
-    
-    
+
     /**
      * Denormalizes the matrix relativ to the mean of the input data and to the
      * standard deviation.
@@ -467,19 +463,19 @@ public final class MathUtils {
 
         return denormMatrix;
     }
-    
-    
+
     /**
-     * Computes the spectral norm of the given matrix.
-     * It is defined as the square root of the maximum absolute value of the
-     * eigenvalues of the product of the matrix with its transposed form.
+     * Computes the spectral norm of the given matrix. It is defined as the
+     * square root of the maximum absolute value of the eigenvalues of the
+     * product of the matrix with its transposed form.
+     * 
      * @param matrix the matrix to compute the norm for.
      * @return the spectral norm of the matrix.
      */
     public static double spectralNorm(final double[][] matrix) {
         double[][] matrixTransposed = transpose(matrix);
-        EigenvalueDecomposition evd = new EigenvalueDecomposition(
-                            multiply(matrix, matrixTransposed));
+        EigenvalueDecomposition evd =
+                new EigenvalueDecomposition(multiply(matrix, matrixTransposed));
         double maxR = Double.MIN_VALUE;
         double[] real = evd.get1DRealD();
         double[] imag = evd.get1DImagD();
@@ -489,5 +485,40 @@ public final class MathUtils {
         }
         return Math.sqrt(maxR);
     }
-    
+
+    /**
+     * Adds the second array to the first one.
+     * 
+     * @param firstArray the first array will be changed by adding the second
+     *            one to it
+     * @param secondArray the second array will be added to the first one (stays
+     *            unchanged)
+     */
+    public static void addArrays(final double[] firstArray,
+            final double[] secondArray) {
+
+        assert firstArray.length == secondArray.length;
+        for (int i = 0; i < firstArray.length; i++) {
+            firstArray[i] += secondArray[i];
+        }
+    }
+
+    /**
+     * Adds the second matrix to the first one.
+     * 
+     * @param firstMatrix the first matrix will be changed by adding the second
+     *            one to it
+     * @param secondMatrix the second matrix will be added to the first one
+     *            (stays unchanged)
+     */
+    public static void addMatrix(final double[][] firstMatrix,
+            final double[][] secondMatrix) {
+
+        assert firstMatrix.length == secondMatrix.length;
+        for (int i = 0; i < firstMatrix.length; i++) {
+            for (int j = 0; j < firstMatrix[i].length; j++) {
+                firstMatrix[i][j] += secondMatrix[i][j];
+            }
+        }
+    }
 }
