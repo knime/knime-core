@@ -57,6 +57,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.ColumnFilter;
 
@@ -91,8 +92,9 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     private int m_xColIdx;
     private Collection<ColorColumn> m_aggrCols;
     
-    private final SettingsModelInteger m_noOfRows = new SettingsModelInteger(
-                CFGKEY_NO_OF_ROWS, DEFAULT_NO_OF_ROWS);
+    private final SettingsModelIntegerBounded m_noOfRows = 
+        new SettingsModelIntegerBounded(
+                CFGKEY_NO_OF_ROWS, DEFAULT_NO_OF_ROWS, 1, Integer.MAX_VALUE);
     private final SettingsModelBoolean m_allRows = new SettingsModelBoolean(
                 CFGKEY_ALL_ROWS, false);
     /** The name of the x column. */
@@ -124,9 +126,30 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             //read the spinner value only if the user hasn't selected to 
             //retrieve all values
             m_noOfRows.validateSettings(settings);
+            final SettingsModelInteger copy = 
+                m_noOfRows.createCloneWithValidatedValue(settings);
+            if (copy.getIntValue() > Integer.MAX_VALUE 
+                    || copy.getIntValue() <= 0) {
+                throw new InvalidSettingsException(
+                        "No of rows must be greater zero");
+            }
         }
-        m_xColName.validateSettings(settings);
-        m_aggrColName.validateSettings(settings);
+        try {
+            m_xColName.validateSettings(settings);
+        } catch (Throwable e) {
+            //It's an older node which hasn't stored the aggregation column
+            final String xCol = settings.getString("HistogramXColName");
+            if (xCol == null || xCol.length() < 1) {
+                throw new InvalidSettingsException("Invalid x column");
+            }
+        } 
+        try {
+            m_aggrColName.validateSettings(settings);
+        } catch (Throwable e) {
+            //It's an older node which hasn't stored the aggregation column
+            LOGGER.debug("Exception while validating settings: " 
+                    + e.getMessage());
+        } 
     }
 
     /**
@@ -140,9 +163,25 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             m_noOfRows.loadSettingsFrom(settings);
         } catch (Exception e) {
             // In case of older nodes the row number is not available
+            m_allRows.setBooleanValue(false);
+            m_noOfRows.setIntValue(DEFAULT_NO_OF_ROWS);
         }
-        m_xColName.loadSettingsFrom(settings);
-        m_aggrColName.loadSettingsFrom(settings);
+        try {
+            m_xColName.loadSettingsFrom(settings);
+        } catch (Throwable e) {
+            //It's an older node which had a different name for the x column
+            final String xCol = settings.getString("xColumn");
+            m_xColName.setStringValue(xCol);
+            LOGGER.debug("Old histogram settings found");
+        } 
+        try {
+            m_aggrColName.loadSettingsFrom(settings);
+        } catch (Throwable e) {
+            //It's an older node which hasn't stored the aggregation column
+            m_aggrColName.setColorNameColumns((ColorColumn)null);
+            LOGGER.debug("Exception while loading settings use default values");
+            
+        }
     }
 
     /**

@@ -82,7 +82,12 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     protected void validateSettings(final NodeSettingsRO settings) 
     throws InvalidSettingsException {
         super.validateSettings(settings);
-        m_noOfBins.validateSettings(settings);
+        try {
+            m_noOfBins.validateSettings(settings);
+        } catch (InvalidSettingsException e) {
+            //this is an older implementation
+            LOGGER.debug("Old implementation found");
+        }
     }
 
     /**
@@ -92,7 +97,13 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) 
     throws InvalidSettingsException {
         super.loadValidatedSettingsFrom(settings);
-        m_noOfBins.loadSettingsFrom(settings);
+        try {
+            m_noOfBins.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            m_noOfBins.setIntValue(
+                    AbstractHistogramVizModel.DEFAULT_NO_OF_BINS);
+            LOGGER.debug("Old settings found using default number of bins");
+        }
     }
 
     /**

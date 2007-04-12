@@ -37,7 +37,7 @@ import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -55,7 +55,7 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
 
     private static final String AGGR_COL_SEL_LABEL = "Aggregation column:";
 
-    private final SettingsModelInteger m_noOfRowsModel;
+    private final SettingsModelIntegerBounded m_noOfRowsModel;
 
     private final SettingsModelBoolean m_allRowsModel;
     /**
@@ -66,9 +66,10 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
     protected HistogramNodeDialogPane() {
         super();
         createNewGroup("Rows to display:");
-        m_noOfRowsModel = new SettingsModelInteger(
+        m_noOfRowsModel = new SettingsModelIntegerBounded(
                 AbstractHistogramNodeModel.CFGKEY_NO_OF_ROWS,
-                AbstractHistogramNodeModel.DEFAULT_NO_OF_ROWS);
+                AbstractHistogramNodeModel.DEFAULT_NO_OF_ROWS, 1,
+                Integer.MAX_VALUE);
         final DialogComponentNumber noOfRowsComp = 
             new DialogComponentNumber(m_noOfRowsModel,
                 NO_OF_ROWS_LABEL, 1);
