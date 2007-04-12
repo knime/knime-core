@@ -909,9 +909,11 @@ calling <code>isEnabled()</code>.<br>
 
 You can set a new title&nbsp;on the default "Options" tab, the one
 that is always created and the components are added to by default
-(before creating a new tab, see below). Call setDefaultTabTitle(String)
-in your NodeDialogPane (that is derived from the
-DefaultNodeSettingsPane). The specified string appears in the tab's
+(before creating a new tab, see below). Call <code>setDefaultTabTitle(String)</code>
+in your <code>NodeDialogPane</code> (that is derived from
+the
+<code>DefaultNodeSettingsPane</code>). The specified string
+appears in the tab's
 title. Currently calling this method places the default tab at the last
 tab position. It is advisable to call this,&nbsp;before creating
 new tabs (see below).<br>
@@ -942,7 +944,8 @@ simple dialogs without the need to implement any additional methods or
 arranging components. Its layout is very restricted though, components
 can be&nbsp;arranged only below each other. If you need a more
 complex dialog with a different layout, you need to create your own
-swing panel (directly derived from NodeDialogPane). You can still use the
+swing panel (directly derived from <code>NodeDialogPane</code>). You can still use
+the
 DialogComponents, arrange them in your custom panel and benefit from
 their loading and saving capabilities: Each component provides a <code>getComponentPanel()</code>
 method that returns the panel holding the component. This panel can be
@@ -970,8 +973,7 @@ in the NodeModel). Which one is used?</span><br>
 A</span>: The one specified in the settings model &nbsp;used
 by the
 NodeModel. Before the dialog opens, the NodeModel's settings are
-transfered into the dialog. (Only when a component is disabled it keeps
-its default value from the dialog constructor.) The default value in
+transfered into the dialog. In some cases the default value in
 the dialog constructor is used to determine the components width, if it
 is not set explicitly.<br>
 
