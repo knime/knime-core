@@ -76,8 +76,10 @@ public class FixedHistogramVizModel extends AbstractHistogramVizModel {
         m_aggrColumns = aggrColumns;
         if (aggrColumns != null && aggrColumns.size() > 1) {
             setShowBarOutline(true);
+            setShowBinOutline(true);
         } else {
             setShowBarOutline(false);
+            setShowBinOutline(false);
         }
         m_xColSpec = xColSpec;
         setBins(bins, missingValueBin);

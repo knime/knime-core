@@ -282,7 +282,7 @@ public class BinDataModel implements Serializable {
     }
 
     /**
-     * @return <code>true</code> if the bars are presentable
+     * @return <code>true</code> if the number of bars fit in the bin
      */
     public boolean isPresentable() {
         return m_presentable;
@@ -369,18 +369,8 @@ public class BinDataModel implements Serializable {
             final int noOfBars = aggrColumns.size();
             m_presentable = elementsFitInBin(noOfBars, binWidth);
             if (!m_presentable) {
-                //the total bin width is not enough to draw all bars so we don't
-                //need to calculate any further and reset all previous 
-                //bar rectangles
-    //            final Collection<BarDataModel> bars = m_bars.values();
-    //            for (BarDataModel bar : bars) {
-    //                bar.setBarRectangle(null, aggrMethod, layout, baseLine, 
-    //                        barElementColors);
-    //            }
-                m_presentable = false;
                 return;
             }
-            m_presentable = true;
             //calculate the height
             final int binHeight = (int)m_binRectangle.getHeight();
             final double maxAggrVal = Math.max(getMaxAggregationValue(
@@ -465,7 +455,6 @@ public class BinDataModel implements Serializable {
     //            }
                 return;
             }
-            m_presentable = true;
             if (!drawBarBefore) {
                 //if the bar couldn't be draw before but now we have to 
                 //recalculate them

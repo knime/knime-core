@@ -156,8 +156,10 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         m_aggrColumns = aggrColumns;
         if (aggrColumns != null && aggrColumns.size() > 1) {
             setShowBarOutline(true);
+            setShowBinOutline(true);
         } else {
             setShowBarOutline(false);
+            setShowBinOutline(false);
         }
         setXColumn(xColSpec);
     }
@@ -236,6 +238,15 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
                 && m_aggrColumns.size() == aggrCols.size()
                 && m_aggrColumns.containsAll(aggrCols)) {
             return false;
+        }
+        if ((m_aggrColumns == null || m_aggrColumns.size() == 1)
+                && aggrCols.size() > 1) {
+            setShowBarOutline(true);
+            setShowBinOutline(true);
+        } else if (m_aggrColumns != null && m_aggrColumns.size() > 1 
+                && (aggrCols == null || aggrCols.size() < 2)) {
+            setShowBarOutline(false);
+            setShowBinOutline(false);
         }
         m_aggrColumns = aggrCols;
 //        createBins();
