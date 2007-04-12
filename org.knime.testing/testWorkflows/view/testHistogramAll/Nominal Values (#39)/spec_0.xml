@@ -1,0 +1,3239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="spec_0.xml">
+<entry key="spec_name" type="xstring" value="default"/>
+<entry key="number_columns" type="xint" value="24"/>
+<config key="column_spec_0">
+<entry key="column_name" type="xstring" value="Name"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="possible_values">
+<entry key="array-size" type="xint" value="322"/>
+<config key="0">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Darnell Coles"/>
+</config>
+</config>
+<config key="1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jim Presley"/>
+</config>
+</config>
+<config key="2">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Omar Moreno"/>
+</config>
+</config>
+<config key="3">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike LaValliere"/>
+</config>
+</config>
+<config key="4">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mickey Hatcher"/>
+</config>
+</config>
+<config key="5">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bob Boone"/>
+</config>
+</config>
+<config key="6">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Wally Backman"/>
+</config>
+</config>
+<config key="7">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Enos Cabell"/>
+</config>
+</config>
+<config key="8">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Darren Daulton"/>
+</config>
+</config>
+<config key="9">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Sid Bream"/>
+</config>
+</config>
+<config key="10">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rich Gedman"/>
+</config>
+</config>
+<config key="11">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Cory Snyder"/>
+</config>
+</config>
+<config key="12">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Kent Hrbek"/>
+</config>
+</config>
+<config key="13">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Fitzgerald"/>
+</config>
+</config>
+<config key="14">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Alan Trammell"/>
+</config>
+</config>
+<config key="15">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Vance Law"/>
+</config>
+</config>
+<config key="16">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ernest Riles"/>
+</config>
+</config>
+<config key="17">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="George Hendrick"/>
+</config>
+</config>
+<config key="18">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Pete Incaviglia"/>
+</config>
+</config>
+<config key="19">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Wayne Krenchicki"/>
+</config>
+</config>
+<config key="20">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Steve Jeltz"/>
+</config>
+</config>
+<config key="21">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="George Foster"/>
+</config>
+</config>
+<config key="22">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Lance Parrish"/>
+</config>
+</config>
+<config key="23">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Andy Allanson"/>
+</config>
+</config>
+<config key="24">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Glenn Wilson"/>
+</config>
+</config>
+<config key="25">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Kirk Gibson"/>
+</config>
+</config>
+<config key="26">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rafael Santana"/>
+</config>
+</config>
+<config key="27">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Terry_Kennedy"/>
+</config>
+</config>
+<config key="28">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ken Landreaux"/>
+</config>
+</config>
+<config key="29">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Donnie Hill"/>
+</config>
+</config>
+<config key="30">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ernie Whitt"/>
+</config>
+</config>
+<config key="31">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jim Rice"/>
+</config>
+</config>
+<config key="32">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Andre Thornton"/>
+</config>
+</config>
+<config key="33">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Eddie Milner"/>
+</config>
+</config>
+<config key="34">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Carney Lansford"/>
+</config>
+</config>
+<config key="35">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Joe Orsulak"/>
+</config>
+</config>
+<config key="36">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Oddibe McDowell"/>
+</config>
+</config>
+<config key="37">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bobby Bonilla"/>
+</config>
+</config>
+<config key="38">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Robin Yount"/>
+</config>
+</config>
+<config key="39">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tony Bernazard"/>
+</config>
+</config>
+<config key="40">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bobby Grich"/>
+</config>
+</config>
+<config key="41">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Frank White"/>
+</config>
+</config>
+<config key="42">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bill Schroeder"/>
+</config>
+</config>
+<config key="43">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Butch Wynegar"/>
+</config>
+</config>
+<config key="44">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="George Brett"/>
+</config>
+</config>
+<config key="45">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tony Pena"/>
+</config>
+</config>
+<config key="46">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rudy Law"/>
+</config>
+</config>
+<config key="47">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Cal Ripken"/>
+</config>
+</config>
+<config key="48">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Argenis Salazar"/>
+</config>
+</config>
+<config key="49">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="John Russell"/>
+</config>
+</config>
+<config key="50">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ron Roenicke"/>
+</config>
+</config>
+<config key="51">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Gary Gaetti"/>
+</config>
+</config>
+<config key="52">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Marvell Wynne"/>
+</config>
+</config>
+<config key="53">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Pete O'Brien"/>
+</config>
+</config>
+<config key="54">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Kurt Stillwell"/>
+</config>
+</config>
+<config key="55">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Carmen Castillo"/>
+</config>
+</config>
+<config key="56">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Willie McGee"/>
+</config>
+</config>
+<config key="57">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tom Paciorek"/>
+</config>
+</config>
+<config key="58">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Reggie Jackson"/>
+</config>
+</config>
+<config key="59">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jerry Willard"/>
+</config>
+</config>
+<config key="60">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Spike Owen"/>
+</config>
+</config>
+<config key="61">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Kevin Bass"/>
+</config>
+</config>
+<config key="62">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tim Wallach"/>
+</config>
+</config>
+<config key="63">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jerry Royster"/>
+</config>
+</config>
+<config key="64">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rick Schu"/>
+</config>
+</config>
+<config key="65">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Charlie Moore"/>
+</config>
+</config>
+<config key="66">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rick Burleson"/>
+</config>
+</config>
+<config key="67">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bill Buckner"/>
+</config>
+</config>
+<config key="68">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Andre Dawson"/>
+</config>
+</config>
+<config key="69">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Brook Jacoby"/>
+</config>
+</config>
+<config key="70">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Joel Youngblood"/>
+</config>
+</config>
+<config key="71">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Harold Baines"/>
+</config>
+</config>
+<config key="72">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Herm Winningham"/>
+</config>
+</config>
+<config key="73">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Len Dykstra"/>
+</config>
+</config>
+<config key="74">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Davis"/>
+</config>
+</config>
+<config key="75">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Kal Daniels"/>
+</config>
+</config>
+<config key="76">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Brett Butler"/>
+</config>
+</config>
+<config key="77">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Eddie Murray"/>
+</config>
+</config>
+<config key="78">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dwayne Murphy"/>
+</config>
+</config>
+<config key="79">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Julio Cruz"/>
+</config>
+</config>
+<config key="80">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Alan Wiggins"/>
+</config>
+</config>
+<config key="81">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Howard Johnson"/>
+</config>
+</config>
+<config key="82">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bill Doran"/>
+</config>
+</config>
+<config key="83">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Gary Pettis"/>
+</config>
+</config>
+<config key="84">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Kirby Puckett"/>
+</config>
+</config>
+<config key="85">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ricky Jones"/>
+</config>
+</config>
+<config key="86">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Chili Davis"/>
+</config>
+</config>
+<config key="87">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Alex Trevino"/>
+</config>
+</config>
+<config key="88">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Steve Balboni"/>
+</config>
+</config>
+<config key="89">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tim Laudner"/>
+</config>
+</config>
+<config key="90">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Toby Harrah"/>
+</config>
+</config>
+<config key="91">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Leon Durham"/>
+</config>
+</config>
+<config key="92">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Lloyd Moseby"/>
+</config>
+</config>
+<config key="93">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Juan Samuel"/>
+</config>
+</config>
+<config key="94">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Andres Thomas"/>
+</config>
+</config>
+<config key="95">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Brian Downing"/>
+</config>
+</config>
+<config key="96">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bip Roberts"/>
+</config>
+</config>
+<config key="97">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Pagliarulo"/>
+</config>
+</config>
+<config key="98">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Billy Beane"/>
+</config>
+</config>
+<config key="99">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Joe Carter"/>
+</config>
+</config>
+<config key="100">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="John Shelby"/>
+</config>
+</config>
+<config key="101">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Darrell Evans"/>
+</config>
+</config>
+<config key="102">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Buddy Biancalana"/>
+</config>
+</config>
+<config key="103">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rickey Henderson"/>
+</config>
+</config>
+<config key="104">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Larry Parrish"/>
+</config>
+</config>
+<config key="105">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ken Griffey"/>
+</config>
+</config>
+<config key="106">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rick Cerone"/>
+</config>
+</config>
+<config key="107">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Hal McRae"/>
+</config>
+</config>
+<config key="108">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Floyd Rayford"/>
+</config>
+</config>
+<config key="109">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jody Davis"/>
+</config>
+</config>
+<config key="110">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Juan Bonilla"/>
+</config>
+</config>
+<config key="111">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Lonnie Smith"/>
+</config>
+</config>
+<config key="112">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Billy Hatcher"/>
+</config>
+</config>
+<config key="113">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bruce Bochy"/>
+</config>
+</config>
+<config key="114">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="John Cangelosi"/>
+</config>
+</config>
+<config key="115">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jerry Mumphrey"/>
+</config>
+</config>
+<config key="116">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Cliff Johnson"/>
+</config>
+</config>
+<config key="117">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Terry Puhl"/>
+</config>
+</config>
+<config key="118">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dickie Thon"/>
+</config>
+</config>
+<config key="119">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Glenn Davis"/>
+</config>
+</config>
+<config key="120">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Gorman Thomas"/>
+</config>
+</config>
+<config key="121">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ruben Sierra"/>
+</config>
+</config>
+<config key="122">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Milt Thompson"/>
+</config>
+</config>
+<config key="123">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Greg Walker"/>
+</config>
+</config>
+<config key="124">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tim Hulett"/>
+</config>
+</config>
+<config key="125">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ozzie Guillen"/>
+</config>
+</config>
+<config key="126">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Scioscia"/>
+</config>
+</config>
+<config key="127">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Darryl Strawberry"/>
+</config>
+</config>
+<config key="128">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Keith Hernandez"/>
+</config>
+</config>
+<config key="129">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mariano Duncan"/>
+</config>
+</config>
+<config key="130">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Chet Lemon"/>
+</config>
+</config>
+<config key="131">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Steve_Sax"/>
+</config>
+</config>
+<config key="132">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Will Clark"/>
+</config>
+</config>
+<config key="133">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Davey Lopes"/>
+</config>
+</config>
+<config key="134">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Glenn Braggs"/>
+</config>
+</config>
+<config key="135">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Darryl Motley"/>
+</config>
+</config>
+<config key="136">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ed Romero"/>
+</config>
+</config>
+<config key="137">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ron Cey"/>
+</config>
+</config>
+<config key="138">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dale Murphy"/>
+</config>
+</config>
+<config key="139">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dan Gladden"/>
+</config>
+</config>
+<config key="140">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dave Collins"/>
+</config>
+</config>
+<config key="141">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jack Clark"/>
+</config>
+</config>
+<config key="142">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tim Teufel"/>
+</config>
+</config>
+<config key="143">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dave Concepcion"/>
+</config>
+</config>
+<config key="144">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Keith Moreland"/>
+</config>
+</config>
+<config key="145">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tom Brookens"/>
+</config>
+</config>
+<config key="146">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Heath"/>
+</config>
+</config>
+<config key="147">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ryne Sandberg"/>
+</config>
+</config>
+<config key="148">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jeffrey_Leonard"/>
+</config>
+</config>
+<config key="149">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Johnny Grubb"/>
+</config>
+</config>
+<config key="150">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Scott Bradley"/>
+</config>
+</config>
+<config key="151">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Wade Boggs"/>
+</config>
+</config>
+<config key="152">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Randy Kutcher"/>
+</config>
+</config>
+<config key="153">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jose Cruz"/>
+</config>
+</config>
+<config key="154">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Lee Lacy"/>
+</config>
+</config>
+<config key="155">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Garth Iorg"/>
+</config>
+</config>
+<config key="156">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jorge Orta"/>
+</config>
+</config>
+<config key="157">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tony Fernandez"/>
+</config>
+</config>
+<config key="158">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Glenn Hubbard"/>
+</config>
+</config>
+<config key="159">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Aldrete"/>
+</config>
+</config>
+<config key="160">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Graig Nettles"/>
+</config>
+</config>
+<config key="161">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Juan Beniquez"/>
+</config>
+</config>
+<config key="162">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jeff Reed"/>
+</config>
+</config>
+<config key="163">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="George Bell"/>
+</config>
+</config>
+<config key="164">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jim Sundberg"/>
+</config>
+</config>
+<config key="165">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Harold Reynolds"/>
+</config>
+</config>
+<config key="166">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Y.Darrell Porter"/>
+</config>
+</config>
+<config key="167">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Buddy Bell"/>
+</config>
+</config>
+<config key="168">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ozzie Smith"/>
+</config>
+</config>
+<config key="169">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Steve Buechele"/>
+</config>
+</config>
+<config key="170">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ben Oglivie"/>
+</config>
+</config>
+<config key="171">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dick Schofield"/>
+</config>
+</config>
+<config key="172">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Danny Heep"/>
+</config>
+</config>
+<config key="173">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Shawon Dunston"/>
+</config>
+</config>
+<config key="174">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Brown"/>
+</config>
+</config>
+<config key="175">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mookie Wilson"/>
+</config>
+</config>
+<config key="176">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Gary Matthews"/>
+</config>
+</config>
+<config key="177">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Phil Bradley"/>
+</config>
+</config>
+<config key="178">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Kevin McReynolds"/>
+</config>
+</config>
+<config key="179">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tito Landrum"/>
+</config>
+</config>
+<config key="180">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tony Phillips"/>
+</config>
+</config>
+<config key="181">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mitch Webster"/>
+</config>
+</config>
+<config key="182">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Vince Coleman"/>
+</config>
+</config>
+<config key="183">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Roy Smalley"/>
+</config>
+</config>
+<config key="184">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Gary Carter"/>
+</config>
+</config>
+<config key="185">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Willie Wilson"/>
+</config>
+</config>
+<config key="186">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Nick Esasky"/>
+</config>
+</config>
+<config key="187">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bob Horner"/>
+</config>
+</config>
+<config key="188">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dave Henderson"/>
+</config>
+</config>
+<config key="189">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mickey Tettleton"/>
+</config>
+</config>
+<config key="190">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jim Traber"/>
+</config>
+</config>
+<config key="191">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tommy Herr"/>
+</config>
+</config>
+<config key="192">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Eric Davis"/>
+</config>
+</config>
+<config key="193">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Marty Barrett"/>
+</config>
+</config>
+<config key="194">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dan Pasqua"/>
+</config>
+</config>
+<config key="195">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bill Almon"/>
+</config>
+</config>
+<config key="196">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jim Dwyer"/>
+</config>
+</config>
+<config key="197">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Garry Templeton"/>
+</config>
+</config>
+<config key="198">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Carlton Fisk"/>
+</config>
+</config>
+<config key="199">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Chris Brown"/>
+</config>
+</config>
+<config key="200">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jose Uribe"/>
+</config>
+</config>
+<config key="201">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Terry Harper"/>
+</config>
+</config>
+<config key="202">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Curt Wilkerson"/>
+</config>
+</config>
+<config key="203">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tony Armas"/>
+</config>
+</config>
+<config key="204">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Alan Ashby"/>
+</config>
+</config>
+<config key="205">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Steve Lombardozzi"/>
+</config>
+</config>
+<config key="206">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Doug Baker"/>
+</config>
+</config>
+<config key="207">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Kevin Mitchell"/>
+</config>
+</config>
+<config key="208">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Von Hayes"/>
+</config>
+</config>
+<config key="209">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Moses"/>
+</config>
+</config>
+<config key="210">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ray Knight"/>
+</config>
+</config>
+<config key="211">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jamie Quirk"/>
+</config>
+</config>
+<config key="212">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Alfredo Griffin"/>
+</config>
+</config>
+<config key="213">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Carmelo Martinez"/>
+</config>
+</config>
+<config key="214">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="John Kruk"/>
+</config>
+</config>
+<config key="215">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bob Kearney"/>
+</config>
+</config>
+<config key="216">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ted Simmons"/>
+</config>
+</config>
+<config key="217">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tom O'Malley"/>
+</config>
+</config>
+<config key="218">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dave Parker"/>
+</config>
+</config>
+<config key="219">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ken Phelps"/>
+</config>
+</config>
+<config key="220">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Reggie Williams"/>
+</config>
+</config>
+<config key="221">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Pete Rose"/>
+</config>
+</config>
+<config key="222">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Larry Sheets"/>
+</config>
+</config>
+<config key="223">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Chris Bando"/>
+</config>
+</config>
+<config key="224">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tim Raines"/>
+</config>
+</config>
+<config key="225">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Damaso Garcia"/>
+</config>
+</config>
+<config key="226">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Billy Jo Robidoux"/>
+</config>
+</config>
+<config key="227">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Greg Gagne"/>
+</config>
+</config>
+<config key="228">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jim Morrison"/>
+</config>
+</config>
+<config key="229">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jeff Stone"/>
+</config>
+</config>
+<config key="230">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rance Mulliniks"/>
+</config>
+</config>
+<config key="231">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Wayne Tolleson"/>
+</config>
+</config>
+<config key="232">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Lou Whitaker"/>
+</config>
+</config>
+<config key="233">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dave Kingman"/>
+</config>
+</config>
+<config key="234">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rick Dempsey"/>
+</config>
+</config>
+<config key="235">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jack Howell"/>
+</config>
+</config>
+<config key="236">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Craig Reynolds"/>
+</config>
+</config>
+<config key="237">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Cecil Cooper"/>
+</config>
+</config>
+<config key="238">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jerry Hairston"/>
+</config>
+</config>
+<config key="239">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rey Quinones"/>
+</config>
+</config>
+<config key="240">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Randy Bush"/>
+</config>
+</config>
+<config key="241">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jose Canseco"/>
+</config>
+</config>
+<config key="242">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mel Hall"/>
+</config>
+</config>
+<config key="243">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Terry Pendleton"/>
+</config>
+</config>
+<config key="244">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ronn Reynolds"/>
+</config>
+</config>
+<config key="245">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bruce Bochte"/>
+</config>
+</config>
+<config key="246">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tom Brunansky"/>
+</config>
+</config>
+<config key="247">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bob Dernier"/>
+</config>
+</config>
+<config key="248">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bob Brenly"/>
+</config>
+</config>
+<config key="249">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dann Bilardello"/>
+</config>
+</config>
+<config key="250">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Gary Ward"/>
+</config>
+</config>
+<config key="251">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Scott Fletcher"/>
+</config>
+</config>
+<config key="252">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ozzie Virgil"/>
+</config>
+</config>
+<config key="253">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Chris Speier"/>
+</config>
+</config>
+<config key="254">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Len Matuszek"/>
+</config>
+</config>
+<config key="255">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Young"/>
+</config>
+</config>
+<config key="256">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Marshall"/>
+</config>
+</config>
+<config key="257">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Willie Upshaw"/>
+</config>
+</config>
+<config key="258">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Wally Joyner"/>
+</config>
+</config>
+<config key="259">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bill Russell"/>
+</config>
+</config>
+<config key="260">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Larry Herndon"/>
+</config>
+</config>
+<config key="261">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tim Flannery"/>
+</config>
+</config>
+<config key="262">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Don Baylor"/>
+</config>
+</config>
+<config key="263">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rob Wilfong"/>
+</config>
+</config>
+<config key="264">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Easler"/>
+</config>
+</config>
+<config key="265">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Julio Franco"/>
+</config>
+</config>
+<config key="266">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Franklin Stubbs"/>
+</config>
+</config>
+<config key="267">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Greg Brock"/>
+</config>
+</config>
+<config key="268">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rafael Belliard"/>
+</config>
+</config>
+<config key="269">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Kingery"/>
+</config>
+</config>
+<config key="270">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Danny Tartabull"/>
+</config>
+</config>
+<config key="271">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dale Sveum"/>
+</config>
+</config>
+<config key="272">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Barry Bonds"/>
+</config>
+</config>
+<config key="273">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bob Melvin"/>
+</config>
+</config>
+<config key="274">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Doug DeCinces"/>
+</config>
+</config>
+<config key="275">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tony Perez"/>
+</config>
+</config>
+<config key="276">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tom Foley"/>
+</config>
+</config>
+<config key="277">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Andres Galarraga"/>
+</config>
+</config>
+<config key="278">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Candy Maldonado"/>
+</config>
+</config>
+<config key="279">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dave Winfield"/>
+</config>
+</config>
+<config key="280">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Phil Garner"/>
+</config>
+</config>
+<config key="281">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ron Oester"/>
+</config>
+</config>
+<config key="282">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mark Salas"/>
+</config>
+</config>
+<config key="283">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rafael Ramirez"/>
+</config>
+</config>
+<config key="284">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Willie Randolph"/>
+</config>
+</config>
+<config key="285">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rick Manning"/>
+</config>
+</config>
+<config key="286">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Denny Walling"/>
+</config>
+</config>
+<config key="287">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Don Mattingly"/>
+</config>
+</config>
+<config key="288">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Alvin Davis"/>
+</config>
+</config>
+<config key="289">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Joel Skinner"/>
+</config>
+</config>
+<config key="290">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jesse Barfield"/>
+</config>
+</config>
+<config key="291">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Harry Spilman"/>
+</config>
+</config>
+<config key="292">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Robby Thompson"/>
+</config>
+</config>
+<config key="293">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Jim Gantner"/>
+</config>
+</config>
+<config key="294">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Daryl Boston"/>
+</config>
+</config>
+<config key="295">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Don Slaught"/>
+</config>
+</config>
+<config key="296">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dave Anderson"/>
+</config>
+</config>
+<config key="297">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Pat Sheridan"/>
+</config>
+</config>
+<config key="298">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rob Deer"/>
+</config>
+</config>
+<config key="299">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ron Kittle"/>
+</config>
+</config>
+<config key="300">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Rick Leach"/>
+</config>
+</config>
+<config key="301">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Fred Lynn"/>
+</config>
+</config>
+<config key="302">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Johnny Ray"/>
+</config>
+</config>
+<config key="303">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Diaz"/>
+</config>
+</config>
+<config key="304">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Luis Rivera"/>
+</config>
+</config>
+<config key="305">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Al Newman"/>
+</config>
+</config>
+<config key="306">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Pat Tabler"/>
+</config>
+</config>
+<config key="307">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ron Hassey"/>
+</config>
+</config>
+<config key="308">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Ken Oberkfell"/>
+</config>
+</config>
+<config key="309">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Curt Ford"/>
+</config>
+</config>
+<config key="310">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Andy Van Slyke"/>
+</config>
+</config>
+<config key="311">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bobby Meacham"/>
+</config>
+</config>
+<config key="312">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bo Diaz"/>
+</config>
+</config>
+<config key="313">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Billy Sample"/>
+</config>
+</config>
+<config key="314">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bill Madlock"/>
+</config>
+</config>
+<config key="315">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Hubie Brooks"/>
+</config>
+</config>
+<config key="316">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Paul Molitor"/>
+</config>
+</config>
+<config key="317">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Dwight Evans"/>
+</config>
+</config>
+<config key="318">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tony Gwynn"/>
+</config>
+</config>
+<config key="319">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mike Schmidt"/>
+</config>
+</config>
+<config key="320">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Gary Redus"/>
+</config>
+</config>
+<config key="321">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Steve Garvey"/>
+</config>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_1">
+<entry key="column_name" type="xstring" value="At Bats"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="16"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="687"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_2">
+<entry key="column_name" type="xstring" value="Hits"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="2"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="238"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_3">
+<entry key="column_name" type="xstring" value="Home Runs"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="0"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="40"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_4">
+<entry key="column_name" type="xstring" value="Runs"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="1"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="130"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_5">
+<entry key="column_name" type="xstring" value="Rbi"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="0"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="121"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_6">
+<entry key="column_name" type="xstring" value="Walks"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="0"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="105"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_7">
+<entry key="column_name" type="xstring" value="Years In Majors"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="1"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="24"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_8">
+<entry key="column_name" type="xstring" value="Career At Bats"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="28"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="14053"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_9">
+<entry key="column_name" type="xstring" value="Career Hits"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="4"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="4256"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_10">
+<entry key="column_name" type="xstring" value="Career Home Runs"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="0"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="548"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_11">
+<entry key="column_name" type="xstring" value="Career Runs"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="1"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="2165"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_12">
+<entry key="column_name" type="xstring" value="Career Rbis"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="0"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="1659"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_13">
+<entry key="column_name" type="xstring" value="Career Walks"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="0"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="1566"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_14">
+<entry key="column_name" type="xstring" value="League"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="possible_values">
+<entry key="array-size" type="xint" value="2"/>
+<config key="0">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="A"/>
+</config>
+</config>
+<config key="1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="N"/>
+</config>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_15">
+<entry key="column_name" type="xstring" value="Division"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="possible_values">
+<entry key="array-size" type="xint" value="2"/>
+<config key="0">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="E"/>
+</config>
+</config>
+<config key="1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="W"/>
+</config>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_16">
+<entry key="column_name" type="xstring" value="Team"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="possible_values">
+<entry key="array-size" type="xint" value="24"/>
+<config key="0">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Cle."/>
+</config>
+</config>
+<config key="1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Hou."/>
+</config>
+</config>
+<config key="2">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Sea."/>
+</config>
+</config>
+<config key="3">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mon."/>
+</config>
+</config>
+<config key="4">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Oak."/>
+</config>
+</config>
+<config key="5">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="K.C."/>
+</config>
+</config>
+<config key="6">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Atl."/>
+</config>
+</config>
+<config key="7">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Det."/>
+</config>
+</config>
+<config key="8">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="L.A."/>
+</config>
+</config>
+<config key="9">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="St.L."/>
+</config>
+</config>
+<config key="10">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bal."/>
+</config>
+</config>
+<config key="11">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Pit."/>
+</config>
+</config>
+<config key="12">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Min."/>
+</config>
+</config>
+<config key="13">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Cin."/>
+</config>
+</config>
+<config key="14">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="S.D."/>
+</config>
+</config>
+<config key="15">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Chi."/>
+</config>
+</config>
+<config key="16">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Cal."/>
+</config>
+</config>
+<config key="17">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="S.F."/>
+</config>
+</config>
+<config key="18">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bos."/>
+</config>
+</config>
+<config key="19">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="N.Y."/>
+</config>
+</config>
+<config key="20">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mil."/>
+</config>
+</config>
+<config key="21">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tor."/>
+</config>
+</config>
+<config key="22">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tex."/>
+</config>
+</config>
+<config key="23">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Phi."/>
+</config>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_17">
+<entry key="column_name" type="xstring" value="Position"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="possible_values">
+<entry key="array-size" type="xint" value="25"/>
+<config key="0">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="C"/>
+</config>
+</config>
+<config key="1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="1B"/>
+</config>
+</config>
+<config key="2">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="RF"/>
+</config>
+</config>
+<config key="3">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="SS"/>
+</config>
+</config>
+<config key="4">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="2B"/>
+</config>
+</config>
+<config key="5">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="DH"/>
+</config>
+</config>
+<config key="6">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="UT"/>
+</config>
+</config>
+<config key="7">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="OF"/>
+</config>
+</config>
+<config key="8">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="3B"/>
+</config>
+</config>
+<config key="9">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="CF"/>
+</config>
+</config>
+<config key="10">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="O1"/>
+</config>
+</config>
+<config key="11">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="LF"/>
+</config>
+</config>
+<config key="12">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="OD"/>
+</config>
+</config>
+<config key="13">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="OS"/>
+</config>
+</config>
+<config key="14">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="3S"/>
+</config>
+</config>
+<config key="15">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="2S"/>
+</config>
+</config>
+<config key="16">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="23"/>
+</config>
+</config>
+<config key="17">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="3O"/>
+</config>
+</config>
+<config key="18">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="CD"/>
+</config>
+</config>
+<config key="19">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="32"/>
+</config>
+</config>
+<config key="20">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="DO"/>
+</config>
+</config>
+<config key="21">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="CS"/>
+</config>
+</config>
+<config key="22">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="1O"/>
+</config>
+</config>
+<config key="23">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="S3"/>
+</config>
+</config>
+<config key="24">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="13"/>
+</config>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+<config key="color_handler">
+<entry key="color_model_class" type="xstring" value="org.knime.core.data.property.ColorModelNominal"/>
+<config key="color_model">
+<config key="keys">
+<config key="C">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="C"/>
+</config>
+</config>
+<config key="1B">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="1B"/>
+</config>
+</config>
+<config key="RF">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="RF"/>
+</config>
+</config>
+<config key="SS">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="SS"/>
+</config>
+</config>
+<config key="2B">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="2B"/>
+</config>
+</config>
+<config key="DH">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="DH"/>
+</config>
+</config>
+<config key="UT">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="UT"/>
+</config>
+</config>
+<config key="OF">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="OF"/>
+</config>
+</config>
+<config key="3B">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="3B"/>
+</config>
+</config>
+<config key="CF">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="CF"/>
+</config>
+</config>
+<config key="O1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="O1"/>
+</config>
+</config>
+<config key="LF">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="LF"/>
+</config>
+</config>
+<config key="OD">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="OD"/>
+</config>
+</config>
+<config key="OS">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="OS"/>
+</config>
+</config>
+<config key="3S">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="3S"/>
+</config>
+</config>
+<config key="2S">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="2S"/>
+</config>
+</config>
+<config key="23">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="23"/>
+</config>
+</config>
+<config key="3O">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="3O"/>
+</config>
+</config>
+<config key="CD">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="CD"/>
+</config>
+</config>
+<config key="32">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="32"/>
+</config>
+</config>
+<config key="DO">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="DO"/>
+</config>
+</config>
+<config key="CS">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="CS"/>
+</config>
+</config>
+<config key="1O">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="1O"/>
+</config>
+</config>
+<config key="S3">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="S3"/>
+</config>
+</config>
+<config key="13">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="13"/>
+</config>
+</config>
+</config>
+<config key="C">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="1B">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="61"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="RF">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="122"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="SS">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="184"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="2B">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="245"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="DH">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="204"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="UT">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="143"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="OF">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="82"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="3B">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="20"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="CF">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="41"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="O1">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="102"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="LF">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="163"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="OD">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="224"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="OS">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="224"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="3S">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="163"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="2S">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="102"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="23">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="41"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="3O">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="20"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="CD">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="82"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="32">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="143"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="DO">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="204"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="CS">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="245"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="1O">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="184"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="S3">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="122"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="13">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="61"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+</config>
+</config>
+</config>
+<config key="column_spec_18">
+<entry key="column_name" type="xstring" value="Put Outs"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="0"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="1378"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_19">
+<entry key="column_name" type="xstring" value="Assists"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="0"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="492"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_20">
+<entry key="column_name" type="xstring" value="Errors"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="0"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<config key="org.knime.core.data.def.IntCell">
+<entry key="IntCell" type="xint" value="32"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_21">
+<entry key="column_name" type="xstring" value="Salary 87"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+<config key="org.knime.core.data.def.DoubleCell">
+<entry key="DoubleCell" type="xdouble" value="0.0"/>
+</config>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+<config key="org.knime.core.data.def.DoubleCell">
+<entry key="DoubleCell" type="xdouble" value="2460.0"/>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_22">
+<entry key="column_name" type="xstring" value="League 87"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="possible_values">
+<entry key="array-size" type="xint" value="2"/>
+<config key="0">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="A"/>
+</config>
+</config>
+<config key="1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="N"/>
+</config>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_23">
+<entry key="column_name" type="xstring" value="Team 87"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+</config>
+<config key="column_domain">
+<config key="lower_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="upper_bound">
+<entry key="datacell" type="xstring" isnull="true" value=""/>
+</config>
+<config key="possible_values">
+<entry key="array-size" type="xint" value="26"/>
+<config key="0">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Cle."/>
+</config>
+</config>
+<config key="1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Hou."/>
+</config>
+</config>
+<config key="2">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Sea."/>
+</config>
+</config>
+<config key="3">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Chi."/>
+</config>
+</config>
+<config key="4">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mon."/>
+</config>
+</config>
+<config key="5">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Oak."/>
+</config>
+</config>
+<config key="6">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Min."/>
+</config>
+</config>
+<config key="7">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="K.C."/>
+</config>
+</config>
+<config key="8">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Atl."/>
+</config>
+</config>
+<config key="9">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Det."/>
+</config>
+</config>
+<config key="10">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="L.A."/>
+</config>
+</config>
+<config key="11">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Pit."/>
+</config>
+</config>
+<config key="12">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bal."/>
+</config>
+</config>
+<config key="13">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Cin."/>
+</config>
+</config>
+<config key="14">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="S.D."/>
+</config>
+</config>
+<config key="15">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Cal."/>
+</config>
+</config>
+<config key="16">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="S.F."/>
+</config>
+</config>
+<config key="17">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Bos."/>
+</config>
+</config>
+<config key="18">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="N.Y."/>
+</config>
+</config>
+<config key="19">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Mil."/>
+</config>
+</config>
+<config key="20">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="St.L."/>
+</config>
+</config>
+<config key="21">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tor."/>
+</config>
+</config>
+<config key="22">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Tex."/>
+</config>
+</config>
+<config key="23">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Phi."/>
+</config>
+</config>
+<config key="24">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="N."/>
+</config>
+</config>
+<config key="25">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="Pit. John"/>
+</config>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+</config>
+</config>

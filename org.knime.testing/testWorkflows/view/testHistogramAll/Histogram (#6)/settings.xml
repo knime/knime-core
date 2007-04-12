@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "de/unikn/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+  <entry key="name" type="xstring" value="Histogram"/>
+  <entry key="isConfigured" type="xboolean" value="true"/>
+  <entry key="isExecuted" type="xboolean" value="false"/>
+  <config key="model">
+    <entry key="createMissingBar" type="xboolean" value="false"/>
+    <entry key="numberOfBins" type="xint" value="10"/>
+    <entry key="equiSized" type="xboolean" value="false"/>
+    <entry key="equiDistant" type="xboolean" value="true"/>
+    <entry key="attrColName" type="xstring" value="Col0"/>
+  </config>
+  <config key="spec_files"/>
+</config>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="histoSettings">
+<entry key="column_name" type="xstring" value="Col36"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+</config>
+<config key="column_domain">
+<config key="possible_values">
+<entry key="array-size" type="xint" value="6"/>
+<config key="0">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="class2"/>
+</config>
+</config>
+<config key="1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="class3"/>
+</config>
+</config>
+<config key="2">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="class4"/>
+</config>
+</config>
+<config key="3">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="class5"/>
+</config>
+</config>
+<config key="4">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="class1"/>
+</config>
+</config>
+<config key="5">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="class0"/>
+</config>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+<config key="color_handler">
+<entry key="color_model_class" type="xstring" value="org.knime.core.data.property.ColorModelNominal"/>
+<config key="color_model">
+<config key="keys">
+<config key="class2">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="class2"/>
+</config>
+</config>
+<config key="class3">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="class3"/>
+</config>
+</config>
+<config key="class4">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="class4"/>
+</config>
+</config>
+<config key="class5">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="class5"/>
+</config>
+</config>
+<config key="class1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="class1"/>
+</config>
+</config>
+<config key="class0">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="class0"/>
+</config>
+</config>
+</config>
+<config key="class2">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="class3">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="class4">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="class5">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="class1">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="class0">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+</config>
+</config>
+</config>

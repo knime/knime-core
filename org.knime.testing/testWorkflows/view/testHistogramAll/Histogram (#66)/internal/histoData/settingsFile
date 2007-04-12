@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="histoSettings">
+<entry key="column_name" type="xstring" value="Col0"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+</config>
+<config key="column_domain">
+<config key="possible_values">
+<entry key="array-size" type="xint" value="4"/>
+<config key="0">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="1"/>
+</config>
+</config>
+<config key="1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="99"/>
+</config>
+</config>
+<config key="2">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="2"/>
+</config>
+</config>
+<config key="3">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="98"/>
+</config>
+</config>
+</config>
+</config>
+<config key="column_properties"/>
+<config key="color_handler">
+<entry key="color_model_class" type="xstring" value="org.knime.core.data.property.ColorModelNominal"/>
+<config key="color_model">
+<config key="keys">
+<config key="99">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="99"/>
+</config>
+</config>
+<config key="2">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="2"/>
+</config>
+</config>
+<config key="1">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="1"/>
+</config>
+</config>
+<config key="98">
+<entry key="datacell" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<config key="org.knime.core.data.def.StringCell">
+<entry key="StringCell" type="xstring" value="98"/>
+</config>
+</config>
+</config>
+<config key="99">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="128"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="2">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="255"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="1">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="255"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="0"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+<config key="98">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="128"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="255"/>
+<entry key="3" type="xint" value="255"/>
+</config>
+</config>
+</config>
+</config>

@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="File Reader"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<config key="Delimiters">
+<config key="Delim0">
+<entry key="pattern" type="xstring" value="&#10;"/>
+<entry key="combineMultiple" type="xboolean" value="true"/>
+<entry key="includeInToken" type="xboolean" value="false"/>
+<entry key="returnAsToken" type="xboolean" value="true"/>
+</config>
+<config key="Delim1">
+<entry key="pattern" type="xstring" value=","/>
+<entry key="combineMultiple" type="xboolean" value="false"/>
+<entry key="includeInToken" type="xboolean" value="false"/>
+<entry key="returnAsToken" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="Quotes">
+<config key="Quote0">
+<entry key="left" type="xstring" value="&quot;"/>
+<entry key="right" type="xstring" value="&quot;"/>
+<entry key="EscChar" type="xchar" value="\"/>
+</config>
+</config>
+<config key="Comments">
+<config key="Comment0">
+<entry key="begin" type="xstring" value="//"/>
+<entry key="end" type="xstring" value="&#10;"/>
+<entry key="includeInToken" type="xboolean" value="false"/>
+<entry key="returnAsToken" type="xboolean" value="false"/>
+</config>
+<config key="Comment1">
+<entry key="begin" type="xstring" value="/*"/>
+<entry key="end" type="xstring" value="*/"/>
+<entry key="includeInToken" type="xboolean" value="false"/>
+<entry key="returnAsToken" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="WhiteSpaces">
+<entry key="WhiteSpace0" type="xstring" value=" "/>
+<entry key="WhiteSpace1" type="xstring" value="&#9;"/>
+</config>
+<entry key="CombineMultDelims" type="xboolean" value="false"/>
+<entry key="DataURL" type="xstring" value="file:/D:/testData/baseball_missingVal.csv"/>
+<entry key="TableName" type="xstring" value="baseball_missingVal.csv"/>
+<entry key="hasColHdr" type="xboolean" value="true"/>
+<entry key="hasRowHdr" type="xboolean" value="false"/>
+<entry key="ignoreEmptyLines" type="xboolean" value="true"/>
+<entry key="rowPrefix" type="xstring" value="Row"/>
+<config key="RowDelims">
+<entry key="RDelim0" type="xstring" value="&#10;"/>
+<entry key="SkipEmptyLine0" type="xboolean" value="true"/>
+</config>
+<config key="MissingPatterns"/>
+<entry key="DecimalSeparator" type="xchar" value="."/>
+<entry key="ignEmtpyTokensAtEOR" type="xboolean" value="false"/>
+<entry key="numOfColumns" type="xint" value="24"/>
+<config key="ColumnProperties">
+<config key="0">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Name"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="1">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="At Bats"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="2">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Hits"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="3">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Home Runs"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="4">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Runs"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="5">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Rbi"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="6">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Walks"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="7">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Years In Majors"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="8">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Career At Bats"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="9">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Career Hits"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="10">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Career Home Runs"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="11">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Career Runs"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="12">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Career Rbis"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="13">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Career Walks"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="14">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="League"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="15">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Division"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="16">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Team"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="17">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Position"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="18">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Put Outs"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="19">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Assists"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="20">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Errors"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="21">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Salary 87"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="22">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="League 87"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="23">
+<entry key="UserSetValues" type="xboolean" value="false"/>
+<entry key="MissValuePattern" type="xstring" value="?"/>
+<entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="ColumnName" type="xstring" value="Team 87"/>
+<config key="ColumnClass">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+</config>
+</config>
+<config key="spec_files">
+<entry key="output_0" type="xstring" value="spec_0.xml"/>
+</config>
+<entry key="data_meta_file" type="xstring" value="data.xml"/>
+<config key="model_files"/>
+</config>
