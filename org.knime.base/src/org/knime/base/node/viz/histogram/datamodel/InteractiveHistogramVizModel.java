@@ -239,7 +239,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
                 && m_aggrColumns.containsAll(aggrCols)) {
             return false;
         }
-        if ((m_aggrColumns == null || m_aggrColumns.size() == 1)
+        if ((m_aggrColumns == null || m_aggrColumns.size() <= 1)
                 && aggrCols.size() > 1) {
             setShowBarOutline(true);
             setShowBinOutline(true);

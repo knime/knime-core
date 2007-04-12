@@ -864,7 +864,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (vizModel.setHistogramLayout(layout)) {
 //          if the layout has changed we have to update the y coordinates
             setYCoordinates();
-            if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
+            if (HistogramLayout.SIDE_BY_SIDE.equals(layout) 
+                    || (vizModel.getAggrColumns() != null 
+                            && vizModel.getAggrColumns().size() > 1)) {
                 //save the current bin width to restore it after changing the
                 //layout again
                 m_lastStackedBinWidth = vizModel.getBinWidth();
