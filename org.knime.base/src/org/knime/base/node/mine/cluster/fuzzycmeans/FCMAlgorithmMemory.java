@@ -94,7 +94,7 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
        initData(table);
         // TODO: checks on table: only double columns, nrRows, dimension
     }
-
+    
     /*
      * Reads the data from the given DataTable in the doublearray m_data
      */
@@ -155,7 +155,9 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
     public double doOneIteration(final ExecutionContext exec)
             throws CanceledExecutionException {
         assert (m_data != null);
-        exec.checkCanceled();
+        if (exec != null) {
+            exec.checkCanceled();
+        }
         updateWeightMatrix(m_data);
         setTotalChange(0.0);
         updateClusterCenters(m_data);
