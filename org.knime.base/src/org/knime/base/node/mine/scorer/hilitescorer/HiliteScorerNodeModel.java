@@ -46,7 +46,6 @@ import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.DefaultRow;
@@ -73,8 +72,8 @@ import org.knime.core.node.NodeSettingsWO;
  * @see HiliteScorerNodeFactory
  */
 public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
-    /** The node logger fot this class. */
-
+    
+    /** The node logger for this class. */
     protected static final NodeLogger LOGGER = NodeLogger
             .getLogger(HiliteScorerNodeModel.class);
 
@@ -160,7 +159,8 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
         // cells in common (e.g. both have Iris-Setosa), they get the same
         // index in the array. thus, the high numbers should appear
         // in the diagonal
-        m_values = determineColValues(in, index1, index2, exec);
+        m_values = determineColValues(in, index1, index2, 
+                exec.createSubProgress(0.5));
         List<String> valuesList = Arrays.asList(m_values);
 
         m_correctCount = 0;
@@ -178,14 +178,16 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
             }
         }
 
+        int rowCnt = in.getRowCount();
         int rowNr = 0;
+        ExecutionMonitor subExec = exec.createSubProgress(0.5);
         for (Iterator<DataRow> it = in.iterator(); it.hasNext(); rowNr++) {
             DataRow row = it.next();
-            exec.setProgress(rowNr / (double) in.getRowCount(),
+            subExec.setProgress((1.0 + rowNr)  / rowCnt,
                     "Computing score, row " + rowNr + " (\"" + row.getKey()
                             + "\") of " + in.getRowCount());
             try {
-                exec.checkCanceled();
+                subExec.checkCanceled();
             } catch (CanceledExecutionException cee) {
                 reset();
                 throw cee;
@@ -328,7 +330,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * Returns the error of wrong classfied pattern in percentage of the number
+     * Returns the error of wrong classified pattern in percentage of the number
      * of patterns.
      * 
      * @return the 1.0 - classification accuracy
@@ -380,7 +382,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
 
     /**
      * Determines the row keys (as DataCells) which belong to the given cell of
-     * the confution matrix.
+     * the confusion matrix.
      * 
      * @param cells
      *            the cells of the confusion matrix for which the keys should be
@@ -426,10 +428,10 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      * @throws CanceledExecutionException
      *             if user canceled operation
      */
-    protected String[] determineColValues(final DataTable in, final int index1,
-            final int index2, final ExecutionMonitor exec)
+    protected String[] determineColValues(final BufferedDataTable in, 
+            final int index1, final int index2, final ExecutionMonitor exec)
             throws CanceledExecutionException {
-
+        int rowCnt = in.getRowCount();
         DataTableSpec inSpec = in.getDataTableSpec();
         DataColumnSpec col1 = inSpec.getColumnSpec(index1);
         DataColumnSpec col2 = inSpec.getColumnSpec(index2);
@@ -443,8 +445,9 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
             int rowNr = 0;
             for (Iterator<DataRow> it = in.iterator(); it.hasNext(); rowNr++) {
                 DataRow row = it.next();
-                exec.checkCanceled(); // throws excepton if user canceled.
-                exec.setMessage("Reading possible values, row " + rowNr
+                exec.checkCanceled(); // throws exception if user canceled.
+                exec.setProgress((1.0 + rowNr) / rowCnt, 
+                        "Reading possible values, row " + rowNr
                         + " (\"" + row.getKey() + "\")");
                 DataCell cell1 = row.getCell(index1);
                 DataCell cell2 = row.getCell(index2);
@@ -503,7 +506,8 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
      *            the key to find
      * @return the index in source where key is located
      */
-    protected static int findValue(final DataCell[] source, final DataCell key) {
+    protected static int findValue(final DataCell[] source, 
+            final DataCell key) {
         for (int i = 0; i < source.length; i++) {
             if (source[i].equals(key)) {
                 return i;
@@ -570,7 +574,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
 
                         if (key.equals(keyToCheck)) {
                             // if the keys equal remove it, as it can only
-                            // occure in one cell
+                            // occur in one cell
                             // keysToCheckIterator.remove();
 
                             // remember that the key was found
@@ -579,7 +583,7 @@ public class HiliteScorerNodeModel extends NodeModel implements DataProvider {
                     }
 
                     if (!wasKeyFound) {
-                        // if one key was not found the cell is not repesented
+                        // if one key was not found the cell is not represented
                         // completely by "keys" (the keys to check
                         allKeysIncluded = false;
                     }
