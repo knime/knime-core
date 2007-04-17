@@ -57,6 +57,8 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     private static final String CONFIG_KEY_PATTERN = "pattern";
 
     private HashSet<DataCell> m_coveredPattern = new HashSet<DataCell>();
+    
+    private boolean pureEnough = false;
 
     /**
      * Empty Constructor visible only within package.
@@ -260,5 +262,23 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
     @Override
     public int getCountOfSubtree() {
         return 1;
+    }
+
+    /**
+     * Get the marker field for the purity.
+     * 
+     * @return whether this leaf is pure enough or not; must have been set
+     * properly
+     */
+    public boolean isPureEnough() {
+        return pureEnough;
+    }
+
+    /**
+     * Set the marker field for the purity
+     * @param pureEnough true if this leaf should be marked as pure enough
+     */
+    public void setPureEnough(boolean pureEnough) {
+        this.pureEnough = pureEnough;
     }
 }
