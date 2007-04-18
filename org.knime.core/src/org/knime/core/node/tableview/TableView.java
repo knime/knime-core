@@ -447,6 +447,52 @@ public class TableView extends JScrollPane {
         }
     }
     
+    /** Get the height of the column header view or -1 if none has been set
+     * (no data available).
+     * @return The height of the column header view.
+     */
+    public int getColumnHeaderViewHeight() {
+        JViewport header = getColumnHeader();
+        Component v;
+        if (header != null) {
+            v = header.getView();
+        } else {
+            // the header == null if the table has not been completely 
+            // initialized (i.e. configureEnclosingScrollPane has not been
+            // called the JTable). The header will be the JTableHeader of the
+            // table
+            v = getContentTable().getTableHeader();
+        }
+        if (v != null) {
+            return v.getHeight();
+        }
+        return -1;
+    }
+    
+    /** Set the height of the column header view. If none has been set
+     * (i.e. no data is available), this method does nothing.
+     * @param newHeight The new height.
+     */
+    public void setColumnHeaderViewHeight(final int newHeight) {
+        JViewport header = getColumnHeader();
+        Component v;
+        if (header != null) {
+            v = header.getView();
+        } else {
+            // the header == null if the table has not been completely 
+            // initialized (i.e. configureEnclosingScrollPane has not been
+            // called the JTable). The header will be the JTableHeader of the
+            // table
+            v = getContentTable().getTableHeader();
+        }
+        if (v != null) {
+            Dimension d = v.getSize();
+            d.height = newHeight;
+            v.setSize(d);
+            v.setPreferredSize(d);
+        }
+    }
+    
     /**
      * Set a new row height in the table.
      * 
@@ -887,17 +933,11 @@ public class TableView extends JScrollPane {
         /** {@inheritDoc} */
         @Override
         public void mouseDragged(final MouseEvent e) {
-            Component c = (Component)e.getSource();
             if (m_oldMouseY > 0) {
-                JViewport colHeader = getColumnHeader();
-                Component colHeaderView = 
-                    colHeader != null ? colHeader.getView() : null;
                 int diff = e.getPoint().y - m_oldMouseY;
-                Dimension o = c.getSize();
-                Dimension n = new Dimension(o.width, o.height + diff);
-                colHeaderView.setSize(n);
-                colHeaderView.setPreferredSize(n);
-                m_oldMouseY = colHeaderView.getSize().height;
+                int oldHeight = getColumnHeaderViewHeight();
+                setColumnHeaderViewHeight(oldHeight + diff);
+                m_oldMouseY = getColumnHeaderViewHeight();
             }
         }
         

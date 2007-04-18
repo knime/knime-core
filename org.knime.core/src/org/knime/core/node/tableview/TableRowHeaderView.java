@@ -293,6 +293,7 @@ public final class TableRowHeaderView extends JTable {
     public void updateUI() {
         super.updateUI();
         m_headerBackground = UIManager.getColor("TableHeader.background");
+        setBackground(m_headerBackground);
         Border b = UIManager.getBorder("TableHeader.border");
         TableCellRenderer renderer = 
             getColumnModel().getColumn(0).getCellRenderer();

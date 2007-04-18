@@ -47,6 +47,7 @@ import org.knime.core.data.def.DoubleCell;
 public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
     
     private final Icon m_icon = new GrayIcon();
+    private boolean m_isPaintCrossForMissing = false;
     
     /** Creates new instance given a column spec. This object will get the
      * information about min/max from the spec and do the normalization 
@@ -67,8 +68,9 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
     public void setText(final String text) {
     }
     
-    /* Internal setter. */
-    private void setTextInternal(final String text) {
+    /** Internal setter for the text, delegates to super.setText().
+     * @param text The text to write. */
+    protected void setTextInternal(final String text) {
         super.setText(text);
     }
     
@@ -120,6 +122,9 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
             c = setDoubleValue(val, min, max);
             setIconColor(c);
             setTextInternal(null);
+        } else if (isPaintCrossForMissing()) {
+            setIconColor(null);
+            setTextInternal(null);
         } else {
             setIcon(null);
             setTextInternal(DataType.getMissingCell().toString());
@@ -142,12 +147,39 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
         
     }
     
+    /**
+     * If a cross is painted for missing values.
+     * @return the isPaintCrossForMissing property.
+     * @see #setPaintCrossForMissing(boolean)
+     */
+    protected boolean isPaintCrossForMissing() {
+        return m_isPaintCrossForMissing;
+    }
+
+    /**
+     * If to paint a cross for missing values (if false a '?' is written).
+     * @param isPaintCross If to paint a cross for missing values.
+     */
+    protected void setPaintCrossForMissing(final boolean isPaintCross) {
+        m_isPaintCrossForMissing = isPaintCross;
+    }
+
     /** Returns "Gray Scale".
-     * @see org.knime.core.data.renderer.DataValueRenderer#getDescription()
+     * {@inheritDoc}
      */
     @Override
     public String getDescription() {
         return "Gray Scale";
+    }
+    
+    /** @return the width of the icon, defaults to <code>getWidth()</code>. */
+    protected int getIconWidth() {
+        return getWidth();
+    }
+    
+    /** @return the height of the icon, defaults to <code>getHeight()</code>. */
+    protected int getIconHeight() {
+        return getHeight();
     }
 
     /** Private icon that is shown instead of any string. 
@@ -162,14 +194,14 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
          * {@inheritDoc}
          */
         public int getIconHeight() {
-            return getHeight();
+            return DoubleGrayValueRenderer.this.getIconHeight();
         }
         
         /**
          * {@inheritDoc}
          */
         public int getIconWidth() {
-            return getWidth();
+            return DoubleGrayValueRenderer.this.getIconWidth();
         }
         
         /** Sets the color for the next paint operation.
@@ -184,8 +216,14 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
          */
         public void paintIcon(
             final Component c, final Graphics g, final int x, final int y) {
-            g.setColor(m_color);
-            g.fillRect(x, y, getIconWidth(), getIconHeight());
+            if (m_color == null) {
+                g.setColor(Color.BLACK);
+                g.drawLine(x, y, x + getIconWidth(), y + getIconHeight());
+                g.drawLine(x, y + getIconHeight(), x + getIconWidth(), y);
+            } else {
+                g.setColor(m_color);
+                g.fillRect(x, y, getIconWidth(), getIconHeight());
+            }
         }
     } // end class GrayIcon
 }
