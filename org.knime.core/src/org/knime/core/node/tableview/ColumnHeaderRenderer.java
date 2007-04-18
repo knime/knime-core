@@ -77,6 +77,7 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
         } else {
             setIcon(null);
         }
+        setToolTipText(newValue.toString());
         setValue(newValue);
         return this;
     }
@@ -94,5 +95,5 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
     public void setShowIcon(final boolean showIcon) {
         m_showIcon = showIcon;
     }
-
+    
 }
