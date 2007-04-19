@@ -100,7 +100,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     private static final Color BIN_SURROUNDING_COLOR = Color.LIGHT_GRAY;
     
     /**The alpha value of the bar surrounding block.*/
-    private static final float BAR_SURROUNDING_ALPHA = 0.2f;
+    private static final float BAR_SIDE_BY_SIDE_SURROUNDING_ALPHA = 0.2f;
     
     /**The color of the element outline.*/
     private static final Color ELEMENT_OUTLINE_COLOR = Color.BLACK;
@@ -326,6 +326,13 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         final LabelDisplayPolicy labelDisplayPolicy = 
             vizModel.getLabelDisplayPolicy();
         final boolean showLabelVertical = vizModel.isShowLabelVertical();
+        final float barOutlineAlpha;
+        if (HistogramLayout.SIDE_BY_SIDE.equals(
+                vizModel.getHistogramLayout())) {
+            barOutlineAlpha = BAR_SIDE_BY_SIDE_SURROUNDING_ALPHA;
+        } else {
+            barOutlineAlpha = 1.0f;
+        }
         // loop over all bins and paint them
         for (BinDataModel bin : vizModel.getBins()) {
             if (drawBinOutline) {
@@ -355,7 +362,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                     //draw the outline of the bar if we have multiple
                     //aggregation columns
                     drawBlock(g2, bar.getSurroundingRectangle(), 
-                            bar.getColor(), BAR_SURROUNDING_ALPHA);
+                            bar.getColor(), barOutlineAlpha);
                 }
                 if (bar.isPresentable()) {
                     drawElements(g2, bar.getElements(), showElementOutline);
