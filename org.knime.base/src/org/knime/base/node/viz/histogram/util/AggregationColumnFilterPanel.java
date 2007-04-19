@@ -223,7 +223,7 @@ public class AggregationColumnFilterPanel extends JPanel {
     @Override
     public void setEnabled(final boolean enabled) {
         super.setEnabled(enabled);
-        m_inclList.setEnabled(enabled);
+//        m_inclList.setEnabled(enabled);
         m_exclList.setEnabled(enabled);
         m_remButton.setEnabled(enabled);
         m_addButton.setEnabled(enabled);
