@@ -99,8 +99,11 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     /**The color of the bin surrounding rectangle.*/
     private static final Color BIN_SURROUNDING_COLOR = Color.LIGHT_GRAY;
     
-    /**The alpha value of the bar surrounding block.*/
+    /**The alpha value of the bar surrounding block in the side by side layout.
+     * */
     private static final float BAR_SIDE_BY_SIDE_SURROUNDING_ALPHA = 0.2f;
+    /**The alpha value of the bar surrounding block in the stacked layout.*/
+    private static final float BAR_STACKED_SURROUNDING_ALPHA = 0.7f;
     
     /**The color of the element outline.*/
     private static final Color ELEMENT_OUTLINE_COLOR = Color.BLACK;
@@ -331,7 +334,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 vizModel.getHistogramLayout())) {
             barOutlineAlpha = BAR_SIDE_BY_SIDE_SURROUNDING_ALPHA;
         } else {
-            barOutlineAlpha = 1.0f;
+            barOutlineAlpha = BAR_STACKED_SURROUNDING_ALPHA;
         }
         // loop over all bins and paint them
         for (BinDataModel bin : vizModel.getBins()) {
