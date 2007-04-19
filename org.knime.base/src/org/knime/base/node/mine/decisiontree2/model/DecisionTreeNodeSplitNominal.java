@@ -275,7 +275,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
      * 
      * @return the values array of this nodes split attribute
      */
-    DataCell[] getSplitValues() {
+    public DataCell[] getSplitValues() {
         return m_splitValues;
     }
 }

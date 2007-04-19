@@ -303,4 +303,13 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
         m_threshold = pConf.getDouble("threshold");
     }
 
+    /**
+     * Returns the split threashold of this continous split.
+     * 
+     * @return the split threashold of this continous split
+     */
+    public double getThreshold() {
+        return m_threshold;
+    }
+
 }
