@@ -283,6 +283,15 @@ public class StatisticsTable implements DataTable {
                 m_meanValues[j] = sum[j] / validCount[j];
                 m_varianceValues[j] = (sumsquare[j] - ((sum[j] * sum[j]) 
                         / validCount[j])) / (validCount[j] - 1);
+                // unreported bug fix: in cases in which a column contains 
+                // almost only one value (for instance 1.0) but one single 
+                // 'outlier' whose value is, for instance 0.9999998, we get 
+                // round-off errors resulting in negative variance values
+                if (m_varianceValues[j] < 0.0 && m_varianceValues[j] > -1.0E8) {
+                    m_varianceValues[j] = 0.0;
+                }
+                assert m_varianceValues[j] >= 0.0 
+                    : "Variance can not be negative: " + m_varianceValues[j];
             }
         }
 
