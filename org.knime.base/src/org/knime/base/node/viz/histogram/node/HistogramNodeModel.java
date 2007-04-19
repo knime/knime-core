@@ -77,8 +77,12 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
     throws CanceledExecutionException {
         LOGGER.debug("Entering createHistogramModel(exec, dataTable) "
                 + "of class HistogramNodeModel.");
-        final DataTableSpec tableSpec = getTableSpec();
+       final DataTableSpec tableSpec = getTableSpec();
        final int noOfRows = getNoOfRows();
+       if (noOfRows == 0) {
+           m_model = null;
+           return;
+       }
        m_model = new InteractiveHistogramDataModel(tableSpec, noOfRows);
         exec.setMessage("Adding data rows to histogram...");
         final double progressPerRow = 1.0 / noOfRows;

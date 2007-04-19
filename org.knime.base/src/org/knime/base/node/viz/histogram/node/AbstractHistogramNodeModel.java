@@ -94,7 +94,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     
     private final SettingsModelIntegerBounded m_noOfRows = 
         new SettingsModelIntegerBounded(
-                CFGKEY_NO_OF_ROWS, DEFAULT_NO_OF_ROWS, 1, Integer.MAX_VALUE);
+                CFGKEY_NO_OF_ROWS, DEFAULT_NO_OF_ROWS, 0, Integer.MAX_VALUE);
     private final SettingsModelBoolean m_allRows = new SettingsModelBoolean(
                 CFGKEY_ALL_ROWS, false);
     /** The name of the x column. */
@@ -138,7 +138,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             m_xColName.validateSettings(settings);
         } catch (Throwable e) {
             //It's an older node which hasn't stored the aggregation column
-            final String xCol = settings.getString("HistogramXColName");
+            final String xCol = settings.getString("xColumn");
             if (xCol == null || xCol.length() < 1) {
                 throw new InvalidSettingsException("Invalid x column");
             }
@@ -178,7 +178,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             m_aggrColName.loadSettingsFrom(settings);
         } catch (Throwable e) {
             //It's an older node which hasn't stored the aggregation column
-            m_aggrColName.setColorNameColumns((ColorColumn)null);
+            m_aggrColName.setColorNameColumns(null);
             LOGGER.debug("Exception while loading settings use default values");
             
         }
@@ -407,7 +407,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
         }
         final int maxNoOfRows = table.getRowCount();
         if (maxNoOfRows < 1) {
-            throw new IllegalArgumentException("Table contains no rows");
+            setWarningMessage("Empty data table found.");
         }
         if (maxNoOfRows < 0) {
             throw new IllegalArgumentException(

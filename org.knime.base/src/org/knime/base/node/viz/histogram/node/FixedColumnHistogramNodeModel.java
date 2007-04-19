@@ -124,6 +124,10 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         LOGGER.debug("Entering createHistogramModel(exec, table) "
                 + "of class FixedColumnHistogramNodeModel.");
         final int noOfRows = getNoOfRows();
+        if (noOfRows == 0) {
+            m_model = null;
+            return;
+        }
         final Collection<ColorColumn> aggrColumns = getAggrColumns();
         final int noOfBins = m_noOfBins.getIntValue();
         m_model = 

@@ -58,6 +58,7 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
     private final SettingsModelIntegerBounded m_noOfRowsModel;
 
     private final SettingsModelBoolean m_allRowsModel;
+    
     /**
      * Constructor for class HistogramNodeDialogPane.
      * 
@@ -68,7 +69,7 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
         createNewGroup("Rows to display:");
         m_noOfRowsModel = new SettingsModelIntegerBounded(
                 AbstractHistogramNodeModel.CFGKEY_NO_OF_ROWS,
-                AbstractHistogramNodeModel.DEFAULT_NO_OF_ROWS, 1,
+                AbstractHistogramNodeModel.DEFAULT_NO_OF_ROWS, 0,
                 Integer.MAX_VALUE);
         final DialogComponentNumber noOfRowsComp = 
             new DialogComponentNumber(m_noOfRowsModel,
