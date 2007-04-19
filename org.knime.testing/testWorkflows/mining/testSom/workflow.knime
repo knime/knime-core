@@ -3,7 +3,7 @@
 <config key="workflow.knime">
 <entry key="version" type="xstring" value="1.2.0"/>
 <entry key="runningNodeID" type="xint" value="15"/>
-<entry key="runningConnectionID" type="xint" value="24"/>
+<entry key="runningConnectionID" type="xint" value="35"/>
 <config key="nodes">
 <config key="node_1">
 <entry key="node_settings_file" type="xstring" value="File Reader (#1)/settings.xml"/>
@@ -15,10 +15,10 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="74"/>
-<entry key="1" type="xint" value="198"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="6"/>
+<entry key="1" type="xint" value="294"/>
+<entry key="2" type="xint" value="80"/>
+<entry key="3" type="xint" value="95"/>
 </config>
 <entry key="name" type="xstring" value="File Reader"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
@@ -141,10 +141,10 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="208"/>
-<entry key="1" type="xint" value="198"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="140"/>
+<entry key="1" type="xint" value="294"/>
+<entry key="2" type="xint" value="82"/>
+<entry key="3" type="xint" value="95"/>
 </config>
 <entry key="name" type="xstring" value="Color Manager"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
@@ -191,10 +191,10 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="540"/>
-<entry key="1" type="xint" value="70"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="472"/>
+<entry key="1" type="xint" value="166"/>
+<entry key="2" type="xint" value="80"/>
+<entry key="3" type="xint" value="95"/>
 </config>
 <entry key="name" type="xstring" value="Som"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
@@ -283,10 +283,10 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="540"/>
-<entry key="1" type="xint" value="220"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="472"/>
+<entry key="1" type="xint" value="316"/>
+<entry key="2" type="xint" value="80"/>
+<entry key="3" type="xint" value="95"/>
 </config>
 <entry key="name" type="xstring" value="Som"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
@@ -375,10 +375,10 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="540"/>
-<entry key="1" type="xint" value="362"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="472"/>
+<entry key="1" type="xint" value="458"/>
+<entry key="2" type="xint" value="80"/>
+<entry key="3" type="xint" value="95"/>
 </config>
 <entry key="name" type="xstring" value="Som"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
@@ -467,10 +467,10 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="374"/>
-<entry key="1" type="xint" value="187"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="306"/>
+<entry key="1" type="xint" value="283"/>
+<entry key="2" type="xint" value="84"/>
+<entry key="3" type="xint" value="95"/>
 </config>
 <entry key="name" type="xstring" value="Disturber Node"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
@@ -490,10 +490,10 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="707"/>
-<entry key="1" type="xint" value="351"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="639"/>
+<entry key="1" type="xint" value="447"/>
+<entry key="2" type="xint" value="80"/>
+<entry key="3" type="xint" value="95"/>
 </config>
 <entry key="name" type="xstring" value="Model Reader"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
@@ -504,7 +504,7 @@
 <entry key="SettingsModelID" type="xstring" value="SMID_string"/>
 <entry key="EnabledStatus" type="xboolean" value="true"/>
 </config>
-<entry key="filename" type="xstring" value="E:\tmp\SomModel_3.pmml"/>
+<entry key="filename" type="xstring" isnull="true" value=""/>
 </config>
 </config>
 <config key="node_8">
@@ -517,10 +517,10 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="692"/>
-<entry key="1" type="xint" value="20"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="624"/>
+<entry key="1" type="xint" value="116"/>
+<entry key="2" type="xint" value="80"/>
+<entry key="3" type="xint" value="95"/>
 </config>
 <entry key="name" type="xstring" value="Model Reader"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
@@ -531,7 +531,7 @@
 <entry key="SettingsModelID" type="xstring" value="SMID_string"/>
 <entry key="EnabledStatus" type="xboolean" value="true"/>
 </config>
-<entry key="filename" type="xstring" value="E:\tmp\SomModel_1.pmml"/>
+<entry key="filename" type="xstring" isnull="true" value=""/>
 </config>
 </config>
 <config key="node_9">
@@ -544,10 +544,10 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="707"/>
-<entry key="1" type="xint" value="202"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="639"/>
+<entry key="1" type="xint" value="298"/>
+<entry key="2" type="xint" value="80"/>
+<entry key="3" type="xint" value="95"/>
 </config>
 <entry key="name" type="xstring" value="Model Reader"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
@@ -558,7 +558,7 @@
 <entry key="SettingsModelID" type="xstring" value="SMID_string"/>
 <entry key="EnabledStatus" type="xboolean" value="true"/>
 </config>
-<entry key="filename" type="xstring" value="E:\tmp\SomModel_2.pmml"/>
+<entry key="filename" type="xstring" isnull="true" value=""/>
 </config>
 </config>
 <config key="node_13">
@@ -571,10 +571,10 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="841"/>
-<entry key="1" type="xint" value="40"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="773"/>
+<entry key="1" type="xint" value="136"/>
+<entry key="2" type="xint" value="192"/>
+<entry key="3" type="xint" value="95"/>
 </config>
 <entry key="name" type="xstring" value="Model Content Difference Checker"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
@@ -592,10 +592,10 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="841"/>
-<entry key="1" type="xint" value="211"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="773"/>
+<entry key="1" type="xint" value="307"/>
+<entry key="2" type="xint" value="192"/>
+<entry key="3" type="xint" value="95"/>
 </config>
 <entry key="name" type="xstring" value="Model Content Difference Checker"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
@@ -613,10 +613,10 @@
 <entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
 <config key="extrainfo.node.bounds">
 <entry key="array-size" type="xint" value="4"/>
-<entry key="0" type="xint" value="841"/>
-<entry key="1" type="xint" value="372"/>
-<entry key="2" type="xint" value="-1"/>
-<entry key="3" type="xint" value="-1"/>
+<entry key="0" type="xint" value="773"/>
+<entry key="1" type="xint" value="468"/>
+<entry key="2" type="xint" value="192"/>
+<entry key="3" type="xint" value="95"/>
 </config>
 <entry key="name" type="xstring" value="Model Content Difference Checker"/>
 <entry key="isConfigured" type="xboolean" value="true"/>
@@ -626,81 +626,81 @@
 </config>
 </config>
 <config key="connections">
-<config key="connection_15">
-<entry key="ID" type="xint" value="15"/>
-<entry key="sourceID" type="xint" value="6"/>
-<entry key="sourcePort" type="xint" value="1"/>
-<entry key="targetID" type="xint" value="4"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_19">
-<entry key="ID" type="xint" value="19"/>
-<entry key="sourceID" type="xint" value="4"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="14"/>
-<entry key="targetPort" type="xint" value="1"/>
-</config>
-<config key="connection_11">
-<entry key="ID" type="xint" value="11"/>
-<entry key="sourceID" type="xint" value="6"/>
-<entry key="sourcePort" type="xint" value="2"/>
-<entry key="targetID" type="xint" value="5"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_16">
-<entry key="ID" type="xint" value="16"/>
-<entry key="sourceID" type="xint" value="8"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="13"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_18">
-<entry key="ID" type="xint" value="18"/>
-<entry key="sourceID" type="xint" value="9"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="14"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_12">
-<entry key="ID" type="xint" value="12"/>
-<entry key="sourceID" type="xint" value="6"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="3"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_17">
-<entry key="ID" type="xint" value="17"/>
-<entry key="sourceID" type="xint" value="3"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="13"/>
-<entry key="targetPort" type="xint" value="1"/>
-</config>
-<config key="connection_13">
-<entry key="ID" type="xint" value="13"/>
-<entry key="sourceID" type="xint" value="2"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="6"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_21">
-<entry key="ID" type="xint" value="21"/>
-<entry key="sourceID" type="xint" value="5"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="15"/>
-<entry key="targetPort" type="xint" value="1"/>
-</config>
-<config key="connection_20">
-<entry key="ID" type="xint" value="20"/>
+<config key="connection_34">
+<entry key="ID" type="xint" value="34"/>
 <entry key="sourceID" type="xint" value="7"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="targetID" type="xint" value="15"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_14">
-<entry key="ID" type="xint" value="14"/>
+<config key="connection_32">
+<entry key="ID" type="xint" value="32"/>
+<entry key="sourceID" type="xint" value="2"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="6"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_30">
+<entry key="ID" type="xint" value="30"/>
+<entry key="sourceID" type="xint" value="6"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="3"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_26">
+<entry key="ID" type="xint" value="26"/>
+<entry key="sourceID" type="xint" value="4"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="14"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_33">
+<entry key="ID" type="xint" value="33"/>
+<entry key="sourceID" type="xint" value="5"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="15"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_28">
+<entry key="ID" type="xint" value="28"/>
+<entry key="sourceID" type="xint" value="8"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="13"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_31">
+<entry key="ID" type="xint" value="31"/>
+<entry key="sourceID" type="xint" value="3"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="13"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_29">
+<entry key="ID" type="xint" value="29"/>
+<entry key="sourceID" type="xint" value="9"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="14"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_35">
+<entry key="ID" type="xint" value="35"/>
 <entry key="sourceID" type="xint" value="1"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="targetID" type="xint" value="2"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_25">
+<entry key="ID" type="xint" value="25"/>
+<entry key="sourceID" type="xint" value="6"/>
+<entry key="sourcePort" type="xint" value="1"/>
+<entry key="targetID" type="xint" value="4"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_27">
+<entry key="ID" type="xint" value="27"/>
+<entry key="sourceID" type="xint" value="6"/>
+<entry key="sourcePort" type="xint" value="2"/>
+<entry key="targetID" type="xint" value="5"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
 </config>
