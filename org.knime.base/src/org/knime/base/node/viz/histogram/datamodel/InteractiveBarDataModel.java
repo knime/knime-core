@@ -36,8 +36,8 @@ import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeLogger;
 
 /**
- * This class holds the information of a histogram bar. Like the color to use
- * and the {@link InteractiveBarElementDataModel} objects of this bar.
+ * This class extends the {@link BarDataModel} to support hiliting.
+ * 
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractiveBarDataModel extends BarDataModel {

@@ -26,7 +26,7 @@
 package org.knime.base.node.viz.histogram;
 
 /**
- * Used to create a {@link ButtonGroup} in the 
+ * Used to create a {@link javax.swing.ButtonGroup} in the 
  * {@link AbstractHistogramProperties} class.
  * @author Tobias Koetter, University of Konstanz
  */

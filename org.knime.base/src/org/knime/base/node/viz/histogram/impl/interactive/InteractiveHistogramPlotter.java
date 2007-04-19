@@ -45,15 +45,13 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
  * This class is the controller between the data model of the
- * {@link AbstractHistogramVizModel} class and the view 
+ * {@link InteractiveHistogramVizModel} 
+ * class and the view 
  * {@link org.knime.base.node.viz.histogram.HistogramDrawingPane}. It creates 
- * the {@link org.knime.base.node.viz.histogram.BarVisModel} objects 
- * based on the 
+ * the {@link org.knime.base.node.viz.histogram.datamodel.BarDataModel} 
+ * objects based on the
  * {@link 
- * org.knime.base.node.viz.histogram.impl.interactive.InteractiveBarDataModel} 
- * of the 
- * {@link org.knime.base.node.viz.histogram.impl.interactive.
- * InteractiveHistogramDataModel} 
+ * org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel} 
  * class by enhancing these information 
  * with information about the size of the drawing space like height and width 
  * in pixel.

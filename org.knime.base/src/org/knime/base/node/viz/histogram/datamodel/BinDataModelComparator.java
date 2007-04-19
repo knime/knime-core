@@ -29,6 +29,7 @@ import java.util.Comparator;
 
 
 /**
+ * Used to sort the bins in their natural order by their caption or boundaries.
  * 
  * @author Tobias Koetter, University of Konstanz
  */

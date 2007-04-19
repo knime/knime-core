@@ -27,6 +27,7 @@ package org.knime.base.node.viz.histogram;
 
 
 /**
+ * Enumerates all possible label display options.
  * 
  * @author Tobias Koetter, University of Konstanz
  */

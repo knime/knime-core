@@ -49,7 +49,8 @@ import org.knime.core.node.NodeLogger;
 
 
 /**
- * 
+ * Extends the {@link AbstractHistogramVizModel} to allow hiliting and 
+ * column changing.
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
@@ -121,7 +122,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * @param aggrMethod the {@link AggregationMethod} to use
      * @param layout {@link HistogramLayout} to use
      * @param spec the {@link DataTableSpec}
-     * @param rows the {@link FixedHistogramDataRow}
+     * @param rows the {@link DataRow}
      * @param xColSpec the {@link DataColumnSpec} of the selected x column
      * @param aggrColumns the selected aggregation columns
      */

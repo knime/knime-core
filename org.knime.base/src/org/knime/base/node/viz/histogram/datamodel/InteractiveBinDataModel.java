@@ -38,9 +38,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeLogger;
 
 /**
- * This class holds the information of a histogram bin. A bin consists of at 
- * least one {@link InteractiveBarDataModel} object which consists of 
- * one or more {@link InteractiveBarElementDataModel} objects.
+ * This class extends the {@link BinDataModel} to support hiliting.
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractiveBinDataModel extends BinDataModel {

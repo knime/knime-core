@@ -44,7 +44,9 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 
 /**
- * 
+ * This class represents one bin in the histogram. A bin represents a value of
+ * the selected x column and contains one or more {@link BarDataModel} objects
+ * depending on the number of aggregation columns.
  * @author Tobias Koetter, University of Konstanz
  */
 public class BinDataModel implements Serializable {

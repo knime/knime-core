@@ -142,7 +142,7 @@ public class FixedHistogramDataModel {
     }
    
     /**
-     * Adds the given {@link FixedHistogramDataRow} to the histogram.
+     * Adds the given row values to the histogram.
      * @param id the row key of this row
      * @param rowColor the color of this row
      * @param xCell the x value

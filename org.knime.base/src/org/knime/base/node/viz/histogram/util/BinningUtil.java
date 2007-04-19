@@ -224,9 +224,9 @@ public final class BinningUtil {
 
     /**
      * Returns the rounded value. If the value is bigger or equal 1 it returns
-     * the result of the {@link bigValueRounder} method otherwise it returns 
-     * the rounded value which contains the given number of decimal places 
-     * after the last 0.
+     * the result of the {@link #bigValueRounder(double, boolean)} 
+     * method otherwise it returns the rounded value which contains the 
+     * given number of decimal places after the last 0.
      * 
      * @param doubleVal the value to round 
      * @param noOfDigits the number of

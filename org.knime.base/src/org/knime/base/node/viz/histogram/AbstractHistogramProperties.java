@@ -24,6 +24,7 @@
  */
 package org.knime.base.node.viz.histogram;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -55,7 +56,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
 
 /**
- * Abstract class which handles the default properties like x column selection.
+ * Abstract class which handles the default properties like layouting.
  * 
  * @author Tobias Koetter, University of Konstanz
  */
@@ -64,10 +65,14 @@ public abstract class AbstractHistogramProperties extends
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(AbstractHistogramProperties.class);
 
-    private static final String BIN_TAB_LABEL = "Bin settings";
+    private static final String COLUMN_TAB_LABEL = 
+        "Column/Aggregation settings";
+    
+    private static final String BIN_AGGR_TAB_LABEL = 
+        "Bin settings";
 
-    private static final String AGGREGATION_TAB_LABEL = 
-        "Aggregation settings";
+//    private static final String AGGREGATION_TAB_LABEL = 
+//        "Aggregation settings";
 
     private static final String VIZ_SETTINGS_TAB_LABEL = 
         "Visualization settings";
@@ -158,7 +163,6 @@ public abstract class AbstractHistogramProperties extends
      * 
      * @param tableSpec the {@link DataTableSpec} to initialize the column
      * @param vizModel the aggregation method to set
-     * selection boxes
      */
     public AbstractHistogramProperties(final DataTableSpec tableSpec, 
             final AbstractHistogramVizModel vizModel) {
@@ -261,10 +265,10 @@ public abstract class AbstractHistogramProperties extends
                 .createEnumButtonGroup(HistogramLayout.values());
         // The bin settings tab
         final JPanel binPanel = createBinSettingsPanel();
-        addTab(BIN_TAB_LABEL, binPanel);
+        addTab(BIN_AGGR_TAB_LABEL, binPanel);
         // the aggregation settings tab
-        final JPanel aggrPanel = createAggregationSettingsPanel();
-        addTab(AGGREGATION_TAB_LABEL, aggrPanel);
+//        final JPanel aggrPanel = createAggregationSettingsPanel();
+//        addTab(AGGREGATION_TAB_LABEL, aggrPanel);
 
         final JPanel visOptionPanel = createVizSettingsPanel();
         addTab(VIZ_SETTINGS_TAB_LABEL, visOptionPanel);
@@ -331,6 +335,47 @@ public abstract class AbstractHistogramProperties extends
         return group;
     }
 
+    /**
+     * @param colBox the box with the implementation specific column 
+     * information
+     */
+    protected void addColumnTab(final Box colBox) {
+        //      the column select tab
+        // the aggregation method label box
+        final Box aggrLabelBox = Box.createHorizontalBox();
+        final JLabel aggrMethLabel = new JLabel(
+                AbstractHistogramProperties.AGGREGATION_METHOD_LABEL);
+        aggrMethLabel.setVerticalAlignment(SwingConstants.CENTER);
+        aggrLabelBox.add(Box.createHorizontalGlue());
+        aggrLabelBox.add(Box.createHorizontalStrut(5));
+        aggrLabelBox.add(aggrMethLabel);
+        aggrLabelBox.add(Box.createHorizontalStrut(5));
+        aggrLabelBox.add(Box.createHorizontalGlue());
+        // the aggregation method radio button box
+        final Box aggrButtonBox = AbstractHistogramProperties
+                .createButtonGroupBox(m_aggrMethButtonGrp, true, null);
+        aggrButtonBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        final Box aggrLabelButtonBox = Box.createVerticalBox();
+        aggrLabelButtonBox.setBorder(BorderFactory
+                .createEtchedBorder(EtchedBorder.RAISED));
+        aggrLabelButtonBox.add(aggrLabelBox);
+        aggrLabelButtonBox.add(aggrButtonBox);
+        final Box rootBox = Box.createHorizontalBox();
+        rootBox.add(aggrLabelButtonBox);
+        rootBox.add(Box.createHorizontalStrut(5));
+        rootBox.add(colBox);
+        final JPanel columnPanel = new JPanel();
+        columnPanel.add(rootBox);
+        final int tabCount = getTabCount();
+        int colTabIdx = 1;
+        if (tabCount < 1) {
+            colTabIdx = 0;
+        }
+        insertTab(COLUMN_TAB_LABEL, null, columnPanel,
+                null, colTabIdx);
+    }
+    
     /**
      * The visualization panel with the following options:
      * <ol>
@@ -441,32 +486,12 @@ public abstract class AbstractHistogramProperties extends
      * 
      * @return the aggregation settings panel
      */
-    private JPanel createAggregationSettingsPanel() {
-        final JPanel aggrPanel = new JPanel();
-        // the aggregation method label box
-        final Box aggrLabelButtonBox = Box.createVerticalBox();
-        final Box aggrLabelBox = Box.createHorizontalBox();
-        final JLabel aggrMethLabel = new JLabel(
-                AbstractHistogramProperties.AGGREGATION_METHOD_LABEL);
-        aggrMethLabel.setVerticalAlignment(SwingConstants.CENTER);
-        aggrLabelBox.add(Box.createHorizontalGlue());
-        aggrLabelBox.add(aggrMethLabel);
-        aggrLabelBox.add(Box.createHorizontalGlue());
-        aggrLabelButtonBox.add(aggrLabelBox);
-        // the aggregation method radio button box
-        final Box aggrButtonBox = AbstractHistogramProperties
-                .createButtonGroupBox(m_aggrMethButtonGrp, false, null);
-        aggrLabelButtonBox.add(aggrButtonBox);
-        final Box aggrBox = Box.createHorizontalBox();
-        aggrBox
-                .setBorder(BorderFactory
-                        .createEtchedBorder(EtchedBorder.RAISED));
-        aggrBox.add(aggrLabelButtonBox);
-        aggrBox.add(Box.createHorizontalGlue());
-        aggrBox.add(Box.createHorizontalGlue());
-        aggrPanel.add(aggrBox);
-        return aggrPanel;
-    }
+//    private JPanel createAggregationSettingsPanel() {
+//        final JPanel aggrPanel = new JPanel();
+//
+//        aggrPanel.add(aggrBox);
+//        return aggrPanel;
+//    }
 
     /**
      * The bin related settings:
@@ -480,7 +505,6 @@ public abstract class AbstractHistogramProperties extends
      * @return the panel with all bar related settings
      */
     private JPanel createBinSettingsPanel() {
-        final JPanel binPanel = new JPanel();
         final Box binNoBox = Box.createVerticalBox();
         // barNoBox.setBorder(BorderFactory
         // .createEtchedBorder(EtchedBorder.RAISED));
@@ -527,6 +551,8 @@ public abstract class AbstractHistogramProperties extends
         binBox.add(binNoBox);
         binBox.add(Box.createHorizontalGlue());
         binBox.add(binSelButtonBox);
+        
+        final JPanel binPanel = new JPanel();
         binPanel.add(binBox);
         return binPanel;
     }

@@ -35,7 +35,10 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
 
 /**
- * 
+ * This class represents the smallest element of a histogram and corresponds
+ * to the color in which the rows of this element are colored. The BarElements
+ * belong to one 
+ * {@link org.knime.base.node.viz.histogram.datamodel.BarDataModel}.
  * @author Tobias Koetter, University of Konstanz
  */
 public class BarElementDataModel implements Serializable {

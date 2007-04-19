@@ -35,8 +35,8 @@ import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.core.data.DataCell;
 
 /**
- * This class holds all information for a bar element of a histogram bar. A
- * bar element is a rectangle section of a histogram bar.
+ * This class extends the {@link BarElementDataModel} to support hiliting.
+ * 
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractiveBarElementDataModel extends BarElementDataModel {

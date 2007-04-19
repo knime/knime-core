@@ -26,14 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Enumerates all possible aggregation method of the Histogram visualisation.
+ * Enumerates all possible layouts of the Histogram visualisation.
  * 
  * @author Tobias Koetter, University of Konstanz
  */
 public enum HistogramLayout implements HistogramProperty {
-    /** The colored rows are displayed next to each other. */
+    /** The BarElements are displayed next to each other. */
     SIDE_BY_SIDE("side_by_side", "Side by side", false),
-    /** The colored rows are displayed vertical. */
+    /** The BarElements are displayed on top of each other. */
     STACKED("stacked", "Stacked", true);
     
     private final String m_id;

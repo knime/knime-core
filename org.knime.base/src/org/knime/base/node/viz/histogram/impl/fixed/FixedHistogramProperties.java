@@ -28,7 +28,6 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 
 import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
@@ -55,13 +54,13 @@ import org.knime.core.data.DataTableSpec;
 public class FixedHistogramProperties extends 
     AbstractHistogramProperties {
 
+    /**
+     * The number of aggregation rows which should be displayed in
+     * one row of the properties panel.*/
+    private static final int NO_OF_AGGR_COLS_PER_ROW = 5;
+
     private static final long serialVersionUID = -6177238900813927896L;
 
-    private static final String COLUMN_TAB_LABEL = "Column settings";
-    
-    private static final String COLUMN_TAB_TOOLTIP = 
-        "Column information tab";
-    
     private static final String X_COLUMN_LABEL = "X Column:";
 
     private static final String AGGREGATION_COLUMN_LABEL = 
@@ -85,14 +84,7 @@ public class FixedHistogramProperties extends
         m_xCol = new JLabel();
         m_aggrCol = new JEditorPane("text/html", "");
         m_aggrCol.setBackground(getBackground());
-        final JPanel columnPanel = createColumnSettingsPanel();
-        final int tabCount = getTabCount();
-        int colTabIdx = 1;
-        if (tabCount < 1) {
-            colTabIdx = 0;
-        }
-        insertTab(COLUMN_TAB_LABEL, null, columnPanel,
-                COLUMN_TAB_TOOLTIP, colTabIdx);
+        super.addColumnTab(createColumnSettingsBox());
     }
 
     /**
@@ -101,7 +93,7 @@ public class FixedHistogramProperties extends
      * 
      * @return the column information panel
      */
-    private JPanel createColumnSettingsPanel() {
+    private Box createColumnSettingsBox() {
 //the x column box        
         final Box xColumnBox = Box.createHorizontalBox();
 //        xColumnBox.setBorder(BorderFactory
@@ -123,19 +115,15 @@ public class FixedHistogramProperties extends
         aggrColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
 
 //      the box which surround both column boxes
-              final Box columnsBox = Box.createVerticalBox();
-              columnsBox.setBorder(BorderFactory
-                      .createEtchedBorder(EtchedBorder.RAISED));
-              columnsBox.add(Box.createVerticalGlue());
-              columnsBox.add(xColumnBox);
-              columnsBox.add(Box.createVerticalGlue());
-              columnsBox.add(aggrColumnBox);
-              columnsBox.add(Box.createVerticalGlue());
-
-//      the root panel to return
-              final JPanel columnPanel = new JPanel();
-              columnPanel.add(columnsBox);
-              return columnPanel;
+          final Box columnsBox = Box.createVerticalBox();
+          columnsBox.setBorder(BorderFactory
+                  .createEtchedBorder(EtchedBorder.RAISED));
+          columnsBox.add(Box.createVerticalGlue());
+          columnsBox.add(xColumnBox);
+          columnsBox.add(Box.createVerticalGlue());
+          columnsBox.add(aggrColumnBox);
+          columnsBox.add(Box.createVerticalGlue());
+          return columnsBox;
     }
 
     /**
@@ -163,10 +151,11 @@ public class FixedHistogramProperties extends
             return "no columns selected";
         }
         StringBuilder buf = new StringBuilder();
+        buf.append("<br>");
         buf.append("<table cellspacing='5'>");
         int i = 0;
         for (ColorColumn col : cols) {
-            if (i % 2 == 0) {
+            if (i % NO_OF_AGGR_COLS_PER_ROW == 0) {
                 buf.append("<tr>");
             }
             buf.append("<td bgcolor='#");
@@ -175,14 +164,18 @@ public class FixedHistogramProperties extends
             buf.append("'>");
             buf.append(col.getColumnName());
             buf.append("</td>");
-            if (i % 2 == 1) {
+            if (i % NO_OF_AGGR_COLS_PER_ROW == NO_OF_AGGR_COLS_PER_ROW - 1) {
                 buf.append("</tr>");
             }
             i++;
         }
-        if (i % 2 == 1) {
-            //close the table line if the number of columns wasn't even
-            buf.append("<td>&nbsp;</td></tr>");
+        if (i % NO_OF_AGGR_COLS_PER_ROW != 0) {
+            while (i % NO_OF_AGGR_COLS_PER_ROW != 0) {
+                //close the table line if the number of columns wasn't even
+                buf.append("<td>&nbsp;</td>");
+                i++;
+            }
+            buf.append("</tr>");
         }
         buf.append("</table>");
         return buf.toString();

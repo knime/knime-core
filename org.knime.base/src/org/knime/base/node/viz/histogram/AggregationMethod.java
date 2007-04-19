@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Enumerates all possible aggregation method of the Histogram visualisation.
+ * Enumerates all possible aggregation methods of the Histogram visualisation.
  * 
  * @author Tobias Koetter, University of Konstanz
  */

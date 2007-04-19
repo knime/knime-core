@@ -28,7 +28,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * This class is the controller between the data model of the
- * {@link FixedColumnHistogramDataModel}
+ * {@link org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel}
  * class and the view
  * {@link org.knime.base.node.viz.histogram.HistogramDrawingPane}.
  * 

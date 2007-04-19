@@ -49,7 +49,9 @@ import org.knime.core.data.def.StringCell;
 
 /**
  * This is the basic visualization model for a histogram. It handles bin
- * creation and hilite handling.
+ * creation and hilite handling and defines the constants which effect the
+ * drawing like minimum space between bins and elements.
+ * 
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramVizModel {
@@ -151,7 +153,7 @@ public abstract class AbstractHistogramVizModel {
     public static final int SPACE_BETWEEN_BARS = 2 * BAR_SURROUNDING_SPACE + 3;
 
     /**
-     * The space between to elements in the {@link HistogramLayout.SIDE_BY_SIDE}
+     * The space between to elements in the SIDE_BY_SIDE {@link HistogramLayout}
      * layout in  pixel. Must be greater 0.
      */
     public static final int SPACE_BETWEEN_ELEMENTS = 2;

@@ -27,18 +27,17 @@
   <title>Fixed histogram plotter package</title>
 </head>
 <body>
-This is the memory saving implementation of the abstract histogram plotter. The user
-has to specify the x and y axis in the node configuration and can change the 
-following properties on the fly:
+This is the memory saving implementation of the abstract histogram plotter. 
+The user has to specify the x and y axis in the node configuration and 
+can only change the following properties on the fly:
 <ol>
-	<li>Number of bars for numerical columns</li>
 	<li>The size of the bars</li>
-	<li>the background color</li>
+	<li>The background color</li>
 	<li>Aggregation method</li>
 	<li>Show/hide missing value bar</li>
 	<li>Show/hide empty bars</li>
+	<li>Layout options</li>
 </ol>
-This node is applicable for huge data sets since it only holds the neccessary
-data in the main memory.
+In order to handle huge data sets this node also doesn't supports hiliting.
 </body>
 </html>

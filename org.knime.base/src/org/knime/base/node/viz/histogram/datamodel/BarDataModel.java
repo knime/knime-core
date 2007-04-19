@@ -43,6 +43,10 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.node.NodeLogger;
 
 /**
+ * This class represents one bar in the histogram. A bar corresponds to one
+ * selected aggregation column and belongs to one 
+ * {@link org.knime.base.node.viz.histogram.datamodel.BinDataModel}. 
+ * It contains one or more {@link BarElementDataModel}.
  * 
  * @author Tobias Koetter, University of Konstanz
  */
@@ -444,13 +448,6 @@ public class BarDataModel implements Serializable {
             double stackedValRange = valRange;
             if ((AggregationMethod.AVERAGE.equals(aggrMethod)
                     || AggregationMethod.SUM.equals(aggrMethod))) {
-                //if the current aggregation method is average or sum 
-                //we have to handle the negative values as positives
-    //            if (minAggrVal < 0) {
-    //                stackedValRange = Math.abs(minAggrVal);
-    //            } else {
-    //                stackedValRange = 0;
-    //            }
                 stackedValRange = 0;
                 LOGGER.debug("Calculating stacked value range.Starting with: "
                         + stackedValRange);
@@ -480,9 +477,6 @@ public class BarDataModel implements Serializable {
                 final double aggrVal = element.getAggregationValue(aggrMethod);
                 
                 double elementAbsVal = Math.abs(aggrVal);
-    //            if (minAggrVal < 0 && aggrVal > 0) {
-    //                elementAbsVal += Math.abs(minAggrVal);
-    //            }
                 //add the minimum aggregation value to the real value if it's 
                 //negative
                 final double rawElementHeight = 
@@ -497,7 +491,7 @@ public class BarDataModel implements Serializable {
                         final double diff = barHeight - elementHeightSum;
                         elementHeight = 
                             (int)Math.round(elementHeight + diff);
-                        LOGGER.warn(
+                        LOGGER.debug(
                                 "++++++++Height diff. for bar " + barAggrVal 
                                 + " in last element: " + diff 
                                 + ". Bar height: " + barHeight

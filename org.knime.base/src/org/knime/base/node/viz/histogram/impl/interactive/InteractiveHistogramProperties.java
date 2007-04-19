@@ -30,7 +30,6 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeListener;
@@ -67,12 +66,7 @@ public class InteractiveHistogramProperties extends
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(InteractiveHistogramProperties.class);
-    
-    private static final String COLUMN_TAB_LABEL = "Column settings";
-    
-    private static final String COLUMN_TAB_TOOLTIP = 
-        "Change the x and aggregation column";
-    
+
     private static final String X_COLUMN_LABEL = "X Column:";
 
     private static final String AGGREGATION_COLUMN_LABEL = 
@@ -111,15 +105,7 @@ public class InteractiveHistogramProperties extends
                    AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER);
        m_aggrCol.setBackground(this.getBackground());
        m_aggrCol.setToolTipText(AGGREGATION_COLUMN_DISABLED_TOOLTIP);
-//     the column select tab
-       final JPanel columnPanel = createColumnSettingsPanel();
-       final int tabCount = getTabCount();
-       int colTabIdx = 1;
-       if (tabCount < 1) {
-           colTabIdx = 0;
-       }
-       insertTab(COLUMN_TAB_LABEL, null, columnPanel,
-               COLUMN_TAB_TOOLTIP, colTabIdx);
+       super.addColumnTab(createColumnSettingsBox());
     }
     
 
@@ -129,7 +115,7 @@ public class InteractiveHistogramProperties extends
      * 
      * @return the columns selection panel
      */
-    private JPanel createColumnSettingsPanel() {
+    private Box createColumnSettingsBox() {
 //the x column box
         final Box xColumnBox = Box.createHorizontalBox();
 //        xColumnBox.setBorder(BorderFactory
@@ -163,11 +149,7 @@ public class InteractiveHistogramProperties extends
         columnsBox.add(Box.createVerticalGlue());
         columnsBox.add(aggrColumnBox);
         columnsBox.add(Box.createVerticalGlue());
-
-//the root panel to return
-        final JPanel columnPanel = new JPanel();
-        columnPanel.add(columnsBox);
-        return columnPanel;
+        return columnsBox;
     }
 
     /**

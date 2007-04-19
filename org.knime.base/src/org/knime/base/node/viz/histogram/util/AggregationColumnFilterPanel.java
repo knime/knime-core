@@ -353,7 +353,9 @@ public class AggregationColumnFilterPanel extends JPanel {
      */
     public void update(final DataTableSpec spec,
             final Collection<? extends ColorColumn> incl) {
-        assert (spec != null && incl != null);
+        if (spec == null) {
+            throw new NullPointerException("TableSpec must not be null");
+        }
         if (SwingUtilities.isEventDispatchThread()) {
             updateInternal(spec, incl);
         } else {
@@ -383,13 +385,15 @@ public class AggregationColumnFilterPanel extends JPanel {
         m_order.clear();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
-        final Set<String> inclNames = new HashSet<String>(incl.size());
-        for (ColorColumn colorCol : incl) {
-            inclNames.add(colorCol.getColumnName());
+        final Set<String> inclNames = new HashSet<String>();
+        if (incl != null && incl.size() > 0) {
+            for (ColorColumn colorCol : incl) {
+                inclNames.add(colorCol.getColumnName());
+            }
         }
         final int noOfColumns = spec.getNumColumns();
         int aggrColIdx = 0;
-        final int noOfAggrCols = incl.size();
+        final int noOfAggrCols = inclNames.size();
         for (int i = 0; i < noOfColumns; i++) {
             final DataColumnSpec cSpec = spec.getColumnSpec(i);
             if (!m_columnFilter.includeColumn(cSpec)) {
