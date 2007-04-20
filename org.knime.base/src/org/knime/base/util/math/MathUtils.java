@@ -128,6 +128,48 @@ public final class MathUtils {
     }
 
     /**
+     * Adds two matrices. The matrices must have the same column and 
+     * row count. The returned matrix object is a new object (no changes
+     * to argument arrays are done).
+     * 
+     * @param matrix1 the matrix on the left side
+     * @param matrix2 the matrix on the right side
+     * @return the result matrix
+     * @throws IllegalArgumentException if the matrices are not compatible
+     */
+    public static double[][] add(final double[][] matrix1,
+            final double[][] matrix2) throws IllegalArgumentException {
+        // set the number of rows for both matrices M1 and M2
+        int numRowsM1 = matrix1.length;
+        int numRowsM2 = matrix2.length;
+
+        // set the number of columns for both matrices M1 and M2
+        int numColsM1 = numRowsM1 != 0 ? matrix1[0].length : 0;
+        int numColsM2 = numRowsM2 != 0 ? matrix2[0].length : 0;
+
+        // check matrix compatibility
+        if (numColsM1 != numColsM2
+                || numRowsM1 != numRowsM2) {
+            throw new IllegalArgumentException(
+                    "Incompatible matrices for addition.");
+        }
+
+        // the result matrix has the same number of rows and columns.
+        double[][] resultMatrix = new double[numRowsM1][numColsM1];
+
+        // the result matrix is created row by row, i.e. it is iterated
+        // over the rows of matrix 1
+        for (int row = 0; row < numRowsM1; row++) {
+
+            // now it is iterated over the number of columns of matrix 2
+            for (int col = 0; col < numColsM1; col++) {
+                resultMatrix[row][col] = matrix1[row][col] + matrix2[row][col];
+            }
+        }
+        return resultMatrix;
+    }
+    
+    /**
      * Multiplies two matrices. Matrix 1 is multiplied from the left to matrix
      * 2. Therefore, result matrix = matrix 1 * matrix 2. The matrices must be
      * compatible, i.e. the number of columns of matrix 1 must equal to the
@@ -164,6 +206,7 @@ public final class MathUtils {
         return resultVector;
     }
 
+    
     /**
      * Multiplies a matrix with its transposed matrix. The transposed matrix is
      * multiplied to the <em>left</em> of the original matrix.
