@@ -30,7 +30,6 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.views.navigator.ResourcePatternFilter;
 import org.knime.core.node.workflow.WorkflowManager;
 
-
 /**
  * Implements the knime resource filter for the knime resource navigator. Only
  * the project has to be shown.
@@ -55,7 +54,8 @@ public class KnimeResourcePatternFilter extends ResourcePatternFilter {
                 // check if a workflow file is contained
                 IResource[] children;
                 try {
-
+                    // refersh to get all children
+                    project.refreshLocal(IResource.DEPTH_INFINITE, null);
                     children = project.members();
                 } catch (Exception e) {
                     // if crashes for some reason do not display it
