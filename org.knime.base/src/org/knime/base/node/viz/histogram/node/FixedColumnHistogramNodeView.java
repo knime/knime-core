@@ -81,6 +81,7 @@ public class FixedColumnHistogramNodeView extends NodeView {
         final AbstractHistogramVizModel vizModel = 
             m_nodeModel.getHistogramVizModel();
         if (vizModel == null) {
+            setComponent(null);
             return;
         }
         if (m_plotter == null) {
