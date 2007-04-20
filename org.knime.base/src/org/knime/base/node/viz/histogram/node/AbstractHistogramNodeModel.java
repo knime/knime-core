@@ -441,21 +441,23 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                 m_aggrCols.add(aggrColumn);
             }
         }
-        
+        int selectedNoOfRows;
         if (m_allRows.getBooleanValue()) {
             //set the actual number of rows in the selected number of rows
             //object since the user wants to display all rows
-            m_noOfRows.setIntValue(maxNoOfRows);
+//            m_noOfRows.setIntValue(maxNoOfRows);
+            selectedNoOfRows = maxNoOfRows;
+        } else {
+            selectedNoOfRows = m_noOfRows.getIntValue();
         }
-        final int selectedNoOfRows = m_noOfRows.getIntValue();
         //final int noOfRows = inData[0].getRowCount();
         if ((selectedNoOfRows) < maxNoOfRows) {
             setWarningMessage("Only the first " + selectedNoOfRows + " of " 
                     + maxNoOfRows + " rows are displayed.");
         } else if (selectedNoOfRows > maxNoOfRows) {
-            m_noOfRows.setIntValue(maxNoOfRows);
+            selectedNoOfRows = maxNoOfRows;
         }
-        createHistogramModel(exec, table);
+        createHistogramModel(exec, selectedNoOfRows, table);
         LOGGER.debug("Exiting execute(inData, exec) of class "
                 + "FixedColumnHistogramNodeModel.");
         return new BufferedDataTable[0];
@@ -465,12 +467,13 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      * This method should use the given information to create the internal
      * histogram data model.
      * @param exec the {@link ExecutionContext} for progress information
+     * @param noOfRows the number of rows to display
      * @param table the {@link DataTable} which contains the rows
      * @throws CanceledExecutionException if the user has canceled the
      * node execution
      */
     protected abstract void createHistogramModel(final ExecutionContext exec, 
-            final DataTable table) 
+            final int noOfRows, final DataTable table) 
     throws CanceledExecutionException;
     
     /**
@@ -533,12 +536,5 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      */
     protected int getXColIdx() {
         return m_xColIdx;
-    }
-
-    /**
-     * @return the number of rows to add to the histogram
-     */
-    protected int getNoOfRows() {
-        return m_noOfRows.getIntValue();
     }
 }

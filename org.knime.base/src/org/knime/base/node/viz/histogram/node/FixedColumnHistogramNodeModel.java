@@ -120,10 +120,10 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
      */
     @Override
     protected void createHistogramModel(final ExecutionContext exec, 
-            final DataTable table) throws CanceledExecutionException {
+            final int noOfRows, final DataTable table) 
+    throws CanceledExecutionException {
         LOGGER.debug("Entering createHistogramModel(exec, table) "
                 + "of class FixedColumnHistogramNodeModel.");
-        final int noOfRows = getNoOfRows();
         if (noOfRows == 0) {
             m_model = null;
             return;

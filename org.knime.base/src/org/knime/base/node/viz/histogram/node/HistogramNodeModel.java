@@ -73,12 +73,11 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
      */
     @Override
     protected void createHistogramModel(final ExecutionContext exec, 
-            final DataTable dataTable) 
+            final int noOfRows, final DataTable dataTable) 
     throws CanceledExecutionException {
         LOGGER.debug("Entering createHistogramModel(exec, dataTable) "
                 + "of class HistogramNodeModel.");
        final DataTableSpec tableSpec = getTableSpec();
-       final int noOfRows = getNoOfRows();
        if (noOfRows == 0) {
            m_model = null;
            return;
