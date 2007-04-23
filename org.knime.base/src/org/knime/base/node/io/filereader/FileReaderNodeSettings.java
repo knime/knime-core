@@ -49,7 +49,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.xml.sax.SAXException;
 
-
 /**
  * 
  * @author Peter Ohl, University of Konstanz
@@ -57,8 +56,8 @@ import org.xml.sax.SAXException;
 public class FileReaderNodeSettings extends FileReaderSettings {
 
     /** The node logger fot this class. */
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(FileReaderNodeSettings.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(FileReaderNodeSettings.class);
 
     // a vector storing properties for each column. The size might not be
     // related to the actual number of columns.
@@ -71,6 +70,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     private static final String CFGKEY_COLPROPS = "ColumnProperties";
 
+    private static final String CFGKEY_EOLDELIMUSERVAL = "delimsAtEOLuserVal";
+
     // flags indicating if the values were actually set or are still at
     // constructor's default. Won't be stored into config.
     private boolean m_hasColHeadersIsSet;
@@ -81,7 +82,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     private boolean m_ignoreDelimsAtEndOfRowIsSet;
 
-    private boolean m_delimsAtEOFUserValue;
+    private boolean m_delimsAtEOLUserValue;
 
     private boolean m_commentIsSet;
 
@@ -114,6 +115,9 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         if (cfg != null) {
             m_numOfColumns = cfg.getInt(CFGKEY_NUMOFCOLS);
             readColumnPropsFromConfig(cfg.getNodeSettings(CFGKEY_COLPROPS));
+            m_delimsAtEOLUserValue =
+                    cfg.getBoolean(CFGKEY_EOLDELIMUSERVAL, 
+                            ignoreEmptyTokensAtEndOfRow());
 
             // check settings
             SettingsStatus status = getStatusOfSettings();
@@ -133,7 +137,6 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_whiteIsSet = true;
         m_ignoreEmptyLinesIsSet = true;
         m_ignoreDelimsAtEndOfRowIsSet = true;
-        m_delimsAtEOFUserValue = ignoreEmptyTokensAtEndOfRow();
         m_analyzedAllRows = false;
     }
 
@@ -149,7 +152,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_hasRowHeadersIsSet = false;
         m_ignoreEmptyLinesIsSet = false;
         m_ignoreDelimsAtEndOfRowIsSet = false;
-        m_delimsAtEOFUserValue = false;
+        m_delimsAtEOLUserValue = false;
         m_commentIsSet = false;
         m_quoteIsSet = false;
         m_delimIsSet = false;
@@ -168,6 +171,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     @Override
     public void saveToConfiguration(final NodeSettingsWO cfg) {
         super.saveToConfiguration(cfg);
+        cfg.addBoolean(CFGKEY_EOLDELIMUSERVAL, m_delimsAtEOLUserValue);
         cfg.addInt(CFGKEY_NUMOFCOLS, m_numOfColumns);
         saveColumnPropsToConfig(cfg.addNodeSettings(CFGKEY_COLPROPS));
     }
@@ -494,8 +498,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                     // Default is false though.
                     cProp.setReadPossibleValuesFromFile(false);
                 }
-                DataColumnSpecCreator dcsc = new DataColumnSpecCreator(name,
-                        type);
+                DataColumnSpecCreator dcsc =
+                        new DataColumnSpecCreator(name, type);
                 cProp.setColumnSpec(dcsc.createSpec());
                 cProps.add(cProp);
             }
@@ -543,8 +547,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         // create a fake table spec that we can pass to the reader.
         DataColumnSpec[] colSpec = new DataColumnSpec[numOfCols];
         for (int i = 0; i < numOfCols; i++) {
-            DataColumnSpecCreator dcsc = new DataColumnSpecCreator("col" + i,
-                    StringCell.TYPE);
+            DataColumnSpecCreator dcsc =
+                    new DataColumnSpecCreator("col" + i, StringCell.TYPE);
             colSpec[i] = dcsc.createSpec();
         }
         DataTableSpec dts = new DataTableSpec(colSpec);
@@ -581,8 +585,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             // replace the columnspec in the cols props
             ColProperty cProp = getColumnProperties().get(col);
             if (!cProp.getUserSettings()) {
-                String uniqueName = uniquifyColName(col, row.getCell(cell)
-                        .toString());
+                String uniqueName =
+                        uniquifyColName(col, row.getCell(cell).toString());
                 cProp.changeColumnName(uniqueName);
             }
             col++;
@@ -776,7 +780,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      */
     public void setIgnoreDelimsAtEndOfRowUserValue(final boolean ignoreEm) {
         m_ignoreDelimsAtEndOfRowIsSet = true;
-        m_delimsAtEOFUserValue = ignoreEm;
+        m_delimsAtEOLUserValue = ignoreEm;
     }
 
     /**
@@ -791,7 +795,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * @return the value the user chose for this flag.
      */
     public boolean ignoreDelimsAtEORUserValue() {
-        return m_delimsAtEOFUserValue;
+        return m_delimsAtEOLUserValue;
     }
 
     /**
@@ -844,8 +848,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * Call this from derived classes to add the status of all super classes.
      * For parameters:
      * 
-     * @see FileReaderSettings
-     *      #addStatusOfSettings(SettingsStatus, boolean, DataTableSpec)
+     * @see FileReaderSettings #addStatusOfSettings(SettingsStatus, boolean,
+     *      DataTableSpec)
      */
     @Override
     protected void addStatusOfSettings(final SettingsStatus status,
@@ -927,8 +931,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             } // if (cName != null)
 
             // check a possible values - if any
-            Set<DataCell> possVals = cProp.getColumnSpec().getDomain()
-                    .getValues();
+            Set<DataCell> possVals =
+                    cProp.getColumnSpec().getDomain().getValues();
             if (possVals != null) {
                 // possible values must not be null
                 for (DataCell val : possVals) {
