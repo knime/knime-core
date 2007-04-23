@@ -52,7 +52,7 @@ public class KnimeResourcePatternFilter extends ResourcePatternFilter {
                 // check if a workflow file is contained
                 IResource[] children;
                 try {
-                    // refersh to get all children
+                    // refresh to get all children
                     project.refreshLocal(IResource.DEPTH_INFINITE, null);
                     children = project.members();
                 } catch (Exception e) {
