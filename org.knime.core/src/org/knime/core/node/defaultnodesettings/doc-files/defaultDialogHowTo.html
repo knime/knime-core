@@ -899,7 +899,15 @@ preserved). When you start using the values from the <code>SettingsModel</code>s
 in your
 <code>NodeModel</code> implementation, you need to check
 the enable status by
-calling <code>isEnabled()</code>.<br>
+calling <code>isEnabled()</code>.
+When changing the values in the SettingsModels (or when instantiating
+them and assigning an initial value), you need to carefully maintain a
+consistent state between those SettingsModels whose state depend on
+each other. For example, if you have a Model that holds a string value
+and whose enable status depends on a boolean SettingsModel, you need to
+make sure that you disable the string model, whenever you assign false
+to the boolean model (and, if you initialize the boolean model with
+false, disable the string model!).<br>
 
 <br>
 
@@ -944,7 +952,8 @@ simple dialogs without the need to implement any additional methods or
 arranging components. Its layout is very restricted though, components
 can be&nbsp;arranged only below each other. If you need a more
 complex dialog with a different layout, you need to create your own
-swing panel (directly derived from <code>NodeDialogPane</code>). You can still use
+swing panel (directly derived from <code>NodeDialogPane</code>).
+You can still use
 the
 DialogComponents, arrange them in your custom panel and benefit from
 their loading and saving capabilities: Each component provides a <code>getComponentPanel()</code>
@@ -1002,11 +1011,16 @@ NodeDialog and get the user input stored in there?</span><br>
 
 <span style="text-decoration: underline;">
 A</span>: That's how the Nodes in KNIME are designed. The
-NodeModel doesn't
+<code>NodeModel</code> doesn't
 know it's dialog, and vice versa. Values are transfered through
 settings objects. You need to implement a mechanism to store and load
 your current settings anyway - we re-use it to transfer the current
-values into the dialog. <br>
+values into the dialog. Also, the <code>NodeModel</code> must be able to reject
+invalid/inconsistent&nbsp;values (in the <code>validateSettings</code> method).
+If we would have only one object, the invalid settings would be set to
+let the <code>NodeModel</code> validate them&nbsp;and canceling the dialog then
+would leave these&nbsp; invalid or inconsistent values in the
+<code>NodeModel</code>.<br>
 
 <br>
 
