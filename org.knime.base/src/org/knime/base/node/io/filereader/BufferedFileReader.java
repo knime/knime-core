@@ -41,9 +41,31 @@ public final class BufferedFileReader extends BufferedReader {
 
     private static final String ZIP_ENDING = ".gz";
 
+    private static final int LINELENGTH = 2048;
+
     private final ByteCountingStream m_countingStream;
 
     private final long m_streamSize;
+
+    /*
+     * the line we are currently reading from
+     */
+    private StringBuilder m_currentLine = new StringBuilder(LINELENGTH);
+
+    private StringBuilder m_tmpLine = new StringBuilder(LINELENGTH);
+
+    private int m_length = 0;
+
+    /*
+     * next points to the next char in the currentLine that is to be returned,
+     * or at length() if the line got fully returned (and a new line must be
+     * read from the underlying stream). And its value is -1 if the EOF has been
+     * reached, or the stream is closed. Initialized with 0 to trigger reading
+     * of next line.
+     */
+    private int m_next = 0;
+
+    private long m_currentLineNumber = 0;
 
     /**
      * Should only be instantiated by the methods provided. The specified stream
@@ -76,12 +98,323 @@ public final class BufferedFileReader extends BufferedReader {
     }
 
     /**
+     * Returns the line currently read (if the \n char was already read, it
+     * still returns the current/last line). If no characters were read so far,
+     * the empty string is returned.<br>
+     * In contrast to {@link #readLine} this method doesn't modify the stream
+     * (doesn't read from it!) and it returns the entire line (also the
+     * characters at the beginning of the line if they were read already).
+     * 
+     * @return the line that is currently read. Returns the empty string, if no
+     *         character was read as of yet, and null if the reader was closed.
+     * @throws IOException if the stream has been closed
+     */
+    public String getCurrentLine() throws IOException {
+        synchronized (lock) {
+            
+            checkOpen();
+            
+            if (m_currentLine.length() == 0) {
+                // no characters were read before
+                return "";
+            }   
+
+            // remove the LF from the end of the string.
+            int endIdx = m_currentLine.length() - 1;
+            if (m_currentLine.charAt(endIdx) == '\n') {
+                endIdx--;
+            }
+            if ((endIdx >= 0) && (m_currentLine.charAt(endIdx) == '\r')) {
+                endIdx--;
+            }
+            if (endIdx < 0) {
+                return "";
+            }
+            return m_currentLine.substring(0, endIdx + 1);
+        }
+    }
+
+    /**
+     * @return the number of the line currently read. It returns zero if no
+     *         character was read yet.
+     * @throws IOException if the stream has been closed
+     */
+    public long getCurrentLineNumber() throws IOException {
+        synchronized (lock) {
+            checkOpen();
+            return m_currentLineNumber;
+        }
+    }
+
+    /**
+     * Reads the next line from the underlying reader and stores it in our
+     * currentLine variable from which this reader reads the next chars. The
+     * '\n' character is stored in the currentLine.
+     * 
+     */
+    private void readNextLine() throws IOException {
+        // we can't use super.readLine() as it swallows \n characters (which is
+        // kind of important at the end of the file).
+        m_tmpLine.setLength(0);
+        while (true) {
+            int c = super.read();
+            if (c == -1) {
+                // reached EOF
+                break;
+            }
+
+            m_tmpLine.append((char)c);
+
+            if (c == '\n') {
+                break;
+            }
+        }
+
+        if (m_tmpLine.length() == 0) {
+            // we are at the EOF
+            // (keep the currentLine until they close the reader)
+            m_length = -1;
+            m_next = -1;
+        } else {
+            // swap tmp and the currentLine (reuse the mem next time around)
+            StringBuilder s = m_currentLine;
+            m_currentLine = m_tmpLine;
+            m_tmpLine = s;
+
+            m_length = m_currentLine.length();
+            m_next = 0;
+            m_currentLineNumber++;
+        }
+    }
+
+    /**
+     * Always use this to get the next character from the underlying reader. It
+     * returns the next char of the currentLine or sets everything to indicate
+     * the EOF, if the underlying reader is done.<br>
+     * NOTE: this method is not synchronized and does not check the open status.
+     * 
+     * @return either the next char from the currentLine string, or -1 if the
+     *         EOF is reached and sets all flags to the appropriate states then.
+     * @throws IOException if something goes wrong during reading
+     */
+    private int readNextChar() throws IOException {
+        if (m_next == m_length) {
+            readNextLine();
+        }
+
+        if (m_next == -1) {
+            return -1;
+        }
+
+        // as we store \n in the currentLine it can never be empty.
+        assert m_length > 0;
+
+        return m_currentLine.charAt(m_next++);
+
+    }
+
+    /*
+     * ---------------------------------------------------------------------
+     * overriding implementations of all read methods.
+     * ---------------------------------------------------------------------
+     */
+
+    /**
+     * Check to make sure that the stream has not been closed. Throws an
+     * IOException if it has been closed.
+     */
+    private void checkOpen() throws IOException {
+        if ((m_currentLine == null) && (m_next == -1)) {
+            throw new IOException("Stream closed");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void close() throws IOException {
+        super.close();
+        m_currentLine = null;
+        m_length = -1;
+        m_next = -1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void mark(final int readAheadLimit) throws IOException {
+        // we don't need it - let's not support it.
+        throw new IOException("Mark/Reset not supported");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean markSupported() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int read() throws IOException {
+        synchronized (lock) {
+            checkOpen();
+            return readNextChar();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int read(final char[] cbuf, final int off, final int len)
+            throws IOException {
+        synchronized (lock) {
+            checkOpen();
+            if ((off < 0) || (off > cbuf.length) || (len < 0)
+                    || ((off + len) > cbuf.length) || ((off + len) < 0)) {
+                throw new IndexOutOfBoundsException();
+            } else if (len == 0) {
+                return 0;
+            }
+
+            int count = 0;
+            int buf = off;
+            while (count < len) {
+                int c = readNextChar();
+                if (c == -1) {
+                    // if we didn't read no character, return -1
+                    return (count == 0 ? -1 : count);
+                }
+
+                cbuf[buf++] = (char)c;
+                count++;
+            }
+
+            return count;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String readLine() throws IOException {
+        synchronized (lock) {
+            checkOpen();
+
+            if (m_next == m_length) {
+                readNextLine();
+            }
+            if (m_next == -1) {
+                // end of file.
+                return null;
+            }
+
+            // we can return the unreturned (i.e. not read yet) part of
+            // currentLine
+            // - but need to remove the \n from the end (and a possible \r).
+            int endIdx = m_length - 1;
+            if (m_currentLine.charAt(endIdx) == '\n') {
+                endIdx--;
+            }
+            if ((endIdx >= 0) && (m_currentLine.charAt(endIdx) == '\r')) {
+                endIdx--;
+            }
+
+            if (m_next > endIdx) {
+                // everything up to (but not including) the \n was read
+                // (this also handles an empty line where endIdx is negative)
+                m_next = m_length;
+                // as readLine doesn't return \n we need to set 'next' to
+                // 'length' to indicate we've returned everything
+                return "";
+            }
+
+            // as readLine doesn't return \n we need to set 'next' to
+            // 'length' to indicate we've returned everything
+            int startIdx = m_next;
+            m_next = m_length;
+            return m_currentLine.substring(startIdx, endIdx + 1);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean ready() throws IOException {
+        if ((m_next >= 0) && (m_next < m_length)) {
+            return true;
+        }
+        return super.ready();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void reset() throws IOException {
+        throw new IOException("Mark/Reset not supported");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long skip(final long n) throws IOException {
+        if (n < 0) {
+            throw new IllegalArgumentException(
+                    "Can't skip a negative number of characters");
+        }
+        synchronized (lock) {
+            checkOpen();
+
+            long skipped = 0;
+
+            while (skipped < n) {
+
+                if (n <= skipped + (m_length - m_next)) {
+                    // we can satisfy it with the currentLine
+                    m_next += n - skipped;
+                    return n;
+                }
+
+                // discard the currentLine and read a new one in
+                skipped += m_length - m_next;
+                m_next = m_length;
+                readNextLine();
+                if (m_next < 0) {
+                    // hit the EOF
+                    return skipped;
+                }
+
+            }
+
+            return n;
+
+        }
+
+    }
+
+    /**
      * Creates a new reader from the specified location. The returned reader can
-     * be asked for the number of bytes read from the stream, and, if the
-     * location specifies a local file - and the size of it can be retrieved -
-     * the overall byte count in the stream. If the specified file ends with
-     * ".gz", it will try to create a ZIP stream (and the byte counts refer both
-     * to the compressed file).
+     * be asked for the number of bytes read from the stream 
+     * ({@link #getNumberOfBytesRead()}),
+     * and, if the location specifies a local file - and the size of it can be
+     * retrieved - the overall byte count in the stream 
+     * ({@link #getFileSize()}).
+     * If the specified file ends with ".gz", it will try to create a ZIP stream
+     * (and the byte counts refer both to the compressed file).<br>
+     * In addition this reader can be asked for the current line it is reading
+     * from ({@link #getCurrentLine()})and the current line number 
+     * ({@link #getCurrentLineNumber()}).
+     * 
      * 
      * @param dataLocation the URL of the source to read from. If it ends with
      *            ".gz" it will try to open a ZIP stream on it.
@@ -105,7 +438,8 @@ public final class BufferedFileReader extends BufferedReader {
         if (dataLocation.toString().endsWith(ZIP_ENDING)) {
             // if the file ends with ".gz" try opening a zip stream on it
             try {
-                readerStream = new InputStreamReader(
+                readerStream =
+                        new InputStreamReader(
                                 new GZIPInputStream(sourceStream), 
                                 "ISO-8859-1");
             } catch (IOException ioe) {
@@ -126,6 +460,31 @@ public final class BufferedFileReader extends BufferedReader {
         }
 
         return new BufferedFileReader(readerStream, sourceStream, fileSize);
+    }
+
+    /**
+     * Same as the method above ({@link #createNewReader(URL)}), but with an
+     * input stream as argument. The {@link #getFileSize()} method of the
+     * created reader always returns zero.
+     * 
+     * @param in the stream to read from
+     * @return a new buffered reader with some extra functionality (compared to
+     *         the {@link BufferedReader}), but no file size (even if the
+     *         stream reads from a file).
+     */
+    public static BufferedFileReader createNewReader(final InputStream in) {
+        if (in == null) {
+            throw new NullPointerException("Can't open a reader on a null "
+                    + "input stream");
+        }
+
+        // the stream used to get the byte count from
+        ByteCountingStream sourceStream = new ByteCountingStream(in);
+        // stream passed to the reader (maybe replaced with the zipped stream)
+        InputStreamReader readerStream = new InputStreamReader(sourceStream);
+
+        return new BufferedFileReader(readerStream, sourceStream, 0);
+
     }
 
     /**
@@ -223,4 +582,5 @@ public final class BufferedFileReader extends BufferedReader {
         }
 
     }
+
 }
