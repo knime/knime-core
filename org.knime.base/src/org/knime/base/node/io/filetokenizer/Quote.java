@@ -245,4 +245,31 @@ public class Quote {
         return result.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj instanceof Quote) {
+            Quote q = (Quote)obj;
+            if (q.m_dontRemove != this.m_dontRemove) {
+                return false;
+            }
+            if (q.m_escape != this.m_escape) {
+                return false;
+            }
+            if (q.m_hasEscape != this.m_hasEscape) {
+                return false;
+            }
+            if (!q.m_left.equals(this.m_left)) {
+                return false;
+            }
+            if (!q.m_right.equals(this.m_right)) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+    
 } // Quote
