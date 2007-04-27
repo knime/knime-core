@@ -115,15 +115,19 @@ public class FilelistAccessory extends JPanel
             if (dir == null) {
                 dir = m_fc.getCurrentDirectory();
             }
-            final File[] fileList;
+            
+            File[] fileList = null;
             if ((dir != null) && (dir.isDirectory())) {
                 fileList = dir.listFiles(m_dirFilter);
-            } else {
+            }
+            if (fileList == null) {
                 fileList = new File[0];
             }
+            
+            final File[] finalListForThread = fileList; 
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    m_fileList.setListData(fileList);
+                    m_fileList.setListData(finalListForThread);
                 }
             });
             
