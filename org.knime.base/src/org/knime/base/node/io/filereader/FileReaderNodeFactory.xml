@@ -48,8 +48,9 @@
 	    <option name="Advanced...">Opens a new dialog with advanced settings.
 	    	There is more advanced support for quotes, support for different
 	    	decimal separators in floating point numbers, for ignoring whitespaces,
-	    	for allowing rows with too few data items, and for making row IDs
-	    	unique (not recommented for huge files).	    
+	    	for allowing rows with too few data items, for making row IDs
+	    	unique (not recommented for huge files), and for limiting the number
+	    	of rows read in.	    
 			</option>
 	    <option name="Click on the table header">If the column header in the 
 	    	preview table is clicked, a new dialog 
