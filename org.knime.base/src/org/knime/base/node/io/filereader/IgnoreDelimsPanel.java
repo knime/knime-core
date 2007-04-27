@@ -31,8 +31,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.io.filetokenizer.Delimiter;
 
@@ -46,8 +44,6 @@ import org.knime.base.node.io.filetokenizer.Delimiter;
 public class IgnoreDelimsPanel extends JPanel {
 
     private JCheckBox m_ignoreThem;
-
-    private boolean m_userClickedIt = false;
 
     /**
      * Constructs the panels and loads it with the settings from the passed
@@ -75,11 +71,6 @@ public class IgnoreDelimsPanel extends JPanel {
     private Container getPanel() {
 
         m_ignoreThem = new JCheckBox("Ignore extra delimiters at end of rows");
-        m_ignoreThem.addChangeListener(new ChangeListener() {
-            public void stateChanged(final ChangeEvent e) {
-                m_userClickedIt = true;
-            }
-        });
         Box result = Box.createHorizontalBox();
         result.add(Box.createHorizontalGlue());
         result.add(m_ignoreThem);
@@ -110,13 +101,15 @@ public class IgnoreDelimsPanel extends JPanel {
      * Overwriting the corresponding values in the object.
      * 
      * @param settings the settings object to fill in the currently set values
+     * @return true if the new settings are different from the one passed in.
      */
-    void overrideSettings(final FileReaderNodeSettings settings) {
+    boolean overrideSettings(final FileReaderNodeSettings settings) {
 
         boolean ignoreEm = m_ignoreThem.isSelected();
 
-        if (m_userClickedIt) {
+        if (ignoreEm != settings.ignoreDelimsAtEORUserValue()) {
             // set the user set value - only if he changed it.
+            
             settings.setIgnoreDelimsAtEndOfRowUserValue(ignoreEm);
 
             // and set he actual flag, if the delimiter is a whitespace (THIS
@@ -137,7 +130,13 @@ public class IgnoreDelimsPanel extends JPanel {
             // also fix the delimiter settings
             // I guess that is what they would expect...?
             settings.setDelimiterUserSet(true);
+        
+            // need to re-analyze file with settings changed
+            return true;
         }
+        
+        return false; // no need to re-analyze, no settings changed here.
+        
     }
 
     /**

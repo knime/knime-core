@@ -87,6 +87,11 @@ final class FileRowIterator extends RowIterator {
 
     private char m_decSeparator;
     
+    // the maximum number of rows this iterator will produce (-1 = no max.)
+    private final long m_maxNumOfRows;
+    
+    private boolean m_fileWasNotCompletelyRead;
+    
     /* the execution context the progress is reported to */
     private ExecutionContext m_exec;
     
@@ -121,6 +126,13 @@ final class FileRowIterator extends RowIterator {
         m_customDecimalSeparator = m_decSeparator != '.';
 
         m_rowNumber = 1;
+        if (m_frSettings.getMaximumNumberOfRowsToRead() < 0) {
+            m_maxNumOfRows = Long.MAX_VALUE;
+        } else {
+            m_maxNumOfRows = m_frSettings.getMaximumNumberOfRowsToRead();
+        }
+        m_fileWasNotCompletelyRead = false; // normally we fully read the file 
+        
         m_exceptionThrown = false;
 
         // set the row prefix here (so we don't have to go through this for each
@@ -161,31 +173,47 @@ final class FileRowIterator extends RowIterator {
     @Override
     public boolean hasNext() {
 
+        boolean result;
+        
         if (m_exceptionThrown) {
             // after we've thrown an exception don't even try to read more.
-            return false;
-        }
-        String token;
+            result = false;
+        } else {
 
-        // we must eat all empty lines to see if there is more meat in the file
-        // DO NOT call this function if you are not at the beginning of the row
-        while (true) {
-            token = m_tokenizer.nextToken();
+            String token;
 
-            if (token == null) {
-                // Reading the EOF closes the stream.
-                return false;
+            // we must eat all empty lines to see if there is more meat in the
+            // file
+            // DO NOT call this function if you are not at the beginning of the
+            // row
+            while (true) {
+                token = m_tokenizer.nextToken();
+
+                if (token == null) {
+                    // Reading the EOF closes the stream.
+                    result = false;
+                    break;
+                }
+
+                if (m_frSettings.getIgnoreEmtpyLines()
+                        && m_frSettings.isRowDelimiter(token)) {
+                    // get the next token.
+                    continue;
+                }
+
+                m_tokenizer.pushBack();
+                result = true;
+                break;
             }
-
-            if (m_frSettings.getIgnoreEmtpyLines()
-                    && m_frSettings.isRowDelimiter(token)) {
-                // get the next token.
-                continue;
-            }
-
-            m_tokenizer.pushBack();
-            return true;
         }
+        
+        // rowNumber is number of the next row!
+        if (m_rowNumber > m_maxNumOfRows) {
+            m_fileWasNotCompletelyRead = result; // incorrect on exception 
+            result = false;
+        }
+        
+        return result;
     }
 
     /**
@@ -318,7 +346,7 @@ final class FileRowIterator extends RowIterator {
         if (m_exec != null && m_source.getFileSize() > 0
                 && readBytes / PROGRESS_JUNK_SIZE > m_lastReport) {
             // assert readBytes <= m_frSettings.getDataFileSize();
-            m_exec.setProgress(readBytes / (double)m_source.getFileSize());
+            m_exec.setProgress(readBytes / m_source.getFileSize());
             m_lastReport++;
         }
         
@@ -569,5 +597,19 @@ final class FileRowIterator extends RowIterator {
 
         return new FileReaderException(msg, errRow, lineNumber);
 
+    }
+    
+    /**
+     * The settings allow for specifying a maximum number of rows. This method
+     * can be used to find out, if the source has more data than actually
+     * returned by the iterator. The result is only accurate, after the
+     * {@link #hasNext()} method returned <code>false</code>.
+     * 
+     * @return true, if the iterator didn't return all rows of the source (due
+     *         to its settings). Only accurate after the iterator finished 
+     *         ({@link #hasNext()} returned false).
+     */
+    public boolean iteratorEndedEarly() {
+        return m_fileWasNotCompletelyRead;
     }
 }

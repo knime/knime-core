@@ -105,9 +105,12 @@ class UniquifyPanel extends JPanel {
      * Overwriting the corresponding values in the object.
      * 
      * @param settings the settings object to fill in the currently set values
+     * @return true if the new settings are different from the one passed in.
      */
-    void overrideSettings(final FileReaderNodeSettings settings) {
+    boolean overrideSettings(final FileReaderNodeSettings settings) {
+        boolean oldVal = settings.uniquifyRowIDs();
         settings.setUniquifyRowIDs(m_uniquifyRowIDs.isSelected());
+        return oldVal != settings.uniquifyRowIDs();
     }
 
     /**

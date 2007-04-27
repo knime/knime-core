@@ -95,8 +95,11 @@ public class DecSepPanel extends JPanel {
      * Writes the current settings of the panel into the passed settings object.
      * 
      * @param settings the object to write settings in
+     * @return true if the new settings are different from the one passed in.
      */
-    void overrideSettings(final FileReaderSettings settings) {
+    boolean overrideSettings(final FileReaderSettings settings) {
+        char oldSep = settings.getDecimalSeparator();
         settings.setDecimalSeparator(m_decSep.getText().charAt(0));
+        return oldSep != settings.getDecimalSeparator();
     }
 }

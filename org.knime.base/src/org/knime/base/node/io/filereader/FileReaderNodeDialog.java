@@ -1022,7 +1022,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             throw new InvalidSettingsException("With the current settings"
                     + " an error occurs: " + errLabel);            
         }
-        if (m_previewTable.getErrorOccured()) {
+        if (m_previewTable.getErrorOccurred()) {
             throw new InvalidSettingsException("With the current settings"
                     + " an error occurs when reading the file (line "
                     + m_previewTable.getErrorLine() + "): "
@@ -1374,8 +1374,11 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             readXMLSettings();
             analyzeDataFileAndUpdatePreview(false); // don't reanalyze
         } else if (advDlg.closedViaOk()) {
+            // call with the actual settings
             advDlg.overrideSettings(m_frSettings);
-            analyzeDataFileAndUpdatePreview(true); // re-analyze
+            if (advDlg.needsReAnalyze()) {
+                analyzeDataFileAndUpdatePreview(true); // re-analyze
+            }
         }
         advDlg.dispose();
     }

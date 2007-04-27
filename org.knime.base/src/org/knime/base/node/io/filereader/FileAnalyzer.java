@@ -91,7 +91,8 @@ public final class FileAnalyzer {
         result.setTableName(userSettings.getTableName());
         result.setDecimalSeparator(userSettings.getDecimalSeparator());
         result.setUniquifyRowIDs(userSettings.uniquifyRowIDs());
-        
+        result.setMaximumNumberOfRowsToRead(userSettings
+                .getMaximumNumberOfRowsToRead());
         result.setAnalyzeUsedAllRows(true); // default is true, to avoid warning
 
         if (!userSettings.isCommentUserSet()) {

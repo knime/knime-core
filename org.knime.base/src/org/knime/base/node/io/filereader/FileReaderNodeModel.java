@@ -28,7 +28,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Vector;
 
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowIterator;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -96,11 +99,11 @@ public class FileReaderNodeModel extends NodeModel {
                     LOGGER.error("FileReader: XML file not read.");
                 }
             } else {
-                // doesn't have the xml extension - consider it a data file
+                // doesn't have the XML extension - consider it a data file
                 m_frSettings = new FileReaderNodeSettings();
                 try {
-                    m_frSettings
-                            .setDataFileLocationAndUpdateTableName(FileReaderNodeDialog
+                    m_frSettings.setDataFileLocationAndUpdateTableName(
+                                    FileReaderNodeDialog
                                     .textToURL(filename));
                 } catch (MalformedURLException mue) {
                     LOGGER.error("FileReader: " + mue.getMessage());
@@ -141,21 +144,44 @@ public class FileReaderNodeModel extends NodeModel {
         FileTable fTable = new FileTable(tSpec, m_frSettings, exec);
 
         // create a DataContainer and fill it with the rows read. It is faster
-        // then reading the file everytime (for each row iterator), and it
+        // then reading the file every time (for each row iterator), and it
         // collects the domain for each column for us. Also, if things fail,
-        // the error message is printed during filereader execution (were it
+        // the error message is printed during file reader execution (were it
         // belongs to) and not some time later when a node uses the row
         // iterator from the file table.
-        BufferedDataTable cacheTable = null;
+        
+        BufferedDataContainer c = exec.createDataContainer(
+                fTable.getDataTableSpec(), /*initDomain=*/true);
+        int row = 0;
+        RowIterator it = fTable.iterator();
         try {
-            cacheTable = exec.createBufferedDataTable(fTable, exec);
+            while (it.hasNext()) {
+                row++;
+                DataRow next = it.next();
+                String message = "Caching row #" + row + " (\""
+                        + next.getKey() + "\")";
+                exec.setMessage(message);
+                exec.checkCanceled();
+                c.addRowToTable(next);
+            }
         } catch (DuplicateKeyException dke) {
             setWarningMessage("Duplicate row IDs. Consider making IDs unique in"
                     + " the advanced settings.");
             throw dke;
+        } finally {
+            c.close();
         }
+        
+        // user settings allow for truncating the table
+        if (it instanceof FileRowIterator) {
+            FileRowIterator fit = (FileRowIterator)it;
+            if (fit.iteratorEndedEarly()) {
+                setWarningMessage("Data was truncated due to user settings.");
+            }
+        }
+        BufferedDataTable out = c.getTable();
             
-        return new BufferedDataTable[]{cacheTable};
+        return new BufferedDataTable[]{out};
     }
 
     /**
@@ -239,7 +265,7 @@ public class FileReaderNodeModel extends NodeModel {
     /**
      * Writes the current user settings into a configuration object.
      * 
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -323,7 +349,7 @@ public class FileReaderNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        // noo internals to save.
+        // no internals to save.
         return;
     }
 

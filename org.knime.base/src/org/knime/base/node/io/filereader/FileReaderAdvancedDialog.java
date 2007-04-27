@@ -60,6 +60,8 @@ public class FileReaderAdvancedDialog extends JDialog {
     private boolean m_closedViaReadXML = false;
 
     private boolean m_closedViaOK = false;
+    
+    private boolean m_doAnalyze = false;
 
     private JTabbedPane m_jTabbedPane = null;
 
@@ -71,10 +73,12 @@ public class FileReaderAdvancedDialog extends JDialog {
     private DecSepPanel m_decSepPanel;
 
     private IgnoreDelimsPanel m_ignoreDelimsPanel;
-    
+
     private ShortLinesPanel m_shortLinesSupport;
-    
+
     private UniquifyPanel m_uniquifyPanel;
+    
+    private LimitRowsPanel m_limitRowsPanel;
 
     /**
      * This is the default constructor.
@@ -110,11 +114,13 @@ public class FileReaderAdvancedDialog extends JDialog {
      *            override settings in the passed object.
      */
     void overrideSettings(final FileReaderNodeSettings settings) {
-        getQuotePanel().overrideSettings(settings);
-        getDecSepPanel().overrideSettings(settings);
-        getIngoreWSatEORPanel().overrideSettings(settings);
-        getShortLinesPanel().overrideSettings(settings);
-        getUniquifyPanel().overrideSettings(settings);
+        m_doAnalyze = false;
+        m_doAnalyze |= getQuotePanel().overrideSettings(settings);
+        m_doAnalyze |= getDecSepPanel().overrideSettings(settings);
+        m_doAnalyze |= getIngoreWSatEORPanel().overrideSettings(settings);
+        m_doAnalyze |= getShortLinesPanel().overrideSettings(settings);
+        m_doAnalyze |= getUniquifyPanel().overrideSettings(settings);
+        m_doAnalyze |= getLimitRowsPanel().overrideSettings(settings);
     }
 
     /**
@@ -249,6 +255,14 @@ public class FileReaderAdvancedDialog extends JDialog {
     }
 
     /**
+     * @return true if one of the settings changed that needs a re-analyze of
+     *         the file to become affective
+     */
+    boolean needsReAnalyze() {
+        return m_doAnalyze;
+    }
+
+    /**
      * This method initializes mainPanel which contains all tabs.
      * 
      * @return javax.swing.JPanel
@@ -297,14 +311,20 @@ public class FileReaderAdvancedDialog extends JDialog {
         }
         return m_shortLinesSupport;
     }
-    
+
     private UniquifyPanel getUniquifyPanel() {
         if (m_uniquifyPanel == null) {
             m_uniquifyPanel = new UniquifyPanel(m_settings);
         }
         return m_uniquifyPanel;
     }
-    
+
+    private LimitRowsPanel getLimitRowsPanel() {
+        if (m_limitRowsPanel == null) {
+            m_limitRowsPanel = new LimitRowsPanel(m_settings);
+        }
+        return m_limitRowsPanel;
+    }
     /**
      * This method initializes jTabbedPane.
      * 
@@ -324,6 +344,8 @@ public class FileReaderAdvancedDialog extends JDialog {
                     "Add support for incomplete rows");
             m_jTabbedPane.addTab("unique RowIDs", null, getUniquifyPanel(),
                     "Disable unique making of row IDs");
+            m_jTabbedPane.addTab("Limit Rows", null, getLimitRowsPanel(),
+                    "Specify the max. number of rows read");
         }
         return m_jTabbedPane;
     }
@@ -334,8 +356,9 @@ public class FileReaderAdvancedDialog extends JDialog {
      * @param args the args of main.
      */
     public static void main(final String[] args) {
-        FileReaderAdvancedDialog dlg = new FileReaderAdvancedDialog(null,
-                new FileReaderNodeSettings());
+        FileReaderAdvancedDialog dlg =
+                new FileReaderAdvancedDialog(null, 
+                        new FileReaderNodeSettings());
         dlg.setVisible(true);
         dlg.dispose();
     }

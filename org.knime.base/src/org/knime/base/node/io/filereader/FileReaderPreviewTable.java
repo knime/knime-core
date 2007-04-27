@@ -37,12 +37,12 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * The data table displayed in the file reader's dialog's preview. We need an
- * extra incarnation of a data table (different from from the {@link FileTable}),
- * because if settings are not correct yet, the table in the preview must not
- * throw any exception on unexpected or invalid data it reads (which the
- * "normal" file table does). Thus, this table returns a row iterator that will
- * create an error row when a error occurs during file reading. It will end the
- * table after the errornous element was read.
+ * extra incarnation of a data table (different from from the 
+ * {@link FileTable}), because if settings are not correct yet, the table in the
+ * preview must not throw any exception on unexpected or invalid data it reads 
+ * (which the "normal" file table does). Thus, this table returns a row iterator
+ * that will create an error row when a error occurs during file reading. It 
+ * will end the table after the errornous element was read.
  * 
  * @author Peter Ohl, University of Konstanz
  */
@@ -87,7 +87,7 @@ public class FileReaderPreviewTable extends FileTable {
      * an error.
      * 
      * @param msg the message to store
-     * @param lineNumber the line in which the error occured
+     * @param lineNumber the line in which the error occurred
      */
     void setError(final String msg, final int lineNumber) {
         if (msg == null) {
@@ -104,18 +104,18 @@ public class FileReaderPreviewTable extends FileTable {
     }
 
     /**
-     * @return <code>true</code> if an error occured in an underlying row
+     * @return <code>true</code> if an error occurred in an underlying row
      *         iterator. Meaning the table contains invalid data. NOTE: if
      *         <code>false</code> is returned it is not guaranteed that all
      *         data in the table is valid. It could be that no row iterator
      *         reached the invalid data yet.
      */
-    boolean getErrorOccured() {
+    boolean getErrorOccurred() {
         return m_errorMsg != null;
     }
 
     /**
-     * @return the error msg set by a row iterator that came accross an error in
+     * @return the error msg set by a row iterator that came across an error in
      *         the table. This is <code>null</code> if not set.
      */
     String getErrorMsg() {
@@ -123,15 +123,15 @@ public class FileReaderPreviewTable extends FileTable {
     }
 
     /**
-     * @return the line number where the error occured - if an error occured and
-     *         an error line number was set. Otherweise -1 is returned.
+     * @return the line number where the error occurred - if an error occurred 
+     *         and an error line number was set. Otherwise -1 is returned.
      */
     int getErrorLine() {
         return m_errorLine;
     }
 
     /**
-     * If someone wants to be notified if an error occured he should register
+     * If someone wants to be notified if an error occurred he should register
      * through this method.
      * 
      * @param listener the object being notified when an error occurs.

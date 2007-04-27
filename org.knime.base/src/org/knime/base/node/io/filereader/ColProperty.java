@@ -144,7 +144,8 @@ class ColProperty {
         // constructor. In case somebody changes it in the future.
         assert (new DataColumnDomainCreator(null, null) != null);
 
-        DataColumnSpecCreator dcsc = new DataColumnSpecCreator(colName, colType);
+        DataColumnSpecCreator dcsc = 
+            new DataColumnSpecCreator(colName, colType);
         if ((posValues != null) && (posValues.size() > 0)) {
             dcsc.setDomain(new DataColumnDomainCreator(posValues, lowerBound,
                     upperBound).createDomain());
@@ -316,7 +317,7 @@ class ColProperty {
     /**
      * Returns a new ColProperty object containing a deep copy of this one.
      * 
-     * @see java.lang.Object#clone()
+     * {@inheritDoc}
      */
     @Override
     public Object clone() {
