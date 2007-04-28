@@ -22,6 +22,7 @@
  */
 package org.knime.core.data.renderer;
 
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -42,7 +43,7 @@ public class DoubleValueRenderer extends DefaultDataValueRenderer {
      */
     public static final DataValueRenderer PERCENT_RENDERER = 
         new DoubleValueRenderer(
-                NumberFormat.getPercentInstance(Locale.US), "Percentage");
+                new DecimalFormat("###0.0#%"), "Percentage");
     
     /**
      * Singleton for ordinary representation.
