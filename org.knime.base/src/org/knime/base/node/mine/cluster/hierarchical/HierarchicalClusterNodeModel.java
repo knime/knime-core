@@ -300,18 +300,14 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
         fusionCont.close();
 
         // if there was no input data create an empty output data
-        // also set the data array to null to inform the view
         if (outputData == null) {
             outputData = createResultTable(inputData, clusters, exec);
-            m_dataArray = null;
-            m_fusionTable = null;
-        } else {
+        } 
             m_dataArray =
                     new DefaultDataArray(outputData, 1, inputData.getRowCount());
             m_fusionTable =
                     new DefaultDataArray(fusionCont.getTable(), 1,
                             iterationStep);
-        }
 
         return new BufferedDataTable[]{exec.createBufferedDataTable(outputData,
                 exec)};
@@ -655,10 +651,14 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
         File f = new File(nodeInternDir, CFG_HCLUST);
         FileInputStream fis = new FileInputStream(f);
         NodeSettingsRO settings = NodeSettings.loadFromXML(fis);
-        try {
-            m_rootNode = ClusterNode.loadFromXML(settings, m_dataArray);
-        } catch (InvalidSettingsException e) {
-            throw new IOException(e.getMessage());
+        // if we had some data...
+        if (m_dataArray.size() > 0) {
+            // we also have some clustering nodes
+            try {
+                m_rootNode = ClusterNode.loadFromXML(settings, m_dataArray);
+            } catch (InvalidSettingsException e) {
+                throw new IOException(e.getMessage());
+            }
         }
     }
 
@@ -674,7 +674,10 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
         File distFile = new File(nodeInternDir, CFG_DIST_DATA);
         DataContainer.writeToZip(m_fusionTable, distFile, exec);
         NodeSettings settings = new NodeSettings(CFG_HCLUST);
-        m_rootNode.saveToXML(settings);
+        // no data -> no clustering nodes
+        if (m_rootNode != null) {
+            m_rootNode.saveToXML(settings);
+        }
         File f = new File(nodeInternDir, CFG_HCLUST);
         FileOutputStream fos = new FileOutputStream(f);
         settings.saveToXML(fos);

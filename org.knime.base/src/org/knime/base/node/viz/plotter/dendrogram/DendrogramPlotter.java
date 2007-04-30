@@ -211,7 +211,8 @@ public class DendrogramPlotter extends ScatterPlotter {
             return;
         }
         if (getDataProvider() == null 
-                || getDataProvider().getDataArray(1) == null) {
+                || getDataProvider().getDataArray(1) == null
+                || getDataProvider().getDataArray(1).size() == 0) {
             return;
         }
         double min = 0.0;

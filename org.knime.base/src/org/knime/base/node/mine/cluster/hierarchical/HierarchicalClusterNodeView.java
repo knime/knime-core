@@ -135,7 +135,8 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
     @Override
     public void modelChanged() {
         if (getNodeModel() == null 
-                || ((DataProvider)getNodeModel()).getDataArray(0) == null) {
+                || ((DataProvider)getNodeModel()).getDataArray(0) == null
+                || ((DataProvider)getNodeModel()).getDataArray(0).size() == 0) {
             return;
         }
         NodeModel model = getNodeModel();
