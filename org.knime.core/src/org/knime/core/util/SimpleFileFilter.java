@@ -38,7 +38,7 @@ public class SimpleFileFilter extends FileFilter {
 
     /**
      * Creates a new simple file filter that filters out all files not
-     * mathcing the given extensions.
+     * matching the given extensions.
      * 
      * @param exts allowed extensions
      */
