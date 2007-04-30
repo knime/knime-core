@@ -26,22 +26,15 @@
 package org.knime.core.node.defaultnodedialog;
 
 import java.awt.Dimension;
-import java.security.NoSuchAlgorithmException;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import javax.swing.JLabel;
 import javax.swing.JPasswordField;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
+import org.knime.core.util.KnimeEncryption;
 
 /**
  * Provide a standard component for a dialog that allows to edit a text field.
@@ -55,19 +48,6 @@ public final class DialogComponentPasswordField extends DialogComponent {
     private final JPasswordField m_pwField;
 
     private final String m_configName;
-    
-    /**
-     * Secret for the password de- and encyption.
-     */
-    private static SecretKey mSECRETKEY;
-    static {
-        try {
-            mSECRETKEY = KeyGenerator.getInstance("DES").generateKey();
-        } catch (NoSuchAlgorithmException e) {
-            NodeLogger.getLogger("Password").warn("Could not generate DES key",
-                    e);
-        }
-    }
     
     /**
      * Constructor put label and JTextField into panel.
@@ -93,7 +73,12 @@ public final class DialogComponentPasswordField extends DialogComponent {
     @Override
     public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) {
-        m_pwField.setText("");
+        String pw = settings.getString(m_configName, "");
+        try {
+            m_pwField.setText(decrypt(pw));
+        } catch (Exception e) {
+            m_pwField.setText("");
+        }
     }
 
     /**
@@ -115,8 +100,7 @@ public final class DialogComponentPasswordField extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodedialog.DialogComponent
-     *      #setEnabledComponents(boolean)
+     * {@inheritDoc}
      */
     @Override
     public void setEnabledComponents(final boolean enabled) {
@@ -138,13 +122,11 @@ public final class DialogComponentPasswordField extends DialogComponent {
      * @param password Char array.
      * @return The password encrypt.
      * @throws Exception If something goes wrong.
+     * @see KnimeEncryption#encrypt(char[])
+     * @deprecated call {@link KnimeEncryption#encrypt(char[])} directly
      */
     public static final String encrypt(final char[] password) throws Exception {
-        // Create Cipher
-        Cipher desCipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
-        desCipher.init(Cipher.ENCRYPT_MODE, mSECRETKEY);
-        byte[] ciphertext = desCipher.doFinal(new String(password).getBytes());
-        return new BASE64Encoder().encode(ciphertext);
+        return KnimeEncryption.encrypt(password);
     }
 
     /**
@@ -153,14 +135,11 @@ public final class DialogComponentPasswordField extends DialogComponent {
      * @param password The password to decrypt.
      * @return The decrypted password.
      * @throws Exception If something goes wrong.
+     * @see KnimeEncryption#decrypt(String)
+     * @deprecated call {@link KnimeEncryption#decrypt(String)} directly
      */
     public static final String decrypt(final String password) throws Exception {
-        Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, mSECRETKEY);
-        // perform the decryption
-        byte[] pw = new BASE64Decoder().decodeBuffer(password);
-        byte[] decryptedText = cipher.doFinal(pw);
-        return new String(decryptedText);
+        return KnimeEncryption.decrypt(password);
     }
     
 }
