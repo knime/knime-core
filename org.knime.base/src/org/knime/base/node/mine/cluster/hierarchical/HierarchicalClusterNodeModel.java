@@ -552,6 +552,9 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
         m_linkageType = Linkage.valueOf(settings.getString(LINKAGETYPE_KEY));
         m_cacheDistances = settings.getBoolean(USE_CACHE_KEY);
         m_selectedColumns.loadSettingsFrom(settings);
+        if (m_selectedColumns.getIncludeList().size() <= 0) {
+            setWarningMessage("No column included!");
+        }
     }
 
     /**
