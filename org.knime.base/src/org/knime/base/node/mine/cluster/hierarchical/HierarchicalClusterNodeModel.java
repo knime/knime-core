@@ -43,6 +43,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
@@ -58,6 +59,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 
 /**
  * Implements a Single Linkage Hirarchical Clustering.
@@ -102,7 +104,11 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
      * Key to store the linkage type in the settings.
      */
     public static final String LINKAGETYPE_KEY = "linkageType";
-
+    
+    /**
+     * Key to store the selected columns in the settings.
+     */
+    public static final String SELECTED_COLUMNS_KEY = "selectedColumns";
     
     /**
      * Key to store the cache flag in the settings.
@@ -120,6 +126,9 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     private int m_numClustersForOutput = 3;
 
     private boolean m_cacheDistances;
+    
+    private final SettingsModelFilterString m_selectedColumns = new SettingsModelFilterString(
+            SELECTED_COLUMNS_KEY);
     
     /**
      * The distance function to use.
@@ -169,7 +178,24 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws Exception {
-        BufferedDataTable inputData = data[0];
+        
+        // filter the columns according to the dialogs column filter settings
+        // filter all columns except the one for this list and the class
+        // column
+        List<String> includedColumns = m_selectedColumns.getIncludeList();
+        int[] columnsToKeep = new int[includedColumns.size()];
+        int count = 0;
+        for (String column : includedColumns) {
+            columnsToKeep[count] =
+                    data[0].getDataTableSpec().findColumnIndex(column);
+            count++;
+        }
+        ColumnRearranger filter =
+                new ColumnRearranger(data[0].getDataTableSpec());
+        filter.keepOnly(columnsToKeep);
+        BufferedDataTable inputData =
+                exec.createColumnRearrangeTable(data[0], filter, exec);
+        
         DataTable outputData = null;
 
         if (m_distFunctionName.equals(DistanceFunction.Names.Manhattan)) {
@@ -502,7 +528,21 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
                     + Linkage.SINGLE + ", " + Linkage.AVERAGE + " or "
                     + Linkage.COMPLETE);
         }
-        return new DataTableSpec[] {generateOutSpec(inSpecs[0])};
+        
+        // filter the columns according to the dialogs column filter settings
+        // filter all columns except the one for this list and the class
+        // column
+        List<String> includedColumns = m_selectedColumns.getIncludeList();
+        DataColumnSpec[] columnsToKeep =
+                new DataColumnSpec[includedColumns.size()];
+        int count = 0;
+        for (String column : includedColumns) {
+            columnsToKeep[count] = inSpecs[0].getColumnSpec(column);
+            count++;
+        }
+
+        DataTableSpec filteredSpec = new DataTableSpec(columnsToKeep);
+        return new DataTableSpec[]{generateOutSpec(filteredSpec)};
     }
 
     /**
@@ -518,6 +558,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
                 settings.getString(DISTFUNCTION_KEY));
         m_linkageType = Linkage.valueOf(settings.getString(LINKAGETYPE_KEY));
         m_cacheDistances = settings.getBoolean(USE_CACHE_KEY);
+        m_selectedColumns.loadSettingsFrom(settings);
     }
 
     /**
@@ -536,6 +577,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
         settings.addString(DISTFUNCTION_KEY, m_distFunctionName.name());
         settings.addString(LINKAGETYPE_KEY, m_linkageType.name());
         settings.addBoolean(USE_CACHE_KEY, m_cacheDistances);
+        m_selectedColumns.saveSettingsTo(settings);
     }
 
     /**

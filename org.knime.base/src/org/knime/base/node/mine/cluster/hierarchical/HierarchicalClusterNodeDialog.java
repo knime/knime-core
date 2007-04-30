@@ -26,11 +26,15 @@ package org.knime.base.node.mine.cluster.hierarchical;
 import org.knime.base.node.mine.cluster.hierarchical.distfunctions.DistanceFunction;
 import org.knime.base.node.mine.cluster.hierarchical.distfunctions.EuclideanDist;
 import org.knime.base.node.mine.cluster.hierarchical.distfunctions.ManhattanDist;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -100,7 +104,13 @@ class HierarchicalClusterNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentBoolean(
                 new SettingsModelBoolean(
                         HierarchicalClusterNodeModel.USE_CACHE_KEY, true),
-                        "Cache distances")); 
+                        "Cache distances"));
+        
+        Class[] allowedTypes = {DoubleValue.class, IntValue.class};
+        addDialogComponent(new DialogComponentColumnFilter(
+                new SettingsModelFilterString(
+                        HierarchicalClusterNodeModel.SELECTED_COLUMNS_KEY), 0,
+                allowedTypes));
     }  
 
 }    // HierarchicalClusterNodeDialog
