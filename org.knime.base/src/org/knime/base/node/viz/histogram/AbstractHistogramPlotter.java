@@ -24,6 +24,7 @@
  */
 package org.knime.base.node.viz.histogram;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -32,423 +33,501 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.SortedSet;
 
+import javax.swing.JSlider;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.Axis;
 import org.knime.base.util.coordinate.Coordinate;
 import org.knime.base.util.coordinate.CoordinateMapping;
 import org.knime.base.util.coordinate.NumericCoordinate;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
+import org.knime.core.node.util.ColumnFilter;
+import org.knime.core.node.util.CombinedColumnFilter;
+import org.knime.core.node.util.DataValueColumnFilter;
 
 /**
  * Abstract class which is the coordinator between the 
- * {@link HistogramDrawingPane} and the {@link AbstractHistogramDataModel}.
+ * {@link HistogramDrawingPane} and the {@link AbstractHistogramVizModel}.
  * 
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramPlotter extends AbstractPlotter {
-
-    /** The minimum height of a bar with an aggregation value > 0. */
-    private static final int MINIMUM_BAR_HEIGHT = 2;
-    /** The highlight selected item menu entry. */
-    public static final String HILITE = HiLiteHandler.HILITE_SELECTED;
-    /** The unhighlight selected item menu entry. */
-    public static final String UNHILITE = HiLiteHandler.UNHILITE_SELECTED;
-    /** The unhighlight item menu entry. */
-    public static final String CLEAR_HILITE = HiLiteHandler.CLEAR_HILITE;
-    /** Defines the minimum width of a bar. */
-    public static final int MIN_BAR_WIDTH = 15;
-    /** This is the minimum space between two bars. */
-    public static final int SPACE_BETWEEN_BARS = 5;
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(AbstractHistogramPlotter.class);
+    /**This name is used for the y axis if the aggregation method is count.*/
+    public static final String COL_NAME_COUNT = "Count";
+    /**Number of digits used in an interval.*/
+    public static final int INTERVAL_DIGITS = 2;
+    
+    /**This column filter should be used in all x column select boxes.*/
+    public static final ColumnFilter X_COLUMN_FILTER = 
+        NoDomainColumnFilter.getInstance();
+    
+    /**This column filter should be used in all aggregation column 
+     * select boxes.*/
+    @SuppressWarnings("unchecked")
+    public static final ColumnFilter AGGREGATION_COLUMN_FILTER =
+        new CombinedColumnFilter(new DataValueColumnFilter(DoubleValue.class), 
+            NoDomainColumnFilter.getInstance());
+    
     /** The <code>DataTableSpec</code> of the input data. */
     private DataTableSpec m_tableSpec;
+
     /**
-     * Saves the <code>DataColumnSpec</code> which was used to create the x
-     * coordinates.
-     */
-    private DataColumnSpec m_xColumnSpec = null;
-    
-    /**
-     * The name of the x axis column.
-     */
-    private String m_xColumn = null;
-    
-    /**
-     * The name of the column which is used for the aggregation. Could be
-     * <code>null</code> for the count method.
-     */
-    private String m_aggrColName = null;
-    /**
-     * The aggregation method. Default is <code>AggregationMethod.COUNT</code>.
-     */
-    private AggregationMethod m_aggrMethod = AggregationMethod.COUNT;
-    /**
-     * The <code>AbstractHistogramDataModel</code> which holds the basic 
+     * The <code>HistogramVizModel</code> which holds the basic 
      * information.
      */
-    private AbstractHistogramDataModel m_histoData;
+    private AbstractHistogramVizModel m_vizModel;
     
     private final AbstractHistogramProperties m_histoProps;
-    /** The current basic width of the bars. */
-    private int m_barWidth = -1;
-    /**
-     *The plotter will show all bars empty or not when set to <code>true</code>.
-     */
-    private boolean m_showEmptyBars = false;
-    /**
-     * The plotter will show an additional bar which contains all rows which
-     * have a missing value for the selected x axis.
-     */
-    private boolean m_showMissingValBar = true;
-
-    /**If set to true the plotter paints the grid lines for the y axis values.*/
-    private boolean m_showGridLines = false;
-
     
+    /**If the user changes the layout to side-by-side we automatically
+     * set the bin width to maximum. If he goes back to stacked layout
+     * show the bars with the original bar width. Thats what this variable
+     * stores.*/
+    private int m_lastStackedBinWidth = -1;
+        
     /**Constructor for class AbstractHistogramPlotter.
      * @param histogramProps the histogram properties panel
-     * @param dataModel the data model on which the plotter based on
      * @param handler the HiLiteHandler to use
      */
     public AbstractHistogramPlotter(
             final AbstractHistogramProperties histogramProps,
-            final AbstractHistogramDataModel dataModel,
             final HiLiteHandler handler) {
-        super(new HistogramDrawingPane(handler), histogramProps);
-        if (dataModel == null) {
-            throw new IllegalArgumentException("Internal exception: " 
-                    + " Histogram data model shouldn't be null.");
-        }
+        super(new HistogramDrawingPane(histogramProps), histogramProps);
         m_histoProps = histogramProps;
-        m_histoProps.addAggregationChangedListener(
-                new ActionListener() {
-            public void actionPerformed(final ActionEvent arg0) {
-                onApply();
-            }
-        });
-        //add the visualization listener and their default values in the
-        //drawing pane
-        final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
-        m_histoProps.addShowGridChangedListener(
-                new ItemListener() {
-                    public void itemStateChanged(final ItemEvent e) {
-                        setShowGridLines(
-                                e.getStateChange() == ItemEvent.SELECTED);
-                    }
-                });
-        //set the default value
-        m_showGridLines = m_histoProps.isShowGrid();
-        m_histoProps.addShowBarOutlineChangedListener(
-                new ItemListener() {
-                    public void itemStateChanged(final ItemEvent e) {
-                        final HistogramDrawingPane drawingPane = 
-                            getHistogramDrawingPane();
-                        if (drawingPane != null) {
-                            drawingPane.setShowBarOutline(
-                                e.getStateChange() == ItemEvent.SELECTED);
-                        }
-                    }
-                });
-        //set the default value
-        drawingPane.setShowBarOutline(m_histoProps.isShowBarOutline());
-        //which needs the histoProps
-        setHistogramDataModel(dataModel);
+//      add the visualization listener
+        registerPropertiesChangeListener();
+//      set the default value
+//        final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
+//        drawingPane.setShowElementOutline(m_histoProps.isShowBarOutline());
+//        drawingPane.setShowLabelVertical(m_histoProps.isShowLabelVertical());
+//        setHistogramDataModel(dataModel);
         // set the hilitehandler for highlighting stuff
         if (handler != null) {
             super.setHiLiteHandler(handler);
-        } else {
-            throw new IllegalArgumentException("HiLiteHandler not defined.");
-        }
-    }
-
-    /**
-     * Applies the settings to the plotter model.
-     */
-    protected void onApply() {
-        AbstractHistogramDataModel histoModel = getHistogramDataModel();
-        if (histoModel == null) {
-            throw new IllegalStateException("HistogramModel shouldn't be null");
-        }
-        setPreferredBarWidth(m_histoProps.getBarWidth());
-        if (!histoModel.isNominal()) {
-            // this is only available for none nominal x axis properties
-            setNumberOfBars(m_histoProps.getNoOfBars());
-        }
-        setAggregationMethod(m_histoProps.getSelectedAggrMethod());
-        setShowEmptyBars(m_histoProps.getShowEmptyBars());
-        setShowMissingvalBar(m_histoProps.getShowMissingvalBar());
-        // force the repainting of the plotter
-        updatePaintModel();
-        // update the labels of the sliders and the select boxes
-        m_histoProps.updateHistogramSettings(this);
-        return;
-    }    
-    
-//    /**
-//     * @param row the {@link DataRow} to add
-//     */
-//    public void addDataRow(final DataRow row) {
-//        m_histoData.addDataRow(row);
-//    }
-//    
-//    /**
-//     * Call this method after adding the last data row.
-//     */
-//    public void lastDataRowAdded() {
-//        setXCoordinates();
-//        setYCoordinates();
-//    }
-
-    /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#updateSize()
-     */
-    @Override
-    public void updateSize() {
-        updateBarsAndPaint();
-    }
-    
-    /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()
-     */
-    @Override
-    public void updatePaintModel() {
-        updateBarsAndPaint();
-//        // update the Histogram properties panel
-//        if (m_tableSpec != null) {
-//            getHistogramPropertiesPanel().updateHistogramSettings(this);
+        } 
+//        else {
+//            throw new IllegalArgumentException("HiLiteHandler not defined.");
 //        }
     }
 
     /**
-     * Takes the data from the private row container and recalculates the bars,
-     * adjusts sizes and repaints.
+     * Registers all histogram properties listener to the histogram
+     * properties panel. 
      */
-    private synchronized void updateBarsAndPaint() {
-        final Coordinate xCoordinates = getXAxis().getCoordinate();
-        final Coordinate yCoordinates = getYAxis().getCoordinate();
-        final Rectangle drawingSpace = calculateDrawingRectangle();
-        if (xCoordinates != null && yCoordinates != null
-                && drawingSpace != null) {
-            final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
-            Hashtable<String, BarVisModel> visBars = drawingPane.getVisBars();
-            visBars = createUpdateVisBars(visBars, xCoordinates, yCoordinates,
-                    drawingSpace);
-            drawingPane.setVisBars(visBars);
-            final double drawingHeight = drawingSpace.getHeight();
-            if (!yCoordinates.isNominal() 
-                    && ((NumericCoordinate)yCoordinates).getMinDomainValue() 
-                        < 0) {
-                final int baseLine = (int)(drawingHeight 
-                        - yCoordinates.calculateMappedValue(
-                                new DoubleCell(0), drawingHeight, true));
-                drawingPane.setBaseLine(baseLine);
-            } else {
-                drawingPane.setBaseLine(null);
-            }
-            if (isShowGridLines()) {
-//                final Axis yAxis = getYAxis();
-//                final int tickOffset = yAxis.getTickOffset();
-                final CoordinateMapping[] tickPos = 
-                    yCoordinates.getTickPositions(drawingHeight, true);
-                final int[] gridLines = new int[tickPos.length];
-                for (int i = 0, length = tickPos.length; i < length; i++) {
-                    gridLines[i] = 
-                        (int)(drawingHeight - tickPos[i].getMappingValue());
-                }
-                drawingPane.setGridLines(gridLines);
-            } else {
-                drawingPane.setGridLines(null);
-            }
-            m_histoProps.updateHistogramSettings(this);
-            repaint();
+    private void registerPropertiesChangeListener() {
+        if (m_histoProps == null) {
+            throw new IllegalStateException(
+                    "Properties panel must not be null");
         }
+        m_histoProps.addShowGridChangedListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                setShowGridLines(
+                        e.getStateChange() == ItemEvent.SELECTED);
+            }
+        });
+        m_histoProps.addShowBinOutlineChangedListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                final AbstractHistogramVizModel vizModel = 
+                    getHistogramVizModel();
+                if (vizModel != null) {
+                    vizModel.setShowBinOutline(
+                            e.getStateChange() == ItemEvent.SELECTED);
+                    final HistogramDrawingPane histoDrawingPane = 
+                        getHistogramDrawingPane();
+                    histoDrawingPane.repaint();
+                }
+            }
+        });
+        m_histoProps.addShowBarOutlineChangedListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                final AbstractHistogramVizModel vizModel = 
+                    getHistogramVizModel();
+                if (vizModel != null) {
+                    vizModel.setShowBarOutline(
+                            e.getStateChange() == ItemEvent.SELECTED);
+                    final HistogramDrawingPane histoDrawingPane = 
+                        getHistogramDrawingPane();
+                    histoDrawingPane.repaint();
+                }
+            }
+        });
+        m_histoProps.addShowElementOutlineChangedListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                final AbstractHistogramVizModel vizModel = 
+                    getHistogramVizModel();
+                if (vizModel != null) {
+                    vizModel.setShowElementOutline(
+                            e.getStateChange() == ItemEvent.SELECTED);
+                    final HistogramDrawingPane histoDrawingPane = 
+                        getHistogramDrawingPane();
+                    histoDrawingPane.repaint();
+                }
+            }
+        });
+        m_histoProps.addLabelOrientationListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                final AbstractHistogramVizModel vizModel = 
+                    getHistogramVizModel();
+                if (vizModel != null) {
+                    final AbstractHistogramProperties histoProps = 
+                        getHistogramPropertiesPanel();
+                    if (histoProps != null) {
+                        vizModel.setShowLabelVertical(
+                                histoProps.isShowLabelVertical());
+                        final HistogramDrawingPane histoDrawingPane = 
+                            getHistogramDrawingPane();
+                        histoDrawingPane.repaint();
+                    }
+                }
+            }
+        });
+        m_histoProps.addLabelDisplayListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                final AbstractHistogramVizModel vizModel = 
+                    getHistogramVizModel();
+                if (vizModel != null) {
+                    final AbstractHistogramProperties histoProps = 
+                        getHistogramPropertiesPanel();
+                    if (histoProps != null) {
+                        vizModel.setLabelDisplayPolicy(
+                                histoProps.getLabelDisplayPolicy());
+                        final HistogramDrawingPane histoDrawingPane = 
+                            getHistogramDrawingPane();
+                        histoDrawingPane.repaint();
+                    }
+                }
+            }
+        });
+        m_histoProps.addLayoutListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                final AbstractHistogramProperties histoProps = 
+                    getHistogramPropertiesPanel();
+                if (histoProps != null) {
+                    setHistogramLayout(histoProps.getHistogramLayout());
+                }
+            }
+        });
+        m_histoProps.addBinWidthChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                final JSlider source = (JSlider)e.getSource();
+                final int binWidth = source.getValue();
+                updateBinWidth(binWidth);
+            }
+        });
+        m_histoProps.addNoOfBinsChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                JSlider source = (JSlider)e.getSource();
+                //react only if the slider is in is final position
+                if (!source.getValueIsAdjusting()) {
+                    final int noOfBins = source.getValue();
+                    if (setNumberOfBins(noOfBins)) {
+                        updatePaintModel();
+                    }
+                }
+            }
+        });
+        m_histoProps.addAggrMethodListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                final String methodName = e.getActionCommand();
+                if (!AggregationMethod.valid(methodName)) {
+                    throw new IllegalArgumentException(
+                            "No valid aggregation method");
+                }
+                final AggregationMethod aggrMethod = 
+                    AggregationMethod.getMethod4String(methodName);
+                if (setAggregationMethod(aggrMethod)) {
+                    updatePaintModel();
+                }
+            }
+        });
+        m_histoProps.addShowEmptyBinListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                if (setShowEmptyBins(
+                        e.getStateChange() == ItemEvent.SELECTED)) {
+                    updatePaintModel();
+                }
+            }
+        });
+        m_histoProps.addShowMissingValBinListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                if (setShowMissingValBin(
+                        e.getStateChange() == ItemEvent.SELECTED)) {
+                    updatePaintModel();
+                }
+            }
+        });
     }
     
     /**
-     * Creates the <code>BarVisModel</code> objects which are used for drawing
-     * the Histogram. If the bars are already exists they get only updated
-     * otherwise would we loose the selected information. This is the case when
-     * the user only changes the aggregation method or column.
-     * 
-     * @param existingBars The currently displayed bars or <code>null</code>
-     * if the bars should be created. 
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateSize() {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            LOGGER.debug("VizModel was null");
+            return;
+        }
+        final Dimension newDrawingSpace = getDrawingPaneDimension();
+        if (!vizModel.setDrawingSpace(newDrawingSpace)) {
+            return;
+        }
+        if (HistogramLayout.SIDE_BY_SIDE.equals(
+                vizModel.getHistogramLayout()) 
+                || vizModel.containsNotPresentableBin()) {
+            //set the bin with to the maximum bin if the layout
+            //is side-by-side or the bin is not presentable with 
+            //the current width
+            vizModel.setBinWidth(vizModel.getMaxBinWidth());
+        }
+        updatePaintModel();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updatePaintModel() {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            LOGGER.debug("VizModel was null");
+            return;
+        }
+        final Coordinate xCoordinates = getXCoordinate();
+        final Coordinate yCoordinates = getAggregationCoordinate();
+        final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
+        final Dimension drawingSpace = vizModel.getDrawingSpace();
+        setHistogramBinRectangle(vizModel, xCoordinates, yCoordinates);
+        final double drawingHeight = drawingSpace.getHeight();
+        if (!yCoordinates.isNominal() 
+                && ((NumericCoordinate)yCoordinates).getMinDomainValue() 
+                    < 0) {
+            final int baseLine = (int)(drawingHeight 
+                    - yCoordinates.calculateMappedValue(
+                            new DoubleCell(0), drawingHeight, true));
+            drawingPane.setBaseLine(baseLine);
+        } else {
+            drawingPane.setBaseLine(null);
+        }
+        if (vizModel.isShowGridLines()) {
+            final int[] gridLines = 
+                getGridLineCoordinates(yCoordinates, drawingHeight);
+            drawingPane.setGridLines(gridLines);
+        } else {
+            drawingPane.setGridLines(null);
+        }
+        //update the properties panel as well since somthing could have changed
+        drawingPane.setHistogramVizModel(vizModel, true);
+    }
+    
+    /**
+     * Updates ONLY the width of the bins.
+     * @param binWidth the new bin width 
+     */
+    protected void updateBinWidth(final int binWidth) {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            LOGGER.debug("VizModel was null");
+            return;
+        }
+        if (!vizModel.setBinWidth(binWidth)) {
+            return;
+        }
+        final Dimension drawingSpace = vizModel.getDrawingSpace();
+        if (drawingSpace == null) {
+            throw new IllegalStateException("Drawing space must not be null");
+        }
+        final double drawingWidth = drawingSpace.getWidth();
+        final double drawingHeight = drawingSpace.getHeight();
+        final Coordinate xCoordinates = getXCoordinate();
+        final Coordinate aggrCoordinate = getAggregationCoordinate();
+        final int baseLine = 
+            (int)(drawingHeight - aggrCoordinate.calculateMappedValue(
+                            new DoubleCell(0), drawingHeight, true));
+        final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
+        
+        final int newBinWidth = vizModel.getBinWidth();
+        final HistogramLayout layout = vizModel.getHistogramLayout();
+        final SortedSet<Color> barElementColors = 
+            vizModel.getRowColors();
+        final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
+        final Collection<ColorColumn> aggrColumns = 
+            vizModel.getAggrColumns();
+        for (BinDataModel bin : vizModel.getBins()) {
+            final DataCell captionCell = bin.getXAxisCaptionCell();
+            final double labelCoord = xCoordinates.calculateMappedValue(
+                    captionCell, drawingWidth, true);
+            //subtract half of the bar width from the start position to place
+            //the middle point of the bar on the mapped coordinate position
+            final int xCoord = (int)(labelCoord - (newBinWidth / 2));
+            bin.updateBinWidth(xCoord, newBinWidth, layout,
+                    barElementColors, aggrMethod, aggrColumns, baseLine);
+        }
+        //if only the bar width changes we don't need to update the properties
+        //since the bar width change is triggered by the property component
+        //itself
+        drawingPane.setHistogramVizModel(vizModel, false);
+    }
+
+    /**
+     * @return the {@link Coordinate} of the x axis.
+     */
+    private Coordinate getXCoordinate() {
+        final Axis xAxis = getXAxis();
+        if (xAxis == null) {
+            throw new IllegalStateException("X axis must not be null");
+        }
+        final Coordinate xCoordinate = xAxis.getCoordinate();
+        if (xCoordinate == null) {
+            throw new IllegalStateException("X coordinate must not be null");
+        }
+        return xCoordinate;
+    }
+
+    /**
+     * @return the {@link Coordinate} of the aggregation axis.
+     */
+    private Coordinate getAggregationCoordinate() {
+        final Axis aggrAxis = getYAxis();
+        if (aggrAxis == null) {
+            throw new IllegalStateException(
+                    "Aggregation axis must not be null");
+        }
+        final Coordinate aggrCoordinate = aggrAxis.getCoordinate();
+        if (aggrCoordinate == null) {
+            throw new IllegalStateException(
+                    "Aggregation coordinate must not be null");
+        }
+        return aggrCoordinate;
+    }
+    
+    /**
+     * Calculates and sets the drawing rectangle of each bin.
      * @param xCoordinates The <code>Coordinate</code> object which contains 
      * the start position of an bar on the x axis 
+     * @param yCoordinates The <code>Coordinate</code> object which contains 
+     * the start position of an bar on the y axis 
      * @param drawingSpace A <code>Rectangle</code> which defines the available
-     * drawing space 
-     * @return a <code>Collection</code> of <code>BarVisModel</code> objects 
-     * containing all information needed for drawing.
+     * drawing space
      */
-    private Hashtable<String, BarVisModel> createUpdateVisBars(
-            final Hashtable<String, BarVisModel> existingBars, 
-            final Coordinate xCoordinates, final Coordinate yCoordinates, 
-            final Rectangle drawingSpace) {
-        AbstractHistogramDataModel histoData = getHistogramDataModel();
-        Hashtable<String, BarVisModel> visBars = 
-            new Hashtable<String, BarVisModel>(histoData.getNumberOfBars() + 1);
+    private static void setHistogramBinRectangle(
+            final AbstractHistogramVizModel vizModel,
+            final Coordinate xCoordinates, final Coordinate yCoordinates) {
+        final Dimension drawingSpace = vizModel.getDrawingSpace();
+        final int binWidth = vizModel.getBinWidth();
+        final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
+        final SortedSet<Color> barElementColors = 
+            vizModel.getRowColors();
+        final Collection<ColorColumn> aggrColumns = 
+            vizModel.getAggrColumns();
+        final HistogramLayout layout = vizModel.getHistogramLayout();
+        final double drawingWidth = drawingSpace.getWidth();
+        final double drawingHeight = drawingSpace.getHeight();
+        final int baseLine = 
+            (int)(drawingHeight - yCoordinates.calculateMappedValue(
+                            new DoubleCell(0), drawingHeight, true));
         // this is the minimum size of a bar with an aggregation value > 0
         final int minHeight = Math.max(
                 (int)HistogramDrawingPane.getBarStrokeWidth(),
-                AbstractHistogramPlotter.MINIMUM_BAR_HEIGHT);
-        final double drawingWidth = drawingSpace.getWidth();
-        final double drawingHeight = drawingSpace.getHeight();
-        CoordinateMapping[] xMappingPositions = xCoordinates.getTickPositions(
-                drawingWidth, true);
-        // get the default width for all bars
-        final int barWidth = getBarWidth();
-        for (CoordinateMapping coordinate : xMappingPositions) {
-            String caption = coordinate.getDomainValueAsString();
-            AbstractBarDataModel bar = histoData.getBar(caption);
-            if (bar == null) {
-                // if we find no bar for the caption it could be a information
-                // caption like only missing values so we simply continue
-                // to avoid null pointer exceptions
-                if (m_showMissingValBar) {
-                    bar = histoData.getMissingValueBar();
-                    if (bar == null || !bar.getCaption().equals(caption)) {
-                        continue;
-                    }
-                } else {
-                    continue;
-                }
+                AbstractHistogramVizModel.MINIMUM_BAR_HEIGHT);
+        // get the default width for all bins
+//        final int binWidth = getBinWidth();
+        for (BinDataModel bin : vizModel.getBins()) {
+            final DataCell captionCell = bin.getXAxisCaptionCell();
+            final double labelCoord = xCoordinates.calculateMappedValue(
+                    captionCell, drawingWidth, true);
+            if (labelCoord < 0) {
+                //this bin is not on the x axis (because it is empty and the
+                //empty bins shouldn't be displayed) so we simply set the
+                //rectangle to null and continue
+                bin.setBinRectangle(null, aggrMethod, layout, baseLine, 
+                        barElementColors, aggrColumns);
+                continue;
             }
-//calculate the starting point on the x axis for the bar
-            final double xCoordinate = coordinate.getMappingValue();
+
+            //if the maximum value is negative use 0 to end at the base line
+            final double maxAggrVal = Math.max(
+                    bin.getMaxAggregationValue(aggrMethod, layout), 0);
+            //if the minimum value is positive use 0 to start at the base line
+            final double minAggrVal = Math.min(
+                bin.getMinAggregationValue(aggrMethod, layout), 0);
             //subtract half of the bar width from the start position to place
             //the middle point of the bar on the mapped coordinate position
-            final int startX = (int)(xCoordinate - (barWidth / 2));
-            
-            
-//calculate the starting point on the y axis for the bar        
-//since the coordinate system in java is on the y axis reversed the bar gets 
-//painted from a starting point in the upper left corner to the bottom (height)
-//and to the right (width).
-            // I have to use the String value label because this is the rounded
-            // aggregation value. If it's a small value which gets rounded
-            double aggrVal = Double.parseDouble(bar.getLabel());
-            Rectangle rect = null;
-            if (aggrVal >= 0) {
-                //if it's a positive value the top left corner starting point
-                //is the value itself ...
-                int startY = (int)(drawingHeight 
-                        - yCoordinates.calculateMappedValue(
-                                new DoubleCell(aggrVal), drawingHeight, true));
-                //... and the end point (height) of the bar is the 0 value!
-                final int fixPoint = (int)(drawingHeight 
-                        - yCoordinates.calculateMappedValue(new DoubleCell(0), 
-                                drawingHeight, true));
-//              the calculateMappedValue method returns the position in a 
-//              normal coordinate system since the java screen coordinates 
-//              are vice versa we have to subtract the coordinate value from
-//              the screen height to get the position on the screen
-
-//check for rounding errors
-                if (startY < 0) {
-                    //avoid negative coordinates
-                    startY = 0;
-                }
-                //make sure that the start point is above the end point which 
-                //can't be moved because it is the 0 value!
-                if (startY > fixPoint) {
-                    startY = fixPoint;
-                }
-                //check the height for the minimum height
-                int height = fixPoint - startY;
-                if (height <= minHeight) {
-                    height = minHeight;
-                    //adjust the starting point to the new height to avoid
-                    //painting in the negatives
-                    startY = fixPoint - height;
-                }
-                rect = new Rectangle(startX, startY, barWidth, height);
-            } else {
-                //if it's a negative value the top left corner start point is
-                // the 0 value ...
-                final int fixPoint = (int)(drawingHeight
-                        - yCoordinates.calculateMappedValue(
-                        new DoubleCell(0), drawingHeight, true));
-                //... and the end point (height) is the negative value itself!
-                int endY = (int)(drawingHeight 
-                        - yCoordinates.calculateMappedValue(
-                                new DoubleCell(aggrVal), drawingHeight, true));
-//              the calculateMappedValue method returns the position in a 
-//              normal coordinate system since the java screen coordinates 
-//              are vice versa we have to subtract the coordinate value from
-//              the screen height to get the position on the screen
-                
-
-//check for rounding errors
-                  if (endY > drawingHeight) {
-                      //avoid bigger bars than the drawing screen
-                      endY = (int)Math.floor(drawingHeight);
-                  }
-                  //make sure that the end point is below the start point which 
-                  //can't be moved because it is the 0 value!
-                  if (fixPoint > endY) {
-                      endY = fixPoint;
-                  }
-                  //check the height for the minimum height
-                  int height = endY - fixPoint;
-                  if (height <= minHeight && aggrVal > 0) {
-                      height = minHeight;
-                      //adjust the starting point to the new height to avoid
-                      //painting in the negatives
-                      endY = fixPoint + height;
-                  }
-                  rect = new Rectangle(startX, fixPoint, barWidth, height);
-            }
-
-            BarVisModel visBar = null;
-            if (existingBars == null 
-                    || !existingBars.containsKey(bar.getCaption())) {
-                visBar = new BarVisModel(bar, rect, m_tableSpec);
-            } else {
-                visBar = existingBars.get(bar.getCaption());
-                if (visBar == null) {
-                    //this shouldn't happen
-                    visBar = new BarVisModel(bar, rect, m_tableSpec);
-                }
-                visBar.updateBarData(bar, rect);
-                
-            }
-            visBars.put(bar.getCaption(), visBar);
+            final int xCoord = (int)(labelCoord - (binWidth / 2));
+            int upperY = (int)(drawingHeight 
+                    - yCoordinates.calculateMappedValue(
+                            new DoubleCell(maxAggrVal), drawingHeight, true));
+            int lowerY = (int)(drawingHeight 
+                    - yCoordinates.calculateMappedValue(
+                            new DoubleCell(minAggrVal), drawingHeight, true));
+            final Rectangle binRect = calculateBorderRectangle(xCoord, lowerY, 
+                    upperY, minHeight, binWidth, maxAggrVal, baseLine);
+            bin.setBinRectangle(binRect, aggrMethod, layout, baseLine, 
+                    barElementColors, aggrColumns);
         } // end of for loop over the x axis coordinates
-        return visBars;
     }
 
-    /**
-     * This method is called when ever something basic has changed. This method
-     * forces the class to reload the HistogramData.
-     */
-    protected void resetHistogramData() {
-        m_histoData = null;
+    private static Rectangle calculateBorderRectangle(final int xCoord, 
+            final int lowerY, final int upperY, final int minHeight, 
+            final int width, final double maxAggrVal, final int baseLine) {
+        int height = lowerY - upperY;
+        int yCoord = upperY;
+        //calculate the height
+        if (height < minHeight) {
+            if (maxAggrVal > 0) {
+                yCoord = baseLine - minHeight;
+            } else if (maxAggrVal < 0) {
+                yCoord = baseLine;
+            } else {
+                //if the aggregation value is zero we have to check
+                //if the base line is at coordinate 0 or not
+                if (baseLine == 0) {
+                    yCoord = baseLine;
+                } else {
+                    yCoord = baseLine - minHeight;
+                }
+            }
+            height = minHeight;
+        }
+        return new Rectangle(xCoord, yCoord, width, height);
     }
-
+    
     /**
      * Sets the x coordinates for the current 
-     * {@link AbstractHistogramDataModel}.
+     * {@link AbstractHistogramVizModel}.
      */
     protected void setXCoordinates() {
         DataColumnSpec colSpec = getXColumnSpec();
-        m_xColumnSpec = colSpec;
 //         tell the headers to display the new column names
         final Coordinate xCoordinate = Coordinate.createCoordinate(colSpec);
+        if (xCoordinate == null) {
+            throw new IllegalStateException("Internal exception: "
+                    + " Unable to create x coordinates");
+        }
         if (getXAxis() == null) {
             final Axis xAxis = new Axis(Axis.HORIZONTAL, 
                     getDrawingPaneDimension().width);
@@ -460,10 +539,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 
     /**
      * Sets the y coordinates for the current 
-     * {@link AbstractHistogramDataModel}.
+     * {@link AbstractHistogramVizModel}.
      */
     protected void setYCoordinates() {
-        DataColumnSpec aggrColSpec = getAggregationColSpec();
+        final DataColumnSpec aggrColSpec = getAggregationColSpec();
 //        setYColName(aggrColSpec.getName());
 //         tell the headers to display the new column names
         final Coordinate yCoordinate = Coordinate.createCoordinate(aggrColSpec);
@@ -476,140 +555,36 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         getYAxis().setToolTipText(aggrColSpec.getName());
     }
 
-    /**
-     * Sets the preferred width for the bars. If the window is to small for the 
-     * size the bars are painted with the maximum bar width.
-     * @see #getMaxBarWidth()
-     * @param barWidth the new width of the bar
-     * @return <code>true</code> if the value has change otherwise
-     *         <code>false</code>
-     */
-    protected boolean setPreferredBarWidth(final int barWidth) {
-        if (m_barWidth == barWidth) {
-            return false;
-        } else {
-            if (barWidth < 0) {
-                m_barWidth = 0;
-            } else {
-                m_barWidth = barWidth;
-            }
-            // updatePaintModel();
-            return true;
-        }
-    }
-
-    /**
-     * @return the current preferred width of the bars.
-     */
-    protected int getBarWidth() {
-        if (m_barWidth < 0 && getHistogramDataModel() != null) {
-            // that only occurs at the first call
-            int noOfBars = getHistogramDataModel().getNumberOfBars();
-            Rectangle drawingSpace = calculateDrawingRectangle();
-            m_barWidth = (int)(drawingSpace.getWidth() / noOfBars)
-                    - SPACE_BETWEEN_BARS;
-        }
-        if (m_barWidth < MIN_BAR_WIDTH) {
-            m_barWidth = MIN_BAR_WIDTH;
-        }
-        if (m_barWidth > getMaxBarWidth()) {
-            // to avoid to wide bars after resizing the window!
-            m_barWidth = getMaxBarWidth();
-        }
-        //draw at least a small line
-        if (m_barWidth <= 0) {
-            m_barWidth = 1;
-        }
-        return m_barWidth;
-    }
-
-    /**
-     * @return the maximum width per bar for the current display settings.
-     */
-    protected int getMaxBarWidth() {
-        int noOfBars = getNoOfDisplayedBars();
-        final Rectangle drawingSpace = calculateDrawingRectangle();
-    
-        int result = (int)(drawingSpace.getWidth() / noOfBars)
-                - SPACE_BETWEEN_BARS;
-        if (result < 0) {
-            // avoid negative values
-            result = 0;
-        }
-        return result;
-    }
-
-    /**
-     * @param noOfBars sets the number of bars which is used for binning of none
-     *            nominal attributes
+      /**
+     * @param noOfBins sets the number of bins which is used for binning of 
+     * none nominal attributes
      * @return <code>true</code> if the value has changed
      */
-    protected boolean setNumberOfBars(final int noOfBars) {
-        if (getHistogramDataModel().setNumberOfBars(noOfBars)) {
+    protected boolean setNumberOfBins(final int noOfBins) {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            LOGGER.debug("VizModel was null");
+            throw new IllegalStateException(
+                    "Exception in setNumberOfBins: "
+                    + "Viz model must not be null");
+        }
+        if (vizModel.setNoOfBins(noOfBins)) {
             setXCoordinates();
             setYCoordinates();
-            // reset the vis bars
-            getHistogramDrawingPane().setVisBars(null);
-            // and we have to set the new max value for the y axis
-//            DataColumnSpec yColSpec = getAggregationColSpec();
-//            Coordinate yCoordinate = Coordinate.createCoordinate(yColSpec);
-//            getYAxis().setCoordinate(yCoordinate);
-            // updatePaintModel();
+            //set the current hilited keys in the new bins
+            vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
+            if (HistogramLayout.SIDE_BY_SIDE.equals(
+                    vizModel.getHistogramLayout())
+                    || vizModel.containsNotPresentableBin()) {
+                vizModel.setBinWidth(vizModel.getMaxBinWidth());
+            }
+            //update the details tab
+            getHistogramPropertiesPanel().updateHTMLDetailsPanel(
+                    vizModel.getHTMLDetailData());
             return true;
         }
         return false;
     }
-
-    /**
-     * @return the number of bars which are currently displayed
-     */
-    public int getNoOfDisplayedBars() {
-        if (m_xColumnSpec != null && m_xColumnSpec.getDomain() != null
-                && m_xColumnSpec.getDomain().getValues() != null) {
-            return m_xColumnSpec.getDomain().getValues().size();
-        } else { // this should never happen
-            return getHistogramDataModel().getNumberOfBars();
-        }
-    }
-
-    /**
-     * @return the maximum number of bars which could be displayed.
-     */
-    protected int getMaxNoOfBars() {
-        final Rectangle rect = calculateDrawingRectangle();
-        int maxNoOfBars = 
-            (int)(rect.getWidth() / (MIN_BAR_WIDTH + SPACE_BETWEEN_BARS));
-        //handle integer values special
-        final AbstractHistogramDataModel dataModel = getHistogramDataModel();
-        final DataColumnSpec xColSpec = dataModel.getOriginalXColSpec();
-        if (xColSpec != null) {
-            final boolean isInteger = 
-                xColSpec.getType().isCompatible(IntValue.class);
-            if (isInteger) {
-                final DataColumnDomain domain = xColSpec.getDomain();
-                if (domain != null) {
-                    final IntCell lowerBound = 
-                        (IntCell)domain.getLowerBound();
-                    final IntCell upperBound = 
-                        (IntCell)domain.getUpperBound();
-                    final int range = 
-                        upperBound.getIntValue() - lowerBound.getIntValue();
-                    if (maxNoOfBars > range) {
-                        maxNoOfBars = range;
-                    }
-                }
-            }
-        }
-        if (m_showMissingValBar && dataModel.containsMissingValueBar()) {
-            maxNoOfBars--;
-        }
-        // display at least one bar
-        if (maxNoOfBars < 1) {
-            maxNoOfBars = 1;
-        }
-        return maxNoOfBars;
-    }
-
 
     /**
      * Sets new aggregation columns and recalculates/repaints.
@@ -620,51 +595,22 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      */
     public boolean setAggregationMethod(final AggregationMethod aggrMethod) {
         if (aggrMethod == null) {
-            throw new IllegalArgumentException("Aggregation method shouldn't"
+            throw new IllegalArgumentException("Aggregation method must not"
                     + " be null");
         }
-        m_aggrMethod = aggrMethod;
-        AbstractHistogramDataModel model = getHistogramDataModel();
-        //set the aggregation method first and ...
-        final boolean aggrMethChanged = 
-            model.changeAggregationMethod(aggrMethod);
-        // ... then the column!!!
-        if (aggrMethChanged //|| getYColName() == null
-                || getYAxis().getCoordinate() == null) {
-            setYCoordinates();
-            return true;
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            LOGGER.debug("VizModel was null");
+            throw new IllegalStateException(
+                    "Exception in setAggregationMethod: "
+                    + "Visualization model must not be null");
         }
-        return false;
-    }
-  
-    /**
-     * Creates new rectangle that spans the area in which the plotter can draw.
-     * 
-     * @return a new rectangle spanning the drawing area
-     */
-    private Rectangle calculateDrawingRectangle() {
-        final Dimension dim = getDrawingPaneDimension();
-        return new Rectangle(dim);
-        /*
-        // the actual size we can draw in
-        // the max dot size is subtracted as a dot can vary in size
-        int width = getWidth();
-        // - getHistogramPlotterDrawingPane().getCurrentMaxDotSize();
-        int height = getHeight();
-        // - getHistogramPlotterDrawingPane().getCurrentMaxDotSize();
-    
-        // we only need an offset if we have borders
-        int xOffset = 0;
-        // getHistogramPlotterDrawingPane().getCurrentHalfMaxDotSize();
-        int yOffset = xOffset;
-        if (getInsets() != null) {
-            Insets paneInsets = getHistogramDrawingPane().getInsets();
-            width -= paneInsets.left + paneInsets.right;
-            xOffset += paneInsets.left;
-            height -= paneInsets.top + paneInsets.bottom;
-            yOffset += paneInsets.top;
+        if (!vizModel.setAggregationMethod(aggrMethod)) {
+            return false;
         }
-        return new Rectangle(xOffset, yOffset, width, height);*/
+        // if the method has changed we have to update the y coordinates
+        setYCoordinates();
+        return true;
     }
 
     /**
@@ -673,7 +619,11 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      * @return the underlying scatter plotter drawing pane
      */
     protected HistogramDrawingPane getHistogramDrawingPane() {
-        return (HistogramDrawingPane)getDrawingPane();
+        HistogramDrawingPane myPane = (HistogramDrawingPane)getDrawingPane();
+        if (myPane == null) {
+            throw new IllegalStateException("Drawing pane must not be null");
+        }
+        return myPane;
     }
 
     /**
@@ -687,10 +637,15 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      * @return the <code>DataColumnSpec</code> of the aggregation column
      */
     public DataColumnSpec getAggregationColSpec() {
-        double lowerBound = getHistogramDataModel().getMinAggregationValue(
-                isShowMissingValBar());
-        double upperBound = getHistogramDataModel().getMaxAggregationValue(
-                isShowMissingValBar());
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            LOGGER.debug("VizModel was null");
+            throw new IllegalStateException(
+                    "Exception in getAggregationColSpec: "
+                    + "Viz model must not be null");
+        }
+        double lowerBound = vizModel.getMinAggregationValue();
+        double upperBound = vizModel.getMaxAggregationValue();
         //set the upper bound for negative values and the lower bound for
         //positive values to 0 to ensure that the 0 is displayed on the 
         //coordinate
@@ -699,23 +654,37 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         } else if (upperBound < 0) {
             upperBound = 0;
         }
-        final String columnName = 
-            getHistogramDataModel().getAggregationColumn();
-        final DataColumnSpec colSpec = m_tableSpec.getColumnSpec(columnName);
+        final AggregationMethod aggrMethod = 
+            vizModel.getAggregationMethod();
         // set the column type depending on the aggregation method and type of
         // the aggregation column. If the method is count set it to integer. If
         // the aggregation method is summary and the data type of the
-        // aggregation
-        // column is integer the result must be an integer itself
+        // aggregation column is integer the result must be an integer itself
         DataType type = DoubleCell.TYPE;
-        if (AggregationMethod.COUNT.equals(m_aggrMethod)
-                || (colSpec != null
-                        && colSpec.getType().isCompatible(IntValue.class) 
-                        && !AggregationMethod.AVERAGE.equals(m_aggrMethod))) {
+        final Collection<? extends ColorColumn> columnNames = 
+            vizModel.getAggrColumns();
+        if (AggregationMethod.COUNT.equals(aggrMethod)) {
             type = IntCell.TYPE;
         }
-        final String displayColumnName = createAggregationColumnName(columnName,
-                m_aggrMethod);
+        if (AggregationMethod.SUM.equals(aggrMethod) && columnNames != null) {
+            //if the aggregation method is summary and ...
+            boolean allInteger = true;
+            for (ColorColumn column : columnNames) {
+                final DataColumnSpec colSpec = 
+                    m_tableSpec.getColumnSpec(column.getColumnName());
+                if (colSpec == null 
+                        || !colSpec.getType().isCompatible(IntValue.class)) {
+                    allInteger = false;
+                    break;
+                }
+            }
+            //... all columns of the int type we can set the column type to int
+            if (allInteger) {
+                type = IntCell.TYPE;    
+            }
+        }
+        final String displayColumnName = createAggregationColumnName(
+                columnNames, aggrMethod);
         final DataColumnSpec spec = createColumnSpec(displayColumnName, type,
                 lowerBound, upperBound, null);
         return spec;
@@ -727,50 +696,26 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
      * @return the <code>DataColumnSpec</code> of the x column
      */
     private DataColumnSpec getXColumnSpec() {
-        final AbstractHistogramDataModel model = getHistogramDataModel();
-        final DataColumnSpec xColSpec = model.getOriginalXColSpec();
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            throw new IllegalStateException(
+                    "Exception in getXColumnSpec: "
+                    + "Viz model must not be null");
+        }
+        final DataColumnSpec xColSpec = vizModel.getXColumnSpec();
         String colName = xColSpec.getName();
-        Set<DataCell> binCaptions = null;
-        if (model.isNominal()) {
-            // check if the column contains only missing values if that's the
-            // case set one value which indicates this
-            if (xColSpec.getDomain().getValues() == null
-                    || xColSpec.getDomain().getValues().size() < 1) {
-                binCaptions = new HashSet<DataCell>(1);
-                binCaptions.add(new StringCell(
-                        "Only missing or too many values"));
-                DataColumnSpec colSpec = createColumnSpec(colName,
-                        StringCell.TYPE, Double.NaN, Double.NaN, binCaptions);
-                return colSpec;
-            } else {
-                binCaptions = xColSpec.getDomain().getValues();
-            }
-        } else {
-            binCaptions = model.getOrderedBarCaptions();
+        final Set<DataCell> binCaptions = vizModel.getBinCaptions();
+        if (vizModel.isBinNominal()) {
             colName = "Binned " + xColSpec.getName();
         }
-        // add or hide bars depending on the user choice
-        if (!m_showEmptyBars || m_showMissingValBar) {
-            LinkedHashSet<DataCell> extendedBinCaptions = 
-                new LinkedHashSet<DataCell>(binCaptions.size() + 1);
-            extendedBinCaptions.addAll(binCaptions);
-            if (!m_showEmptyBars) {
-                for (DataCell cell : binCaptions) {
-                    AbstractBarDataModel bar = model.getBar(cell.toString());
-                    if (bar == null || bar.isEmpty()) {
-                        extendedBinCaptions.remove(cell);
-                    }
-                }
-            }
-            if (m_showMissingValBar) {
-                AbstractBarDataModel missingValBar = model.getMissingValueBar();
-                if (missingValBar != null) {
-                    StringCell missingValCell = new StringCell(missingValBar
-                            .getCaption());
-                    extendedBinCaptions.add(missingValCell);
-                }
-            }
-            binCaptions = extendedBinCaptions;
+//      check if the column contains only missing values if that's the
+        // case set one value which indicates this
+        if (binCaptions.size() < 1) {
+            binCaptions.add(new StringCell(
+                    "Only missing or too many values"));
+            DataColumnSpec colSpec = createColumnSpec(colName,
+                    StringCell.TYPE, Double.NaN, Double.NaN, binCaptions);
+            return colSpec;
         }
         DataColumnSpec colSpec = createColumnSpec(colName, StringCell.TYPE,
                 Double.NaN, Double.NaN, binCaptions);
@@ -820,96 +765,169 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     /**
      * Returns the column name including the aggregation method.
      * 
-     * @param colName the origin column name
+     * @param columnNames the origin column name
      * @param aggrMethod the aggregation method
      * @return column name with a hint about the aggregation method
      */
-    private String createAggregationColumnName(final String colName, 
+    private String createAggregationColumnName(
+            final Collection<? extends ColorColumn> columnNames, 
             final AggregationMethod aggrMethod) {
         if (aggrMethod.equals(AggregationMethod.COUNT)) {
-            return AbstractHistogramDataModel.COL_NAME_COUNT;
-        } else if (colName == null || colName.length() < 0) {
+            return AbstractHistogramPlotter.COL_NAME_COUNT;
+        }
+        StringBuilder name = new StringBuilder();
+        if (columnNames == null || columnNames.size() < 0) {
+            //if the method is not count the user has to 
+            //select a aggregation column
             throw new IllegalArgumentException("Column name not defined.");
         } else if (aggrMethod.equals(AggregationMethod.SUM)) {
-            return "Sum of " + colName;
+            name.append("Sum of ");
         } else if (aggrMethod.equals(AggregationMethod.AVERAGE)) {
-            return "Avg of " + colName;
+            name.append("Avg of ");
         } else {
             throw new IllegalArgumentException(
                     "Aggregation method not supported.");
         }
+        boolean first = true;
+        for (ColorColumn column : columnNames) {
+            if (first) {
+                first = false;
+            } else {
+                name.append(", ");
+            }
+            name.append(column.getColumnName());
+        }
+        return name.toString(); 
     }
 
-    /**
-     * @return <code>true</code> if the y axis grid lines should be shown.
-     */
-    public boolean isShowGridLines() {
-        return m_showGridLines;
-    }
-    
     /**
      * @param showGridLines set to <code>true</code> if the grid lines of the
      * y axis should be shown
      */
     public void setShowGridLines(final boolean showGridLines) {
-        if (showGridLines != m_showGridLines) {
-            m_showGridLines = showGridLines;
-            updateBarsAndPaint();
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            throw new IllegalStateException(
+                    "Exception in setShowGridLines: "
+                    + "Viz model must not be null");
+        }
+        if (vizModel.setShowGridLines(showGridLines)) {
+            final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
+            if (drawingPane == null) {
+                return;
+            }
+            if (showGridLines) {
+                final Coordinate yCoordinates = getYAxis().getCoordinate();
+                if (yCoordinates == null) {
+                    return;
+                }
+                final double drawingHeight = 
+                    vizModel.getDrawingSpace().getHeight();
+                final int[] gridLines = 
+                    getGridLineCoordinates(yCoordinates, drawingHeight);
+                drawingPane.setGridLines(gridLines);
+            } else {
+                drawingPane.setGridLines(null);
+            }
+            repaint();
+        }
+    }
+
+    /**
+     * @param yCoordinates the coordinate object of the y axis
+     * @param drawingHeight the total height to draw
+     * @return the grid lines or null
+     */
+    private int[] getGridLineCoordinates(
+            final Coordinate yCoordinates, final double drawingHeight) {
+        if (yCoordinates == null) {
+            throw new IllegalArgumentException("Y coordinates not defined");
+        }
+        final CoordinateMapping[] tickPos = yCoordinates
+                .getTickPositions(drawingHeight, true);
+        final int[] gridLines = new int[tickPos.length];
+        for (int i = 0, length = tickPos.length; i < length; i++) {
+            gridLines[i] = (int)(drawingHeight - tickPos[i]
+                    .getMappingValue());
+        }
+        return gridLines;
+    }
+    
+    /**
+     * @param layout the {@link HistogramLayout} to use
+     */
+    public void setHistogramLayout(final HistogramLayout layout) {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            return;
+        }
+        if (vizModel.setHistogramLayout(layout)) {
+//          if the layout has changed we have to update the y coordinates
+            setYCoordinates();
+            if (HistogramLayout.SIDE_BY_SIDE.equals(layout) 
+                    || (vizModel.getAggrColumns() != null 
+                            && vizModel.getAggrColumns().size() > 1)) {
+                //save the current bin width to restore it after changing the
+                //layout again
+                m_lastStackedBinWidth = vizModel.getBinWidth();
+                //... and set the bin width to the maximum bin 
+                //with by changing to the side by side layout
+                vizModel.setBinWidth(vizModel.getMaxBinWidth());
+            } else if (HistogramLayout.STACKED.equals(layout)) {
+                //set the previous used bin width
+                vizModel.setBinWidth(m_lastStackedBinWidth);
+            }
+            updatePaintModel();
         }
     }
     
     /**
-     * @return the showEmptyBars
-     */
-    public boolean isShowEmptyBars() {
-        return m_showEmptyBars;
-    }
-
-    /**
-     * @param showEmptyBars the showEmptyBars to set
+     * @param showEmptyBins set to <code>true</code> if the empty bins should
+     * be displayed
      * @return <code>true</code> if the value has changed
      */
-    public boolean setShowEmptyBars(final boolean showEmptyBars) {
-        if (showEmptyBars != m_showEmptyBars) {
-            m_showEmptyBars = showEmptyBars;
+    public boolean setShowEmptyBins(final boolean showEmptyBins) {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            LOGGER.debug("VizModel was null");
+            throw new IllegalStateException(
+                    "Exception in setShowEmptyBins: "
+                    + "Viz model must not be null");
+        }
+        if (vizModel.setShowEmptyBins(showEmptyBins)) {
             setXCoordinates();
             setYCoordinates();
-            // updatePaintModel();
+            if (HistogramLayout.SIDE_BY_SIDE.equals(
+                    vizModel.getHistogramLayout())
+                    || vizModel.containsNotPresentableBin()) {
+                vizModel.setBinWidth(vizModel.getMaxBinWidth());
+            }
             return true;
         }
         return false;
     }
 
     /**
-     * @return the showMissingvalBar
-     */
-    public boolean isShowMissingValBar() {
-        return m_showMissingValBar;
-    }
-
-    /**
-     * @param showMissingvalBar the showMissingvalBar to set
+     * @param showMissingValBin the showMissingvalBar to set
      * @return <code>true</code> if the value has changed
      */
-    public boolean setShowMissingvalBar(final boolean showMissingvalBar) {
-        if (showMissingvalBar != m_showMissingValBar) {
-            m_showMissingValBar = showMissingvalBar;
-            if (!showMissingvalBar) {
-                // remove a possibly set missing value bar from the vis bars
-                AbstractBarDataModel missingValBar = getHistogramDataModel()
-                        .getMissingValueBar();
-                if (missingValBar != null) {
-                    Hashtable<String, BarVisModel> visBars = 
-                        getHistogramDrawingPane().getVisBars();
-                    if (visBars != null) {
-                        visBars.remove(missingValBar.getCaption());
-                    }
-                }
-            }
+    public boolean setShowMissingValBin(final boolean showMissingValBin) {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            LOGGER.debug("VizModel was null");
+            throw new IllegalStateException(
+                    "Exception in setShowMissingValBin: "
+                    + "Viz model must not be null");
+        }
+        if (vizModel.setShowMissingValBin(showMissingValBin)) {
             // set the coordinates to the new boundaries
             setXCoordinates();
             setYCoordinates();
-            // updatePaintModel();
+            if (HistogramLayout.SIDE_BY_SIDE.equals(
+                    vizModel.getHistogramLayout())
+                    || vizModel.containsNotPresentableBin()) {
+                vizModel.setBinWidth(vizModel.getMaxBinWidth());
+            }
             return true;
         }
         return false;
@@ -921,7 +939,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     @Override
     public void reset() {
         super.setHiLiteHandler(null);
-        resetHistogramData();
+        m_tableSpec = null;
+        resetHistogramVizModel();
         getXAxis().setCoordinate(null);
         getXAxis().setToolTipText("");
         getYAxis().setCoordinate(null);
@@ -930,47 +949,15 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#hiLite(
-     *      org.knime.core.node.property.hilite.KeyEvent)
-     */
-    @Override
-    public void hiLite(final KeyEvent event) {
-        // we don't need to take care of un/highlight since we don't save
-        // the highlight state in an object but ask the hilitehandler itself
-        // every time.
-        updatePaintModel();
-    }
-
-    /**
-     * @see 
-     * org.knime.core.node.property.hilite.HiLiteListener#unHiLite(KeyEvent)
-     */
-    @Override
-    public void unHiLite(final KeyEvent event) {
-        // we don't need to take care of un/highlight since we don't save
-        // the highlight state in an object but ask the hilitehandler itself
-        // every time.
-        updatePaintModel();
-    }
-
-
-    /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
-     */
-    public void unHiLiteAll() {
-        // we don't need to take care of un/highlight since we don't save
-        // the highlight state in an object but ask the hilitehandler itself
-        // every time.
-        updatePaintModel();
-    }
-
-    /**
      * @param hiLiteHandler The hiLiteHandler to set.
      */
     @Override
     public void setHiLiteHandler(final HiLiteHandler hiLiteHandler) {
+        if (hiLiteHandler == null) {
+            throw new IllegalArgumentException(
+                    "HiliteHandler must not be null");
+        }
         super.setHiLiteHandler(hiLiteHandler);
-        getHistogramDrawingPane().setHiLiteHandler(hiLiteHandler);
     }
 
     /**
@@ -981,186 +968,194 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
     /**
-     * @param tableSpec the new {@link DataTableSpec}
-     */
-    protected void setDataTableSpec(final DataTableSpec tableSpec) {
-        m_tableSpec = tableSpec;
-    }
-
-    /**
-     * Returns the <code>AbstractHistogramDataModel</code> on which the 
+     * Returns the <code>AbstractHistogramVizModel</code> on which the 
      * visualisation bases on. It creates the model if it doesn't exists by 
      * using the information of the getXColName method and the m_rowContainer 
      * variable.
      * 
      * @return the model on which the visualisation is based on
      */
-    public AbstractHistogramDataModel getHistogramDataModel() {
-        return m_histoData;
+    public AbstractHistogramVizModel getHistogramVizModel() {
+//        if (m_vizModel == null) {
+//            throw new IllegalStateException("VizModel must not be null");
+//        }
+        return m_vizModel;
     }
-    
+
     /**
-     * @param histoData the new {@link AbstractHistogramDataModel}
+     * This method is called when ever something basic has changed. This method
+     * forces the class to reload the HistogramData.
      */
-    public void setHistogramDataModel(
-            final AbstractHistogramDataModel histoData) {
-        m_histoData = histoData;
-        m_tableSpec = m_histoData.getTableSpec();
-        if (m_tableSpec == null) {
-            throw new IllegalArgumentException("Internal exception:"
-                    + " Row container shouldn't be null.");
+    protected void resetHistogramVizModel() {
+        m_vizModel = null;
+    }
+
+    /**
+     * Sets the new {@link AbstractHistogramVizModel}.
+     * @param tableSpec the new {@link DataTableSpec}
+     * @param vizModel the new {@link AbstractHistogramVizModel}
+     */
+    public void setHistogramVizModel(final DataTableSpec tableSpec,
+            final AbstractHistogramVizModel vizModel) {
+        if (tableSpec == null) {
+            throw new IllegalArgumentException(
+                    "Table specification must not be null");
         }
-        m_xColumn = m_histoData.getXColumn();
-        if (m_xColumn == null || m_xColumn.length() < 1) {
-            throw new IllegalArgumentException("No column available to set.");
+        if (vizModel == null) {
+            throw new IllegalArgumentException("Viz model must not be null");
         }
-        m_aggrColName = m_histoData.getAggregationColumn();
-        m_aggrMethod = m_histoData.getAggregationMethod();
+        m_tableSpec = tableSpec;
+        m_vizModel = vizModel;
+        vizModel.setDrawingSpace(getDrawingPaneDimension());
         //after setting all properties set the coordinate axis as well
         setXCoordinates();
         setYCoordinates();
         // select the x column also in the select box of the properties
         // panel
-       m_histoProps.updateColumnSelection(m_tableSpec, m_xColumn, 
-                m_aggrColName);
-    }
-
-    /**
-     * @return the name of the aggregation column
-     */
-    protected String getAggregationColName() {
-        return m_aggrColName;
-    }
-
-    /**
-     * @param aggrColName sets the new aggregation column
-     */
-    public void setAggregationColName(final String aggrColName) {
-        m_aggrColName = aggrColName;
-    }
-
-    /**
-     * @return the {@link AggregationMethod}
-     */
-    public AggregationMethod getAggregationMethod() {
-        return m_aggrMethod;
+       m_histoProps.updateColumnSelection(m_tableSpec, 
+               vizModel.getXColumnName(), vizModel.getAggrColumns(),
+               vizModel.getAggregationMethod());
+       if (!vizModel.isFixed()) {
+           //set the hilite information
+           vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
+       }
+       updatePaintModel();
     }
 
     /**
      * @return the name of the column used as x axis
      */
     public String getXColName() {
-        return m_xColumn;
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            LOGGER.debug("VizModel was null");
+            throw new IllegalStateException(
+                    "Exception in getAggregationColSpec: "
+                    + "Viz model must not be null");
+        }
+        return vizModel.getXColumnName();
     }
-    
+//*************************************************************************
+//Selection and hiliting section
+//*************************************************************************
     /**
-     * @param name the name of the column used as x axis
+     * {@inheritDoc}
      */
-    public void setXColName(final String name) {
-        m_xColumn = name;
-    }
-    
-    /**
-     * @return the name of the column used used y axis
-     */
-    public String getYColName() {
-        return m_aggrColName;
-    }
-    
-    /**
-     * @param name the name of the column used as y axis
-     */
-    public void setYColName(final String name) {
-        m_aggrColName = name;
+    @Override
+    public void hiLite(final KeyEvent event) {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null || vizModel.isFixed()) {
+            LOGGER.debug("VizModel doesn't support hiliting or was null");
+            return;
+        }
+        final Set<DataCell>hilited = event.keys();
+        vizModel.updateHiliteInfo(hilited, true);
+        repaint();
     }
 
-    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unHiLite(final KeyEvent event) {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null || vizModel.isFixed()) {
+            LOGGER.debug("VizModel doesn't support hiliting or was null");
+            return;
+        }
+        final Set<DataCell>hilited = event.keys();
+        vizModel.updateHiliteInfo(hilited, false);
+        repaint();
+    }
+
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLiteSelected()
+     * {@inheritDoc}
+     */
+    public void unHiLiteAll() {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null || vizModel.isFixed()) {
+            LOGGER.debug("VizModel doesn't support hiliting or was null");
+            return;
+        }
+        vizModel.unHiliteAll();
+        repaint();
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public void hiLiteSelected() {
-        final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
-        delegateHiLite(drawingPane.getKeys4SelectedBars());
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null || vizModel.isFixed()) {
+            LOGGER.debug("VizModel doesn't support hiliting or was null");
+            return;
+        }
+        final Set<DataCell> selectedKeys = 
+            vizModel.getSelectedKeys();
+        delegateHiLite(selectedKeys);
+        repaint();
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void unHiLiteSelected() {
-        final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
-        delegateUnHiLite(drawingPane.getKeys4SelectedBars());
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null || vizModel.isFixed()) {
+            LOGGER.debug("VizModel doesn't support hiliting or was null");
+            return;
+        }
+        final Set<DataCell> selectedKeys = 
+            vizModel.getSelectedKeys();
+        delegateUnHiLite(selectedKeys);
+        repaint();
     }
     
     /**
-     * @see AbstractPlotter#selectClickedElement(java.awt.Point)
+     * {@inheritDoc}
      */
     @Override
     public void selectClickedElement(final Point clicked) {
-        final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
-        final Hashtable<String, BarVisModel> visBars = drawingPane.getVisBars();
-        if (visBars == null) {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            LOGGER.debug("VizModel was null");
             return;
         }
-        final Collection<BarVisModel> bars = visBars.values();
-        if (bars == null) {
-            return;
-        }
-        for (BarVisModel bar : bars) {
-            if (bar.getRectangle().contains(clicked)) {
-                bar.setSelected(!bar.isSelected());
-            } else {
-                bar.setSelected(false);
-            }
-        }
-        return;
+        vizModel.selectElement(clicked);
+        m_histoProps.updateHTMLDetailsPanel(
+                vizModel.getHTMLDetailData());
+        repaint();
     }
 
     /**
-     * @see AbstractPlotter#selectElementsIn(java.awt.Rectangle)
+     * {@inheritDoc}
      */
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {
-        final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
-        if (drawingPane == null) {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
+            LOGGER.debug("VizModel was null");
             return;
         }
-        Hashtable<String, BarVisModel> visBars = drawingPane.getVisBars();
-        if (visBars == null) {
-            return;
-        }
-        final Collection<BarVisModel> bars = visBars.values();
-        if (bars == null) {
-            return;
-        }
-        for (BarVisModel bar : bars) {
-            if (bar.screenRectOverlapping(selectionRectangle)) {
-                bar.setSelected(!bar.isSelected());
-            } else {
-                bar.setSelected(false);
-            }
-        }
-        return;
+        vizModel.selectElement(selectionRectangle);
+        m_histoProps.updateHTMLDetailsPanel(
+                vizModel.getHTMLDetailData());
+        repaint();
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#clearSelection()
+     * {@inheritDoc}
      */
     @Override
     public void clearSelection() {
-        final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
-        Hashtable<String, BarVisModel> visBars = drawingPane.getVisBars();
-        if (visBars == null) {
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        if (vizModel == null) {
             return;
         }
-        final Collection<BarVisModel> bars = visBars.values();
-        if (bars == null) {
-            return;
-        }
-        for (BarVisModel bar : bars) {
-            bar.setSelected(false);
-        }
+        vizModel.clearSelection();
+        repaint();
     }
 }

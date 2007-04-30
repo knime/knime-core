@@ -20,12 +20,11 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.node.viz.histogram;
+package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
+import java.io.Serializable;
 import java.util.Comparator;
-
-import org.knime.core.data.property.ColorAttr;
 
 
 /**
@@ -35,29 +34,37 @@ import org.knime.core.data.property.ColorAttr;
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-class HSBColorAttrComparator implements Comparator<ColorAttr> {
-    private final boolean m_useHilitColor;
+public final class HSBColorComparator implements Comparator<Color>, 
+Serializable {
+    
+    private static final long serialVersionUID = -2017351242977651036L;
+    
     private static final int HUE_IDX = 0;
     private static final int SATURATION_IDX = 1;
     private static final int BRIGHTNESS_IDX = 2;
     //used to set the split of the hue circle in the blue area
     private static final float HUE_SPLITT = 0.5f;
-
-    /**
-     * creates a new comparator for color attributes.
-     * 
-     * @param useHilitColor if set <code>true</code> the hilight color will be
-     *            used when comparing two colorattr objects, otherwise the
-     *            "regular" color is looked at
-     */
-    HSBColorAttrComparator(final boolean useHilitColor) {
-        m_useHilitColor = useHilitColor;
+    
+    private static HSBColorComparator instance;
+    
+    private HSBColorComparator() {
+        //nothing to do
     }
 
     /**
-     * @see java.util.Comparator#compare
+     * @return the only instance of this comparator
      */
-    public int compare(final ColorAttr o1, final ColorAttr o2) {
+    public static HSBColorComparator getInstance() {
+        if (instance == null) {
+            instance = new HSBColorComparator();
+        }
+        return instance;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public int compare(final Color o1, final Color o2) {
         if (o1 == o2) {
             return 0;
         }
@@ -68,25 +75,22 @@ class HSBColorAttrComparator implements Comparator<ColorAttr> {
             return +1;
         }
 
-        Color c1 = o1.getColor(false, m_useHilitColor);
-        Color c2 = o2.getColor(false, m_useHilitColor);
-
         float[] hsbvals = new float[3];
         hsbvals = 
-            Color.RGBtoHSB(c1.getRed(), c1.getGreen(), c1.getBlue(), hsbvals);
+            Color.RGBtoHSB(o1.getRed(), o1.getGreen(), o1.getBlue(), hsbvals);
         //we don't need to make modulo 1 because java takes care that the value
         //is below 1
-        float hue1 = hsbvals[HUE_IDX] + HUE_SPLITT;
-        float sat1 = hsbvals[SATURATION_IDX];
-        float bright1 = hsbvals[BRIGHTNESS_IDX];
+        final float hue1 = hsbvals[HUE_IDX] + HUE_SPLITT;
+        final float sat1 = hsbvals[SATURATION_IDX];
+        final float bright1 = hsbvals[BRIGHTNESS_IDX];
         
         hsbvals = 
-            Color.RGBtoHSB(c2.getRed(), c2.getGreen(), c2.getBlue(), hsbvals);
+            Color.RGBtoHSB(o2.getRed(), o2.getGreen(), o2.getBlue(), hsbvals);
         //we don't need to make modulo 1 because java takes care that the value
         //is below 1        
-        float hue2 = hsbvals[HUE_IDX] + HUE_SPLITT;
-        float sat2 = hsbvals[SATURATION_IDX];
-        float bright2 = hsbvals[BRIGHTNESS_IDX];
+        final float hue2 = hsbvals[HUE_IDX] + HUE_SPLITT;
+        final float sat2 = hsbvals[SATURATION_IDX];
+        final float bright2 = hsbvals[BRIGHTNESS_IDX];
         
         if (hue1 > hue2) {
             return +1;

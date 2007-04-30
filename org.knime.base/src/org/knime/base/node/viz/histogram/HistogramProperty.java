@@ -1,5 +1,5 @@
-<!--
-====================================================================
+/* 
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -17,17 +17,33 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
-====================================================================
--->
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html; charset=ISO-8859-1"
- http-equiv="content-type">
-  <title>Histogram plotter util package</title>
-</head>
-<body>
-<p>Contains utility classes which performe binning or which are used
-in dialogs to select the aggregation columns.
-</body>
-</html>
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *    10.01.2007 (Tobias Koetter): created
+ */
+
+package org.knime.base.node.viz.histogram;
+
+/**
+ * Used to create a {@link javax.swing.ButtonGroup} in the 
+ * {@link AbstractHistogramProperties} class.
+ * @author Tobias Koetter, University of Konstanz
+ */
+public interface HistogramProperty {
+
+    /**
+     * @return the label to display
+     */
+    public String getLabel();
+    
+    /**
+     * @return the id of this option
+     */
+    public String getID();
+ 
+    /**
+     * @return <code>true</code> if this is the default option
+     */
+    public boolean isDefault();
+}

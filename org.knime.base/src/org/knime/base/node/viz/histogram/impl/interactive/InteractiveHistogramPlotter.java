@@ -21,28 +21,37 @@
  */
 package org.knime.base.node.viz.histogram.impl.interactive;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 
-import org.knime.base.node.viz.histogram.AbstractHistogramDataModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
 import org.knime.base.node.viz.histogram.AggregationMethod;
-import org.knime.core.data.DataRow;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
  * This class is the controller between the data model of the
- * {@link InteractiveHistogramDataModel} class and the view 
+ * {@link InteractiveHistogramVizModel} 
+ * class and the view 
  * {@link org.knime.base.node.viz.histogram.HistogramDrawingPane}. It creates 
- * the {@link org.knime.base.node.viz.histogram.BarVisModel} objects 
- * based on the 
+ * the {@link org.knime.base.node.viz.histogram.datamodel.BarDataModel} 
+ * objects based on the
  * {@link 
- * org.knime.base.node.viz.histogram.impl.interactive.InteractiveBarDataModel} 
- * of the 
- * {@link 
- * org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel} 
+ * org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel} 
  * class by enhancing these information 
  * with information about the size of the drawing space like height and width 
  * in pixel.
@@ -50,11 +59,10 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
-    
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(InteractiveHistogramPlotter.class);
     private static final long serialVersionUID = -893697601218801524L;
     
-    /** <code>DataTable</code> which holds the data rows. */
-    private final Collection<DataRow> m_data;
     
     /**
      * Creates a new PlotterScrolling pane and associates it with the passed
@@ -62,24 +70,27 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
      * 
      * @param histogramProps the <code>FixedColumnHistogramProperties</code> 
      * with the view options for the user
-     * @param dataModel the data model on which this plotter based on
      * @param handler the hilite handler from the input port
      */
     public InteractiveHistogramPlotter(
             final InteractiveHistogramProperties histogramProps,
-            final InteractiveHistogramDataModel dataModel,
             final HiLiteHandler handler) {
-        super(histogramProps, dataModel, handler);
-        histogramProps.getXColSelectBox().addActionListener(
+        super(histogramProps, handler);
+        histogramProps.addXColumnChangeListener(
                 new ActionListener() {
                     public void actionPerformed(final ActionEvent e) {
-                        final InteractiveHistogramProperties props = 
-                            (InteractiveHistogramProperties)
-                            getHistogramPropertiesPanel();
-                        onXColChanged(props.getSelectedXColumn());
+                        final ColumnSelectionComboxBox cb = 
+                            (ColumnSelectionComboxBox)e.getSource();
+                        final String xCol = cb.getSelectedColumn();
+                        onXColChanged(xCol);
                     }
                 });
-        m_data = dataModel.getDataRow();
+        histogramProps.addAggrColumnChangeListener(
+                new ChangeListener() {
+                    public void stateChanged(final ChangeEvent e) {
+                        onAggrColChanged();
+                    }
+                });
     }
    
     /**
@@ -88,116 +99,163 @@ public class InteractiveHistogramPlotter extends AbstractHistogramPlotter {
     * @param xColName the new selected x column
     */
    protected void onXColChanged(final String xColName) {
-       final InteractiveHistogramProperties interactiveHistoProps = 
-           (InteractiveHistogramProperties)getHistogramPropertiesPanel();
-       setXColumn(xColName);
-       interactiveHistoProps.getXColSelectBox().setToolTipText(xColName);
-       // repaint the plotter
-       updatePaintModel();
+       if (xColName == null || xColName.trim().length() < 1) {
+           return;
+       }
+       // if it's the same name we don't need to do anything
+       if (getXColName() != null && getXColName().equals(xColName)) {
+           return;
+       }
+       final AbstractHistogramVizModel abstractVizModel = 
+           getHistogramVizModel();
+       if (abstractVizModel == null) {
+           LOGGER.debug("VizModel was null");
+           return;
+       }
+       if (abstractVizModel instanceof InteractiveHistogramVizModel) {
+           final InteractiveHistogramVizModel vizModel = 
+               (InteractiveHistogramVizModel)abstractVizModel;
+           final DataColumnSpec xColSpec = 
+               getDataTableSpec().getColumnSpec(xColName);
+           if (vizModel.setXColumn(xColSpec)) {
+               //set the current hilited keys in the new bins
+               vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
+//             set the new axis
+               setXCoordinates();
+               setYCoordinates();
+               //update the details tab
+               getHistogramPropertiesPanel().updateHTMLDetailsPanel(
+                       vizModel.getHTMLDetailData());
+               // repaint the plotter
+               updatePaintModel();
+               
+           }
+        } else {
+            throw new IllegalStateException(
+                    "VizModel should be of type interactive");
+        }
+       
        // update the slider values and the select boxes
-       interactiveHistoProps.updateHistogramSettings(this);
+//       getHistogramPropertiesPanel().updateHistogramSettings(this);
    }
    
    /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter#onApply()
+     * Called whenever the user changes the aggregation column.
      */
-   @Override
-   protected void onApply() {
-       final InteractiveHistogramProperties interactiveHistoProps = 
-           (InteractiveHistogramProperties)getHistogramPropertiesPanel();
-       setAggregationColumn(interactiveHistoProps.getSelectedAggrColumn(), 
-                   interactiveHistoProps.getSelectedAggrMethod());
-       super.onApply();
-       return;
-   }
-
-    /**
-     * Sets the new x column.
-     * 
-     * @param xColName name of the new x column to plot
-     */
-    public void setXColumn(final String xColName) {
-        if (xColName == null || xColName.trim().length() < 1) {
+    protected void onAggrColChanged() {
+        final AbstractHistogramVizModel abstractVizModel = 
+            getHistogramVizModel();
+        if (abstractVizModel == null) {
+            LOGGER.debug("VizModel was null");
             return;
         }
-        // if it's the same name we don't need to do anything
-        if (getXColName() != null && getXColName().equals(xColName)) {
+        final AbstractHistogramProperties abstractHistogramProperties = 
+            getHistogramPropertiesPanel();
+        if (abstractHistogramProperties == null) {
+            LOGGER.debug("ProeprtiesPanel was null");
             return;
         }
-        // since the tableSpec is final and checked in the constructor
-        // we don't need to check for null
-        int xIndex = getDataTableSpec().findColumnIndex(xColName);
-        if (xIndex >= 0) {
-            //reset the histogram data model first
-            resetHistogramData();
-            //set all values which have no side effect
-//          set the name of the selected x column in the plotter class
-            setXColName(xColName);
-            // reset the vis bars
-            getHistogramDrawingPane().setVisBars(null);
-            // reset the aggregation column to the possible new boundaries
-            setYColName(null); // set the column name to null to force 
-            //after setting all needed values set the aggregation column
-            //which needs the HistogramDataModel!!!
-            final InteractiveHistogramProperties interactiveHistoProps = 
-                (InteractiveHistogramProperties)getHistogramPropertiesPanel();
-            setAggregationColumn(interactiveHistoProps.getSelectedAggrColumn(), 
-                    interactiveHistoProps.getSelectedAggrMethod());
-            
-            //set the new axis
-            setXCoordinates();
-            setYCoordinates();
+        if (abstractVizModel instanceof InteractiveHistogramVizModel) {
+            final InteractiveHistogramVizModel vizModel = 
+                (InteractiveHistogramVizModel)abstractVizModel;
+            if (abstractHistogramProperties 
+                    instanceof InteractiveHistogramProperties) {
+                final InteractiveHistogramProperties props =
+                (InteractiveHistogramProperties) abstractHistogramProperties;
+                List<ColorColumn> aggrCols = props.getSelectedAggrColumns();
+                if (vizModel.setAggregationColumns(aggrCols)) {
+                    //show the bar outline automatically depending on the 
+                    //number of selected aggregation columns
+                    vizModel.setShowBarOutline(aggrCols != null 
+                            && aggrCols.size() > 1);
+                    setYCoordinates();
+                    //set the current hilited keys in the new bins
+                    vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
+                    if (vizModel.containsNotPresentableBin()) {
+                        vizModel.setBinWidth(vizModel.getMaxBinWidth());
+                    }
+                    //update the details tab
+                    getHistogramPropertiesPanel().updateHTMLDetailsPanel(
+                            vizModel.getHTMLDetailData());
+                    updatePaintModel();
+                }
+            } else {
+                throw new IllegalStateException(
+                        " PropertiesPanel should be of type interactive");
+            }
         } else {
-            throw new IllegalArgumentException("No column specification found"
-                    + " for column: " + xColName);
+            throw new IllegalStateException(
+                    "VizModel should be of type interactive");
         }
-    }
-
-    /**
-     * Sets new aggregation columns and recalculates/repaints.
-     * 
-     * @param yColName name of the new y column to plot
-     * @param aggrMethod The aggregation method
-     */
-    public void setAggregationColumn(final String yColName,
-            final AggregationMethod aggrMethod) {
-        if (aggrMethod == null) {
-            throw new IllegalArgumentException("Aggregation method shouldn't"
-                    + " be null");
-        }
-        if (yColName == null && !aggrMethod.equals(AggregationMethod.COUNT)) {
-            throw new IllegalArgumentException("No column name only allowed"
-                    + " with aggregation method count.");
-        }
-        setAggregationColName(yColName);
-        boolean nameChanged = 
-            getHistogramDataModel().changeAggregationColumn(yColName);
-        boolean coordinatesSet = super.setAggregationMethod(aggrMethod);
-        if (nameChanged && !coordinatesSet) {
-            setYCoordinates();
-        }
-        return;
     }
     
     /**
-     * @see org.knime.base.node.viz.histogram.AbstractHistogramPlotter
-     * #getHistogramDataModel()
+     * {@inheritDoc}
      */
     @Override
-    public AbstractHistogramDataModel getHistogramDataModel() {
-        AbstractHistogramDataModel histoData = super.getHistogramDataModel();
-        if (histoData == null) {
-            histoData = new InteractiveHistogramDataModel(getDataTableSpec(), 
-                    getXColName(), getAggregationColName(), 
-                    getAggregationMethod());
-            if (m_data != null) {
-                for (Iterator<DataRow> iter = m_data.iterator(); 
-                    iter.hasNext();) {
-                    histoData.addDataRow(iter.next());
-                }
-            }
-            super.setHistogramDataModel(histoData);
+    public boolean setAggregationMethod(final AggregationMethod aggrMethod) {
+        if (aggrMethod == null) {
+            throw new IllegalArgumentException("Aggregation method must not"
+                    + " be null");
         }
-        return histoData;
+        final AbstractHistogramVizModel vizModel = getHistogramVizModel();
+        final Collection<? extends ColorColumn> oldAggrCols = 
+            vizModel.getAggrColumns();
+        if (oldAggrCols == null || oldAggrCols.size() < 1) {
+            //check if the user hasn't defined any aggregation column yet we 
+            //have to set a default one if he has changed the aggregation
+            //method form sum to something else where we need an 
+            //aggregation column
+            if (vizModel instanceof InteractiveHistogramVizModel) {
+                final InteractiveHistogramVizModel interactiveVizModel = 
+                    (InteractiveHistogramVizModel)vizModel;
+                final AbstractHistogramProperties abstHistoProps = 
+                    getHistogramPropertiesPanel();
+                if (abstHistoProps 
+                        instanceof InteractiveHistogramProperties) {
+                    final InteractiveHistogramProperties props = 
+                        (InteractiveHistogramProperties)abstHistoProps;
+                    
+                    final DataTableSpec spec = 
+                        interactiveVizModel.getTableSpec();
+                    final int numColumns = spec.getNumColumns();
+                    boolean found = false;
+                    for (int i = 0; i < numColumns; i++) {
+                        final DataColumnSpec colSpec = spec.getColumnSpec(i);
+                        if (AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER.
+                                includeColumn(colSpec)) {
+                            final ColorColumn aggrColumn = 
+                                new ColorColumn(Color.LIGHT_GRAY, 
+                                        colSpec.getName());
+                            final ArrayList<ColorColumn> aggrCols = 
+                                new ArrayList<ColorColumn>(1);
+                            aggrCols.add(aggrColumn);
+                            props.updateColumnSelection(
+                                    spec, getXColName(), aggrCols, aggrMethod);
+                            final List<ColorColumn> selectedAggrCols = 
+                                props.getSelectedAggrColumns();
+                            interactiveVizModel.setAggregationColumns(
+                                    selectedAggrCols);
+                            //set the current hilited keys in the new bins
+                            vizModel.updateHiliteInfo(delegateGetHiLitKeys(), 
+                                    true);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        props.updateHistogramSettings(interactiveVizModel);
+                        return false;
+                    }
+                } else {
+                    throw new IllegalStateException(
+                            "ProeprtiesPanel should  be of interactive type.");
+                }
+            } else {
+                throw new IllegalStateException("Visualization model should "
+                        + " be of interactive type.");
+            }
+        }
+        return super.setAggregationMethod(aggrMethod);
     }
 }

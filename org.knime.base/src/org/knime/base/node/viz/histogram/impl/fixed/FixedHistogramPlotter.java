@@ -21,25 +21,20 @@
  */
 package org.knime.base.node.viz.histogram.impl.fixed;
 
+import javax.swing.JPopupMenu;
+
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * This class is the controller between the data model of the
- * {@link org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel}
+ * {@link org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel}
  * class and the view
- * {@link org.knime.base.node.viz.histogram.HistogramDrawingPane}. It creates
- * the {@link org.knime.base.node.viz.histogram.BarVisModel} objects based on
- * the
- * {@link org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel}
- * of the
- * {@link org.knime.base.node.viz.histogram.impl.interactive.InteractiveHistogramDataModel}
- * class by enhancing these information with information about the size of the
- * drawing space like height and width in pixel.
+ * {@link org.knime.base.node.viz.histogram.HistogramDrawingPane}.
  * 
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
+public class FixedHistogramPlotter extends AbstractHistogramPlotter {
 
     private static final long serialVersionUID = -3264294894462201355L;
 
@@ -49,13 +44,22 @@ public class FixedColumnHistogramPlotter extends AbstractHistogramPlotter {
      * 
      * @param histogramProps the <code>FixedColumnHistogramProperties</code>
      *            with the view options for the user
-     * @param dataModel the data model on which the plotter based on
      * @param handler the hilite handler from the input port
      */
-    public FixedColumnHistogramPlotter(
-            final FixedColumnHistogramProperties histogramProps,
-            final FixedColumnHistogramDataModel dataModel,
+    public FixedHistogramPlotter(
+            final FixedHistogramProperties histogramProps,
             final HiLiteHandler handler) {
-        super(histogramProps, dataModel, handler);
+        super(histogramProps, handler);
+        
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void fillPopupMenu(final JPopupMenu popupMenu) {
+        //add disable the popup menu since this implementation
+        //doesn't supports hiliting
+        popupMenu.setEnabled(false);
     }
 }

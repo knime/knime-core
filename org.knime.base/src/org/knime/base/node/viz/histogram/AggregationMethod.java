@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Enumerates all possible aggregation method of the Histogram visualisation.
+ * Enumerates all possible aggregation methods of the Histogram visualisation.
  * 
  * @author Tobias Koetter, University of Konstanz
  */
@@ -44,7 +44,7 @@ public enum AggregationMethod {
      * @return the enumeration fields as a String list of their names
      */
     public static List<String> asStringList() {
-        Enum[] values = values();
+        Enum<AggregationMethod>[] values = values();
         List<String> list = new ArrayList<String>();
         for (int i = 0; i < values.length; i++) {
             list.add(values[i].name());

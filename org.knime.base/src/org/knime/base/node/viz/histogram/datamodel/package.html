@@ -24,14 +24,21 @@
 <head>
   <meta content="text/html; charset=ISO-8859-1"
  http-equiv="content-type">
-  <title>Histogram plotter node package</title>
+  <title>Histogram data model package</title>
 </head>
 <body>
-Contains classes for KNIME nodes which uses the classes of the histogram
-package to display a histogram view. The HistogramNode node allows the user 
-to change the columns for the x coordinate and aggregation column in the view 
-by contrast the FixedColumnHistogramNode node allows the selection
-of these columns only in the node dialog and doesn't supports hiliting in order
-to allow the browsing of huge data sets.
+<p>This package contains all data and visualization models which are used in
+the different histogram implementations.</p>
+<p>A histogram consists of one or more {@link org.knime.base.node.viz.histogram.datamodel.BinDataModel}
+which are drawn next to each other
+at their corresponding x value on the x axis. The value of a row for the 
+selected x column defines to which bin a row belongs.</p>
+<p>Each bin contains one or more {@link org.knime.base.node.viz.histogram.datamodel.BarDataModel}. 
+A bar represents a selected aggregation 
+column. The height of the bar is the aggregated value (count, sum, avg) of all 
+values for the selected aggregation column.</p>
+<p>A bar contains one or more {@link org.knime.base.node.viz.histogram.datamodel.BarElementDataModel}. 
+The BarElements reflect the color of
+the row which is defined by the user in the ColorManager.</p>
 </body>
 </html>
