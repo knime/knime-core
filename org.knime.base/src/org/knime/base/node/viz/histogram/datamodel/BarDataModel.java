@@ -659,8 +659,6 @@ public class BarDataModel implements Serializable {
                         || m_isSelected;
                     }
                 }
-            } else {
-                setSelected(false);
             }
             return m_isSelected;
         }
@@ -688,8 +686,6 @@ public class BarDataModel implements Serializable {
                         || m_isSelected;
                     }
                 }
-            } else {
-                setSelected(false);
             }
             return m_isSelected;
         }
