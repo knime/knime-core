@@ -1,5 +1,5 @@
 
-KNIME - version 1.2.0
+KNIME - version 1.2.1
 ============================================================
 
 Quickstart guide:

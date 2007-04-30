@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Konstanz Information Miner
 Bundle-SymbolicName: org.knime.product;singleton:=true
-Bundle-Version: 1.2.0
+Bundle-Version: 1.2.1
 Bundle-ClassPath: workbench-product.jar
 Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-Vendor: University of Konstanz, Germany
