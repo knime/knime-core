@@ -52,13 +52,14 @@ public class EuclideanDist extends MinkowskiDist {
      * 
      * @param firstDataRow the first data row used to calculate the distance
      * @param secondDataRow the second data row used to calculate the distance
+     * @param includedCols the columns to include into the distance calculation
      * 
      * @return the distance of the two rows
      */
     @Override
-    public double calcDistance(
-            final DataRow firstDataRow, final DataRow secondDataRow) {
-        return super.calcDistance(firstDataRow, secondDataRow);
+    public double calcDistance(final DataRow firstDataRow,
+            final DataRow secondDataRow, final int[] includedCols) {
+        return super.calcDistance(firstDataRow, secondDataRow, includedCols);
     }
 
     /**
