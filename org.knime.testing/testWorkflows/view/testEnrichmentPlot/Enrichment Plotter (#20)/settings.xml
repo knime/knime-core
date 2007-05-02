@@ -22,6 +22,7 @@
 <entry key="curve_4_hit" type="xstring" value="Col29"/>
 <entry key="curve_4_descending" type="xboolean" value="true"/>
 <entry key="sumHitValues" type="xboolean" value="true"/>
+<entry key="hitThreshold" type="xdouble" value="5.0"/>
 </config>
 <config key="data_meta_file">
 <entry key="data_files_directory" type="xstring" value="data"/>

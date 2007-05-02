@@ -2,7 +2,7 @@
 <!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
 <config key="spec.xml">
 <entry key="spec_name" type="xstring" value="default"/>
-<entry key="number_columns" type="xint" value="5"/>
+<entry key="number_columns" type="xint" value="7"/>
 <config key="column_spec_0">
 <entry key="column_name" type="xstring" value="Smiles:"/>
 <config key="column_type">
@@ -93,6 +93,22 @@
 </config>
 </config>
 </config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_5">
+<entry key="column_name" type="xstring" value="Support in Focus (rel):"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+</config>
+<config key="column_domain"/>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_6">
+<entry key="column_name" type="xstring" value="Support in Complement (rel):"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+</config>
+<config key="column_domain"/>
 <config key="column_properties"/>
 </config>
 </config>

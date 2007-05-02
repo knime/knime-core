@@ -19,6 +19,7 @@
 <entry key="curve_3_hit" type="xstring" value="sepal length"/>
 <entry key="curve_3_descending" type="xboolean" value="false"/>
 <entry key="sumHitValues" type="xboolean" value="false"/>
+<entry key="hitThreshold" type="xdouble" value="5.0"/>
 </config>
 <config key="data_meta_file">
 <entry key="data_files_directory" type="xstring" value="data"/>
