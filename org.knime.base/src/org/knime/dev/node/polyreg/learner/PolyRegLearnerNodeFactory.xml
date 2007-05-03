@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="polyRegLearner.png" type="Learner">
+    <name>Polynomial Regression Learner</name>
+
+    <shortDescription>Learner that builds a polynomial regression model from the input data</shortDescription>
+
+    <fullDescription>
+        <intro>
+            This node performs polynomial regression on the input data and computes the coefficients that minimize the
+            squared error. The user must choose which of the input columns is the target or dependant variable. By
+            default, polynomial with degree 2 are used, which can be changed in the dialog.
+        </intro>
+        <option name="Target column">The column that contains the dependant "target" variable.</option>
+        <option name="Polynomial degree">The maximum degree the polynomial regression function should have.</option>
+    </fullDescription>
+
+    <ports>
+        <dataIn name="Trainig data" index="0">
+            The input samples, only numeric columns are allowed and except that target column all are used for
+            regression. The input must not contain missing values, you have to fix them by e.g. using the Missing Values
+            node.
+        </dataIn>
+        <dataOut name="Training error" index="0">
+            Training data classified with the learned model and the corresponding errors.
+        </dataOut>
+        <modelOut name="Regression coefficients" index="0">
+            The computed regression coefficients as a model for use in the Polynomial Regression Predictor.
+        </modelOut>
+    </ports>
+
+    <views>
+        <view index="0" name="Learned coefficients">Shows all learned coefficients all attributes.</view>
+        <view index="1" name="Scatterplot view">
+            Shows the data points and the regression function in one dimension.
+        </view>
+    </views>
+</knimeNode>
