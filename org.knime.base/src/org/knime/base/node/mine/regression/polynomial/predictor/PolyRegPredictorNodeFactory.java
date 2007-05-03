@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- * 
  */
-package org.knime.dev.node.polyreg.predictor;
+package org.knime.base.node.mine.regression.polynomial.predictor;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

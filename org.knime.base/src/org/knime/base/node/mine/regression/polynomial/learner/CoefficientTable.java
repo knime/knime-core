@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- * 
  */
-package org.knime.dev.node.polyreg.learner;
+package org.knime.base.node.mine.regression.polynomial.learner;
 
 import java.awt.BorderLayout;
 import java.text.DecimalFormat;

@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- * 
  */
-package org.knime.dev.node.polyreg.predictor;
+package org.knime.base.node.mine.regression.polynomial.predictor;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,7 +48,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * This node predicts numerical values using the coefficients learned by
- * a {@link org.knime.dev.node.polyreg.learner.PolyRegLearnerNodeModel}.
+ * a {@link org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeModel}.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */

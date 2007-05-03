@@ -22,7 +22,7 @@
  * History
  *   Apr 6, 2006 (wiswedel): created
  */
-package org.knime.dev.node.polyreg.learner;
+package org.knime.base.node.mine.regression.polynomial.learner;
 
 import java.awt.Color;
 import java.awt.event.ItemEvent;
