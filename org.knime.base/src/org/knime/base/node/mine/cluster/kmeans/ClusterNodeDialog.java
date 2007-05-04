@@ -21,20 +21,12 @@
  */
 package org.knime.base.node.mine.cluster.kmeans;
 
-import java.awt.Component;
-import java.awt.FlowLayout;
-
-import javax.swing.Box;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 
 /**
@@ -44,52 +36,56 @@ import org.knime.core.node.NotConfigurableException;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public class ClusterNodeDialog extends NodeDialogPane {
+public class ClusterNodeDialog extends DefaultNodeSettingsPane {
     // private members holding new values
-    private final JTextField m_nrClustersTextField;
-
-    private final JTextField m_maxNrIterationsTextField;
+//    private final JTextField m_nrClustersTextField;
+//
+//    private final JTextField m_maxNrIterationsTextField;
+//    
+//    private final ColumnFilterPanel m_columnFilter;
+    
+    private DialogComponentNumber m_nrOfClusters;
+    
+    private DialogComponentNumber m_maxNrOfIterations;
+    
+    private DialogComponentColumnFilter m_columnFilter;
 
     /**
      * Constructor - set name of k-means cluster node. Also initialize special
      * property panel holding the variables that can be adjusted by the user.
      */
+    @SuppressWarnings("unchecked")
     ClusterNodeDialog() {
         super();
-        // create panel content for special property-tab
-        Box clusterPropBox = Box.createVerticalBox();
-        Box box1 = Box.createHorizontalBox();
-        JLabel nrClustersLabel = new JLabel("number of clusters: ");
-        nrClustersLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        box1.add(nrClustersLabel);
-        m_nrClustersTextField = new JTextField("___");
-        m_nrClustersTextField.setAlignmentX(Component.LEFT_ALIGNMENT);
-        box1.add(m_nrClustersTextField);
-        box1.add(Box.createHorizontalGlue());
-        Box box2 = Box.createHorizontalBox();
-        JLabel maxNrIterationsLabel = new JLabel("max. number of iterations: ");
-        box2.add(maxNrIterationsLabel);
-        m_maxNrIterationsTextField = new JTextField("____");
-        box2.add(m_maxNrIterationsTextField);
-        box2.add(Box.createHorizontalGlue());
-        clusterPropBox.add(box1);
-        clusterPropBox.add(box2);
-        clusterPropBox.add(Box.createVerticalGlue());
-        JPanel panel = new JPanel();
-        panel.setLayout(new FlowLayout());
-        clusterPropBox.setAlignmentX(Component.LEFT_ALIGNMENT);
-        clusterPropBox.setAlignmentY(Component.TOP_ALIGNMENT);
-        panel.add(clusterPropBox);
-        super.addTab("K-Means Properties", panel);
+        m_nrOfClusters = new DialogComponentNumber(
+                new SettingsModelIntegerBounded(
+                        ClusterNodeModel.CFG_NR_OF_CLUSTERS, 
+                        ClusterNodeModel.INITIAL_NR_CLUSTERS, 
+                        1, Integer.MAX_VALUE), "number of clusters: ", 1);
+        m_maxNrOfIterations = new DialogComponentNumber(
+                new SettingsModelIntegerBounded(
+                        ClusterNodeModel.CFG_MAX_ITERATIONS,
+                        ClusterNodeModel.INITIAL_MAX_ITERATIONS,
+                        1, Integer.MAX_VALUE),
+                        "max. number of iterations: ", 10);
+        m_columnFilter = new DialogComponentColumnFilter(
+                new SettingsModelFilterString(ClusterNodeModel.CFG_COLUMNS), 
+                0, DoubleValue.class);
+        addDialogComponent(m_nrOfClusters);
+        addDialogComponent(m_maxNrOfIterations);
+        addDialogComponent(m_columnFilter);
+        setDefaultTabTitle("K-Means Properties");
     }
 
-    /**
+    
+    
+    /*
      * Update content of dialog fields according to new settings provided.
      * 
      * @param config the config to write into the current settings
      * @param specs the spec for each input
      * @throws NotConfigurableException never
-     */
+     *
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO config,
             final DataTableSpec[] specs) throws NotConfigurableException {
@@ -110,7 +106,7 @@ public class ClusterNodeDialog extends NodeDialogPane {
      * @throws InvalidSettingsException if settings don't make sense
      * 
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO,DataTableSpec[])
-     */
+     *
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
@@ -136,4 +132,5 @@ public class ClusterNodeDialog extends NodeDialogPane {
                     + " not a number");
         }
     }
+    */
 }
