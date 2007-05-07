@@ -133,7 +133,7 @@ public class SubgroupMinerDialog extends NodeDialogPane {
         m_panel.add(associationPanel);
 
         m_confidence = new DialogComponentNumber(
-                SubgroupMinerModel.CFG_CONFIDENCE, "Minimum Confidence:", 0.01,
+                SubgroupMinerModel.CFG_CONFIDENCE, "Minimum Confidence:", 0.0,
                 1.0, SubgroupMinerModel.DEFAULT_CONFIDENCE, 0.1);
         m_confidence.setEnabled(false);
         addDialogComponent(m_confidence);
