@@ -460,6 +460,17 @@ public class QuotePanel extends JPanel {
     }
 
     /**
+     * Checks the current values in the panel.
+     * 
+     * @return null, if settings are okay and can be applied. An error message
+     *         if not.
+     */
+    String checkSettings() {
+        return null;
+    }
+
+
+    /**
      * Deletes all quotes defined in the passed object, reads the currently
      * listed quotes from the JList and adds them to the settings object.
      * 

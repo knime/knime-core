@@ -97,6 +97,16 @@ public class IgnoreDelimsPanel extends JPanel {
     }
 
     /**
+     * Checks the current values in the panel.
+     * 
+     * @return null, if settings are okay and can be applied. An error message
+     *         if not.
+     */
+    String checkSettings() {
+        return null;
+    }
+
+    /**
      * Transfers the current settings from the panel in the passed object.
      * Overwriting the corresponding values in the object.
      * 
@@ -109,7 +119,7 @@ public class IgnoreDelimsPanel extends JPanel {
 
         if (ignoreEm != settings.ignoreDelimsAtEORUserValue()) {
             // set the user set value - only if he changed it.
-            
+
             settings.setIgnoreDelimsAtEndOfRowUserValue(ignoreEm);
 
             // and set he actual flag, if the delimiter is a whitespace (THIS
@@ -130,13 +140,13 @@ public class IgnoreDelimsPanel extends JPanel {
             // also fix the delimiter settings
             // I guess that is what they would expect...?
             settings.setDelimiterUserSet(true);
-        
+
             // need to re-analyze file with settings changed
             return true;
         }
-        
+
         return false; // no need to re-analyze, no settings changed here.
-        
+
     }
 
     /**

@@ -92,6 +92,17 @@ class ShortLinesPanel extends JPanel {
     }
 
     /**
+     * Checks the current values in the panel.
+     * 
+     * @return null, if settings are okay and can be applied. An error message
+     *         if not.
+     */
+    String checkSettings() {
+        return null;
+    }
+
+
+    /**
      * Transfers the current settings from the panel in the passed object.
      * Overwriting the corresponding values in the object.
      * 

@@ -186,6 +186,17 @@ class LimitRowsPanel extends JPanel {
     }
 
     /**
+     * Checks the current values in the panel.
+     * 
+     * @return null, if settings are okay and can be applied. An error message
+     *         if not.
+     */
+    String checkSettings() {
+        // we've made huge efforts to ensure a valid panel all the time.
+        return null;
+    }
+
+    /**
      * Transfers the current settings from the panel in the passed object.
      * Overwriting the corresponding values in the object.
      * 
