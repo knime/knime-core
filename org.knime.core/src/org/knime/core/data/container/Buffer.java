@@ -1140,7 +1140,7 @@ class Buffer {
     File getBlobFile(final int indexBlobInCol, final int column, 
             final boolean createPath, final boolean isCompressed) 
         throws IOException {
-        StringBuffer childPath = new StringBuffer();
+        StringBuilder childPath = new StringBuilder();
         childPath.append("col_" + column);
         childPath.append(File.separatorChar);
         String topDir = getFileName(indexBlobInCol 
