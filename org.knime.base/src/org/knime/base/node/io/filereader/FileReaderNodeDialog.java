@@ -1229,7 +1229,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 }
             }
             if (userSet) {
-                name = cSpec.getName().toString() + "*";
+                name = "*" + cSpec.getName().toString();
             } else {
                 name = cSpec.getName().toString();
             }
