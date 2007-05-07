@@ -223,9 +223,6 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
                 .getString(CFG_ITEMSET_TYPE));
         m_sorter = FrequentItemSetTable.Sorter.valueOf(settings
                 .getString(CFG_SORT_BY));
-//        if (m_minSupport == 0) {
-//            m_minSupport = DEFAULT_MIN_SUPPORT;
-//        }
         if (m_maxItemSetLength == 0) {
             m_maxItemSetLength = DEFAULT_MAX_ITEMSET_LENGTH;
         }
