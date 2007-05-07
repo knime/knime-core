@@ -22,8 +22,6 @@
  */
 package org.knime.core.data;
 
-import java.io.File;
-
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
@@ -83,10 +81,9 @@ public interface DataValue {
             try {
                 ClassLoader loader = DataValue.class.getClassLoader();
                 String path = DataValue.class.getPackage().getName().replace(
-                        '.', File.separatorChar);
-                icon = new ImageIcon(loader.getResource(path
-                        + File.separatorChar + "icon" 
-                        + File.separatorChar + "defaulticon.png"));
+                        '.', '/');
+                icon = new ImageIcon(loader.getResource(
+                        path + "/icon/defaulticon.png"));
             } catch (Exception e) {
                 icon = null;
             }
