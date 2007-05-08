@@ -165,16 +165,14 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
 
     /**
      * 
-     * @return the root node of the cluster hierarchie.
+     * @return the root node of the cluster hierarchy.
      */
     public ClusterNode getRootNode() {
         return m_rootNode;
     }
 
     /**
-     * Executes the algorithm. The output data table has then clusterd entries.
-     * 
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
@@ -384,7 +382,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
             final int row1Index = node1Leaf.getRowIndex();
             for (ClusterNode node2Leaf : node2.leafs()) {
                 final DataRow row2 = node2Leaf.getLeafDataPoint();
-                final int row2Index = node1Leaf.getRowIndex();
+                final int row2Index = node2Leaf.getRowIndex();
 
                 float f = Float.NaN;
                 if (cache != null) {
@@ -421,7 +419,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
             final int row1Index = node1Leaf.getRowIndex();
             for (ClusterNode node2Leaf : node2.leafs()) {
                 final DataRow row2 = node2Leaf.getLeafDataPoint();
-                final int row2Index = node1Leaf.getRowIndex();
+                final int row2Index = node2Leaf.getRowIndex();
 
                 float f = Float.NaN;
                 if (cache != null) {
@@ -538,9 +536,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     }
 
     /**
-     * Load validated settings in the model.
-     * 
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -558,14 +554,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     }
 
     /**
-     * Saves the settings from the <code>HierarchicalClusterNodeModel</code>.
-     * <ul>
-     * <li> Number of clusters for output</li>
-     * <li> The class of the distance function</li>
-     * <li> Linkage Type</li>
-     * </ul>
-     * 
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -577,15 +566,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     }
 
     /**
-     * Settings are validated.
-     * <ul>
-     * <li>Number of clusters for output must be greater than 0</li>
-     * <li>A distance function object is instanced</li>
-     * <li>The linkage type must either be <code>SINGLE_LINKAGE</code> or
-     * <code>AVERAGE_LINKAGE</code></li>
-     * </ul>
-     * 
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)

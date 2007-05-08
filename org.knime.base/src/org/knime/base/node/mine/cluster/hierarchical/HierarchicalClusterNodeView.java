@@ -77,7 +77,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
                 m_properties) {
 
             @Override
-            public void fillPopupMenu(JPopupMenu popupMenu) {
+            public void fillPopupMenu(final JPopupMenu popupMenu) {
                 // nothing: no hiliting supported
             }
 
@@ -98,7 +98,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
         
         m_properties.getDotSizeSpinner().addChangeListener(
                 new ChangeListener() {
-                    public void stateChanged(ChangeEvent e) {
+                    public void stateChanged(final ChangeEvent e) {
                         ((ScatterPlotterDrawingPane)m_distancePlotter
                                 .getDrawingPane()).setDotSize((Integer)
                                 m_properties.getDotSizeSpinner().getValue());
@@ -108,7 +108,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
         });
         m_properties.getThicknessSpinner().addChangeListener(
                 new ChangeListener() {
-                    public void stateChanged(ChangeEvent e) {
+                    public void stateChanged(final ChangeEvent e) {
                         m_thickness = (Integer)m_properties
                             .getThicknessSpinner().getValue();
                         modelChanged();
@@ -117,7 +117,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
         });
         m_properties.getShowHideCheckbox().addChangeListener(
                 new ChangeListener() {
-                    public void stateChanged(ChangeEvent e) {
+                    public void stateChanged(final ChangeEvent e) {
                         m_distancePlotter.setHideMode(
                                 !m_properties.getShowHideCheckbox()
                                 .isSelected());
