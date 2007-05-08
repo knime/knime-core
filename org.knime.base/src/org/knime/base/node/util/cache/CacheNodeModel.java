@@ -72,7 +72,7 @@ final class CacheNodeModel extends NodeModel {
             for (RowIterator it = data[0].iterator(); it.hasNext(); row++) {
                 DataRow next = it.next();
                 String message = "Caching row " + row + "/" + totalCount
-                        + "(\"" + next.getKey() + "\")";
+                        + " (\"" + next.getKey() + "\")";
                 exec.setProgress(row / (double)totalCount, message);
                 exec.checkCanceled();
                 con.addRowToTable(next);
