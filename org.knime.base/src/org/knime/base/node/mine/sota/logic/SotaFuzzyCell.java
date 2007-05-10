@@ -27,7 +27,6 @@ package org.knime.base.node.mine.sota.logic;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.data.FuzzyNumberValue;
-import org.knime.core.data.IntervalValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
@@ -38,7 +37,7 @@ import org.knime.core.node.ModelContentWO;
  * @author Kilian Thiel, University of Konstanz
  */
 public final class SotaFuzzyCell implements SotaCell, FuzzyIntervalValue, 
-FuzzyNumberValue, IntervalValue {
+FuzzyNumberValue {
     
     private static final String CFG_KEY_MIN_SUPP = "FuzzyMinSupp";
     private static final String CFG_KEY_MAX_SUPP = "FuzzyMaxSupp";
@@ -172,18 +171,4 @@ FuzzyNumberValue, IntervalValue {
     public double getCore() {
         return getCenterOfGravity();
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    public double getRightBound() {
-        return getMaxCore();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public double getLeftBound() {
-        return getMinCore();
-    }     
 }
