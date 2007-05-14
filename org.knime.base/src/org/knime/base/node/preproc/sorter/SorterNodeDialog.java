@@ -100,7 +100,9 @@ public class SorterNodeDialog extends NodeDialogPane {
                 if (alist != null) {
                     list = new ArrayList<String>();
                     for (int i = 0; i < alist.length; i++) {
-                        list.add(alist[i]);
+                        if (specs[0].findColumnIndex(alist[i]) >= 0) {
+                            list.add(alist[i]);
+                        }
                     }
                 }
             } catch (InvalidSettingsException ise) {
@@ -114,6 +116,12 @@ public class SorterNodeDialog extends NodeDialogPane {
                         .getBooleanArray(SorterNodeModel.SORTORDER_KEY);
             } catch (InvalidSettingsException ise) {
                 LOGGER.error(ise.getMessage());
+            }
+        }
+        if (list != null) {
+            if (list.size() == 0 || list.size() != sortOrder.length) {
+                list = null;
+                sortOrder = null;
             }
         }
 

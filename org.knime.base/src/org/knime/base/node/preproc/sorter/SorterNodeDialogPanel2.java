@@ -41,7 +41,11 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.Border;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 
 
 /**
@@ -53,10 +57,11 @@ import org.knime.core.data.DataTableSpec;
 public class SorterNodeDialogPanel2 extends JPanel {
     private static final long serialVersionUID = -1757898824881266019L;
 
-    /*
-     * The entry in the JComboBox for not sorting a column
+    /**
+     * The entry in the JComboBox for not sorting a column.
      */
-    private static final String NOSORT = "- DO NOT SORT -";
+    public static final DataColumnSpec NOSORT = new DataColumnSpecCreator(
+            "- DO NOT SORT -", DataType.getType(DataCell.class)).createSpec();
 
     /*
      * Keeps track of the components on this JPanel
@@ -110,10 +115,10 @@ public class SorterNodeDialogPanel2 extends JPanel {
         int interncounter = 0;
 
         if (spec != null) {
-            Vector<String> values = new Vector<String>();
+            Vector<DataColumnSpec> values = new Vector<DataColumnSpec>();
             values.add(NOSORT);
             for (int j = 0; j < spec.getNumColumns(); j++) {
-                values.add(spec.getColumnSpec(j).getName());
+                values.add(spec.getColumnSpec(j));
             }
             if ((incl == null) && (sortOrder == null)) {
 
@@ -212,8 +217,8 @@ public class SorterNodeDialogPanel2 extends JPanel {
         ArrayList<String> list = new ArrayList<String>();
         for (int i = 0; i < m_components.size(); i++) {
             SortItem temp = m_components.get(i);
-            if (!(temp.getSelectedColumn().toString().equals(NOSORT))) {
-                list.add(temp.getSelectedColumn().toString());
+            if (!(temp.getSelectedColumn().equals(NOSORT))) {
+                list.add(temp.getSelectedColumn().getName());
             }
         }
         return list;
