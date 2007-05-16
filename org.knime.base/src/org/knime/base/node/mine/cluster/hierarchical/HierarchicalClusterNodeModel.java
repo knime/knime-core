@@ -35,7 +35,6 @@ import org.knime.base.node.mine.cluster.hierarchical.distfunctions.ManhattanDist
 import org.knime.base.node.util.DataArray;
 import org.knime.base.node.util.DefaultDataArray;
 import org.knime.base.node.viz.plotter.DataProvider;
-import org.knime.base.node.viz.plotter.dendrogram.ClusterNode;
 import org.knime.base.util.HalfFloatMatrix;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;

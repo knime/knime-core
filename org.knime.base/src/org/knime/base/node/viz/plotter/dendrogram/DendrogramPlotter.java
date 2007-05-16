@@ -42,11 +42,11 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
- * Converts a {@link org.knime.base.node.viz.plotter.dendrogram.ClusterNode}
+ * Converts a {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramNode}
  * into a {@link org.knime.base.node.viz.plotter.dendrogram.BinaryTree} of 
  * {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramPoint}s, which
  * is the visual representation of a hierachical clustering result stored in the
- * {@link org.knime.base.node.viz.plotter.dendrogram.ClusterNode}.
+ * {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramNode}.
  *  
  * @author Fabian Dill, University of Konstanz
  */
@@ -54,8 +54,8 @@ public class DendrogramPlotter extends ScatterPlotter {
     
     private static final int OFFSET = 6;
 
-    /** The hierachcal clustering result. */
-    private ClusterNode m_rootNode;
+    /** The hierarchical clustering result. */
+    private DendrogramNode m_rootNode;
     /** The visual model of the clustering result. */ 
     private BinaryTree<DendrogramPoint> m_tree;
     /** The set of selected dendrogram points. */
@@ -132,11 +132,11 @@ public class DendrogramPlotter extends ScatterPlotter {
     
     /**
      * Sets the result of the hierachical clustering represented in a 
-     * {@link org.knime.base.node.viz.plotter.dendrogram.ClusterNode}.
+     * {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramNode}.
      * 
      * @param root the root node of the dendrogram.
      */
-    public void setRootNode(final ClusterNode  root) {
+    public void setRootNode(final DendrogramNode  root) {
         m_rootNode = root;
     }
 
@@ -216,7 +216,7 @@ public class DendrogramPlotter extends ScatterPlotter {
             return;
         }
         double min = 0.0;
-        double max = m_rootNode.getMaxDistance(m_rootNode);
+        double max = m_rootNode.getMaxDistance();
         setPreserve(false);
         createYCoordinate(min, max);
         m_dotSize = ((DendrogramDrawingPane)getDrawingPane()).getDotSize();
@@ -231,7 +231,7 @@ public class DendrogramPlotter extends ScatterPlotter {
         
     }
     
-    private void getRowKeys(final ClusterNode node, final Set<DataCell> ids) {
+    private void getRowKeys(final DendrogramNode node, final Set<DataCell> ids) {
         if (node == null) {
             return;
         }
@@ -250,7 +250,7 @@ public class DendrogramPlotter extends ScatterPlotter {
      * 
      * @param node the cluster node tree.
      */
-    public void createViewModel(final ClusterNode node) {
+    public void createViewModel(final DendrogramNode node) {
         if (node == null) {
             return;
         }
@@ -261,16 +261,16 @@ public class DendrogramPlotter extends ScatterPlotter {
     /**
      * Recursive method to convert the result of the hierachical clustering 
      * result represented by a 
-     * {@link org.knime.base.node.viz.plotter.dendrogram.ClusterNode} into a 
+     * {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramNode} into a 
      * {@link org.knime.base.node.viz.plotter.dendrogram.BinaryTree} of 
      * {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramPoint}s.
      * 
      * @param node the node to convert
      * @return the visual model of the passed 
-     * {@link org.knime.base.node.viz.plotter.dendrogram.ClusterNode}
+     * {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramNode}
      */
     private BinaryTreeNode<DendrogramPoint> createViewModelFor(
-            final ClusterNode node) {
+            final DendrogramNode node) {
         if (getXAxis() == null || getXAxis().getCoordinate() == null
                 || getYAxis() == null || getYAxis().getCoordinate() == null) {
             updatePaintModel();
@@ -332,7 +332,7 @@ public class DendrogramPlotter extends ScatterPlotter {
      * @param node the node to determine the mapped x position for
      * @return the x position of the visual model for the passed node
      */
-    private int getXPosition(final ClusterNode node) {
+    private int getXPosition(final DendrogramNode node) {
         if (node.isLeaf()) {
             DataCell value = node.getLeafDataPoint().getKey().getId();
             return (int)getXAxis().getCoordinate().calculateMappedValue(
@@ -375,7 +375,7 @@ public class DendrogramPlotter extends ScatterPlotter {
      * {@inheritDoc}
      */
     @Override
-    public void hiLite(KeyEvent event) {
+    public void hiLite(final KeyEvent event) {
         updatePaintModel();
     }
 
@@ -383,10 +383,7 @@ public class DendrogramPlotter extends ScatterPlotter {
      * {@inheritDoc}
      */
     @Override
-    public void unHiLite(KeyEvent event) {
+    public void unHiLite(final KeyEvent event) {
         updatePaintModel();
     }
-    
-    
-
 }

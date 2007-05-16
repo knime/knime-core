@@ -20,7 +20,7 @@
  * ------------------------------------------------------------------- * 
  */
 
-package org.knime.base.node.viz.plotter.dendrogram;
+package org.knime.base.node.mine.cluster.hierarchical;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.knime.base.node.util.DataArray;
+import org.knime.base.node.viz.plotter.dendrogram.DendrogramNode;
 import org.knime.core.data.DataRow;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -39,10 +40,10 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class ClusterNode {
+public class ClusterNode implements DendrogramNode {
 
     /**
-     * The data row which represents the leaf of a hierarchie tree. Is null if
+     * The data row which represents the leaf of a hierarchy tree. Is null if
      * this node is not a leaf.
      */
     private DataRow m_leafDataPoint;
@@ -52,14 +53,14 @@ public class ClusterNode {
     private double m_dist;
 
     /**
-     * Holds the child nodes of a hierarchie sub tree. Is empty if this node is
+     * Holds the child nodes of a hierarchy sub tree. Is empty if this node is
      * a leaf node. In this implementation a parent has two child nodes. (Binary
      * tree)
      */
     private ClusterNode[] m_hierarchieNodes;
 
     /**
-     * Indicates wheather this is a leaf node or not.
+     * Indicates whether this is a leaf node or not.
      */
     private boolean m_isLeaf;
 
@@ -76,7 +77,9 @@ public class ClusterNode {
         m_isLeaf = true;
     }
 
+    
     /**
+     * Returns the index of the row stored inside this leaf node.
      * 
      * @return the index of the row if the node is a leaf node -1 otherwise.
      */
@@ -115,7 +118,7 @@ public class ClusterNode {
             return rows;
         }
 
-        // else recursivly get the rows
+        // else recursively get the rows
 
         List<DataRow> rowVector = new ArrayList<DataRow>();
         getDataRows(this, rowVector);
@@ -134,24 +137,24 @@ public class ClusterNode {
      * @param clusterNode the node to get the data rows from.
      * @param rowVector the vector to store the found data rows in.
      */
-    private void getDataRows(final ClusterNode clusterNode,
+    private void getDataRows(final DendrogramNode clusterNode,
             final List<DataRow> rowVector) {
 
         // rekursives auslesen aller data rows
-        ClusterNode subNode1 = clusterNode.getFirstSubnode();
-        ClusterNode subNode2 = clusterNode.getSecondSubnode();
+        DendrogramNode subNode1 = clusterNode.getFirstSubnode();
+        DendrogramNode subNode2 = clusterNode.getSecondSubnode();
 
-        if (subNode1.m_isLeaf) {
+        if (subNode1.isLeaf()) {
 
-            rowVector.add(subNode1.m_leafDataPoint);
+            rowVector.add(subNode1.getLeafDataPoint());
         } else {
 
             getDataRows(subNode1, rowVector);
         }
 
-        if (subNode2.m_isLeaf) {
+        if (subNode2.isLeaf()) {
 
-            rowVector.add(subNode2.m_leafDataPoint);
+            rowVector.add(subNode2.getLeafDataPoint());
         } else {
 
             getDataRows(subNode2, rowVector);
@@ -188,10 +191,7 @@ public class ClusterNode {
     }
 
     /**
-     * Returns the first subnode of this node. This method is implemented
-     * because of the binary characteristique of this tree.
-     * 
-     * @return the first sub node.
+     * {@inheritDoc}
      */
     public ClusterNode getFirstSubnode() {
         if (m_hierarchieNodes == null) {
@@ -201,8 +201,7 @@ public class ClusterNode {
     }
 
     /**
-     * 
-     * @return the distance to the next level.
+     * {@inheritDoc}
      */
     public double getDist() {
         if (isLeaf()) {
@@ -212,52 +211,34 @@ public class ClusterNode {
     }
 
     /**
-     * 
-     * @return true if the node is a leaf node.
+     * {@inheritDoc}
      */
     public boolean isLeaf() {
         return m_isLeaf;
     }
 
     /**
-     * @param node the node
-     * @return the maximum distance to the leaf node.
+     * {@inheritDoc}
      */
-    public double getMaxDistance(final ClusterNode node) {
-        if (node.getFirstSubnode() == null && node.getSecondSubnode() == null) {
+    public double getMaxDistance() {
+        if ((getFirstSubnode() == null) && (getSecondSubnode() == null)) {
             return m_dist;
         }
-        double dist1 = getMaxDistance(node.getFirstSubnode());
-        double dist2 = getMaxDistance(node.getSecondSubnode());
+        double dist1 = getFirstSubnode().getMaxDistance();
+        double dist2 = getSecondSubnode().getMaxDistance();
         double dist3 = Math.max(dist1, dist2);
-        return Math.max(dist3, node.getDist());
+        return Math.max(dist3, getDist());
     }
 
     /**
-     * 
-     * @return the name of this node (the row keys it contains).
-     */
-    public String getName() {
-        if (isLeaf()) {
-            return m_leafDataPoint.getKey().getId().toString();
-        } else {
-            return getFirstSubnode().getName() + getSecondSubnode().getName();
-        }
-    }
-
-    /**
-     * 
-     * @return the leaf data point
+     * {@inheritDoc}
      */
     public DataRow getLeafDataPoint() {
         return m_leafDataPoint;
     }
 
     /**
-     * Returns the second subnode of this node. This method is implemented
-     * because of the binary characteristique of this tree.
-     * 
-     * @return the second sub node.
+     * {@inheritDoc}
      */
     public ClusterNode getSecondSubnode() {
         if (m_hierarchieNodes == null) {
@@ -325,7 +306,7 @@ public class ClusterNode {
      * Loads a cluster node from the settings.
      * 
      * @param settings the config to load from
-     * @param orgTable the original talbe containing the rows in the same order!
+     * @param orgTable the original table containing the rows in the same order!
      * @return a cluster node
      * @throws InvalidSettingsException if not stored properly.
      */
