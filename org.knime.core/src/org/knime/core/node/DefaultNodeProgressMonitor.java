@@ -146,7 +146,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @return <code>true</code> if the execution of the
      *         <code>NodeModel</code> has been canceled.
      */
-    synchronized boolean isCanceled() {
+    boolean isCanceled() {
         return m_cancelExecute;
     }
 
@@ -158,7 +158,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * 
      * @throws CanceledExecutionException If the execution has been canceled.
      */
-    public synchronized void checkCanceled() throws CanceledExecutionException {
+    public void checkCanceled() throws CanceledExecutionException {
         if (isCanceled()) {
             throw new CanceledExecutionException(
                     "ProgressMonitor has been canceled.");
@@ -168,7 +168,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /**
      * Sets the cancel requested flag.
      */
-    public synchronized void setExecuteCanceled() {
+    public void setExecuteCanceled() {
         m_cancelExecute = true;
     }
 
