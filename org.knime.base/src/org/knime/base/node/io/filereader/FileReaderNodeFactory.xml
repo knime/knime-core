@@ -59,7 +59,8 @@
 	     	A pattern can be entered that will cause a "missing
 	        cell" to be created when it's read for this column. Additionally,
 	        possible values of the column domain can be updated by selecting
-	        "Domain".
+	        "Domain". And, you can choose to skip this column entirely, i.e. it
+	        will not be included in the output table then.
 		    </option>	      	
 	</fullDescription>
 	

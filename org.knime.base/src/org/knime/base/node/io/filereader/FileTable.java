@@ -22,6 +22,7 @@
 package org.knime.base.node.io.filereader;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
@@ -50,7 +51,7 @@ import org.knime.core.node.NodeLogger;
  */
 public class FileTable implements DataTable {
 
-    /** The node logger fot this class. */
+    /** The node logger for this class. */
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(FileTable.class);
 
@@ -63,9 +64,11 @@ public class FileTable implements DataTable {
     // the execution context to which the progress is reported
     private final ExecutionContext m_exec;
 
+    private final boolean[] m_skipColums;
+    
     /**
-     * Inits a new file table with the structure defined in tableSpec and using
-     * the settings in frSettings when the file is read.
+     * Creates a new file table with the structure defined in tableSpec and
+     * using the settings in frSettings when the file is read.
      * 
      * @param tableSpec a table spec defining the structure of the table to
      *            create
@@ -74,27 +77,73 @@ public class FileTable implements DataTable {
      * @param exec the execution context the progress is reported to; if null,
      *            no progress is reported
      */
-    public FileTable(final DataTableSpec tableSpec,
+    public FileTable(final DataTableSpec tableSpec, 
             final FileReaderSettings frSettings, final ExecutionContext exec) {
+        this(tableSpec, frSettings, createFalseArray(tableSpec.getNumColumns()),
+                exec);
+    }
+    
+    /**
+     * Creates a new file table with the structure defined in tableSpec and
+     * using the settings in frSettings when the file is read.
+     * 
+     * @param tableSpec a table spec defining the structure of the table to
+     *            create
+     * @param frSettings FileReaderSettings specifying the wheres and hows for
+     *            reading the ASCII data file
+     * @param skipColumns array with the element set to true if the
+     *            corresponding column should be skipped (i.e. read but not be
+     *            included in the row). The array must have the length of the
+     *            'original' column number (in the file), the specified table
+     *            spec is the new one (with less columns).
+     * @param exec the execution context the progress is reported to; if null,
+     *            no progress is reported
+     */
+    public FileTable(final DataTableSpec tableSpec, 
+            final FileReaderSettings frSettings, final boolean[] skipColumns, 
+            final ExecutionContext exec) {
 
         if ((tableSpec == null) || (frSettings == null)) {
             throw new NullPointerException("Must specify non-null table spec"
                     + " and file reader settings for file table.");
         }
+        if (skipColumns.length < tableSpec.getNumColumns()) {
+            throw new IllegalArgumentException("The number of columns can't"
+                    + " be larger than the spec for columns to skip");
+        }
+        int cols = 0;
+        for (boolean b : skipColumns) {
+            if (!b) {
+                cols++;
+            }
+        }
+        if (cols != tableSpec.getNumColumns()) {
+            throw new IllegalArgumentException("The number of columns to "
+                    + "include is different from the number of columns in the"
+                    + " table spec.");
+        }
         m_tableSpec = tableSpec;
         m_frSettings = frSettings;
+        m_skipColums = skipColumns;
         m_exec = exec;
 
     }
 
+    private static boolean[] createFalseArray(final int length) {
+        boolean[] result = new boolean[length];
+        Arrays.fill(result, false);
+        return result;
+    }
+    
     /**
      * {@inheritDoc}
      */
     public RowIterator iterator() {
         try {
-            return new FileRowIterator(m_frSettings, m_tableSpec, m_exec);
+            return new FileRowIterator(m_frSettings, m_tableSpec, m_skipColums,
+                    m_exec);
         } catch (IOException ioe) {
-            LOGGER.error("I/O Error occured while trying to open a stream"
+            LOGGER.error("I/O Error occurred while trying to open a stream"
                     + " to '" + m_frSettings.getDataFileLocation().toString()
                     + "'.");
         }

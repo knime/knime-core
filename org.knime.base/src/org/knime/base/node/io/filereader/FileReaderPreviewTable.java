@@ -42,7 +42,7 @@ import org.knime.core.node.NodeLogger;
  * preview must not throw any exception on unexpected or invalid data it reads 
  * (which the "normal" file table does). Thus, this table returns a row iterator
  * that will create an error row when a error occurs during file reading. It 
- * will end the table after the errornous element was read.
+ * will end the table after the erroneous element was read.
  * 
  * @author Peter Ohl, University of Konstanz
  */
@@ -73,7 +73,7 @@ public class FileReaderPreviewTable extends FileTable {
         m_errorMsg = null;
         m_errorLine = -1;
     }
-
+    
     /**
      * {@inheritDoc}
      */
