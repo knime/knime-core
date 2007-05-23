@@ -288,7 +288,7 @@ public final class BinningUtil {
      * @param value the value to round
      * @return the rounded value which is >= the given value and looks nicer :-)
      */
-    public static double bigValueRounder(final double value, 
+    private static double bigValueRounder(final double value, 
             final boolean roundUp) {
         double divider = 1;
         double addition = 1;
