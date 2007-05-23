@@ -33,6 +33,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.ToolTipManager;
+
 import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.property.ShapeFactory;
@@ -66,7 +68,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
         super();
         m_dots = new DotInfoArray(0);
         m_selDots = new HashSet<DataCell>();
-        setToolTipText("");
+        ToolTipManager.sharedInstance().registerComponent(this);
     }
     
     /**
@@ -255,7 +257,11 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
                 points++;
             }
         }
-        return tooltip.toString();
+        if (tooltip.toString().length() > 0) {
+            return tooltip.toString();
+        } else {
+            return null;
+        }
     }
 
 }

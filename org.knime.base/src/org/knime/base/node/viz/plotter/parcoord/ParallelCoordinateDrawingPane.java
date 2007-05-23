@@ -39,6 +39,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.ToolTipManager;
+
 import org.knime.base.node.viz.plotter.LabelPaintUtil;
 import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
 import org.knime.base.util.coordinate.NominalCoordinate;
@@ -101,7 +103,7 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
      *
      */
     public ParallelCoordinateDrawingPane() {
-        setToolTipText("");
+        ToolTipManager.sharedInstance().registerComponent(this);
     }
     
     
@@ -672,7 +674,10 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
             }
             i++;
         }
-        return buffer.toString();
+        if (buffer.toString().length() > 0) {
+            return buffer.toString();
+        }
+        return null;
     }
 
 }
