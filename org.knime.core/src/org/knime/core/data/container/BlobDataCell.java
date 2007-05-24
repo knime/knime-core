@@ -55,6 +55,10 @@ import org.knime.core.data.DataCell;
  * save much time when the cell is not used as for instance in a row filter,
  * row sampler or sorter node. 
  * </li>
+ * <li> Once deserialized, the cell is held in a
+ * {@link java.lang.ref.SoftReference}, allowing for garbage collection when
+ * memory gets limited (unless cell is otherwise referenced). 
+ * </li>
  * </ul> 
  * 
  * <p>In comparison to ordinary cell implementation, objects of this class
