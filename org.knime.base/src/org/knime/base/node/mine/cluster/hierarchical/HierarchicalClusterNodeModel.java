@@ -545,7 +545,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
                 DistanceFunction.Names.valueOf(settings
                         .getString(DISTFUNCTION_KEY));
         m_linkageType = Linkage.valueOf(settings.getString(LINKAGETYPE_KEY));
-        m_cacheDistances = settings.getBoolean(USE_CACHE_KEY);
+        m_cacheDistances = settings.getBoolean(USE_CACHE_KEY, false);
         m_selectedColumns.loadSettingsFrom(settings);
         if (m_selectedColumns.getIncludeList().size() <= 0) {
             setWarningMessage("No column included!");
@@ -597,7 +597,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
                     + Linkage.COMPLETE);
         }
 
-        settings.getBoolean(USE_CACHE_KEY);
+        settings.getBoolean(USE_CACHE_KEY, false);
     }
 
     /** Generate output spec based on input spec (appends column). */
