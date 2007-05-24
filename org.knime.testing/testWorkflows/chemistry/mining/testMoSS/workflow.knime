@@ -3,7 +3,7 @@
 <config key="workflow.knime">
 <entry key="version" type="xstring" value="1.2.0"/>
 <entry key="runningNodeID" type="xint" value="28"/>
-<entry key="runningConnectionID" type="xint" value="166"/>
+<entry key="runningConnectionID" type="xint" value="195"/>
 <config key="nodes">
 <config key="node_1">
 <entry key="node_settings_file" type="xstring" value="File Reader (#1)/settings.xml"/>
@@ -97,6 +97,7 @@
 <entry key="UserSetValues" type="xboolean" value="true"/>
 <entry key="MissValuePattern" type="xstring" value="?"/>
 <entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="SkipThisColumn" type="xboolean" value="false"/>
 <entry key="ColumnName" type="xstring" value="Col0"/>
 <config key="ColumnClass">
 <entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
@@ -107,6 +108,7 @@
 <entry key="UserSetValues" type="xboolean" value="false"/>
 <entry key="MissValuePattern" type="xstring" value="?"/>
 <entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="SkipThisColumn" type="xboolean" value="false"/>
 <entry key="ColumnName" type="xstring" value="Col1"/>
 <config key="ColumnClass">
 <entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
@@ -630,6 +632,7 @@
 <entry key="UserSetValues" type="xboolean" value="false"/>
 <entry key="MissValuePattern" type="xstring" value="?"/>
 <entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="SkipThisColumn" type="xboolean" value="false"/>
 <entry key="ColumnName" type="xstring" value="sln"/>
 <config key="ColumnClass">
 <entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
@@ -640,6 +643,7 @@
 <entry key="UserSetValues" type="xboolean" value="false"/>
 <entry key="MissValuePattern" type="xstring" value="?"/>
 <entry key="ReadPossValsFromFile" type="xboolean" value="false"/>
+<entry key="SkipThisColumn" type="xboolean" value="false"/>
 <entry key="ColumnName" type="xstring" value="Class"/>
 <config key="ColumnClass">
 <entry key="cell_class" type="xstring" value="org.knime.core.data.def.StringCell"/>
@@ -1067,207 +1071,207 @@
 </config>
 </config>
 <config key="connections">
-<config key="connection_139">
-<entry key="ID" type="xint" value="139"/>
-<entry key="sourceID" type="xint" value="21"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="22"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_138">
-<entry key="ID" type="xint" value="138"/>
-<entry key="sourceID" type="xint" value="7"/>
-<entry key="sourcePort" type="xint" value="2"/>
-<entry key="targetID" type="xint" value="12"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_141">
-<entry key="ID" type="xint" value="141"/>
-<entry key="sourceID" type="xint" value="9"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="8"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_140">
-<entry key="ID" type="xint" value="140"/>
-<entry key="sourceID" type="xint" value="10"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="8"/>
-<entry key="targetPort" type="xint" value="1"/>
-</config>
-<config key="connection_143">
-<entry key="ID" type="xint" value="143"/>
-<entry key="sourceID" type="xint" value="18"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="21"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_142">
-<entry key="ID" type="xint" value="142"/>
-<entry key="sourceID" type="xint" value="2"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="7"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_152">
-<entry key="ID" type="xint" value="152"/>
-<entry key="sourceID" type="xint" value="7"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="3"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_153">
-<entry key="ID" type="xint" value="153"/>
-<entry key="sourceID" type="xint" value="16"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="19"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_154">
-<entry key="ID" type="xint" value="154"/>
-<entry key="sourceID" type="xint" value="14"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="16"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_155">
-<entry key="ID" type="xint" value="155"/>
-<entry key="sourceID" type="xint" value="24"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="27"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_156">
-<entry key="ID" type="xint" value="156"/>
-<entry key="sourceID" type="xint" value="1"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="2"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_157">
-<entry key="ID" type="xint" value="157"/>
-<entry key="sourceID" type="xint" value="16"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="17"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_158">
-<entry key="ID" type="xint" value="158"/>
-<entry key="sourceID" type="xint" value="20"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="26"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_159">
-<entry key="ID" type="xint" value="159"/>
-<entry key="sourceID" type="xint" value="7"/>
-<entry key="sourcePort" type="xint" value="1"/>
-<entry key="targetID" type="xint" value="10"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_144">
-<entry key="ID" type="xint" value="144"/>
-<entry key="sourceID" type="xint" value="26"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="27"/>
-<entry key="targetPort" type="xint" value="1"/>
-</config>
-<config key="connection_145">
-<entry key="ID" type="xint" value="145"/>
-<entry key="sourceID" type="xint" value="19"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="24"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_146">
-<entry key="ID" type="xint" value="146"/>
-<entry key="sourceID" type="xint" value="7"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="5"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_147">
-<entry key="ID" type="xint" value="147"/>
-<entry key="sourceID" type="xint" value="13"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="11"/>
-<entry key="targetPort" type="xint" value="1"/>
-</config>
-<config key="connection_148">
-<entry key="ID" type="xint" value="148"/>
-<entry key="sourceID" type="xint" value="20"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="23"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_149">
-<entry key="ID" type="xint" value="149"/>
-<entry key="sourceID" type="xint" value="7"/>
-<entry key="sourcePort" type="xint" value="1"/>
-<entry key="targetID" type="xint" value="9"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_150">
-<entry key="ID" type="xint" value="150"/>
-<entry key="sourceID" type="xint" value="3"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="6"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_151">
-<entry key="ID" type="xint" value="151"/>
-<entry key="sourceID" type="xint" value="17"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="18"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_163">
-<entry key="ID" type="xint" value="163"/>
-<entry key="sourceID" type="xint" value="12"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="11"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_162">
-<entry key="ID" type="xint" value="162"/>
-<entry key="sourceID" type="xint" value="25"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="28"/>
-<entry key="targetPort" type="xint" value="1"/>
-</config>
-<config key="connection_161">
-<entry key="ID" type="xint" value="161"/>
-<entry key="sourceID" type="xint" value="26"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="28"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_160">
-<entry key="ID" type="xint" value="160"/>
-<entry key="sourceID" type="xint" value="21"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="25"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_166">
-<entry key="ID" type="xint" value="166"/>
+<config key="connection_193">
+<entry key="ID" type="xint" value="193"/>
 <entry key="sourceID" type="xint" value="17"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="targetID" type="xint" value="20"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_165">
-<entry key="ID" type="xint" value="165"/>
+<config key="connection_192">
+<entry key="ID" type="xint" value="192"/>
+<entry key="sourceID" type="xint" value="21"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="25"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_195">
+<entry key="ID" type="xint" value="195"/>
+<entry key="sourceID" type="xint" value="5"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="6"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_194">
+<entry key="ID" type="xint" value="194"/>
 <entry key="sourceID" type="xint" value="7"/>
 <entry key="sourcePort" type="xint" value="2"/>
 <entry key="targetID" type="xint" value="13"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_164">
-<entry key="ID" type="xint" value="164"/>
-<entry key="sourceID" type="xint" value="5"/>
+<config key="connection_171">
+<entry key="ID" type="xint" value="171"/>
+<entry key="sourceID" type="xint" value="18"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="21"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_170">
+<entry key="ID" type="xint" value="170"/>
+<entry key="sourceID" type="xint" value="10"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="8"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_169">
+<entry key="ID" type="xint" value="169"/>
+<entry key="sourceID" type="xint" value="9"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="8"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_168">
+<entry key="ID" type="xint" value="168"/>
+<entry key="sourceID" type="xint" value="7"/>
+<entry key="sourcePort" type="xint" value="2"/>
+<entry key="targetID" type="xint" value="12"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_175">
+<entry key="ID" type="xint" value="175"/>
+<entry key="sourceID" type="xint" value="14"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="16"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_174">
+<entry key="ID" type="xint" value="174"/>
+<entry key="sourceID" type="xint" value="16"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="19"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_173">
+<entry key="ID" type="xint" value="173"/>
+<entry key="sourceID" type="xint" value="7"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="3"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_172">
+<entry key="ID" type="xint" value="172"/>
+<entry key="sourceID" type="xint" value="2"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="7"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_167">
+<entry key="ID" type="xint" value="167"/>
+<entry key="sourceID" type="xint" value="21"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="22"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_186">
+<entry key="ID" type="xint" value="186"/>
+<entry key="sourceID" type="xint" value="7"/>
+<entry key="sourcePort" type="xint" value="1"/>
+<entry key="targetID" type="xint" value="9"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_187">
+<entry key="ID" type="xint" value="187"/>
+<entry key="sourceID" type="xint" value="3"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="targetID" type="xint" value="6"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_184">
+<entry key="ID" type="xint" value="184"/>
+<entry key="sourceID" type="xint" value="13"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="11"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_185">
+<entry key="ID" type="xint" value="185"/>
+<entry key="sourceID" type="xint" value="20"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="23"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_190">
+<entry key="ID" type="xint" value="190"/>
+<entry key="sourceID" type="xint" value="25"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="28"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_191">
+<entry key="ID" type="xint" value="191"/>
+<entry key="sourceID" type="xint" value="26"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="28"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_188">
+<entry key="ID" type="xint" value="188"/>
+<entry key="sourceID" type="xint" value="17"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="18"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_189">
+<entry key="ID" type="xint" value="189"/>
+<entry key="sourceID" type="xint" value="12"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="11"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_178">
+<entry key="ID" type="xint" value="178"/>
+<entry key="sourceID" type="xint" value="16"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="17"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_179">
+<entry key="ID" type="xint" value="179"/>
+<entry key="sourceID" type="xint" value="20"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="26"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_176">
+<entry key="ID" type="xint" value="176"/>
+<entry key="sourceID" type="xint" value="24"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="27"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_177">
+<entry key="ID" type="xint" value="177"/>
+<entry key="sourceID" type="xint" value="1"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="2"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_182">
+<entry key="ID" type="xint" value="182"/>
+<entry key="sourceID" type="xint" value="19"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="24"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_183">
+<entry key="ID" type="xint" value="183"/>
+<entry key="sourceID" type="xint" value="7"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="5"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_180">
+<entry key="ID" type="xint" value="180"/>
+<entry key="sourceID" type="xint" value="7"/>
+<entry key="sourcePort" type="xint" value="1"/>
+<entry key="targetID" type="xint" value="10"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_181">
+<entry key="ID" type="xint" value="181"/>
+<entry key="sourceID" type="xint" value="26"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="27"/>
 <entry key="targetPort" type="xint" value="1"/>
 </config>
 </config>

@@ -3,7 +3,9 @@
 <config key="table_meta_info">
 <entry key="table_ID" type="xint" value="58"/>
 <entry key="table_type" type="xstring" value="rearrange_columns_table"/>
-<entry key="table_reference" type="xstring" isnull="true" value=""/>
+<config key="table_references">
+<entry key="array-size" type="xint" value="0"/>
+</config>
 <config key="meta_internal">
 <entry key="table_reference_ID" type="xint" value="57"/>
 <config key="table_internal_map">
