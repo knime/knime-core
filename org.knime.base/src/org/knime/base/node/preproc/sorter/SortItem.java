@@ -95,7 +95,7 @@ public class SortItem extends JPanel {
      * @param sortOrder the sort
      */
     SortItem(final int id, final Vector<DataColumnSpec> values, 
-            final Object selected, final boolean sortOrder) {
+            final DataColumnSpec selected, final boolean sortOrder) {
         m_id = id;
         m_combovalues = values;
 

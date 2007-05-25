@@ -124,29 +124,24 @@ public class SorterNodeDialogPanel2 extends JPanel {
 
                 for (int i = 0; i < nrsortitems 
                 && i < spec.getNumColumns(); i++) {
-                    Object selected = (i == 0) ? values.get(i + 1) : values
-                            .get(0);
+                    DataColumnSpec selected = 
+                            (i == 0) ? values.get(i + 1) : values.get(0);
                     SortItem temp = new SortItem(i, values, selected, true);
                     super.add(temp);
                     m_components.add(temp);
                 }
             } else {
                 for (int i = 0; i < incl.size(); i++) {
-                    String toInclude = incl.get(i);
-                    if (spec.findColumnIndex(toInclude) != -1) {
-                        SortItem temp = new SortItem(interncounter, values,
-                                toInclude, sortOrder[interncounter]);
-                        super.add(temp);
-                        m_components.add(temp);
-                        interncounter++;
-                    } else if (toInclude.toString().equals(NOSORT)) {
-                        SortItem temp = new SortItem(interncounter, values,
-                                toInclude, sortOrder[interncounter]);
+                    int toInclude = spec.findColumnIndex(incl.get(i));
+                    if (toInclude != -1) {
+                        DataColumnSpec colspec = spec.getColumnSpec(toInclude);
+                        SortItem temp =
+                                new SortItem(interncounter, values, colspec,
+                                        sortOrder[interncounter]);
                         super.add(temp);
                         m_components.add(temp);
                         interncounter++;
                     }
-
                 }
             }
             Box buttonbox = Box.createHorizontalBox();
@@ -164,7 +159,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
                     ArrayList<String> newlist = new ArrayList<String>();
                     for (int i = 0; i < m_components.size(); i++) {
                         SortItem temp = m_components.get(i);
-                        newlist.add(temp.getSelectedColumn().toString());
+                        newlist.add(temp.getSelectedColumn().getName());
                     }
                     int oldsize = m_components.size();
                     String temp = spinner.getValue().toString();
@@ -233,7 +228,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
         Vector<Boolean> boolvector = new Vector<Boolean>();
         for (int i = 0; i < m_components.size(); i++) {
             SortItem temp = m_components.get(i);
-            if (!(temp.getSelectedColumn().toString().equals(NOSORT))) {
+            if (!(temp.getSelectedColumn().equals(NOSORT))) {
                 boolvector.add(temp.getSortOrder());
             }
         }
