@@ -84,11 +84,6 @@ public class FCMAlgorithm {
      */
     private double m_lambda;
 
-    /*
-     * Sum of all within-cluster variations
-     */
-    private double m_allsum = 0;
-
      /*
      * DataTable to be clustered
      */
@@ -402,76 +397,7 @@ public class FCMAlgorithm {
         }
         return max;
     }
-
-    /**
-     * Calculates the Within-Cluster Variation for each cluster. We take 'crisp'
-     * cluster centers to determine the membership from a datarow to a cluster
-     * center.
-     * 
-     * @return withinClusterVariations
-     */
-    public double[] getWithinClusterVariations() {
-
-        // calculate within-cluster cariation for each cluster center
-        double[] sum = new double[m_clusters.length];
-        int[] nrRows = new int[m_clusters.length];
-
-        DataRow dRow;
-        int winner = -1;
-
-        RowIterator rowit = m_table.iterator();
-        int i = 0;
-        Distance dist = Distance.getInstance();
-        while (rowit.hasNext()) {
-            dRow = rowit.next();
-            winner = getWinner(m_weightMatrix[i]);
-            sum[winner] += dist.compute(m_clusters[winner], dRow);
-            nrRows[winner]++;
-            i++;
-        }
-
-        m_allsum = 0;
-        double[] withinclustervariations = new double[m_clusters.length];
-        for (int c = 0; c < m_clusters.length; c++) {
-            double clustervariation = sum[c] / nrRows[c];
-            withinclustervariations[c] = clustervariation;
-            m_allsum += clustervariation;
-        }
-        m_allsum = (m_allsum / m_clusters.length);
-        return withinclustervariations;
-    }
-
-    /**
-     * Calculates the Between-Cluster Variation.
-     * 
-     * @return the between cluster variation.
-     */
-    public double getBetweenClusterVariation() {
-        double sum = 0;
-        for (int j = 0; j < m_clusters.length; j++) {
-            for (int i = 0; i < m_clusters.length; i++) {
-                sum += clusterdistance(m_clusters[i], m_clusters[j]);
-            }
-        }
-        sum = sum / (m_clusters.length * m_clusters.length);
-        return (sum / m_allsum);
-    }
-
-    /*
-     * Helper method to calculate the distance between two cluster centers
-     */
-    private double clusterdistance(final double[] cluster1,
-            final double[] cluster2) {
-        double distance = 0;
-        for (int i = 0; i < cluster1.length; i++) {
-            double d = cluster1[i] - cluster2[i];
-            distance += d * d;
-        }
-        return distance;
-    }
-
-    
-    
+   
     ///////////////////////////////////////////////
     // protected getted and setters 
     ///////////////////////////////////////////////
