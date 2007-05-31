@@ -29,7 +29,8 @@ package org.knime.core.node.util;
 /**
  * Used to create a {@link javax.swing.ButtonGroup} in the 
  * {@link org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup} 
- * class. Should be implemented by an {@link java.lang.Enum} for simplicity.
+ * class. 
+ * <p>Should be implemented by an {@link java.lang.Enum} for simplicity.</p>
  * @author Tobias Koetter, University of Konstanz
  */
 public interface ButtonGroupEnumInterface {
