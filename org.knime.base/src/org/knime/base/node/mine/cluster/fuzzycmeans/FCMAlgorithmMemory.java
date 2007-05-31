@@ -95,6 +95,20 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
         // TODO: checks on table: only double columns, nrRows, dimension
     }
     
+    /**
+     * Inits the cluster centers and the weight matrix. Must be called before
+     * the iterations are carried out.
+     * 
+     * @param keys the RowKeys for each data row.
+     * @param data the DaaTable as 2 dimensional double array.
+     */
+    public void init(final RowKey[] keys, final double[][] data) {
+       assert (keys.length == data.length);
+       super.init(data.length, data[0].length, null);
+       m_data = data;
+       m_keys = keys;
+    }
+    
     /*
      * Reads the data from the given DataTable in the doublearray m_data
      */
@@ -126,6 +140,15 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
      */
     public double[][] getConvertedData() {
         assert m_data != null : "Please initialize first";
+        return m_data;
+    }
+    
+    /**
+     * @param table DataTable to convert.
+     * @return two-dimensional double array.
+     */
+    public double[][] getConvertedData(final DataTable table) {
+        init(table);
         return m_data;
     }
     
