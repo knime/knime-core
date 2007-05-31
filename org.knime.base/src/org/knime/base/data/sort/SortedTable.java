@@ -230,7 +230,7 @@ public class SortedTable implements DataTable {
         ArrayList<DataRow> containerrowlist = new ArrayList<DataRow>();
         ExecutionMonitor subexec = exec.createSubProgress(.5);
         int chunkCounter = 1;
-        int numChunks = nrRows / CONTAINERSIZE;
+        int numChunks = (int) Math.ceil((double) nrRows / CONTAINERSIZE);
         while (rowIt.hasNext()) {
             subexec.setProgress((double)currentRowNr / (double)nrRows,
                     "Reading in data-chunk " + chunkCounter + "...");
