@@ -21,6 +21,7 @@
  */
 package org.knime.base.node.mine.cluster.fuzzycmeans;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -29,8 +30,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
+import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -47,8 +50,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-import org.knime.base.data.filter.column.FilterColumnTable;
-
 /**
  * Generate a fuzzy c-means clustering using a fixed number of cluster centers.
  * 
@@ -57,6 +58,7 @@ import org.knime.base.data.filter.column.FilterColumnTable;
  */
 
 public class FuzzyClusterNodeModel extends NodeModel {
+    
     /**
      * Key for the Cluster Columns in the output DataTable.
      */
@@ -112,6 +114,11 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * in the PredParams.
      */
     public static final String MEMORY_KEY = "memory";
+    
+    /**
+     * Key to store whether cluster quality measures should be calculated.
+     */
+    public static final String MEASURES_KEY = "measures";
 
     /*
      * List contains the data cells to include.
@@ -183,6 +190,11 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * WithinClustusterVariations
      */
     private double[] m_withinClusterVariation = null;
+    
+    /*
+     * Fuzzy Hypervolumnes
+     */
+    private double[] m_fuzzyHypervolumes = null;
 
     /*
      * Between Cluster Variation
@@ -190,14 +202,38 @@ public class FuzzyClusterNodeModel extends NodeModel {
     private double m_betweenClusterVariation = Double.NaN;
 
     /*
+     * Partition Coefficient
+     */
+    private double m_partitionCoefficient = Double.NaN;
+
+    /*
+     * Partition Entropy
+     */
+    private double m_partitionEntropy = Double.NaN;
+
+    /*
+     * Xie Beni Index
+     */
+    private double m_xieBeniIndex = Double.NaN;
+    /*
      * The underlying fuzzy c-means algorithm.
      */
     private FCMAlgorithm m_fcmAlgo;
     
     /*
+     * Object to calculate cluster quality measures 
+     */
+    private FCMQualityMeasures m_fcmmeasures;
+    
+    /*
      * Flag indicating whether the clustering should be performed in memory.
      */
     private boolean m_memory;
+
+    /*
+     * Flag indicating whether cluster quality measures should be calculated.
+     */
+    private boolean m_measures;
 
     /**
      * Constructor, remember parent and initialize status.
@@ -212,6 +248,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
         m_calculateDelta = false;
         m_delta = .2;
         m_memory = true;
+        m_measures = true;
     }
 
     /**
@@ -220,7 +257,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * supplementary information about the membership to each cluster center.
      * OUTPORT = original datarows with cluster membership information
      * 
-     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -278,7 +315,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
         // main loop - until clusters stop changing or maxNrIterations reached
         int currentIteration = 0;
         double totalchange = Double.MAX_VALUE;
-        while ((totalchange > 1e-5) 
+        while ((totalchange > 1e-7) 
                 && (currentIteration < m_maxNrIterations)) {
             if (exec != null) {
                 exec.checkCanceled();
@@ -291,6 +328,32 @@ public class FuzzyClusterNodeModel extends NodeModel {
             currentIteration++;
         } // while(!finished & nrIt<maxNrIt)
 
+        if (m_measures) {
+            double[][] data = null;
+            if (m_fcmAlgo instanceof FCMAlgorithmMemory) {
+                data = ((FCMAlgorithmMemory)m_fcmAlgo).getConvertedData();
+            } else {
+                data =
+                        new double[nrRows][m_fcmAlgo.getDimension()];
+                int curRow = 0;
+                for (DataRow dRow : filteredtable) {
+                    for (int j = 0; j < dRow.getNumCells(); j++) {
+                        if (!(dRow.getCell(j).isMissing())) {
+                            DoubleValue dv = (DoubleValue)dRow.getCell(j);
+                            data[curRow][j] = dv.getDoubleValue();
+
+                        } else {
+                            data[curRow][j] = 0;
+                        }
+                    }
+                    curRow++;
+                }
+            }
+            m_fcmmeasures =
+                    new FCMQualityMeasures(m_fcmAlgo.getClusterCentres(),
+                            m_fcmAlgo.getweightMatrix(), data, m_fuzzifier);
+        }
+        
         ColumnRearranger colRearranger = new ColumnRearranger(m_spec);
         CellFactory membershipFac = new ClusterMembershipFactory(m_fcmAlgo);
         colRearranger.append(membershipFac);
@@ -306,15 +369,20 @@ public class FuzzyClusterNodeModel extends NodeModel {
     public void reset() {
         m_betweenClusterVariation = Double.NaN;
         m_withinClusterVariation = null;
+        m_partitionCoefficient = Double.NaN;
+        m_partitionEntropy = Double.NaN;
+        m_xieBeniIndex = Double.NaN;
+        m_fuzzyHypervolumes = null;
         m_fcmAlgo = null;
         m_clusters = null;
+        m_fcmmeasures = null;
     }
 
     /**
      * Saves the number of Clusters and the maximum number of iterations in the
      * settings.
      * 
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -336,13 +404,14 @@ public class FuzzyClusterNodeModel extends NodeModel {
             settings.addDouble(DELTAVALUE_KEY, -1);
         }
         settings.addBoolean(MEMORY_KEY, m_memory);
+        settings.addBoolean(MEASURES_KEY, m_measures);
     }
 
     /**
      * Validates the number of Clusters and the maximum number of iterations in
      * the settings.
      * 
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -380,7 +449,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * Loads the number of clusters and the maximum number of iterations from
      * the settings.
      * 
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -421,12 +490,15 @@ public class FuzzyClusterNodeModel extends NodeModel {
         if (settings.containsKey(MEMORY_KEY)) {
             m_memory = settings.getBoolean(MEMORY_KEY);
         }
+        if (settings.containsKey(MEASURES_KEY)) {
+            m_measures = settings.getBoolean(MEASURES_KEY);
+        }
     }
 
     /**
      * Number of columns in the output table is not deterministic.
      * 
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -499,11 +571,57 @@ public class FuzzyClusterNodeModel extends NodeModel {
         if (!Double.isNaN(m_betweenClusterVariation)) {
             return m_betweenClusterVariation;
         }
-        if (m_fcmAlgo != null) {
-            return m_fcmAlgo.getBetweenClusterVariation();
+        if (m_fcmmeasures != null) {
+            return m_fcmmeasures.getBetweenClusterVariation();
         }
         return Double.NaN;
     }
+    
+    /**
+     * Calculates the partition coefficient.
+     * 
+     * @return the partition coefficient
+     */
+    public double getPartitionCoefficient() {
+        if (!Double.isNaN(m_partitionCoefficient)) {
+            return m_partitionCoefficient;
+        }
+        if (m_fcmmeasures != null) {
+            return m_fcmmeasures.getPartitionCoefficient();
+        }
+        return Double.NaN;
+    }
+    
+    /**
+     * Calculates the partition entropy.
+     * 
+     * @return the partition entropy
+     */
+    public double getPartitionEntropy() {
+        if (!Double.isNaN(m_partitionEntropy)) {
+            return m_partitionEntropy;
+        }
+        if (m_fcmmeasures != null) {
+            return m_fcmmeasures.getPartitionEntropy();
+        }
+        return Double.NaN;
+    }
+    
+    /**
+     * Calculates the Xie Beni Index.
+     * 
+     * @return the Xie Beni Index
+     */
+    public double getXieBeniIndex() {
+        if (!Double.isNaN(m_xieBeniIndex)) {
+            return m_xieBeniIndex;
+        }
+        if (m_fcmmeasures != null) {
+            return m_fcmmeasures.getXieBeniIndex();
+        }
+        return Double.NaN;
+    }
+    
 
     /**
      * Calculates the Within-Cluster Variation for each cluster. We take 'crisp'
@@ -516,7 +634,29 @@ public class FuzzyClusterNodeModel extends NodeModel {
         if (m_withinClusterVariation != null) {
             return m_withinClusterVariation;
         }
-        return m_fcmAlgo.getWithinClusterVariations();
+        if (m_fcmmeasures != null) {
+            return m_fcmmeasures.getWithinClusterVariations();
+        }
+        return null;
+    }
+    
+    /**
+     * Calculates the fuzzy hypervolumnes for each cluster.
+     * 
+     * @return fuzzy hypervolumnes of all clusters
+     */
+    public double[] getFuzzyHyperVolumes() {
+        if (m_fuzzyHypervolumes != null) {
+            return m_fuzzyHypervolumes;
+        }
+        if (m_fcmmeasures != null) {
+            double[] fhypervolumnes = new double[m_nrClusters];
+            for (int c = 0; c < m_nrClusters; c++) {
+                fhypervolumnes[c] = m_fcmmeasures.getFuzzyHyperVolume(c);
+            }
+            return fhypervolumnes;
+        }
+        return null;
     }
 
     /**
@@ -530,8 +670,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
      * Saves a model of the clustering. It contains the cluster prototypes and
      * their names and the columns used.
      * 
-     * @see org.knime.core.node.NodeModel#saveModelContent(int,
-     *      ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveModelContent(final int index,
@@ -572,19 +711,40 @@ public class FuzzyClusterNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException {
         File f = new File(internDir, "FuzzyCMeans");
         ObjectInputStream in = new ObjectInputStream(new FileInputStream(f));
-        int nrClusters = in.readInt();
-        int nrDimensions = in.readInt();
-        m_clusters = new double[nrClusters][nrDimensions];
-        for (int c = 0; c < nrClusters; c++) {
-            for (int d = 0; d < nrDimensions; d++) {
-                m_clusters[c][d] = in.readDouble();
+        int nrClusters = 0;
+        int nrDimensions = 0;
+        try {
+            nrClusters = in.readInt();
+            nrDimensions = in.readInt();
+            m_clusters = new double[nrClusters][nrDimensions];
+            for (int c = 0; c < nrClusters; c++) {
+                for (int d = 0; d < nrDimensions; d++) {
+                    m_clusters[c][d] = in.readDouble();
+                }
             }
+            double[] withinClusterVariation = new double[nrClusters];
+            for (int c = 0; c < nrClusters; c++) {
+                withinClusterVariation[c] = in.readDouble();
+            }
+            m_withinClusterVariation = withinClusterVariation;
+            m_betweenClusterVariation = in.readDouble();
+        } catch (EOFException eof) {
+            // In the new version, these measures are only stored if
+            // the dialog option 'compute quality measures' is checked.
         }
-        m_withinClusterVariation = new double[nrClusters];
-        for (int c = 0; c < nrClusters; c++) {
-            m_withinClusterVariation[c] = in.readDouble();
+        try {
+            m_partitionCoefficient = in.readDouble();
+            m_partitionEntropy = in.readDouble();
+            m_xieBeniIndex = in.readDouble();
+            double[] fHyperVolumes = new double[nrClusters];
+            for (int c = 0; c < nrClusters; c++) {
+                fHyperVolumes[c] = in.readDouble();
+            }
+            m_fuzzyHypervolumes = fHyperVolumes;
+        } catch (EOFException eof) {
+            // older versions don't have the measures. In this case, the
+            // measurements will be null and not shown in the view.
         }
-        m_betweenClusterVariation = in.readDouble();
         in.close();
         exec.setProgress(1.0);
     }
@@ -618,10 +778,28 @@ public class FuzzyClusterNodeModel extends NodeModel {
                 out.writeDouble(clusters[c][d]);
             }
         }
-        for (int c = 0; c < nrClusters; c++) {
-            out.writeDouble(getWithinClusterVariations()[c]);
+        if (getWithinClusterVariations() != null) {
+            for (int c = 0; c < nrClusters; c++) {
+                out.writeDouble(getWithinClusterVariations()[c]);
+            }
         }
-        out.writeDouble(getBetweenClusterVariation());
+        if (!Double.isNaN(getBetweenClusterVariation())) {
+            out.writeDouble(getBetweenClusterVariation());
+        }
+        if (!Double.isNaN(getPartitionCoefficient())) {
+            out.writeDouble(getPartitionCoefficient());
+        }
+        if (!Double.isNaN(getPartitionEntropy())) {
+            out.writeDouble(getPartitionEntropy());
+        }
+        if (!Double.isNaN(getXieBeniIndex())) {
+            out.writeDouble(getXieBeniIndex());
+        }
+        if (getFuzzyHyperVolumes() != null) {
+            for (int c = 0; c < nrClusters; c++) {
+                out.writeDouble(getFuzzyHyperVolumes()[c]);
+            }
+        }
         out.close();
         exec.setProgress(1.0);
 
