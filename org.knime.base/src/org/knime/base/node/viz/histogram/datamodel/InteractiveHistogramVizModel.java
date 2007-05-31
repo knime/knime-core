@@ -203,6 +203,16 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         } else {
             m_rowComparator.update(xColType.getComparator(), m_xColIdx);
         }
+//        if (BinningUtil.binNominal(m_xColSpec, getNoOfBins())) {
+//            setBinNominal(true);
+//        } else {
+//            final boolean wasNominal = isBinNominal();
+//            setBinNominal(false);
+//            //if we have binned nominal reset the number of bins to default
+//            if (wasNominal) {
+//                updateNoOfBins(DEFAULT_NO_OF_BINS);
+//            }
+//        }
         if (xColType.isCompatible(
                 DoubleValue.class)) {
             final boolean wasNominal = isBinNominal();

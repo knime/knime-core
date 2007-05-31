@@ -104,6 +104,13 @@ public class FixedHistogramDataModel {
             throw new NullPointerException(
                     "The x column domain must not be null");
         }
+//        if (BinningUtil.binNominal(xColSpec, noOfBins)) {
+//            m_binNominal = true;
+//            m_bins = BinningUtil.createNominalBins(xColSpec);
+//        } else {
+//            m_binNominal = false;
+//            m_bins = BinningUtil.createIntervalBins(xColSpec, noOfBins);
+//        }
         if (m_xColSpec.getType().isCompatible(
                 DoubleValue.class)) {
             m_binNominal = false;

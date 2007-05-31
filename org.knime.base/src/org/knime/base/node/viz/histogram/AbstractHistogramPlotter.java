@@ -340,7 +340,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         } else {
             drawingPane.setGridLines(null);
         }
-        //update the properties panel as well since somthing could have changed
+        //update the properties panel as well since something could have changed
         drawingPane.setHistogramVizModel(vizModel, true);
     }
     
@@ -575,7 +575,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
             if (HistogramLayout.SIDE_BY_SIDE.equals(
                     vizModel.getHistogramLayout())
-                    || vizModel.containsNotPresentableBin()) {
+                    || (vizModel.getAggrColumns() != null 
+                            && vizModel.getAggrColumns().size() > 1)) {
                 vizModel.setBinWidth(vizModel.getMaxBinWidth());
             }
             //update the details tab
