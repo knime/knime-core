@@ -135,7 +135,7 @@ public class SettingsModelStringArray extends SettingsModel {
         if (newValue == null) {
             m_value = null;
         } else {
-            m_value = new String[m_value.length];
+            m_value = new String[newValue.length];
             System.arraycopy(newValue, 0, m_value, 0, newValue.length);
         }
         
