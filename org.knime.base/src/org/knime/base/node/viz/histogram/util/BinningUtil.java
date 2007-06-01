@@ -583,13 +583,14 @@ public final class BinningUtil {
      * @param aggrCells the aggregation {@link DataCell} objects which 
      * contain the value
      * @return the index of the bin where the row was added
+     * @throws IllegalArgumentException if the given row doesn't fit in any bin
      */
     public static int addDataRow2Bin(final boolean binNominal,
             final List<? extends BinDataModel> bins, 
             final BinDataModel missingValueBin, final int startBin, 
             final DataCell xCell, final Color rowColor, final DataCell id, 
             final Collection<ColorColumn> aggrColumns, 
-            final DataCell... aggrCells) {
+            final DataCell... aggrCells) throws IllegalArgumentException {
         if (bins == null) {
             throw new NullPointerException("Bins must not be null");
         }
@@ -724,5 +725,49 @@ public final class BinningUtil {
             }
         }
         return false;
+    }
+    
+    /**
+     * Checks if the given cell is in the domain range of the given 
+     * {@link DataColumnSpec}. If the cell is missing the method returns 
+     * <code>true</code>.
+     * @param cell the cell to check
+     * @param spec the {@link DataColumnSpec} with the domain
+     * @return <code>true</code> if the cell is missing or the value is between
+     * the upper and lower bound specified by the domain of the given column 
+     * specification
+     */
+    public static boolean checkDomainRange(final DataCell cell, 
+            final DataColumnSpec spec) {
+        if (!cell.isMissing()) {
+            if (!cell.getType().isCompatible(DoubleValue.class)) {
+                throw new IllegalStateException(
+                        "X value is not a valid number");
+            }
+            final DataColumnDomain domain = spec.getDomain();
+            final DataCell lowerBoundCell = domain.getLowerBound();
+            if (lowerBoundCell == null || lowerBoundCell.isMissing()
+                    || !lowerBoundCell.getType().isCompatible(
+                            DoubleValue.class)) {
+                throw new IllegalArgumentException(
+                "The lower bound of the x column domain should be defined");
+            }
+            double lowerBound = 
+                ((DoubleValue)lowerBoundCell).getDoubleValue();
+            final DataCell upperBoundCell = domain.getUpperBound();
+            if (upperBoundCell == null || upperBoundCell.isMissing()
+                    || !upperBoundCell.getType().isCompatible(
+                            DoubleValue.class)) {
+                throw new IllegalArgumentException(
+                "The upper bound of the x column domain should be defined");
+            }
+            final double upperBound = 
+                ((DoubleValue)upperBoundCell).getDoubleValue();
+            if (((DoubleValue)cell).getDoubleValue() < lowerBound 
+                    || ((DoubleValue)cell).getDoubleValue() > upperBound) {
+                return false;
+            }
+        }
+        return true;
     }
 }
