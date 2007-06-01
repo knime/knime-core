@@ -182,8 +182,8 @@ public class DataColumnSpecCreator {
             newLower = myLower;
         }
 
-        final DataCell myUpper = m_domain.getLowerBound();
-        final DataCell oUpper = domain2.getLowerBound();
+        final DataCell myUpper = m_domain.getUpperBound();
+        final DataCell oUpper = domain2.getUpperBound();
         DataCell newUpper;
         if (myUpper == null || oUpper == null) {
             newUpper = null;
