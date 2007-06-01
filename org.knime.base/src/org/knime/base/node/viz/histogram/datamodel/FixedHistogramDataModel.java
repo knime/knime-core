@@ -164,8 +164,18 @@ public class FixedHistogramDataModel {
             m_rowColors.add(rowColor);
         }
         final int startBin = 0;
-        BinningUtil.addDataRow2Bin(m_binNominal, m_bins, m_missingValueBin, 
-                startBin, xCell, rowColor, id, m_aggrColumns, aggrCells);
+        try {
+            BinningUtil.addDataRow2Bin(m_binNominal, m_bins, m_missingValueBin, 
+                    startBin, xCell, rowColor, id, m_aggrColumns, aggrCells);
+        } catch (IllegalArgumentException e) {
+            if (!BinningUtil.checkDomainRange(xCell, getXColumnSpec())) {
+                throw new IllegalStateException(
+                    "Invalid column domain for column " 
+                    + m_xColSpec.getName()
+                    + ". " + e.getMessage());
+            } 
+            throw e;
+        }
     }
 
     /**

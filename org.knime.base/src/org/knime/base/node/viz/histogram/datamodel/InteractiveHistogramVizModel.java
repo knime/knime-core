@@ -356,14 +356,25 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         if (m_aggrColumns == null || m_aggrColumns.size() < 1) {
             //if the user hsn't selected a aggregation column
             for (DataRow row : getSortedRows()) {
-                final DataCell xVal = row.getCell(m_xColIdx);
+                final DataCell xCell = row.getCell(m_xColIdx);
                 final Color color = 
                     m_tableSpec.getRowColor(row).getColor(false, false);
                 final DataCell id = row.getKey().getId();
-                startBin = BinningUtil.addDataRow2Bin(
-                        isBinNominal(), bins, missingValBin, startBin, 
-                        xVal, color, id, m_aggrColumns, 
-                        DataType.getMissingCell());
+                try {
+                    startBin = BinningUtil.addDataRow2Bin(
+                            isBinNominal(), bins, missingValBin, startBin, 
+                            xCell, color, id, m_aggrColumns, 
+                            DataType.getMissingCell());
+                } catch (IllegalArgumentException e) {
+                    if (!BinningUtil.checkDomainRange(xCell, 
+                            getXColumnSpec())) {
+                        throw new IllegalStateException(
+                            "Invalid column domain for column " 
+                            + m_xColSpec.getName()
+                            + ". " + e.getMessage());
+                    }
+                    throw e;
+                }
             }
         } else {
             final DataTableSpec tableSpec = getTableSpec();
