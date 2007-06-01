@@ -60,13 +60,14 @@ public class BinningUtilTest extends TestCase {
         maxVal = 10;
         minVal = 0;
         noOfBars = 10;
-        expected = 1;
+        expected = 2;
         isInteger = true;
         interval = BinningUtil.createBinInterval(maxVal, minVal, 
                 noOfBars, isInteger);
         assertEquals(interval, expected);
         
         isInteger = false;
+        expected = 1;
         interval = BinningUtil.createBinInterval(maxVal, minVal, 
                 noOfBars, isInteger);
         assertEquals(interval, expected);
@@ -225,4 +226,24 @@ public class BinningUtilTest extends TestCase {
         }
     }
 
+    /**
+     * Test the 
+     * {@link BinningUtil#createBinInterval(double, double, int, boolean)} 
+     * method.
+     */
+    public void testIntegerInterval() {
+        double interval = BinningUtil.createBinInterval(-1, -3, 2, true);
+        assertTrue(interval == 2);
+        interval = BinningUtil.createBinInterval(1, -1, 2, true);
+        assertTrue(interval == 2);
+        interval = BinningUtil.createBinInterval(3, 1, 2, true);
+        assertTrue(interval == 2);
+        
+        interval = BinningUtil.createBinInterval(-1, -3, 3, true);
+        assertTrue(interval == 1);
+        interval = BinningUtil.createBinInterval(1, -1, 3, true);
+        assertTrue(interval == 1);
+        interval = BinningUtil.createBinInterval(3, 1, 3, true);
+        assertTrue(interval == 1);
+    }
 }
