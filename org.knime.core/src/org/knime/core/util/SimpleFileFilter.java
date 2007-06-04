@@ -43,6 +43,9 @@ public class SimpleFileFilter extends FileFilter {
      * @param exts allowed extensions
      */
     public SimpleFileFilter(final String... exts) {
+        if (exts == null) {
+            throw new NullPointerException("Extensions must not be null");
+        }
         m_validExtensions = exts;
     }
 
@@ -65,6 +68,13 @@ public class SimpleFileFilter extends FileFilter {
         return false;
     }
 
+    /**
+     * @return all extensions which are accepted by this filter
+     */
+    public String[] getValidExtensions() {
+        return m_validExtensions;
+    }
+    
     /**
      * {@inheritDoc}
      */
