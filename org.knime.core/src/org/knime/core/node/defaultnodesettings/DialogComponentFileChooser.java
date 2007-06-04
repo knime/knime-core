@@ -35,8 +35,8 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -75,7 +75,7 @@ public class DialogComponentFileChooser extends DialogComponent {
 
     private final TitledBorder m_border;
 
-    private final Map<FileFilter, String> m_extensionByFilter;
+    private final List<SimpleFileFilter> m_fileFilter;
     
     /**
      * Constructor that creates a file chooser with an
@@ -170,14 +170,13 @@ public class DialogComponentFileChooser extends DialogComponent {
         getComponentPanel().add(p);
 
         if (validExtensions != null) {
-            m_extensionByFilter = 
-                new HashMap<FileFilter, String>(validExtensions.length);
+            m_fileFilter = 
+                new ArrayList<SimpleFileFilter>(validExtensions.length);
             for (String extension : validExtensions) {
-                m_extensionByFilter.put(new SimpleFileFilter(
-                        extension), extension);
+                m_fileFilter.add(new SimpleFileFilter(extension));
             }
         } else {
-            m_extensionByFilter = new HashMap<FileFilter, String>(0);
+            m_fileFilter = new ArrayList<SimpleFileFilter>(0);
         }
         
         m_browseButton.addActionListener(new ActionListener() {
@@ -194,14 +193,16 @@ public class DialogComponentFileChooser extends DialogComponent {
                     chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 } else {
                     // if extensions are defined
-                    if (m_extensionByFilter != null 
-                            && m_extensionByFilter.size() > 0) {
+                    if (m_fileFilter != null 
+                            && m_fileFilter.size() > 0) {
                         // disable "All Files" selection
                         chooser.setAcceptAllFileFilterUsed(false);
-                        // set file filter for given extensions
-                        for (FileFilter filter : m_extensionByFilter.keySet()) {
+                        // set the file filter for the given extensions
+                        for (FileFilter filter : m_fileFilter) {
                             chooser.setFileFilter(filter);
                         }
+                        //set the first filter as default filter
+                        chooser.setFileFilter(m_fileFilter.get(0));
                     }
                 }
                 int returnVal =
@@ -214,25 +215,37 @@ public class DialogComponentFileChooser extends DialogComponent {
                                 chooser.getSelectedFile().getAbsoluteFile()
                                         .toString();
                         //check if the user has added the extension
-                        if (!directoryOnly && validExtensions != null) {
+                        if (!directoryOnly && m_fileFilter != null) {
                             boolean extensionFound = false;
-                            for (String extension : 
-                                m_extensionByFilter.values()) {
-                                if (newFile.endsWith(extension)) {
-                                    extensionFound = true;
+                            for (SimpleFileFilter filter : m_fileFilter) {
+                                final String[] extensions = 
+                                    filter.getValidExtensions();
+                                for (String extension : extensions) {
+                                    if (newFile.endsWith(extension)) {
+                                        extensionFound = true;
+                                        break;
+                                    }
+                                }
+                                if (extensionFound) {
                                     break;
                                 }
                             }
                             //otherwise add the extension of the selected
-                            //FileFilte
+                            //FileFilter
                             if (!extensionFound) {
                                 final FileFilter fileFilter = 
                                     chooser.getFileFilter();
-                                if (fileFilter != null) {
-                                    final String extension = 
-                                        m_extensionByFilter.get(fileFilter);
-                                    if (extension != null) {
-                                        newFile = newFile + extension;
+                                if (fileFilter != null 
+                                        && fileFilter 
+                                        instanceof SimpleFileFilter) {
+                                    final SimpleFileFilter filter = 
+                                        (SimpleFileFilter)fileFilter;
+                                    final String[] extensions = 
+                                        filter.getValidExtensions();
+                                    if (extensions != null 
+                                            && extensions.length > 0) {
+                                        //append the first extension
+                                        newFile = newFile + extensions[0];
                                     }
                                 }
                             }
