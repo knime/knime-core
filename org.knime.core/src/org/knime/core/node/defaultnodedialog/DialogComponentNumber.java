@@ -102,10 +102,13 @@ public class DialogComponentNumber extends DialogComponent {
         SpinnerNumberModel model = new SpinnerNumberModel(defaultValue,
                 minValue, maxValue, stepSize);
         m_spinner = new JSpinner(model);
+        m_spinner.setEditor(new JSpinner.NumberEditor(m_spinner,
+        "0.0################################################"));
         JSpinner.DefaultEditor editor = (JSpinner.DefaultEditor)m_spinner
                 .getEditor();
         editor.getTextField().setColumns(
                 Double.toString(maxValue).length() + 1);
+
         this.add(m_spinner);
         m_configName = configName;
         m_type = Type.DOUBLE;

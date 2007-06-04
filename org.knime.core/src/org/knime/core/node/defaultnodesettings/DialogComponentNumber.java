@@ -123,7 +123,7 @@ public class DialogComponentNumber extends DialogComponent {
         m_spinner = new JSpinner(spinnerModel);
         if (numberModel instanceof SettingsModelDouble) {
             m_spinner.setEditor(new JSpinner.NumberEditor(m_spinner,
-                    "#.0################################################"));
+                    "0.0################################################"));
         }
         JSpinner.DefaultEditor editor =
                 (JSpinner.DefaultEditor)m_spinner.getEditor();
