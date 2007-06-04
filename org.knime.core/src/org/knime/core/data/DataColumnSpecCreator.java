@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -119,6 +120,8 @@ public final class DataColumnSpecCreator {
     public DataColumnSpecCreator(final DataColumnSpec cspec) {
         m_name = cspec.getName();
         assert m_name != null : "Column name must not be null!";
+        List<String> elNames = cspec.getElementNames();
+        m_elementNames = elNames.toArray(new String[elNames.size()]);
         m_type = cspec.getType();
         assert m_type != null : " Column type must not be null!";
         m_domain = cspec.getDomain();
@@ -137,16 +140,16 @@ public final class DataColumnSpecCreator {
     /**
      * Merges the existing {@link DataColumnSpec} with a second
      * {@link DataColumnSpec}. If they have equal structure, the domain
-     * information from both DataColumnSpecs is merged, Color, Shape and
-     * Size-Handlers are compared (must be equal).
+     * information and properties from both DataColumnSpecs is merged, 
+     * Color, Shape and Size-Handlers are compared (must be equal).
      * 
      * @param cspec2 the second {@link DataColumnSpec}.
      * 
      * @see DataTableSpec#mergeDataTableSpecs(DataTableSpec...)
      * @throws IllegalArgumentException if the structure (type and name) does
      *             not match, if the domain can not be merged, if the Color-,
-     *             Shape- or SizeHandlers are different or if a property with
-     *             different values exists.
+     *             Shape- or SizeHandlers are different or the sub element 
+     *             names are not equal.
      */
     public void merge(final DataColumnSpec cspec2) {
         if (!cspec2.getName().equals(m_name)
@@ -250,7 +253,13 @@ public final class DataColumnSpecCreator {
         if (mergedProps.size() != m_properties.size()) {
             setProperties(new DataColumnProperties(mergedProps));
         }
-
+        List<String> elNames2 = cspec2.getElementNames();
+        String[] elNames2Array = elNames2.toArray(new String[elNames2.size()]);
+        String[] elNamesArray = 
+            m_elementNames == null ? new String[]{m_name} : m_elementNames;
+        if (!Arrays.deepEquals(elNamesArray, elNames2Array)) {
+            throw new IllegalArgumentException("Element names are not equal");
+        }
     }
 
     /**
