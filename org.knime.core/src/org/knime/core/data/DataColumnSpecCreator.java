@@ -26,6 +26,7 @@
  */
 package org.knime.core.data;
 
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -55,7 +56,7 @@ import org.knime.core.node.NodeLogger;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public class DataColumnSpecCreator {
+public final class DataColumnSpecCreator {
     
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(DataColumnSpec.class);
@@ -80,6 +81,11 @@ public class DataColumnSpecCreator {
 
     /** Holds the ColorHandler if one was set or null. */
     private ColorHandler m_colorHandler = null;
+    
+    /** Holds the names array (by default and array containing column name),
+     * something different for array types or BitVector type.
+     */
+    private String[] m_elementNames;
     
     /**
      * Counter that is used when the setName() method is called with an
@@ -267,6 +273,30 @@ public class DataColumnSpecCreator {
         }
         m_name = validName;
     }
+    
+    /**
+     * Set names of elements when this column contains a vector type. By default
+     * (i.e. non-vector types) the array has length 1 and contains the name of
+     * the column. If the argument is <code>null</code>, a default name array 
+     * will be used when the final {@link DataColumnSpec} is created (the array
+     * will contain the then-actual name of the column).
+     * @param elNames The elements names/identifiers to set.
+     * @throws NullPointerException If the argument contains <code>null</code>
+     * elements.
+     * @see DataColumnSpec#getElementNames()
+     */
+    public void setElementNames(final String[] elNames) {
+        if (elNames == null) {
+            m_elementNames = null;
+        } else {
+            if (Arrays.asList(elNames).contains(null)) {
+                throw new NullPointerException(
+                        "Argument array contains null elements");
+            }
+            m_elementNames = new String[elNames.length];
+            System.arraycopy(elNames, 0, m_elementNames, 0, elNames.length);
+        }
+    }
 
     /**
      * Set (new) column type.
@@ -358,7 +388,9 @@ public class DataColumnSpecCreator {
      * @return newly created <code>DataColumnSpec</code>
      */
     public DataColumnSpec createSpec() {
-        return new DataColumnSpec(m_name, m_type, m_domain, m_properties,
-                m_sizeHandler, m_colorHandler, m_shapeHandler);
+        String[] elNames = 
+            m_elementNames == null ? new String[]{m_name} : m_elementNames;
+        return new DataColumnSpec(m_name, elNames, m_type, m_domain,
+                m_properties, m_sizeHandler, m_colorHandler, m_shapeHandler);
     }
 }
