@@ -25,9 +25,7 @@
  */
 package org.knime.base.data.bitvector;
 
-import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.List;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -70,7 +68,6 @@ public class BitVectorCell extends DataCell implements BitVectorValue,
 
     private final int m_nrBits; // remember this as well
 
-    private List<String> m_nameMapping;
 
     // Note: BitSet.length() doesn't work! (returns length only up to last '1')
 
@@ -153,30 +150,6 @@ public class BitVectorCell extends DataCell implements BitVectorValue,
     public BitVectorCell(final BitSet bits, final int nrOfBits) {
         m_nrBits = nrOfBits;
         m_bits = bits;
-    }
-
-    /**
-     * 
-     * @param bits the underlying bit set
-     * @param nrOfBits the size of the bit set
-     * @param nameMapping a mapping of bit position to a name
-     */
-    public BitVectorCell(final BitSet bits, final int nrOfBits,
-            final List<String> nameMapping) {
-        m_nrBits = nrOfBits;
-        m_bits = bits;
-        m_nameMapping = nameMapping;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public List<String> getNaming() {
-        if (m_nameMapping != null) {
-            return new ArrayList<String>(m_nameMapping);
-        } else {
-            return null;
-        }
     }
 
     /**
@@ -299,6 +272,7 @@ public class BitVectorCell extends DataCell implements BitVectorValue,
      * Returns cardinality of this bit vector.
      * 
      * @see org.knime.core.data.IntValue#getIntValue()
+     * @return cardinality of this bit vector
      */
     public int getIntValue() {
         return m_bits.cardinality();

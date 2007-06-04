@@ -27,7 +27,6 @@ package org.knime.base.data.bitvector;
 
 import java.io.File;
 import java.util.BitSet;
-import java.util.List;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -65,13 +64,6 @@ public interface BitVectorValue extends DataValue {
      * @return hex string of this bitvector
      */
     String toHexString();
-
-    /**
-     * A mapping from bit position to earlier column name.
-     * 
-     * @return a mapping from bit position to name or null if none exist
-     */
-    List<String> getNaming();
     
     /** Utility Factory for Bit Vector values. */
     static class BitVectorUtilityFactory extends UtilityFactory {

@@ -246,7 +246,6 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
         if (bitVectorIndex < 0) {
             return new ArrayList<BitSet>();
         }
-        boolean first = true;
         for (RowIterator itr = inData.iterator(); itr.hasNext();) {
             exec.checkCanceled();
             DataRow currRow = itr.next();
@@ -255,10 +254,6 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
             BitSet currBitSet = currCell.getBitSet();
             m_maxBitsetLength = Math.max(m_maxBitsetLength, currCell
                     .getNumBits());
-            if (first) {
-                m_nameMapping = currCell.getNaming();
-                first = false;
-            }
             bitSets.add(currBitSet);
             m_tidRowKeyMapping.put(m_nrOfRows, currRow.getKey().getId());
             m_nrOfRows++;
@@ -507,6 +502,8 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
             throw new InvalidSettingsException(
                     "Set the column with the bit vectors");
         }
+        m_nameMapping = inSpecs[0].getColumnSpec(m_bitVectorColumn)
+            .getElementNames();
         DataTableSpec outputSpec;
         if (m_associationRules) {
             outputSpec = createAssociationRulesSpec();

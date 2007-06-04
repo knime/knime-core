@@ -233,7 +233,7 @@ public class TIDApriori implements AprioriAlgorithm {
         LOGGER.debug("dbsize: " + m_dbsize);
 
         findFrequentItems(transactions, exec);
-        LOGGER.debug("found " + m_frequentItems.size() + " frequent item sets");
+        LOGGER.debug("found " + m_frequentItems.size() + " frequent items");
         filterAlwaysFrequentItems();
         findFrequentItemsDepthFirst(exec);
     }

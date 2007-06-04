@@ -24,10 +24,9 @@
 package org.knime.base.node.mine.subgroupminer;
 
 import java.util.BitSet;
-import java.util.List;
 
 import org.knime.base.data.bitvector.BitVectorCell;
-import org.knime.base.data.bitvector.BitVectorRowCellFactory;
+import org.knime.base.data.bitvector.BitVectorCellFactory;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -37,7 +36,7 @@ import org.knime.core.data.DoubleValue;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class Numeric2BitVectorMeanCellFactory extends BitVectorRowCellFactory {
+public class Numeric2BitVectorMeanCellFactory extends BitVectorCellFactory {
 
     private double[] m_meanValues;
 
@@ -50,15 +49,13 @@ public class Numeric2BitVectorMeanCellFactory extends BitVectorRowCellFactory {
     /**
      * 
      * @param bitColSpec the column spec of the column containing the bitvectors
-     * @param nameMapping optional bitposition - column name mapping
      * @param meanValues the mean values of the numeric columns
      * @param meanThreshold threshold above which the bits should be set
      *            (percentage of the mean)
      */
     public Numeric2BitVectorMeanCellFactory(final DataColumnSpec bitColSpec,
-            final List<String>nameMapping,
             final double[] meanValues, final double meanThreshold) {
-        super(bitColSpec, nameMapping);
+        super(bitColSpec);
         m_meanValues = meanValues;
         m_meanFactor = meanThreshold;
     }
@@ -91,7 +88,7 @@ public class Numeric2BitVectorMeanCellFactory extends BitVectorRowCellFactory {
      * {@inheritDoc}
      */
     @Override
-    public DataCell getCell(DataRow row) {
+    public DataCell getCell(final DataRow row) {
         incrementNrOfRows();
         BitSet currBitSet = new BitSet(row.getNumCells());
         for (int i = 0; i < row.getNumCells(); i++) {
@@ -109,11 +106,7 @@ public class Numeric2BitVectorMeanCellFactory extends BitVectorRowCellFactory {
             } else {
                 m_totalNrOf0s++;
             }
-        }
-        if (getNameMapping() != null) {
-            return new BitVectorCell(currBitSet, row.getNumCells(), 
-                    getNameMapping());
-        }        
+        }     
         return new BitVectorCell(currBitSet, row.getNumCells());
     }
 

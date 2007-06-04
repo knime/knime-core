@@ -44,8 +44,8 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -254,14 +254,6 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        BufferedDataTable numericValues = inData[0];
-        List<String> nameMapping = new ArrayList<String>();
-        for (int i = 0; i < numericValues.getDataTableSpec().getNumColumns(); 
-            i++) {
-            nameMapping.add(numericValues.getDataTableSpec().getColumnSpec(i)
-                    .getName().toString());
-        }
-
         if (m_fromString) {
             // parse id, hex or bit strings
             int stringColumnPos = inData[0].getDataTableSpec().findColumnIndex(
@@ -277,15 +269,15 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             }
             return bfdt;
 
-        } else {
+        } else {          
             BufferedDataTable[] bfdt = createBitVectorsFromNumericData(
-                    inData[0], nameMapping, exec);
+                    inData[0], exec);
             return bfdt;
         }
     }
     
     private BufferedDataTable[] createBitVectorsFromNumericData(
-            final BufferedDataTable data, final List<String> nameMapping, 
+            final BufferedDataTable data, 
             final ExecutionContext exec)
             throws CanceledExecutionException {
         DataColumnSpec colSpec =
@@ -298,13 +290,12 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             meanValues = calculateMeanValues(data);
             m_factory =
                     new Numeric2BitVectorMeanCellFactory(colSpec,
-                            nameMapping,
                             meanValues, meanFactor);
         } else {
             // or dependend on fixed threshold
             m_factory =
                     new Numeric2BitVectorThresholdCellFactory(colSpec,
-                            nameMapping, m_threshold);
+                            m_threshold);
 
         }
         ColumnRearranger c = new ColumnRearranger(data.getDataTableSpec());
@@ -317,8 +308,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             // put out only the generated one
             DataTableSpec spec = new DataTableSpec(createNumericOutputSpec(
                     data.getDataTableSpec()));
-            BufferedDataContainer cont = exec.createDataContainer(spec);
-            int rowNr = 0;
+            DataContainer cont = exec.createDataContainer(spec);
+            double rowNr = 0;
             double nrOfRows = data.getRowCount();
             for (DataRow row : data) {
                 exec.checkCanceled();
@@ -329,7 +320,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                 cont.addRowToTable(newRow);
             }
             cont.close();
-            return new BufferedDataTable[]{cont.getTable()};
+            return new BufferedDataTable[]{exec.createBufferedDataTable(
+                    cont.getTable(), exec)};
         }
     }
     
@@ -370,8 +362,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             m_factory = new IdString2BitVectorCellFactory(creator.createSpec(),
                     colIdx);
         } else {
-            throw new InvalidSettingsException("String type to parse "
-                    + "bitvectors from unknown!");
+            throw new InvalidSettingsException(
+                    "String type to parse bitvectors" + " from unknown!");
         }
         ColumnRearranger c = new ColumnRearranger(spec);
         if (m_replace) {
@@ -442,13 +434,21 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     
     private DataColumnSpec createNumericOutputSpec(final DataTableSpec spec) {
         String name;
-        int i = 0;
+        int j = 0;
         do {
-            name = "BitVectors" + (i == 0 ? "" : "_" + i); 
-            i++;
+            name = "BitVectors" + (j == 0 ? "" : "_" + j); 
+            j++;
         } while (spec.containsName(name));
+        // get the names of numeric columns
+        List<String> nameMapping = new ArrayList<String>();
+        for (int i = 0; i < spec.getNumColumns(); i++) {
+            nameMapping.add(spec.getColumnSpec(i)
+                    .getName().toString());
+        }  
         DataColumnSpecCreator creator = new DataColumnSpecCreator(
                 name, BitVectorCell.TYPE);
+        creator.setElementNames(nameMapping.toArray(
+                new String[nameMapping.size()]));
         return creator.createSpec(); 
     }
 
