@@ -44,8 +44,8 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -317,8 +317,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             // put out only the generated one
             DataTableSpec spec = new DataTableSpec(createNumericOutputSpec(
                     data.getDataTableSpec()));
-            DataContainer cont = exec.createDataContainer(spec);
-            double rowNr = 0;
+            BufferedDataContainer cont = exec.createDataContainer(spec);
+            int rowNr = 0;
             double nrOfRows = data.getRowCount();
             for (DataRow row : data) {
                 exec.checkCanceled();
@@ -329,8 +329,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                 cont.addRowToTable(newRow);
             }
             cont.close();
-            return new BufferedDataTable[]{exec.createBufferedDataTable(
-                    cont.getTable(), exec)};
+            return new BufferedDataTable[]{cont.getTable()};
         }
     }
     
@@ -356,7 +355,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
         if (!m_replace) {
             String colName = spec.getColumnSpec(colIdx).getName() + "_bits";
             creator.setName(colName);
-            if (spec.containsName(colName)){
+            if (spec.containsName(colName)) {
                 throw new InvalidSettingsException("Column " + colName 
                         + " already exist in table!");
             }
@@ -371,8 +370,8 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             m_factory = new IdString2BitVectorCellFactory(creator.createSpec(),
                     colIdx);
         } else {
-            throw new InvalidSettingsException("String type to parse bitvectors" 
-                    + " from unknown!");
+            throw new InvalidSettingsException("String type to parse "
+                    + "bitvectors from unknown!");
         }
         ColumnRearranger c = new ColumnRearranger(spec);
         if (m_replace) {
@@ -398,8 +397,7 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
     /**
      * Assume to get numeric data only. Output is one column of type BitVector.
      * 
-     * @see org.knime.core.node.NodeModel#configure(
-     *      org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
