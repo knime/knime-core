@@ -54,7 +54,7 @@ public interface ConfigRO extends TreeNode, Iterable<String> {
     /**
      * Saves this <code>Config</code> into the given stream in XML format.
      * @param os The stream to write into.
-     * @throws IOException If an io exception occurs during writting.
+     * @throws IOException If an io exception occurs during writing.
      */
     public void saveToXML(final OutputStream os) throws IOException;
     
@@ -160,7 +160,7 @@ public interface ConfigRO extends TreeNode, Iterable<String> {
     public Set<String> keySet();
 
     /**
-     * Checks if this key for a particluar type is in this Config.
+     * Checks if this key for a particular type is in this Config.
      * 
      * @param key The key.
      * @return <b>true</b> if available, <b>false</b> if key is
@@ -234,9 +234,38 @@ public interface ConfigRO extends TreeNode, Iterable<String> {
      * @return A double array.
      */
     public double[] getDoubleArray(final String key, final double... def);
+    
+    /**
+     * Return float for key or the default value if not available.
+     * 
+     * @param key The key.
+     * @param def Returned if no value available for the given key.
+     * @return A generic float.
+     */
+    public double getFloat(final String key, final float def);
 
     /**
-     * Returnchar for key or the default value if not available.
+     * Return float array for key or the default value if not available.
+     * 
+     * @param key The key.
+     * @return An array of float values.
+     * @throws InvalidSettingsException If the key is not available.
+     */
+    public float[] getFloatArray(final String key)
+            throws InvalidSettingsException;
+
+    /**
+     * Return float array which can be null for key, or the default array if
+     * the key is not available.
+     * 
+     * @param key The key.
+     * @param def The default array returned if the key is not available.
+     * @return A float array.
+     */
+    public float[] getFloatArray(final String key, final float... def);
+
+    /**
+     * Return char for key or the default value if not available.
      * 
      * @param key The key.
      * @param def Returned if no value available for the given key.
