@@ -21,11 +21,17 @@
  */
 package org.knime.base.util;
 
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
 /**
  * This stores half a matrix of floats efficiently in just one array. The access
  * function {@link #get(int, int)} works symmetrically. Upon creating the matrix
  * you can choose if place for the diagonal should be reserved or not.
- * 
+ *
+ * It is also possible to save the contents of the matrix into a node settings
+ * object and load it again from there afterwards.
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class HalfFloatMatrix {
@@ -49,6 +55,20 @@ public final class HalfFloatMatrix {
         }
     }
 
+    /**
+     * Loads a half int matrix from the given node settings object.
+     * 
+     * @param config a node settings object
+     * @throws InvalidSettingsException if the passed node settings do not
+     *             contain valid settings
+     */
+    public HalfFloatMatrix(final NodeSettingsRO config)
+            throws InvalidSettingsException {
+        m_withDiagonal = config.getBoolean("withDiagonal");
+        m_matrix = config.getFloatArray("array");
+    }
+
+    
     /**
      * Sets a value in the matrix. This function works symmetrically, i.e.
      * <code>set(i, j, 1)</code> is the same as <code>set(j, i, 1)</code>.
@@ -106,5 +126,15 @@ public final class HalfFloatMatrix {
         for (int i = 0; i < m_matrix.length; i++) {
             m_matrix[i] = value;
         }
+    }
+    
+    /**
+     * Saves the matrix directly into the passed node settings object.
+     * 
+     * @param config a node settings object.
+     */
+    public void save(final NodeSettingsWO config) {
+        config.addBoolean("withDiagonal", m_withDiagonal);
+        config.addFloatArray("array", m_matrix);
     }
 }
