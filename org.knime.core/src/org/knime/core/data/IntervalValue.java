@@ -31,24 +31,66 @@ import javax.swing.ImageIcon;
  * @author Thomas Gabriel, University of Konstanz
  */
 public interface IntervalValue extends DataValue {
-    
-    /** 
+
+    /**
      * Meta information to this value type.
+     * 
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = 
-        new IntervalUtilityFactory();
+    public static final UtilityFactory UTILITY = new IntervalUtilityFactory();
 
     /**
      * @return minimum border
      */
     public double getLeftBound();
-    
+
     /**
      * @return maximum border
      */
     public double getRightBound();
-    
+
+    /**
+     * @return whether the left bound is included in the interval
+     */
+    public boolean leftBoundIncluded();
+
+    /**
+     * @return whether the right bound is included in the interval
+     */
+    public boolean rightBoundIncluded();
+
+    /**
+     * Determines if the given double value is contained in this interval, to
+     * the left or to the right.
+     * 
+     * @param value the value to check
+     * 
+     * @return -1 if value is left to the interval, 0 if it is included an 1 if
+     *         it is to the right of the interval
+     */
+    public int compare(double value);
+
+    /**
+     * Determines if the given double value is contained in this interval, to
+     * the left or to the right.
+     * 
+     * @param value the value to check
+     * 
+     * @return -1 if value is left to the interval, 0 if it is included an 1 if
+     *         it is to the right of the interval
+     */
+    public int compare(DoubleValue value);
+
+    /**
+     * Determines if the given {@link IntervalValue} is contained in this
+     * interval.
+     * 
+     * @param value the interval to check
+     * 
+     * @return true if the value is completely contained in the interval
+     */
+    public boolean includes(IntervalValue value);
+
     /** Implementations of the meta information of this value class. */
     public static class IntervalUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
@@ -59,10 +101,10 @@ public interface IntervalValue extends DataValue {
             ImageIcon icon;
             try {
                 ClassLoader loader = IntervalValue.class.getClassLoader();
-                String path = IntervalValue.class.getPackage().
-                    getName().replace('.', '/');
-                icon = new ImageIcon(loader.getResource(
-                        path + "/icon/intervalicon.png"));
+                String path = IntervalValue.class.getPackage().getName().
+                        replace('.', '/');
+                icon = new ImageIcon(loader.getResource(path
+                        + "/icon/intervalicon.png"));
             } catch (Exception e) {
                 icon = null;
             }
@@ -70,8 +112,8 @@ public interface IntervalValue extends DataValue {
         }
 
         private static final IntervalValueComparator COMPARATOR =
-            new IntervalValueComparator();
-        
+                new IntervalValueComparator();
+
         /** Only subclasses are allowed to instantiate this class. */
         protected IntervalUtilityFactory() {
         }
