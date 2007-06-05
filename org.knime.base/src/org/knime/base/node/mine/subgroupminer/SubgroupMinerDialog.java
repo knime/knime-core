@@ -24,31 +24,22 @@
  */
 package org.knime.base.node.mine.subgroupminer;
 
-import java.awt.Dimension;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.BoxLayout;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.base.data.bitvector.BitVectorValue;
 import org.knime.base.node.mine.subgroupminer.apriori.AprioriAlgorithmFactory;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSet;
 import org.knime.base.node.mine.subgroupminer.freqitemset.FrequentItemSetTable;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodedialog.DialogComponent;
-import org.knime.core.node.defaultnodedialog.DialogComponentColumnSelection;
-import org.knime.core.node.defaultnodedialog.DialogComponentComboBox;
-import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * The dialog for the subgroup miner node. Provides possibilities to adjust the
@@ -58,132 +49,178 @@ import org.knime.core.node.defaultnodedialog.DialogComponentNumber;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class SubgroupMinerDialog extends NodeDialogPane {
-    private DialogComponentColumnSelection m_bitVectorColumnComp;
+public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
+    
+    private DialogComponentColumnNameSelection m_bitVectorColumnComp;
 
     private DialogComponentNumber m_minSupportComp;
 
-    private DialogComponentComboBox m_itemSetTypeComp;
+    private DialogComponentStringSelection m_itemSetTypeComp;
 
     private DialogComponentNumber m_itemSetLengthComp;
 
-    private DialogComponentComboBox m_sortByComp;
+    private DialogComponentStringSelection m_sortByComp;
 
-    private DialogComponentComboBox m_dataStructComp;
+    private DialogComponentStringSelection m_dataStructComp;
 
-    private JCheckBox m_associationRules;
+    private DialogComponentBoolean m_associationRules;
 
     private DialogComponentNumber m_confidence;
 
-    private List<DialogComponent> m_dialogComponents;
-
-    private JPanel m_panel;
 
     /**
      * Constructs the dialog for the subgroup miner node by adding the needed
      * default dialog components.
      */
+    @SuppressWarnings("unchecked")
     public SubgroupMinerDialog() {
         super();
-        m_dialogComponents = new ArrayList<DialogComponent>();
-        m_panel = new JPanel();
-        m_panel.setLayout(new BoxLayout(m_panel, BoxLayout.Y_AXIS));
-        m_panel.setPreferredSize(new Dimension(300, 400));
-        super.addTab("Default Options", m_panel);
-
-        m_bitVectorColumnComp = new DialogComponentColumnSelection(
-                SubgroupMinerModel.CFG_BITVECTOR_COL,
+        
+        m_bitVectorColumnComp = new DialogComponentColumnNameSelection(
+                createBitVectorColumnModel(),
                 "Column containing the bit vectors", 0, BitVectorValue.class);
-        addDialogComponent(m_bitVectorColumnComp);
-
+        
         m_minSupportComp = new DialogComponentNumber(
-                SubgroupMinerModel.CFG_MIN_SUPPORT, "Minimum support (0-1)",
-                0.0d, 1.0, SubgroupMinerModel.DEFAULT_MIN_SUPPORT, 0.1);
-        addDialogComponent(m_minSupportComp);
-
-        m_itemSetTypeComp = new DialogComponentComboBox(
-                SubgroupMinerModel.CFG_ITEMSET_TYPE, "Item Set Type",
+                createMinSupportModel(),
+                "Minimum support (0-1)", 0.1);
+        
+        m_itemSetTypeComp = new DialogComponentStringSelection(
+                createItemSetTypeModel(), "Item Set Type",
                 FrequentItemSet.Type.asStringList());
-        addDialogComponent(m_itemSetTypeComp);
 
         m_itemSetLengthComp = new DialogComponentNumber(
-                SubgroupMinerModel.CFG_MAX_ITEMSET_LENGTH,
-                "Maximal Itemset Length:", 1, Integer.MAX_VALUE,
-                SubgroupMinerModel.DEFAULT_MAX_ITEMSET_LENGTH);
-        addDialogComponent(m_itemSetLengthComp);
-
-        m_sortByComp = new DialogComponentComboBox(
-                SubgroupMinerModel.CFG_SORT_BY, "Sort output table by: ",
+                createItemsetLengthModel(),
+                "Maximal Itemset Length:", 1);
+        
+        m_sortByComp = new DialogComponentStringSelection(
+                createSortByModel(), "Sort output table by: ",
                 FrequentItemSetTable.Sorter.asStringList());
-        addDialogComponent(m_sortByComp);
+        
 
-        JPanel associationPanel = new JPanel();
-        associationPanel.setLayout(new BoxLayout(associationPanel,
-                BoxLayout.X_AXIS));
-        associationPanel.add(new JLabel("Output association rules"));
-        m_associationRules = new JCheckBox();
-        m_associationRules.setSelected(false);
-        m_associationRules.addItemListener(new ItemListener() {
-            public void itemStateChanged(final ItemEvent arg0) {
-                m_confidence.setEnabled(m_associationRules.isSelected());
-                m_sortByComp.setEnabled(!m_associationRules.isSelected());
-            }
-        });
-        associationPanel.add(m_associationRules);
-        m_panel.add(associationPanel);
-
-        m_confidence = new DialogComponentNumber(
-                SubgroupMinerModel.CFG_CONFIDENCE, "Minimum Confidence:", 0.0,
-                1.0, SubgroupMinerModel.DEFAULT_CONFIDENCE, 0.1);
-        m_confidence.setEnabled(false);
-        addDialogComponent(m_confidence);
-
-        m_dataStructComp = new DialogComponentComboBox(
-                SubgroupMinerModel.CFG_UNDERLYING_STRUCT,
+        m_dataStructComp = new DialogComponentStringSelection(
+                createAlgorithmModel(),
                 "Underlying data structure: ",
                 AprioriAlgorithmFactory.AlgorithmDataStructure.asStringList());
-        addDialogComponent(m_dataStructComp);
+        
 
-    }
+        // models
+        final SettingsModelDoubleBounded confidenceModel 
+            = createConfidenceModel();
+        final SettingsModelBoolean assocRuleFlag 
+            = createAssociationRuleFlagModel();
+        
+        // components 
+        m_confidence = new DialogComponentNumber(
+                confidenceModel, "Minimum Confidence:", 0.1);
+        
 
-    /**
-     * Adds a dialog component to this dialog pane.
-     * 
-     * @param diaC the dialog component that should be added
-     */
-    public void addDialogComponent(final DialogComponent diaC) {
-        m_dialogComponents.add(diaC);
-        m_panel.add(diaC);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        try {
-            for (DialogComponent comp : m_dialogComponents) {
-                comp.loadSettingsFrom(settings, specs);
-
+        m_associationRules = new DialogComponentBoolean(
+                assocRuleFlag, "Output association rules");
+        
+        // listener
+        assocRuleFlag.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                confidenceModel.setEnabled(assocRuleFlag.getBooleanValue());
             }
-            m_associationRules.setSelected(settings
-                    .getBoolean(SubgroupMinerModel.CFG_ASSOCIATION_RULES));
-        } catch (InvalidSettingsException ise) {
-            // do nothing here, since it is the dialog
-        }
+        });
+        
+        
+        // adding to panel
+        createNewGroup("Itemset Mining");
+        addDialogComponent(m_bitVectorColumnComp);
+        addDialogComponent(m_minSupportComp);
+        addDialogComponent(m_dataStructComp);
+        
+        createNewGroup("Output");
+        addDialogComponent(m_itemSetTypeComp);
+        addDialogComponent(m_itemSetLengthComp);
+        addDialogComponent(m_sortByComp);
+        
+        createNewGroup("Association Rules");
+        addDialogComponent(m_associationRules);
+        addDialogComponent(m_confidence);
+
+
+
     }
 
     /**
-     * {@inheritDoc}
+     * 
+     * @return settings model for the bitvector column
      */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
-        for (DialogComponent comp : m_dialogComponents) {
-            comp.saveSettingsTo(settings);
-        }
-        settings.addBoolean(SubgroupMinerModel.CFG_ASSOCIATION_RULES,
-                m_associationRules.isSelected());
+    static SettingsModelString createBitVectorColumnModel() {
+        return new SettingsModelString(
+                SubgroupMinerModel.CFG_BITVECTOR_COL, "");
+    }
+    
+    /**
+     * 
+     * @return settings model for the minimum support
+     */
+    static SettingsModelDoubleBounded createMinSupportModel() {
+        return new SettingsModelDoubleBounded(
+                SubgroupMinerModel.CFG_MIN_SUPPORT, 
+                SubgroupMinerModel.DEFAULT_MIN_SUPPORT, 0.0, 1.0);
+    }
+    
+    /**
+     * 
+     * @return settings model for the item set type
+     */
+    static SettingsModelString createItemSetTypeModel() {
+        return new SettingsModelString(SubgroupMinerModel.CFG_ITEMSET_TYPE, 
+                FrequentItemSet.Type.CLOSED.name());
+    }
+    
+    /**
+     * 
+     * @return settings model for the itemset length
+     */
+    static SettingsModelIntegerBounded createItemsetLengthModel() {
+        return new SettingsModelIntegerBounded(
+                SubgroupMinerModel.CFG_MAX_ITEMSET_LENGTH,
+                SubgroupMinerModel.DEFAULT_MAX_ITEMSET_LENGTH,
+                1, Integer.MAX_VALUE);
+    }
+    
+    /**
+     * 
+     * @return settings model for the sort by method
+     */
+    static SettingsModelString createSortByModel() {
+        return new SettingsModelString(
+                SubgroupMinerModel.CFG_SORT_BY,
+                FrequentItemSetTable.Sorter.NONE.name());
+    }
+    
+    /**
+     * 
+     * @return settings model for the association rule creation flag
+     */
+    static SettingsModelBoolean createAssociationRuleFlagModel() {
+        return new SettingsModelBoolean(
+                SubgroupMinerModel.CFG_ASSOCIATION_RULES, false);
+    }
+    
+    /**
+     * 
+     * @return settings model for the confidence 
+     */
+    static SettingsModelDoubleBounded createConfidenceModel() {
+        SettingsModelDoubleBounded model = new SettingsModelDoubleBounded(
+                SubgroupMinerModel.CFG_CONFIDENCE,
+                SubgroupMinerModel.DEFAULT_CONFIDENCE, 0.0, 1.0);
+        model.setEnabled(false);
+        return model;
+    }
+    
+    /**
+     * 
+     * @return settings model for the underlying algorithm
+     */
+    static SettingsModelString createAlgorithmModel() {
+        return new SettingsModelString(
+                SubgroupMinerModel.CFG_UNDERLYING_STRUCT, 
+                AprioriAlgorithmFactory.AlgorithmDataStructure.ARRAY.name());
     }
 }
