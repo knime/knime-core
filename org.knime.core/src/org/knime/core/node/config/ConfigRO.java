@@ -242,7 +242,7 @@ public interface ConfigRO extends TreeNode, Iterable<String> {
      * @param def Returned if no value available for the given key.
      * @return A generic float.
      */
-    public double getFloat(final String key, final float def);
+    public float getFloat(final String key, final float def);
 
     /**
      * Return float array for key or the default value if not available.
