@@ -1,0 +1,142 @@
+/* ------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+ * ---------------------------------------------------------------------
+ * 
+ * History
+ *   05.06.2007 (thor): created
+ */
+package org.knime.base.util;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
+/**
+ * This stores half a matrix of doubles efficiently in just one array. The
+ * access function {@link #get(int, int)} works symmetrically. Upon creating the
+ * matrix you can choose if place for the diagonal should be reserved or not.
+ * 
+ * It is also possible to save the contents of the matrix into a node settings
+ * object and load it again from there afterwards.
+ * 
+ * @author Thorsten Meinl, University of Konstanz
+ */
+public final class HalfDoubleMatrix {
+    private final boolean m_withDiagonal;
+
+    private final double[] m_matrix;
+
+    /**
+     * Creates a new half-matrix of doubles.
+     * 
+     * @param rows the number of rows (and columns) in the matrix
+     * @param withDiagonal <code>true</code> if the diagonal should be stored
+     *            too, <code>false</code> otherwise
+     */
+    public HalfDoubleMatrix(final int rows, final boolean withDiagonal) {
+        m_withDiagonal = withDiagonal;
+        if (withDiagonal) {
+            m_matrix = new double[(rows * rows + rows) / 2];
+        } else {
+            m_matrix = new double[(rows * rows - rows) / 2];
+        }
+    }
+
+    /**
+     * Loads a half int matrix from the given node settings object.
+     * 
+     * @param config a node settings object
+     * @throws InvalidSettingsException if the passed node settings do not
+     *             contain valid settings
+     */
+    public HalfDoubleMatrix(final NodeSettingsRO config)
+            throws InvalidSettingsException {
+        m_withDiagonal = config.getBoolean("withDiagonal");
+        m_matrix = config.getDoubleArray("array");
+    }
+
+    /**
+     * Sets a value in the matrix. This function works symmetrically, i.e.
+     * <code>set(i, j, 1)</code> is the same as <code>set(j, i, 1)</code>.
+     * 
+     * @param row the value's row
+     * @param col the value's column
+     * @param value the value
+     */
+    public void set(final int row, final int col, final double value) {
+        if (row > col) {
+            if (m_withDiagonal) {
+                m_matrix[row * (row + 1) / 2 + col] = value;
+            } else {
+                m_matrix[row * (row - 1) / 2 + col] = value;
+            }
+        } else {
+            if (m_withDiagonal) {
+                m_matrix[col * (col + 1) / 2 + row] = value;
+            } else {
+                m_matrix[col * (col - 1) / 2 + row] = value;
+            }
+        }
+    }
+
+    /**
+     * Returns a value in the matrix. This function works symmetrically, i.e.
+     * <code>get(i, j)</code> is the same as <code>get(j, i)</code>.
+     * 
+     * @param row the value's row
+     * @param col the value's column
+     * @return the value
+     */
+    public double get(final int row, final int col) {
+        if (row > col) {
+            if (m_withDiagonal) {
+                return m_matrix[row * (row + 1) / 2 + col];
+            } else {
+                return m_matrix[row * (row - 1) / 2 + col];
+            }
+        } else {
+            if (m_withDiagonal) {
+                return m_matrix[col * (col + 1) / 2 + row];
+            } else {
+                return m_matrix[col * (col - 1) / 2 + row];
+            }
+        }
+    }
+
+    /**
+     * Fills the matrix with the given value.
+     * 
+     * @param value any value
+     */
+    public void fill(final double value) {
+        for (int i = 0; i < m_matrix.length; i++) {
+            m_matrix[i] = value;
+        }
+    }
+
+    /**
+     * Saves the matrix directly into the passed node settings object.
+     * 
+     * @param config a node settings object.
+     */
+    public void save(final NodeSettingsWO config) {
+        config.addBoolean("withDiagonal", m_withDiagonal);
+        config.addDoubleArray("array", m_matrix);
+    }
+}
