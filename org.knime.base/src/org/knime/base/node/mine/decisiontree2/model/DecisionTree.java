@@ -195,4 +195,13 @@ public class DecisionTree implements Serializable {
         }
         return (DecisionTreeNodeLeaf)node;
     }
+    
+    /**
+     * Sets a new root node.
+     * 
+     * @param root the new root to set
+     */
+    public void setRoot(final DecisionTreeNode root) {
+        m_rootNode = root;
+    }
 }
