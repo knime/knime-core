@@ -23,6 +23,8 @@ package org.knime.base.node.io.database;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
@@ -46,47 +48,32 @@ import org.knime.core.node.NodeLogger;
  * @author Thomas Gabriel, University of Konstanz
  */
 final class DBWriterConnection {
+    
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DBWriterConnection.class);
+    
+    private DBWriterConnection() {
+        
+    }
     
     /**
      * Create connection to write into database.
      * @param conn An already opened connection to a database.
      * @param table The table name to write into.
      * @param data The data to write.
-     * @param exec Used the cancel writting.
+     * @param appendData if checked the data is appended to an existing table
+     * @param exec Used the cancel writing.
      * @param sqlTypes A mapping from column name to SQL-type. 
+     * @return error string or null, if non
      * @throws SQLException If connection could not be established.
      * @throws CanceledExecutionException If canceled.
      */
-    DBWriterConnection(final Connection conn,
+    static final String writeData(final Connection conn,
             final String table, final BufferedDataTable data,
+            final boolean appendData,
             final ExecutionMonitor exec, final Map<String, String> sqlTypes) 
             throws SQLException, CanceledExecutionException {
-        
         DataTableSpec spec = data.getDataTableSpec();
-        StringBuilder buf = new StringBuilder("(");
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            if (i > 0) {
-                buf.append(", ");
-            }
-            DataColumnSpec cspec = spec.getColumnSpec(i);
-            String colName = cspec.getName();
-            String column = colName.replaceAll("[^a-zA-Z0-9]", "_");
-            buf.append(column + " " + sqlTypes.get(colName));
-        }
-        buf.append(")");
-        LOGGER.debug(buf.toString());
-        
-        try {
-            conn.createStatement().execute("DROP TABLE " + table);
-        } catch (Exception e) {
-            LOGGER.debug("Can't drop table, don't worry will create new one.");
-        }
-        // and create new table
-        conn.createStatement().execute("CREATE TABLE " + table + " " 
-                + buf.toString());
-
         StringBuilder wildcard = new StringBuilder("(");
         for (int i = 0; i < spec.getNumColumns(); i++) {
             if (i > 0) {
@@ -96,6 +83,84 @@ final class DBWriterConnection {
             }
         }
         wildcard.append(")");
+        // append data to existing table
+        if (appendData) {
+            ResultSet rs = null;
+            try {
+                // try to count all rows to see if table exists
+                rs = conn.createStatement().executeQuery(
+                        "SELECT * FROM " + table);
+            } catch (SQLException sqle) {
+                LOGGER.debug("Table is not available, will create new table.");
+                // and create new table
+                conn.createStatement().execute("CREATE TABLE " + table + " " 
+                        + createStmt(spec, sqlTypes));
+            }
+            // if table exists
+            if (rs != null) {
+                ResultSetMetaData rsmd = rs.getMetaData();
+                if (spec.getNumColumns() != rsmd.getColumnCount()) {
+                    throw new RuntimeException("Number of columns from input "
+                            + "and in database does not match: " 
+                            + spec.getNumColumns() + " <> "
+                            + rsmd.getColumnCount());
+                }
+                for (int i = 0; i < rsmd.getColumnCount(); i++) {
+                    String name = rsmd.getColumnName(i + 1);
+                    DataColumnSpec cspec = spec.getColumnSpec(i);
+                    if (!cspec.getName().equals(name)) {
+                        throw new RuntimeException("Column name from input "
+                                + "does not match column name in database at "
+                                + "position " + i + ": " + name);
+                    }
+                    int type = rsmd.getColumnType(i + 1);
+                    switch (type) {
+                        // check all int compatible types 
+                        case Types.INTEGER:
+                        case Types.BIT:
+                        case Types.BINARY:
+                        case Types.BOOLEAN:
+                        case Types.VARBINARY:
+                        case Types.SMALLINT:
+                        case Types.TINYINT:
+                        case Types.BIGINT:
+                        // check all double compatible types
+                            if (!cspec.getType().isCompatible(IntValue.class)) {
+                                throw new RuntimeException("Column type from "
+                                        + "input does not match type in "
+                                        + "database at position " + i 
+                                        + ": " + type);
+                            }
+                            break;
+                        case Types.FLOAT:
+                        case Types.DOUBLE:
+                        case Types.NUMERIC:
+                        case Types.DECIMAL:
+                        case Types.REAL:
+                            if (!cspec.getType().isCompatible(
+                                    DoubleValue.class)) {
+                                throw new RuntimeException("Column type from "
+                                        + "input does not match type in "
+                                        + "database at position " + i 
+                                        + ": " + type);
+                            }
+                            break;
+                        // all other cases are fine for string-type columns
+                    }
+                }
+                rs.close();
+            }
+        } else {
+            try {
+                // remove existing table (if any)
+                conn.createStatement().execute("DROP TABLE " + table);
+            } catch (Exception e) {
+                LOGGER.debug("Can't drop table, will create new table.");
+            }
+            // and create new table
+            conn.createStatement().execute("CREATE TABLE " + table + " " 
+                    + createStmt(spec, sqlTypes));
+        }
         
         // create table meta data with empty column information
         PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + table
@@ -108,6 +173,7 @@ final class DBWriterConnection {
         int rowCount = data.getRowCount();
         int cnt = 1;
         int errorCnt = 0;
+        int allErrors = 0;
         for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
             exec.checkCanceled();
             exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
@@ -145,15 +211,16 @@ final class DBWriterConnection {
             try {
                 stmt.execute();
             } catch (Exception e) {
+                allErrors++;
                 if (errorCnt > -1) {
+                    String errorMsg = "Error in row #" + cnt + ": " 
+                        + row.getKey() + ", " + e.getMessage();
+                    exec.setMessage(errorMsg);
                     if (errorCnt++ < 100) {
-                        LOGGER.warn("Error in row #" + cnt + ": " 
-                                + row.getKey() + ", " + e.getMessage(), e);
+                        LOGGER.warn(errorMsg, e);
                     } else {
                         errorCnt = -1;
-                        LOGGER.warn("Error in row #" + cnt + ": " 
-                                + row.getKey() + ", " + e.getMessage() 
-                                + " - more errors...", e);
+                        LOGGER.warn(errorMsg + " - more errors...", e);
                     }
                 }
             }
@@ -162,6 +229,28 @@ final class DBWriterConnection {
         conn.setAutoCommit(true);
         stmt.close();
         conn.close();
+        if (allErrors == 0) {
+            return null;
+        } else {
+            return "Error writing " + allErrors + " of " + rowCount;
+        }
     }
+    
+    private static String createStmt(final DataTableSpec spec, 
+            final Map<String, String> sqlTypes) {
+        StringBuilder buf = new StringBuilder("(");
+        for (int i = 0; i < spec.getNumColumns(); i++) {
+            if (i > 0) {
+                buf.append(", ");
+            }
+            DataColumnSpec cspec = spec.getColumnSpec(i);
+            String colName = cspec.getName();
+            String column = colName.replaceAll("[^a-zA-Z0-9]", "_");
+            buf.append(column + " " + sqlTypes.get(colName));
+        }
+        buf.append(")");
+        return buf.toString();
+    }
+        
     
 }

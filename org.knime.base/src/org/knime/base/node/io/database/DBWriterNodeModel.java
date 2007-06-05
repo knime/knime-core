@@ -71,6 +71,8 @@ class DBWriterNodeModel extends NodeModel {
     private String m_pass = "";
 
     private String m_table = "<table_name>";
+    
+    private boolean m_append = false;
 
     private final Map<String, String> m_types = 
         new LinkedHashMap<String, String>();
@@ -113,6 +115,7 @@ class DBWriterNodeModel extends NodeModel {
         settings.addString("user", m_user);
         settings.addString("password", m_pass);
         settings.addString("table", m_table);
+        settings.addBoolean("append_data", m_append);
         // save sql type mapping
         NodeSettingsWO typeSett = settings.addNodeSettings(CFG_SQL_TYPES);
         for (Map.Entry<String, String> e : m_types.entrySet()) {
@@ -144,6 +147,7 @@ class DBWriterNodeModel extends NodeModel {
         String database = settings.getString("database");
         String user = settings.getString("user");
         String table = settings.getString("table");
+        boolean append = settings.getBoolean("append_data", false);
         // password
         String password = settings.getString("password", "");
         // loaded driver: need to load settings before 1.2
@@ -158,6 +162,7 @@ class DBWriterNodeModel extends NodeModel {
             m_user = user;
             m_pass = password;
             m_table = table;
+            m_append = append;
             for (String fileName : loadedDriver) {
                 try {
                     DBDriverLoader.loadDriver(new File(fileName));
@@ -196,7 +201,11 @@ class DBWriterNodeModel extends NodeModel {
             DriverManager.setLoginTimeout(5);
             conn = DriverManager.getConnection(m_url, m_user, password);
             // write entire data
-            new DBWriterConnection(conn, m_table, inData[0], exec, m_types);
+            String error = DBWriterConnection.writeData( 
+                    conn, m_table, inData[0], m_append, exec, m_types);
+            if (error != null) {
+                super.setWarningMessage(error);
+            }
         } finally {
             if (conn != null) {
                 conn.close();
@@ -276,10 +285,15 @@ class DBWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("No columns in input data.");
         }
         
+        String passMsg = "";
         // print warning if password is empty
         if (m_pass == null || m_pass.length() == 0) {
-            super.setWarningMessage(
-                    "Check if you need to set a password.");
+            passMsg = "Check if you need to set a password.";
+        }
+        
+        if (passMsg.length() > 0 || !m_append) {
+            super.setWarningMessage("Existing table will be dropped!\n" 
+                    + passMsg);
         }
         
         return new DataTableSpec[0];

@@ -37,6 +37,7 @@ import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
@@ -77,6 +78,9 @@ public class DBWriterDialogPane extends NodeDialogPane {
     private final JTextField m_table = new JTextField("<table_name>");
 
     private final JPasswordField m_pass = new JPasswordField();
+    
+    private final JCheckBox m_append = 
+        new JCheckBox("... to existing table (if any!)");
 
     private JFileChooser m_chooser = null;
 
@@ -111,11 +115,11 @@ public class DBWriterDialogPane extends NodeDialogPane {
         });
         JPanel driverPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         driverPanel.setBorder(BorderFactory
-                .createTitledBorder(" Database Driver "));
+                .createTitledBorder(" Database driver "));
         driverPanel.add(m_driver, BorderLayout.CENTER);
         driverPanel.add(m_load, BorderLayout.EAST);
         
-        JPanel settPanel = new JPanel(new GridLayout(5, 1));
+        JPanel settPanel = new JPanel(new GridLayout(6, 1));
         settPanel.add(driverPanel);
         JPanel dbPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         dbPanel.setBorder(BorderFactory.createTitledBorder(
@@ -126,7 +130,7 @@ public class DBWriterDialogPane extends NodeDialogPane {
         dbPanel.add(m_db);
         settPanel.add(dbPanel);
         JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        userPanel.setBorder(BorderFactory.createTitledBorder(" User Name "));
+        userPanel.setBorder(BorderFactory.createTitledBorder(" User name "));
         m_user.setPreferredSize(new Dimension(400, 20));
         m_user.setFont(font);
         userPanel.add(m_user);
@@ -150,18 +154,28 @@ public class DBWriterDialogPane extends NodeDialogPane {
         passPanel.add(m_pass);
         settPanel.add(passPanel);
         JPanel tablePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        tablePanel.setBorder(BorderFactory.createTitledBorder(" Table Name "));
+        tablePanel.setBorder(BorderFactory.createTitledBorder(" Table name "));
         m_table.setPreferredSize(new Dimension(400, 20));
         m_table.setFont(font);
         tablePanel.add(m_table);
         settPanel.add(tablePanel);
+        
+        JPanel appendPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        appendPanel.setBorder(BorderFactory.createTitledBorder(" Append data "));
+        m_append.setPreferredSize(new Dimension(400, 20));
+        m_append.setFont(font);
+        m_append.setToolTipText("Table structure from input and database table"
+                + " must match!");
+        appendPanel.add(m_append);
+        settPanel.add(appendPanel);
+        
         super.addTab("Settings", settPanel);
         
         // add SQL type panel
         m_typePanel = new DBSQLTypesPanel();
         JScrollPane scroll = new JScrollPane(m_typePanel);
         scroll.setPreferredSize(settPanel.getPreferredSize());
-        super.addTab("SQL Types", scroll);
+        super.addTab("SQL types", scroll);
     }
 
     private JFileChooser createFileChooser() {
@@ -206,6 +220,8 @@ public class DBWriterDialogPane extends NodeDialogPane {
                 DBDriverLoader.getURLForDriver(select)));
         // table name
         m_table.setText(settings.getString("table", "<table_name>"));
+        // append data flag
+        m_append.setSelected(settings.getBoolean("append_data", false));
         
         // load sql type for each column
         try {
@@ -256,6 +272,7 @@ public class DBWriterDialogPane extends NodeDialogPane {
         settings.addString("database", url);
         settings.addString("user", m_user.getText().trim());
         settings.addString("table", m_table.getText().trim());
+        settings.addBoolean("append_data", m_append.isSelected());
         if (m_passwordChanged) {
             try {
                 settings.addString("password", 

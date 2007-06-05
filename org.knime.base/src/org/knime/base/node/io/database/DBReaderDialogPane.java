@@ -125,7 +125,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
         });
         JPanel driverPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         driverPanel.setBorder(BorderFactory
-                .createTitledBorder(" Database Driver "));
+                .createTitledBorder(" Database driver "));
         driverPanel.add(m_driver, BorderLayout.CENTER);
         driverPanel.add(m_load, BorderLayout.EAST);
         parentPanel.add(driverPanel);
@@ -138,7 +138,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
         dbPanel.add(m_db);
         parentPanel.add(dbPanel);
         JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        userPanel.setBorder(BorderFactory.createTitledBorder(" User Name "));
+        userPanel.setBorder(BorderFactory.createTitledBorder(" User name "));
         m_user.setPreferredSize(new Dimension(400, 20));
         m_user.setFont(font);
         userPanel.add(m_user);
