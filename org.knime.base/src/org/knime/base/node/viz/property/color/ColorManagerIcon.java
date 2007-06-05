@@ -40,6 +40,7 @@ import org.knime.core.data.DataType;
  * @author Thomas Gabriel, University of Konstanz
  */
 class ColorManagerIcon implements Icon {
+    
     private Color m_color;
 
     private final DataCell m_cell;

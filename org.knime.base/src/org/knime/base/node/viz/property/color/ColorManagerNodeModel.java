@@ -85,7 +85,7 @@ class ColorManagerNodeModel extends NodeModel {
     /**
      * Saves the color settings to <code>ModelContent</code> object.
      * 
-     * @see NodeModel#saveModelContent(int, ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveModelContent(final int index,
