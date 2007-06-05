@@ -93,7 +93,7 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
      * or something similar. A new getKey method should return a key for the
      * hashmap, which must be a combination of the type and the identifier.
      * This will resolve the problem of replacing entries with the same 
-     * identifier but different keys. The equals ans hashCode methods must be 
+     * identifier but different keys. The equals and hashCode methods must be 
      * adopted accordingly.
      */
     

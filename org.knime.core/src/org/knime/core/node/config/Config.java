@@ -455,6 +455,32 @@ public abstract class Config extends AbstractConfigEntry
         }
         return ((ConfigDoubleEntry)o).getDouble();
     }
+    
+    /**
+     * Adds a float by the given key.
+     * 
+     * @param key The key.
+     * @param value The float value to add.
+     */
+    public void addFloat(final String key, final float value) {
+        put(new ConfigFloatEntry(key, value));
+    }
+
+    /**
+     * Return float for key.
+     * 
+     * @param key The key.
+     * @return A generic float.
+     * @throws InvalidSettingsException If the key is not available.
+     */
+    public float getFloat(final String key) throws InvalidSettingsException {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigFloatEntry)) {
+            throw new InvalidSettingsException(
+                    "Float for key \"" + key + "\" not found.");
+        }
+        return ((ConfigFloatEntry)o).getFloat();
+    }
 
     /**
      * Adds this char value to the Config by the given key.
@@ -911,6 +937,58 @@ public abstract class Config extends AbstractConfigEntry
             return def;
         }
     }
+    
+    /**
+     * Return float for key or the default value if not available.
+     * 
+     * @param key The key.
+     * @param def Returned if no value available for the given key.
+     * @return A generic float.
+     */
+    public float getFloat(final String key, final float def) {
+        try {
+            return getFloat(key);
+        } catch (InvalidSettingsException ise) {
+            return def;
+        }
+    }
+
+    /**
+     * Return float array for key or the default value if not available.
+     * 
+     * @param key The key.
+     * @return An array of float values.
+     * @throws InvalidSettingsException If the key is not available.
+     */
+    public float[] getFloatArray(final String key)
+            throws InvalidSettingsException {
+        Config config = this.getConfig(key);
+        int size = config.getInt(CFG_ARRAY_SIZE, -1);
+        if (size == -1) {
+            return null;
+        }
+        float[] ret = new float[size];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = config.getFloat(Integer.toString(i));
+        }
+        return ret;
+    }
+
+    /**
+     * Return float array which can be null for key, or the default array if
+     * the key is not available.
+     * 
+     * @param key The key.
+     * @param def The default array returned if the key is not available.
+     * @return A float array.
+     */
+    public float[] getFloatArray(final String key, final float... def) {
+        try {
+            return getFloatArray(key);
+        } catch (InvalidSettingsException ise) {
+            return def;
+        }
+    }
 
     /**
      * Adds this double array value to the Config by the given key. The array
@@ -925,6 +1003,23 @@ public abstract class Config extends AbstractConfigEntry
             config.addInt(CFG_ARRAY_SIZE, values.length);
             for (int i = 0; i < values.length; i++) {
                 config.addDouble(Integer.toString(i), values[i]);
+            }
+        }
+    }
+    
+    /**
+     * Adds this float array value to the Config by the given key. The array
+     * can be null.
+     * 
+     * @param key The key.
+     * @param values The float array to add.
+     */
+    public void addFloatArray(final String key, final float... values) {
+        ConfigWO config = this.addConfig(key);
+        if (values != null) {
+            config.addInt(CFG_ARRAY_SIZE, values.length);
+            for (int i = 0; i < values.length; i++) {
+                config.addFloat(Integer.toString(i), values[i]);
             }
         }
     }

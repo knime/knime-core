@@ -65,6 +65,14 @@ public interface ConfigWO {
      * @param value The double value to add.
      */
     public void addDouble(final String key, final double value);
+    
+    /**
+     * Adds a float by the given key.
+     * 
+     * @param key The key.
+     * @param value The float value to add.
+     */
+    public void addFloat(final String key, final float value);
 
     /**
      * Adds this char value to the Config by the given key.
@@ -143,12 +151,21 @@ public interface ConfigWO {
 
     /**
      * Adds this double array value to the Config by the given key. The array
-     * can be null-
+     * can be null
      * 
      * @param key The key.
      * @param values The double array to add.
      */
     public void addDoubleArray(final String key, final double... values);
+    
+    /**
+     * Adds this float array value to the Config by the given key. The array
+     * can be null.
+     * 
+     * @param key The key.
+     * @param values The float array to add.
+     */
+    public void addFloatArray(final String key, final float... values);
 
     /**
      * Adds this byte array to the Config by the given key. The array can be
@@ -171,7 +188,7 @@ public interface ConfigWO {
      * Adds this long array to the Config by the given key.
      * 
      * @param key The key.
-     * @param values The long arry to add.
+     * @param values The long array to add.
      */
     public void addLongArray(final String key, final long... values);
 

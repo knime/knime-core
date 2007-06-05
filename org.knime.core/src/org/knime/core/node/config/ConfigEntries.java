@@ -22,14 +22,15 @@
  */
 package org.knime.core.node.config;
 
+
 /**
  * An enumeration holding all possible types that can be written to and read
- * from a Config. All entries have to be defined inside the corrensponding DTD. 
+ * from a Config. All entries have to be defined inside the corresponding DTD. 
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-    
 enum ConfigEntries {
+    
     /**
      * Entry of type String.
      */
@@ -75,6 +76,22 @@ enum ConfigEntries {
         @Override
         ConfigDoubleEntry createEntry(final String key, final String value) {
             return new ConfigDoubleEntry(key, value);
+        }
+    },
+    
+    /**
+     * Entry of type float.
+     */
+    xfloat {
+        /**
+         * Returns a new entry for float objects.
+         * @param key The key for this value. 
+         * @param value The String value as float.
+         * @return A new Config entry.
+         */
+        @Override
+        ConfigFloatEntry createEntry(final String key, final String value) {
+            return new ConfigFloatEntry(key, value);
         }
     },
     
