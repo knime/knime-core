@@ -139,4 +139,28 @@ public final class HalfDoubleMatrix {
         config.addBoolean("withDiagonal", m_withDiagonal);
         config.addDoubleArray("array", m_matrix);
     }
+
+    /**
+     * Returns if the half matrix also stores the diagonal or not.
+     * 
+     * @return <code>true</code> if the diagonal is stored, <code>false</code>
+     *         otherwise
+     */
+    public boolean storesDiagonal() {
+        return m_withDiagonal;
+    }
+
+    
+    /**
+     * Returns the number of rows the half matrix has.
+     * 
+     * @return the number of rows
+     */
+    public int getRowCount() {
+        if (m_withDiagonal) {
+            return (-1 + (int)Math.sqrt(1 + 8 * m_matrix.length)) / 2;
+        } else {
+            return (1 + (int)Math.sqrt(1 + 8 * m_matrix.length)) / 2;
+        }
+    }
 }

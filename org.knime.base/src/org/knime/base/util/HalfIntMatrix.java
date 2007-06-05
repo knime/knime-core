@@ -54,7 +54,7 @@ import org.knime.core.node.NodeSettingsWO;
  * you can choose if place for the diagonal should be reserved or not.
  * 
  * It is also possible to save the contents of the matrix into a node settings
- * object and load it again from there afterwards. 
+ * object and load it again from there afterwards.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -159,5 +159,28 @@ public final class HalfIntMatrix {
     public void save(final NodeSettingsWO config) {
         config.addBoolean("withDiagonal", m_withDiagonal);
         config.addIntArray("array", m_matrix);
+    }
+
+    /**
+     * Returns if the half matrix also stores the diagonal or not.
+     * 
+     * @return <code>true</code> if the diagonal is stored, <code>false</code>
+     *         otherwise
+     */
+    public boolean storesDiagonal() {
+        return m_withDiagonal;
+    }
+
+    /**
+     * Returns the number of rows the half matrix has.
+     * 
+     * @return the number of rows
+     */
+    public int getRowCount() {
+        if (m_withDiagonal) {
+            return (-1 + (int)Math.sqrt(1 + 8 * m_matrix.length)) / 2;
+        } else {
+            return (1 + (int)Math.sqrt(1 + 8 * m_matrix.length)) / 2;
+        }
     }
 }

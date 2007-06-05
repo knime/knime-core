@@ -29,9 +29,10 @@ import org.knime.core.node.NodeSettingsWO;
  * This stores half a matrix of floats efficiently in just one array. The access
  * function {@link #get(int, int)} works symmetrically. Upon creating the matrix
  * you can choose if place for the diagonal should be reserved or not.
- *
+ * 
  * It is also possible to save the contents of the matrix into a node settings
  * object and load it again from there afterwards.
+ * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class HalfFloatMatrix {
@@ -68,7 +69,6 @@ public final class HalfFloatMatrix {
         m_matrix = config.getFloatArray("array");
     }
 
-    
     /**
      * Sets a value in the matrix. This function works symmetrically, i.e.
      * <code>set(i, j, 1)</code> is the same as <code>set(j, i, 1)</code>.
@@ -127,7 +127,7 @@ public final class HalfFloatMatrix {
             m_matrix[i] = value;
         }
     }
-    
+
     /**
      * Saves the matrix directly into the passed node settings object.
      * 
@@ -136,5 +136,28 @@ public final class HalfFloatMatrix {
     public void save(final NodeSettingsWO config) {
         config.addBoolean("withDiagonal", m_withDiagonal);
         config.addFloatArray("array", m_matrix);
+    }
+
+    /**
+     * Returns if the half matrix also stores the diagonal or not.
+     * 
+     * @return <code>true</code> if the diagonal is stored, <code>false</code>
+     *         otherwise
+     */
+    public boolean storesDiagonal() {
+        return m_withDiagonal;
+    }
+
+    /**
+     * Returns the number of rows the half matrix has.
+     * 
+     * @return the number of rows
+     */
+    public int getRowCount() {
+        if (m_withDiagonal) {
+            return (-1 + (int)Math.sqrt(1 + 8 * m_matrix.length)) / 2;
+        } else {
+            return (1 + (int)Math.sqrt(1 + 8 * m_matrix.length)) / 2;
+        }
     }
 }
