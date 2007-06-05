@@ -22,8 +22,8 @@
 package org.knime.base.util;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * This stores half a matrix of floats efficiently in just one array. The access
@@ -63,7 +63,7 @@ public final class HalfFloatMatrix {
      * @throws InvalidSettingsException if the passed node settings do not
      *             contain valid settings
      */
-    public HalfFloatMatrix(final NodeSettingsRO config)
+    public HalfFloatMatrix(final ConfigRO config)
             throws InvalidSettingsException {
         m_withDiagonal = config.getBoolean("withDiagonal");
         m_matrix = config.getFloatArray("array");
@@ -78,6 +78,10 @@ public final class HalfFloatMatrix {
      * @param value the value
      */
     public void set(final int row, final int col, final float value) {
+        if (!m_withDiagonal && row == col) {
+            throw new IllegalArgumentException("Can't set value in diagonal " 
+                    + "of the matrix (no space reserved)");
+        }
         if (row > col) {
             if (m_withDiagonal) {
                 m_matrix[row * (row + 1) / 2 + col] = value;
@@ -102,6 +106,10 @@ public final class HalfFloatMatrix {
      * @return the value
      */
     public float get(final int row, final int col) {
+        if (!m_withDiagonal && row == col) {
+            throw new IllegalArgumentException("Can't read value in diagonal " 
+                    + "of the matrix (not saved)");
+        }
         if (row > col) {
             if (m_withDiagonal) {
                 return m_matrix[row * (row + 1) / 2 + col];
@@ -133,7 +141,7 @@ public final class HalfFloatMatrix {
      * 
      * @param config a node settings object.
      */
-    public void save(final NodeSettingsWO config) {
+    public void save(final ConfigWO config) {
         config.addBoolean("withDiagonal", m_withDiagonal);
         config.addFloatArray("array", m_matrix);
     }

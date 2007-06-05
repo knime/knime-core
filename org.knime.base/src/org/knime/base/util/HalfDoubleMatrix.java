@@ -24,8 +24,8 @@
 package org.knime.base.util;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * This stores half a matrix of doubles efficiently in just one array. The
@@ -65,7 +65,7 @@ public final class HalfDoubleMatrix {
      * @throws InvalidSettingsException if the passed node settings do not
      *             contain valid settings
      */
-    public HalfDoubleMatrix(final NodeSettingsRO config)
+    public HalfDoubleMatrix(final ConfigRO config)
             throws InvalidSettingsException {
         m_withDiagonal = config.getBoolean("withDiagonal");
         m_matrix = config.getDoubleArray("array");
@@ -80,6 +80,10 @@ public final class HalfDoubleMatrix {
      * @param value the value
      */
     public void set(final int row, final int col, final double value) {
+        if (!m_withDiagonal && row == col) {
+            throw new IllegalArgumentException("Can't set value in diagonal " 
+                    + "of the matrix (no space reserved)");
+        }
         if (row > col) {
             if (m_withDiagonal) {
                 m_matrix[row * (row + 1) / 2 + col] = value;
@@ -104,6 +108,10 @@ public final class HalfDoubleMatrix {
      * @return the value
      */
     public double get(final int row, final int col) {
+        if (!m_withDiagonal && row == col) {
+            throw new IllegalArgumentException("Can't read value in diagonal " 
+                    + "of the matrix (not saved)");
+        }
         if (row > col) {
             if (m_withDiagonal) {
                 return m_matrix[row * (row + 1) / 2 + col];
@@ -135,7 +143,7 @@ public final class HalfDoubleMatrix {
      * 
      * @param config a node settings object.
      */
-    public void save(final NodeSettingsWO config) {
+    public void save(final ConfigWO config) {
         config.addBoolean("withDiagonal", m_withDiagonal);
         config.addDoubleArray("array", m_matrix);
     }
