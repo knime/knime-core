@@ -341,7 +341,7 @@ public class ColumnFilterPanel extends JPanel {
     
     /**
      * Enables or disables all components on this panel.
-     * @see javax.swing.JComponent#setEnabled(boolean)
+     * {@inheritDoc}
      */
     @Override
     public void setEnabled(final boolean enabled) {
@@ -484,7 +484,7 @@ public class ColumnFilterPanel extends JPanel {
      * from the spec afterwards.
      * 
      * @param spec the spec to retrieve the column names from
-     * @param exclude the flag if <code>excl</code> contains the columns to
+     * @param exclude the flag if <code>cells</code> contains the columns to
      *            exclude (otherwise include).
      * @param cells an array of data cells to either in- or exclude.
      */
@@ -512,13 +512,13 @@ public class ColumnFilterPanel extends JPanel {
      * from the spec afterwards.
      * 
      * @param spec the spec to retrieve the column names from
-     * @param exclude the flag if <code>excl</code> contains the columns to
+     * @param exclude the flag if <code>list</code> contains the columns to
      *            exclude otherwise include
-     * @param excl the list of columns to exclude or include
+     * @param list the list of columns to exclude or include
      */
     public void update(final DataTableSpec spec, final boolean exclude,
-            final Collection<String> excl) {
-        assert (spec != null && excl != null);
+            final Collection<String> list) {
+        assert (spec != null && list != null);
         m_order.clear();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
@@ -531,13 +531,13 @@ public class ColumnFilterPanel extends JPanel {
             final String c = cSpec.getName();
             m_order.add(cSpec);
             if (exclude) {
-                if (excl.contains(c)) {
+                if (list.contains(c)) {
                     m_exclMdl.addElement(cSpec);
                 } else {
                     m_inclMdl.addElement(cSpec);
                 }
             } else {
-                if (excl.contains(c)) {
+                if (list.contains(c)) {
                     m_inclMdl.addElement(cSpec);
                 } else {
                     m_exclMdl.addElement(cSpec);
