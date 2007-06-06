@@ -89,10 +89,10 @@ public class ColumnFilterPanel extends JPanel {
     /** Exclude model. */
     private final DefaultListModel m_exclMdl;
 
-    /** Hilight all search hits in the include model. */
+    /** Highlight all search hits in the include model. */
     private final JCheckBox m_markAllHitsIncl;
 
-    /** Hilight all search hits in the exclude model. */
+    /** Highlight all search hits in the exclude model. */
     private final JCheckBox m_markAllHitsExcl;
 
     /** Remove all button. */
@@ -764,9 +764,10 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Removes the given columns form either include or exclude list and notfies
-     * all listeners. Does not throw an exception if the argument contains
-     * <code>null</code> elements or is not contained in any of the lists.
+     * Removes the given columns form either include or exclude list and 
+     * notifies all listeners. Does not throw an exception if the argument 
+     * contains <code>null</code> elements or is not contained in any of the 
+     * lists.
      * 
      * @param columns the columns to remove
      */
@@ -824,7 +825,7 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Setter for the original "remove All" button.
+     * Setter for the original "Remove All" button.
      * 
      * @param text the new button title
      */
@@ -833,7 +834,7 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Setter for the original "add All" button.
+     * Setter for the original "Add All" button.
      * 
      * @param text the new button title
      */
@@ -842,7 +843,7 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Setter for the original "remove" button.
+     * Setter for the original "Remove" button.
      * 
      * @param text the new button title
      */
