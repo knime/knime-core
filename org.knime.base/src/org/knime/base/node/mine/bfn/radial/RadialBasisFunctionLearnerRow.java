@@ -34,7 +34,7 @@ import org.knime.core.data.RowKey;
  * use radial basis function prototypes for training. This prototype keeps an
  * Gaussian functions is internal representation. This function is created
  * infinity which means cover the entry domain. During training the function is
- * shrinked if new conflicting instances are obmitted. Therefore two parameters
+ * shrinked if new conflicting instances are omitted. Therefore two parameters
  * have been introduced. One is <code>m_thetaMinus</code> which is used to
  * describe an upper bound of conflicting instances; and 
  * <code>m_thetaPlus</code>, to lower bound for non-conflicting instances.
@@ -67,15 +67,11 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @param thetaMinus upper bound for conflicting instances
      * @param thetaPlus lower bound for non-conflicting instances
      * @param distance choice of the distance function between patterns.
-     * @param numPat The overall number of pattern used for training. 
-     * @param isHierarchical true if the rule is hierarchical, false otherwise.
      */
     RadialBasisFunctionLearnerRow(final RowKey key, final DataCell classInfo,
             final DataRow center, final double thetaMinus,
-            final double thetaPlus, final int distance,
-            final int numPat,
-            final boolean isHierarchical) {
-        super(key, center, classInfo, isHierarchical);
+            final double thetaPlus, final int distance) {
+        super(key, center, classInfo);
         m_thetaMinus = thetaMinus;
         m_thetaMinusSqrtMinusLog = Math.sqrt(-Math.log(m_thetaMinus));
         assert (m_thetaMinus >= 0.0 && m_thetaMinus <= 1.0);
@@ -83,8 +79,8 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         m_thetaPlusSqrtMinusLog = Math.sqrt(-Math.log(m_thetaPlus));
         assert (m_thetaPlus >= 0.0 && m_thetaPlus <= 1.0);
         m_predRow = new RadialBasisFunctionPredictorRow(key.getId(), center,
-                classInfo, m_thetaMinus, distance, numPat);
-        addCovered(center.getKey().getId(), classInfo);
+                classInfo, m_thetaMinus, distance);
+        addCovered(center, classInfo);
     }
 
     /**
@@ -123,7 +119,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         if (m_predRow.isNotShrunk()) {
             return true;
         }
-        return (m_predRow.getStdDev() 
+        return (m_predRow.getStdDev()
             >= m_predRow.computeDistance(row) / m_thetaPlusSqrtMinusLog);
     }
 
@@ -189,7 +185,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @return the standard deviation
      */
     @Override
-    public double computeCoverage() {
+    public double computeSpread() {
         return m_predRow.getStdDev();
     }
 

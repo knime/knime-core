@@ -52,6 +52,7 @@ import org.knime.core.node.NotConfigurableException;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
+    
     /** Prediction column. */
     private final JTextField m_apply = new JTextField();
 
@@ -69,7 +70,7 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
     /** Key for don't know probability for the unknown class. */
     public static final String DONT_KNOW_PROP = "dont_know_prop";
     
-    /** Config key if dont know should be ignored. */
+    /** Config key if don't know should be ignored. */
     public static final String CFG_DONT_KNOW_IGNORE = "ignore_dont_know";
 
     /**
@@ -130,7 +131,7 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
         });
 
         // add fuzzy learner tab
-        super.addTab("Applied Column", p);
+        super.addTab("Applied column", p);
     }
     
     private void selectionChanged() {

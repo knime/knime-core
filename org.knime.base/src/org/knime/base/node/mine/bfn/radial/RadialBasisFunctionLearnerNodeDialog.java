@@ -32,38 +32,31 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.mine.bfn.BasisFunctionLearnerNodeDialogPanel;
+import org.knime.base.node.mine.bfn.BasisFunctionLearnerNodeDialogPane;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 
 /**
  * A dialog for PNN learner to set properties, such as theta minus and plus. 
- * In addition, it keeps a panel to set the basic basisfunction
- * settings for training.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class RadialBasisFunctionLearnerNodeDialog extends NodeDialogPane {
-    
-    private final BasisFunctionLearnerNodeDialogPanel m_basicsPanel;
+public class RadialBasisFunctionLearnerNodeDialog 
+        extends BasisFunctionLearnerNodeDialogPane {
 
     private final JSpinner m_thetaMinus;
 
     private final JSpinner m_thetaPlus;
     
     /**
-     * Creates a new {@link NodeDialogPane} for radial basis functions in order
-     * to set theta minus, theta plus, and a choice of distance function.
+     * Creates a new {@link org.knime.core.node.NodeDialogPane} for radial 
+     * basisfunctions in order to set theta minus and theta plus.
      */
-    RadialBasisFunctionLearnerNodeDialog() {
+    public RadialBasisFunctionLearnerNodeDialog() {
         super();
-        // panel with model specific settings
-        m_basicsPanel = new BasisFunctionLearnerNodeDialogPanel();
-        super.addTab(m_basicsPanel.getName(), m_basicsPanel);
         
         // panel with advance settings
         JPanel p = new JPanel(new GridLayout(0, 1));
@@ -142,7 +135,7 @@ class RadialBasisFunctionLearnerNodeDialog extends NodeDialogPane {
         });
         
         // add the learner tab to this dialog
-        super.addTab(" Learner ", p);
+        super.addTab("Advanced", p);
     }
 
     /**
@@ -151,6 +144,7 @@ class RadialBasisFunctionLearnerNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
+        super.loadSettingsFrom(settings, specs);
         // update theta minus
         m_thetaMinus.setValue(new Double(settings.getDouble(
                 RadialBasisFunctionFactory.THETA_MINUS,
@@ -159,8 +153,6 @@ class RadialBasisFunctionLearnerNodeDialog extends NodeDialogPane {
         m_thetaPlus.setValue(new Double(settings.getDouble(
                 RadialBasisFunctionFactory.THETA_PLUS,
                 RadialBasisFunctionLearnerNodeModel.THETAPLUS)));
-        // update basic tab
-        m_basicsPanel.loadSettingsFrom(settings, specs);
     }
 
     /**
@@ -174,7 +166,7 @@ class RadialBasisFunctionLearnerNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        assert (settings != null);
+        super.saveSettingsTo(settings);
 
         // contains the error message
         StringBuilder errMsg = new StringBuilder();
@@ -205,13 +197,6 @@ class RadialBasisFunctionLearnerNodeDialog extends NodeDialogPane {
         } catch (ParseException nfe) {
             errMsg.append("Theta-plus \"" + m_thetaPlus.toString()
                     + "\" invalid must be between 0.0 and 1.0\n");
-        }
-        
-        try {
-            // save settings from basic tab
-            m_basicsPanel.saveSettingsTo(settings);
-        } catch (InvalidSettingsException ise) {
-            errMsg.append(ise.getMessage());
         }
 
         // if error message's length greater zero throw exception

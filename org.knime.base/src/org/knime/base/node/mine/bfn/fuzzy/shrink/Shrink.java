@@ -46,7 +46,7 @@ public interface Shrink {
      * leftSuppLoss(.).
      * 
      * @param value current value
-     * @param mem holds paramater of fuzzy trapzoid membership function
+     * @param mem holds parameter of fuzzy trapezoid membership function
      * @return calculated fuzzy membership loss on the anchor left side in the
      *         support region
      */
@@ -56,7 +56,7 @@ public interface Shrink {
      * leftCoreLoss(.).
      * 
      * @param value current value
-     * @param mem holds paramater of fuzzy trapzoid membership function
+     * @param mem holds parameter of fuzzy trapezoid membership function
      * @return calculated fuzzy membership loss on the anchor left side in the
      *         core region
      */
@@ -66,7 +66,7 @@ public interface Shrink {
      * rightSuppLoss(.).
      * 
      * @param value current value
-     * @param mem holds paramater of fuzzy trapzoid membership function
+     * @param mem holds parameter of fuzzy trapezoid membership function
      * @return calculated fuzzy membership loss on the anchor right side in the
      *         support region
      */
@@ -76,7 +76,7 @@ public interface Shrink {
      * rightCoreLoss(.).
      * 
      * @param value current value
-     * @param mem holds paramater of fuzzy trapzoid membership function
+     * @param mem holds parameter of fuzzy trapezoid membership function
      * @return calculated fuzzy membership loss on the anchor right side in the
      *         core region
      */

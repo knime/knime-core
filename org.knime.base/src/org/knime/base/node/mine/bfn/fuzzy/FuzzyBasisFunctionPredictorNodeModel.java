@@ -41,8 +41,16 @@ public class FuzzyBasisFunctionPredictorNodeModel extends
      * {@inheritDoc}
      */
     @Override
-    protected BasisFunctionPredictorRow createPredictorRow(
+    public BasisFunctionPredictorRow createPredictorRow(
             final ModelContentRO pp) throws InvalidSettingsException {
         return new FuzzyBasisFunctionPredictorRow(pp);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean normalizeClassification() {
+         return false;
     }
 }

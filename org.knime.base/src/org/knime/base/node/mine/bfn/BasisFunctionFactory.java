@@ -25,6 +25,7 @@ import java.util.ArrayList;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -32,7 +33,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.util.MutableDouble;
@@ -48,9 +51,26 @@ import org.knime.core.util.MutableDouble;
  */
 public abstract class BasisFunctionFactory {
     
-    /*
-     * TODO hierarchy level should have lower, upper bound, and possible values
-     */
+    /** Key for the distance function. */
+    static final String CFG_DISTANCE = "distance";
+    
+    /** Key for the model spec. */
+    static final String CFG_MODEL_SPEC = "model_spec";
+    
+    /** Name of the basisfunction class column. */
+    public static final String CLASS_COLUMN = "Class";
+    
+    private static final DataColumnSpec WEIGHT_COLUMN = 
+        new DataColumnSpecCreator("Weight", IntCell.TYPE).createSpec();
+    
+    private static final DataColumnSpec SPREAD_COLUMN = 
+        new DataColumnSpecCreator("Spread", DoubleCell.TYPE).createSpec();
+    
+    private static final DataColumnSpec FEATURES_COLUMN = 
+        new DataColumnSpecCreator("Features", IntCell.TYPE).createSpec();
+    
+    private static final DataColumnSpec VARIANCE_COLUMN = 
+        new DataColumnSpecCreator("Variance", DoubleCell.TYPE).createSpec();
     
     /** the model spec. */
     private final DataTableSpec m_spec;
@@ -58,11 +78,10 @@ public abstract class BasisFunctionFactory {
     /** choice of distance function. */
     private final int m_distance;
 
-    /** <code>true</code> if hierarchical model is trained. */
-    private final boolean m_hierarchy;
-
+    /** Domain minimum for each dimension, might be adjusted during learning. */
     private final MutableDouble[] m_mins;
 
+    /** Domain maximum for each dimension, might be adjusted during learning. */
     private final MutableDouble[] m_maxs;
 
     /**
@@ -70,24 +89,23 @@ public abstract class BasisFunctionFactory {
      * value for all numeric columns.
      * 
      * @param spec the training's data spec
-     * @param target the class info column in the data
+     * @param dataColumns used for training
+     * @param targetColumns the class info column in the data
      * @param type the type for the model columns
      * @param distance the choice of distance function
-     * @param hierarchy true if a hierarchical model is trained, false otherwise
      */
     protected BasisFunctionFactory(final DataTableSpec spec,
-            final String target, final DataType type, final int distance,
-            final boolean hierarchy) {
+            final String[] dataColumns, final String[] targetColumns, 
+            final DataType type, final int distance) {
         // keep distance function
         m_distance = distance;
-        // hierarchical?
-        m_hierarchy = hierarchy;
         // init mins and maxs from domain
-        int nrColumns = spec.getNumColumns() - 1; // without target
+        int nrColumns = dataColumns.length;
         m_mins = new MutableDouble[nrColumns];
         m_maxs = new MutableDouble[nrColumns];
         for (int i = 0; i < nrColumns; i++) {
-            DataColumnDomain domain = spec.getColumnSpec(i).getDomain();
+            DataColumnDomain domain = 
+                spec.getColumnSpec(dataColumns[i]).getDomain();
             m_mins[i] = new MutableDouble(Double.NaN);
             m_maxs[i] = new MutableDouble(Double.NaN);
             if (domain.hasBounds()) {
@@ -103,16 +121,7 @@ public abstract class BasisFunctionFactory {
                 }
             }
         }
-        DataTableSpec modelSpec = createModelSpec(spec, target, type);
-        if (hierarchy) {
-            DataColumnSpec newcol = new DataColumnSpecCreator("Level",
-                    IntCell.TYPE).createSpec();
-            DataTableSpec levelSpec = new DataTableSpec(
-                    new DataColumnSpec[]{newcol});
-            m_spec = new DataTableSpec(modelSpec, levelSpec);
-        } else {
-            m_spec = modelSpec;
-        }
+        m_spec = createModelSpec(spec, dataColumns, targetColumns, type);
     }
 
     /**
@@ -137,43 +146,58 @@ public abstract class BasisFunctionFactory {
      * target column.
      * 
      * @param inSpec the input data spec
-     * @param target the target classification column
+     * @param dataColumns the data columns used for training
+     * @param targetColumns the target classification columns
      * @return a new table spec with a number of 
      * {@link org.knime.core.data.def.DoubleCell}s and
      *         the target column last
      * @param type the type for the model columns
      */
     public static final DataTableSpec createModelSpec(
-            final DataTableSpec inSpec, final String target, 
-            final DataType type) {
+            final DataTableSpec inSpec, final String[] dataColumns, 
+            final String[] targetColumns, final DataType type) {
+        // list of final columns in table spec
         ArrayList<DataColumnSpec> list = new ArrayList<DataColumnSpec>();
         // find all double and integer columns
-        for (int i = 0; i < inSpec.getNumColumns(); i++) {
-            DataColumnSpec cSpec = inSpec.getColumnSpec(i);
-            // if target column - is added later...
-            if (target.equals(cSpec.getName())) {
-                continue;
-            }
-            // TODO too restrictive
-            if (cSpec.getType().isCompatible(DoubleValue.class)) {
-                DataColumnSpecCreator newCSpec = new DataColumnSpecCreator(
-                        cSpec);
-                newCSpec.setType(type);
-                newCSpec.setDomain(cSpec.getDomain());
-                list.add(newCSpec.createSpec());
-            }
+        for (String dataColumn : dataColumns) {
+            DataColumnSpec cSpec = inSpec.getColumnSpec(dataColumn);
+            assert (cSpec.getType().isCompatible(DoubleValue.class));
+            DataColumnSpecCreator newCSpec = new DataColumnSpecCreator(
+                    cSpec);
+            newCSpec.setType(type);
+            newCSpec.setDomain(cSpec.getDomain());
+            list.add(newCSpec.createSpec());
         }
         // if no numeric columns available
         if (list.size() == 0) {
-            return null;
+            return new DataTableSpec();
         }
-        // add the target column last
-        int targetIndex = inSpec.findColumnIndex(target);
-        list.add(inSpec.getColumnSpec(targetIndex));
+        // add the target columns
+        DataColumnSpec target0 = inSpec.getColumnSpec(targetColumns[0]);
+        if (targetColumns.length > 1
+                && target0.getType().isCompatible(DoubleValue.class)) {
+            StringCell[] targetStrings = new StringCell[targetColumns.length];
+            for (int i = 0; i < targetColumns.length; i++) {
+                targetStrings[i] = new StringCell(targetColumns[i]);
+            }
+            DataColumnSpecCreator cSpec = new DataColumnSpecCreator(
+                    CLASS_COLUMN, StringCell.TYPE);
+            cSpec.setDomain(new DataColumnDomainCreator(
+                    targetStrings).createDomain());
+            list.add(cSpec.createSpec());
+        } else {
+            assert (targetColumns.length == 1);
+            DataColumnSpecCreator cSpec = new DataColumnSpecCreator(target0);
+            cSpec.setType(StringCell.TYPE);
+            list.add(target0);
+        }
+        // add additional rule info
+        list.add(WEIGHT_COLUMN);
+        list.add(SPREAD_COLUMN);
+        list.add(FEATURES_COLUMN);
+        list.add(VARIANCE_COLUMN);
         // new table spec
-        DataTableSpec ret = new DataTableSpec(
-                list.toArray(new DataColumnSpec[]{}));
-        return ret;
+        return new DataTableSpec(list.toArray(new DataColumnSpec[]{}));
     }
 
     /**
@@ -193,39 +217,24 @@ public abstract class BasisFunctionFactory {
     }
 
     /**
-     * @return <code>true</code> if hierarchical model is trained.
-     */
-    public final boolean isHierarchical() {
-        return m_hierarchy;
-    }
-
-    /**
-     * Returns a new row initialized
+     * Returns a new row initialised
      * by a {@link DataRow} as its initial center vector and a class
      * label.
      * 
      * @param key this row's key
      * @param classInfo data cell contains class info
      * @param row the initial center vector
-     * @param numPat The overall number of pattern used for training. 
      * @return a new row of a certain type
      */
     public abstract BasisFunctionLearnerRow commit(final RowKey key,
-            final DataCell classInfo, final DataRow row, final int numPat);
-    /** Key for the distance function. */
-    static final String CFG_DISTANCE = "distance";
-    /** Key whether a hierarchical model is trained. */
-    static final String CFG_IS_HIERACHICAL = "is_hierarchical";
-    /** Key for the model spec. */
-    static final String CFG_MODEL_SPEC = "model_spec";
-
+            final DataCell classInfo, final DataRow row);
+    
     /**
      * Saves to model content.
      * @param pp the model content this is saved to.
      */
     public void save(final ModelContent pp) {
         pp.addInt(CFG_DISTANCE, m_distance);
-        pp.addBoolean(CFG_IS_HIERACHICAL, m_hierarchy);
         ModelContentWO modelSpec = pp.addModelContent(CFG_MODEL_SPEC);
         m_spec.save(modelSpec);
     }

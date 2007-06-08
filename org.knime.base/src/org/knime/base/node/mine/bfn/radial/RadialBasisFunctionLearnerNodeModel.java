@@ -37,7 +37,7 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class RadialBasisFunctionLearnerNodeModel 
+public class RadialBasisFunctionLearnerNodeModel 
         extends BasisFunctionLearnerNodeModel {
     
     /** The node logger for this class. */
@@ -60,7 +60,7 @@ class RadialBasisFunctionLearnerNodeModel
     private double m_thetaPlus = THETAPLUS;
 
     /** Inits a new RadialBasisFunctionFactory with one in- and one output. */
-    RadialBasisFunctionLearnerNodeModel() {
+    public RadialBasisFunctionLearnerNodeModel() {
         super();
     }
 
@@ -68,27 +68,18 @@ class RadialBasisFunctionLearnerNodeModel
      * {@inheritDoc}
      */
     @Override
-    protected BasisFunctionFactory getFactory(final DataTableSpec spec) {
+    public BasisFunctionFactory getFactory(final DataTableSpec spec) {
         LOGGER.debug("theta-minus  : " + m_thetaMinus);
         LOGGER.debug("theta-plus   : " + m_thetaPlus);
         return new RadialBasisFunctionFactory(m_thetaMinus, m_thetaPlus,
-                getDistance(), spec, getTargetColumn());
+                getDistance(), spec, getDataColumns(), getTargetColumns());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] ins)
-            throws InvalidSettingsException {
-        return super.configure(ins);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+    public void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.loadValidatedSettingsFrom(settings);
         // update theta minus
@@ -102,7 +93,7 @@ class RadialBasisFunctionLearnerNodeModel
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
+    public void saveSettingsTo(final NodeSettingsWO settings) {
         super.saveSettingsTo(settings);
         // theta minus
         settings.addDouble(RadialBasisFunctionFactory.THETA_MINUS, 
@@ -115,7 +106,7 @@ class RadialBasisFunctionLearnerNodeModel
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
+    public void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.validateSettings(settings);
         // the error string
@@ -144,7 +135,21 @@ class RadialBasisFunctionLearnerNodeModel
      * {@inheritDoc}
      */
     @Override
-    protected final DataType getModelType() {
+    public final DataType getModelType() {
         return DoubleCell.TYPE;
+   }
+    
+    /**
+     * @return theta minus
+     */
+    public double getThetaMinus() {
+        return m_thetaMinus;
+    }
+    
+    /**
+     * @return theta plus
+     */
+    public double getThetaPlus() {
+        return m_thetaPlus;
     }
 }

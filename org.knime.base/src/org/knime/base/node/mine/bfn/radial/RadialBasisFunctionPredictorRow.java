@@ -63,12 +63,11 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param classLabel The class label.
      * @param thetaMinus Theta minus.
      * @param distance Distance measurement.
-     * @param numPat The overall number of pattern used for training. 
      */
     RadialBasisFunctionPredictorRow(final DataCell key, final DataRow center,
             final DataCell classLabel, final double thetaMinus,
-            final int distance, final int numPat) {
-        super(key, classLabel, numPat, thetaMinus);
+            final int distance) {
+        super(key, classLabel, thetaMinus);
         m_distance = distance;
         m_center = new double[center.getNumCells()];
         for (int i = 0; i < m_center.length; i++) {
@@ -133,7 +132,8 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param row the row to compute distance to
      * @return the distance between prototype and given row
      */
-    final double computeDistance(final DataRow row) {
+    @Override
+    public final double computeDistance(final DataRow row) {
         Distance dist = BasisFunctionLearnerNodeModel.DISTANCES[m_distance];
         return dist.compute(m_center, row);
     }
@@ -150,7 +150,7 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      */
     @Override
     public final double compose(final DataRow row, final double act) {
-        return act + (getNumCorrectCoveredPattern() *  computeActivation(row));
+        return act + (getNumCorrectCoveredPattern() * computeActivation(row));
     }
 
     /**
@@ -219,4 +219,14 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
         buf.append(" -> " + super.toString());
         return buf.toString();
     }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrUsedFeatures() {
+        return m_center.length; 
+    }
+    
 }

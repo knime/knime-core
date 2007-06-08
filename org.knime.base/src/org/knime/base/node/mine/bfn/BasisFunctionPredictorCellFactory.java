@@ -25,14 +25,19 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.knime.base.data.filter.column.FilterColumnRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.container.CellFactory;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.node.ExecutionMonitor;
 
 /**
  * This predictor cell factory predicts the passed rows using the underlying
@@ -40,28 +45,50 @@ import org.knime.core.data.container.SingleCellFactory;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
-    
-    /*
-     * TODO add fuzzy degree output for each class
-     */
+public class BasisFunctionPredictorCellFactory implements CellFactory {
     
     private final List<BasisFunctionPredictorRow> m_model;
     
+    private final int[] m_filteredColumns;
+    
     private final double m_dontKnowClass;
     
-    private final int[] m_filteredRows;
+    private final boolean m_normClass;
+    
+    private final DataColumnSpec[] m_specs;
     
     /**
      * Create new predictor cell factory. Only used to create the 
      * <code>ColumnRearranger</code> with the appended model spec.
-     * @param targetSpec The spec of the targetColumn.
+     * @param modelSpecs column specs of the model
+     * @param newTargetName new column target name
+     * 
      */
-    public BasisFunctionPredictorCellFactory(final DataColumnSpec targetSpec) {
-        super(targetSpec);
+    public BasisFunctionPredictorCellFactory(
+            final DataColumnSpec[] modelSpecs, final String newTargetName) {
         m_model = null;
-        m_dontKnowClass = 0.0;
-        m_filteredRows = null;
+        m_filteredColumns = null;
+        m_dontKnowClass = Double.NaN;
+        m_normClass = false;
+        m_specs = createSpec(modelSpecs, newTargetName);
+    }
+    
+    private static DataColumnSpec[] createSpec(
+            final DataColumnSpec[] modelSpecs, final String newTargetName) {
+        int modelClassIdx = modelSpecs.length - 5;
+        Set<DataCell> possClasses = 
+            modelSpecs[modelClassIdx].getDomain().getValues();
+        DataColumnSpec[] specs = new DataColumnSpec[possClasses.size() + 1];
+        Iterator<DataCell> it = possClasses.iterator();
+        for (int i = 0; i < possClasses.size(); i++) {
+            specs[i] = new DataColumnSpecCreator(
+                    it.next().toString(), DoubleCell.TYPE).createSpec();
+        }
+        DataColumnSpecCreator newTargetSpec = new DataColumnSpecCreator(
+                modelSpecs[modelClassIdx]);
+        newTargetSpec.setName(newTargetName);
+        specs[specs.length - 1] = newTargetSpec.createSpec();
+        return specs;
     }
 
     /**
@@ -72,101 +99,134 @@ public class BasisFunctionPredictorCellFactory extends SingleCellFactory {
      * @param dataSpec the spec of the test data
      * @param modelSpecs names and types of the rule model
      * @param model the trained model as list of rows
-     * @param applyColumn the name of the applied column
-     * @param dontKnowClass the <i>don't know</i> class probability
+     * @param newTargetName name of the new predicted column
+     * @param dontKnowClass the don't know class probability
+     * @param normClass normalize classification output
      * @throws NullPointerException if one of the arguments is <code>null</code>
      */
     public BasisFunctionPredictorCellFactory(final DataTableSpec dataSpec, 
             final DataColumnSpec[] modelSpecs,
             final List<BasisFunctionPredictorRow> model,
-            final DataColumnSpec applyColumn, final double dontKnowClass) {
-        super(applyColumn);
+            final String newTargetName,
+            final double dontKnowClass,
+            final boolean normClass) {
+        
         // check input
         assert (model != null);
-        assert (applyColumn != null);
-        m_dontKnowClass = dontKnowClass;
-
         // keep the model for later mapping
         if (model.size() == 0) {
             throw new IllegalArgumentException("Model must not be empty.");
         }
         m_model = model;
-
-        m_filteredRows = new int[modelSpecs.length - 1];
-        for (int i = 0; i < m_filteredRows.length; i++) { // without class
-            String name = modelSpecs[i].getName();
-            m_filteredRows[i] = dataSpec.findColumnIndex(name);
+        
+        m_dontKnowClass = dontKnowClass;
+        
+        m_normClass = normClass;
+        
+        m_specs = createSpec(modelSpecs, newTargetName);
+        
+        m_filteredColumns = new int[modelSpecs.length - 5];
+        for (int i = 0; i < m_filteredColumns.length; i++) {
+            m_filteredColumns[i] = dataSpec.findColumnIndex(
+                    modelSpecs[i].getName());
         }
     }
     
     /**
      * Predicts an unknown row to the given model.
      * 
-     * @param row The row to predict
+     * @param row the row to predict
      * @param model to this model
+     * @param specs an array of class column specs
+     * @param dontKnowClass don't know class activation
+     * @param normClass normalize classification output
      * @return mapping class label to array of assigned class degrees
      */
-    public static final Map<DataCell, double[]> predict(final DataRow row,
-            final List<BasisFunctionPredictorRow> model) {
-        // maps classes to [#covered,activation]
-        final LinkedHashMap<DataCell, double[]> map = 
-            new LinkedHashMap<DataCell, double[]>();
-        final LinkedHashMap<DataCell, Integer> numPatPerClass = 
-                new LinkedHashMap<DataCell, Integer>();
-        int cntAllClasses = 0;
+    public static final DataCell[] predict(final DataRow row,
+            final List<BasisFunctionPredictorRow> model,
+            final DataColumnSpec[] specs, final double dontKnowClass,
+            final boolean normClass) {
+        // maps class to activation
+        Map<DataCell, Double> map = new LinkedHashMap<DataCell, Double>();
         // overall basisfunctions in the model
         for (Iterator<BasisFunctionPredictorRow> it = model.iterator(); 
                 it.hasNext();) {
-            final BasisFunctionPredictorRow bf = it.next();
-            // get its class label
+            BasisFunctionPredictorRow bf = it.next();
             DataCell classInfo = bf.getClassLabel();
-            // check if class label is already used
+            double act;
             if (map.containsKey(classInfo)) {
-                double[] value = map.get(classInfo);
-                value[0] = bf.compose(row, value[0]);
-                assert (bf.getNumPattern() == numPatPerClass.get(classInfo));
+                act = bf.compose(row, map.get(classInfo));
             } else {
-                double act = bf.compose(row, 0.0);
-                map.put(classInfo, new double[]{act});
-                int numClasses = bf.getNumPattern();
-                numPatPerClass.put(classInfo, numClasses);
-                cntAllClasses += numClasses;
+                act = bf.compose(row, 0.0);
             }
+            map.put(classInfo, act);
         }
-//        for (DataCell classInfo : map.keySet()) {
-//            double value = (double) numPatPerClass.get(classInfo) 
-//                * map.get(classInfo)[0]; // / (double) cntAllClasses;
-//            map.put(classInfo, new double[]{value});
-//        }
-        return map;
-    }
-    
-    private static DataCell findBestClass(final Map<DataCell, double[]> map,
-            final double dontKnowClass) {
-        // find best class label, not yet set
+        
+        // hash column specs
+        DataTableSpec hash = new DataTableSpec(specs);
+        
+        // find best class activation index
         DataCell best = DataType.getMissingCell();
         // set default highest activation, not yet set
         double hact = -1.0;
-        // overall class labels
+        // skip last column which is the winner
+        double sumAct = 0.0;
+        Double[] act = new Double[specs.length]; 
         for (DataCell cell : map.keySet()) {
-            double[] value = map.get(cell);
-            double act = value[0];
-            assert (act >= 0.0) : "activation=" + act;
-            if (act > hact && act > dontKnowClass) {
-                hact = act;
+            Double d = map.get(cell);
+            if (d > hact || (d == hact && best.isMissing())) {
+                hact = d;
                 best = cell;
             }
+            int idx = hash.findColumnIndex(cell.toString());
+            if (idx >= 0) {
+                act[idx] = d;
+                sumAct += d;
+            }
         }
-        return best;
+  
+        // all class values, skip winner
+        DataCell[] res = new DataCell[specs.length];
+        for (int i = 0; i < res.length - 1; i++) {
+            if (act[i] == null) {
+                res[i] = new DoubleCell(0.0);
+            } else {
+                if (normClass && sumAct > 0) {
+                    res[i] = new DoubleCell(act[i] / sumAct);
+                } else {
+                    res[i] = new DoubleCell(act[i]);
+                }
+            }
+        }
+        if (hact < dontKnowClass) {
+            res[res.length - 1] = DataType.getMissingCell();
+        } else {
+            res[res.length - 1] = best;
+        }
+        return res;
     }
 
     /**
      * Predicts given row using the underlying basisfunction model.
-     * @see org.knime.core.data.container.SingleCellFactory#getCell(DataRow)
+     * {@inheritDoc}
      */
-    @Override
-    public DataCell getCell(final DataRow row) {
-        DataRow wRow = new FilterColumnRow(row, m_filteredRows);
-        return findBestClass(predict(wRow, m_model), m_dontKnowClass);
+    public DataCell[] getCells(final DataRow row) {
+        DataRow wRow = new FilterColumnRow(row, m_filteredColumns);
+        return predict(wRow, m_model, m_specs, m_dontKnowClass, m_normClass);  
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public DataColumnSpec[] getColumnSpecs() {
+        return m_specs;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setProgress(final int curRowNr, final int rowCount, 
+            final RowKey lastKey, final ExecutionMonitor exec) {
+        exec.setProgress((double) curRowNr / rowCount);
     }
 }

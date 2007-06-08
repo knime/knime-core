@@ -26,7 +26,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
 
 /**
- * Computes the Euclidian distance between two vectors.
+ * Computes the Euclidean distance between two vectors.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -53,11 +53,11 @@ public final class Distance {
     }
 
     /**
-     * Computes the euclidian distance between two normalized rows.
+     * Computes the Euclidean distance between two normalized rows.
      * 
      * @param x a row
      * @param y another row
-     * @return euclidian distance between <code>x</code> and <code>y</code>.
+     * @return Euclidean distance between <code>x</code> and <code>y</code>.
      * @throws NullPointerException if one of the given rows is
      *             <code>null</code>
      */
@@ -87,11 +87,11 @@ public final class Distance {
     }
 
     /**
-     * Computes the euclidian distance between two normalized vectors.
+     * Computes the Euclidean distance between two normalized vectors.
      * 
      * @param x an array of double cells
      * @param y a row
-     * @return the euclidian distance between <code>x</code> and
+     * @return the Euclidean distance between <code>x</code> and
      *         <code>y</code>
      * @throws NullPointerException if one of the given rows is
      *             <code>null</code>
@@ -121,11 +121,11 @@ public final class Distance {
     }
 
     /**
-     * Computes the euclidian distance between two normalized vectors.
+     * Computes the Euclidean distance between two normalized vectors.
      * 
      * @param x an array of doubles
      * @param y a row
-     * @return the euclidian distance between <code>x</code> and
+     * @return the Euclidean distance between <code>x</code> and
      *         <code>y</code>
      * @throws NullPointerException if one of the given rows is
      *             <code>null</code>
@@ -155,11 +155,11 @@ public final class Distance {
     }
 
     /**
-     * Computes the euclidian distance between two normalized vectors.
+     * Computes the Euclidean distance between two normalized vectors.
      * 
      * @param x an array of doubles
      * @param y an array of doubles
-     * @return the euclidian distance between <code>x</code> and
+     * @return the Euclidean distance between <code>x</code> and
      *         <code>y</code>.
      * @throws NullPointerException if one of the given arrays is
      *             <code>null</code>
@@ -185,11 +185,11 @@ public final class Distance {
     }
 
     /**
-     * Computes the euclidian distance between two normalized vectors.
+     * Computes the Euclidean distance between two normalized vectors.
      * 
      * @param x an array of doubles
      * @param y an array of DoubleValues
-     * @return the euclidian distance between <code>x</code> and
+     * @return the Euclidean distance between <code>x</code> and
      *         <code>y</code>
      * @throws NullPointerException if one of the given rows is
      *             <code>null</code>
@@ -215,11 +215,11 @@ public final class Distance {
     }
 
     /**
-     * Computes the euclidian distance between the two normalized arrays.
+     * Computes the Euclidean distance between the two normalized arrays.
      * 
      * @param x an array
      * @param y another array
-     * @return the euclidian distance between <code>x</code> and
+     * @return the Euclidean distance between <code>x</code> and
      *         <code>y</code>
      * @throws NullPointerException if one of the given arrays is
      *             <code>null</code>
@@ -245,12 +245,12 @@ public final class Distance {
     }
 
     /**
-     * Returns string representation <tt>Euclidian</tt>.
+     * Returns string representation <tt>Euclidean</tt>.
      * 
-     * @return <tt>Euclidian</tt>
+     * @return <tt>Euclidean</tt>
      */
     @Override
     public String toString() {
-        return "Euclidian";
+        return "Euclidean";
     }
 }

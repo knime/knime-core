@@ -34,15 +34,23 @@ import org.knime.core.node.ModelContentRO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class RadialBasisFunctionPredictorNodeModel extends
+public class RadialBasisFunctionPredictorNodeModel extends
         BasisFunctionPredictorNodeModel {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected BasisFunctionPredictorRow createPredictorRow(
+    public BasisFunctionPredictorRow createPredictorRow(
             final ModelContentRO pp) throws InvalidSettingsException {
         return new RadialBasisFunctionPredictorRow(pp);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean normalizeClassification() {
+         return true;
     }
 }

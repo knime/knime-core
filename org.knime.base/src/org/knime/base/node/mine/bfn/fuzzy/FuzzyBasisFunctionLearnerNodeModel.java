@@ -69,7 +69,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
      * @throws CanceledExecutionException if the training was canceled
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
+    public BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
         return super.execute(data, exec);
     }
@@ -78,18 +78,18 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
      * {@inheritDoc}
      */
     @Override
-    protected BasisFunctionFactory getFactory(final DataTableSpec spec) {
+    public BasisFunctionFactory getFactory(final DataTableSpec spec) {
         LOGGER.debug("fuzzy_norm   : " + Norm.NORMS[m_norm]);
         LOGGER.debug("shrink       : " + Shrink.SHRINKS[m_shrink]);
         return new FuzzyBasisFunctionFactory(m_norm, m_shrink, spec,
-                getTargetColumn(), getDistance());
-    }
+                getDataColumns(), getTargetColumns(), getDistance());
+    } 
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] ins)
+    public DataTableSpec[] configure(final DataTableSpec[] ins)
             throws InvalidSettingsException {
         return super.configure(ins);
     }
@@ -98,7 +98,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+    public void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.loadValidatedSettingsFrom(settings);
         // shrink procedure
@@ -111,7 +111,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
+    public void saveSettingsTo(final NodeSettingsWO settings) {
         super.saveSettingsTo(settings);
         // shrink procedure
         settings.addInt(Shrink.SHRINK_KEY, m_shrink);
@@ -123,7 +123,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
+    public void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         super.validateSettings(settings);
         StringBuffer msg = new StringBuffer();

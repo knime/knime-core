@@ -34,10 +34,10 @@ import org.knime.core.node.ModelContent;
 
 /**
  * Basic interface for all basis function algorithms. Provides the function
- * getNewBasisFunction(.) to initialize a new prototype. This interface is
+ * getNewBasisFunction() to initialise a new prototype. This interface is
  * needed in order to create new prototypes in the general BasisFunctionLearner.
- * Hence a BasisFunctionLearner would be initialized with an object of type
- * BasisFunctionFactory. It is used as inter-class to init BasisFunction(s). One
+ * Hence a BasisFunctionLearner would be initialised with an object of type
+ * BasisFunctionFactory. It is used as factory to create basisfunctions. One
  * implementation of the BasisFunctionFactory; here represents the
  * FuzzyBasisFunctionFactory object.
  * 
@@ -45,9 +45,9 @@ import org.knime.core.node.ModelContent;
  * 
  * @see FuzzyBasisFunctionLearnerRow
  * 
- * @see #commit(RowKey, DataCell, DataRow, int)
+ * @see #commit(RowKey, DataCell, DataRow)
  */
-public final class FuzzyBasisFunctionFactory extends BasisFunctionFactory {
+public class FuzzyBasisFunctionFactory extends BasisFunctionFactory {
     
     /** The choice of fuzzy norm. */
     private final int m_norm;
@@ -62,49 +62,33 @@ public final class FuzzyBasisFunctionFactory extends BasisFunctionFactory {
      * @param norm the choice of fuzzy norm
      * @param shrink the choice of shrink procedure
      * @param spec the data to retrieve all columns and class info from
-     * @param target the class info column in the data
+     * @param dataColumns used for training
+     * @param targetColumns the class info column in the data
      * @param distance the choice of distance function
      */
     public FuzzyBasisFunctionFactory(final int norm, final int shrink,
-            final DataTableSpec spec, final String target, final int distance) {
-        this(norm, shrink, spec, target, distance, false);
-    }
-
-    /**
-     * Creates a new factory fuzzy basisfunction along with a {@link Norm} and a
-     * {@link Shrink} function.
-     * 
-     * @param norm the choice of fuzzy norm
-     * @param shrink the choice of shrink procedure
-     * @param spec the data to retrieve all columns and class info from
-     * @param target the class info column in the data
-     * @param distance the choice of distance function
-     * @param isHierarchical If hierarchical rules have to be commited.
-     */
-    public FuzzyBasisFunctionFactory(final int norm, final int shrink,
-            final DataTableSpec spec, final String target, final int distance,
-            final boolean isHierarchical) {
-        super(spec, target, FuzzyIntervalCell.TYPE, distance, isHierarchical);
+            final DataTableSpec spec, final String[] dataColumns, 
+            final String[] targetColumns, final int distance) {
+        super(spec, dataColumns, targetColumns, FuzzyIntervalCell.TYPE, 
+                distance);
         m_norm = norm;
         m_shrink = shrink;
     }
 
     /**
-     * Creates and returns a new row initialized with a class label and a center
+     * Creates and returns a new row initialised with a class label and a center
      * vector.
      * 
      * @param key the key for this row
      * @param row the initial center vector
      * @param classInfo the class info
-     * @param numPat The overall number of pattern used for training.
      * @return A new basisfunction 
      */
     @Override
     public BasisFunctionLearnerRow commit(final RowKey key,
-            final DataCell classInfo, final DataRow row, final int numPat) {
+            final DataCell classInfo, final DataRow row) {
         return new FuzzyBasisFunctionLearnerRow(key, classInfo, row, m_norm,
-                m_shrink, getMinimums(), getMaximums(), numPat, 
-                isHierarchical());
+                m_shrink, getMinimums(), getMaximums());
     }
 
     /**

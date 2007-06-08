@@ -31,6 +31,7 @@ import org.knime.base.node.mine.bfn.fuzzy.membership.MembershipFunction;
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class VolumeAnchorBasedShrink implements Shrink {
+    
     private static final Shrink SHRINK = new VolumeAnchorBasedShrink();
 
     /**
@@ -56,7 +57,7 @@ public final class VolumeAnchorBasedShrink implements Shrink {
             final MembershipFunction mem) {
 
         // value on the border
-        if (mem.getMinSupport() == value) {
+        if (mem.getMinSupport() >= value) {
             return Double.MIN_VALUE;
         }
         // normalized volume loss
@@ -75,7 +76,7 @@ public final class VolumeAnchorBasedShrink implements Shrink {
             final MembershipFunction mem) {
 
         // value on the border
-        if (mem.getMinCore() == value) {
+        if (mem.getMinCore() >= value) {
             return Double.MIN_VALUE;
         }
         // normalized volume loss
@@ -94,7 +95,7 @@ public final class VolumeAnchorBasedShrink implements Shrink {
             final MembershipFunction mem) {
 
         // value on the border
-        if (mem.getMaxSupport() == value) {
+        if (mem.getMaxSupport() <= value) {
             return Double.MIN_VALUE;
         }
         // normalized volume loss
@@ -113,7 +114,7 @@ public final class VolumeAnchorBasedShrink implements Shrink {
             final MembershipFunction mem) {
 
         // value on the border
-        if (mem.getMaxCore() == value) {
+        if (mem.getMaxCore() <= value) {
             return Double.MIN_VALUE;
         }
         // normalized volume loss
