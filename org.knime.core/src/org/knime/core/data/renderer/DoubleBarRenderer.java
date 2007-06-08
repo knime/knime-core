@@ -66,7 +66,7 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
     }
 
     /** Overridden to ignore any invocation.
-     * @see javax.swing.JLabel#setText(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public void setText(final String text) {
@@ -116,9 +116,11 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
                 max = 1.0;
             }
             d = (float)((val - min) / (max - min));
+            setToolTipText(Double.toString(val));
             setIconValue(d);
             setTextInternal(null);
         } else {
+            setToolTipText("Missing Value");
             setIcon(null);
             setTextInternal(DataType.getMissingCell().toString());
         }
@@ -130,7 +132,7 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
     }
 
     /** Returns "Bars".
-     * @see org.knime.core.data.renderer.DataValueRenderer#getDescription()
+     * {@inheritDoc}
      */
     @Override
     public String getDescription() {
