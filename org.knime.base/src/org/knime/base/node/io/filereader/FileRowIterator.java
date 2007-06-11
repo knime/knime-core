@@ -433,7 +433,8 @@ final class FileRowIterator extends RowIterator {
                 throw prepareForException("Wrong data format. In line "
                         + m_tokenizer.getLineNumber() + " (" + rowHeader
                         + ") read '" + data + "' for an integer (in column #"
-                        + col + ").", m_tokenizer.getLineNumber(), rowHeader,
+                        + col + " '" + m_tableSpec.getColumnSpec(col).getName() 
+                        + "').", m_tokenizer.getLineNumber(), rowHeader,
                         row);
             }
         } else if (type.equals(DoubleCell.TYPE)) {
@@ -449,7 +450,8 @@ final class FileRowIterator extends RowIterator {
                             + m_tokenizer.getLineNumber() + " (" + rowHeader
                             + ") read '" + data
                             + "' for a floating point (in column #" + col
-                            + ").", 
+                            + " '" + m_tableSpec.getColumnSpec(col).getName() 
+                            + "').", 
                             m_tokenizer.getLineNumber(), rowHeader, row);
                 }
                 dblData = data.replace(m_decSeparator, '.');
@@ -465,7 +467,9 @@ final class FileRowIterator extends RowIterator {
                 throw prepareForException("Wrong data format. In line "
                         + m_tokenizer.getLineNumber() + " (" + rowHeader
                         + ") read '" + data
-                        + "' for a floating point (in column #" + col + ").",
+                        + "' for a floating point (in column #" + col 
+                        + " '" + m_tableSpec.getColumnSpec(col).getName() 
+                        + "').",
                         m_tokenizer.getLineNumber(), rowHeader, row);
             }
         } else if (type.equals(SmilesTypeHelper.INSTANCE.getSmilesType())) {
@@ -486,7 +490,10 @@ final class FileRowIterator extends RowIterator {
                 }
                 msg +=
                         " (line: " + m_tokenizer.getLineNumber() + "("
-                                + rowHeader + "), column #" + col + ").";
+                                + rowHeader + "), column #" + col 
+                                + " '" 
+                                + m_tableSpec.getColumnSpec(col).getName()
+                                + "').";
                 throw prepareForException(msg, m_tokenizer.getLineNumber(),
                         rowHeader, row);
             }
