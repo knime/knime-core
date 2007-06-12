@@ -311,7 +311,7 @@ public final class MathUtils {
                     l = r;
                 }
             }
-            if (max == 0.0) {
+            if (Math.abs(max) < 1E-10) {
                 throw new ArithmeticException("Cannot invert matrix, column "
                         + c + " has only 0 entries.");
             }
