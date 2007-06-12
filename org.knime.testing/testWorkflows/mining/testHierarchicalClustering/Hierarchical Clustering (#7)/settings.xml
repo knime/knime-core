@@ -12,6 +12,19 @@
 <entry key="distFunction" type="xstring" value="Euclidean"/>
 <entry key="linkageType" type="xstring" value="SINGLE"/>
 <entry key="cacheDistances" type="xboolean" value="false"/>
+<config key="selectedColumns_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_filterString"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<config key="selectedColumns">
+<config key="InclList">
+<entry key="array-size" type="xint" value="1"/>
+<entry key="0" type="xstring" value="Col0"/>
+</config>
+<config key="ExclList">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+</config>
 </config>
 <config key="data_meta_file">
 <entry key="data_files_directory" type="xstring" value="data"/>
