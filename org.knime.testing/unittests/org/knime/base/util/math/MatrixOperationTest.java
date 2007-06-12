@@ -55,10 +55,9 @@ public class MatrixOperationTest extends TestCase {
         try {
             MathUtils.multiply(d1, d1);
             fail("Accepted invalid matrix size");
-        } catch (ArithmeticException ae) {
+        } catch (IllegalArgumentException ae) {
             // nothing
         }
-
     }
 
     /**
@@ -87,7 +86,7 @@ public class MatrixOperationTest extends TestCase {
                 fail("Matrix inversion failed, max error: " + error);
             }
         }
-        // lineare dependency should not allow a solution
+        // linear dependency should not allow a solution
         d = new double[][]{new double[]{3, 4, 2}, new double[]{6, 8, 4}, 
                 // multiple of first row
                 new double[]{4, 1, 5}};
@@ -102,6 +101,17 @@ public class MatrixOperationTest extends TestCase {
         try {
             inverse = MathUtils.inverse(d);
             fail("Got solution for non-square matrix");
+        } catch (ArithmeticException ae) {
+            // nothing to do here
+        }
+
+
+        // non-invertible matrix (determinant is 0)
+        d = new double[][]{new double[]{1, 2, 3}, new double[]{4, 5, 6}, 
+                new double[]{7, 8, 9}};
+        try {
+            inverse = MathUtils.inverse(d);
+            fail("Got invalid solution");
         } catch (ArithmeticException ae) {
             // nothing to do here
         }
