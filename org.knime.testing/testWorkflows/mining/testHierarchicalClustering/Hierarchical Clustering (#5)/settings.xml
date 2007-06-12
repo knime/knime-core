@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="Hierarchical Clustering"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="numberClusters" type="xint" value="3"/>
+<entry key="distFunction" type="xstring" value="Euclidean"/>
+<entry key="linkageType" type="xstring" value="SINGLE"/>
+<entry key="cacheDistances" type="xboolean" value="false"/>
+<config key="selectedColumns_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_filterString"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<config key="selectedColumns">
+<config key="InclList">
+<entry key="array-size" type="xint" value="35"/>
+<entry key="0" type="xstring" value="Col0"/>
+<entry key="1" type="xstring" value="Col1"/>
+<entry key="2" type="xstring" value="Col2"/>
+<entry key="3" type="xstring" value="Col3"/>
+<entry key="4" type="xstring" value="Col5"/>
+<entry key="5" type="xstring" value="Col6"/>
+<entry key="6" type="xstring" value="Col7"/>
+<entry key="7" type="xstring" value="Col8"/>
+<entry key="8" type="xstring" value="Col9"/>
+<entry key="9" type="xstring" value="Col10"/>
+<entry key="10" type="xstring" value="Col11"/>
+<entry key="11" type="xstring" value="Col12"/>
+<entry key="12" type="xstring" value="Col13"/>
+<entry key="13" type="xstring" value="Col14"/>
+<entry key="14" type="xstring" value="Col15"/>
+<entry key="15" type="xstring" value="Col16"/>
+<entry key="16" type="xstring" value="Col17"/>
+<entry key="17" type="xstring" value="Col18"/>
+<entry key="18" type="xstring" value="Col19"/>
+<entry key="19" type="xstring" value="Col20"/>
+<entry key="20" type="xstring" value="Col21"/>
+<entry key="21" type="xstring" value="Col22"/>
+<entry key="22" type="xstring" value="Col23"/>
+<entry key="23" type="xstring" value="Col24"/>
+<entry key="24" type="xstring" value="Col25"/>
+<entry key="25" type="xstring" value="Col26"/>
+<entry key="26" type="xstring" value="Col27"/>
+<entry key="27" type="xstring" value="Col28"/>
+<entry key="28" type="xstring" value="Col29"/>
+<entry key="29" type="xstring" value="Col30"/>
+<entry key="30" type="xstring" value="Col31"/>
+<entry key="31" type="xstring" value="Col32"/>
+<entry key="32" type="xstring" value="Col33"/>
+<entry key="33" type="xstring" value="Col34"/>
+<entry key="34" type="xstring" value="Col35"/>
+</config>
+<config key="ExclList">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+</config>
+</config>
+<config key="data_meta_file">
+<entry key="data_files_directory" type="xstring" value="data"/>
+<config key="output_0">
+<entry key="data_files_directory" type="xstring" value="data_0"/>
+<entry key="has_output_spec" type="xboolean" value="true"/>
+</config>
+</config>
+<config key="model_files"/>
+</config>
