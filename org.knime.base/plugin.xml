@@ -108,7 +108,7 @@
       <category
             icon="icons/missing.gif"
             level-id="modeleval"
-            name="Model Evaluation"
+            name="Scoring"
             path="/mining"/>
       <category
             after="write"
