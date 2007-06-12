@@ -452,11 +452,11 @@
          factory-class="org.knime.base.node.mine.sota.predictor.SotaPredictorNodeFactory"
          id="org.knime.base.node.mine.sota.predictor.SotaPredictorNodeFactory"/>         
       <node
-            category-path="/statistics"
+            category-path="/statistics/regression"
             factory-class="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"
 	        id="org.knime.dev.nodes.polyreg.learner.PolyRegLearnerNodeFactory"/>
       <node
-            category-path="/statistics"
+            category-path="/statistics/regression"
             factory-class="org.knime.base.node.mine.regression.polynomial.predictor.PolyRegPredictorNodeFactory"
 	        id="org.knime.dev.nodes.polyreg.predictor.PolyRegPredictorNodeFactory"/>
             
