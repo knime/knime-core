@@ -19,9 +19,8 @@
 
     <ports>
         <dataIn name="Trainig data" index="0">
-            The input samples, only numeric columns are allowed and except that target column all are used for
-            regression. The input must not contain missing values, you have to fix them by e.g. using the Missing Values
-            node.
+            The input samples, which of the columns are used as independent variables can be configured in the dialog.
+             The input must not contain missing values, you have to fix them by e.g. using the Missing Values node.
         </dataIn>
         <dataOut name="Training error" index="0">
             Training data classified with the learned model and the corresponding errors.
