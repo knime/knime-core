@@ -1603,6 +1603,18 @@ public class WorkflowManager implements WorkflowListener {
         NodeContainer cont = m_nodesByID.get(new Integer(id));
         return cont;
     }
+    
+    /**
+     * Returns the connection container that is handled by the manager for the given
+     * id.
+     * 
+     * @param id The id of the connection whose
+     *            <code>ConnectionContainer</code> should be returned
+     * @return The container that represents the connection of the given id
+     */
+    public ConnectionContainer getConnectionContainerById(final int id) {
+        return  m_connectionsByID.get(new Integer(id));
+    }
 
     /**
      * Returns all nodes currently managed by this instance.

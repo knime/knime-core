@@ -29,13 +29,14 @@ import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-
+import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
  * A dialog for the scorer to set the two table columns to score for.
@@ -72,7 +73,9 @@ public final class HiliteScorerNodeDialog extends NodeDialogPane {
         m_p.setLayout(new BoxLayout(m_p, BoxLayout.Y_AXIS));
 
         m_firstColumns = new JComboBox();
+        m_firstColumns.setRenderer(new DataColumnSpecListCellRenderer());
         m_secondColumns = new JComboBox();
+        m_secondColumns.setRenderer(new DataColumnSpecListCellRenderer());
 
         JPanel firstColumnPanel = new JPanel(new GridLayout(1, 1));
         firstColumnPanel.setBorder(BorderFactory
@@ -110,7 +113,7 @@ public final class HiliteScorerNodeDialog extends NodeDialogPane {
         m_firstColumns.removeAllItems();
         m_secondColumns.removeAllItems();
 
-        DataTableSpec spec = specs[0];
+        DataTableSpec spec = specs[HiliteScorerNodeModel.INPORT];
 
         if ((spec == null) || (spec.getNumColumns() < 2)) {
             throw new NotConfigurableException("Scorer needs an input table "
@@ -119,23 +122,27 @@ public final class HiliteScorerNodeDialog extends NodeDialogPane {
 
         int numCols = spec.getNumColumns();
         for (int i = 0; i < numCols; i++) {
-            String c = spec.getColumnSpec(i).getName();
+            DataColumnSpec c = spec.getColumnSpec(i);
             m_firstColumns.addItem(c);
             m_secondColumns.addItem(c);
         }
         // if at least two columns available
-        String col2 = (numCols > 0) ? spec.getColumnSpec(numCols - 1)
-                .getName() : null;
-        String col1 = (numCols > 1) ? spec.getColumnSpec(numCols - 2)
-                .getName() : col2;
-        col1 = settings.getString(HiliteScorerNodeModel.FIRST_COMP_ID, col1);
-        col2 = settings.getString(HiliteScorerNodeModel.SECOND_COMP_ID, col2);
+        DataColumnSpec col2 =
+                (numCols > 0) ? spec.getColumnSpec(numCols - 1) : null;
+        DataColumnSpec col1 =
+                (numCols > 1) ? spec.getColumnSpec(numCols - 2) : col2;
+        col1 =
+                spec.getColumnSpec(settings.getString(
+                        HiliteScorerNodeModel.FIRST_COMP_ID, col1.getName()));
+        col2 =
+                spec.getColumnSpec(settings.getString(
+                        HiliteScorerNodeModel.SECOND_COMP_ID, col2.getName()));
         m_firstColumns.setSelectedItem(col1);
         m_secondColumns.setSelectedItem(col2);
     }
 
     /**
-     * Sets the selected columns inside the {@link HiliteScorerNodeModel}.
+     * Sets the selected columns inside the {@link ScorerNodeModel}.
      * 
      * @param settings the object to write the settings into
      * @throws InvalidSettingsException if the column selection is invalid
@@ -145,8 +152,10 @@ public final class HiliteScorerNodeDialog extends NodeDialogPane {
             throws InvalidSettingsException {
         assert (settings != null);
 
-        String firstColumn = (String)m_firstColumns.getSelectedItem();
-        String secondColumn = (String)m_secondColumns.getSelectedItem();
+        String firstColumn =
+                ((DataColumnSpec)m_firstColumns.getSelectedItem()).getName();
+        String secondColumn =
+                ((DataColumnSpec)m_secondColumns.getSelectedItem()).getName();
 
         if ((firstColumn == null) || (secondColumn == null)) {
             throw new InvalidSettingsException("Select two valid column names "

@@ -75,6 +75,7 @@ public class HiliteScorerNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
+
         return new HiliteScorerNodeDialog();
     }
 }
