@@ -32,6 +32,8 @@ import org.eclipse.update.internal.search.SiteSearchCategory;
 import org.eclipse.update.internal.ui.UpdateUI;
 import org.eclipse.update.internal.ui.UpdateUIMessages;
 import org.eclipse.update.internal.ui.wizards.InstallWizardOperation;
+import org.eclipse.update.search.BackLevelFilter;
+import org.eclipse.update.search.EnvironmentFilter;
 import org.eclipse.update.search.UpdateSearchRequest;
 import org.eclipse.update.search.UpdateSearchScope;
 import org.eclipse.update.ui.UpdateJob;
@@ -77,6 +79,8 @@ public class InvokeInstallSiteAction extends Action {
 
             UpdateSearchRequest searchRequest =
                     new UpdateSearchRequest(category, scope);
+            searchRequest.addFilter(new BackLevelFilter());
+            searchRequest.addFilter(new EnvironmentFilter());
             UpdateJob job =
                     new UpdateJob(UpdateUIMessages.InstallWizard_jobName,
                             searchRequest);
