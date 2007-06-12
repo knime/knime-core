@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="table_meta_info">
+<entry key="table_ID" type="xint" value="67012"/>
+<entry key="table_type" type="xstring" value="rearrange_columns_table"/>
+<config key="table_references">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="meta_internal">
+<entry key="table_reference_ID" type="xint" value="67002"/>
+<config key="table_internal_map">
+<entry key="array-size" type="xint" value="33"/>
+<entry key="0" type="xint" value="2"/>
+<entry key="1" type="xint" value="3"/>
+<entry key="2" type="xint" value="4"/>
+<entry key="3" type="xint" value="5"/>
+<entry key="4" type="xint" value="6"/>
+<entry key="5" type="xint" value="7"/>
+<entry key="6" type="xint" value="8"/>
+<entry key="7" type="xint" value="9"/>
+<entry key="8" type="xint" value="10"/>
+<entry key="9" type="xint" value="11"/>
+<entry key="10" type="xint" value="12"/>
+<entry key="11" type="xint" value="13"/>
+<entry key="12" type="xint" value="14"/>
+<entry key="13" type="xint" value="15"/>
+<entry key="14" type="xint" value="16"/>
+<entry key="15" type="xint" value="17"/>
+<entry key="16" type="xint" value="18"/>
+<entry key="17" type="xint" value="19"/>
+<entry key="18" type="xint" value="20"/>
+<entry key="19" type="xint" value="21"/>
+<entry key="20" type="xint" value="22"/>
+<entry key="21" type="xint" value="23"/>
+<entry key="22" type="xint" value="24"/>
+<entry key="23" type="xint" value="25"/>
+<entry key="24" type="xint" value="26"/>
+<entry key="25" type="xint" value="27"/>
+<entry key="26" type="xint" value="28"/>
+<entry key="27" type="xint" value="29"/>
+<entry key="28" type="xint" value="30"/>
+<entry key="29" type="xint" value="31"/>
+<entry key="30" type="xint" value="32"/>
+<entry key="31" type="xint" value="33"/>
+<entry key="32" type="xint" value="34"/>
+</config>
+<config key="table_internal_flags">
+<entry key="array-size" type="xint" value="33"/>
+<entry key="0" type="xboolean" value="true"/>
+<entry key="1" type="xboolean" value="true"/>
+<entry key="2" type="xboolean" value="true"/>
+<entry key="3" type="xboolean" value="true"/>
+<entry key="4" type="xboolean" value="true"/>
+<entry key="5" type="xboolean" value="true"/>
+<entry key="6" type="xboolean" value="true"/>
+<entry key="7" type="xboolean" value="true"/>
+<entry key="8" type="xboolean" value="true"/>
+<entry key="9" type="xboolean" value="true"/>
+<entry key="10" type="xboolean" value="true"/>
+<entry key="11" type="xboolean" value="true"/>
+<entry key="12" type="xboolean" value="true"/>
+<entry key="13" type="xboolean" value="true"/>
+<entry key="14" type="xboolean" value="true"/>
+<entry key="15" type="xboolean" value="true"/>
+<entry key="16" type="xboolean" value="true"/>
+<entry key="17" type="xboolean" value="true"/>
+<entry key="18" type="xboolean" value="true"/>
+<entry key="19" type="xboolean" value="true"/>
+<entry key="20" type="xboolean" value="true"/>
+<entry key="21" type="xboolean" value="true"/>
+<entry key="22" type="xboolean" value="true"/>
+<entry key="23" type="xboolean" value="true"/>
+<entry key="24" type="xboolean" value="true"/>
+<entry key="25" type="xboolean" value="true"/>
+<entry key="26" type="xboolean" value="true"/>
+<entry key="27" type="xboolean" value="true"/>
+<entry key="28" type="xboolean" value="true"/>
+<entry key="29" type="xboolean" value="true"/>
+<entry key="30" type="xboolean" value="true"/>
+<entry key="31" type="xboolean" value="true"/>
+<entry key="32" type="xboolean" value="true"/>
+</config>
+</config>
+<entry key="table_file_name" type="xstring" isnull="true" value=""/>
+</config>
