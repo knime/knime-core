@@ -8,11 +8,13 @@
     <fullDescription>
         <intro>
             This node performs polynomial regression on the input data and computes the coefficients that minimize the
-            squared error. The user must choose which of the input columns is the target or dependant variable. By
+            squared error. The user must choose which of the input columns is the target or dependent variable. By
             default, polynomial with degree 2 are used, which can be changed in the dialog.
         </intro>
-        <option name="Target column">The column that contains the dependant "target" variable.</option>
+        <option name="Target column">The column that contains the dependent "target" variable.</option>
         <option name="Polynomial degree">The maximum degree the polynomial regression function should have.</option>
+        <option name="Column Selection">Select the columns containing the independent variables and
+        	move them to the "include" list. </option>
     </fullDescription>
 
     <ports>

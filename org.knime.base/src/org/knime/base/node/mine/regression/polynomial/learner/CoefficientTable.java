@@ -65,7 +65,7 @@ public class CoefficientTable extends JPanel {
                 return m_model.getColumnNames()[rowIndex];
             } else  {
                 return FORMATTER.format(m_model.getBetas()
-                        [rowIndex * m_model.getDegree() + columnIndex - 1]);
+                        [rowIndex * m_model.getDegree() + columnIndex]);
             }
         }
 

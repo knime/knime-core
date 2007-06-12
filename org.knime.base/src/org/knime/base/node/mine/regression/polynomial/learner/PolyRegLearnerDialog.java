@@ -24,13 +24,19 @@ package org.knime.base.node.mine.regression.polynomial.learner;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.LinkedHashSet;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -38,30 +44,32 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.ColumnFilterPanel;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
  * This is the dialog for the polynomial regression learner node. The user can
- * select the target column with the dependant variable and the degree of the
+ * select the target column with the dependent variable and the degree of the
  * polynomial used for regression.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
 public class PolyRegLearnerDialog extends NodeDialogPane {
     @SuppressWarnings("unchecked")
-    private final ColumnSelectionComboxBox m_targetColumn =
-            new ColumnSelectionComboxBox((Border)null, DoubleValue.class);
+    private final ColumnSelectionComboxBox m_targetColumn = new ColumnSelectionComboxBox(
+            (Border)null, DoubleValue.class);
 
-    private final JSpinner m_degree =
-            new JSpinner(new SpinnerNumberModel(2, 1, 10, 1));
+    private final JSpinner m_degree = new JSpinner(new SpinnerNumberModel(2, 1,
+            10, 1));
 
-    private final PolyRegLearnerSettings m_settings =
-            new PolyRegLearnerSettings();
+    private final PolyRegLearnerSettings m_settings = new PolyRegLearnerSettings();
 
-    private final JSpinner m_viewRows =
-        new JSpinner(new SpinnerNumberModel(10000, 1, Integer.MAX_VALUE, 10));
+    private final JSpinner m_viewRows = new JSpinner(new SpinnerNumberModel(
+            10000, 1, Integer.MAX_VALUE, 10));
 
-    
+    private final ColumnFilterPanel m_colSelectionPanel = new ColumnFilterPanel(
+            DoubleValue.class);
+
     /**
      * Creates a new dialog for the polynomial regression learner node.
      */
@@ -69,11 +77,22 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         JPanel p = new JPanel(new GridBagLayout());
 
         GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.NORTHWEST;
         c.gridx = 0;
         c.gridy = 0;
-        p.add(new JLabel("Target column (dependant variable)   "), c);
+        p.add(new JLabel("Target column (dependent variable)   "), c);
         c.gridx = 1;
         p.add(m_targetColumn, c);
+        m_targetColumn.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent ev) {
+                if (m_targetColumn.getSelectedItem() != null) {
+                    m_colSelectionPanel.resetHiding();
+                    m_colSelectionPanel
+                            .hideColumns((DataColumnSpec)m_targetColumn
+                                    .getSelectedItem());
+                }
+            }
+        });
 
         c.insets = new Insets(4, 0, 0, 0);
         c.gridy++;
@@ -82,9 +101,19 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         c.gridx = 1;
         p.add(m_degree, c);
 
+        c.gridy++;
+        c.gridx = 0;
+        c.gridwidth = 2;
+        p.add(new JSeparator(SwingConstants.HORIZONTAL), c);
+
+        c.gridy++;
+        p.add(new JLabel("Select the independent variables"), c);
+
+        c.gridy++;
+        p.add(m_colSelectionPanel, c);
+
         addTab("Regression settings", p);
-        
-        
+
         p = new JPanel(new GridBagLayout());
         c.gridx = 0;
         c.gridy = 0;
@@ -104,11 +133,22 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         try {
             m_settings.loadSettingsFrom(settings);
         } catch (InvalidSettingsException ex) {
-            // ignore it, defaults are used instead
+            LinkedHashSet<String> defSelected = new LinkedHashSet<String>();
+            for (DataColumnSpec s : specs[0]) {
+                if (s.getType().isCompatible(DoubleValue.class)) {
+                    defSelected.add(s.getName());
+                }
+            }
+            m_settings.selectedColumns(defSelected);
+            // for the rest: ignore it, defaults are used instead
         }
         m_targetColumn.update(specs[0], m_settings.getTargetColumn());
         m_degree.getModel().setValue(m_settings.getDegree());
         m_viewRows.getModel().setValue(m_settings.getMaxRowsForView());
+        m_colSelectionPanel
+                .update(specs[0], false, m_settings.selectedColumns());
+        m_colSelectionPanel.hideColumns((DataColumnSpec)m_targetColumn
+                .getSelectedItem());
     }
 
     /**
@@ -120,6 +160,7 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         m_settings.setTargetColumn(m_targetColumn.getSelectedColumn());
         m_settings.setDegree((Integer)m_degree.getModel().getValue());
         m_settings.setMaxRowsForView((Integer)m_viewRows.getModel().getValue());
+        m_settings.selectedColumns(m_colSelectionPanel.getIncludedColumnSet());
         m_settings.saveSettingsTo(settings);
     }
 }
