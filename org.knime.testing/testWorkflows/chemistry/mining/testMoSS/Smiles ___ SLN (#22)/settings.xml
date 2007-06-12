@@ -8,7 +8,7 @@
 <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
 </config>
 <config key="model">
-<entry key="target_column" type="xstring" value="SLN:"/>
+<entry key="target_column" type="xstring" value="Fragment"/>
 <entry key="is_replace_column" type="xboolean" value="true"/>
 </config>
 <config key="data_meta_file">

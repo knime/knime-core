@@ -10,7 +10,7 @@
 <config key="model">
 <config key="exclude">
 <entry key="array-size" type="xint" value="1"/>
-<entry key="0" type="xstring" value="Smiles:"/>
+<entry key="0" type="xstring" value="Fragment"/>
 </config>
 </config>
 <config key="data_meta_file">

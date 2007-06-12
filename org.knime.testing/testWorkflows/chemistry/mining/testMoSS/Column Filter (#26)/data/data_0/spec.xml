@@ -2,9 +2,9 @@
 <!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
 <config key="spec.xml">
 <entry key="spec_name" type="xstring" value="default"/>
-<entry key="number_columns" type="xint" value="4"/>
+<entry key="number_columns" type="xint" value="6"/>
 <config key="column_spec_0">
-<entry key="column_name" type="xstring" value="Atom Num:"/>
+<entry key="column_name" type="xstring" value="Atom count"/>
 <config key="column_type">
 <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
 </config>
@@ -25,7 +25,7 @@
 <config key="column_properties"/>
 </config>
 <config key="column_spec_1">
-<entry key="column_name" type="xstring" value="Bond Num:"/>
+<entry key="column_name" type="xstring" value="Bond count"/>
 <config key="column_type">
 <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
 </config>
@@ -46,7 +46,7 @@
 <config key="column_properties"/>
 </config>
 <config key="column_spec_2">
-<entry key="column_name" type="xstring" value="Support in Focus (abs):"/>
+<entry key="column_name" type="xstring" value="Support in focus (abs)"/>
 <config key="column_type">
 <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
 </config>
@@ -67,7 +67,7 @@
 <config key="column_properties"/>
 </config>
 <config key="column_spec_3">
-<entry key="column_name" type="xstring" value="Support in Complement (abs):"/>
+<entry key="column_name" type="xstring" value="Support in complement (abs)"/>
 <config key="column_type">
 <entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
 </config>
@@ -85,6 +85,22 @@
 </config>
 </config>
 </config>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_4">
+<entry key="column_name" type="xstring" value="Support in focus (rel)"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+</config>
+<config key="column_domain"/>
+<config key="column_properties"/>
+</config>
+<config key="column_spec_5">
+<entry key="column_name" type="xstring" value="Support in complement (rel)"/>
+<config key="column_type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+</config>
+<config key="column_domain"/>
 <config key="column_properties"/>
 </config>
 </config>

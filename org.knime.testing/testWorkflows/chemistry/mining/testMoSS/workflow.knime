@@ -2,8 +2,8 @@
 <!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
 <config key="workflow.knime">
 <entry key="version" type="xstring" value="1.2.0"/>
-<entry key="runningNodeID" type="xint" value="28"/>
-<entry key="runningConnectionID" type="xint" value="195"/>
+<entry key="runningNodeID" type="xint" value="42"/>
+<entry key="runningConnectionID" type="xint" value="280"/>
 <config key="nodes">
 <config key="node_1">
 <entry key="node_settings_file" type="xstring" value="File Reader (#1)/settings.xml"/>
@@ -909,7 +909,7 @@
 <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
 </config>
 <config key="model">
-<entry key="target_column" type="xstring" value="SLN:"/>
+<entry key="target_column" type="xstring" value="Fragment"/>
 <entry key="is_replace_column" type="xboolean" value="true"/>
 </config>
 </config>
@@ -935,7 +935,7 @@
 <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
 </config>
 <config key="model">
-<entry key="target_column" type="xstring" value="Smiles:"/>
+<entry key="target_column" type="xstring" value="Fragment"/>
 <entry key="is_replace_column" type="xboolean" value="true"/>
 </config>
 </config>
@@ -963,7 +963,7 @@
 <config key="model">
 <config key="exclude">
 <entry key="array-size" type="xint" value="1"/>
-<entry key="0" type="xstring" value="SLN:"/>
+<entry key="0" type="xstring" value="Fragment"/>
 </config>
 </config>
 </config>
@@ -991,7 +991,7 @@
 <config key="model">
 <config key="exclude">
 <entry key="array-size" type="xint" value="1"/>
-<entry key="0" type="xstring" value="SLN:"/>
+<entry key="0" type="xstring" value="Fragment"/>
 </config>
 </config>
 </config>
@@ -1019,7 +1019,7 @@
 <config key="model">
 <config key="exclude">
 <entry key="array-size" type="xint" value="1"/>
-<entry key="0" type="xstring" value="Smiles:"/>
+<entry key="0" type="xstring" value="Fragment"/>
 </config>
 </config>
 </config>
@@ -1069,210 +1069,738 @@
 <entry key="TESTEVALUATOR" type="xstring" value="TableDiffer"/>
 </config>
 </config>
+<config key="node_30">
+<entry key="node_settings_file" type="xstring" value="SDF Reader (#30)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.cdk.io.sdf.SDFReaderFactory"/>
+<entry key="id" type="xint" value="30"/>
+<entry key="customName" type="xstring" value="Node 30"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="39"/>
+<entry key="1" type="xint" value="1349"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="SDF Reader"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<config key="filename_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="filename" type="xstring" value="/home/thor/workspace/KNIME/dataset/private/BindingDB/ABL.sdf.gz"/>
+</config>
+</config>
+<config key="node_31">
+<entry key="node_settings_file" type="xstring" value="MoSS (#31)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.node.MoSSNodeFactory"/>
+<entry key="id" type="xint" value="31"/>
+<entry key="customName" type="xstring" value="Node 31"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="457"/>
+<entry key="1" type="xint" value="1416"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="MoSS"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="Structure Column" type="xstring" value="Molecules"/>
+<entry key="Activity Value Column" type="xstring" value="Activity"/>
+<config key="Focus Labels">
+<entry key="array-size" type="xint" value="1"/>
+<entry key="0" type="xstring" value="A"/>
+</config>
+<config key="Complement Labels">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<entry key="Complement Support (%)" type="xdouble" value="5.0"/>
+<entry key="Focus Support (%)" type="xdouble" value="10.0"/>
+<entry key="Max embs# (0: disabled)" type="xint" value="0"/>
+<entry key="Minimum fragment size" type="xint" value="1"/>
+<entry key="Maximum fragment size" type="xint" value="100"/>
+<entry key="Fragment extension mode" type="xstring" value="MAXIMUM_SOURCE_NODE"/>
+<config key="Ring mining range">
+<entry key="array-size" type="xint" value="2"/>
+<entry key="0" type="xint" value="3"/>
+<entry key="1" type="xint" value="8"/>
+</config>
+<entry key="Find variable-length carbon chains" type="xboolean" value="false"/>
+<entry key="Core" type="xstring" value=""/>
+<entry key="Equivalent sibling Pruning" type="xboolean" value="true"/>
+<entry key="Perfect extension Pruning" type="xboolean" value="true"/>
+<entry key="Canonical Form Pruning" type="xboolean" value="true"/>
+<entry key="No pure-Carbon fragments" type="xboolean" value="true"/>
+</config>
+</config>
+<config key="node_32">
+<entry key="node_settings_file" type="xstring" value="SDF Properties Export (#32)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.cdk.io.sdf.properties.export.SDFPropsExNodeFactory"/>
+<entry key="id" type="xint" value="32"/>
+<entry key="customName" type="xstring" value="Node 32"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="135"/>
+<entry key="1" type="xint" value="1349"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="SDF Properties Export"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="columnName" type="xstring" value="Molecules"/>
+</config>
+</config>
+<config key="node_33">
+<entry key="node_settings_file" type="xstring" value="Java Snippet (#33)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"/>
+<entry key="id" type="xint" value="33"/>
+<entry key="customName" type="xstring" value="Node 33"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="297"/>
+<entry key="1" type="xint" value="1349"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Java Snippet"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="expression" type="xstring" value="&quot;A&quot;"/>
+<entry key="replaced_column" type="xstring" value="Activity"/>
+<entry key="append_column" type="xboolean" value="false"/>
+<entry key="return_type" type="xstring" value="java.lang.String"/>
+</config>
+</config>
+<config key="node_34">
+<entry key="node_settings_file" type="xstring" value="MoSS (#34)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.node.MoSSNodeFactory"/>
+<entry key="id" type="xint" value="34"/>
+<entry key="customName" type="xstring" value="Node 34"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="457"/>
+<entry key="1" type="xint" value="1283"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="MoSS"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="Structure Column" type="xstring" value="Molecules"/>
+<entry key="Activity Value Column" type="xstring" value="Activity"/>
+<config key="Focus Labels">
+<entry key="array-size" type="xint" value="1"/>
+<entry key="0" type="xstring" value="A"/>
+</config>
+<config key="Complement Labels">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<entry key="Complement Support (%)" type="xdouble" value="5.0"/>
+<entry key="Focus Support (%)" type="xdouble" value="10.0"/>
+<entry key="Max embs# (0: disabled)" type="xint" value="0"/>
+<entry key="Minimum fragment size" type="xint" value="1"/>
+<entry key="Maximum fragment size" type="xint" value="100"/>
+<entry key="Fragment extension mode" type="xstring" value="MAXIMUM_SOURCE_NODE"/>
+<config key="Ring mining range">
+<entry key="array-size" type="xint" value="2"/>
+<entry key="0" type="xint" value="3"/>
+<entry key="1" type="xint" value="8"/>
+</config>
+<entry key="Find variable-length carbon chains" type="xboolean" value="false"/>
+<entry key="Core" type="xstring" value=""/>
+<entry key="Equivalent sibling Pruning" type="xboolean" value="true"/>
+<entry key="Perfect extension Pruning" type="xboolean" value="true"/>
+<entry key="Canonical Form Pruning" type="xboolean" value="true"/>
+<entry key="No pure-Carbon fragments" type="xboolean" value="true"/>
+</config>
+</config>
+<config key="node_35">
+<entry key="node_settings_file" type="xstring" value="Difference Checker (#35)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.testing.node.differNode.DiffNodeFactory"/>
+<entry key="id" type="xint" value="35"/>
+<entry key="customName" type="xstring" value="Node 35"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="622"/>
+<entry key="1" type="xint" value="1352"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Difference Checker"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings"/>
+<config key="model">
+<entry key="TESTEVALUATOR" type="xstring" value="TableDiffer"/>
+</config>
+</config>
+<config key="node_36">
+<entry key="node_settings_file" type="xstring" value="MoSS (#36)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.node.MoSSNodeFactory"/>
+<entry key="id" type="xint" value="36"/>
+<entry key="customName" type="xstring" value="Node 36"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="603"/>
+<entry key="1" type="xint" value="1717"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="MoSS"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="Structure Column" type="xstring" value="Molecules"/>
+<entry key="Activity Value Column" type="xstring" value="Activity"/>
+<config key="Focus Labels">
+<entry key="array-size" type="xint" value="1"/>
+<entry key="0" type="xstring" value="A"/>
+</config>
+<config key="Complement Labels">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<entry key="Complement Support (%)" type="xdouble" value="5.0"/>
+<entry key="Focus Support (%)" type="xdouble" value="10.0"/>
+<entry key="Max embs# (0: disabled)" type="xint" value="0"/>
+<entry key="Minimum fragment size" type="xint" value="1"/>
+<entry key="Maximum fragment size" type="xint" value="100"/>
+<entry key="Fragment extension mode" type="xstring" value="MAXIMUM_SOURCE_NODE"/>
+<config key="Ring mining range">
+<entry key="array-size" type="xint" value="2"/>
+<entry key="0" type="xint" value="3"/>
+<entry key="1" type="xint" value="8"/>
+</config>
+<entry key="Find variable-length carbon chains" type="xboolean" value="false"/>
+<entry key="Core" type="xstring" value=""/>
+<entry key="Equivalent sibling Pruning" type="xboolean" value="true"/>
+<entry key="Perfect extension Pruning" type="xboolean" value="true"/>
+<entry key="Canonical Form Pruning" type="xboolean" value="true"/>
+<entry key="No pure-Carbon fragments" type="xboolean" value="true"/>
+</config>
+</config>
+<config key="node_37">
+<entry key="node_settings_file" type="xstring" value="SDF Properties Export (#37)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.cdk.io.sdf.properties.export.SDFPropsExNodeFactory"/>
+<entry key="id" type="xint" value="37"/>
+<entry key="customName" type="xstring" value="Node 37"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="135"/>
+<entry key="1" type="xint" value="1657"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="SDF Properties Export"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="columnName" type="xstring" value="Molecules"/>
+</config>
+</config>
+<config key="node_38">
+<entry key="node_settings_file" type="xstring" value="MoSS (#38)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.moss.node.MoSSNodeFactory"/>
+<entry key="id" type="xint" value="38"/>
+<entry key="customName" type="xstring" value="Node 38"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="603"/>
+<entry key="1" type="xint" value="1584"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="MoSS"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="Structure Column" type="xstring" value="Molecules"/>
+<entry key="Activity Value Column" type="xstring" value="Activity"/>
+<config key="Focus Labels">
+<entry key="array-size" type="xint" value="1"/>
+<entry key="0" type="xstring" value="A"/>
+</config>
+<config key="Complement Labels">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<entry key="Complement Support (%)" type="xdouble" value="5.0"/>
+<entry key="Focus Support (%)" type="xdouble" value="10.0"/>
+<entry key="Max embs# (0: disabled)" type="xint" value="0"/>
+<entry key="Minimum fragment size" type="xint" value="1"/>
+<entry key="Maximum fragment size" type="xint" value="100"/>
+<entry key="Fragment extension mode" type="xstring" value="MAXIMUM_SOURCE_NODE"/>
+<config key="Ring mining range">
+<entry key="array-size" type="xint" value="2"/>
+<entry key="0" type="xint" value="3"/>
+<entry key="1" type="xint" value="8"/>
+</config>
+<entry key="Find variable-length carbon chains" type="xboolean" value="false"/>
+<entry key="Core" type="xstring" value=""/>
+<entry key="Equivalent sibling Pruning" type="xboolean" value="true"/>
+<entry key="Perfect extension Pruning" type="xboolean" value="true"/>
+<entry key="Canonical Form Pruning" type="xboolean" value="true"/>
+<entry key="No pure-Carbon fragments" type="xboolean" value="true"/>
+</config>
+</config>
+<config key="node_39">
+<entry key="node_settings_file" type="xstring" value="Difference Checker (#39)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.testing.node.differNode.DiffNodeFactory"/>
+<entry key="id" type="xint" value="39"/>
+<entry key="customName" type="xstring" value="Node 39"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="768"/>
+<entry key="1" type="xint" value="1653"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Difference Checker"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings"/>
+<config key="model">
+<entry key="TESTEVALUATOR" type="xstring" value="TableDiffer"/>
+</config>
+</config>
+<config key="node_40">
+<entry key="node_settings_file" type="xstring" value="Java Snippet (#40)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"/>
+<entry key="id" type="xint" value="40"/>
+<entry key="customName" type="xstring" value="Node 40"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="442"/>
+<entry key="1" type="xint" value="1657"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="Java Snippet"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="expression" type="xstring" value="&quot;A&quot;"/>
+<entry key="replaced_column" type="xstring" value="Activity"/>
+<entry key="append_column" type="xboolean" value="false"/>
+<entry key="return_type" type="xstring" value="java.lang.String"/>
+</config>
+</config>
+<config key="node_41">
+<entry key="node_settings_file" type="xstring" value="SDF Reader (#41)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.cdk.io.sdf.SDFReaderFactory"/>
+<entry key="id" type="xint" value="41"/>
+<entry key="customName" type="xstring" value="Node 41"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="39"/>
+<entry key="1" type="xint" value="1657"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="SDF Reader"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<config key="filename_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="filename" type="xstring" value="/home/thor/workspace/KNIME/dataset/private/BindingDB/ABL.sdf.gz"/>
+</config>
+</config>
+<config key="node_42">
+<entry key="node_settings_file" type="xstring" value="SDF to CDK (#42)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.ext.chem.cdk.parser.sdf.SDFParserNodeFactory"/>
+<entry key="id" type="xint" value="42"/>
+<entry key="customName" type="xstring" value="Node 42"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="true"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="307"/>
+<entry key="1" type="xint" value="1657"/>
+<entry key="2" type="xint" value="-1"/>
+<entry key="3" type="xint" value="-1"/>
+</config>
+<entry key="name" type="xstring" value="SDF to CDK"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="SDFColumn" type="xstring" value="Molecules"/>
+<entry key="replaceColumn" type="xboolean" value="true"/>
+<entry key="appendColName" type="xstring" isnull="true" value=""/>
+</config>
+</config>
 </config>
 <config key="connections">
-<config key="connection_193">
-<entry key="ID" type="xint" value="193"/>
-<entry key="sourceID" type="xint" value="17"/>
+<config key="connection_275">
+<entry key="ID" type="xint" value="275"/>
+<entry key="sourceID" type="xint" value="31"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="20"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_192">
-<entry key="ID" type="xint" value="192"/>
-<entry key="sourceID" type="xint" value="21"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="25"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_195">
-<entry key="ID" type="xint" value="195"/>
-<entry key="sourceID" type="xint" value="5"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="6"/>
+<entry key="targetID" type="xint" value="35"/>
 <entry key="targetPort" type="xint" value="1"/>
 </config>
-<config key="connection_194">
-<entry key="ID" type="xint" value="194"/>
-<entry key="sourceID" type="xint" value="7"/>
-<entry key="sourcePort" type="xint" value="2"/>
-<entry key="targetID" type="xint" value="13"/>
+<config key="connection_274">
+<entry key="ID" type="xint" value="274"/>
+<entry key="sourceID" type="xint" value="34"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="35"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_171">
-<entry key="ID" type="xint" value="171"/>
-<entry key="sourceID" type="xint" value="18"/>
+<config key="connection_273">
+<entry key="ID" type="xint" value="273"/>
+<entry key="sourceID" type="xint" value="40"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="21"/>
+<entry key="targetID" type="xint" value="36"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_170">
-<entry key="ID" type="xint" value="170"/>
-<entry key="sourceID" type="xint" value="10"/>
+<config key="connection_272">
+<entry key="ID" type="xint" value="272"/>
+<entry key="sourceID" type="xint" value="40"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="8"/>
-<entry key="targetPort" type="xint" value="1"/>
-</config>
-<config key="connection_169">
-<entry key="ID" type="xint" value="169"/>
-<entry key="sourceID" type="xint" value="9"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="8"/>
+<entry key="targetID" type="xint" value="38"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_168">
-<entry key="ID" type="xint" value="168"/>
-<entry key="sourceID" type="xint" value="7"/>
-<entry key="sourcePort" type="xint" value="2"/>
-<entry key="targetID" type="xint" value="12"/>
+<config key="connection_279">
+<entry key="ID" type="xint" value="279"/>
+<entry key="sourceID" type="xint" value="30"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="32"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_175">
-<entry key="ID" type="xint" value="175"/>
-<entry key="sourceID" type="xint" value="14"/>
+<config key="connection_278">
+<entry key="ID" type="xint" value="278"/>
+<entry key="sourceID" type="xint" value="32"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="16"/>
+<entry key="targetID" type="xint" value="33"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_174">
-<entry key="ID" type="xint" value="174"/>
-<entry key="sourceID" type="xint" value="16"/>
+<config key="connection_277">
+<entry key="ID" type="xint" value="277"/>
+<entry key="sourceID" type="xint" value="33"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="19"/>
+<entry key="targetID" type="xint" value="31"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_173">
-<entry key="ID" type="xint" value="173"/>
-<entry key="sourceID" type="xint" value="7"/>
+<config key="connection_276">
+<entry key="ID" type="xint" value="276"/>
+<entry key="sourceID" type="xint" value="33"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="3"/>
+<entry key="targetID" type="xint" value="34"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_172">
-<entry key="ID" type="xint" value="172"/>
-<entry key="sourceID" type="xint" value="2"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="7"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_167">
-<entry key="ID" type="xint" value="167"/>
-<entry key="sourceID" type="xint" value="21"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="22"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_186">
-<entry key="ID" type="xint" value="186"/>
-<entry key="sourceID" type="xint" value="7"/>
-<entry key="sourcePort" type="xint" value="1"/>
-<entry key="targetID" type="xint" value="9"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_187">
-<entry key="ID" type="xint" value="187"/>
-<entry key="sourceID" type="xint" value="3"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="6"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_184">
-<entry key="ID" type="xint" value="184"/>
-<entry key="sourceID" type="xint" value="13"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="11"/>
-<entry key="targetPort" type="xint" value="1"/>
-</config>
-<config key="connection_185">
-<entry key="ID" type="xint" value="185"/>
-<entry key="sourceID" type="xint" value="20"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="23"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_190">
-<entry key="ID" type="xint" value="190"/>
-<entry key="sourceID" type="xint" value="25"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="28"/>
-<entry key="targetPort" type="xint" value="1"/>
-</config>
-<config key="connection_191">
-<entry key="ID" type="xint" value="191"/>
+<config key="connection_280">
+<entry key="ID" type="xint" value="280"/>
 <entry key="sourceID" type="xint" value="26"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="28"/>
-<entry key="targetPort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="27"/>
+<entry key="targetPort" type="xint" value="1"/>
 </config>
-<config key="connection_188">
-<entry key="ID" type="xint" value="188"/>
-<entry key="sourceID" type="xint" value="17"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="18"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_189">
-<entry key="ID" type="xint" value="189"/>
-<entry key="sourceID" type="xint" value="12"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="11"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_178">
-<entry key="ID" type="xint" value="178"/>
-<entry key="sourceID" type="xint" value="16"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="17"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_179">
-<entry key="ID" type="xint" value="179"/>
-<entry key="sourceID" type="xint" value="20"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="26"/>
-<entry key="targetPort" type="xint" value="0"/>
-</config>
-<config key="connection_176">
-<entry key="ID" type="xint" value="176"/>
+<config key="connection_258">
+<entry key="ID" type="xint" value="258"/>
 <entry key="sourceID" type="xint" value="24"/>
 <entry key="sourcePort" type="xint" value="0"/>
 <entry key="targetID" type="xint" value="27"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_177">
-<entry key="ID" type="xint" value="177"/>
-<entry key="sourceID" type="xint" value="1"/>
+<config key="connection_259">
+<entry key="ID" type="xint" value="259"/>
+<entry key="sourceID" type="xint" value="20"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="2"/>
+<entry key="targetID" type="xint" value="23"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_182">
-<entry key="ID" type="xint" value="182"/>
-<entry key="sourceID" type="xint" value="19"/>
+<config key="connection_256">
+<entry key="ID" type="xint" value="256"/>
+<entry key="sourceID" type="xint" value="16"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="24"/>
+<entry key="targetID" type="xint" value="17"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_183">
-<entry key="ID" type="xint" value="183"/>
+<config key="connection_257">
+<entry key="ID" type="xint" value="257"/>
+<entry key="sourceID" type="xint" value="20"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="26"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_262">
+<entry key="ID" type="xint" value="262"/>
+<entry key="sourceID" type="xint" value="17"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="18"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_263">
+<entry key="ID" type="xint" value="263"/>
+<entry key="sourceID" type="xint" value="21"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="22"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_260">
+<entry key="ID" type="xint" value="260"/>
+<entry key="sourceID" type="xint" value="25"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="28"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_261">
+<entry key="ID" type="xint" value="261"/>
+<entry key="sourceID" type="xint" value="26"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="28"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_266">
+<entry key="ID" type="xint" value="266"/>
+<entry key="sourceID" type="xint" value="13"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="11"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_267">
+<entry key="ID" type="xint" value="267"/>
+<entry key="sourceID" type="xint" value="42"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="40"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_264">
+<entry key="ID" type="xint" value="264"/>
 <entry key="sourceID" type="xint" value="7"/>
-<entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="5"/>
+<entry key="sourcePort" type="xint" value="1"/>
+<entry key="targetID" type="xint" value="9"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_180">
-<entry key="ID" type="xint" value="180"/>
+<config key="connection_265">
+<entry key="ID" type="xint" value="265"/>
+<entry key="sourceID" type="xint" value="3"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="6"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_270">
+<entry key="ID" type="xint" value="270"/>
+<entry key="sourceID" type="xint" value="41"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="37"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_271">
+<entry key="ID" type="xint" value="271"/>
+<entry key="sourceID" type="xint" value="38"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="39"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_268">
+<entry key="ID" type="xint" value="268"/>
+<entry key="sourceID" type="xint" value="37"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="42"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_269">
+<entry key="ID" type="xint" value="269"/>
+<entry key="sourceID" type="xint" value="36"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="39"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_239">
+<entry key="ID" type="xint" value="239"/>
+<entry key="sourceID" type="xint" value="16"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="19"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_254">
+<entry key="ID" type="xint" value="254"/>
 <entry key="sourceID" type="xint" value="7"/>
 <entry key="sourcePort" type="xint" value="1"/>
 <entry key="targetID" type="xint" value="10"/>
 <entry key="targetPort" type="xint" value="0"/>
 </config>
-<config key="connection_181">
-<entry key="ID" type="xint" value="181"/>
-<entry key="sourceID" type="xint" value="26"/>
+<config key="connection_255">
+<entry key="ID" type="xint" value="255"/>
+<entry key="sourceID" type="xint" value="12"/>
 <entry key="sourcePort" type="xint" value="0"/>
-<entry key="targetID" type="xint" value="27"/>
+<entry key="targetID" type="xint" value="11"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_252">
+<entry key="ID" type="xint" value="252"/>
+<entry key="sourceID" type="xint" value="19"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="24"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_253">
+<entry key="ID" type="xint" value="253"/>
+<entry key="sourceID" type="xint" value="7"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="5"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_250">
+<entry key="ID" type="xint" value="250"/>
+<entry key="sourceID" type="xint" value="5"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="6"/>
 <entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_251">
+<entry key="ID" type="xint" value="251"/>
+<entry key="sourceID" type="xint" value="1"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="2"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_248">
+<entry key="ID" type="xint" value="248"/>
+<entry key="sourceID" type="xint" value="17"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="20"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_249">
+<entry key="ID" type="xint" value="249"/>
+<entry key="sourceID" type="xint" value="7"/>
+<entry key="sourcePort" type="xint" value="2"/>
+<entry key="targetID" type="xint" value="13"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_246">
+<entry key="ID" type="xint" value="246"/>
+<entry key="sourceID" type="xint" value="9"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="8"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_247">
+<entry key="ID" type="xint" value="247"/>
+<entry key="sourceID" type="xint" value="21"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="25"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_244">
+<entry key="ID" type="xint" value="244"/>
+<entry key="sourceID" type="xint" value="18"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="21"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_245">
+<entry key="ID" type="xint" value="245"/>
+<entry key="sourceID" type="xint" value="7"/>
+<entry key="sourcePort" type="xint" value="2"/>
+<entry key="targetID" type="xint" value="12"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_242">
+<entry key="ID" type="xint" value="242"/>
+<entry key="sourceID" type="xint" value="7"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="3"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_243">
+<entry key="ID" type="xint" value="243"/>
+<entry key="sourceID" type="xint" value="10"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="8"/>
+<entry key="targetPort" type="xint" value="1"/>
+</config>
+<config key="connection_240">
+<entry key="ID" type="xint" value="240"/>
+<entry key="sourceID" type="xint" value="14"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="16"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_241">
+<entry key="ID" type="xint" value="241"/>
+<entry key="sourceID" type="xint" value="2"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="7"/>
+<entry key="targetPort" type="xint" value="0"/>
 </config>
 </config>
 </config>
