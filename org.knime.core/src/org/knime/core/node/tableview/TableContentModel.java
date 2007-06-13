@@ -388,25 +388,32 @@ public class TableContentModel extends AbstractTableModel
                 cacheNextRow();
                 fireTableDataChanged();
             } else {
+                final int cacheSize = getCacheSize();
                 // init with nonsense values - will change soon
-                int firstRow = m_cachedRows.length; // first row changed
-                int lastRow = -1;                   // and last one, resp.
-                for (int i = 0; i < m_cachedRows.length; i++) {
-                    final DataRow current = m_cachedRows[i];
+                final int firstRowCached = firstRowCached();
+                int firstRow = -1; // remember first and last changed index
+                int lastRow = -1;
+                // traverse all rows in cache and check if some are hilighted
+                for (int i = 0; i < cacheSize; i++) {
+                    final int indexInCache = (firstRowCached + i) % cacheSize; 
+                    final DataRow current = indexInCache >= 0 
+                        ? m_cachedRows[indexInCache] : null;
                     if (current == null) { // rows haven't been cached yet
                         break;             // everything after is also null
                     }
                     final DataCell key = current.getKey().getId();
                     // do the hilite sync
-                    final boolean wasHiLit = m_hilitSet.get(i);
+                    final boolean wasHiLit = m_hilitSet.get(indexInCache);
                     final boolean isHiLit = (hiliter != null
                         ? hiliter.isHiLit(key) : false);
                     
                     // either hilite or color changed
                     if (wasHiLit != isHiLit) {
-                        firstRow = Math.min(firstRow, i);
-                        lastRow = Math.max(lastRow, i);
-                        m_hilitSet.set(i, isHiLit);
+                        if (firstRow == -1) {
+                            firstRow = indexInCache;
+                        }
+                        lastRow = indexInCache;
+                        m_hilitSet.set(indexInCache, isHiLit);
                     }
                 }
                 // will swallow the event when firstRow > lastRow
@@ -788,27 +795,28 @@ public class TableContentModel extends AbstractTableModel
             fireTableRowsDeleted(0, oldRowCount);
         } else { // shows all
             /* process event if it shows all rows */
-            int firstI = cacheSize; // remember first and last changed "i"
-            int lastI = -1;         // (for event)
+            final int firstRowCached = firstRowCached();
+            int firstI = -1; // remember first and last changed "i" (for event)
+            int lastI = -1;
             // traverse all rows in cache and check if some are hilighted
-            for (int i = 0; i < m_cachedRows.length; i++) {
-                final DataRow current = m_cachedRows[i];
+            for (int i = 0; i < cacheSize; i++) {
+                final int indexInCache = (firstRowCached + i) % cacheSize; 
+                final DataRow current = indexInCache >= 0 
+                    ? m_cachedRows[indexInCache] : null;
                 if (current == null) { // last row, everything after is null
                     break;
                 }
-                boolean isHiLit = m_hilitSet.get(i);
+                boolean isHiLit = m_hilitSet.get(indexInCache);
                 if (isHiLit) {
-                    if (i < firstI) {
-                        firstI = i;
+                    if (firstI == -1) {
+                        firstI = indexInCache;
                     }
-                    if (i > lastI) {
-                        lastI = i;
-                    }
-                    m_hilitSet.set(i, false);
+                    lastI = indexInCache;
+                    m_hilitSet.set(indexInCache, false);
                 }
             }
             if (lastI != -1) { // something has changed -> fire event
-                assert (firstI != cacheSize);
+                assert (firstI != -1);
                 fireRowsInCacheUpdated(firstI, lastI);
             }
         }
@@ -972,6 +980,26 @@ public class TableContentModel extends AbstractTableModel
         } 
         return m_rowCountOfInterestInIterator - 1 - (lastRowIndex + cS - index);
     } // rowForIndex(int)
+    
+    /** @return index in the cache hosting the first row in the 
+     *  table that's cached or -1 if none is cached */
+    private int firstRowCached() {
+        final int lastRow = lastRowCached();
+        if (lastRow < 0) {
+            return -1;
+        }
+        final int cS = getCacheSize();
+        int next = (lastRow + 1) % cS;
+        return m_cachedRows[next] != null ? next : 0;
+    }
+
+    /** @return index in cache hosting the last row in the table that's 
+     *  cached or -1 if none is cached. */
+    private int lastRowCached() {
+        final int cS = getCacheSize();
+        return m_rowCountOfInterestInIterator >= 0 
+            ? (m_rowCountOfInterestInIterator - 1) % cS : -1;
+    }
 
 
     /**
@@ -1050,28 +1078,30 @@ public class TableContentModel extends AbstractTableModel
         
         /* process event if it shows all rows */
         final Set<DataCell> s = e.keys();
-        int firstI = cacheSize; // remember first and last changed "i"
-        int lastI = -1;         // (for event)
+        final int firstRowCached = firstRowCached();
+        int firstI = -1; // remember first and last changed "i" (for event)
+        int lastI = -1;
         // traverse all rows in cache and check if the rows' key is hilighted
-        for (int i = 0; i < m_cachedRows.length; i++) {
-            final DataRow current = m_cachedRows[i];
+        for (int i = 0; i < cacheSize; i++) {
+            final int indexInCache = (firstRowCached + i) % cacheSize; 
+            final DataRow current = indexInCache >= 0 
+                ? m_cachedRows[indexInCache] : null;
             if (current == null) { // last row, everything after is null
                 break;
             }
             DataCell key = current.getKey().getId();
             if (s.contains(key)) { // is newly hilighted
-                if (i < firstI) {
-                    firstI = i;
+                if (firstI == -1) {
+                    firstI = indexInCache;
                 }
-                if (i > lastI) {
-                    lastI = i;
-                }
-                assert (isHiLite != m_hilitSet.get(i)); // wasn't previously set
-                m_hilitSet.set(i, isHiLite);
+                lastI = indexInCache;
+                // wasn't previously set
+                assert (isHiLite != m_hilitSet.get(indexInCache));
+                m_hilitSet.set(indexInCache, isHiLite);
             }
         }
         if (lastI != -1) { // something has changed -> fire event
-            assert (firstI != cacheSize);
+            assert (firstI != -1);
             fireRowsInCacheUpdated(firstI, lastI);
         }
     } // processHiLiteEvent(KeyEvent, boolean)
@@ -1144,7 +1174,7 @@ public class TableContentModel extends AbstractTableModel
         int firstRow = rowForIndex(i1);
         int lastRow = rowForIndex(i2);
         if (firstRow > lastRow) {
-            int swap = firstRow;
+            int swap = lastRow;
             lastRow = firstRow;
             firstRow = swap;
         }
