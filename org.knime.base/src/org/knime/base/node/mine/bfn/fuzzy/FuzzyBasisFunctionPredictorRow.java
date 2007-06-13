@@ -182,7 +182,11 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
             } else {
                 d1[i] = ((DoubleValue) cell).getDoubleValue();
             }
-            d2[i] = m_mem[i].getAnchor();
+            if (m_mem[i].isMissingIntern()) {
+                d2[i] = Double.NaN;
+            } else {
+                d2[i] = m_mem[i].getAnchor();
+            }
         }
         return Distance.getInstance().compute(d1, d2);
     }
