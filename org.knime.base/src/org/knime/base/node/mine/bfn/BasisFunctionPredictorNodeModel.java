@@ -163,13 +163,14 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
                 Class<? extends DataValue> prefValue = 
                     m_modelSpec[i].getType().getPreferredValueClass();
                 if (!dataType.isCompatible(prefValue)) {
-                    throw new InvalidSettingsException("Model type "
-                            + m_modelSpec[i].getType()
-                            + " is not a super type of " + dataType);
+                    throw new InvalidSettingsException("Model column '"
+                            + m_modelSpec[i].getName() + "' of type '"
+                            + m_modelSpec[i].getType() 
+                            + "' is not a super type of '" + dataType + "'");
                 }
             } else {
-                throw new InvalidSettingsException("Model column \""
-                        + m_modelSpec[i].getName() + "\" not in data spec.");
+                throw new InvalidSettingsException("Model column name '"
+                        + m_modelSpec[i].getName() + "' not in data spec.");
             }
         }
         return new DataTableSpec[]{createSpec(inSpecs[0]).createSpec()};
