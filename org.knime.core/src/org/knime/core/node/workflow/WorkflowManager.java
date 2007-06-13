@@ -153,6 +153,16 @@ public class WorkflowManager implements WorkflowListener {
         private boolean m_checkAutoExecNodes = false;
         
         /**
+         * This variable is set to the current time in case the are 
+         * no running nodes so far and one or more nodes are started.
+         * This variable is used to meassure the time untill all currently
+         * running nodes have been executed. In case there are further
+         * nodes started (other nodes are already running), the time is not
+         * reseted.
+         */
+        private long m_executionTime;
+        
+        /**
          * Create new empty workflow executer.
          */
         WorkflowExecutor() {
@@ -177,6 +187,10 @@ public class WorkflowManager implements WorkflowListener {
                 if (!b) {
                     MyNodePM pm = new MyNodePM(nc);
                     synchronized (m_addLock) {
+                        if (m_executionTime == 0 && m_waitingNodes.size() == 0
+                                && m_runningNodes.size() == 0) {
+                            m_executionTime = System.currentTimeMillis();
+                        }
                         m_waitingNodes.put(nc, pm);
                         CountDownLatch old =
                                 m_waitLocks.put(nc, new CountDownLatch(1));
@@ -365,6 +379,12 @@ public class WorkflowManager implements WorkflowListener {
                             LOGGER.warn("Some nodes were still waiting but "
                                     + "none is running: " + m_waitingNodes);
                         }
+                    } else if (m_waitingNodes.size() == 0) {
+                        // log the time and reset the timer
+                        LOGGER.debug("Workflow execution time: "
+                                + (System.currentTimeMillis() - m_executionTime)
+                                + " ms");
+                        m_executionTime = 0;
                     }
 
                     for (NodeContainer nc : m_waitingNodes.keySet()) {
