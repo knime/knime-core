@@ -68,7 +68,7 @@ public final class MathUtils {
         } else {
             result = 0.0;
         }
-        
+
         return result;
     }
 
@@ -85,19 +85,18 @@ public final class MathUtils {
      */
     public static double[][] multiply(final double[][] matrix1,
             final double[][] matrix2) throws IllegalArgumentException {
-
-        // set the number of columns for both matrices M1 and M2
-        int numColsM1 = matrix1[0].length;
-        int numColsM2 = matrix2[0].length;
-
         // set the number of rows for both matrices M1 and M2
         int numRowsM1 = matrix1.length;
         int numRowsM2 = matrix2.length;
 
+        // set the number of columns for both matrices M1 and M2
+        int numColsM1 = numRowsM1 > 0 ? matrix1[0].length : numRowsM2;
+        int numColsM2 = numRowsM2 > 0 ? matrix2[0].length : 0;
+
         // check matrix compatibility
         if (numColsM1 != numRowsM2) {
             throw new IllegalArgumentException(
-                    "Uncompatible matrices for multiplication.");
+                    "Incompatible matrices for multiplication.");
         }
 
         // the result matrix has the number of rows of matrix 1 and the
@@ -128,10 +127,89 @@ public final class MathUtils {
         return resultMatrix;
     }
 
+    /**
+     * Adds two matrices. The matrices must have the same column and 
+     * row count. The returned matrix object is a new object (no changes
+     * to argument arrays are done).
+     * 
+     * @param matrix1 the matrix on the left side
+     * @param matrix2 the matrix on the right side
+     * @return the result matrix
+     * @throws IllegalArgumentException if the matrices are not compatible
+     */
+    public static double[][] add(final double[][] matrix1,
+            final double[][] matrix2) throws IllegalArgumentException {
+        // set the number of rows for both matrices M1 and M2
+        int numRowsM1 = matrix1.length;
+        int numRowsM2 = matrix2.length;
+
+        // set the number of columns for both matrices M1 and M2
+        int numColsM1 = numRowsM1 != 0 ? matrix1[0].length : 0;
+        int numColsM2 = numRowsM2 != 0 ? matrix2[0].length : 0;
+
+        // check matrix compatibility
+        if (numColsM1 != numColsM2
+                || numRowsM1 != numRowsM2) {
+            throw new IllegalArgumentException(
+                    "Incompatible matrices for addition.");
+        }
+
+        // the result matrix has the same number of rows and columns.
+        double[][] resultMatrix = new double[numRowsM1][numColsM1];
+
+        // the result matrix is created row by row, i.e. it is iterated
+        // over the rows of matrix 1
+        for (int row = 0; row < numRowsM1; row++) {
+
+            // now it is iterated over the number of columns of matrix 2
+            for (int col = 0; col < numColsM1; col++) {
+                resultMatrix[row][col] = matrix1[row][col] + matrix2[row][col];
+            }
+        }
+        return resultMatrix;
+    }
     
     /**
-     * Multiplies a matrix with its transposed matrix. The transposed matrix
-     * is multiplied to the <em>lefft</em> of the original matrix.
+     * Multiplies two matrices. Matrix 1 is multiplied from the left to matrix
+     * 2. Therefore, result matrix = matrix 1 * matrix 2. The matrices must be
+     * compatible, i.e. the number of columns of matrix 1 must equal to the
+     * number of rows of matrix 2.
+     * 
+     * @param matrix the matrix on the left side
+     * @param vector the vector on the right side
+     * @return the result matrix
+     * @throws IllegalArgumentException if the matrices are not compatible
+     */
+    public static double[] multiply(final double[][] matrix,
+            final double[] vector) throws IllegalArgumentException {
+        final int numRowsMatrix = matrix.length;
+        final int numColsMatrix = numRowsMatrix > 0 ? matrix[0].length : 0;
+        final int numRowsVector = vector.length;
+
+        // check dimension compatibility
+        if (numColsMatrix != numRowsVector) {
+            throw new IllegalArgumentException(
+                    "Matrix must have the same number of columns as the vector "
+                            + "has rows.");
+        }
+
+        double[] resultVector = new double[numRowsVector];
+
+        for (int i = 0; i < numRowsMatrix; i++) {
+            double tmp = 0;
+            for (int j = 0; j < numColsMatrix; j++) {
+                tmp += matrix[i][j] * vector[j];
+            }
+            resultVector[i] = tmp;
+        }
+
+        return resultVector;
+    }
+
+    
+    /**
+     * Multiplies a matrix with its transposed matrix. The transposed matrix is
+     * multiplied to the <em>left</em> of the original matrix.
      * 
      * @param mat the matrix
      * @return the result matrix
@@ -162,7 +240,6 @@ public final class MathUtils {
         return resultMatrix;
     }
 
-    
     /**
      * Transposes the given matrix.
      * 
@@ -171,7 +248,9 @@ public final class MathUtils {
      *         changed according to the given matrix
      */
     public static double[][] transpose(final double[][] inputMatrix) {
-
+        if (inputMatrix.length == 0) {
+            return inputMatrix;
+        }
         int numCols = inputMatrix[0].length;
         int numRows = inputMatrix.length;
 
@@ -250,8 +329,8 @@ public final class MathUtils {
                 if (rowOrder[r1] != l) {
                     for (int c1 = 0; c1 < size; c1++) {
                         if (c1 != c) {
-                            a[rowOrder[r1]][c1] -= a[rowOrder[r1]][c]
-                                    * a[l][c1];
+                            a[rowOrder[r1]][c1] -=
+                                    a[rowOrder[r1]][c] * a[l][c1];
                         }
                         e[rowOrder[r1]][c1] -= a[rowOrder[r1]][c] * e[l][c1];
                     }
@@ -269,7 +348,7 @@ public final class MathUtils {
         }
         return inverse;
     }
-    
+
     /**
      * Normalizes the matrix relative to the mean of the input data and to the
      * standard deviation.
@@ -282,6 +361,9 @@ public final class MathUtils {
      */
     public static double[][] normalizeMatrix(final double[][] matrix,
             final double[] standardDev, final double[] mean) {
+        if (matrix.length == 0) {
+            return matrix;
+        }
 
         double[][] normMatrix = new double[matrix.length][matrix[0].length];
 
@@ -289,8 +371,9 @@ public final class MathUtils {
 
             for (int column = 0; column < normMatrix[row].length; column++) {
 
-                normMatrix[row][column] = (matrix[row][column] - mean[column])
-                        / standardDev[column];
+                normMatrix[row][column] =
+                        (matrix[row][column] - mean[column])
+                                / standardDev[column];
             }
         }
 
@@ -307,6 +390,9 @@ public final class MathUtils {
      */
     public static double[][] normalizeMatrix(final double[][] matrix,
             final double[] mean) {
+        if (matrix.length == 0) {
+            return matrix;
+        }
 
         double[][] normMatrix = new double[matrix.length][matrix[0].length];
 
@@ -322,6 +408,21 @@ public final class MathUtils {
     }
 
     /**
+     * Normalizes the matrix relative to the mean and standard deviation of the
+     * input data.
+     * 
+     * @param matrix the matrix to normalize
+     * 
+     * @return the normalized matrix
+     */
+    public static double[][] normalizeMatrix(final double[][] matrix) {
+        double[] mean = StatisticUtils.mean(matrix);
+        double[] stdev = StatisticUtils.standardDeviation(matrix);
+
+        return normalizeMatrix(matrix, stdev, mean);
+    }
+
+    /**
      * Denormalizes the matrix relativ to the mean of the input data and to the
      * standard deviation.
      * 
@@ -333,6 +434,9 @@ public final class MathUtils {
      */
     public static double[][] denormalizeMatrix(final double[][] y,
             final double[] standardDev, final double[] mean) {
+        if (y.length == 0) {
+            return y;
+        }
 
         double[][] denormMatrix = new double[y.length][y[0].length];
 
@@ -386,6 +490,9 @@ public final class MathUtils {
      */
     public static double[][] denormalizeMatrix(final double[][] y,
             final double[] mean) {
+        if (y.length == 0) {
+            return y;
+        }
 
         double[][] denormMatrix = new double[y.length][y[0].length];
 
@@ -399,19 +506,19 @@ public final class MathUtils {
 
         return denormMatrix;
     }
-    
-    
+
     /**
-     * Computes the spectral norm of the given matrix.
-     * It is defined as the square root of the maximum absolute value of the
-     * eigenvalues of the product of the matrix with its transposed form.
+     * Computes the spectral norm of the given matrix. It is defined as the
+     * square root of the maximum absolute value of the eigenvalues of the
+     * product of the matrix with its transposed form.
+     * 
      * @param matrix the matrix to compute the norm for.
      * @return the spectral norm of the matrix.
      */
     public static double spectralNorm(final double[][] matrix) {
         double[][] matrixTransposed = transpose(matrix);
-        EigenvalueDecomposition evd = new EigenvalueDecomposition(
-                            multiply(matrix, matrixTransposed));
+        EigenvalueDecomposition evd =
+                new EigenvalueDecomposition(multiply(matrix, matrixTransposed));
         double maxR = Double.MIN_VALUE;
         double[] real = evd.get1DRealD();
         double[] imag = evd.get1DImagD();
@@ -421,5 +528,40 @@ public final class MathUtils {
         }
         return Math.sqrt(maxR);
     }
-    
+
+    /**
+     * Adds the second array to the first one.
+     * 
+     * @param firstArray the first array will be changed by adding the second
+     *            one to it
+     * @param secondArray the second array will be added to the first one (stays
+     *            unchanged)
+     */
+    public static void addArrays(final double[] firstArray,
+            final double[] secondArray) {
+
+        assert firstArray.length == secondArray.length;
+        for (int i = 0; i < firstArray.length; i++) {
+            firstArray[i] += secondArray[i];
+        }
+    }
+
+    /**
+     * Adds the second matrix to the first one.
+     * 
+     * @param firstMatrix the first matrix will be changed by adding the second
+     *            one to it
+     * @param secondMatrix the second matrix will be added to the first one
+     *            (stays unchanged)
+     */
+    public static void addMatrix(final double[][] firstMatrix,
+            final double[][] secondMatrix) {
+
+        assert firstMatrix.length == secondMatrix.length;
+        for (int i = 0; i < firstMatrix.length; i++) {
+            for (int j = 0; j < firstMatrix[i].length; j++) {
+                firstMatrix[i][j] += secondMatrix[i][j];
+            }
+        }
+    }
 }
