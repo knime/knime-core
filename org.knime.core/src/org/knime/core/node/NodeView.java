@@ -34,6 +34,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
@@ -46,6 +47,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import org.knime.core.util.FileReaderFileFilter;
@@ -466,10 +468,25 @@ public abstract class NodeView {
         preOpenView();
         // inform derived class
         onOpen();
-        // show frame
-        m_frame.setVisible(true); // triggers WindowEvent 'Opened' which
-        // brings the frame to front
-        m_frame.toFront();
+        // show frame, make sure to do this in EDT (GUI related task)
+        Runnable runner = new Runnable() {
+            public void run() {
+                m_frame.setVisible(true); // triggers WindowEvent 'Opened' which
+                // brings the frame to front
+                m_frame.toFront();
+            }
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            runner.run();
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(runner);
+            } catch (InterruptedException ie) {
+                m_logger.warn("Thread invoking openView() was interrupted");
+            } catch (InvocationTargetException ite) {
+                m_logger.warn("Unable to open view", ite);
+            } 
+        }
     }
 
     /**
