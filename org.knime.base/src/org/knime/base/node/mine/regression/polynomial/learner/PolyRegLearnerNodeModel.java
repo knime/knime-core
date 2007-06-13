@@ -316,7 +316,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             try {
                 m_betas = internals.getDoubleArray("betas");
                 m_columnNames = internals.getStringArray("columnNames");
-                m_squaredError = internals.getDouble("squarredError");
+                m_squaredError = internals.getDouble("squaredError");
                 m_meanValues = internals.getDoubleArray("meanValues");
             } catch (InvalidSettingsException ex) {
                 throw new IOException("Old or corrupt internals");
@@ -368,7 +368,7 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
             NodeSettings internals = new NodeSettings("internals");
             internals.addDoubleArray("betas", m_betas);
             internals.addStringArray("columnNames", m_columnNames);
-            internals.addDouble("squarredError", m_squaredError);
+            internals.addDouble("squaredError", m_squaredError);
             internals.addDoubleArray("meanValues", m_meanValues);
 
             internals.saveToXML(new BufferedOutputStream(new FileOutputStream(
@@ -432,11 +432,11 @@ public class PolyRegLearnerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * Returns the total squarred error.
+     * Returns the total squared error.
      * 
-     * @return the squarred error
+     * @return the squared error
      */
-    double getSquarredError() {
+    double getSquaredError() {
         return m_squaredError;
     }
 

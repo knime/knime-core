@@ -56,13 +56,14 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  */
 public class PolyRegLearnerDialog extends NodeDialogPane {
     @SuppressWarnings("unchecked")
-    private final ColumnSelectionComboxBox m_targetColumn = new ColumnSelectionComboxBox(
-            (Border)null, DoubleValue.class);
+    private final ColumnSelectionComboxBox m_targetColumn = 
+        new ColumnSelectionComboxBox((Border)null, DoubleValue.class);
 
     private final JSpinner m_degree = new JSpinner(new SpinnerNumberModel(2, 1,
             10, 1));
 
-    private final PolyRegLearnerSettings m_settings = new PolyRegLearnerSettings();
+    private final PolyRegLearnerSettings m_settings = 
+        new PolyRegLearnerSettings();
 
     private final JSpinner m_viewRows = new JSpinner(new SpinnerNumberModel(
             10000, 1, Integer.MAX_VALUE, 10));

@@ -80,7 +80,7 @@ public class CoefficientTable extends JPanel {
     };
     
     private final JTable m_table;
-    private final JLabel m_squarredError = new JLabel();
+    private final JLabel m_squaredError = new JLabel();
     
 
     /**
@@ -95,7 +95,7 @@ public class CoefficientTable extends JPanel {
         
         m_table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         add(new JScrollPane(m_table), BorderLayout.CENTER);        
-        add(m_squarredError, BorderLayout.SOUTH);        
+        add(m_squaredError, BorderLayout.SOUTH);        
     }
     
     /**
@@ -103,8 +103,8 @@ public class CoefficientTable extends JPanel {
      */
     public void update() {
         m_tableModel.fireTableDataChanged();
-        m_squarredError.setText("  Squarred error (per row):  " 
-                + m_model.getSquarredError());
+        m_squaredError.setText("  Squared error (per row):  " 
+                + m_model.getSquaredError());
         
         for (int i = 0; i < m_tableModel.getColumnCount(); i++) {
             m_table.getTableHeader().getColumnModel().getColumn(i)

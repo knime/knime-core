@@ -41,7 +41,8 @@ public class PolyRegLearnerSettings {
 
     private String m_targetColumn;
 
-    private final Set<String> m_selectedColumnNames = new LinkedHashSet<String>();
+    private final Set<String> m_selectedColumnNames = 
+        new LinkedHashSet<String>();
 
     private final Set<String> m_unmodSelectedColumnNames = Collections
             .unmodifiableSet(m_selectedColumnNames);

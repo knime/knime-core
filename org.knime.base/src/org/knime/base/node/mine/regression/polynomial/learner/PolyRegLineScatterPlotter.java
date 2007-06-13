@@ -52,7 +52,9 @@ public class PolyRegLineScatterPlotter extends ScatterPlotter {
     private static class MyProperties extends ScatterPlotterProperties {
         private final ColumnSelectionComboxBox m_xColumn =
                 new ColumnSelectionComboxBox((Border)null, DoubleValue.class);
-        
+        /**
+         * 
+         */
         MyProperties() {
             JPanel p = new JPanel();
             p.add(new JLabel("Choose column for x-axis"));
