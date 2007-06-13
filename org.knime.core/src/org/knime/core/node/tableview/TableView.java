@@ -639,6 +639,9 @@ public class TableView extends JScrollPane {
      * @param p location where to open the popup
      */
     protected void showPopup(final Point p) {
+        if (!hasHiLiteHandler()) {
+            return;
+        }
         if (m_popup == null) {
             m_popup = new JPopupMenu();
             for (JMenuItem item : createHiLiteMenuItems()) {
