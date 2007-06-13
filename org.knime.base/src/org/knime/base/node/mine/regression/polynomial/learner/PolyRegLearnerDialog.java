@@ -118,6 +118,7 @@ public class PolyRegLearnerDialog extends NodeDialogPane {
         p = new JPanel(new GridBagLayout());
         c.gridx = 0;
         c.gridy = 0;
+        c.gridwidth = 1;
         p.add(new JLabel("Number of data points to show in view   "), c);
         c.gridx = 1;
         p.add(m_viewRows, c);

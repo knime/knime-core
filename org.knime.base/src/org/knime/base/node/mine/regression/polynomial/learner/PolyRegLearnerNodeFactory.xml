@@ -22,7 +22,7 @@
             The input samples, which of the columns are used as independent variables can be configured in the dialog.
              The input must not contain missing values, you have to fix them by e.g. using the Missing Values node.
         </dataIn>
-        <dataOut name="Training error" index="0">
+        <dataOut name="Data with training error" index="0">
             Training data classified with the learned model and the corresponding errors.
         </dataOut>
         <modelOut name="Regression coefficients" index="0">
