@@ -30,6 +30,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -165,14 +166,17 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
             int idx = inSpecs[0].findColumnIndex(m_modelSpec[i].getName());
             if (idx >= 0) {
                 DataType dataType = inSpecs[0].getColumnSpec(idx).getType();
-                if (!m_modelSpec[i].getType().isASuperTypeOf(dataType)) {
-                    throw new InvalidSettingsException("Model type "
-                            + m_modelSpec[i].getType()
-                            + " is not a super type of " + dataType);
+                Class<? extends DataValue> prefValue = 
+                    m_modelSpec[i].getType().getPreferredValueClass();
+                if (!dataType.isCompatible(prefValue)) {
+                    throw new InvalidSettingsException("Model column '"
+                            + m_modelSpec[i].getName() + "' of type '"
+                            + m_modelSpec[i].getType() 
+                            + "' is not a super type of '" + dataType + "'");
                 }
             } else {
-                throw new InvalidSettingsException("Model column name "
-                        + m_modelSpec[i].getName() + " not in data spec.");
+                throw new InvalidSettingsException("Model column name '"
+                        + m_modelSpec[i].getName() + "' not in data spec.");
             }
         }
         return new DataTableSpec[]{createSpec(inSpecs[0]).createSpec()};
