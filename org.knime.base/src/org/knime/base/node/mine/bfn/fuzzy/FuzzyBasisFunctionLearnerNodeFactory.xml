@@ -29,7 +29,10 @@
     	each dimension.
 		</intro>
 	<option name="Target Column">
-		Select the target to be used as the classification attribute.
+		Select the target(s) to be used for classification. If more
+		than one column is selected, the columns must contain the class
+		membership values between 0 and 1 for each class given by the column
+		name.
 	</option>
 	<option name="Missing Values">
 	    Select one method to handle missing values: "Incorp" may generate fuzzy 
