@@ -329,7 +329,25 @@ public class ColumnSelectionPanel extends JPanel {
             throw new NotConfigurableException(m_columnFilter.allFilteredMsg());
         }
     }
-
+    
+    /**
+     * Gets the selected column as DataColumnSpec. If the 
+     * addNoneCol flag is true the method returns <code>null</code> if the user
+     * has selected the no column item from the combo box.
+     * 
+     * @return The spec of the column that is currently selected or 
+     * <code>null</code> if the addNoneCol flag is set to true and 
+     * the no column item is selected.
+     */
+    public final DataColumnSpec getSelectedColumnAsSpec() {
+        DataColumnSpec selected = (DataColumnSpec)m_chooser.getSelectedItem();
+        if (selected == null || (m_addNoneColOption 
+                && selected.equals(m_addNoneColSpec))) {
+            return null;
+        }
+        return selected;
+    }
+    
     /**
      * Gets the selected column. If the addNoneCol flag
      * is true the method returns <code>null</code> if the user
@@ -339,14 +357,8 @@ public class ColumnSelectionPanel extends JPanel {
      * if the addNoneCol flag is set to true and the no column item is selected.
      */
     public final String getSelectedColumn() {
-        DataColumnSpec selected = (DataColumnSpec)m_chooser.getSelectedItem();
-        if (m_addNoneColOption && selected.equals(m_addNoneColSpec)) {
-            return null;
-        }
-        if (selected != null) {
-            return selected.getName();
-        }
-        return null;
+        DataColumnSpec selected = getSelectedColumnAsSpec();
+        return selected != null ? selected.getName() : null;
     }
     
     

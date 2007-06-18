@@ -205,6 +205,25 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             }
         });
     }
+    
+    /** Returns the {@link DataColumnSpec} of the currently selected item. 
+     * This method delegates to 
+     *{@link ColumnSelectionPanel#getSelectedColumnAsSpec()}.
+     * @return The currently selected item as {@link DataColumnSpec} or null
+     * if none is selected (the list is empty).
+     */
+    public final DataColumnSpec getSelectedAsSpec() {
+        return m_chooser.getSelectedColumnAsSpec();
+    }
+    
+    /** Returns the name of the currently selected item. This method delegates
+     * to {@link ColumnSelectionPanel#getSelectedColumn()}.
+     * @return The name of the currently selected item or null if none is 
+     * selected (the list is empty).
+     */
+    public final String getSelected() {
+        return m_chooser.getSelectedColumn();
+    }
 
     /**
      * {@inheritDoc}
