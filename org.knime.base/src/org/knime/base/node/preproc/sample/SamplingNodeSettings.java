@@ -27,6 +27,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
+ * This class holds the settings for the sampling and the partioning node.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -45,6 +46,10 @@ public class SamplingNodeSettings {
 
     /** NodeSettings key: The random seed. */
     private static final String CFG_RANDOM_SEED = "random_seed";
+
+    private static final String CFG_STRATIFIED = "stratified_sampling";
+
+    private static final String CFG_CLASS_COLUMN = "class_column";
 
     /**
      * Enum for the two methods for setting the number of rows in the output
@@ -75,6 +80,10 @@ public class SamplingNodeSettings {
      */
     private Long m_seed;
 
+    private boolean m_stratifiedSampling;
+
+    private String m_classColumnName;
+
     /**
      * Saves the settings to the given object.
      * 
@@ -89,6 +98,8 @@ public class SamplingNodeSettings {
             // write null here if no deterministic behaviour required.
             settings.addString(CFG_RANDOM_SEED, m_seed != null ? Long
                     .toString(m_seed) : null);
+            settings.addBoolean(CFG_STRATIFIED, m_stratifiedSampling);
+            settings.addString(CFG_CLASS_COLUMN, m_classColumnName);
         }
     }
 
@@ -108,8 +119,8 @@ public class SamplingNodeSettings {
             final boolean guessValues) throws InvalidSettingsException {
         String seed;
         if (guessValues) {
-            String method = settings.getString(CFG_METHOD, Methods.Absolute
-                    .toString());
+            String method =
+                    settings.getString(CFG_METHOD, Methods.Absolute.toString());
             if (method == null) {
                 method = Methods.Absolute.toString();
             }
@@ -138,8 +149,15 @@ public class SamplingNodeSettings {
             m_fraction = settings.getDouble(CFG_FRACTION);
             m_count = settings.getInt(CFG_COUNT);
         }
+        m_stratifiedSampling = settings.getBoolean(CFG_STRATIFIED, false);
+        m_classColumnName = settings.getString(CFG_CLASS_COLUMN, null);
         if (seed != null) {
-            m_seed = Long.parseLong(seed);
+            try {
+                m_seed = Long.parseLong(seed);
+            } catch (NumberFormatException nfe) {
+                throw new InvalidSettingsException("Unable to parse seed " 
+                        + "string \"" + seed + "\", not a number");
+            }
         } else {
             m_seed = null;
         }
@@ -237,5 +255,45 @@ public class SamplingNodeSettings {
      */
     public void seed(final Long seed) {
         m_seed = seed;
+    }
+
+    /**
+     * Sets if stratified should be used instead of pure random sampling.
+     * 
+     * @param b <code>true</code> if stratified sampling should be used,
+     *            <code>false</code> otherwise
+     */
+    public void stratifiedSampling(final boolean b) {
+        m_stratifiedSampling = b;
+    }
+
+    /**
+     * Returns if stratified should be used instead of pure random sampling.
+     * 
+     * @return <code>true</code> if stratified sampling should be used,
+     *            <code>false</code> otherwise
+     */
+    public boolean stratifiedSampling() {
+        return m_stratifiedSampling;
+    }
+
+    /**
+     * Sets the class column whose distribution should be retained when using
+     * stratified sampling.
+     * 
+     * @param columnName the name of the class column
+     */
+    public void classColumn(final String columnName) {
+        m_classColumnName = columnName;
+    }
+
+    /**
+     * Returns the class column whose distribution should be retained when using
+     * stratified sampling.
+     * 
+     * @return the name of the class column
+     */
+    public String classColumn() {
+        return m_classColumnName;
     }
 }

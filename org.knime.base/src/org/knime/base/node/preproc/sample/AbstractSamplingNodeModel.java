@@ -89,6 +89,15 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
             throw new InvalidSettingsException("Unknown method: "
                     + temp.method());
         }
+
+        if (temp.stratifiedSampling() && (temp.classColumn() == null)) {
+            throw new InvalidSettingsException(
+                    "No class column for stratified sampling selected");
+        }
+        if (temp.stratifiedSampling() && !temp.random()) {
+            throw new InvalidSettingsException(
+                    "Stratified sampling only works with random row selection");
+        }
     }
 
     /**
@@ -138,25 +147,45 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
     protected RowFilter getSamplingRowFilter(final DataTable in,
             final ExecutionMonitor exec) throws CanceledExecutionException,
             InvalidSettingsException {
+        Random rand;
+        if (m_settings.random()) {
+            rand =
+                    m_settings.seed() != null ? new Random(m_settings.seed())
+                            : new Random();
+        } else {
+            rand = null;
+        }
+
         RowFilter rowFilter;
         if (m_settings.method() == SamplingNodeSettings.Methods.Absolute) {
-            if (m_settings.random()) {
-                Random r = m_settings.seed() != null ? new Random(m_settings
-                        .seed()) : new Random();
-                rowFilter = Sampler.createSampleFilter(in, m_settings.count(),
-                        r, exec);
+            if (rand != null) {
+                if (m_settings.stratifiedSampling()) {
+                    rowFilter =
+                            new StratifiedSamplingRowFilter(in, m_settings
+                                    .classColumn(), m_settings.count(), exec);
+                } else {
+                    rowFilter =
+                            Sampler.createSampleFilter(in, m_settings.count(),
+                                    rand, exec);
+                }
             } else {
                 rowFilter = Sampler.createRangeFilter(m_settings.count());
             }
         } else if (m_settings.method() == SamplingNodeSettings.Methods.Relative) {
-            if (m_settings.random()) {
-                Random r = m_settings.seed() != null ? new Random(m_settings
-                        .seed()) : new Random();
-                rowFilter = Sampler.createSampleFilter(in, m_settings
-                        .fraction(), r, exec);
+            if (rand != null) {
+                if (m_settings.stratifiedSampling()) {
+                    rowFilter =
+                            new StratifiedSamplingRowFilter(in, m_settings
+                                    .classColumn(), m_settings.fraction(), exec);
+                } else {
+                    rowFilter =
+                            Sampler.createSampleFilter(in, m_settings
+                                    .fraction(), rand, exec);
+                }
             } else {
-                rowFilter = Sampler.createRangeFilter(in,
-                        m_settings.fraction(), exec);
+                rowFilter =
+                        Sampler.createRangeFilter(in, m_settings.fraction(),
+                                exec);
             }
         } else {
             throw new InvalidSettingsException("Unknown method: "

@@ -58,7 +58,7 @@ public class PartitionNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        m_panel.loadSettingsFrom(settings);
+        m_panel.loadSettingsFrom(settings, specs[0]);
     }
 
     /**

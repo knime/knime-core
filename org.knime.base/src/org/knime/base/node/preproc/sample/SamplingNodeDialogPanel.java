@@ -39,11 +39,15 @@ import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
+import javax.swing.border.Border;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.NominalValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
  * Panel to be used in the dialog of the sampling node. It allows to set if the
@@ -67,20 +71,26 @@ public class SamplingNodeDialogPanel extends JPanel {
 
     private final JFormattedTextField m_seedField;
 
+    private final JCheckBox m_stratified;
+
+    private final ColumnSelectionComboxBox m_classColumn;
+
     /**
      * Creates new panel, inits fields. Nothing else.
      */
+    @SuppressWarnings("unchecked")
     public SamplingNodeDialogPanel() {
         super(new GridLayout(0, 2));
         m_absoluteButton = new JRadioButton("Absolute: ");
         m_relativeButton = new JRadioButton("Relative[%]: ");
-        m_absoluteSpinner = new JSpinner(new SpinnerNumberModel(100, 1,
-                Integer.MAX_VALUE, 50));
-        m_relativeSpinner = new JSpinner(new SpinnerNumberModel(10.0, 0.0,
-                100.0, 0.1));
+        m_absoluteSpinner =
+                new JSpinner(new SpinnerNumberModel(100, 1, Integer.MAX_VALUE,
+                        50));
+        m_relativeSpinner =
+                new JSpinner(new SpinnerNumberModel(10.0, 0.0, 100.0, 0.1));
         final int width = 8;
-        JSpinner.DefaultEditor editor = (JSpinner.DefaultEditor)m_absoluteSpinner
-                .getEditor();
+        JSpinner.DefaultEditor editor =
+                (JSpinner.DefaultEditor)m_absoluteSpinner.getEditor();
         editor.getTextField().setColumns(width);
         editor = (JSpinner.DefaultEditor)m_relativeSpinner.getEditor();
         editor.getTextField().setColumns(width);
@@ -89,8 +99,8 @@ public class SamplingNodeDialogPanel extends JPanel {
         m_useSeedChecker
                 .setToolTipText("Check this to allow deterministic sampling.");
         m_useSeedChecker.setHorizontalTextPosition(SwingConstants.RIGHT);
-        m_seedField = new JFormattedTextField(new Long(System
-                .currentTimeMillis()));
+        m_seedField =
+                new JFormattedTextField(new Long(System.currentTimeMillis()));
         m_seedField.setColumns(8);
         m_useSeedChecker.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
@@ -106,11 +116,31 @@ public class SamplingNodeDialogPanel extends JPanel {
                 m_useSeedChecker.setEnabled(m_chooseRandom.isSelected());
                 m_seedField.setEnabled(m_chooseRandom.isSelected()
                         && m_useSeedChecker.isSelected());
+                if (!m_chooseRandom.isSelected()) {
+                    m_stratified.setSelected(false);
+                }
             }
         });
         m_useSeedChecker.setEnabled(m_chooseRandom.isSelected());
         m_seedField.setEnabled(m_chooseRandom.isSelected()
                 && m_useSeedChecker.isSelected());
+
+        m_stratified = new JCheckBox("Stratified sampling:");
+        m_stratified.setToolTipText(
+                "Check this to retain the distribution in the class column.");
+        m_stratified.setHorizontalTextPosition(SwingConstants.RIGHT);
+        m_classColumn = new ColumnSelectionComboxBox(
+                (Border)null, NominalValue.class);
+
+        m_stratified.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                m_classColumn.setEnabled(m_stratified.isSelected());
+                if (m_stratified.isSelected()) {
+                    m_chooseRandom.setSelected(true);
+                }
+            }
+        });
+
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(m_absoluteButton);
         buttonGroup.add(m_relativeButton);
@@ -136,14 +166,20 @@ public class SamplingNodeDialogPanel extends JPanel {
 
         add(getInFlowLayout(m_useSeedChecker));
         add(getInFlowLayout(m_seedField));
+
+        add(getInFlowLayout(m_stratified));
+        add(getInFlowLayout(m_classColumn));
     }
 
     /**
      * Method that is called from the dialog to load settings.
      * 
      * @param settings the settings from the NodeModel
+     * @param spec the spec of the input table
+     * @throws NotConfigurableException if the node cannot be configured (yet)
      */
-    public void loadSettingsFrom(final NodeSettingsRO settings) {
+    public void loadSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec spec) throws NotConfigurableException {
         SamplingNodeSettings sets = new SamplingNodeSettings();
         try {
             sets.loadSettingsFrom(settings, true);
@@ -167,6 +203,10 @@ public class SamplingNodeDialogPanel extends JPanel {
         } else {
             m_useSeedChecker.setSelected(false);
         }
+
+        m_stratified.setSelected(sets.stratifiedSampling());
+        m_classColumn.update(spec, sets.classColumn());
+        m_classColumn.setEnabled(sets.stratifiedSampling());
     }
 
     /**
@@ -182,7 +222,8 @@ public class SamplingNodeDialogPanel extends JPanel {
             sets.method(SamplingNodeSettings.Methods.Absolute);
         }
 
-        sets.fraction(((Double)m_relativeSpinner.getValue()).doubleValue() / 100);
+        sets.fraction(
+                ((Double)m_relativeSpinner.getValue()).doubleValue() / 100);
         sets.count(((Integer)m_absoluteSpinner.getValue()).intValue());
         sets.random(m_chooseRandom.isSelected());
 
@@ -191,6 +232,10 @@ public class SamplingNodeDialogPanel extends JPanel {
         } else {
             sets.seed(null);
         }
+
+        sets.stratifiedSampling(m_stratified.isSelected());
+        sets.classColumn(m_classColumn.getSelectedColumn());
+
         sets.saveSettingsTo(settings);
     }
 

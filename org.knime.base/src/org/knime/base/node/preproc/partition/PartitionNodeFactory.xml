@@ -28,6 +28,12 @@
 			If you do not specify a random seed, the partitioning will differ
 	        when the node is re-executed.
 		</option>
+        <option name="Stratified sampling">
+            Check this button if you want stratified sampling, i.e. the distribution
+            of values in the selected column is (approximately) retained in 
+            the output tables. 
+            Stratified sampling only works when random sampling is enabled.
+        </option>
 	</fullDescription>
     <ports>
         <dataIn index="0" name="Table to partition">Table to partition.</dataIn>
