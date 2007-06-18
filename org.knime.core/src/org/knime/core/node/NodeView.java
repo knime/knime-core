@@ -381,9 +381,9 @@ public abstract class NodeView {
                     // otherwise queue into event dispatch thread
                     SwingUtilities.invokeAndWait(run);
                 } catch (InvocationTargetException ite) {
-                	m_logger.error("Exception during view update", ite);
+                    m_logger.error("Exception during view update", ite);
                 } catch (InterruptedException ie) {
-                	m_logger.error(Thread.currentThread() 
+                    m_logger.error(Thread.currentThread() 
                             + " was interrupted", ie);
                 }
             }
@@ -502,13 +502,9 @@ public abstract class NodeView {
         if (SwingUtilities.isEventDispatchThread()) {
             runner.run();
         } else {
-            try {
-                SwingUtilities.invokeAndWait(runner);
-            } catch (InterruptedException ie) {
-                m_logger.warn("Thread invoking openView() was interrupted");
-            } catch (InvocationTargetException ite) {
-                m_logger.warn("Unable to open view", ite);
-            } 
+            // do not use invokeAndWait here: caused deadlocks (apparently)
+            // in native code under windows
+            SwingUtilities.invokeLater(runner);
         }
     }
 
