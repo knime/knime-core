@@ -34,7 +34,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
@@ -479,13 +478,9 @@ public abstract class NodeView {
         if (SwingUtilities.isEventDispatchThread()) {
             runner.run();
         } else {
-            try {
-                SwingUtilities.invokeAndWait(runner);
-            } catch (InterruptedException ie) {
-                m_logger.warn("Thread invoking openView() was interrupted");
-            } catch (InvocationTargetException ite) {
-                m_logger.warn("Unable to open view", ite);
-            } 
+            // do not use invokeAndWait here: caused deadlocks (apparently)
+            // in native code under windows
+            SwingUtilities.invokeLater(runner);
         }
     }
 
