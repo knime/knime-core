@@ -28,6 +28,7 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -60,7 +61,7 @@ public class StratifiedSamplingRowFilter extends RowFilter {
             final DataTable table, final ExecutionMonitor exec,
             final String classColumn) throws CanceledExecutionException {
         HashMap<DataCell, List<Integer>> valueCounts =
-                new HashMap<DataCell, List<Integer>>();
+                new LinkedHashMap<DataCell, List<Integer>>();
 
         int classColIndex =
                 table.getDataTableSpec().findColumnIndex(classColumn);
