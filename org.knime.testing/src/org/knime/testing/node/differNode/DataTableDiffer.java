@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -36,7 +35,6 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.StringCell;
-
 
 /**
  * 
@@ -100,66 +98,83 @@ public class DataTableDiffer implements TestEvaluator {
      * 
      * @throws TestEvaluationException
      * @see org.knime.testing.node.differNode.TestEvaluator#compare(
-     *      org.knime.core.data.DataTable,
-     *      org.knime.core.data.DataTable)
+     *      org.knime.core.data.DataTable, org.knime.core.data.DataTable)
      */
     public void compare(final DataTable table1, final DataTable table2)
             throws TestEvaluationException {
-        if (!table1.getDataTableSpec().equalStructure(
-                table2.getDataTableSpec())) {
-            throw new TestEvaluationException("The specs are not the same");
-        }
-        Iterator<DataRow> rowIt1 = table1.iterator();
-        Iterator<DataRow> rowIt2 = table2.iterator();
-        while (rowIt1.hasNext() && rowIt2.hasNext()) {
-            Iterator<DataCell> cellIt1 = rowIt1.next().iterator();
-            Iterator<DataCell> cellIt2 = rowIt2.next().iterator();
-            while (cellIt1.hasNext() && cellIt2.hasNext()) {
-                if (!cellIt1.next().equals(cellIt2.next())) {
-                    throw new TestEvaluationException(
-                            "The tablecontents are not the same");
+
+        // Compare the table specs
+
+        if (!table1.getDataTableSpec().equalStructure(table2.getDataTableSpec())) {
+            // generate a helpful error message
+            DataTableSpec spec1 = table1.getDataTableSpec();
+            DataTableSpec spec2 = table2.getDataTableSpec();
+            if (spec1.getNumColumns() != spec2.getNumColumns()) {
+                throw new TestEvaluationException("Tables have different"
+                        + " number of columns");
+            }
+            boolean colsDiff = false;
+            String msg =
+                    "The following columns differ in "
+                            + "name, type, and/or domain:\n";
+            for (int c = 0; c < spec1.getNumColumns(); c++) {
+                if (!spec1.getColumnSpec(c).equalStructure(spec2.getColumnSpec(c))) {
+                    colsDiff = true;
+                    msg += " Col#" + c;
                 }
             }
-        }
-    }
+            if (colsDiff) {
+                throw new TestEvaluationException(msg);
+            }
 
-    /**
-     * Compares the two dataTableSpecs and returns the diff positions.
-     * 
-     * @return diff positions
-     */
-    public int[] diffTableSpec() {
-        DataTableSpec spec1 = m_dataTable1.getDataTableSpec();
-        DataTableSpec spec2 = m_dataTable2.getDataTableSpec();
-        Vector<Integer> diffs = new Vector<Integer>();
-        Iterator<DataColumnSpec> specIt1 = spec1.iterator();
-        Iterator<DataColumnSpec> specIt2 = spec2.iterator();
-        int diffpos = 0;
-        while (specIt1.hasNext() && specIt2.hasNext()) {
-            if (!specIt1.next().equals(specIt2.next())) {
-                diffs.add(diffpos);
-            }
-            diffpos++;
-        }
-        // add remaining comlums to diff
-        if (spec1.getNumColumns() > spec2.getNumColumns()) {
-            while (diffpos < spec1.getNumColumns()) {
-                diffs.add(diffpos);
-                diffpos++;
-            }
-        }
-        if (spec1.getNumColumns() < spec2.getNumColumns()) {
-            while (diffpos < spec2.getNumColumns()) {
-                diffs.add(diffpos);
-                diffpos++;
-            }
+            throw new TestEvaluationException("DataTableSpecs are different"
+                    + " (eventhough DataColumnSpecs are all equal).");
         }
 
-        int[] result = new int[diffs.size()];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = diffs.get(i).intValue();
+        // Compare the table content
+
+        Iterator<DataRow> rowIt1 = table1.iterator();
+        Iterator<DataRow> rowIt2 = table2.iterator();
+        long rowNum = -1;
+
+        while (rowIt1.hasNext() && rowIt2.hasNext()) {
+            DataRow row1 = rowIt1.next();
+            DataRow row2 = rowIt2.next();
+            rowNum++;
+            // we've checked the table structure before
+            assert row1.getNumCells() == row2.getNumCells();
+
+            // check the row key
+            if (!row1.getKey().equals(row2.getKey())) {
+                throw new TestEvaluationException("Row keys in row #" + rowNum
+                        + " differ ('" + row1.getKey() + "' vs. '"
+                        + row2.getKey() + "')");
+            }
+            // and all data cells
+            for (int c = 0; c < row1.getNumCells(); c++) {
+                DataCell c1 = row1.getCell(c);
+                DataCell c2 = row2.getCell(c);
+                if (!c1.equals(c2)) {
+                    throw new TestEvaluationException("Cell content differs"
+                            + " in row #"
+                            + rowNum
+                            + "('"
+                            + row1.getKey()
+                            + "')"
+                            + " column #"
+                            + c
+                            + "('"
+                            + table1.getDataTableSpec().getColumnSpec(c)
+                                    .getName() + "'): Cell1='" + c1
+                            + "' vs. Cell2='" + c2 + "'");
+                }
+            }
+
         }
-        return result;
+        if (rowIt1.hasNext() || rowIt2.hasNext()) {
+            throw new TestEvaluationException(
+                    "DataTables are different in length.");
+        }
 
     }
 
@@ -174,6 +189,7 @@ public class DataTableDiffer implements TestEvaluator {
             Vector<DataRow> rows = new Vector<DataRow>();
             Iterator<DataRow> rowIt1 = m_dataTable1.iterator();
             Iterator<DataRow> rowIt2 = m_dataTable2.iterator();
+            // this is bullshit! (po)
             if (rowIt1.hasNext() != rowIt2.hasNext()) {
                 throw new IllegalStateException("The tables are not "
                         + "of the same size!");
@@ -196,9 +212,10 @@ public class DataTableDiffer implements TestEvaluator {
                         cells[pos] = currentCell1;
                     } else {
                         // TODO tg rowDiffers = true;
-                        cells[pos] = new StringCell("CELL DIFFERS:"
-                                + currentCell1.toString() + " <> "
-                                + currentCell2.toString());
+                        cells[pos] =
+                                new StringCell("CELL DIFFERS:"
+                                        + currentCell1.toString() + " <> "
+                                        + currentCell2.toString());
                     }
                     pos++;
                 }
@@ -212,8 +229,8 @@ public class DataTableDiffer implements TestEvaluator {
                 dataRows[i] = (DataRow)tmp[i];
             }
 
-            m_DiffTable = new DefaultTable(dataRows, m_dataTable1
-                    .getDataTableSpec());
+            m_DiffTable =
+                    new DefaultTable(dataRows, m_dataTable1.getDataTableSpec());
         }
         return m_DiffTable;
     }
