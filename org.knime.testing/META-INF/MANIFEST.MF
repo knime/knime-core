@@ -18,7 +18,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.junit,
  org.knime.ext.weka,
  org.knime.deprecated,
- org.knime.dev
+ org.knime.dev,
+ org.knime.base.kudospharma
 Eclipse-RegisterBuddy: org.knime.base
 Eclipse-AutoStart: true
 Export-Package: org.knime.testing,
