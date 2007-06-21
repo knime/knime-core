@@ -158,7 +158,12 @@ public final class DoubleCell extends DataCell implements DoubleValue,
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        return ((DoubleCell)dc).m_double == m_double;
+        double o = ((DoubleCell)dc).m_double;
+        if (Double.isNaN(m_double) && Double.isNaN(o)) {
+            // Double.NaN is not equal to Double.NaN
+            return true;
+        }
+        return o == m_double;
     }
 
     /**
