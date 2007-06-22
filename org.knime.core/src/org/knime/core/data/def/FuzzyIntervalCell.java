@@ -173,13 +173,19 @@ public final class FuzzyIntervalCell extends DataCell implements
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         FuzzyIntervalCell fc = (FuzzyIntervalCell)dc;
+        if (Double.isNaN(fc.m_minSupp) && Double.isNaN(m_minSupp) 
+                && Double.isNaN(fc.m_minCore) && Double.isNaN(m_minCore)
+                && Double.isNaN(fc.m_maxCore) && Double.isNaN(m_maxCore)
+                && Double.isNaN(fc.m_maxSupp) && Double.isNaN(m_maxSupp)) {
+            return true;
+        }
         return (fc.m_minSupp == m_minSupp) && (fc.m_minCore == m_minCore) 
             && (fc.m_maxCore == m_maxCore) && (fc.m_maxSupp == m_maxSupp);
     }
 
     /**
      * Computes hash code based on all private members.
-     * @see DataCell#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {

@@ -84,10 +84,10 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /** Right interval bound. */
     private final double m_right;
 
-    /** Whether to include the left bound */
+    /** Whether to include the left bound. */
     private final boolean m_includeLeft;
 
-    /** Whether to include the right bound */
+    /** Whether to include the right bound. */
     private final boolean m_includeRight;
 
     /**
@@ -193,6 +193,11 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         IntervalCell ic = (IntervalCell)dc;
+        if (Double.isNaN(ic.getLeftBound()) && Double.isNaN(getLeftBound())
+                && Double.isNaN(ic.getRightBound()) 
+                && Double.isNaN(getRightBound())) {
+            return true;
+        }
         return ic.getLeftBound() == getLeftBound()
                 && ic.getRightBound() == getRightBound()
                 && ic.m_includeLeft == m_includeLeft
@@ -202,7 +207,7 @@ public final class IntervalCell extends DataCell implements FuzzyIntervalValue,
     /**
      * Computes hash code based on all private members.
      * 
-     * @see DataCell#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
