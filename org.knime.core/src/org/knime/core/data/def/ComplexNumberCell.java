@@ -114,8 +114,13 @@ public final class ComplexNumberCell extends DataCell implements
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        return ((ComplexNumberCell)dc).m_real == m_real
-                && ((ComplexNumberCell)dc).m_imag == m_imag;
+        double oreal = ((ComplexNumberCell) dc).m_real;
+        double oimag = ((ComplexNumberCell)dc).m_imag;
+        if (Double.isNaN(oreal) && Double.isNaN(oimag)
+                && Double.isNaN(m_real) && Double.isNaN(m_imag)) {
+            return true;
+        }
+        return (oreal == m_real && oimag == m_imag);
     }
 
     /**

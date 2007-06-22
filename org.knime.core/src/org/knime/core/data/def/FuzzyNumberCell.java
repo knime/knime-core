@@ -179,6 +179,11 @@ public final class FuzzyNumberCell extends DataCell implements
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
         FuzzyNumberCell fc = (FuzzyNumberCell)dc;
+        if (Double.isNaN(fc.m_minSupp) && Double.isNaN(m_minSupp) 
+                && Double.isNaN(fc.m_core) && Double.isNaN(m_core)
+                && Double.isNaN(fc.m_maxSupp) && Double.isNaN(m_maxSupp)) {
+            return true;
+        }
         return (fc.m_minSupp == m_minSupp) && (fc.m_core == m_core)
                 && (fc.m_maxSupp == m_maxSupp);
     }
