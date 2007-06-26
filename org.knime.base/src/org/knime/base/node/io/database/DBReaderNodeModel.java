@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.sql.SQLException;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -141,9 +142,9 @@ class DBReaderNodeModel extends DBReaderConnectionNodeModel {
      *  #configure(org.knime.core.data.DataTableSpec[])
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) 
             throws InvalidSettingsException {
-        if (getDatabaseName() == null || getUser() == null 
+        if (getDatabaseName() == null || getUser() == null
                 || getPassword() == null) {
             throw new InvalidSettingsException("No settings available "
                     + "to create database connection.");
@@ -152,15 +153,31 @@ class DBReaderNodeModel extends DBReaderConnectionNodeModel {
             return new DataTableSpec[]{m_lastSpec};
         }
         DBDriverLoader.registerDriver(getDriver());
-        try { 
+        try {
             String password = KnimeEncryption.decrypt(getPassword());
-            DBReaderConnection conn = new DBReaderConnection(
-                    getDatabaseName(), getUser(), password, getQuery());
+            DBReaderConnection conn =
+                    new DBReaderConnection(getDatabaseName(), getUser(),
+                            password, getQuery());
             m_lastSpec = conn.getDataTableSpec();
+        } catch (SQLException e) {
+            throw new InvalidSettingsException(e.getMessage());
         } catch (Exception e) {
-            throw new InvalidSettingsException("Could not establish "
-                    + "connection to database: " + getDatabaseName());
+            throw new InvalidSettingsException("Could not decrypt password.");
         }
         return new DataTableSpec[]{m_lastSpec};
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        super.validateSettings(settings);
+        String query = settings.getString("statement");
+        if (query.contains("<table>")) {
+            throw new InvalidSettingsException(
+                    "Database table placeholder not replaced.");
+        }
     }
 }
