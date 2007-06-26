@@ -164,13 +164,12 @@ public class DBReaderDialogPane extends NodeDialogPane {
         JPanel allPanel = new JPanel(new BorderLayout());
         allPanel.add(parentPanel, BorderLayout.NORTH);
         m_statmnt.setFont(font);
-        m_statmnt.setText("SELECT * FROM");
-        JScrollPane scrollPane = new JScrollPane(m_statmnt,
+        m_statmnt.setText("SELECT * FROM <table>");
+        final JScrollPane scrollPane = new JScrollPane(m_statmnt,
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setBorder(BorderFactory
                 .createTitledBorder(" SQL Statement "));
-        scrollPane.setPreferredSize(new Dimension(400, 100));
         allPanel.add(scrollPane, BorderLayout.CENTER);
         super.addTab("Settings", allPanel);
     }
