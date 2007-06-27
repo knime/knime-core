@@ -140,6 +140,10 @@ class DBReaderConnectionNodeModel extends NodeModel {
             final boolean write) throws InvalidSettingsException {
         String driver = settings.getString("driver");
         String statement = settings.getString("statement");
+        if (statement == null || !statement.toLowerCase().contains("select")) {
+            throw new InvalidSettingsException(
+                    "SQL query invalid: " + statement);
+        }
         String database = settings.getString("database");
         String user = settings.getString("user");
         // password
@@ -233,7 +237,7 @@ class DBReaderConnectionNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
     protected void reset() {
@@ -315,3 +319,4 @@ class DBReaderConnectionNodeModel extends NodeModel {
     }
 
 }
+
