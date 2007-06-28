@@ -28,9 +28,9 @@ package org.knime.base.data.sort;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Vector;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -53,14 +53,14 @@ import org.knime.core.node.NodeLogger;
  * @author Nicolas Cebron, University of Konstanz
  */
 public class SortedTable implements DataTable {
-    
+
     private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(SortedTable.class);
+            NodeLogger.getLogger(SortedTable.class);
 
     /**
-     * Number of rows for each container.
+     * Number of cells for each container.
      */
-    private static final int CONTAINERSIZE = 100000;
+    private static final int CONTAINERSIZE = 1000000;
 
     private BufferedDataTable m_sortedTable;
 
@@ -85,7 +85,6 @@ public class SortedTable implements DataTable {
      */
     private boolean[] m_sortAscending;
 
-    
     /**
      * Creates a sorted table from the given table and the sorting parameters.
      * The table is sorted in the constructor.
@@ -109,7 +108,7 @@ public class SortedTable implements DataTable {
             final ExecutionContext exec) throws Exception {
         this(dataTable, inclList, sortAscending, false, exec);
     }
-    
+
     /**
      * Creates a sorted table from the given table and the sorting parameters.
      * The table is sorted in the constructor.
@@ -123,8 +122,9 @@ public class SortedTable implements DataTable {
      *            in the list of included columns. true: ascending false:
      *            descending
      * @param sortInMemory <code>true</code> if the table should be sorted in
-     * memory, <code>false</code> if it should be sorted in disk. Sorting in
-     * memory is much faster but may fail if the data table is too big. 
+     *            memory, <code>false</code> if it should be sorted in disk.
+     *            Sorting in memory is much faster but may fail if the data
+     *            table is too big.
      * 
      * @param exec the execution context used to create the the buffered data
      *            table and indicate the progress
@@ -133,8 +133,8 @@ public class SortedTable implements DataTable {
      */
     public SortedTable(final BufferedDataTable dataTable,
             final List<String> inclList, final boolean[] sortAscending,
-            final boolean sortInMemory,
-            final ExecutionContext exec) throws Exception {
+            final boolean sortInMemory, final ExecutionContext exec)
+            throws Exception {
 
         m_spec = dataTable.getDataTableSpec();
         // get the column indices of the columns that will be sorted
@@ -161,19 +161,18 @@ public class SortedTable implements DataTable {
             }
             m_indices[i] = pos;
         }
-        
+
         if (sortInMemory) {
             sortInMemory(dataTable, exec);
         } else {
             sortOnDisk(dataTable, exec);
         }
     }
-    
-    
+
     private void sortInMemory(final BufferedDataTable dataTable,
             final ExecutionContext exec) throws CanceledExecutionException {
         DataRow[] rows = new DataRow[dataTable.getRowCount()];
-        
+
         final double max = 2 * dataTable.getRowCount();
         int progress = 0;
         exec.setMessage("Reading data");
@@ -194,9 +193,9 @@ public class SortedTable implements DataTable {
         time = System.currentTimeMillis();
         Arrays.sort(rows, new RowComparator());
         LOGGER.debug("Sort time: " + (System.currentTimeMillis() - time));
-        
+
         exec.setMessage("Creating sorted table");
-        
+
         BufferedDataContainer dc =
                 exec.createDataContainer(dataTable.getDataTableSpec());
         time = System.currentTimeMillis();
@@ -209,28 +208,30 @@ public class SortedTable implements DataTable {
             progress++;
         }
         dc.close();
-        
+
         m_sortedTable = dc.getTable();
         LOGGER.debug("Write time: " + (System.currentTimeMillis() - time));
     }
 
-
     private void sortOnDisk(final BufferedDataTable dataTable,
             final ExecutionContext exec) throws CanceledExecutionException {
-        Vector<DataContainer> containerVector = new Vector<DataContainer>();
-        // Initialize RowIterator
+        ArrayList<DataContainer> containerVector =
+                new ArrayList<DataContainer>();
+        // Initialise RowIterator
         RowIterator rowIt = dataTable.iterator();
         int nrRows = dataTable.getRowCount();
         int currentRowNr = 0;
+
+        int nrContainerRows = CONTAINERSIZE / m_spec.getNumColumns();
         // wrap all DataRows in Containers of size containerSize
         // sort each container before it is'stored'.
         DataContainer newContainer = new DataContainer(m_spec, false, 100);
         int nrRowsinContainer = 0;
-        // TODO: can be ommited due to new buffered table with known row size
+        // TODO: can be omitted due to new buffered table with known row size
         ArrayList<DataRow> containerrowlist = new ArrayList<DataRow>();
         ExecutionMonitor subexec = exec.createSubProgress(.5);
         int chunkCounter = 1;
-        int numChunks = (int) Math.ceil((double) nrRows / CONTAINERSIZE);
+        int numChunks = (int)Math.ceil((double)nrRows / nrContainerRows);
         while (rowIt.hasNext()) {
             subexec.setProgress((double)currentRowNr / (double)nrRows,
                     "Reading in data-chunk " + chunkCounter + "...");
@@ -238,43 +239,40 @@ public class SortedTable implements DataTable {
             if (newContainer.isClosed()) {
                 newContainer = new DataContainer(m_spec, false, 100);
                 nrRowsinContainer = 0;
-                containerrowlist = new ArrayList<DataRow>();
             }
             DataRow row = rowIt.next();
             currentRowNr++;
             nrRowsinContainer++;
             containerrowlist.add(row);
-            if (nrRowsinContainer == CONTAINERSIZE) {
+            if (nrRowsinContainer == nrContainerRows) {
                 exec.checkCanceled();
                 // sort list
-                DataRow[] temparray = new DataRow[containerrowlist.size()];
-                temparray = containerrowlist.toArray(temparray);
                 subexec.setMessage("Presorting chunk " + chunkCounter + " of "
                         + numChunks);
-                Arrays.sort(temparray, 0, temparray.length, m_rowComparator);
+                Collections.sort(containerrowlist, m_rowComparator);
                 // write in container
-                for (int i = 0; i < temparray.length; i++) {
-                    newContainer.addRowToTable(temparray[i]);
+                for (DataRow row2 : containerrowlist) {
+                    newContainer.addRowToTable(row2);
                 }
                 newContainer.close();
                 containerVector.add(newContainer);
                 chunkCounter++;
+                containerrowlist.clear();
             }
         }
-        if (nrRowsinContainer % CONTAINERSIZE != 0) {
+        if (nrRowsinContainer % nrContainerRows != 0) {
             exec.checkCanceled();
             // sort list
-            DataRow[] temparray = new DataRow[containerrowlist.size()];
-            temparray = containerrowlist.toArray(temparray);
             subexec.setMessage("Presorting chunk " + chunkCounter + " of "
                     + numChunks);
-            Arrays.sort(temparray, 0, temparray.length, m_rowComparator);
+            Collections.sort(containerrowlist, m_rowComparator);
             // write in container
-            for (int i = 0; i < temparray.length; i++) {
-                newContainer.addRowToTable(temparray[i]);
+            for (DataRow row2 : containerrowlist) {
+                newContainer.addRowToTable(row2);
             }
             newContainer.close();
             containerVector.add(newContainer);
+            containerrowlist.clear();
         }
 
         // merge all sorted containers together
@@ -286,7 +284,7 @@ public class SortedTable implements DataTable {
                 new RowIterator[containerVector.size()];
         DataRow[] currentRowValues = new DataRow[containerVector.size()];
 
-        // Initialize both arrays
+        // Initialise both arrays
         for (int c = 0; c < containerVector.size(); c++) {
             DataContainer tempContainer = containerVector.get(c);
             DataTable tempTable = tempContainer.getTable();
