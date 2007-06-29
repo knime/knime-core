@@ -66,7 +66,6 @@ public class PasteActionContextMenu extends PasteAction {
     protected int[] calculateShift(int[] ids) {
         int x = getEditor().getSelectionTool().getXLocation();
         int y = getEditor().getSelectionTool().getYLocation();
-        System.out.println("press location: " + x + ", " + y);
         int smallestX = Integer.MAX_VALUE;
         int smallestY = Integer.MAX_VALUE;
         for (int i = 0; i < ids.length; i++) {

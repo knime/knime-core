@@ -143,7 +143,6 @@ public class ModellingNodeExtraInfo implements NodeExtraInfo {
         // first change the x value
         m_bounds[0] = m_bounds[0] + moveDist[0];
         m_bounds[1] = m_bounds[1] + moveDist[1];
-        System.out.println("Changed to : " + m_bounds[0]+ ", " + m_bounds[1]);
     }
 
     /**
