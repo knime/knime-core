@@ -129,20 +129,20 @@ public class PasteAction extends AbstractClipboardAction {
         try {
             newPartIds = manager.createSubWorkflow(copySettings);
 
+            int[] shift = calculateShift(newPartIds[0]);
             for (int i = 0; i < newPartIds[0].length; i++) {
                 NodeContainer nc =
                         manager.getNodeContainerById(newPartIds[0][i]);
                 // finaly change the extra info so that the copies are
                 // located differently (if not null)
                 NodeExtraInfo extraInfo = nc.getExtraInfo();
+                
                 if (extraInfo != null) {
-                    extraInfo.changePosition(80 * (clipboardContent
-                            .getRetrievalCounter() + 1));
+                    extraInfo.changePosition(shift);
                     nc.setExtraInfo(extraInfo);
                     // this is a bit dirty but
                     // needed to trigger the re-layout of the node
                 }
-
             }
             // now process the connections
             for (int i = 0; i < newPartIds[1].length; i++) {
@@ -153,8 +153,7 @@ public class PasteAction extends AbstractClipboardAction {
                 ModellingConnectionExtraInfo extraInfo =
                         (ModellingConnectionExtraInfo)cc.getExtraInfo();
                 if (extraInfo != null) {
-                    extraInfo.changePosition(80 * (clipboardContent
-                            .getRetrievalCounter() + 1));
+                    extraInfo.changePosition(shift);
                     cc.setExtraInfo(extraInfo);
                 }
 
@@ -182,9 +181,6 @@ public class PasteAction extends AbstractClipboardAction {
             partViewer.appendSelection(newPart);
         }
 
-        // increment the retrieval counter
-        clipboardContent.incrementRetrievalCounter();
-
         // update the actions
         getEditor().updateActions();
 
@@ -192,5 +188,13 @@ public class PasteAction extends AbstractClipboardAction {
         // is not updated correctly.
         getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
 
+    }
+
+    protected int[] calculateShift(int[] ids) {
+        int counter =
+                (getEditor().getClipboardContent().getRetrievalCounter() + 1);
+        // increment the retrieval counter
+        getEditor().getClipboardContent().incrementRetrievalCounter();
+        return new int[]{80 * counter, 80 * counter};
     }
 }

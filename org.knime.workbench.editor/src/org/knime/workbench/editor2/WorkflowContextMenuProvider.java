@@ -48,6 +48,7 @@ import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.OpenPortViewAction;
 import org.knime.workbench.editor2.actions.OpenViewAction;
 import org.knime.workbench.editor2.actions.OpenViewEmbeddedAction;
+import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -59,8 +60,8 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowContextMenuProvider extends ContextMenuProvider {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(WorkflowContextMenuProvider.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(WorkflowContextMenuProvider.class);
 
     private ActionRegistry m_actionRegistry;
 
@@ -89,6 +90,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
      */
     @Override
     public void buildContextMenu(final IMenuManager manager) {
+        
         LOGGER.debug("Building up context menu...");
         manager.add(new Separator(IWorkbenchActionConstants.GROUP_APP));
         GEFActionConstants.addStandardActionGroups(manager);
@@ -103,7 +105,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
         ((UpdateAction)action).update();
 
-        action = m_actionRegistry.getAction("paste");
+        action = m_actionRegistry.getAction(PasteActionContextMenu.ID);
         manager.appendToGroup(GEFActionConstants.GROUP_EDIT, action);
         ((UpdateAction)action).update();
 
@@ -159,22 +161,23 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
             if (p instanceof NodeContainerEditPart) {
 
                 NodeContainer container = null;
-                container = (NodeContainer)((NodeContainerEditPart)p)
-                        .getModel();
+                container =
+                        (NodeContainer)((NodeContainerEditPart)p).getModel();
 
                 // add for node views option if applicable
                 LOGGER.debug("adding open node-view action(s) "
                         + "to context menu...");
                 int numNodeViews = container.getNumViews();
-                /* BW: disabled this feature, no embedded eclipse views
-                 * available (to enable them uncomment the following lines
-                 * and also change the settings in MainPreferencePage.
+                /*
+                 * BW: disabled this feature, no embedded eclipse views
+                 * available (to enable them uncomment the following lines and
+                 * also change the settings in MainPreferencePage.
                  */
                 boolean openEmbedded = false;
-//                boolean openEmbedded = KNIMEUIPlugin.getDefault().
-//                      getPreferenceStore().getString(
-//                          PreferenceConstants.P_CHOICE_VIEWMODE).equals(
-//                          PreferenceConstants.P_CHOICE_VIEWMODE_VIEW);
+                // boolean openEmbedded = KNIMEUIPlugin.getDefault().
+                // getPreferenceStore().getString(
+                // PreferenceConstants.P_CHOICE_VIEWMODE).equals(
+                // PreferenceConstants.P_CHOICE_VIEWMODE_VIEW);
                 for (int i = 0; i < numNodeViews; i++) {
                     if (openEmbedded) {
                         action = new OpenViewEmbeddedAction(container, i);

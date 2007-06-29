@@ -58,7 +58,6 @@ import org.eclipse.gef.commands.CommandStack;
 import org.eclipse.gef.commands.CommandStackListener;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.editparts.ZoomManager;
-import org.eclipse.gef.tools.SelectionTool;
 import org.eclipse.gef.ui.actions.ActionRegistry;
 import org.eclipse.gef.ui.actions.GEFActionConstants;
 import org.eclipse.gef.ui.actions.PrintAction;
@@ -118,6 +117,7 @@ import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.NodeConnectionContainerDeleteAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.PasteAction;
+import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.job.ProgressMonitorJob;
@@ -140,8 +140,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         CommandStackListener, ISelectionListener, WorkflowListener,
         IResourceChangeListener {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(WorkflowEditor.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(WorkflowEditor.class);
 
     /** Clipboard name. */
     public static final String CLIPBOARD_ROOT_NAME = "clipboard";
@@ -181,6 +181,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private PropertySheetPage m_undoablePropertySheetPage;
 
+    private WorkflowSelectionTool m_selectionTool;
+
     /**
      * Stores possible exceptions from the workflow manager that can occur
      * during loading the workflow. The WorkflowException is a collection
@@ -209,16 +211,17 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
-    private static final ArrayList<ConsoleViewAppender> APPENDERS = new ArrayList<ConsoleViewAppender>();
+    private static final ArrayList<ConsoleViewAppender> APPENDERS =
+            new ArrayList<ConsoleViewAppender>();
 
     static {
-        IPreferenceStore pStore = KNIMEUIPlugin.getDefault()
-                .getPreferenceStore();
-        String logLevelConsole = pStore
-                .getString(PreferenceConstants.P_LOGLEVEL_CONSOLE);
+        IPreferenceStore pStore =
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
+        String logLevelConsole =
+                pStore.getString(PreferenceConstants.P_LOGLEVEL_CONSOLE);
         setLogLevel(logLevelConsole);
-        String logLevelFile = pStore
-                .getString(PreferenceConstants.P_LOGLEVEL_LOG_FILE);
+        String logLevelFile =
+                pStore.getString(PreferenceConstants.P_LOGLEVEL_LOG_FILE);
         LEVEL l = LEVEL.WARN;
         try {
             l = LEVEL.valueOf(logLevelFile);
@@ -265,7 +268,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                         PreferenceConstants.P_MAXIMUM_THREADS)) {
                     int count;
                     try {
-                        count = (Integer) event.getNewValue();
+                        count = (Integer)event.getNewValue();
                         KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(count);
                     } catch (Exception e) {
                         LOGGER.warn("Unable to get maximum thread count "
@@ -273,7 +276,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                     }
                 } else if (event.getProperty().equals(
                         PreferenceConstants.P_TEMP_DIR)) {
-                    System.setProperty("java.io.tmpdir", (String) event
+                    System.setProperty("java.io.tmpdir", (String)event
                             .getNewValue());
                 }
             }
@@ -286,8 +289,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * PreferenceConstants.P_LOGLEVEL_DEBUG,
      * PreferenceConstants.P_LOGLEVEL_INFO, etc.
      * 
-     * @param logLevel
-     *            The new log level.
+     * @param logLevel The new log level.
      */
     private static void setLogLevel(final String logLevel) {
         boolean changed = false;
@@ -338,7 +340,9 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // create an edit domain for this editor (handles the command stack)
         m_editDomain = new DefaultEditDomain(this);
-        m_editDomain.setDefaultTool(new SelectionTool());
+        m_selectionTool = new WorkflowSelectionTool();
+        m_editDomain.setActiveTool(m_selectionTool);
+        m_editDomain.setDefaultTool(m_selectionTool);
 
         setEditDomain(m_editDomain);
 
@@ -359,8 +363,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Add the given Appender to the NodeLogger.
      * 
-     * @param app
-     *            Appender to add.
+     * @param app Appender to add.
      * @return If the given appender was not previously registered.
      */
     static boolean addAppender(final ConsoleViewAppender app) {
@@ -375,8 +378,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Removes the given Appender from the NodeLogger.
      * 
-     * @param app
-     *            Appender to remove.
+     * @param app Appender to remove.
      * @return If the given appended was previously registered.
      */
     static boolean removeAppender(final ConsoleViewAppender app) {
@@ -406,8 +408,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Sets the clipboard content for this editor.
      * 
-     * @param content
-     *            the content to set into the clipboard
+     * @param content the content to set into the clipboard
      * 
      */
     public void setClipboardContent(final ClipboardObject content) {
@@ -488,8 +489,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         // first of all close all child editors
         for (MetaWorkflowEditor metaWorkflowEditor : m_childEditors) {
 
-            IWorkbenchPage page = PlatformUI.getWorkbench()
-                    .getActiveWorkbenchWindow().getActivePage();
+            IWorkbenchPage page =
+                    PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                            .getActivePage();
             if (page != null) {
                 page.closeEditor(metaWorkflowEditor, false);
             }
@@ -542,8 +544,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         StackAction redo = new RedoAction(this);
 
         // Editor Actions
-        WorkbenchPartAction delete = new NodeConnectionContainerDeleteAction(
-                this);
+        WorkbenchPartAction delete =
+                new NodeConnectionContainerDeleteAction(this);
         WorkbenchPartAction save = new SaveAction(this);
         WorkbenchPartAction print = new PrintAction(this);
 
@@ -557,13 +559,14 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction cancel = new CancelAction(this);
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
-        AbstractNodeAction setNameAndDescription = new SetNameAndDescriptionAction(
-                this);
+        AbstractNodeAction setNameAndDescription =
+                new SetNameAndDescriptionAction(this);
 
         // copy / cut / paste action
         CopyAction copy = new CopyAction(this);
         CutAction cut = new CutAction(this);
         PasteAction paste = new PasteAction(this);
+        PasteActionContextMenu pasteContext = new PasteActionContextMenu(this);
 
         // register the actions
         m_actionRegistry.registerAction(undo);
@@ -584,6 +587,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(copy);
         m_actionRegistry.registerAction(cut);
         m_actionRegistry.registerAction(paste);
+        m_actionRegistry.registerAction(pasteContext);
 
         // remember ids for later updates via 'updateActions'
         m_editorActions = new ArrayList<String>();
@@ -656,15 +660,16 @@ public class WorkflowEditor extends GraphicalEditor implements
     protected void createGraphicalViewer(final Composite parent) {
         IEditorSite editorSite = getEditorSite();
         GraphicalViewer viewer = null;
-        viewer = new WorkflowGraphicalViewerCreator(editorSite, this
-                .getActionRegistry()).createViewer(parent);
+        viewer =
+                new WorkflowGraphicalViewerCreator(editorSite, this
+                        .getActionRegistry()).createViewer(parent);
 
         // Configure the key handler
-        GraphicalViewerKeyHandler keyHandler = new GraphicalViewerKeyHandler(
-                viewer);
+        GraphicalViewerKeyHandler keyHandler =
+                new GraphicalViewerKeyHandler(viewer);
 
-        KeyHandler parentKeyHandler = keyHandler
-                .setParent(getCommonKeyHandler());
+        KeyHandler parentKeyHandler =
+                keyHandler.setParent(getCommonKeyHandler());
         viewer.setKeyHandler(parentKeyHandler);
 
         // hook the viewer into the EditDomain
@@ -685,7 +690,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 "org.knime.workbench.help.flow_editor_context");
 
         loadProperties();
-        ((WorkflowRootEditPart) getGraphicalViewer().getRootEditPart()
+        ((WorkflowRootEditPart)getGraphicalViewer().getRootEditPart()
                 .getChildren().get(0))
                 .createToolTipHelper(getSite().getShell());
     }
@@ -740,7 +745,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         setDefaultInput(input);
         // we only support file inputs
 
-        m_fileResource = ((IFileEditorInput) input).getFile();
+        m_fileResource = ((IFileEditorInput)input).getFile();
 
         // TODO try to load a WFM-config from the file, create an empty one if
         // this fails
@@ -766,8 +771,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             // KNIME code (dirty fix to avoid error logs during
             // editor opening)
 
-            IFile markerFile = m_fileResource.getProject().getFile(
-                    WizardProjectsImportPage.IMPORT_MARKER_FILE_NAME);
+            IFile markerFile =
+                    m_fileResource.getProject().getFile(
+                            WizardProjectsImportPage.IMPORT_MARKER_FILE_NAME);
             // the file will be removed in the doSave method
             if (markerFile.exists()) {
                 NodeLogger.setIgnoreLoadDataError(true);
@@ -776,8 +782,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
-            LoadWorkflowRunnable loadWorflowRunnable = new LoadWorkflowRunnable(
-                    this, file);
+            LoadWorkflowRunnable loadWorflowRunnable =
+                    new LoadWorkflowRunnable(this, file);
             ps.busyCursorWhile(loadWorflowRunnable);
 
             // check if the editor should be disposed
@@ -815,8 +821,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Sets the input in the super class for defaults.
      * 
-     * @param input
-     *            the editor input object
+     * @param input the editor input object
      */
     void setDefaultInput(final IEditorInput input) {
 
@@ -841,8 +846,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             RootEditPart rootEditPart = getGraphicalViewer().getRootEditPart();
 
             if (rootEditPart instanceof ScalableFreeformRootEditPart) {
-                m_overviewOutlinePage = new NewOverviewOutlinePage(
-                        (ScalableFreeformRootEditPart) rootEditPart);
+                m_overviewOutlinePage =
+                        new NewOverviewOutlinePage(
+                                (ScalableFreeformRootEditPart)rootEditPart);
             }
         }
 
@@ -977,8 +983,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             // except when cancalation occured
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
-            SaveWorflowRunnable saveWorflowRunnable = new SaveWorflowRunnable(
-                    this, file, exceptionMessage, monitor);
+            SaveWorflowRunnable saveWorflowRunnable =
+                    new SaveWorflowRunnable(this, file, exceptionMessage,
+                            monitor);
             ps.busyCursorWhile(saveWorflowRunnable);
 
             // after saving the workflow, check for the import marker
@@ -987,8 +994,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             // KNIME code (dirty fix to avoid error logs during
             // editor opening)
 
-            IFile markerFile = m_fileResource.getProject().getFile(
-                    WizardProjectsImportPage.IMPORT_MARKER_FILE_NAME);
+            IFile markerFile =
+                    m_fileResource.getProject().getFile(
+                            WizardProjectsImportPage.IMPORT_MARKER_FILE_NAME);
 
             if (markerFile.exists()) {
                 try {
@@ -1040,14 +1048,14 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Shwos a simple information message.
      * 
-     * @param message
-     *            the info message to display
+     * @param message the info message to display
      */
     private void showInfoMessage(final String header, final String message) {
         // inform the user
 
-        MessageBox mb = new MessageBox(this.getSite().getShell(),
-                SWT.ICON_INFORMATION | SWT.OK);
+        MessageBox mb =
+                new MessageBox(this.getSite().getShell(), SWT.ICON_INFORMATION
+                        | SWT.OK);
         mb.setText(header);
         mb.setMessage(message);
         mb.open();
@@ -1207,7 +1215,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     }
 
-    private final Map<Integer, ProgressMonitorJob> m_dummyNodeJobs = new HashMap<Integer, ProgressMonitorJob>();
+    private final Map<Integer, ProgressMonitorJob> m_dummyNodeJobs =
+            new HashMap<Integer, ProgressMonitorJob>();
 
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
@@ -1221,16 +1230,16 @@ public class WorkflowEditor extends GraphicalEditor implements
         markDirty();
 
         if (event instanceof WorkflowEvent.NodeWaiting) {
-            NodeContainer nc = (NodeContainer) event.getOldValue();
+            NodeContainer nc = (NodeContainer)event.getOldValue();
             if (!(MetaOutputModel.class.isAssignableFrom(nc.getModelClass()) || MetaInputModel.class
                     .isAssignableFrom(nc.getModelClass()))) {
-                NodeProgressMonitor pm = (NodeProgressMonitor) event
-                        .getNewValue();
+                NodeProgressMonitor pm =
+                        (NodeProgressMonitor)event.getNewValue();
 
-                ProgressMonitorJob job = new ProgressMonitorJob(nc
-                        .getCustomName()
-                        + " (" + nc.getName() + ")", pm, m_manager, nc,
-                        "Queued for execution...");
+                ProgressMonitorJob job =
+                        new ProgressMonitorJob(nc.getCustomName() + " ("
+                                + nc.getName() + ")", pm, m_manager, nc,
+                                "Queued for execution...");
                 // Reverted as not properly ordered yet. Improve in next version
                 // job.schedule();
 
@@ -1248,8 +1257,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
 
             // this code is for the new progress monitor
-            NodeContainer nc = (NodeContainer) event.getOldValue();
-            NodeProgressMonitor pm = (NodeProgressMonitor) event.getNewValue();
+            NodeContainer nc = (NodeContainer)event.getOldValue();
+            NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
 
             NodeProgressListener currentListener;
 
@@ -1270,8 +1279,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             // if a node removed node was a meta node
             // a possible open meta editor must be closed
-            MetaWorkflowEditor childEditor = getEditor((NodeContainer) event
-                    .getOldValue());
+            MetaWorkflowEditor childEditor =
+                    getEditor((NodeContainer)event.getOldValue());
             if (childEditor != null && !childEditor.isClosed()) {
                 PlatformUI.getWorkbench().getActiveWorkbenchWindow()
                         .getActivePage().closeEditor(childEditor, false);
@@ -1436,8 +1445,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                         // we need to update the file resource that we have
                         // currently opened in our editor, so that we now have
                         // the "new" file
-                        m_fileResource = ResourcesPlugin.getWorkspace()
-                                .getRoot().getFile(delta.getMovedToPath());
+                        m_fileResource =
+                                ResourcesPlugin.getWorkspace().getRoot()
+                                        .getFile(delta.getMovedToPath());
                         setDefaultInput(new FileEditorInput(m_fileResource));
 
                     }
@@ -1466,8 +1476,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Therefore the settings are loaded and the editor registeres itself as
      * listener to get workflow events.
      * 
-     * @param settings
-     *            the settings representing this workflow
+     * @param settings the settings representing this workflow
      */
     // void createWorkflowManager(final NodeSettings settings) {
     // m_manager = RepositoryManager.INSTANCE.loadWorkflowFromConfig(settings);
@@ -1476,8 +1485,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Sets the underlying workflow manager for this editor.
      * 
-     * @param manager
-     *            the workflow manager to set
+     * @param manager the workflow manager to set
      */
     void setWorkflowManager(final WorkflowManager manager) {
         m_manager = manager;
@@ -1486,8 +1494,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Tries to add the given editor.
      * 
-     * @param editor
-     *            the edior to add as a child
+     * @param editor the edior to add as a child
      * 
      * @return true if the given editor was not added already
      */
@@ -1498,8 +1505,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Returns the editor for the given meta node container.
      * 
-     * @param metaNodeContainer
-     *            the meta node container to look up
+     * @param metaNodeContainer the meta node container to look up
      * 
      * @return the editor for this meta node container, null if container was
      *         not found
@@ -1528,8 +1534,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Removes the given editor from the child editor set.
      * 
-     * @param editor
-     *            the editor to remove
+     * @param editor the editor to remove
      */
     public void removeEditor(final IEditorPart editor) {
         m_childEditors.remove(editor);
@@ -1538,10 +1543,8 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Transposes a point according to the given zoom manager.
      * 
-     * @param zoomManager
-     *            the zoom manager providing the zoom levels
-     * @param pointToAdapt
-     *            the point to adapt
+     * @param zoomManager the zoom manager providing the zoom levels
+     * @param pointToAdapt the point to adapt
      */
     public static void transposeZoom(final ZoomManager zoomManager,
             final Point pointToAdapt, final boolean adaptViewPortLocation) {
@@ -1549,12 +1552,12 @@ public class WorkflowEditor extends GraphicalEditor implements
         double zoomLevel = zoomManager.getZoom();
 
         // adapt the location accordint to the zoom level
-        pointToAdapt.x = (int) (pointToAdapt.x * zoomLevel);
-        pointToAdapt.y = (int) (pointToAdapt.y * zoomLevel);
+        pointToAdapt.x = (int)(pointToAdapt.x * zoomLevel);
+        pointToAdapt.y = (int)(pointToAdapt.y * zoomLevel);
 
         if (adaptViewPortLocation) {
-            Point viewPortLocation = zoomManager.getViewport()
-                    .getViewLocation();
+            Point viewPortLocation =
+                    zoomManager.getViewport().getViewLocation();
             pointToAdapt.x -= viewPortLocation.x;
             pointToAdapt.y -= viewPortLocation.y;
         }
@@ -1563,42 +1566,38 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Adapts a point according to the given zoom manager.
      * 
-     * @param zoomManager
-     *            the zoom manager providing the zoom levels
-     * @param pointToAdapt
-     *            the point to adapt
+     * @param zoomManager the zoom manager providing the zoom levels
+     * @param pointToAdapt the point to adapt
      */
     public static void adaptZoom(final ZoomManager zoomManager,
             final Point pointToAdapt, final boolean adaptViewPortLocation) {
 
         if (adaptViewPortLocation) {
-            Point viewPortLocation = zoomManager.getViewport()
-                    .getViewLocation();
+            Point viewPortLocation =
+                    zoomManager.getViewport().getViewLocation();
             pointToAdapt.x += viewPortLocation.x;
             pointToAdapt.y += viewPortLocation.y;
         }
         double zoomLevel = zoomManager.getZoom();
 
         // adapt the location accordint to the zoom level
-        pointToAdapt.x = (int) (pointToAdapt.x * (1.0 / zoomLevel));
-        pointToAdapt.y = (int) (pointToAdapt.y * (1.0 / zoomLevel));
+        pointToAdapt.x = (int)(pointToAdapt.x * (1.0 / zoomLevel));
+        pointToAdapt.y = (int)(pointToAdapt.y * (1.0 / zoomLevel));
     }
 
     /**
      * Adapts a precission point according to the given zoom manager.
      * 
-     * @param zoomManager
-     *            the zoom manager providing the zoom levels
-     * @param pointToAdapt
-     *            the point to adapt
+     * @param zoomManager the zoom manager providing the zoom levels
+     * @param pointToAdapt the point to adapt
      */
     public static void adaptZoom(final ZoomManager zoomManager,
             final PrecisionPoint pointToAdapt,
             final boolean adaptViewPortLocation) {
 
         if (adaptViewPortLocation) {
-            Point viewPortLocation = zoomManager.getViewport()
-                    .getViewLocation();
+            Point viewPortLocation =
+                    zoomManager.getViewport().getViewLocation();
             pointToAdapt.x += viewPortLocation.x;
             pointToAdapt.y += viewPortLocation.y;
         }
@@ -1613,8 +1612,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Set if the workflow loading process was canceled. Should only be invoked
      * during workflow loading.
      * 
-     * @param canceled
-     *            canceled or not
+     * @param canceled canceled or not
      * @see LoadWorkflowRunnable
      */
     void setLoadingCanceled(final boolean canceled) {
@@ -1625,8 +1623,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Set if the workflow loading process encountered an exception. Should only
      * be invoked during workflow loading.
      * 
-     * @param exception
-     *            the exception to set
+     * @param exception the exception to set
      * @see LoadWorkflowRunnable
      */
     void setWorkflowException(final WorkflowException exception) {
@@ -1637,11 +1634,14 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Set if the workflow loading process. Should only be invoked during
      * workflow loading.
      * 
-     * @param dirty
-     *            whether the editor should be marked as dirty or not
+     * @param dirty whether the editor should be marked as dirty or not
      * @see LoadWorkflowRunnable
      */
     void setIsDirty(boolean dirty) {
         m_isDirty = dirty;
+    }
+
+    public WorkflowSelectionTool getSelectionTool() {
+        return m_selectionTool;
     }
 }

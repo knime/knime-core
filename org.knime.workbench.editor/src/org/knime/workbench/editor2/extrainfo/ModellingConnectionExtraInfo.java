@@ -122,11 +122,11 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
      * 
      * @param moveDist the distance to change the bend points
      */
-    public void changePosition(final int moveDist) {
+    public void changePosition(final int[] moveDist) {
 
         for (int[] point : m_bendpoints) {
-            point[0] += moveDist;
-            point[1] += moveDist;
+            point[0] += moveDist[0];
+            point[1] += moveDist[1];
         }
     }
 }
