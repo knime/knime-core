@@ -1358,6 +1358,17 @@ public class WizardProjectsImportPage extends WizardPage implements
     public ProjectRecord[] getValidProjects() {
         List validProjects = new ArrayList();
         for (int i = 0; i < selectedProjects.length; i++) {
+            File file = selectedProjects[i].projectSystemFile;
+            if (file != null) {
+                // projects that are in the current workspace location
+                // and are also in the workspace are not selectable 
+                IPath workspace = Platform.getLocation();
+                if (workspace.isPrefixOf(new Path(file.getAbsolutePath()))
+                        && isProjectInWorkspace(selectedProjects[i]
+                                .getProjectName())) {
+                    continue;
+                }
+            }
             // if (!isProjectInWorkspace(selectedProjects[i].getProjectName()))
             // {
             validProjects.add(selectedProjects[i]);
