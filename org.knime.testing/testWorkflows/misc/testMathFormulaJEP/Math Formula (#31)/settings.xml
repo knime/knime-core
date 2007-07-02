@@ -8,7 +8,7 @@
 <entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
 </config>
 <config key="model">
-<entry key="expression" type="xstring" value="ROWNUMBER"/>
+<entry key="expression" type="xstring" value="ROWINDEX"/>
 <entry key="replaced_column" type="xstring" value="rownumber"/>
 <entry key="append_column" type="xboolean" value="false"/>
 </config>
