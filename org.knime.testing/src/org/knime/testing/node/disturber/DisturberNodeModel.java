@@ -23,6 +23,7 @@ package org.knime.testing.node.disturber;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Random;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -75,11 +76,12 @@ public class DisturberNodeModel extends NodeModel {
                 .createDataContainer(inData[0].getDataTableSpec());
 
         int count = 0;
+        Random r = new Random(12345678);
         for (DataRow row : inData[0]) {
             exec.setProgress(count++ / (double) inData[0].getRowCount());
             DataCell[] cells = new DataCell[row.getNumCells()];
             for (int i = 0; i < cells.length; i++) {
-                if (Math.random() < 0.1) {
+                if (r.nextDouble() < 0.1) {
                     cells[i] = DataType.getMissingCell();
                 } else {
                     cells[i] = row.getCell(i);
