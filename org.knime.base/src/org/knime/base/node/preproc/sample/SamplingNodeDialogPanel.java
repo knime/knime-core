@@ -203,10 +203,17 @@ public class SamplingNodeDialogPanel extends JPanel {
         } else {
             m_useSeedChecker.setSelected(false);
         }
-
-        m_stratified.setSelected(sets.stratifiedSampling());
-        m_classColumn.update(spec, sets.classColumn());
-        m_classColumn.setEnabled(sets.stratifiedSampling());
+        
+        try {
+            m_classColumn.update(spec, sets.classColumn());
+            m_stratified.setSelected(sets.stratifiedSampling());
+            m_classColumn.setEnabled(sets.stratifiedSampling());
+        } catch (NotConfigurableException ex) {
+            // no nominal value column, so disable stratified sampling
+            m_classColumn.setEnabled(false);
+            m_stratified.setSelected(false);
+            m_stratified.setEnabled(false);
+        }
     }
 
     /**
