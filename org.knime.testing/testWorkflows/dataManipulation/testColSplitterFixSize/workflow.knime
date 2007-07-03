@@ -133,7 +133,7 @@
 </config>
 <config key="node_2">
 <entry key="node_settings_file" type="xstring" value="Column Splitter (#2)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.base.node.preproc.colsplitter.ColSplitterNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
 <entry key="id" type="xint" value="2"/>
 <entry key="customName" type="xstring" value="string column w/ quotes, size 6"/>
 <entry key="customDescription" type="xstring" value=""/>
@@ -209,7 +209,7 @@
 </config>
 <config key="node_9">
 <entry key="node_settings_file" type="xstring" value="Column Splitter (#9)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.base.node.preproc.colsplitter.ColSplitterNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
 <entry key="id" type="xint" value="9"/>
 <entry key="customName" type="xstring" value="Str col, no quotes, size 6"/>
 <entry key="customDescription" type="xstring" value=""/>
@@ -239,7 +239,7 @@
 </config>
 <config key="node_13">
 <entry key="node_settings_file" type="xstring" value="Column Splitter (#13)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.base.node.preproc.colsplitter.ColSplitterNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
 <entry key="id" type="xint" value="13"/>
 <entry key="customName" type="xstring" value="Dbl col, quotes, size 4"/>
 <entry key="customDescription" type="xstring" value=""/>
@@ -269,7 +269,7 @@
 </config>
 <config key="node_16">
 <entry key="node_settings_file" type="xstring" value="Column Splitter (#16)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.base.node.preproc.colsplitter.ColSplitterNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
 <entry key="id" type="xint" value="16"/>
 <entry key="customName" type="xstring" value="Node 16"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -299,7 +299,7 @@
 </config>
 <config key="node_17">
 <entry key="node_settings_file" type="xstring" value="Column Splitter (#17)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.base.node.preproc.colsplitter.ColSplitterNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
 <entry key="id" type="xint" value="17"/>
 <entry key="customName" type="xstring" value="Node 17"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -329,7 +329,7 @@
 </config>
 <config key="node_18">
 <entry key="node_settings_file" type="xstring" value="Column Splitter (#18)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.base.node.preproc.colsplitter.ColSplitterNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
 <entry key="id" type="xint" value="18"/>
 <entry key="customName" type="xstring" value="Node 18"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -359,7 +359,7 @@
 </config>
 <config key="node_19">
 <entry key="node_settings_file" type="xstring" value="Column Splitter (#19)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.base.node.preproc.colsplitter.ColSplitterNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
 <entry key="id" type="xint" value="19"/>
 <entry key="customName" type="xstring" value="Node 19"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -389,7 +389,7 @@
 </config>
 <config key="node_20">
 <entry key="node_settings_file" type="xstring" value="Column Splitter (#20)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.base.node.preproc.colsplitter.ColSplitterNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
 <entry key="id" type="xint" value="20"/>
 <entry key="customName" type="xstring" value="Node 20"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
@@ -419,7 +419,7 @@
 </config>
 <config key="node_21">
 <entry key="node_settings_file" type="xstring" value="Column Splitter (#21)/settings.xml"/>
-<entry key="factory" type="xstring" value="org.knime.base.node.preproc.colsplitter.ColSplitterNodeFactory"/>
+<entry key="factory" type="xstring" value="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
 <entry key="id" type="xint" value="21"/>
 <entry key="customName" type="xstring" value="Node 21"/>
 <entry key="customDescription" type="xstring" isnull="true" value=""/>
