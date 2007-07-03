@@ -206,6 +206,7 @@ public class SamplingNodeDialogPanel extends JPanel {
         
         try {
             m_classColumn.update(spec, sets.classColumn());
+            m_stratified.setEnabled(true);
             m_stratified.setSelected(sets.stratifiedSampling());
             m_classColumn.setEnabled(sets.stratifiedSampling());
         } catch (NotConfigurableException ex) {
