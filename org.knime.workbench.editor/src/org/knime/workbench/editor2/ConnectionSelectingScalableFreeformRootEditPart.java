@@ -27,8 +27,6 @@ package org.knime.workbench.editor2;
 import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
-import org.eclipse.gef.tools.MarqueeDragTracker;
-import org.eclipse.gef.tools.MarqueeSelectionTool;
 
 /**
  * Overrides the default <code>ScalableFreeformRootEditPart</code> to return
@@ -50,10 +48,11 @@ public class ConnectionSelectingScalableFreeformRootEditPart extends
          * The root will only be asked for a drag tracker if for some reason the
          * contents editpart says it is neither selector nor opaque.
          */
-        MarqueeDragTracker tracker = new MarqueeDragTracker();
+        WorkflowMarqueeSelectionTool tracker =
+                new WorkflowMarqueeSelectionTool();
         tracker
-                .setMarqueeBehavior(MarqueeSelectionTool.BEHAVIOR_NODES_AND_CONNECTIONS);
-        
+                .setMarqueeBehavior(WorkflowMarqueeSelectionTool.BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED);
+
         return tracker;
     }
 }
