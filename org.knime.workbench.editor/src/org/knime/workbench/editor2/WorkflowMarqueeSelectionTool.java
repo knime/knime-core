@@ -39,6 +39,8 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Display;
+import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * A Tool which selects multiple objects inside a rectangular area of a
@@ -106,6 +108,10 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     private Set allChildren = new HashSet();
 
     private Collection selectedEditParts;
+
+    private Collection deselectedEditParts;
+
+    private Collection alreadySelectedEditParts;
 
     private Request targetRequest;
 
@@ -207,6 +213,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
                     || child.getTargetEditPart(MARQUEE_REQUEST) != child
                     || !isFigureVisible(figure) || !figure.isShowing())
                 continue;
+            if (!(child instanceof NodeContainerEditPart || child instanceof ConnectionContainerEditPart)) {
+                continue;
+            }
 
             Rectangle r = figure.getBounds().getCopy();
             figure.translateToAbsolute(r);
@@ -226,17 +235,47 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             }
 
             if (included) {
-                if (child.getSelected() == EditPart.SELECTED_NONE
-                        || getSelectionMode() != TOGGLE_MODE)
+                if (isToggle()) {
+                    if (wasSelected(child)) {
+                        // System.out.println("was selected");
+                        deselections.add(child);
+                    } else {
+                        // System.out.println("was not selected");
+                        newSelections.add(child);
+                    }
+                } else {
                     newSelections.add(child);
-                else
+                }
+                // if (child.getSelected() == EditPart.SELECTED_NONE
+                // || getSelectionMode() != TOGGLE_MODE)
+                // newSelections.add(child);
+                // else {
+                // deselections.add(child);
+                // System.out.println("was selected");
+                // }
+            } else if (isToggle()) {
+                // if in toggle mode, a not included child must be
+                // readded if it was in the selection before
+                if (wasSelected(child)) {
+                    newSelections.add(child);
+                } else {
                     deselections.add(child);
+                }
             }
         }
 
         if (marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS
                 || marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED)
             calculateConnections(newSelections, deselections);
+    }
+
+    private boolean wasSelected(EditPart part) {
+        for (Object o : alreadySelectedEditParts) {
+            if (o == part) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Request createTargetRequest() {
@@ -350,6 +389,10 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             else
                 setSelectionMode(DEFAULT_MODE);
         }
+        alreadySelectedEditParts = new ArrayList();
+        alreadySelectedEditParts.addAll(getCurrentViewer()
+                .getSelectedEditParts());
+        //System.out.println("already selected set");
         return true;
     }
 
@@ -366,6 +409,40 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         return true;
     }
 
+    static void printCollection(Collection c) {
+        for (Object o : c) {
+            System.out.println("in list: " + o);
+        }
+    }
+
+    boolean nodesAndConnectionsEqual(Collection c1, Collection c2) {
+        if (c1.size() != c2.size()) {
+            return false;
+        }
+        for (Object o : c1) {
+            // only node and connection container parts are relevant
+            if (o instanceof NodeContainerEditPart
+                    || o instanceof ConnectionContainerEditPart) {
+                // now check if o is also in c2
+                boolean found = false;
+                for (Object o2 : c2) {
+                    if (o2 == o) {
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    // the second list does not contain the object
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean isToggle() {
+        return getSelectionMode() == TOGGLE_MODE;
+    }
+
     /**
      * @see org.eclipse.gef.tools.AbstractTool#handleDragInProgress()
      */
@@ -373,9 +450,39 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         if (isInState(STATE_DRAG | STATE_DRAG_IN_PROGRESS)) {
             showMarqueeFeedback();
             eraseTargetFeedback();
+            ArrayList previousSelection = new ArrayList();
+            ArrayList previousDeselection = new ArrayList();
+            try {
+                if (selectedEditParts != null)
+                    previousSelection.addAll(selectedEditParts);
+                else
+                    performMarqueeSelect();
+                if (isToggle() && deselectedEditParts != null) {
+                    previousDeselection.addAll(deselectedEditParts);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+//            System.out.println("Already selected:");
+//            printCollection(alreadySelectedEditParts);
             calculateNewSelection(selectedEditParts = new ArrayList(),
-                    new ArrayList());
+                    deselectedEditParts = new ArrayList());
+            // System.out.println("Current selection");
+            // printCollection(deselectedEditParts);
+            // System.out.println("Previous selection");
+            // printCollection(previousDeselection);
             showTargetFeedback();
+            if (!nodesAndConnectionsEqual(previousSelection, selectedEditParts)
+                    || !nodesAndConnectionsEqual(previousDeselection,
+                            deselectedEditParts)) {
+                // System.out.println("Previous selection differs");
+                // System.out.println("Current selection");
+                // printCollection(selectedEditParts);
+                // System.out.println("Previous selection");
+                // printCollection(previousSelection);
+                // System.out.println("Selection changed");
+                performMarqueeSelect();
+            }
         }
         return true;
     }
@@ -488,6 +595,10 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             setDefaultCursor(SharedCursors.CROSS);
         else
             setDefaultCursor(SharedCursors.NO);
+        // if (selectedEditParts == null) {
+        // if (mode == TOGGLE_MODE)
+        // selectedEditParts = getCurrentViewer().getSelectedEditParts();
+        // }
     }
 
     private void showMarqueeFeedback() {
