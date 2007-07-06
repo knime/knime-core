@@ -45,11 +45,11 @@ public final class KNIMEConstants {
     /** KNIME's minor release number. */
     public static final int MINOR = 2;
     /** KNIME's revision number. */
-    public static final int REV = 0;
+    public static final int REV = 2; // Please change this on upgrade: 1.2.2 
     
-    /** Workflow file version. */
     // IMPORTANT: Remember to also update the NodeLogger welcome screen with
     // the current version and the prerequisites
+    /** Workflow file version. */
     public static final String VERSION = MAJOR + "." + MINOR + "." + REV;
 
     /**
