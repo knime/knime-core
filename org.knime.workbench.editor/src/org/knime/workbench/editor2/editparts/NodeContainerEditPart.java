@@ -440,6 +440,16 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                             .getDescription());
                 }
                 updateNodeStatus();
+                
+                // reset the tooltip text of the outports
+                for (Object part : getChildren()) {
+
+                    if (part instanceof NodeOutPortEditPart) {
+                        NodeOutPortEditPart outPortPart =
+                                (NodeOutPortEditPart)part;
+                        outPortPart.rebuildTooltip();
+                    }
+                }
 
                 // always refresh visuals
                 refreshVisuals();

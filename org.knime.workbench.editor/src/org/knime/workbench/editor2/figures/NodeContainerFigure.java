@@ -63,6 +63,7 @@ import org.knime.workbench.editor2.ImageRepository;
  * and the center icon</li>
  * <li><code>StatusFigure</code> - contains description text and some color
  * codes</li>
+ * <li><code>ProgressFigure</code> - displaying the execution progress</li>
  * </ul>
  * 
  * @author Florian Georg, University of Konstanz
