@@ -12,12 +12,13 @@
    height="297mm"
    id="svg2"
    sodipodi:version="0.32"
-   inkscape:version="0.44.1"
-   sodipodi:docbase="C:\Dokumente und Einstellungen\ohl\Eigene Dateien\VER120BRANCH\org.knime.product"
+   inkscape:version="0.45.1"
+   sodipodi:docbase="/home/wiswedel/eclipse/eclipse_branch_1.2/org.knime.product"
    sodipodi:docname="splash.svg"
    inkscape:export-filename="C:\Dokumente und Einstellungen\gabriel\Desktop\splash.bmp"
    inkscape:export-xdpi="90"
-   inkscape:export-ydpi="90">
+   inkscape:export-ydpi="90"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -29,7 +30,7 @@
      inkscape:pageshadow="2"
      inkscape:zoom="1"
      inkscape:cx="418.94052"
-     inkscape:cy="526.18109"
+     inkscape:cy="525.68109"
      inkscape:document-units="px"
      inkscape:current-layer="g2137"
      inkscape:window-width="1272"
@@ -61,7 +62,7 @@
         <rect
            inkscape:export-ydpi="90"
            inkscape:export-xdpi="90"
-           inkscape:export-filename="C:\Dokumente und Einstellungen\ohl\Eigene Dateien\VER120BRANCH\org.knime.product\splash.png"
+           inkscape:export-filename="/home/wiswedel/eclipse/eclipse_branch_1.2/org.knime.product/splash.png"
            style="fill:#ffd700;stroke:#bd9325;stroke-width:3.41936445;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
            id="rect1391"
            width="451.58066"
@@ -131,7 +132,7 @@
              id="tspan3573"
              sodipodi:role="line">KNIME</tspan><tspan
              style="font-size:24.01224136px"
-             y="284.24451"
+             y="282.25192"
              x="302.74658"
              id="tspan3577"
              sodipodi:role="line">Konstanz Information Miner</tspan></text>
@@ -143,18 +144,18 @@
            id="text2163"
            y="301.99414"
            x="625.12262"
-           style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:black;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+           style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
            xml:space="preserve"><tspan
              style="font-size:14.40734577px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
              y="301.99414"
-             x="625.12261"
+             x="625.12262"
              id="tspan2165"
-             sodipodi:role="line">Version 1.2.1</tspan><tspan
+             sodipodi:role="line">Version 1.2.2</tspan><tspan
              id="tspan1986"
              style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
-             y="315.92474"
+             y="315.09449"
              x="625.12262"
-             sodipodi:role="line">(Build May 14, 2007)</tspan></text>
+             sodipodi:role="line">(Build July 6, 2007)</tspan></text>
         <g
            inkscape:export-ydpi="90"
            inkscape:export-xdpi="90"
@@ -189,7 +190,7 @@
              id="tspan1978"
              style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
              y="464.43382"
-             x="624.33471"
+             x="624.33472"
              sodipodi:role="line">Uses: Java5, GEF, Log4J</tspan></text>
       </g>
     </g>

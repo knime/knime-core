@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.base"
       label="KNIME"
-      version="1.2.1"
+      version="1.2.2"
       provider-name="Chair for Bioinformatics and Information Mining, Prof. Berthold, University of Konstanz, Germany"
       plugin="org.knime.core"
       image="icons/knime64.gif">
@@ -292,72 +292,72 @@ terms of this License.
          id="org.knime.base"
          download-size="0"
          install-size="0"
-         version="1.2.1"/>
+         version="1.2.2"/>
 
    <plugin
          id="org.knime.core"
          download-size="0"
          install-size="0"
-         version="1.2.1"/>
+         version="1.2.2"/>
 
    <plugin
          id="org.knime.workbench"
          download-size="0"
          install-size="0"
-         version="1.2.1"/>
+         version="1.2.2"/>
 
    <plugin
          id="org.knime.workbench.core"
          download-size="0"
          install-size="0"
-         version="1.2.1"/>
+         version="1.2.2"/>
 
    <plugin
          id="org.knime.workbench.editor"
          download-size="0"
          install-size="0"
-         version="1.2.1"/>
+         version="1.2.2"/>
 
    <plugin
          id="org.knime.workbench.helpview"
          download-size="0"
          install-size="0"
-         version="1.2.1"/>
+         version="1.2.2"/>
 
    <plugin
          id="org.knime.workbench.ui"
          download-size="0"
          install-size="0"
-         version="1.2.1"/>
+         version="1.2.2"/>
 
    <plugin
          id="org.knime.workbench.repository"
          download-size="0"
          install-size="0"
-         version="1.2.1"/>
+         version="1.2.2"/>
 
    <plugin
          id="org.knime.product"
          download-size="0"
          install-size="0"
-         version="1.2.1"/>
+         version="1.2.2"/>
 
    <plugin
          id="org.knime.workbench.help"
          download-size="0"
          install-size="0"
-         version="1.2.1"/>
+         version="1.2.2"/>
 
    <plugin
          id="org.knime.deprecated"
          download-size="0"
          install-size="0"
-         version="1.2.1"/>
+         version="1.2.2"/>
 
    <plugin
          id="org.knime.ext.sun"
          download-size="0"
          install-size="0"
-         version="1.2.1"/>
+         version="1.2.2"/>
 
 </feature>
