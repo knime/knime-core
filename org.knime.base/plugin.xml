@@ -21,6 +21,12 @@
             path="/io"/>
       <category
             after="io"
+            icon="icons/16x16/category_database.png"
+            level-id="database"
+            name="Database"
+            path="/"/>
+      <category
+            after="database"
             icon="icons/16x16/category_transform.gif"
             level-id="manipulation"
             name="Data Manipulation"
@@ -299,7 +305,7 @@
             factory-class="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"
             id="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"/>
       <node
-            category-path="/io/read"
+            category-path="/database"
             factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"
             id="org.knime.base.node.io.database.DBReaderNodeFactory"/>
       <node
@@ -356,7 +362,7 @@
 	          factory-class="org.knime.base.node.io.table.write.WriteTableNodeFactory"
 	          id="org.knime.base.node.io.table.write.WriteTableNodeFactory"/>
 	     <node
-	          category-path="/io/write"
+	          category-path="/database"
 	          factory-class="org.knime.base.node.io.database.DBWriterNodeFactory"
 	          id="org.knime.base.node.io.database.DBWriterNodeFactory"/>
      <node
