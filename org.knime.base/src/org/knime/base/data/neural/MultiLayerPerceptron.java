@@ -212,6 +212,13 @@ public class MultiLayerPerceptron {
             return m_layers[i];
         }
     }
+    
+    /**
+     * @return number of Layers in MLP.
+     */
+    public int getNrLayers() {
+        return m_layers.length;
+    }
 
     /**
      * Sets all layers.
@@ -283,7 +290,10 @@ public class MultiLayerPerceptron {
     }
 
     /**
-     * {@inheritDoc}
+     * Computes the output for given input.
+     * 
+     * @param in the input values
+     * @return output values of MLP.
      */
     public double[] output(final Double[] in) {
         double[] temp = new double[in.length];

@@ -206,7 +206,7 @@ public class RPropNodeModel extends NodeModel {
     /**
      * returns null.
      * 
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -219,6 +219,21 @@ public class RPropNodeModel extends NodeModel {
                     if (!colspec.getType().isCompatible(DoubleValue.class)) {
                         throw new InvalidSettingsException(
                                 "Only double columns for input");
+                    } else {
+                        DataColumnDomain domain = colspec.getDomain();
+                        if (domain.hasBounds()) {
+                            double lower =
+                                    ((DoubleValue)domain.getLowerBound())
+                                            .getDoubleValue();
+                            double upper =
+                                    ((DoubleValue)domain.getUpperBound())
+                                            .getDoubleValue();
+                            if (lower < 0 || upper > 1) {
+                                setWarningMessage("Input data not normalized." 
+                                       + " Please consider using the " 
+                                       + "Normalizer Node first.");
+                            }
+                        }
                     }
                 } else {
                     classcolinspec = true;
@@ -262,7 +277,7 @@ public class RPropNodeModel extends NodeModel {
      * <li>The neural net is trained.</li>
      * </ol>
      * 
-     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -447,7 +462,7 @@ public class RPropNodeModel extends NodeModel {
     /**
      * Stores the model of the trained neural network for later use.
      * 
-     * @see NodeModel#saveModelContent(int,ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveModelContent(final int index,
