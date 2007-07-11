@@ -9,6 +9,7 @@
 </config>
 <config key="model">
 <entry key="columnName" type="xstring" value="sepal length"/>
+<entry key="hiliting" type="xboolean" value="false"/>
 </config>
 <config key="data_meta_file">
 <entry key="data_files_directory" type="xstring" value="data"/>
