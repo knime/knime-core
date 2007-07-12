@@ -1006,7 +1006,7 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
-            return super.getPreferredSize(WIDTH,
+            return new Dimension(WIDTH,
                     m_label.getPreferredSize().height);
         }
 
