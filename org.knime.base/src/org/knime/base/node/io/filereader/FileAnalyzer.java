@@ -769,7 +769,7 @@ public final class FileAnalyzer {
         for (int t = 0; t < types.length; t++) {
             if (types[t] == null) {
                 types[t] = StringCell.TYPE;
-                if ((userColProps == null) || (userColProps.size() < t) 
+                if ((userColProps == null) || (userColProps.size() <= t) 
                     || (userColProps.get(t) == null) 
                     || (!userColProps.get(t).getSkipThisColumn())) { 
                     cols += "#" + t + ", ";
