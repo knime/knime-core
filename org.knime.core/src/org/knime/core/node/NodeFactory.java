@@ -141,20 +141,16 @@ public abstract class NodeFactory {
 
     static {
         try {
-            String imagePath = "./default.png";
-            if (!imagePath.startsWith("/")) {
-                imagePath =
-                        NodeFactory.class.getPackage().getName().replace('.',
-                                '/')
-                                + "/" + imagePath;
-            }
+            String imagePath =
+                    NodeFactory.class.getPackage().getName().replace('.', '/')
+                            + "/default.png";
 
             URL iconURL =
                     NodeFactory.class.getClassLoader().getResource(imagePath);
 
             defaultIcon = iconURL;
         } catch (Exception ioe) {
-            LOGGER.error("Default icon could not be read.");
+            LOGGER.error("Default icon could not be read.", ioe);
         }
     }
 
