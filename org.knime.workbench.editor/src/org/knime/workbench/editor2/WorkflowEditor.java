@@ -986,8 +986,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             SaveWorflowRunnable saveWorflowRunnable =
                     new SaveWorflowRunnable(this, file, exceptionMessage,
                             monitor);
-            ps.busyCursorWhile(saveWorflowRunnable);
-
+            ps.run(true, false, saveWorflowRunnable);
             // after saving the workflow, check for the import marker
             // and delete it
             // -------------- Import Checking ----------------------
