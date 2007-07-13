@@ -24,6 +24,7 @@
 package org.knime.base.node.mine.sota.predictor;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.knime.base.data.filter.column.FilterColumnRow;
 import org.knime.base.node.mine.sota.distances.DistanceManager;
@@ -35,6 +36,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.def.StringCell;
@@ -77,29 +79,41 @@ public class SotaPredictorCellFactory implements CellFactory {
      * {@inheritDoc}
      */
     public DataCell[] getCells(final DataRow row) {
-        
-        DataRow filteredRow = new FilterColumnRow(row, m_includedColsIndices);
-        
-        ArrayList<SotaTreeCell> cells = new ArrayList<SotaTreeCell>();
-        SotaManager.getCells(cells, m_root);
-        
-        SotaTreeCell winner = null;
-        double minDist = Double.MAX_VALUE;
+        if (row != null) {
 
-        for (int j = 0; j < cells.size(); j++) {
-            double dist = m_distanceManager.getDistance(
-                    filteredRow, cells.get(j));
-            if (dist < minDist) {
-                winner = cells.get(j);
-                minDist = dist;
+            DataRow filteredRow = 
+                new FilterColumnRow(row, m_includedColsIndices);
+
+            Iterator<DataCell> it = filteredRow.iterator();
+            while (it.hasNext()) {
+                if (it.next().isMissing()) {
+                    return new DataCell[]{DataType.getMissingCell()};
+                }
             }
+
+            ArrayList<SotaTreeCell> cells = new ArrayList<SotaTreeCell>();
+            SotaManager.getCells(cells, m_root);
+
+            SotaTreeCell winner = null;
+            double minDist = Double.MAX_VALUE;
+
+            for (int j = 0; j < cells.size(); j++) {
+                double dist = m_distanceManager.getDistance(
+                        filteredRow, cells.get(j));
+                
+                if (dist < minDist) {
+                    winner = cells.get(j);
+                    minDist = dist;
+                }
+            }
+            String predClass = SotaTreeCell.DEFAULT_CLASS;
+            if (winner != null) {
+                predClass = winner.getTreeCellClass();
+            }
+
+            return new DataCell[]{new StringCell(predClass)};
         }
-        String predClass = SotaTreeCell.DEFAULT_CLASS;
-        if (winner != null) {
-            predClass = winner.getTreeCellClass();
-        }
-        
-        return new DataCell[]{new StringCell(predClass)};
+        return null;
     }
 
     /**

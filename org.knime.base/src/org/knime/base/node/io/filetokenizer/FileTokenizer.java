@@ -164,6 +164,9 @@ public class FileTokenizer {
 
     /* the end-of-file flag */
     private static final int EOF = -1;
+    
+    /* the flag which identifies if the last token is a delimiter or not */
+    private boolean m_tokenWasDelimiter = false;
 
     /**
      * Creates a new tokenizer with the default behaviour.
@@ -232,6 +235,14 @@ public class FileTokenizer {
     }
 
     /**
+     * @return Returns true if last token is a delimiter token, 
+     * otherwise false.
+     */
+    public boolean lastTokenWasDelimiter() {
+        return m_tokenWasDelimiter;
+    }
+    
+    /**
      * Reads the next token from the stream and returns it as string. Or
      * <code>null</code> if no more token can be read.
      * 
@@ -252,12 +263,14 @@ public class FileTokenizer {
             String tmp = m_lastDelimiter;
             m_lastDelimiter = null;
             m_lastToken = tmp;
+            m_tokenWasDelimiter = true;
             return tmp;
         }
 
         m_lastToken = null;
         m_newToken.setLength(0);
         m_lastQuotes = null;
+        m_tokenWasDelimiter = false;
         
         int lastEndQuoteIdx = -1; // the idx of the end quote last seen or added
         int c = getNextChar();
