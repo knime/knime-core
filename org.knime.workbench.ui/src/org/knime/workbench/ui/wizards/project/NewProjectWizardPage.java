@@ -33,27 +33,24 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.knime.workbench.ui.KNIMEUIPlugin;
 
 import com.swtdesigner.ResourceManager;
-
-import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * Page that is used as the "New Project" wizards' GUI.
  * 
  * @author Florian Georg, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public class NewProjectWizardPage extends WizardPage {
     private static final String INITIAL_PROJECT_NAME = "Knime_project";
 
-    private Button m_checkAddDataset;
-
     private Text m_projectName;
-
+    
     /**
      * Create & init the page.
      * 
@@ -87,10 +84,7 @@ public class NewProjectWizardPage extends WizardPage {
             }
         });
         m_projectName.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-       
-
-
+        
         // initialize the new project name field
         // set a default file name which is not already available
         String projectName = INITIAL_PROJECT_NAME;
@@ -107,10 +101,6 @@ public class NewProjectWizardPage extends WizardPage {
         }
 
         m_projectName.setText(projectName);
-
-        // m_checkAddDataset = new Button(group, SWT.CHECK);
-        // m_checkAddDataset.setEnabled(false);
-        // m_checkAddDataset.setText("Add example dataset (iris)");
     }
 
     private void updateStatus(final String message) {
@@ -145,12 +135,5 @@ public class NewProjectWizardPage extends WizardPage {
      */
     public String getProjectName() {
         return m_projectName.getText();
-    }
-
-    /**
-     * @return The state of the "add dataset" checkbox
-     */
-    public boolean getAddDataset() {
-        return m_checkAddDataset.getSelection();
     }
 }
