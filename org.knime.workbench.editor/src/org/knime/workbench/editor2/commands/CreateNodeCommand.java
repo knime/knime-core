@@ -113,7 +113,7 @@ public class CreateNodeCommand extends Command {
      */
     @Override
     public boolean canUndo() {
-        return true;
+        return false;
     }
 
     /**
