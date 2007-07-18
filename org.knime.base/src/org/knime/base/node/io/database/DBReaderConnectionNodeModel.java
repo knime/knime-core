@@ -159,7 +159,8 @@ class DBReaderConnectionNodeModel extends NodeModel {
             boolean changed = false;
             if (m_user != null && m_name != null && m_pass != null) { 
                 if (!user.equals(m_user) || !database.equals(m_name)
-                        || !password.equals(m_pass)) {
+                        || !password.equals(m_pass)
+                        || !statement.equals(m_query)) {
                     changed = true;
                 }
             }
