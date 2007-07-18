@@ -54,20 +54,33 @@ public class KnimeContentProvider extends WorkbenchContentProvider {
     @Override
     protected void processDelta(final IResourceDelta delta) {
         super.processDelta(delta);
-        m_viewer.getClass();
-        new Thread(new Runnable() {
-            public void run() {
-                try {
-                    Thread.sleep(500);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                Display.getDefault().syncExec(new Runnable() {
-                    public void run() {
-                        m_viewer.expandAll();
-                    }
-                });
+        // Workaround to remove the plus signs from the workflow projects
+        // the update threads invoke the expandAll method on the viewer
+        // this causes the plus signs to disappear
+        // the first thread tries to remove the sign quickly
+        // if this is too early the second thread removes them later
+        new UpdateThread(30).start();
+        new UpdateThread(500).start();
+    }
+
+    private class UpdateThread extends Thread {
+        private long m_waitTime;
+
+        public UpdateThread(final long waitTime) {
+            m_waitTime = waitTime;
+        }
+
+        public void run() {
+            try {
+                Thread.sleep(m_waitTime);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }).start();
+            Display.getDefault().syncExec(new Runnable() {
+                public void run() {
+                    m_viewer.expandAll();
+                }
+            });
+        }
     }
 }
