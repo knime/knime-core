@@ -83,23 +83,21 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     /**
      * Adds the filters to the viewer.
      * 
-     * @param viewer
-     *            the viewer
+     * @param viewer the viewer
      * @since 2.0
      */
     @Override
     protected void initFilters(final TreeViewer viewer) {
 
         super.initFilters(viewer);
-        //viewer.resetFilters();
+        // viewer.resetFilters();
         viewer.addFilter(new KnimeResourcePatternFilter());
     }
 
     /**
      * Sets the label provider for the viewer.
      * 
-     * @param viewer
-     *            the viewer
+     * @param viewer the viewer
      * @since 2.0
      */
     @Override
@@ -113,14 +111,13 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      * Handles an open event from the viewer. Opens an editor on the selected
      * knime project.
      * 
-     * @param event
-     *            the open event
+     * @param event the open event
      */
     @Override
     protected void handleOpen(final OpenEvent event) {
 
         IStructuredSelection selection =
-                (IStructuredSelection) event.getSelection();
+                (IStructuredSelection)event.getSelection();
 
         Iterator<Object> elements = selection.iterator();
         while (elements.hasNext()) {
@@ -129,7 +126,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
                 // get the workflow file of the project
                 // must be "workflow.knime"
-                IProject project = (IProject) element;
+                IProject project = (IProject)element;
 
                 IFile workflowFile = project.getFile("workflow.knime");
 
@@ -173,122 +170,122 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      *      #resourceChanged(org.eclipse.core.resources.IResourceChangeEvent)
      */
     public void resourceChanged(final IResourceChangeEvent event) {
-//        try {
-//            if (event == null || event.getDelta() == null) {
-//                return;
-//            }
-//            event.getDelta().accept(new NavigatorResourceDeltaVisitor());
-//        } catch (CoreException e) {
-//            // should never happen, I think...
-//            e.printStackTrace();
-//        }
+        // try {
+        // if (event == null || event.getDelta() == null) {
+        // return;
+        // }
+        // event.getDelta().accept(new NavigatorResourceDeltaVisitor());
+        // } catch (CoreException e) {
+        // // should never happen, I think...
+        // e.printStackTrace();
+        // }
     }
 
-//    /**
-//     * Visitor, checks wheter the projects have been changed in some way.
-//     * 
-//     * @author Christoph Sieb, University of Konstanz
-//     */
-//    private class NavigatorResourceDeltaVisitor implements
-//            IResourceDeltaVisitor {
-//        public String getTypeString(final IResourceDelta delta) {
-//            StringBuffer buffer = new StringBuffer();
-//
-//            if ((delta.getKind() & IResourceDelta.ADDED) != 0) {
-//                buffer.append("ADDED|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.ADDED_PHANTOM) != 0) {
-//                buffer.append("ADDED_PHANTOM|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.ALL_WITH_PHANTOMS) != 0) {
-//                buffer.append("ALL_WITH_PHANTOMS|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.CHANGED) != 0) {
-//                buffer.append("CHANGED|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.CONTENT) != 0) {
-//                buffer.append("CONTENT|");
-//            }
-//            if ((delta.getFlags() & IResourceDelta.DESCRIPTION) != 0) {
-//                buffer.append("DESCRIPTION|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.ENCODING) != 0) {
-//                buffer.append("ENCODING|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.MARKERS) != 0) {
-//                buffer.append("MARKERS|");
-//            }
-//            if ((delta.getFlags() & IResourceDelta.MOVED_FROM) != 0) {
-//                buffer.append("MOVED_FROM|");
-//            }
-//            if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
-//                buffer.append("MOVED_TO|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.NO_CHANGE) != 0) {
-//                buffer.append("NO_CHANGE|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.OPEN) != 0) {
-//                buffer.append("OPEN|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.REMOVED) != 0) {
-//                buffer.append("REMOVED|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.REMOVED_PHANTOM) != 0) {
-//                buffer.append("REMOVED_PHANTOM|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.REPLACED) != 0) {
-//                buffer.append("REPLACED|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.SYNC) != 0) {
-//                buffer.append("SYNC|");
-//            }
-//            if ((delta.getKind() & IResourceDelta.TYPE) != 0) {
-//                buffer.append("TYPE|");
-//            }
-//            return buffer.toString();
-//        }
-//
-//        /**
-//         * Not properly working yet. Seems that another listener is refreshing
-//         * after this visitor refreshed and expanded, thus the + sign appears.
-//         * 
-//         * @see org.eclipse.core.resources.IResourceDeltaVisitor
-//         *      #visit(org.eclipse.core.resources.IResourceDelta)
-//         */
-//        public boolean visit(final IResourceDelta delta) throws CoreException {
-//
-//            // LOGGER.debug("Path: " + delta.getResource().getName()
-//            // + " Deltat type: " + getTypeString(delta));
-//
-//            // If delta resource is a project, refresh and expand the
-//            // navigation tree
-//            if (true || delta.getResource().getType() == IResource.PROJECT) {
-//
-//                // this forces the filter to run
-//                // => the viewer recognizes that no children are left and
-//                // removes the
-//                // + signs
-//
-//                Display.getDefault().asyncExec(new Runnable() {
-//                    public void run() {
-//
-//                        try {
-//                            getViewer().refresh();
-//                            getViewer().expandToLevel(2);
-//                        } catch (RuntimeException re) {
-//                            // do nothing
-//                            // just ensure that nothing goes wrong
-//                        }
-//
-//                    }
-//                });
-//
-//                return false;
-//            }
-//
-//            return true;
-//        }
-//    }
+    // /**
+    // * Visitor, checks wheter the projects have been changed in some way.
+    // *
+    // * @author Christoph Sieb, University of Konstanz
+    // */
+    // private class NavigatorResourceDeltaVisitor implements
+    // IResourceDeltaVisitor {
+    // public String getTypeString(final IResourceDelta delta) {
+    // StringBuffer buffer = new StringBuffer();
+    //
+    // if ((delta.getKind() & IResourceDelta.ADDED) != 0) {
+    // buffer.append("ADDED|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.ADDED_PHANTOM) != 0) {
+    // buffer.append("ADDED_PHANTOM|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.ALL_WITH_PHANTOMS) != 0) {
+    // buffer.append("ALL_WITH_PHANTOMS|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.CHANGED) != 0) {
+    // buffer.append("CHANGED|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.CONTENT) != 0) {
+    // buffer.append("CONTENT|");
+    // }
+    // if ((delta.getFlags() & IResourceDelta.DESCRIPTION) != 0) {
+    // buffer.append("DESCRIPTION|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.ENCODING) != 0) {
+    // buffer.append("ENCODING|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.MARKERS) != 0) {
+    // buffer.append("MARKERS|");
+    // }
+    // if ((delta.getFlags() & IResourceDelta.MOVED_FROM) != 0) {
+    // buffer.append("MOVED_FROM|");
+    // }
+    // if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
+    // buffer.append("MOVED_TO|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.NO_CHANGE) != 0) {
+    // buffer.append("NO_CHANGE|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.OPEN) != 0) {
+    // buffer.append("OPEN|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.REMOVED) != 0) {
+    // buffer.append("REMOVED|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.REMOVED_PHANTOM) != 0) {
+    // buffer.append("REMOVED_PHANTOM|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.REPLACED) != 0) {
+    // buffer.append("REPLACED|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.SYNC) != 0) {
+    // buffer.append("SYNC|");
+    // }
+    // if ((delta.getKind() & IResourceDelta.TYPE) != 0) {
+    // buffer.append("TYPE|");
+    // }
+    // return buffer.toString();
+    // }
+    //
+    // /**
+    // * Not properly working yet. Seems that another listener is refreshing
+    // * after this visitor refreshed and expanded, thus the + sign appears.
+    // *
+    // * @see org.eclipse.core.resources.IResourceDeltaVisitor
+    // * #visit(org.eclipse.core.resources.IResourceDelta)
+    // */
+    // public boolean visit(final IResourceDelta delta) throws CoreException {
+    //
+    // // LOGGER.debug("Path: " + delta.getResource().getName()
+    // // + " Deltat type: " + getTypeString(delta));
+    //
+    // // If delta resource is a project, refresh and expand the
+    // // navigation tree
+    // if (true || delta.getResource().getType() == IResource.PROJECT) {
+    //
+    // // this forces the filter to run
+    // // => the viewer recognizes that no children are left and
+    // // removes the
+    // // + signs
+    //
+    // Display.getDefault().asyncExec(new Runnable() {
+    // public void run() {
+    //
+    // try {
+    // getViewer().refresh();
+    // getViewer().expandToLevel(2);
+    // } catch (RuntimeException re) {
+    // // do nothing
+    // // just ensure that nothing goes wrong
+    // }
+    //
+    // }
+    // });
+    //
+    // return false;
+    // }
+    //
+    // return true;
+    // }
+    // }
 
     /**
      * Fills the context menu with the actions contained in this group and its
@@ -296,8 +293,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      * for the kinme projects. Note: Projects which are closed in the default
      * navigator are not shown in the knime navigator any more.
      * 
-     * @param menu
-     *            the context menu
+     * @param menu the context menu
      */
     @Override
     public void fillContextMenu(final IMenuManager menu) {
@@ -313,7 +309,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
             if (item instanceof ActionContributionItem) {
 
-                ActionContributionItem aItem = (ActionContributionItem) item;
+                ActionContributionItem aItem = (ActionContributionItem)item;
                 // remove the gointo item
                 if (aItem.getAction() instanceof GoIntoAction) {
 
@@ -360,5 +356,16 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             menu.add(items[i]);
         }
 
+    }
+
+    /**
+     * Sets the content provider for the viewer.
+     * 
+     * @param viewer the viewer
+     * @since 2.0
+     */
+    @Override
+    protected void initContentProvider(TreeViewer viewer) {
+        viewer.setContentProvider(new KnimeContentProvider());
     }
 }
