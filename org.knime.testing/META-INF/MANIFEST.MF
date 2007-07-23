@@ -23,7 +23,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.knime.exp.chem,
  org.knime.dev,
  org.knime.ext.c45r8,
- org.knime.exp
+ org.knime.exp,
+ org.knime.ext.jython
 Eclipse-RegisterBuddy: org.knime.base
 Eclipse-AutoStart: true
 Export-Package: org.knime.testing,
