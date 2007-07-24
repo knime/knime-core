@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -43,6 +44,7 @@ import java.util.zip.GZIPOutputStream;
 import org.knime.base.node.mine.bfn.BasisFunctionLearnerTable.MissingValueReplacementFunction;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
@@ -121,7 +123,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     /** Contains model info after training. */
     private ModelContent m_modelInfo;
 
-    private DataTableSpec m_modelSpec;
+    private DataColumnSpec[] m_modelSpec;
 
     private final Map<DataCell, List<BasisFunctionLearnerRow>> m_bfs;
 
@@ -224,6 +226,18 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
             }
         }
         
+        // if no data columns are found, use all numeric columns
+        List<String> dataCols = new ArrayList<String>();
+        if (m_dataColumns == null || m_dataColumns.length == 0) {
+            for (DataColumnSpec cspec : ins[0]) {
+                if (!targetHash.contains(cspec.getName())
+                        && cspec.getType().isCompatible(DoubleValue.class)) {
+                    dataCols.add(cspec.getName());
+                }
+            }
+            m_dataColumns = dataCols.toArray(new String[dataCols.size()]);
+        }
+        
         // check data columns, only numeric
         for (String dataColumn : m_dataColumns) {
             if (!ins[0].containsName(dataColumn)) {
@@ -278,6 +292,18 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         }
         // add target columns at the end
         columns.addAll(Arrays.asList(m_targetColumns));
+        
+        // if no data columns are found, use all numeric columns
+        List<String> dataCols = new ArrayList<String>();
+        if (m_dataColumns == null || m_dataColumns.length == 0) {
+            for (DataColumnSpec cspec : tSpec) {
+                if (!targetHash.contains(cspec.getName())
+                        && cspec.getType().isCompatible(DoubleValue.class)) {
+                    dataCols.add(cspec.getName());
+                }
+            }
+            m_dataColumns = dataCols.toArray(new String[dataCols.size()]);
+        }
 
         // filter selected columns from input data
         String[] cols = columns.toArray(new String[]{});
@@ -302,7 +328,14 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
                 trainData, m_dataColumns, m_targetColumns, factory,
                 BasisFunctionLearnerTable.MISSINGS[m_missing],
                 m_shrinkAfterCommit, m_maxCoverage, m_maxEpochs, exec);
-        m_modelSpec = table.getDataTableSpec();
+        DataTableSpec modelSpec = table.getDataTableSpec();
+        m_modelSpec = new DataColumnSpec[modelSpec.getNumColumns()];
+        for (int i = 0; i < m_modelSpec.length; i++) {
+            DataColumnSpecCreator creator = 
+                new DataColumnSpecCreator(modelSpec.getColumnSpec(i));
+            creator.removeAllHandlers();
+            m_modelSpec[i] = creator.createSpec();
+        }
 
         // set translator mapping
         m_translator.setMapper(table.getHiLiteMapper());
@@ -348,6 +381,11 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
                 msg.append("No target column specified.\n");
             }
         } catch (InvalidSettingsException ise) {
+            // try to read only one target ref. to KNIME 1.2.0 and before
+            targetColumns = 
+                new String[]{settings.getString(TARGET_COLUMNS, null)};
+        }
+        if (targetColumns == null || targetColumns.length == 0) {
             msg.append("Target columns not found in settings.\n");
         }
         // get data columns
@@ -355,11 +393,12 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         try {
             dataColumns = settings.getStringArray(DATA_COLUMNS);
         } catch (InvalidSettingsException ise) {
-            msg.append("Data columns not found in settings.\n");
+            // suppress since before 1.2.0 all numeric data columns were used
+            // msg.append("Data columns not found in settings.\n");
         }
-        if (dataColumns == null || dataColumns.length == 0) {
-            msg.append("No data column specified.\n");
-        }
+//        if (dataColumns == null || dataColumns.length == 0) {
+//            msg.append("No data column specified.\n");
+//        }
         if (dataColumns != null && targetColumns != null) {
             Set<String> hash = new HashSet<String>(Arrays.asList(dataColumns));
             for (String target : targetColumns) {
@@ -396,6 +435,11 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         // target columns for classification
         m_targetColumns = settings.getStringArray(
                 TARGET_COLUMNS, (String[]) null);
+        if (m_targetColumns == null) {
+            // try to find single target column from version 1.2.0 and before
+            m_targetColumns = new String[]{settings.getString(
+                    TARGET_COLUMNS, null)};
+        }
         // data columns for training
         m_dataColumns = settings.getStringArray(
                 DATA_COLUMNS, (String[]) null);
@@ -406,7 +450,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         // shrink after commit
         m_shrinkAfterCommit = settings.getBoolean(SHRINK_AFTER_COMMIT);
         // max class coverage
-        m_maxCoverage = settings.getBoolean(MAX_CLASS_COVERAGE);
+        m_maxCoverage = settings.getBoolean(MAX_CLASS_COVERAGE, true);
         // maximum epochs
         m_maxEpochs = settings.getInt(MAX_EPOCHS, -1);
     }
@@ -442,8 +486,8 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         // add used columns
         assert m_modelSpec != null;
         ModelContentWO modelSpec = pp.addModelContent("model_spec");
-        for (int i = 0; i < m_modelSpec.getNumColumns(); i++) {
-            DataColumnSpec cspec = m_modelSpec.getColumnSpec(i);
+        for (int i = 0; i < m_modelSpec.length; i++) {
+            DataColumnSpec cspec = m_modelSpec[i];
             cspec.save(modelSpec.addConfig(cspec.getName()));
         }
         // save basisfunctions
