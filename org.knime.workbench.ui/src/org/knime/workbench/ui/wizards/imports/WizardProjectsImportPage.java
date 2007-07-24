@@ -73,7 +73,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.eclipse.ui.dialogs.IOverwriteQuery;
-import org.eclipse.ui.internal.ide.IDEApplication;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
 import org.eclipse.ui.internal.wizards.datatransfer.DataTransferMessages;
@@ -92,6 +91,11 @@ public class WizardProjectsImportPage extends WizardPage implements
 
     // ------------ KNIME change,
     public static final String IMPORT_MARKER_FILE_NAME = "ImportMarker";
+    
+    /**
+	 * The name of the folder containing metadata information for the workspace.
+	 */
+	public static final String METADATA_FOLDER = ".metadata"; //$NON-NLS-1$
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(WizardProjectsImportPage.class);
@@ -943,7 +947,7 @@ public class WizardProjectsImportPage extends WizardPage implements
         for (int i = 0; i < contents.length; i++) {
             if (contents[i].isDirectory()) {
                 if (!contents[i].getName().equals(
-                        IDEApplication.METADATA_FOLDER)) {
+                       METADATA_FOLDER)) {
                     collectProjectFilesFromDirectory(files, contents[i],
                             monitor);
                 }
