@@ -13,7 +13,7 @@
 
    <element name="extension">
       <complexType>
-         <sequence>
+         <sequence minOccurs="1" maxOccurs="unbounded">
             <choice>
                <element ref="category"/>
             </choice>
