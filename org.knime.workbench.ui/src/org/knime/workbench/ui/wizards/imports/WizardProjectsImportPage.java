@@ -48,10 +48,13 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
+import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -78,6 +81,7 @@ import org.eclipse.ui.internal.wizards.datatransfer.TarException;
 import org.eclipse.ui.internal.wizards.datatransfer.TarFile;
 import org.eclipse.ui.wizards.datatransfer.FileSystemStructureProvider;
 import org.eclipse.ui.wizards.datatransfer.IImportStructureProvider;
+import org.knime.core.node.NodeLogger;
 
 /**
  * The WizardProjectsImportPage is the page that allows the user to import
@@ -88,6 +92,9 @@ public class WizardProjectsImportPage extends WizardPage implements
 
     // ------------ KNIME change,
     public static final String IMPORT_MARKER_FILE_NAME = "ImportMarker";
+
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(WizardProjectsImportPage.class);
 
     /**
      * Class declared public only for test suite.
@@ -217,6 +224,10 @@ public class WizardProjectsImportPage extends WizardPage implements
 
     private IProject[] wsProjects;
 
+    private boolean doublesToImport;
+
+    private boolean renamePageShown;
+
     // constant from WizardArchiveFileResourceImportPage1
     private static final String[] FILE_IMPORT_MASK =
             {"*.jar;*.zip;*.tar;*.tar.gz;*.tgz", "*.*"}; //$NON-NLS-1$ //$NON-NLS-2$
@@ -277,7 +288,6 @@ public class WizardProjectsImportPage extends WizardPage implements
         createOptionsArea(workArea);
         restoreWidgetValues();
         Dialog.applyDialogFont(workArea);
-
     }
 
     /**
@@ -327,6 +337,15 @@ public class WizardProjectsImportPage extends WizardPage implements
                 new GridData(GridData.GRAB_HORIZONTAL | GridData.GRAB_VERTICAL
                         | GridData.FILL_BOTH);
         projectsList.getControl().setLayoutData(listData);
+        projectsList
+                .addPostSelectionChangedListener(new ISelectionChangedListener() {
+
+                    public void selectionChanged(
+                            final SelectionChangedEvent event) {
+                        updateRenamePage();
+                    }
+
+                });
 
         projectsList.setContentProvider(new ITreeContentProvider() {
 
@@ -403,6 +422,19 @@ public class WizardProjectsImportPage extends WizardPage implements
         createSelectionButtons(listComposite);
     }
 
+    private void updateRenamePage() {
+        if (!(getProjectsToRename().length > 0)) {
+            renamePageShown = true;
+        }
+        boolean additionalChanges =
+                ((WizardProjectRenameDuplicatesPage)getWizard().getPages()[1])
+                        .updateRenameList();
+        if (renamePageShown) {
+            renamePageShown = !additionalChanges;
+        }
+
+    }
+
     /**
      * Create the selection buttons in the listComposite.
      * 
@@ -423,6 +455,7 @@ public class WizardProjectsImportPage extends WizardPage implements
         selectAll.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent e) {
                 projectsList.setCheckedElements(selectedProjects);
+                updateRenamePage();
             }
         });
         Dialog.applyDialogFont(selectAll);
@@ -439,6 +472,7 @@ public class WizardProjectsImportPage extends WizardPage implements
             public void widgetSelected(SelectionEvent e) {
 
                 projectsList.setCheckedElements(new Object[0]);
+                updateRenamePage();
 
             }
         });
@@ -672,7 +706,7 @@ public class WizardProjectsImportPage extends WizardPage implements
         if (path.equals(lastPath)) {
             return;
         }
-
+        updateRenamePage();
         lastPath = path;
 
         // on an empty path empty selectedProjects
@@ -792,6 +826,7 @@ public class WizardProjectsImportPage extends WizardPage implements
 
         projectsList.refresh(true);
         projectsList.setCheckedElements(getValidProjects());
+        updateRenamePage();
         setPageComplete(getValidProjects().length > 0);
     }
 
@@ -1029,6 +1064,10 @@ public class WizardProjectsImportPage extends WizardPage implements
      */
     public boolean createProjects() {
         saveWidgetValues();
+        // put the renamed projet files into the project records before
+        // performing the import
+        ((WizardProjectRenameDuplicatesPage)getWizard().getPages()[1])
+                .putRenameTextFieldContentIntoProjectRecord();
         final Object[] selected = projectsList.getCheckedElements();
         WorkspaceModifyOperation op = new WorkspaceModifyOperation() {
             protected void execute(IProgressMonitor monitor)
@@ -1052,6 +1091,7 @@ public class WizardProjectsImportPage extends WizardPage implements
                                 ((ProjectRecord)selected[i]).projectName;
                         final IProject project =
                                 workspace.getRoot().getProject(projectName);
+
                         final File file =
                                 new File(project.getProjectRelativePath()
                                         .makeAbsolute().toFile(),
@@ -1069,6 +1109,28 @@ public class WizardProjectsImportPage extends WizardPage implements
                             }
                         }
                         // -------------- Import Marking End -----------------
+                        // -------------- Rename Change KNIME ----------------
+                        // Renames the project
+                        // Necessary if the imported project was renamed as
+                        // it already existed in the workspace. Here the
+                        // .project
+                        // file will be renamed to the already renamed file name
+                        try {
+                            IProjectDescription description =
+                                    project.getDescription();
+                            description.setName(projectName);
+
+                            project.move(description, IResource.FORCE
+                                    | IResource.SHALLOW, monitor);
+                        } catch (Exception e) {
+                            LOGGER.warn("The name of the imported project: "
+                                    + projectName
+                                    + " could not be renamed in the "
+                                    + ".project file. I.e. the "
+                                    + "file name is correct but"
+                                    + " the name in the " + ".project"
+                                    + " file differs.");
+                        }
                     }
                 } finally {
                     monitor.done();
@@ -1357,11 +1419,13 @@ public class WizardProjectsImportPage extends WizardPage implements
      */
     public ProjectRecord[] getValidProjects() {
         List validProjects = new ArrayList();
+        // to remember if projects should be imported, that are duplicates
+        doublesToImport = false;
         for (int i = 0; i < selectedProjects.length; i++) {
             File file = selectedProjects[i].projectSystemFile;
             if (file != null) {
                 // projects that are in the current workspace location
-                // and are also in the workspace are not selectable 
+                // and are also in the workspace are not selectable
                 IPath workspace = Platform.getLocation();
                 if (workspace.isPrefixOf(new Path(file.getAbsolutePath()))
                         && isProjectInWorkspace(selectedProjects[i]
@@ -1369,11 +1433,12 @@ public class WizardProjectsImportPage extends WizardPage implements
                     continue;
                 }
             }
-            // if (!isProjectInWorkspace(selectedProjects[i].getProjectName()))
-            // {
+            if (isProjectInWorkspace(selectedProjects[i].getProjectName())) {
+                doublesToImport = true;
+            }
             validProjects.add(selectedProjects[i]);
-            // }
         }
+        renamePageShown = false;
         return (ProjectRecord[])validProjects
                 .toArray(new ProjectRecord[validProjects.size()]);
     }
@@ -1447,5 +1512,41 @@ public class WizardProjectsImportPage extends WizardPage implements
      */
     public Button getCopyCheckbox() {
         return copyCheckbox;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IWizardPage getNextPage() {
+        // the next page is only necessary if there are doubles
+        if (!getDoublesToImport()) {
+            return null;
+        }
+        renamePageShown = true;
+        return super.getNextPage();
+
+    }
+
+    public boolean getDoublesToImport() {
+        return doublesToImport;
+    }
+
+    public boolean getRenamePageShown() {
+        return renamePageShown;
+    }
+
+    ProjectRecord[] getProjectsToRename() {
+        Object[] selected = getProjectsList().getCheckedElements();
+        List<ProjectRecord> resultList = new ArrayList<ProjectRecord>();
+        for (Object o : selected) {
+            ProjectRecord project = (ProjectRecord)o;
+            // the project is a duplicate (i.e. there exist already a
+            // project with the given name in the workspace
+            if (isProjectInWorkspace(project.getProjectName())) {
+                resultList.add(project);
+            }
+        }
+        return resultList.toArray(new ProjectRecord[resultList.size()]);
     }
 }

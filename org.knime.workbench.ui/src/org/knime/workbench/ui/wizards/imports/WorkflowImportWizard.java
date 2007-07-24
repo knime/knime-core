@@ -52,14 +52,42 @@ public class WorkflowImportWizard extends ExternalProjectImportWizard {
     /**
      * {@inheritDoc}
      */
-    @Override
     public void addPages() {
         super.addPages();
+        WizardProjectsImportPage importPage =
+                (WizardProjectsImportPage)getPages()[0];
 
-        getPages()[0].setTitle("Knime workflow projects");
-        getPages()[0]
-                .setDescription("This wizard imports Knime workflow projects"
-                        + " given as an archive or given as a folder within"
-                        + " the file system.");
+        importPage.setTitle("Knime workflow projects");
+        importPage.setDescription("This wizard imports Knime workflow projects"
+                + " given as an archive or given as a folder within"
+                + " the file system.");
+
+        WizardProjectRenameDuplicatesPage renamePage =
+                new WizardProjectRenameDuplicatesPage(importPage);
+        renamePage.setTitle("Double projects");
+        renamePage.setDescription("Shows projects which have the same name "
+                + "as a workspace project. Rename them here. Automatic " +
+                        "proposals are the appended numbers in brackets.");
+        addPage(renamePage);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean canFinish() {
+        WizardProjectsImportPage importPage =
+                (WizardProjectsImportPage)getPages()[0];
+//        WizardProjectRenameDuplicatesPage renamePage =
+//                (WizardProjectRenameDuplicatesPage)getPages()[1];
+        if (importPage.isPageComplete()) {
+            if (!importPage.getDoublesToImport()) {
+                return true;
+            } else if (importPage.getRenamePageShown()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
