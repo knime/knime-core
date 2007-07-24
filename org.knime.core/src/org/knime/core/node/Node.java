@@ -57,7 +57,7 @@ import org.knime.core.util.FileUtil;
  * Node can be connected with predecessors and successors through its input and
  * output ports, {@link org.knime.core.node.NodeInPort} and
  * {@link org.knime.core.node.NodeOutPort}, respectively. There are data ports
- * for exchanging data tables, and prediction model ports for transfering
+ * for exchanging data tables, and prediction model ports for transferring
  * computed data models. <br />
  * A node must contain a {@link NodeModel} and may contain {@link NodeView}s
  * and a {@link NodeDialogPane} implementing the Model-View-Controller paradigm.
@@ -174,7 +174,7 @@ public final class Node {
         try {
             String sysLaF = UIManager.getSystemLookAndFeelClassName();
             // The GTK L&F has apparently some serious problems. Weka dialogs
-            // cannot be openend (NPE) and in 1.6.0 there were problems with 
+            // cannot be opened (NPE) and in 1.6.0 there were problems with 
             // "Xlib: sequence lost" ... resulting in KNIME going down.
             if (sysLaF.equals("com.sun.java.swing.plaf.gtk.GTKLookAndFeel")) {
                 sysLaF = UIManager.getCrossPlatformLookAndFeelClassName();
@@ -229,7 +229,7 @@ public final class Node {
         // register logger
         m_logger = NodeLogger.getLogger(m_name);
 
-        // do not instanciate dialog pane at the beginning
+        // do not instantiate dialog pane at the beginning
         m_dialogPane = null;
 
         // init state listener array
@@ -334,7 +334,7 @@ public final class Node {
      * Loads the node settings and internal structures from the given location,
      * depending on the node's state, configured or executed.
      * 
-     * @param loadID Forwared to the node. This id serves as loading id, it
+     * @param loadID Forwarded to the node. This id serves as loading id, it
      *            helps to distinguish between two workflows being loaded at the
      *            same time. This id is passed on to the
      *            {@link org.knime.core.node.BufferedDataTable#getDataTable(
@@ -1227,7 +1227,7 @@ public final class Node {
         m_localTempTables.addAll(tempTables);
     }
     
-    /** Enumerates the output tables and puts them into the global worflow 
+    /** Enumerates the output tables and puts them into the global workflow 
      * repository of tables. This method is basically delegates from the
      * NodeContainer class to access a package-scope method in 
      * BufferedDataTable.
@@ -1256,7 +1256,7 @@ public final class Node {
 
 
     /**
-     * Deletes and temporary rescources associated with this node.
+     * Deletes and temporary resources associated with this node.
      */
     public void cleanup() {
         for (DataOutPort o : m_outDataPorts) {
@@ -1453,7 +1453,7 @@ public final class Node {
             m_model.loadModelContent(realId, predParams);
             
             // NOTE: configure was previously invoked at the end of the method
-            // as this is not neccessary and also would reset state messages
+            // as this is not necessary and also would reset state messages
             // set in the catch blocks the configure is only invoked,
             // if the model could be properly set
             configure();
@@ -1476,7 +1476,7 @@ public final class Node {
             notifyStateListeners(m_status);
         } catch (Throwable e) {
             reset(false);
-            m_logger.coding("Error occured: ", e);
+            m_logger.coding("Error occurred: ", e);
             m_status =
                     new NodeStatus.Error(
                             "Could not load ModelContent due to an error: "
@@ -1751,7 +1751,7 @@ public final class Node {
      *         dialog pane. The pane might be <code>null</code> if no dialog
      *         is available.
      * @throws NotConfigurableException if the dialog cannot be opened because
-     *             of real invalid settings or if any predconditions are not
+     *             of real invalid settings or if any preconditions are not
      *             fulfilled, e.g. no predecessor node, no nominal column in
      *             input table, etc.
      * @see #hasDialog()
