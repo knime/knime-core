@@ -595,7 +595,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(redo.getId());
         m_editorActions.add(delete.getId());
         m_editorActions.add(save.getId());
-        m_editorActions.add(print.getId());
 
         m_editorActions.add(openDialog.getId());
         m_editorActions.add(execute.getId());
