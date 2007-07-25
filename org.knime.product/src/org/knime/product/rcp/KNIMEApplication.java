@@ -25,7 +25,6 @@ import java.io.File;
 
 import org.eclipse.core.runtime.IPlatformRunnable;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.internal.adaptor.Locker_JavaNio;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
@@ -33,6 +32,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
+import org.knime.core.util.FileLocker;
 
 /**
  * This class controls all aspects of the application's execution.
@@ -110,7 +110,7 @@ public class KNIMEApplication implements IPlatformRunnable {
             lockFile.createNewFile();
         }
 
-        Locker_JavaNio locker = new Locker_JavaNio(lockFile);
+        FileLocker locker = new FileLocker(lockFile);
         return locker.lock();
     }
 }
