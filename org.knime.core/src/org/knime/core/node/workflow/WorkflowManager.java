@@ -61,6 +61,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeStateListener;
 import org.knime.core.node.NodeStatus;
+import org.knime.core.util.FileLocker;
 import org.knime.core.util.MutableInteger;
 
 /**
@@ -689,6 +690,8 @@ public class WorkflowManager implements WorkflowListener {
     /** Table repository, important for blob (de)serialization. A sub workflow
      * manager will use the map of its parent WFM. */
     private final HashMap<Integer, ContainerTable> m_tableRepository;
+    
+    private FileLocker m_fileLock;
 
     /**
      * Create new Workflow.
@@ -1697,6 +1700,8 @@ public class WorkflowManager implements WorkflowListener {
             InvalidSettingsException, CanceledExecutionException,
             WorkflowInExecutionException, WorkflowException {
         checkForRunningNodes("Workflow cannot be loaded");
+      
+        lockWorkflowFile(workflowFile);
 
         if (!workflowFile.isFile()
                 || !workflowFile.getName().equals(WORKFLOW_FILE)) {
@@ -2270,6 +2275,17 @@ public class WorkflowManager implements WorkflowListener {
             fireWorkflowEvent(event);
         }
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        if (m_fileLock != null) {
+            m_fileLock.release();
+        }
+    }
 
     /**
      * Loads the settings from the passed node container's dialog into its
@@ -2328,6 +2344,9 @@ public class WorkflowManager implements WorkflowListener {
         for (int i = sortedNodes.size() - 1; i >= 0; i--) {
             sortedNodes.get(i).cleanup();
         }
+        if (m_fileLock != null) {
+            m_fileLock.release();
+        }
     }
 
     /**
@@ -2359,5 +2378,27 @@ public class WorkflowManager implements WorkflowListener {
      */
     public void setCheckAutoexecNodes(final boolean b) {
         m_executor.setCheckAutoexecNodes(b);
-    }    
+    }  
+    
+    private void lockWorkflowFile(final File workflowFile)
+            throws CanceledExecutionException {
+        try {
+            File lockFile = new File(workflowFile.getParentFile(), ".lock");
+            if (!lockFile.exists()) {
+                lockFile.createNewFile();
+            }
+            m_fileLock = new FileLocker(lockFile);
+            if (!m_fileLock.lock()) {
+                throw new CanceledExecutionException(
+                        "Workflow already used by another editor.");
+            }
+
+        } catch (CanceledExecutionException e) {
+            throw e;
+        } catch (Exception e) {
+            LOGGER.warn("Workflow file: " + workflowFile
+                    + " could not be locked.");
+
+        }
+    }
 }

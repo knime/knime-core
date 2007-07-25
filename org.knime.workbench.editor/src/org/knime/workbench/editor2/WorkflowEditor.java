@@ -192,6 +192,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private boolean m_loadingCanceled;
 
+    private String m_loadingCanceledMessage;
+
     /**
      * Keeps all meta workflow editors which were opend from this editor.
      */
@@ -350,6 +352,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         createActions();
 
         m_loadingCanceled = false;
+        m_loadingCanceledMessage = "";
     }
 
     /**
@@ -791,7 +794,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             if (m_manager == null) {
                 if (m_loadingCanceled) {
                     throw new OperationCanceledException(
-                            "Loading workflow canceled by user.");
+                            m_loadingCanceledMessage);
                 } else {
                     throw new RuntimeException("Workflow could not be loaded");
                 }
@@ -1615,6 +1618,18 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     void setLoadingCanceled(final boolean canceled) {
         m_loadingCanceled = canceled;
+    }
+
+    /**
+     * Set if the workflow loading process was canceled and a message. Should
+     * only be invoked during workflow loading.
+     * 
+     * @param message the reason for the cancelation
+     * @see LoadWorkflowRunnable
+     */
+    void setLoadingCanceledMessage(final String message) {
+        m_loadingCanceled = true;
+        m_loadingCanceledMessage = message;
     }
 
     /**
