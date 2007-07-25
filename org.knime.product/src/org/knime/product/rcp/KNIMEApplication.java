@@ -21,17 +21,30 @@
  */
 package org.knime.product.rcp;
 
+import java.io.File;
+
 import org.eclipse.core.runtime.IPlatformRunnable;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.internal.adaptor.Locker_JavaNio;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.osgi.service.datalocation.Location;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
 
 /**
  * This class controls all aspects of the application's execution.
  */
 public class KNIMEApplication implements IPlatformRunnable {
-    
+
     private static final String PROP_EXIT_CODE = "eclipse.exitcode";
-    
+
+    private static String LOCK_FOLDERNAME = ".metadata";
+
+    private static String LOCK_FILENAME = ".lock";
+
     /**
      * @param args The args
      * @throws Exception on general application error
@@ -40,11 +53,30 @@ public class KNIMEApplication implements IPlatformRunnable {
      */
     public Object run(final Object args) throws Exception {
         Display display = PlatformUI.createDisplay();
+        // check if the workspace is already in use
+        // at this point its valid, so try to lock it and update the
+        // metadata version information if successful
         try {
-            int returnCode = PlatformUI.createAndRunWorkbench(display,
-                    new KNIMEApplicationWorkbenchAdvisor());
-            
-//          the workbench doesn't support relaunch yet (bug 61809) so
+            Shell shell = new Shell(display, SWT.ON_TOP);
+            if (!lockWorkspace()) {
+                Platform.endSplash();
+                MessageDialog
+                        .openError(
+                                shell,
+                                IDEWorkbenchMessages.IDEApplication_workspaceCannotLockTitle,
+                                IDEWorkbenchMessages.IDEApplication_workspaceCannotLockMessage);
+                return EXIT_OK;
+            }
+        } catch (Exception e) {
+            // do nothing if locking could not be performed
+        }
+
+        try {
+            int returnCode =
+                    PlatformUI.createAndRunWorkbench(display,
+                            new KNIMEApplicationWorkbenchAdvisor());
+
+            // the workbench doesn't support relaunch yet (bug 61809) so
             // for now restart is used, and exit data properties are checked
             // here to substitute in the relaunch return code if needed
             if (returnCode != PlatformUI.RETURN_RESTART) {
@@ -58,9 +90,27 @@ public class KNIMEApplication implements IPlatformRunnable {
             // if (returnCode == PlatformUI.RETURN_RESTART) {
             // return IPlatformRunnable.EXIT_RESTART;
             // }
-            //            return IPlatformRunnable.EXIT_OK;
+            // return IPlatformRunnable.EXIT_OK;
         } finally {
             display.dispose();
         }
+    }
+
+    private boolean lockWorkspace() throws Exception {
+
+        Location instanceLoc = Platform.getInstanceLocation();
+        
+        File lockFileFolder =
+                new File(instanceLoc.getURL().getFile(), LOCK_FOLDERNAME);
+        if (!lockFileFolder.exists()) {
+            lockFileFolder.mkdirs();
+        }
+        File lockFile = new File(lockFileFolder, LOCK_FILENAME);
+        if (!lockFile.exists()) {
+            lockFile.createNewFile();
+        }
+
+        Locker_JavaNio locker = new Locker_JavaNio(lockFile);
+        return locker.lock();
     }
 }
