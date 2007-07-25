@@ -78,6 +78,7 @@ public class KnimeContentProvider extends WorkbenchContentProvider {
             }
             Display.getDefault().syncExec(new Runnable() {
                 public void run() {
+                    m_viewer.refresh();
                     m_viewer.expandAll();
                 }
             });
