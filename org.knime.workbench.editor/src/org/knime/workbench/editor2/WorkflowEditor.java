@@ -789,10 +789,22 @@ public class WorkflowEditor extends GraphicalEditor implements
             ps.busyCursorWhile(loadWorflowRunnable);
 
             // check if the editor should be disposed
-            // TODO: At the moment the editor is opened with an error message
-            // should be closed instead!!
             if (m_manager == null) {
                 if (m_loadingCanceled) {
+                    Display.getDefault().asyncExec(new Runnable() {
+                        public void run() {
+                            getEditorSite().getPage().closeEditor(
+                                    WorkflowEditor.this, false);
+                            MessageBox mb =
+                                    new MessageBox(Display.getDefault()
+                                            .getActiveShell(),
+                                            SWT.ICON_INFORMATION | SWT.OK);
+                            mb.setText("Editor could not be opened");
+                            mb
+                                    .setMessage(m_loadingCanceledMessage);
+                            mb.open();
+                        }
+                    });
                     throw new OperationCanceledException(
                             m_loadingCanceledMessage);
                 } else {
