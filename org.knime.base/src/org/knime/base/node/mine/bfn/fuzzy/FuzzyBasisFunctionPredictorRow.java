@@ -34,6 +34,7 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.util.MutableDouble;
 
 /**
  * 
@@ -58,7 +59,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param mem An array of membership functions each per dimension. 
      * @param norm A fuzzy norm to combine activations via all dimensions.
      */
-    FuzzyBasisFunctionPredictorRow(final DataCell key,
+    protected FuzzyBasisFunctionPredictorRow(final DataCell key,
             final DataCell classLabel, final MembershipFunction[] mem,
             final int norm) {
         super(key, classLabel, MINACT);
@@ -100,6 +101,13 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      */
     public MembershipFunction getMemship(final int i) {
         return m_mem[i];
+    }
+    
+    /**
+     * @return array of fuzzy membership function
+     */
+    public MembershipFunction[] getMemships() {
+        return m_mem;
     }
 
     /**
@@ -204,6 +212,35 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
             }
         }
         return used; 
+    }
+    
+    /**
+     * @return fuzzy norm
+     */
+    public final int getNorm() {
+        return m_norm;
+    }
+    
+    /**
+     * @return array of minimum bounds
+     */
+    public final MutableDouble[] getMins() {
+        MutableDouble[] mins = new MutableDouble[m_mem.length];
+        for (int i = 0; i < mins.length; i++) {
+            mins[i] = m_mem[i].getMin();
+        }
+        return mins;
+    }
+    
+    /**
+     * @return array of maximum bounds
+     */
+    public final MutableDouble[] getMaxs() {
+        MutableDouble[] maxs = new MutableDouble[m_mem.length];
+        for (int i = 0; i < maxs.length; i++) {
+            maxs[i] = m_mem[i].getMax();
+        }
+        return maxs;
     }
 
 }

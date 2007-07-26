@@ -96,7 +96,7 @@ public class FuzzyBasisFunctionFactory extends BasisFunctionFactory {
      * 
      * @return the upper bound for activation
      */
-    final int getNorm() {
+    public final int getNorm() {
         return m_norm;
     }
 
@@ -105,7 +105,7 @@ public class FuzzyBasisFunctionFactory extends BasisFunctionFactory {
      * 
      * @return the lower bound for activation
      */
-    final int getShrink() {
+    public final int getShrink() {
         return m_shrink;
     }
 

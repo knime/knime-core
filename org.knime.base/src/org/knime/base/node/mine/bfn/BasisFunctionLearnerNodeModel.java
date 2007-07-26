@@ -259,7 +259,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     /**
      * @return the type of the learned model cells
      */
-    protected abstract DataType getModelType();
+    public abstract DataType getModelType();
 
     /**
      * Starts the learning algorithm in the learner.

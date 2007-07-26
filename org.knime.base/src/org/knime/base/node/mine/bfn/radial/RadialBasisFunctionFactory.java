@@ -62,9 +62,10 @@ public class RadialBasisFunctionFactory extends BasisFunctionFactory {
      * @param dataColumns used for training
      * @param targetColumns the class info columns in the data
      */
-    RadialBasisFunctionFactory(final double thetaMinus, final double thetaPlus,
-            final int distance, final DataTableSpec spec, 
-            final String[] dataColumns, final String[] targetColumns) {
+    protected RadialBasisFunctionFactory(final double thetaMinus, 
+            final double thetaPlus, final int distance, 
+            final DataTableSpec spec, final String[] dataColumns, 
+            final String[] targetColumns) {
         super(spec, dataColumns, targetColumns, DoubleCell.TYPE, distance);
         m_thetaMinus = thetaMinus;
         m_thetaPlus = thetaPlus;
@@ -80,7 +81,7 @@ public class RadialBasisFunctionFactory extends BasisFunctionFactory {
      * @return A new basisfunction.
      */
     @Override
-    public final BasisFunctionLearnerRow commit(final RowKey key,
+    public BasisFunctionLearnerRow commit(final RowKey key,
             final DataCell classInfo, final DataRow row) {
         return new RadialBasisFunctionLearnerRow(key, classInfo, row,
                 m_thetaMinus, m_thetaPlus, super.getDistance());
@@ -91,7 +92,7 @@ public class RadialBasisFunctionFactory extends BasisFunctionFactory {
      * 
      * @return the upper bound for activation
      */
-    final double getThetaMinus() {
+    public final double getThetaMinus() {
         return m_thetaMinus;
     }
 
@@ -100,7 +101,7 @@ public class RadialBasisFunctionFactory extends BasisFunctionFactory {
      * 
      * @return the lower bound for activation
      */
-    final double getThetaPlus() {
+    public final double getThetaPlus() {
         return m_thetaPlus;
     }
 

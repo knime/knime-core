@@ -496,15 +496,15 @@ public class MembershipFunction {
     /**
      * @return min of this membership (not min support)
      */
-    public final double getMin() {
-        return m_min.doubleValue();
+    public final MutableDouble getMin() {
+        return m_min;
     }
     
     /**
      * @return max of this membership (not max support)
      */
-    public final double getMax() {
-        return m_max.doubleValue();
+    public final MutableDouble getMax() {
+        return m_max;
     }
 
     /**

@@ -95,7 +95,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     /**
      * {@inheritDoc}
      */
-    public final int getNumCells() {
+    public int getNumCells() {
         // #attributes + class, weight, spread, features, variance
         return m_centroid.getNumCells() + 5; 
     }
@@ -117,7 +117,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     /**
      * {@inheritDoc}
      */
-    public final DataCell getCell(final int index) {
+    public DataCell getCell(final int index) {
         final int nrCells = m_centroid.getNumCells();
         if (index < nrCells) {
             return getFinalCell(index);

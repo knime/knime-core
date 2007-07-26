@@ -157,7 +157,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
      * @return {@link FuzzyIntervalCell#TYPE}
      */
     @Override
-    protected final DataType getModelType() {
+    public final DataType getModelType() {
         return FuzzyIntervalCell.TYPE;
     }
 

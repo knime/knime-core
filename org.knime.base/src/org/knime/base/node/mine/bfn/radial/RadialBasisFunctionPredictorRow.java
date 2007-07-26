@@ -64,9 +64,9 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param thetaMinus Theta minus.
      * @param distance Distance measurement.
      */
-    RadialBasisFunctionPredictorRow(final DataCell key, final DataRow center,
-            final DataCell classLabel, final double thetaMinus,
-            final int distance) {
+    protected RadialBasisFunctionPredictorRow(final DataCell key, 
+            final DataRow center, final DataCell classLabel, 
+            final double thetaMinus, final int distance) {
         super(key, classLabel, thetaMinus);
         m_distance = distance;
         m_center = new double[center.getNumCells()];
@@ -227,6 +227,13 @@ public class RadialBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     @Override
     public int getNrUsedFeatures() {
         return m_center.length; 
+    }
+    
+    /**
+     * @return distance measure
+     */
+    public final int getDistance() {
+        return m_distance;
     }
     
 }

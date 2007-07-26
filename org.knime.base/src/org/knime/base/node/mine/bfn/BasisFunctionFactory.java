@@ -212,7 +212,7 @@ public abstract class BasisFunctionFactory {
     /**
      * @return the model's spec with class info column
      */
-    public final DataTableSpec getModelSpec() {
+    public DataTableSpec getModelSpec() {
         return m_spec;
     }
 

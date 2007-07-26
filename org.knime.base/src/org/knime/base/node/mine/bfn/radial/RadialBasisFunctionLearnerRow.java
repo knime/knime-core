@@ -22,7 +22,6 @@
 package org.knime.base.node.mine.bfn.radial;
 
 import org.knime.base.node.mine.bfn.BasisFunctionLearnerRow;
-import org.knime.base.node.mine.bfn.BasisFunctionPredictorRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
@@ -34,14 +33,14 @@ import org.knime.core.data.RowKey;
  * use radial basis function prototypes for training. This prototype keeps an
  * Gaussian functions is internal representation. This function is created
  * infinity which means cover the entry domain. During training the function is
- * shrinked if new conflicting instances are omitted. Therefore two parameters
+ * shrunk if new conflicting instances are omitted. Therefore two parameters
  * have been introduced. One is <code>m_thetaMinus</code> which is used to
  * describe an upper bound of conflicting instances; and 
  * <code>m_thetaPlus</code>, to lower bound for non-conflicting instances.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
+public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     
     /** The upper bound for conflicting instances. */
     private final double m_thetaMinus;
@@ -68,9 +67,10 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @param thetaPlus lower bound for non-conflicting instances
      * @param distance choice of the distance function between patterns.
      */
-    RadialBasisFunctionLearnerRow(final RowKey key, final DataCell classInfo,
-            final DataRow center, final double thetaMinus,
-            final double thetaPlus, final int distance) {
+    protected RadialBasisFunctionLearnerRow(final RowKey key, 
+            final DataCell classInfo, final DataRow center, 
+            final double thetaMinus, final double thetaPlus, 
+            final int distance) {
         super(key, center, classInfo);
         m_thetaMinus = thetaMinus;
         m_thetaMinusSqrtMinusLog = Math.sqrt(-Math.log(m_thetaMinus));
@@ -87,7 +87,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * {@inheritDoc}
      */
     @Override
-    public BasisFunctionPredictorRow getPredictorRow() {
+    public RadialBasisFunctionPredictorRow getPredictorRow() {
         return m_predRow;
     }
 
@@ -308,4 +308,19 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     public double computeActivation(final DataRow row) {
         return m_predRow.computeActivation(row);
     }
+    
+    /**
+     * @return theta minus
+     */
+    public final double getThetaMinus() {
+        return m_thetaMinus;
+    }
+
+    /**
+     * @return theta plus
+     */
+    public final double getThetaPlus() {
+        return m_thetaPlus;
+    }
+    
 }

@@ -128,7 +128,7 @@ public final class BasisFunctionIterator extends RowIterator {
     /**
      * Skips the current class, {@link #next()} will then return the first basis
      * function of the next class. If the current class is the last, the
-     * basefuntion index is set to the last element <code>+1</code> and
+     * basisfunction index is set to the last element <code>+1</code> and
      * {@link #hasNext()} will return <code>false</code>.
      */
     public void skipClass() {

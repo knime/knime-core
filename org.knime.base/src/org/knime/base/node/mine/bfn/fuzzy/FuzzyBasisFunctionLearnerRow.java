@@ -43,7 +43,7 @@ import org.knime.core.util.MutableDouble;
 public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     
     /** The choice of shrink procedure. */
-    private final Shrink m_shrink;
+    private final int m_shrink;
 
     /** Underlying predictive fuzzy row. */
     private final FuzzyBasisFunctionPredictorRow m_predRow;
@@ -64,7 +64,7 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
             final int shrink, 
             final MutableDouble[] min, final MutableDouble[] max) {
         super(key, centroid, classInfo);
-        m_shrink = Shrink.SHRINKS[shrink];
+        m_shrink = shrink;
         assert (min.length == centroid.getNumCells());
         assert (max.length == centroid.getNumCells());
         // init trapezoid fuzzy membership functions for each dimension
@@ -235,8 +235,8 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
                     // if the value is in the core region
                     if (value >= m_predRow.getMemship(i).getMinCore()) {
                         // gets the loss in the core region
-                        double loss = m_shrink.leftCoreLoss(value, m_predRow
-                                .getMemship(i));
+                        double loss = Shrink.SHRINKS[m_shrink].
+                            leftCoreLoss(value, m_predRow.getMemship(i));
                         assert (0.0 <= loss && loss <= 1.0) : loss;
                         // if the new loss is less than the current
                         if (loss < coreLoss) {
@@ -246,8 +246,8 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
                     } else { // if value is not in the core
                         if (value >= m_predRow.getMemship(i).getMinSupport()) {
                             // gets loss in the support region
-                            double loss = m_shrink.leftSuppLoss(value,
-                                    m_predRow.getMemship(i));
+                            double loss = Shrink.SHRINKS[m_shrink].
+                                leftSuppLoss(value, m_predRow.getMemship(i));
                             assert (0 <= loss && loss <= 1.0) : loss;
                             // if new value less that the current value
                             if (loss < suppLoss) {
@@ -270,8 +270,8 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
                         // if the value is in the core region
                         if (value <= m_predRow.getMemship(i).getMaxCore()) {
                             // gets loss value
-                            double loss = m_shrink.rightCoreLoss(value,
-                                    m_predRow.getMemship(i));
+                            double loss = Shrink.SHRINKS[m_shrink].
+                                rightCoreLoss(value, m_predRow.getMemship(i));
                             assert (0.0 <= loss && loss <= 1.0) : loss;
                             // if the new loss is less than the current one
                             if (loss < coreLoss) {
@@ -281,8 +281,9 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
                         } else { // if value is not in core region,
                             if (value <= m_predRow.getMemship(i)
                                     .getMaxSupport()) {
-                                double loss = m_shrink.rightSuppLoss(value,
-                                        m_predRow.getMemship(i));
+                                double loss = Shrink.SHRINKS[m_shrink].
+                                    rightSuppLoss(value, 
+                                            m_predRow.getMemship(i));
                                 assert (0.0 <= loss && loss <= 1.0) : loss;
                                 // if new loss is less than current
                                 if (loss < suppLoss) {
@@ -444,10 +445,12 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
             if (spread > 0.0) {
                 if (vol == 0.0) {
                     vol = spread;
-                    dom = (mem.getMax() - mem.getMin());
+                    dom = (mem.getMax().doubleValue() 
+                            - mem.getMin().doubleValue());
                 } else {
                     vol *= spread;
-                    dom *= (mem.getMax() - mem.getMin());
+                    dom *= (mem.getMax().doubleValue() 
+                            - mem.getMin().doubleValue());
                 }
             }
         }
@@ -506,4 +509,10 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         return m_predRow.computeActivation(row);
     }
 
+    /**
+     * @return shrink method
+     */
+    public final int getShrink() {
+        return m_shrink;
+    }
 }
