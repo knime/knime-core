@@ -124,6 +124,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
         } else if (index == nrCells) {
             return getClassLabel();
         } else if (index == nrCells + 1) {
+            assert m_coveredPattern.size() > 0;
             return new IntCell(m_coveredPattern.size());
         } else if (index == nrCells + 2) {
             return new DoubleCell(computeSpread());
@@ -147,7 +148,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @param index cell for index
      * @return a basis function cell
      */
-    protected abstract DataCell getFinalCell(final int index);
+    public abstract DataCell getFinalCell(final int index);
 
     /**
      * @param col the column index
@@ -167,7 +168,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @throws NullPointerException if the given <code>other</code> basis
      *             function is <code>null</code>
      */
-    protected abstract boolean compareCoverage(final BasisFunctionLearnerRow o,
+    public abstract boolean compareCoverage(final BasisFunctionLearnerRow o,
             final DataRow r);
 
     /**
@@ -381,7 +382,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @param row to check coverage
      * @return <code>true</code> if covered, otherwise <code>false</code>
      */
-    protected abstract boolean covers(final DataRow row);
+    public abstract boolean covers(final DataRow row);
 
     /**
      * Returns <code>true</code> if the input row is explained by this row,
@@ -391,7 +392,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @param row to check coverage
      * @return <code>true</code> if explained, otherwise <code>false</code>
      */
-    protected abstract boolean explains(final DataRow row);
+    public abstract boolean explains(final DataRow row);
 
     /**
      * Called if a new row has to be adjusted.
@@ -400,7 +401,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @return a value greater zero if a conflict has to be solved. The value
      *         indicates relative loss in coverage for this basis function.
      */
-    protected abstract boolean getShrinkValue(final DataRow row);
+    public abstract boolean getShrinkValue(final DataRow row);
 
     /**
      * Called if a new row has to be adjusted, all conflicting rows are
@@ -410,20 +411,20 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @return <code>true</code> if this basis function was effected by any
      *         change, otherwise <code>false</code>
      */
-    protected abstract boolean shrink(final DataRow row);
+    public abstract boolean shrink(final DataRow row);
 
     /**
      * Called if the algorithms starts a new run overall input pattern; some
      * variables might need to be reset.
      */
-    protected abstract void reset();
+    public abstract void reset();
 
     /**
      * Called if a row covers a new <code>DataRow</code>.
      * 
      * @param row the new covered <code>DataRow</code>
      */
-    protected abstract void cover(final DataRow row);
+    public abstract void cover(final DataRow row);
 
     /**
      * Check if two BasisFunctionLearnerRow objects are equal by its centroid.

@@ -609,4 +609,12 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     public final int getDistance() {
         return m_distance;
     }
+    
+    /**
+     * @return maximum number of epochs to train
+     */
+    public final int getMaxNrEpochs() {
+        return m_maxEpochs;
+    }
+    
 }

@@ -117,7 +117,7 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @see #computeActivation(DataRow)
      */
     @Override
-    protected boolean covers(final DataRow row) {
+    public boolean covers(final DataRow row) {
         assert (m_predRow.getNrMemships() == row.getNumCells());
         return (computeActivation(row) > m_predRow.getDontKnowClassDegree());
     }
@@ -133,7 +133,7 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @see #computeActivation(DataRow)
      */
     @Override
-    protected boolean explains(final DataRow row) {
+    public boolean explains(final DataRow row) {
         assert (m_predRow.getNrMemships() == row.getNumCells());
         return (computeActivation(row) == 1.0);
     }
@@ -179,7 +179,8 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      *         indicates relative loss in coverage for this basis function.
      */
     @Override
-    protected final boolean getShrinkValue(final DataRow row) {
+    public
+    final boolean getShrinkValue(final DataRow row) {
         return shrinkIt(row, false) > 0.0;
     }
 
@@ -193,7 +194,8 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @return <code>true</code> if a dimension was effect by this operation
      */
     @Override
-    protected final boolean shrink(final DataRow row) {
+    public
+    final boolean shrink(final DataRow row) {
         return shrinkIt(row, true) > 1E-10;
     }
 
@@ -370,7 +372,7 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * Resets core value of all dimensions to the initial anchor value.
      */
     @Override
-    protected void reset() {
+    public void reset() {
         for (int i = 0; i < m_predRow.getNrMemships(); i++) {
             if (!m_predRow.getMemship(i).isMissingIntern()) {
                 m_predRow.getMemship(i).resetCore();
@@ -384,7 +386,7 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @param row the row to cover
      */
     @Override
-    protected void cover(final DataRow row) {
+    public void cover(final DataRow row) {
         assert (m_predRow.getNrMemships() == row.getNumCells());
         // overall data cells in the vector
         for (int i = 0; i < m_predRow.getNrMemships(); i++) {
@@ -424,7 +426,7 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @throws NullPointerException if one of the args in <code>null</code>
      */
     @Override
-    protected boolean compareCoverage(final BasisFunctionLearnerRow o,
+    public boolean compareCoverage(final BasisFunctionLearnerRow o,
             final DataRow r) {
         return m_predRow.getNumAllCoveredPattern() > o.getPredictorRow()
                 .getNumAllCoveredPattern();
@@ -497,7 +499,7 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * {@inheritDoc}
      */
     @Override
-    protected DataCell getFinalCell(final int index) {
+    public DataCell getFinalCell(final int index) {
         return m_predRow.getMemship(index).createFuzzyIntervalCell();
     }
 

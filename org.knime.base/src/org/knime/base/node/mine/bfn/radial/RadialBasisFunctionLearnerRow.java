@@ -115,7 +115,8 @@ public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @see #computeActivation(DataRow)
      */
     @Override
-    protected final boolean covers(final DataRow row) {
+    public
+    final boolean covers(final DataRow row) {
         if (m_predRow.isNotShrunk()) {
             return true;
         }
@@ -137,7 +138,8 @@ public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @see #computeActivation(DataRow)
      */
     @Override
-    protected final boolean explains(final DataRow row) {
+    public
+    final boolean explains(final DataRow row) {
         if (m_predRow.isNotShrunk()) {
             return true;
         }
@@ -202,7 +204,8 @@ public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      *             {@link RadialBasisFunctionLearnerRow}
      */
     @Override
-    protected final boolean compareCoverage(
+    public
+    final boolean compareCoverage(
             final BasisFunctionLearnerRow best, final DataRow row) {
         RadialBasisFunctionLearnerRow rbf 
             = (RadialBasisFunctionLearnerRow) best;
@@ -217,7 +220,8 @@ public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      *         indicates relative loss in coverage for this basisfunction.
      */
     @Override
-    protected final boolean getShrinkValue(final DataRow row) {
+    public
+    final boolean getShrinkValue(final DataRow row) {
         return shrinkIt(row, false);
     }
 
@@ -233,7 +237,8 @@ public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      *         other wise this function return <code>false</code>
      */
     @Override
-    protected final boolean shrink(final DataRow row) {
+    public
+    final boolean shrink(final DataRow row) {
         return shrinkIt(row, true);
     }
 
@@ -271,7 +276,8 @@ public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * Method is empty.
      */
     @Override
-    protected final void reset() {
+    public
+    final void reset() {
         // empty
     }
 
@@ -281,7 +287,8 @@ public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @param row Ignored.
      */
     @Override
-    protected final void cover(final DataRow row) {
+    public
+    final void cover(final DataRow row) {
 
     }
 
@@ -297,7 +304,7 @@ public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * {@inheritDoc}
      */
     @Override
-    protected DataCell getFinalCell(final int index) {
+    public DataCell getFinalCell(final int index) {
         return super.getAnchor().getCell(index);
     }
 
