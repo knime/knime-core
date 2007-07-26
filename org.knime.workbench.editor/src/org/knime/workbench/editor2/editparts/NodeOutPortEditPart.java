@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
-import org.eclipse.draw2d.MouseEvent;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.figures.NewToolTipFigure;
@@ -89,19 +88,6 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
             }
         }
         ((NewToolTipFigure)getFigure().getToolTip()).setText(sb.toString());
-    }
-
-    /**
-     * Opens the outport table on double click.
-     * 
-     * @see org.knime.workbench.editor2.editparts.KnimeAbstractPart#
-     *      doubleClick(org.eclipse.draw2d.MouseEvent)
-     */
-    public void doubleClick(final MouseEvent me) {
-
-        ((NodeContainerEditPart)getParent()).getNodeContainer().openPortView(
-                getId());
-
     }
 
     /**

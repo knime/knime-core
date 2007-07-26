@@ -30,6 +30,7 @@ import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.NodeEditPart;
 import org.eclipse.gef.Request;
+import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
 import org.eclipse.gef.requests.SelectionRequest;
 import org.eclipse.gef.tools.ConnectionDragCreationTool;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -51,7 +52,7 @@ import org.knime.workbench.editor2.figures.AbstractNodePortFigure;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public abstract class AbstractPortEditPart extends KnimeAbstractPart
+public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
         implements NodeEditPart, WorkflowListener {
 
     private int m_id;
