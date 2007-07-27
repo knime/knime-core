@@ -129,9 +129,7 @@ public class BasisFunctionPredictorNodeDialog extends NodeDialogPane {
                 m_dontKnow.setEnabled(true);
             }
         });
-
-        // add fuzzy learner tab
-        super.addTab("Applied column", p);
+        super.addTab("Winner Column", p);
     }
     
     private void selectionChanged() {
