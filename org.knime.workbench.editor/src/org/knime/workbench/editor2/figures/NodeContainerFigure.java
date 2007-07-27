@@ -572,7 +572,6 @@ public class NodeContainerFigure extends RectangleFigure {
                         + m_infoWarnErrorPanel.getPreferredSize().height
                         + m_statusFigure.getPreferredSize().height
                         + m_name.getPreferredSize().height + 8;
-        System.out.println("Width: " + prefWidth + " Height: " + prefHeight);
         return new Dimension(prefWidth, prefHeight);
     }
 
@@ -920,8 +919,7 @@ public class NodeContainerFigure extends RectangleFigure {
             }
 
             
-            getParent().getParent().validate();
-            getParent().getParent().repaint();
+            repaint();
         }
 
         /**
