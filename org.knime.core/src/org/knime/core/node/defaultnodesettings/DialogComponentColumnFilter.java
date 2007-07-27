@@ -183,7 +183,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateStettingsBeforeSave()
+    protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
         // just in case we didn't get notified about the last change...
         updateModel();

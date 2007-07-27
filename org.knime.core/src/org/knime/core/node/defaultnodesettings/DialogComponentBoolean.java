@@ -95,7 +95,7 @@ public final class DialogComponentBoolean extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateStettingsBeforeSave()
+    protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
         // nothing to do.
     }

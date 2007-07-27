@@ -173,7 +173,7 @@ public abstract class DialogComponent {
             throws InvalidSettingsException {
 
         try {
-            validateStettingsBeforeSave();
+            validateSettingsBeforeSave();
         } catch (InvalidSettingsException ise) {
             if (m_model.isEnabled()) {
                 // forward the exception only if the component is enabled.
@@ -197,7 +197,7 @@ public abstract class DialogComponent {
      * 
      * @throws InvalidSettingsException if the entered values are invalid
      */
-    protected abstract void validateStettingsBeforeSave()
+    protected abstract void validateSettingsBeforeSave()
             throws InvalidSettingsException;
 
     /**

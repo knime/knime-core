@@ -298,7 +298,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateStettingsBeforeSave()
+    protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
         // just in case we didn't get notified about the last selection ...
         updateModel();

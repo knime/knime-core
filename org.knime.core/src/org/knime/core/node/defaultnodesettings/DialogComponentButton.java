@@ -121,7 +121,7 @@ public class DialogComponentButton extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateStettingsBeforeSave()
+    protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
         // Nothing to do ...
     }

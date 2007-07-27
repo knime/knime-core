@@ -385,7 +385,7 @@ public class DialogComponentButtonGroup extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateStettingsBeforeSave() {
+    protected void validateSettingsBeforeSave() {
         updateModel();
     }
 }
