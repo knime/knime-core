@@ -477,14 +477,14 @@ public class NodeContainerFigure extends RectangleFigure {
 
         switch (state) {
         case STATE_NOT_CONFIGURED:
-            m_heading.setFont(FONT_NORMAL);
-            m_heading.setEnabled(false);
+//            m_heading.setFont(FONT_NORMAL);
+//            m_heading.setEnabled(false);
             setStatusAmple();
             m_statusFigure.setIcon(RED);
             break;
         case STATE_READY:
-            m_heading.setFont(FONT_NORMAL);
-            m_heading.setEnabled(true);
+//            m_heading.setFont(FONT_NORMAL);
+//            m_heading.setEnabled(true);
 
             setStatusAmple();
             m_statusFigure.setIcon(YELLOW);
@@ -497,7 +497,7 @@ public class NodeContainerFigure extends RectangleFigure {
         // break;
         case STATE_EXECUTING:
             // m_heading.setFont(FONT_EXECUTING);
-            m_heading.setEnabled(true);
+           // m_heading.setEnabled(true);
 
             setProgressBar(true);
             // m_heading.setFont(FONT_EXECUTING);
@@ -505,32 +505,32 @@ public class NodeContainerFigure extends RectangleFigure {
             break;
         case STATE_QUEUED:
             // m_heading.setFont(FONT_NORMAL);
-            m_heading.setEnabled(true);
+           // m_heading.setEnabled(true);
 
             setProgressBar(false);
             break;
         case STATE_EXECUTED:
             // m_heading.setFont(FONT_EXECUTED);
-            m_heading.setEnabled(true);
+           // m_heading.setEnabled(true);
 
             setStatusAmple();
             m_statusFigure.setIcon(GREEN);
             break;
         case STATE_WARNING:
             // m_heading.setFont(FONT_NORMAL);
-            m_heading.setEnabled(true);
+           // m_heading.setEnabled(true);
             m_infoWarnErrorPanel.setWarning(message);
             // m_contentFigure.setWarning(message, WarnErrorToolTip.WARNING);
             break;
         case STATE_ERROR:
             // m_heading.setFont(FONT_NORMAL);
-            m_heading.setEnabled(true);
+          //  m_heading.setEnabled(true);
             m_infoWarnErrorPanel.setError(message);
             // m_contentFigure.setWarning(message, WarnErrorToolTip.ERROR);
             break;
         default:
             // m_heading.setFont(FONT_NORMAL);
-            m_heading.setEnabled(false);
+           // m_heading.setEnabled(false);
 
             setStatusAmple();
             m_statusFigure.setIcon(RED);
@@ -572,6 +572,7 @@ public class NodeContainerFigure extends RectangleFigure {
                         + m_infoWarnErrorPanel.getPreferredSize().height
                         + m_statusFigure.getPreferredSize().height
                         + m_name.getPreferredSize().height + 8;
+        System.out.println("Width: " + prefWidth + " Height: " + prefHeight);
         return new Dimension(prefWidth, prefHeight);
     }
 
@@ -918,7 +919,9 @@ public class NodeContainerFigure extends RectangleFigure {
                         WarnErrorToolTip.WARNING);
             }
 
-            repaint();
+            
+            getParent().getParent().validate();
+            getParent().getParent().repaint();
         }
 
         /**
