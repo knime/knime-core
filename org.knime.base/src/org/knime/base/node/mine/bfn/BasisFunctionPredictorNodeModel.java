@@ -75,7 +75,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
+    public BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
         // data spec
         final DataTableSpec dataSpec = data[0].getDataTableSpec();
@@ -92,7 +92,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadModelContent(final int index,
+    public void loadModelContent(final int index,
             final ModelContentRO predParams) throws InvalidSettingsException {
         assert index == 0;
         if (predParams != null) {
@@ -133,12 +133,12 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
     /**
      * @return <code>true</code> if normalization is required for output
      */
-    protected abstract boolean normalizeClassification();
+    public abstract boolean normalizeClassification();
 
     /**
      * @return the <i>don't know</i> class probability between 0.0 and 1.0
      */
-    protected double getDontKnowClassDegree() {
+    public double getDontKnowClassDegree() {
         return m_dontKnow;
     }
 
@@ -146,7 +146,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    public DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         if (m_bfs.size() == 0) {
             throw new InvalidSettingsException("No rules available!");
@@ -213,7 +213,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      * Resets the translator.
      */
     @Override
-    protected final void reset() {
+    public final void reset() {
         // remove list of basisfunctions
         m_bfs.clear();
         // clear model spec
@@ -224,7 +224,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+    public void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // prediction column name
         m_applyColumn = settings
@@ -240,7 +240,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
+    public void saveSettingsTo(final NodeSettingsWO settings) {
         // prediction column name
         settings.addString(BasisFunctionPredictorNodeDialog.APPLY_COLUMN,
                 m_applyColumn);
@@ -256,7 +256,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
+    public void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         StringBuffer sb = new StringBuffer();
         // prediction column name
@@ -291,7 +291,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      *      #loadInternals(java.io.File,ExecutionMonitor)
      */
     @Override
-    protected void loadInternals(final File internDir,
+    public void loadInternals(final File internDir,
             final ExecutionMonitor exec) {
 
     }
@@ -305,7 +305,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      *      #saveInternals(java.io.File,ExecutionMonitor)
      */
     @Override
-    protected void saveInternals(final File internDir,
+    public void saveInternals(final File internDir,
             final ExecutionMonitor exec) {
 
     }

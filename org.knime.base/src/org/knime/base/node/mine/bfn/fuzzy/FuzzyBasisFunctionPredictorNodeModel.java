@@ -50,7 +50,7 @@ public class FuzzyBasisFunctionPredictorNodeModel extends
      * {@inheritDoc}
      */
     @Override
-    protected boolean normalizeClassification() {
+    public boolean normalizeClassification() {
          return false;
     }
 }

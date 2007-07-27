@@ -165,6 +165,10 @@ public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
                 == rbf.getAnchor().getNumCells());
         double overlap = 1.0;
         for (int i = 0; i < this.getAnchor().getNumCells(); i++) {
+            if (this.getAnchor().getCell(i).isMissing()
+                    || rbf.getAnchor().getCell(i).isMissing()) {
+                continue;
+            }
             double a = ((DoubleValue)this.getAnchor().getCell(i))
                     .getDoubleValue();
             double b = ((DoubleValue)rbf.getAnchor().getCell(i))

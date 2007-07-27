@@ -114,7 +114,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * {@inheritDoc}
      */
     @Override
-    protected void save(final ModelContentWO pp) {
+    public void save(final ModelContentWO pp) {
         super.save(pp);
         pp.addInt(Norm.NORM_KEY, m_norm);
         ModelContentWO memParams = pp.addModelContent("membership_functions");

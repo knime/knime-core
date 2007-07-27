@@ -50,7 +50,7 @@ public class RadialBasisFunctionPredictorNodeModel extends
      * {@inheritDoc}
      */
     @Override
-    protected boolean normalizeClassification() {
+    public boolean normalizeClassification() {
          return true;
     }
 }

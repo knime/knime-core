@@ -209,7 +209,7 @@ public abstract class BasisFunctionPredictorRow {
      * 
      * @param pp the model content to save this row to
      */
-    protected void save(final ModelContentWO pp) {
+    public void save(final ModelContentWO pp) {
         pp.addDataCell("row_id", m_key);
         pp.addDataCell("class_label", m_classLabel);
         pp.addDouble("dont_know_class", m_dontKnowDegree);
