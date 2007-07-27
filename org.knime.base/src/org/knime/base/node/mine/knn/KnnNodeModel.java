@@ -224,6 +224,14 @@ public class KnnNodeModel extends NodeModel {
         exec.setMessage("Building kd-tree");
         KDTree<DataCell> tree =
                 treeBuilder.buildTree(exec.createSubProgress(0.3));
+        
+        if (tree.size() < m_settings.k()) {
+            throw new InvalidSettingsException("There are only " + tree.size()
+                    + " patterns in the input table, but " + m_settings.k()
+                    + " nearest neighbours were requested for classification. "
+                    + "Please select at most " + tree.size() + " neighbours.");
+        }
+        
         exec.setMessage("Classifying");
         ColumnRearranger c =
                 createRearranger(inSpec, classColumnSpec, featureColumns,

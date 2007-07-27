@@ -84,7 +84,11 @@ public class KDTree<T> {
             throw new IllegalArgumentException(
                     "The query vector has not length " + m_k);
         }
-
+        if (k > m_size) {
+            throw new IllegalArgumentException("The tree contains only "
+                    + m_size + " elements, but " + k + " were requested");
+        }
+        
         PriorityQueue<NearestNeighbour<T>> pq =
                 new PriorityQueue<NearestNeighbour<T>>(k);
         for (int i = 0; i < k; i++) {
