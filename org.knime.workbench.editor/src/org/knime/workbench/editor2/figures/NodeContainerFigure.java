@@ -571,7 +571,7 @@ public class NodeContainerFigure extends RectangleFigure {
                         + m_contentFigure.getPreferredSize().height
                         + m_infoWarnErrorPanel.getPreferredSize().height
                         + m_statusFigure.getPreferredSize().height
-                        + m_name.getPreferredSize().height + 8;
+                        + m_name.getPreferredSize().height + 20;
         return new Dimension(prefWidth, prefHeight);
     }
 
