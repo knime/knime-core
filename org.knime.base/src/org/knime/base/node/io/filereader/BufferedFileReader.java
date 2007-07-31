@@ -445,6 +445,9 @@ public final class BufferedFileReader extends BufferedReader {
             } catch (IOException ioe) {
                 // the exception will fly if the specified file is not a zip
                 // file. Keep regular stream then.
+                sourceStream =
+                    new ByteCountingStream(dataLocation.openStream());
+                readerStream = new InputStreamReader(sourceStream);
             }
         }
 
