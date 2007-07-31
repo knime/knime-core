@@ -98,7 +98,7 @@ public abstract class DialogComponent {
     /**
      * @return the Settings model associated with this component.
      */
-    protected final SettingsModel getModel() {
+    public final SettingsModel getModel() {
         return m_model;
     }
 
