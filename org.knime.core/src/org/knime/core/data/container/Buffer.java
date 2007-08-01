@@ -71,6 +71,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.MutableInteger;
 
 /**
  * A buffer writes the rows from a {@link DataContainer} to a file. 
@@ -429,6 +430,7 @@ class Buffer {
             if (m_list.size() > m_maxRowsInMem) {
                 ensureTempFileExists();
                 if (m_outStream == null) {
+                    Buffer.onFileCreated();
                     m_outStream = initOutFile(new BufferedOutputStream(
                             new FileOutputStream(m_binFile)));
                 }
@@ -971,6 +973,7 @@ class Buffer {
                 return;
             }
         }
+        Buffer.onFileCreated();
         OutputStream out = 
             new BufferedOutputStream(new FileOutputStream(outFile));
         if (isToCompress) {
@@ -1127,12 +1130,17 @@ class Buffer {
         StringBuffer childPath = new StringBuffer();
         childPath.append("col_" + column);
         childPath.append(File.separatorChar);
-        String topDir = getFileName(indexBlobInCol 
-                / (BLOB_ENTRIES_PER_DIRECTORY * BLOB_ENTRIES_PER_DIRECTORY));
+        // the index of the folder in knime_container_xyz/col_0/
+        int topFolderIndex = indexBlobInCol 
+            / (BLOB_ENTRIES_PER_DIRECTORY * BLOB_ENTRIES_PER_DIRECTORY);
+        String topDir = getFileName(topFolderIndex);
         childPath.append(topDir);
         childPath.append(File.separatorChar);
-        String subDir = getFileName(
-                indexBlobInCol / BLOB_ENTRIES_PER_DIRECTORY);
+        // the index of the folder in knime_container_xyz/col_0/topFolderIndex
+        int subFolderIndex = (indexBlobInCol - (topFolderIndex
+                * BLOB_ENTRIES_PER_DIRECTORY * BLOB_ENTRIES_PER_DIRECTORY))
+                / BLOB_ENTRIES_PER_DIRECTORY;
+        String subDir = getFileName(subFolderIndex);
         childPath.append(subDir);
         if (createPath) {
             ensureBlobDirExists();
@@ -1334,6 +1342,29 @@ class Buffer {
         }
         m_binFile = null;
         m_blobDir = null;
+    }
+    
+    private static final int MAX_FILES_TO_CREATE_BEFORE_GC = 10000;
+    private static final MutableInteger FILES_CREATED_COUNTER = 
+        new MutableInteger(0);
+    
+    /** Method being called each time a file is created. It maintains a counter
+     * and calls each {@link #MAX_FILES_TO_CREATE_BEFORE_GC} files the garbage 
+     * collector. This fixes an unreported problem on windows, where (although 
+     * the file reference is null) there seems to be a hidden file lock, 
+     * which yields a "not enough system resources to perform operation" error.
+     */
+    private static void onFileCreated() {
+        synchronized (FILES_CREATED_COUNTER) {
+            FILES_CREATED_COUNTER.inc();
+            if (FILES_CREATED_COUNTER.intValue() 
+                    % MAX_FILES_TO_CREATE_BEFORE_GC == 0) {
+                LOGGER.debug("created " + FILES_CREATED_COUNTER.intValue()
+                        + " files, performing garbage collection to"
+                        + " release handles");
+                System.gc();
+            }
+        }
     }
     
     /** Print a debug message. This method does nothing if 
