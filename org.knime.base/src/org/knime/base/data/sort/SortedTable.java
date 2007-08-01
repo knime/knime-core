@@ -76,7 +76,7 @@ public class SortedTable implements DataTable {
     /**
      * The RowComparator to compare two DataRows (inner class).
      */
-    private final RowComparator m_rowComparator = new RowComparator();
+    private final Comparator<DataRow> m_rowComparator;
 
     /**
      * Array containing information about the sort order for each column. true:
@@ -84,6 +84,30 @@ public class SortedTable implements DataTable {
      */
     private boolean[] m_sortAscending;
 
+    /**
+     * Creates a new sorted table. Sorting is done with the given comparator.
+     * 
+     * @param dataTable any data table
+     * @param rowComparator the comparator that should be used for sorting
+     * @param sortInMemory <code>true</code> if sorting should be done in
+     *            memory, <code>false</code> if sorting should be done on disk
+     * @param exec an execution context for reporting progress and creating
+     *            temporary table files
+     * @throws CanceledExecutionException if the user canceled execution
+     */
+    public SortedTable(final BufferedDataTable dataTable,
+            final Comparator<DataRow> rowComparator,
+            final boolean sortInMemory, final ExecutionContext exec)
+            throws CanceledExecutionException {
+        m_rowComparator = rowComparator;
+        m_spec = dataTable.getDataTableSpec();
+        if (sortInMemory) {
+            sortInMemory(dataTable, exec);
+        } else {
+            sortOnDisk(dataTable, exec);
+        }
+    }
+    
     /**
      * Creates a sorted table from the given table and the sorting parameters.
      * The table is sorted in the constructor.
@@ -134,7 +158,7 @@ public class SortedTable implements DataTable {
             final List<String> inclList, final boolean[] sortAscending,
             final boolean sortInMemory, final ExecutionContext exec)
             throws Exception {
-
+        m_rowComparator = new RowComparator();
         m_spec = dataTable.getDataTableSpec();
         // get the column indices of the columns that will be sorted
         // also make sure that m_inclList and m_sortOrder both exist
