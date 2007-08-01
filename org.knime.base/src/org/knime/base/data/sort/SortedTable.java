@@ -37,7 +37,6 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -179,11 +178,8 @@ public class SortedTable implements DataTable {
         long time = System.currentTimeMillis();
         int i = 0;
         for (DataRow r : dataTable) {
-            // exec.checkCanceled();
-            if (i % 1000 == 0) {
-                exec.checkCanceled();
-                exec.setProgress(progress / max);
-            }
+            exec.checkCanceled();
+            exec.setProgress(progress / max);
             rows[i++] = r;
             progress++;
         }
@@ -200,10 +196,8 @@ public class SortedTable implements DataTable {
                 exec.createDataContainer(dataTable.getDataTableSpec());
         time = System.currentTimeMillis();
         for (i = 0; i < rows.length; i++) {
-            if (i % 1000 == 0) {
-                exec.checkCanceled();
-                exec.setProgress(progress / max);
-            }
+            exec.checkCanceled();
+            exec.setProgress(progress / max);
             dc.addRowToTable(rows[i]);
             progress++;
         }
@@ -215,8 +209,8 @@ public class SortedTable implements DataTable {
 
     private void sortOnDisk(final BufferedDataTable dataTable,
             final ExecutionContext exec) throws CanceledExecutionException {
-        ArrayList<DataContainer> containerVector =
-                new ArrayList<DataContainer>();
+        ArrayList<BufferedDataContainer> containerVector =
+                new ArrayList<BufferedDataContainer>();
         // Initialise RowIterator
         RowIterator rowIt = dataTable.iterator();
         int nrRows = dataTable.getRowCount();
@@ -225,7 +219,8 @@ public class SortedTable implements DataTable {
         int nrContainerRows = CONTAINERSIZE / m_spec.getNumColumns();
         // wrap all DataRows in Containers of size containerSize
         // sort each container before it is'stored'.
-        DataContainer newContainer = new DataContainer(m_spec, false, 100);
+        BufferedDataContainer newContainer = 
+            exec.createDataContainer(m_spec, false);
         int nrRowsinContainer = 0;
         // TODO: can be omitted due to new buffered table with known row size
         ArrayList<DataRow> containerrowlist = new ArrayList<DataRow>();
@@ -237,7 +232,7 @@ public class SortedTable implements DataTable {
                     "Reading in data-chunk " + chunkCounter + "...");
             exec.checkCanceled();
             if (newContainer.isClosed()) {
-                newContainer = new DataContainer(m_spec, false, 100);
+                newContainer = exec.createDataContainer(m_spec, false);
                 nrRowsinContainer = 0;
             }
             DataRow row = rowIt.next();
@@ -286,7 +281,7 @@ public class SortedTable implements DataTable {
 
         // Initialise both arrays
         for (int c = 0; c < containerVector.size(); c++) {
-            DataContainer tempContainer = containerVector.get(c);
+            BufferedDataContainer tempContainer = containerVector.get(c);
             DataTable tempTable = tempContainer.getTable();
             currentRowIterators[c] = tempTable.iterator();
         }
