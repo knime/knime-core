@@ -469,12 +469,15 @@ public final class NodeLogger {
     public void error(final Object o, final Throwable t) {
         if (isIgnoreLoadDataWarning 
                 && m_logger.getName().equals(WorkflowManager.class.getName())
-                && t != null 
+                && t != null && t.getMessage() != null
                 && t.getMessage().startsWith("No such data file: ")) {
             debug(o, t);
         } else {
             this.error(o);
-            this.error(t.getMessage());
+            String message = t.getMessage();
+            if (message != null && message.trim().length() > 0) {
+                this.error(message);
+            }
             this.debug(o, t);
         }
     }
@@ -504,7 +507,12 @@ public final class NodeLogger {
     public void assertLog(final boolean b, final String m,
             final AssertionError e) {
         if (ASSERT) {
-            m_logger.assertLog(b, "ASSERT " + m + " " + e.getMessage());
+            String message = e.getMessage();
+            if (message != null && message.trim().length() > 0) {
+                m_logger.assertLog(b, "ASSERT " + m + " " + message);
+            } else {
+                m_logger.assertLog(b, "ASSERT " + m);
+            }
             m_logger.debug("ASSERT\t " + m, e);
         } else {
             // assertions are off, but write to knime.log anyway
@@ -530,7 +538,10 @@ public final class NodeLogger {
      */
     public void coding(final Object o, final Throwable t) {
         this.coding(o);
-        this.coding(t.getMessage());
+        String message = t.getMessage();
+        if (message != null && message.trim().length() > 0) {
+            this.coding(message);
+        }
         this.debug(o, t);
     }
 
@@ -542,7 +553,10 @@ public final class NodeLogger {
      */
     public void fatal(final Object o, final Throwable t) {
         this.fatal(o);
-        this.fatal(t.getMessage());
+        String message = t.getMessage();
+        if (message != null && message.trim().length() > 0) {
+            this.fatal(message);
+        }
         this.debug(o, t);
     }
 
