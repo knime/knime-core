@@ -5,6 +5,9 @@
 	<html>
 	<head>
 		<title>Node description for <xsl:value-of select="name" /></title>
+        <style type="text/css">
+            tt,pre { font-family: Courier New, Courier, Arial, Helvetica; }
+        </style>
 	</head>
 	<body style="font-family: Tahoma, Arial, Helvetica; font-size: 80%;">
 		<h2 align="center"><xsl:value-of select="name" /></h2>
@@ -95,7 +98,7 @@
 	<xsl:apply-templates select="node()" /> (<span style="font-style: italic;"><xsl:value-of select="@href" />)</span>
 </xsl:template>
 	
-	
+    
 <xsl:template match="@*|node()" priority="-1" mode="copy">
         <xsl:copy><xsl:apply-templates select="@*|node()" mode="copy" /></xsl:copy>
 </xsl:template>
