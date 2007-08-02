@@ -585,15 +585,21 @@ public abstract class NodeModel {
      * views about the changes.
      */
     final void resetModel() {
-        // reset in derived model
-        reset();
-        // set state to not executed and not configured
-        m_executed = false;
-        m_configured = false;
-        // reset these property handlers
-        resetHiLiteHandlers();
-        // and notify all views
-        stateChanged();
+        try {
+            // reset in derived model
+            reset();
+        } catch (Throwable t) {
+            String name = t.getClass().getSimpleName();
+            m_logger.coding("Reset failed due to a " + name, t);
+        } finally {
+            // set state to not executed and not configured
+            m_executed = false;
+            m_configured = false;
+            // reset these property handlers
+            resetHiLiteHandlers();
+            // and notify all views
+            stateChanged();
+        }
     }
 
     /**
