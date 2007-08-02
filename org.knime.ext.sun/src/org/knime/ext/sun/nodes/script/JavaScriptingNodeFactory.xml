@@ -9,8 +9,8 @@
 				This node allows you to execute arbitrary java code to create
 				a new column or to replace an existing one. Enter the java code in 
 				the text area. To address certain input values of the table 
-				use <tt>$name_of_col$</tt>. For instance, the sum of the first two 
-				columns is <tt>$col_1$ + $col_2$</tt> (replace col_1 and col_2 by the 
+				use <code>$name_of_col$</code>. For instance, the sum of the first two 
+				columns is <code>$col_1$ + $col_2$</code> (replace col_1 and col_2 by the 
 				name of the columns). Please also specify the return type with one 
 				of the radio buttons. The final value will be the result of your
 		        last statement (<b>after</b> last ';'). You can also use more complex 
@@ -33,13 +33,13 @@
   bin 
 </pre>
              <p>
-               It is advisable to use a designated return variable (<tt>bin</tt> in the example) that
+               It is advisable to use a designated return variable (<code>bin</code> in the example) that
                gets assigned the actual return value. Note also that the last closing '}' character is followed
                by an explicit ';'!
              </p>
 		     <p>
 		        You can also use static methods of java utility classes, e.g. to get a 
-		        column with random values, simply enter <tt>Math.random()</tt> and 
+		        column with random values, simply enter <code>Math.random()</code> and 
 		        check the double return type.
 	        </p>
 		</intro>
@@ -50,9 +50,9 @@
 		  for instance loops, enter a (potentially unnecessary) '<b>;</b>' 
 		  right before the return statement. You can add the name of a column 
 		  by clicking its name in the left list. Note that numeric 
-		  (double-compatible) columns will be handled as generic <tt>double</tt>,
-		  int-compatible columns as <tt>int</tt> and any other column type as 
-		  <tt>String</tt>.
+		  (double-compatible) columns will be handled as generic <code>double</code>,
+		  int-compatible columns as <code>int</code> and any other column type as 
+		  <code>String</code>.
 		</option>
 		<option name="Return type">
 		  Specify here the resulting type of your code snippet. Unfortunately
