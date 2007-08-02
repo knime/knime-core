@@ -24,6 +24,7 @@ package org.knime.core.node.workflow;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.knime.core.data.def.DoubleCell;
@@ -50,7 +51,7 @@ public final class BatchExecutor {
             NodeLogger.getLogger(BatchExecutor.class);
 
     private static class Option {
-        private final int m_nodeID;
+        private final int[] m_nodeIDs;
 
         private final String m_name;
 
@@ -59,14 +60,14 @@ public final class BatchExecutor {
         private final String m_type;
         /**
          * Create new <code>Option</code>.
-         * @param nodeID node ID
+         * @param nodeIDs node IDs, mostly one element, more for nested flows
          * @param name name
          * @param value value
          * @param type type
          */
-        Option(final int nodeID, final String name, final String value,
+        Option(final int[] nodeIDs, final String name, final String value,
                 final String type) {
-            m_nodeID = nodeID;
+            m_nodeIDs = nodeIDs;
             m_name = name;
             m_value = value;
             m_type = type;
@@ -91,6 +92,8 @@ public final class BatchExecutor {
             + "             or any of \"StringCell\", \"DoubleCell\" or \"IntCell\".\n"
             + "             If 'name' addresses a nested element (for instance \"rowFilter\" ->\n"
             + "             \"ColValRowFilterUpperBound\"), the entire path must be given, separated by \"/\".\n"
+            + "             If the node is part of a meta node, provide also the node ids of the parent node(s),\n"
+            + "             e.g. 90/56.\n"
             + "\n"
             + "Some KNIME settings can also be adjusted by Java properties:\n"
             + " -Dorg.knime.core.maxThreads=n => sets the maximum number of threads used by KNIME\n");
@@ -164,12 +167,16 @@ public final class BatchExecutor {
                 output = new File(parts[1]);
             } else if ("-option".equals(parts[0])) {
                 String[] parts2 = parts[1].split("\\,");
-                int nodeID = Integer.parseInt(parts2[0]);
+                String[] nodeIDPath = parts2[0].split("/");
+                int[] nodeIDs = new int[nodeIDPath.length];
+                for (int i = 0; i < nodeIDs.length; i++) {
+                    nodeIDs[i] = Integer.parseInt(nodeIDPath[i]);
+                }
                 String optionName = parts2[1];
                 String value = parts2[2];
                 String type = parts2[3];
 
-                options.add(new Option(nodeID, optionName, value, type));
+                options.add(new Option(nodeIDs, optionName, value, type));
             } else {
                 System.err.println("Unknown option '" + parts[0] + "'");
                 usage();
@@ -204,9 +211,15 @@ public final class BatchExecutor {
         }
 
         for (Option o : options) {
-            NodeContainer cont = wfm.getNodeContainerById(o.m_nodeID);
+            int[] idPath = o.m_nodeIDs;
+            NodeContainer cont = wfm.getNodeContainerById(idPath[0]);
+            for (int i = 1; i < idPath.length; i++) {
+                cont = cont.getEmbeddedWorkflowManager().
+                    getNodeContainerById(idPath[i]);
+            }
             if (cont == null) {
-                LOGGER.warn("No node with id " + o.m_nodeID + " found.");
+                LOGGER.warn("No node with id " 
+                        + Arrays.toString(idPath) + " found.");
             } else {
                 NodeSettings settings = new NodeSettings("something");
                 cont.saveSettings(settings);
