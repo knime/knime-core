@@ -5,13 +5,13 @@
     <shortDescription>Joins two tables</shortDescription>
     <fullDescription>
         <intro>
-            This node joins two tables in a database-like way. The join is based either on the rowkeys of both tables or
-            on the row key of the first table and an arbitrary column from the second table.
+            This node joins two tables in a database-like way. The join is based either on the row IDs of both tables or
+            on the row ID of the first table and an arbitrary column from the second table.
         </intro>
         <option name="Join column from second table">
             Select the column from the second input table that should be used for joining. You may selected a real
-            column or the table's row key here. You must make sure, that the type of selected column matches the type of
-            the row key in the first table! If e.g. the row keys in the first table are StringCells and the selected
+            column or the table's row ID here. You must make sure, that the type of selected column matches the type of
+            the row ID in the first table! If e.g. the row IDs in the first table are StringCells and the selected
             column from the second table are IntCells joining will fail although they may contain the same numbers.
         </option>
         <option name="Duplicate column handling">

@@ -107,8 +107,10 @@ public class NewJoinerNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (!"$RowKey$".equals(m_settings.secondTableColumn())
-                && inSpecs[1].findColumnIndex(m_settings.secondTableColumn()) == -1) {
+        if (!NewJoinerSettings.ROW_KEY_IDENTIFIER.equals(
+                m_settings.secondTableColumn()) 
+                && inSpecs[1].findColumnIndex(m_settings.secondTableColumn()) 
+                == -1) {
             throw new InvalidSettingsException("Join column '"
                     + m_settings.secondTableColumn()
                     + "' not found in second table");
@@ -182,13 +184,19 @@ public class NewJoinerNodeModel extends NodeModel {
         m_secondTableColIndex =
                 rightTable.getDataTableSpec().findColumnIndex(
                         m_settings.secondTableColumn());
-        if (!"$RowKey$".equals(m_settings.secondTableColumn())
+        if (!NewJoinerSettings.ROW_KEY_IDENTIFIER.equals(
+                m_settings.secondTableColumn())
                 && (m_secondTableColIndex == -1)) {
             throw new InvalidSettingsException("Join column '"
                     + m_settings.secondTableColumn()
                     + "' not found in second table");
         }
 
+        BufferedDataContainer dc =
+            exec.createDataContainer(createSpec(new DataTableSpec[]{
+                    leftTable.getDataTableSpec(),
+                    rightTable.getDataTableSpec()}));
+        
         // create a row with missing values for left or full outer joins
         DataCell[] missingCells = new DataCell[m_secondTableSurvivers.length];
         for (int i = 0; i < missingCells.length; i++) {
@@ -223,11 +231,6 @@ public class NewJoinerNodeModel extends NodeModel {
         SortedTable rightSortedTable =
                 new SortedTable(rightTable, rowComparator, false, exec
                         .createSubExecutionContext(0.7));
-
-        BufferedDataContainer dc =
-                exec.createDataContainer(createSpec(new DataTableSpec[]{
-                        leftTable.getDataTableSpec(),
-                        rightTable.getDataTableSpec()}));
 
         Iterator<DataRow> lit = leftTable.iterator();
         Iterator<DataRow> rit = rightSortedTable.iterator();
@@ -355,7 +358,8 @@ public class NewJoinerNodeModel extends NodeModel {
     }
 
     private DataCell getRightJoinKey(final DataRow row) {
-        if ("$RowKey$".equals(m_settings.secondTableColumn())) {
+        if (NewJoinerSettings.ROW_KEY_IDENTIFIER.equals(
+                m_settings.secondTableColumn())) {
             return row.getKey().getId();
         } else {
             return row.getCell(m_secondTableColIndex);

@@ -135,7 +135,7 @@ public class NewJoinerNodeDialog extends NodeDialogPane {
         m_joinMode.setSelectedItem(m_settings.joinMode());
 
         m_comboModel.removeAllElements();
-        m_comboModel.addElement("Row Key");
+        m_comboModel.addElement(NewJoinerSettings.ROW_KEY_COL_NAME);
         m_secondTableColumn.setSelectedIndex(0);
         for (DataColumnSpec colSpec : specs[1]) {
             m_comboModel.addElement(colSpec);
@@ -165,7 +165,7 @@ public class NewJoinerNodeDialog extends NodeDialogPane {
         m_settings.joinMode((JoinMode)m_joinMode.getSelectedItem());
 
         if (m_secondTableColumn.getSelectedItem() instanceof String) {
-            m_settings.secondTableColumn("$RowKey$");
+            m_settings.secondTableColumn(NewJoinerSettings.ROW_KEY_IDENTIFIER);
         } else {
             m_settings.secondTableColumn(((DataColumnSpec)m_secondTableColumn
                     .getSelectedItem()).getName());

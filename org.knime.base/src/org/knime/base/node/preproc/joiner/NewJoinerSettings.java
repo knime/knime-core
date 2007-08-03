@@ -77,6 +77,11 @@ public class NewJoinerSettings {
             return m_text;
         }
     }
+    
+    /** Name of the row key column in the dialog. */
+    static final String ROW_KEY_COL_NAME = "Row ID";
+    /** Internally used row key identifier. */
+    static final String ROW_KEY_IDENTIFIER = "$RowID$";
 
     private String m_secondTableColumn;
 
@@ -194,7 +199,8 @@ public class NewJoinerSettings {
                 JoinMode.valueOf(settings.getString("joinMode",
                         JoinMode.InnerJoin.toString()));
         m_secondTableColumn =
-                settings.getString("secondTableColumn", "$RowKey$");
+                settings.getString("secondTableColumn", 
+                        NewJoinerSettings.ROW_KEY_IDENTIFIER);
         m_suffix = settings.getString("suffix", "");
     }
 
