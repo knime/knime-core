@@ -134,7 +134,28 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
      * @return <code>true</code> if normalization is required for output
      */
     public abstract boolean normalizeClassification();
-
+    
+    /**
+     * @return a list of basisfunction rules
+     */
+    public List<BasisFunctionPredictorRow> getRules() {
+        return m_bfs;
+    }
+    
+    /**
+     * @return the column name contained the winner prediction
+     */
+    public String getApplyColumn() {
+        return m_applyColumn;
+    }
+    
+    /**
+     * @return spec of the applied data
+     */
+    public DataColumnSpec[] getModelSpecs() {
+        return m_modelSpec;
+    }
+    
     /**
      * @return the <i>don't know</i> class probability between 0.0 and 1.0
      */

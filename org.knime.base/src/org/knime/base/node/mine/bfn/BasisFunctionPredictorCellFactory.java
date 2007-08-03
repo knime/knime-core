@@ -78,6 +78,9 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
         int modelClassIdx = modelSpecs.length - 5;
         Set<DataCell> possClasses = 
             modelSpecs[modelClassIdx].getDomain().getValues();
+        if (possClasses == null) {
+            return new DataColumnSpec[0];
+        }
         DataColumnSpec[] specs = new DataColumnSpec[possClasses.size() + 1];
         Iterator<DataCell> it = possClasses.iterator();
         for (int i = 0; i < possClasses.size(); i++) {
@@ -136,16 +139,11 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      * Predicts an unknown row to the given model.
      * 
      * @param row the row to predict
-     * @param model to this model
-     * @param specs an array of class column specs
-     * @param dontKnowClass don't know class activation
-     * @param normClass normalize classification output
+     * @param model a list of rules
      * @return mapping class label to array of assigned class degrees
      */
-    public static final DataCell[] predict(final DataRow row,
-            final List<BasisFunctionPredictorRow> model,
-            final DataColumnSpec[] specs, final double dontKnowClass,
-            final boolean normClass) {
+    protected DataCell[] predict(final DataRow row,
+            final List<BasisFunctionPredictorRow> model) {
         // maps class to activation
         Map<DataCell, Double> map = new LinkedHashMap<DataCell, Double>();
         // overall basisfunctions in the model
@@ -163,7 +161,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
         }
         
         // hash column specs
-        DataTableSpec hash = new DataTableSpec(specs);
+        DataTableSpec hash = new DataTableSpec(m_specs);
         
         // find best class activation index
         DataCell best = DataType.getMissingCell();
@@ -171,7 +169,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
         double hact = -1.0;
         // skip last column which is the winner
         double sumAct = 0.0;
-        Double[] act = new Double[specs.length]; 
+        Double[] act = new Double[m_specs.length]; 
         for (DataCell cell : map.keySet()) {
             Double d = map.get(cell);
             if (d > hact || (d == hact && best.isMissing())) {
@@ -186,19 +184,19 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
         }
   
         // all class values, skip winner
-        DataCell[] res = new DataCell[specs.length];
+        DataCell[] res = new DataCell[m_specs.length];
         for (int i = 0; i < res.length - 1; i++) {
             if (act[i] == null) {
                 res[i] = new DoubleCell(0.0);
             } else {
-                if (normClass && sumAct > 0) {
+                if (m_normClass && sumAct > 0) {
                     res[i] = new DoubleCell(act[i] / sumAct);
                 } else {
                     res[i] = new DoubleCell(act[i]);
                 }
             }
         }
-        if (hact < dontKnowClass) {
+        if (hact < m_dontKnowClass) {
             res[res.length - 1] = DataType.getMissingCell();
         } else {
             res[res.length - 1] = best;
@@ -212,7 +210,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      */
     public DataCell[] getCells(final DataRow row) {
         DataRow wRow = new FilterColumnRow(row, m_filteredColumns);
-        return predict(wRow, m_model, m_specs, m_dontKnowClass, m_normClass);  
+        return predict(wRow, m_model);  
     }
     
     /**
