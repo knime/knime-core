@@ -36,6 +36,13 @@
             name="testing"
             path="/"/>
    </extension>
+   <extension
+	     id="KNIME_TESTING_APPLICATION"
+         point="org.eclipse.core.runtime.applications">
+      <application>
+         <run class="org.knime.testing.core.KNIMETestingApplication"/>
+      </application>
+   </extension>
    
 
 </plugin>

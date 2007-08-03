@@ -44,7 +44,6 @@ import org.knime.core.node.NodeStatus;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.testing.KnimeTestRegistry;
 
 // TODO: check, that the number of correct results corresponds to the number
 // of outports of the node under test

@@ -21,7 +21,7 @@
  * History
  *   16.01.2007 (ohl): created
  */
-package org.knime.testing;
+package org.knime.testing.core;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -33,7 +33,6 @@ import java.io.IOException;
 import javax.swing.JFileChooser;
 
 import org.knime.core.node.KNIMEConstants;
-import org.knime.testing.core.KnimeTestCase;
 
 /**
  * Analyzes a log file of a previous regression run. Log file should only
@@ -48,7 +47,7 @@ import org.knime.testing.core.KnimeTestCase;
 public class AnalyzeLogFile {
 
     /**
-     * privatly used enum
+     * privately used enum
      */
     enum ErrorCode {
         /** good test */
@@ -88,11 +87,13 @@ public class AnalyzeLogFile {
      * Constructor.
      * 
      * @param logFile the log file to analyze.
+     * @param outputDir a directory in which a dir will be created containing
+     *            the results. If null, the java default temp dir will be used.
      * @throws FileNotFoundException if it couldn't find the log file.
      * @throws IOException if something went wrong writing the files.
      */
-    AnalyzeLogFile(final File logFile) throws FileNotFoundException,
-            IOException {
+    AnalyzeLogFile(final File logFile, final File outputDir)
+            throws FileNotFoundException, IOException {
         if ((logFile == null) || (!logFile.exists())) {
             throw new IllegalArgumentException("You must specify an existing"
                     + " LogFile to analyze.");
@@ -100,9 +101,16 @@ public class AnalyzeLogFile {
 
         // create the temp dir. Contains reg run start time in its name.
         m_startTime = extractTimestamp(logFile);
-        m_tmpDir =
-                new File(File.createTempFile("foo", null).getParentFile(),
-                        "RegRunAnalyze_" + m_startTime);
+        if (outputDir == null) {
+            m_tmpDir = File.createTempFile("foo", null).getParentFile();
+        } else if (!outputDir.isDirectory()) {
+            System.out.println("Specified output is not a directory!"
+                    + " Using Java Temp dir instead!");
+            m_tmpDir = File.createTempFile("foo", null).getParentFile();
+        } else {
+            m_tmpDir = outputDir;
+        }
+        m_tmpDir = new File(m_tmpDir, "RegRunAnalyze_" + m_startTime);
         if (m_tmpDir.exists()) {
             if (!m_tmpDir.isDirectory()) {
                 throw new IOException("The output dir can't be created. "
@@ -117,13 +125,14 @@ public class AnalyzeLogFile {
                         + m_tmpDir + ").");
             }
         }
-        
+
         // copy log file into result dir
         BufferedReader logReader = new BufferedReader(new FileReader(logFile));
         String copyName = logFile.getName();
         if (copyName.endsWith(".log") && (copyName.length() > 4)) {
-            copyName = "_" + copyName.substring(0, copyName.length() - 4) 
-            + m_startTime + ".log";
+            copyName =
+                    "_" + copyName.substring(0, copyName.length() - 4)
+                            + m_startTime + ".log";
         } else {
             copyName = "_" + copyName + m_startTime;
         }
@@ -136,7 +145,7 @@ public class AnalyzeLogFile {
         }
         logReader.close();
         logWriter.close();
-        
+
         // global file writer. All methods write in there.
         File failTests =
                 new File(m_tmpDir, "SummaryFailingTests_" + m_startTime
@@ -447,7 +456,7 @@ public class AnalyzeLogFile {
             fc.setSelectedFile(logFileName);
 
             if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                new AnalyzeLogFile(fc.getSelectedFile());
+                new AnalyzeLogFile(fc.getSelectedFile(), null);
             } else {
                 System.out.println("Canceled.");
             }
