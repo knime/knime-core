@@ -24,6 +24,7 @@
 package org.knime.core.data.def;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -96,6 +97,36 @@ public class DefaultRow implements DataRow {
         this(new RowKey(rowId), row);
     }
 
+    /**
+     * Inits a new <code>DefaultRow</code> object by row id and an array of
+     * <code>DataCell</code>s. The content of the argument array is copied.
+     * 
+     * @param rowId a {@link DataCell} containing a row Id
+     * @param row a list containing the actual data of this row
+     * @throws NullPointerException if the specified rowID is <code>null</code>
+     * @throws NullPointerException if <code>row</code> or one of its
+     *             cells is <code>null</code>.
+     */
+    public DefaultRow(final DataCell rowId, final List<DataCell> row) {
+        this(rowId, row.toArray(new DataCell[row.size()]));
+    }
+
+    /**
+     * Inits a new <code>DefaultRow</code> object by row id and an array of
+     * <code>DataCell</code>s. The content of the argument array is copied.
+     * 
+     * @param rowKey a {@link RowKey} containing a unique row Id
+     * @param row a list containing the actual data of this row
+     * @throws NullPointerException if the specified row key is
+     *             <code>null</code>
+     * @throws NullPointerException if <code>row</code> or one of its
+     *             cells is <code>null</code>.
+     */
+    public DefaultRow(final RowKey rowKey, final List<DataCell> row) {
+        this(rowKey, row.toArray(new DataCell[row.size()]));
+    }
+
+    
     /**
      * Inits a new <code>DefaultRow</code> object by row key and an array of
      * <code>double</code> values.
