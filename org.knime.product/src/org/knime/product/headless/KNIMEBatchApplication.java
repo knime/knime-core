@@ -64,7 +64,12 @@ public class KNIMEBatchApplication implements IPlatformRunnable {
         }
         // this actually returns with a non-0 value when failed, 
         // we ignore it here
-        BatchExecutor.mainRun(stringArgs);
+        try {
+            BatchExecutor.mainRun(stringArgs);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
         return EXIT_OK;
     }
 }
