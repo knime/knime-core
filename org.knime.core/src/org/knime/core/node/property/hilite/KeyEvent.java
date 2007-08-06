@@ -86,11 +86,12 @@ public class KeyEvent extends EventObject {
 
     /** 
      * Returns the set of <code>DataCell</code> row keys on which the event 
-     * initially occured.
+     * initially occurred.
      * 
      * @return a set of row IDs
      */
     public Set<DataCell> keys() { 
         return m_keys;
     }
-}   // KeyEvent
+    
+}
