@@ -30,6 +30,7 @@ import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.NodeEditPart;
 import org.eclipse.gef.Request;
+import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
 import org.eclipse.gef.requests.SelectionRequest;
 import org.eclipse.gef.tools.ConnectionDragCreationTool;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -51,7 +52,7 @@ import org.knime.workbench.editor2.figures.AbstractNodePortFigure;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public abstract class AbstractPortEditPart extends KnimeAbstractPart
+public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
         implements NodeEditPart, WorkflowListener {
 
     private int m_id;
@@ -207,8 +208,7 @@ public abstract class AbstractPortEditPart extends KnimeAbstractPart
     }
 
     /**
-     * @see org.eclipse.gef.NodeEditPart
-     *      #getSourceConnectionAnchor(org.eclipse.gef.ConnectionEditPart)
+     * {@inheritDoc}
      */
     public ConnectionAnchor getSourceConnectionAnchor(
             final ConnectionEditPart connection) {
@@ -216,16 +216,14 @@ public abstract class AbstractPortEditPart extends KnimeAbstractPart
     }
 
     /**
-     * @see org.eclipse.gef.NodeEditPart
-     *      #getSourceConnectionAnchor(org.eclipse.gef.Request)
+     * {@inheritDoc}
      */
     public ConnectionAnchor getSourceConnectionAnchor(final Request request) {
         return new OutPortConnectionAnchor(getFigure());
     }
 
     /**
-     * @see org.eclipse.gef.NodeEditPart
-     *      #getTargetConnectionAnchor(org.eclipse.gef.ConnectionEditPart)
+     * {@inheritDoc}
      */
     public ConnectionAnchor getTargetConnectionAnchor(
             final ConnectionEditPart connection) {
@@ -233,8 +231,7 @@ public abstract class AbstractPortEditPart extends KnimeAbstractPart
     }
 
     /**
-     * @see org.eclipse.gef.NodeEditPart
-     *      #getTargetConnectionAnchor(org.eclipse.gef.Request)
+     * {@inheritDoc}
      */
     public ConnectionAnchor getTargetConnectionAnchor(final Request request) {
         return new InPortConnectionAnchor(getFigure());

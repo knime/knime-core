@@ -30,7 +30,6 @@ import javax.swing.JScrollPane;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
-
 /**
  * The FuzzyClusterNodeView provides the user with information about the quality
  * of the clustering.
@@ -75,30 +74,65 @@ public class FuzzyClusterNodeView extends NodeView {
      */
     @Override
     protected void modelChanged() {
-        if (m_model != null && m_model.getClusterCentres() != null
-                && m_model.getWithinClusterVariations() != null) {
+        if (m_model != null && m_model.getClusterCentres() != null) {
             StringBuffer buffer = new StringBuffer();
             buffer.append("<html>\n");
             buffer.append("<body>\n");
             buffer.append("<h1>Cluster Centers</h1>");
             buffer.append(printClusterCenters());
             buffer.append("<br>");
-            buffer.append("<h1>WithinClusterVariations:</h1>");
+
             double[] withinclustervars = m_model.getWithinClusterVariations();
-            for (int c = 0; c < m_model.getClusterCentres().length; c++) {
-                buffer.append("Cluster " + c + ": " + withinclustervars[c]
-                        + "<br>");
+            if (withinclustervars != null && withinclustervars.length > 0) {
+                buffer.append("<h1>WithinClusterVariations:</h1>");
+                for (int c = 0; c < m_model.getClusterCentres().length; c++) {
+                    buffer.append("Cluster " + c + ": " + withinclustervars[c]
+                            + "<br>");
+                }
             }
-            buffer.append("<h1>BetweenClusterVariation:</h1>");
-            buffer.append(m_model.getBetweenClusterVariation());
+            double betweenclusterVar = m_model.getBetweenClusterVariation();
+            if (!Double.isNaN(betweenclusterVar)) {
+                buffer.append("<h1>BetweenClusterVariation:</h1>");
+                buffer.append(betweenclusterVar);
+                buffer.append("<br>");
+            }
+            double partCoefficient = m_model.getPartitionCoefficient();
+            if (!Double.isNaN(partCoefficient)) {
+                buffer.append("<h1>Partition Coefficient:</h1>");
+                buffer.append(partCoefficient);
+                buffer.append("<br>");
+            }
+            double partEntropy = m_model.getPartitionEntropy();
+            if (!Double.isNaN(partEntropy)) {
+                buffer.append("<h1>Partition Entropy:</h1>");
+                buffer.append(partEntropy);
+                buffer.append("<br>");
+            }
+
+            double xiebeni = m_model.getXieBeniIndex();
+            if (!Double.isNaN(xiebeni)) {
+                buffer.append("<h1>XieBeni Index:</h1>");
+                buffer.append(xiebeni);
+                buffer.append("<br>");
+            }
+
+            double[] fHyperVols = m_model.getFuzzyHyperVolumes();
+            if (fHyperVols != null) {
+                buffer.append("<h1>Fuzzy Hypervolumes:</h1>");
+                for (int c = 0; c < fHyperVols.length; c++) {
+                    buffer.append("Cluster " + c + ": " + fHyperVols[c]
+                            + "<br>");
+                }
+            }
+
             buffer.append("</body>\n");
             buffer.append("</html>\n");
             m_output.setText(buffer.toString());
-        }
+        } 
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onClose()
+     * {@inheritDoc}
      */
     @Override
     protected void onClose() {
@@ -106,7 +140,7 @@ public class FuzzyClusterNodeView extends NodeView {
     }
 
     /**
-     * @see NodeView#onOpen()
+     * {@inheritDoc}
      */
     @Override
     protected void onOpen() {

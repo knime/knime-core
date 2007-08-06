@@ -152,7 +152,7 @@ public class DialogComponentDoubleRange extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateStettingsBeforeSave()
+    protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
         SettingsModelDoubleRange model = (SettingsModelDoubleRange)getModel();
         double newMin;

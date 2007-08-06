@@ -85,7 +85,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
+     * {@inheritDoc}
      */
     @Override
     public Object getAdapter(final Class adapter) {
@@ -221,9 +221,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * 
-     * @see org.eclipse.gef.commands.CommandStackListener
-     *      #commandStackChanged(java.util.EventObject)
+     * {@inheritDoc}
      */
     public void commandStackChanged(final EventObject event) {
         LOGGER.debug("WorkflowRoot: command stack changed");

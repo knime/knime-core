@@ -71,7 +71,6 @@ public class IgnoreDelimsPanel extends JPanel {
     private Container getPanel() {
 
         m_ignoreThem = new JCheckBox("Ignore extra delimiters at end of rows");
-
         Box result = Box.createHorizontalBox();
         result.add(Box.createHorizontalGlue());
         result.add(m_ignoreThem);
@@ -98,34 +97,56 @@ public class IgnoreDelimsPanel extends JPanel {
     }
 
     /**
+     * Checks the current values in the panel.
+     * 
+     * @return null, if settings are okay and can be applied. An error message
+     *         if not.
+     */
+    String checkSettings() {
+        return null;
+    }
+
+    /**
      * Transfers the current settings from the panel in the passed object.
      * Overwriting the corresponding values in the object.
      * 
      * @param settings the settings object to fill in the currently set values
+     * @return true if the new settings are different from the one passed in.
      */
-    void overrideSettings(final FileReaderNodeSettings settings) {
+    boolean overrideSettings(final FileReaderNodeSettings settings) {
 
         boolean ignoreEm = m_ignoreThem.isSelected();
-        // set the user set value
-        settings.setIgnoreDelimsAtEndOfRowUserValue(ignoreEm);
 
-        // and set he actual flag, if the delimiter is a whitespace (THIS
-        // DEPENDS on delimiters are being set before this is called!!!!) (!)
-        for (Delimiter delim : settings.getAllDelimiters()) {
-            String delStr = delim.getDelimiter();
-            if (!settings.isRowDelimiter(delStr)) {
-                if (delStr.equals(" ") || delStr.equals("\t")) {
-                    settings.setIgnoreEmptyTokensAtEndOfRow(ignoreEm);
-                    break;
+        if (ignoreEm != settings.ignoreDelimsAtEORUserValue()) {
+            // set the user set value - only if he changed it.
+
+            settings.setIgnoreDelimsAtEndOfRowUserValue(ignoreEm);
+
+            // and set he actual flag, if the delimiter is a whitespace (THIS
+            // DEPENDS on delimiters are being set before this is called!!!!)
+            // (!)
+            for (Delimiter delim : settings.getAllDelimiters()) {
+                String delStr = delim.getDelimiter();
+                if (!settings.isRowDelimiter(delStr)) {
+                    if (delStr.equals(" ") || delStr.equals("\t")) {
+                        settings.setIgnoreEmptyTokensAtEndOfRow(ignoreEm);
+                        break;
+                    }
+
                 }
 
             }
 
+            // also fix the delimiter settings
+            // I guess that is what they would expect...?
+            settings.setDelimiterUserSet(true);
+
+            // need to re-analyze file with settings changed
+            return true;
         }
 
-        // also fix the delimiter settings
-        // I guess that is what they would expect...?
-        settings.setDelimiterUserSet(true);
+        return false; // no need to re-analyze, no settings changed here.
+
     }
 
     /**
@@ -134,11 +155,11 @@ public class IgnoreDelimsPanel extends JPanel {
      * @param settings object holding the values to display in the panel
      */
     private void loadSettings(final FileReaderNodeSettings settings) {
+
         if (settings.ignoreDelimsAtEORUserSet()) {
             m_ignoreThem.setSelected(settings.ignoreDelimsAtEORUserValue());
         } else {
-            // default is ignoring tabs and spaces
-            m_ignoreThem.setSelected(true);
+            m_ignoreThem.setSelected(settings.ignoreEmptyTokensAtEndOfRow());
         }
     }
 }

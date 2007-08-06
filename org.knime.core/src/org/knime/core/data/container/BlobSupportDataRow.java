@@ -75,21 +75,21 @@ final class BlobSupportDataRow implements DataRow {
     }
 
     /**
-     * @see DataRow#getKey()
+     * {@inheritDoc}
      */
     public RowKey getKey() {
         return m_key;
     }
 
     /**
-     * @see DataRow#getNumCells()
+     * {@inheritDoc}
      */
     public int getNumCells() {
         return m_cells.length;
     }
 
     /**
-     * @see Iterable#iterator()
+     * {@inheritDoc}
      */
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);

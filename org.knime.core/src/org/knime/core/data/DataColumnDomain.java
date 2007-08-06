@@ -45,8 +45,13 @@ import org.knime.core.node.config.ConfigWO;
  * the data table is outside the provided bounds and no other value appears in
  * that column than the values listed in the set returned by
  * {@link #getValues()}. If you are not sure about the data to come in your
- * column, don't provide domain infos (<code>null</code>).
- * 
+ * column, don't provide domain infos (<code>null</code>).<br>
+ * Also noteworthy: domain information describes the source of the data (the 
+ * domain), not the data itself. I.e. the created domain object could contain 
+ * more possible values than actually appear in the data table, or a range 
+ * bigger than needed for the data in that particular data table. But it must 
+ * always include all values appearing in the table.
+ *    
  * @see DataColumnDomainCreator
  * 
  * @author Thomas Gabriel, University of Konstanz
@@ -255,7 +260,7 @@ public final class DataColumnDomain {
      * Returns the hash code of this domain, based on the hash codes of the
      * lower, upper bound, and each possible value - if available.
      * 
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {

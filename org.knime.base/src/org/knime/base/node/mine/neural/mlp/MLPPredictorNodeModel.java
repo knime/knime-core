@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Set;
 
-import org.knime.base.data.append.column.AppendedColumnTable;
+import org.knime.base.data.neural.Layer;
 import org.knime.base.data.neural.MultiLayerPerceptron;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -92,7 +92,7 @@ public class MLPPredictorNodeModel extends NodeModel {
      * the execute-method. Therefore, new DataTableSpecs are not available until
      * execute has been called.
      * 
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -115,53 +115,34 @@ public class MLPPredictorNodeModel extends NodeModel {
                             inSpecs[0].findColumnIndex(incol);
                 }
             }
-            
 
-            String name = "PredClass";
-            DataType type;
-            if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
-                type = DoubleCell.TYPE;
-            } else if (m_mlp.getMode() 
-                    == MultiLayerPerceptron.CLASSIFICATION_MODE) {
-                type = StringCell.TYPE;
-            } else {
-                throw new InvalidSettingsException("Unsupported mode in MLP: "
-                        + m_mlp.getMode());
-            }
-            DataColumnSpec appendSpec =
-                    new DataColumnSpecCreator(name, type).createSpec();
-            DataColumnSpec[] allappSpec;
-
+            MLPClassificationFactory mymlp;
             /*
              * Regression
              */
             if (m_mlp.getMode() == MultiLayerPerceptron.REGRESSION_MODE) {
-                allappSpec = new DataColumnSpec[1];
-                allappSpec[0] = appendSpec;
-            } else {
+
+                mymlp = new MLPClassificationFactory(true, m_columns);
+            } else if (m_mlp.getMode() 
+                    == MultiLayerPerceptron.CLASSIFICATION_MODE) {
                 /*
                  * Classification
                  */
-                m_nrPossValues = m_mlp.getArchitecture().getNrOutputNeurons();
-                allappSpec = new DataColumnSpec[m_nrPossValues + 1];
-                allappSpec[0] = appendSpec;
-                for (int i = 1; i <= m_nrPossValues; i++) {
-                    name = "Neuron" + (i - 1);
-                    type = DoubleCell.TYPE;
-                    allappSpec[i] =
-                            new DataColumnSpecCreator(name, type).createSpec();
-                }
+                mymlp = new MLPClassificationFactory(false, m_columns);
+            } else {
+                throw new InvalidSettingsException("Unsupported Mode: "
+                        + m_mlp.getMode());
             }
-            DataTableSpec returnspec =
-                    AppendedColumnTable.getTableSpec(inSpecs[0], allappSpec);
-            return new DataTableSpec[]{returnspec};
+            ColumnRearranger colre = new ColumnRearranger(inSpecs[0]);
+            colre.append(mymlp);
+            return new DataTableSpec[]{colre.createSpec()};
         }
         throw new InvalidSettingsException("No model content "
                 + "available for configuration");
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -193,7 +174,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -201,7 +182,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -209,14 +190,14 @@ public class MLPPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -226,7 +207,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     /**
      * Loads a MLP from a ModelContent object.
      * 
-     * @see NodeModel#loadModelContent(int, ModelContentRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadModelContent(final int index,
@@ -268,9 +249,7 @@ public class MLPPredictorNodeModel extends NodeModel {
         }
 
         /**
-         * 
-         * @see org.knime.base.data.append.column.AppendedCellFactory
-         *      #getAppendedCell(org.knime.core.data.DataRow)
+         * {@inheritDoc}
          */
         public DataCell[] getCells(final DataRow row) {
             double[] inputs = new double[m_faccolumns.length];
@@ -301,8 +280,7 @@ public class MLPPredictorNodeModel extends NodeModel {
         }
 
         /**
-         * 
-         * @see org.knime.core.data.container.CellFactory#getColumnSpecs()
+         * {@inheritDoc}
          */
         public DataColumnSpec[] getColumnSpecs() {
             String name = "PredClass";
@@ -327,24 +305,26 @@ public class MLPPredictorNodeModel extends NodeModel {
                 /*
                  * Classification
                  */
-
                 m_nrPossValues = m_mlp.getArchitecture().getNrOutputNeurons();
+
                 allappSpec = new DataColumnSpec[m_nrPossValues + 1];
                 allappSpec[0] = appendSpec;
-                for (int i = 1; i <= m_nrPossValues; i++) {
-                    name = "Neuron" + (i - 1);
+                Layer outputlayer = m_mlp.getLayer(m_mlp.getNrLayers() - 1);
+                int index = 1;
+                for (int i = 0; i < m_nrPossValues; i++) {
+                    name = outputlayer.getPerceptron(i).getClassValue()
+                                    + " (Neuron " + i + ")";
                     type = DoubleCell.TYPE;
-                    allappSpec[i] =
+                    allappSpec[index] =
                             new DataColumnSpecCreator(name, type).createSpec();
+                    index++;
                 }
             }
             return allappSpec;
         }
 
         /**
-         * @see org.knime.core.data.container.CellFactory# setProgress(int, int,
-         *      org.knime.core.data.RowKey,
-         *      org.knime.core.node.ExecutionMonitor)
+         * {@inheritDoc}
          */
         public void setProgress(final int curRowNr, final int rowCount,
                 final RowKey lastKey, final ExecutionMonitor exec) {
@@ -353,8 +333,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -363,8 +342,7 @@ public class MLPPredictorNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

@@ -44,8 +44,7 @@ import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
  */
 public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
     /**
-     * @see org.eclipse.gef.editpolicies.ConstrainedLayoutEditPolicy
-     *      #createAddCommand(org.eclipse.gef.EditPart, java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     protected Command createAddCommand(final EditPart child,

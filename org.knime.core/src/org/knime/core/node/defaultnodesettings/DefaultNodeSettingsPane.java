@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
@@ -59,6 +60,10 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
     private JPanel m_currentPanel;
 
     private String m_defaultTabTitle = TAB_TITLE;
+    
+    private Box m_currentBox;
+    
+    private boolean m_horizontal = false;
 
     /**
      * Constructor for DefaultNodeDialogPane.
@@ -75,6 +80,8 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
         m_compositePanel.setLayout(new BoxLayout(m_compositePanel,
                 BoxLayout.Y_AXIS));
         m_currentPanel = m_compositePanel;
+        m_currentBox = createBox(m_horizontal);
+        m_currentPanel.add(m_currentBox);
     }
 
     /**
@@ -143,7 +150,10 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
      * @param title - the title of the new group.
      */
     public void createNewGroup(final String title) {
+        checkForEmptyBox();
         m_currentPanel = createSubPanel(title);
+        m_currentBox = createBox(m_horizontal);
+        m_currentPanel.add(m_currentBox);
     }
 
     private JPanel createSubPanel(final String title) {
@@ -161,10 +171,12 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
      * 
      */
     public void closeCurrentGroup() {
+        checkForEmptyBox();
         if (m_currentPanel.getComponentCount() == 0) {
             m_compositePanel.remove(m_currentPanel);
         }
         m_currentPanel = m_compositePanel;
+        m_currentBox = createBox(m_horizontal);
     }
 
     /**
@@ -175,9 +187,25 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
      */
     public void addDialogComponent(final DialogComponent diaC) {
         m_dialogComponents.add(diaC);
-        m_currentPanel.add(diaC.getComponentPanel());
+        m_currentBox.add(diaC.getComponentPanel());
+        addGlue(m_currentBox, m_horizontal);
     }
-
+ 
+    /**
+     * Changes the orientation the components get placed in the dialog.
+     * @param horizontal <code>true</code> if the next components should be 
+     * placed next to each other or <code>false</code> if the next components 
+     * should be placed below each other.
+     */
+    public void setHorizontalPlacement(final boolean horizontal) {
+        if (m_horizontal != horizontal) {
+            m_horizontal = horizontal;
+            checkForEmptyBox();
+            m_currentBox = createBox(m_horizontal);
+            m_currentPanel.add(m_currentBox);
+        }
+    }
+    
     /**
      * Load settings for all registered components.
      * 
@@ -244,5 +272,39 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
     public void saveAdditionalSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         assert settings != null;
+    }
+
+    private void checkForEmptyBox() {
+        if (m_currentBox.getComponentCount() == 0) {
+            m_currentPanel.remove(m_currentBox);
+        }
+    }
+
+    /**
+     * @param currentBox
+     * @param horizontal
+     */
+    private static void addGlue(final Box box, final boolean horizontal) {
+        if (horizontal) {
+            box.add(Box.createVerticalGlue());
+        } else {
+            box.add(Box.createHorizontalGlue());
+        }
+    }
+    
+    /**
+     * @param horizontal <code>true</code> if the layout is horizontal
+     * @return the box
+     */
+    private static Box createBox(final boolean horizontal) {
+        final Box box;
+        if (horizontal) {
+            box = new Box(BoxLayout.X_AXIS);
+            box.add(Box.createVerticalGlue());
+        } else {
+            box = new Box(BoxLayout.Y_AXIS);
+            box.add(Box.createHorizontalGlue());
+        }
+         return box;
     }
 }

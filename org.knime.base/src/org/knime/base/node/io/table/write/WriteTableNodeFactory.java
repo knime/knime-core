@@ -37,7 +37,7 @@ import org.knime.core.node.NodeView;
 public class WriteTableNodeFactory extends NodeFactory {
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override 
     public NodeModel createNodeModel() {
@@ -45,7 +45,7 @@ public class WriteTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
+     * {@inheritDoc}
      */
     @Override
     protected int getNrNodeViews() {
@@ -53,7 +53,7 @@ public class WriteTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#createNodeView(int, NodeModel)
+     * {@inheritDoc}
      */
     @Override
     public NodeView createNodeView(
@@ -62,7 +62,7 @@ public class WriteTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#hasDialog()
+     * {@inheritDoc}
      */
     @Override
     protected boolean hasDialog() {
@@ -70,7 +70,7 @@ public class WriteTableNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#createNodeDialogPane()
+     * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {

@@ -57,7 +57,7 @@ public class FileReaderFileFilter extends FileFilter {
     }
 
     /**
-     * @see javax.swing.filechooser.FileFilter#accept(java.io.File)
+     * {@inheritDoc}
      */
     @Override
     public boolean accept(final File f) {
@@ -83,7 +83,7 @@ public class FileReaderFileFilter extends FileFilter {
     }
 
     /**
-     * @see javax.swing.filechooser.FileFilter#getDescription()
+     * {@inheritDoc}
      */
     @Override
     public String getDescription() {

@@ -78,7 +78,7 @@ public interface StringValue extends DataValue {
         }
 
         /**
-         * @see DataValue.UtilityFactory#getIcon()
+         * {@inheritDoc}
          */
         @Override
         public Icon getIcon() {
@@ -86,7 +86,7 @@ public interface StringValue extends DataValue {
         }
 
         /**
-         * @see UtilityFactory#getComparator()
+         * {@inheritDoc}
          */
         @Override
         protected DataValueComparator getComparator() {
@@ -94,7 +94,7 @@ public interface StringValue extends DataValue {
         }
         
         /**
-         * @see DataValue.UtilityFactory#getRendererFamily(DataColumnSpec)
+         * {@inheritDoc}
          */
         @Override
         protected DataValueRendererFamily getRendererFamily(

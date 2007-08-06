@@ -151,7 +151,7 @@ class ShapeManagerNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -159,7 +159,7 @@ class ShapeManagerNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(File, ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -169,8 +169,7 @@ class ShapeManagerNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File,
-     *      ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
@@ -205,7 +204,7 @@ class ShapeManagerNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -225,7 +224,7 @@ class ShapeManagerNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -244,7 +243,7 @@ class ShapeManagerNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)

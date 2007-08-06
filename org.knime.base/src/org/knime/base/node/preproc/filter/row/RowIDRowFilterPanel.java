@@ -46,7 +46,7 @@ import org.knime.core.node.InvalidSettingsException;
  * 
  * @author Peter Ohl, University of Konstanz
  */
-class RowIDRowFilterPanel extends RowFilterPanel {
+public class RowIDRowFilterPanel extends RowFilterPanel {
     private JLabel m_errText;
 
     private JTextField m_regExpr;
@@ -58,7 +58,7 @@ class RowIDRowFilterPanel extends RowFilterPanel {
     /**
      * Creates a new panel for a row ID filter.
      */
-    RowIDRowFilterPanel() {
+    public RowIDRowFilterPanel() {
         super(400, 350);
 
         m_errText = new JLabel();
@@ -138,7 +138,7 @@ class RowIDRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * @see RowFilterPanel#loadSettingsFromFilter(RowFilter)
+     * {@inheritDoc}
      */
     @Override
     public void loadSettingsFromFilter(final RowFilter filter)
@@ -157,7 +157,7 @@ class RowIDRowFilterPanel extends RowFilterPanel {
     }
 
     /**
-     * @see RowFilterPanel#createFilter(boolean)
+     * {@inheritDoc}
      */
     @Override
     public RowFilter createFilter(final boolean include)

@@ -49,6 +49,10 @@
     If this option is selected, the clustering is performed in the memory,
     which speeds up the process.
     </option>
+    <option name="Compute cluster quality measures">
+    Whether to calculate quality measures for the clustering. This can be
+    time and memory consuming with large datasets.
+    </option>
 	</fullDescription>
 	
 	<ports>

@@ -61,6 +61,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeStateListener;
 import org.knime.core.node.NodeStatus;
+import org.knime.core.util.FileLocker;
 import org.knime.core.util.MutableInteger;
 
 /**
@@ -150,6 +151,18 @@ public class WorkflowManager implements WorkflowListener {
         private final Object m_addLock = new Object(),
                 m_transferLock = new Object(), m_finishLock = new Object();
 
+        private boolean m_checkAutoExecNodes = false;
+        
+        /**
+         * This variable is set to the current time in case the are 
+         * no running nodes so far and one or more nodes are started.
+         * This variable is used to meassure the time untill all currently
+         * running nodes have been executed. In case there are further
+         * nodes started (other nodes are already running), the time is not
+         * reseted.
+         */
+        private long m_executionTime;
+        
         /**
          * Create new empty workflow executer.
          */
@@ -175,6 +188,10 @@ public class WorkflowManager implements WorkflowListener {
                 if (!b) {
                     MyNodePM pm = new MyNodePM(nc);
                     synchronized (m_addLock) {
+                        if (m_executionTime == 0 && m_waitingNodes.size() == 0
+                                && m_runningNodes.size() == 0) {
+                            m_executionTime = System.currentTimeMillis();
+                        }
                         m_waitingNodes.put(nc, pm);
                         CountDownLatch old =
                                 m_waitLocks.put(nc, new CountDownLatch(1));
@@ -363,6 +380,12 @@ public class WorkflowManager implements WorkflowListener {
                             LOGGER.warn("Some nodes were still waiting but "
                                     + "none is running: " + m_waitingNodes);
                         }
+                    } else if (m_waitingNodes.size() == 0) {
+                        // log the time and reset the timer
+                        LOGGER.debug("Workflow execution time: "
+                                + (System.currentTimeMillis() - m_executionTime)
+                                + " ms");
+                        m_executionTime = 0;
                     }
 
                     for (NodeContainer nc : m_waitingNodes.keySet()) {
@@ -417,8 +440,7 @@ public class WorkflowManager implements WorkflowListener {
         }
 
         /**
-         * @see org.knime.core.node.NodeStateListener
-         *      #stateChanged(org.knime.core.node.NodeStatus, int)
+         * {@inheritDoc}
          */
         public void stateChanged(final NodeStatus state, final int id) {
             if ((state instanceof NodeStatus.EndExecute)
@@ -449,7 +471,7 @@ public class WorkflowManager implements WorkflowListener {
 
                         if (nc.getStatus() instanceof NodeStatus.Error) {
                             cancelExecution(nc.getAllSuccessors());
-                        } else if (nc.isExecuted()) {
+                        } else if (nc.isExecuted() && m_checkAutoExecNodes) {
                             List<NodeContainer> autoNodes =
                                     new ArrayList<NodeContainer>();
                             // check if auto-executable nodes are following
@@ -590,6 +612,16 @@ public class WorkflowManager implements WorkflowListener {
         public boolean isQueued(final NodeContainer cont) {
             return m_waitingNodes.containsKey(cont);
         }
+        
+        /**
+         * Sets if auto-executable should really be auto-executed or not.
+         * 
+         * @param b <code>true</code> if auto-executable nodes should be
+         *  autoexecuted, <code>false</code> otherwise
+         */
+        public void setCheckAutoexecNodes(final boolean b) {
+            m_checkAutoExecNodes = b;
+        }
     }
 
     /** Key for connections. */
@@ -658,6 +690,8 @@ public class WorkflowManager implements WorkflowListener {
     /** Table repository, important for blob (de)serialization. A sub workflow
      * manager will use the map of its parent WFM. */
     private final HashMap<Integer, ContainerTable> m_tableRepository;
+    
+    private FileLocker m_fileLock;
 
     /**
      * Create new Workflow.
@@ -674,7 +708,7 @@ public class WorkflowManager implements WorkflowListener {
                 if (key < 0) {
                     LOGGER.debug("Table has an invalid ID! " 
                         + "(This message can be ignored if the flow " 
-                        + "was written with a version prior to 1.2.0.");
+                        + "was written with a version prior to 1.2.0.)");
                     return null;
                 }
                 return super.put(key, value);
@@ -1592,6 +1626,18 @@ public class WorkflowManager implements WorkflowListener {
         NodeContainer cont = m_nodesByID.get(new Integer(id));
         return cont;
     }
+    
+    /**
+     * Returns the connection container that is handled by the manager for the given
+     * id.
+     * 
+     * @param id The id of the connection whose
+     *            <code>ConnectionContainer</code> should be returned
+     * @return The container that represents the connection of the given id
+     */
+    public ConnectionContainer getConnectionContainerById(final int id) {
+        return  m_connectionsByID.get(new Integer(id));
+    }
 
     /**
      * Returns all nodes currently managed by this instance.
@@ -1654,6 +1700,8 @@ public class WorkflowManager implements WorkflowListener {
             InvalidSettingsException, CanceledExecutionException,
             WorkflowInExecutionException, WorkflowException {
         checkForRunningNodes("Workflow cannot be loaded");
+      
+        lockWorkflowFile(workflowFile);
 
         if (!workflowFile.isFile()
                 || !workflowFile.getName().equals(WORKFLOW_FILE)) {
@@ -2227,6 +2275,17 @@ public class WorkflowManager implements WorkflowListener {
             fireWorkflowEvent(event);
         }
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        if (m_fileLock != null) {
+            m_fileLock.release();
+        }
+    }
 
     /**
      * Loads the settings from the passed node container's dialog into its
@@ -2285,6 +2344,9 @@ public class WorkflowManager implements WorkflowListener {
         for (int i = sortedNodes.size() - 1; i >= 0; i--) {
             sortedNodes.get(i).cleanup();
         }
+        if (m_fileLock != null) {
+            m_fileLock.release();
+        }
     }
 
     /**
@@ -2304,5 +2366,39 @@ public class WorkflowManager implements WorkflowListener {
      */
     HashMap<Integer, ContainerTable> getTableRepository() {
         return m_tableRepository;
+    }
+    
+    /**
+     * Sets if auto-executable should really be auto-executed or not.
+     * Please note that changing this behaviout affects <b>all</b> parent and
+     * child workflow managers and not only this one!
+     * 
+     * @param b <code>true</code> if auto-executable nodes should be
+     *  autoexecuted, <code>false</code> otherwise
+     */
+    public void setCheckAutoexecNodes(final boolean b) {
+        m_executor.setCheckAutoexecNodes(b);
+    }  
+    
+    private void lockWorkflowFile(final File workflowFile)
+            throws CanceledExecutionException {
+        try {
+            File lockFile = new File(workflowFile.getParentFile(), ".lock");
+            if (!lockFile.exists()) {
+                lockFile.createNewFile();
+            }
+            m_fileLock = new FileLocker(lockFile);
+            if (!m_fileLock.lock()) {
+                throw new CanceledExecutionException(
+                        "Workflow already used by another editor.");
+            }
+
+        } catch (CanceledExecutionException e) {
+            throw e;
+        } catch (Exception e) {
+            LOGGER.warn("Workflow file: " + workflowFile
+                    + " could not be locked.");
+
+        }
     }
 }

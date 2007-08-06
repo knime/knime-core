@@ -85,7 +85,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         if (m_buffer != null) {
@@ -95,7 +95,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         ensureBufferOpen();
@@ -103,7 +103,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
     
     /**
-     * @see KnowsRowCountTable#getRowCount()
+     * {@inheritDoc}
      */
     public int getRowCount() {
         ensureBufferOpen();
@@ -147,7 +147,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
     
     /**
-     * @see KnowsRowCountTable#putIntoTableRepository(HashMap)
+     * {@inheritDoc}
      */
     public void putIntoTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
@@ -155,7 +155,7 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
     }
     
     /**
-     * @see KnowsRowCountTable#removeFromTableRepository(HashMap)
+     * {@inheritDoc}
      */
     public void removeFromTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
@@ -178,12 +178,15 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
         }
     }
     
+    private static final BufferedDataTable[] EMPTY_ARRAY = 
+        new BufferedDataTable[0];
+    
     /**
-     * Returns <code>null</code>. This method is used internally.
-     * @see KnowsRowCountTable#getReferenceTable()
+     * Returns an empty array. This method is used internally.
+     * @see KnowsRowCountTable#getReferenceTables()
      */
-    public BufferedDataTable getReferenceTable() {
-        return null;
+    public BufferedDataTable[] getReferenceTables() {
+        return EMPTY_ARRAY;
     }
     
     /** Executes the copy process when the content of this table is demanded 

@@ -52,14 +52,14 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 
 /**
- * Creates a connection to read from database. 
+ * Creates a connection to read from database.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class DBReaderConnection implements DataTable {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(DBReaderConnection.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(DBReaderConnection.class);
 
     private final DataTableSpec m_spec;
 
@@ -69,6 +69,7 @@ public final class DBReaderConnection implements DataTable {
 
     /**
      * Create connection to database and read meta info.
+     * 
      * @param url The URL.
      * @param user The user.
      * @param pw The password.
@@ -98,14 +99,14 @@ public final class DBReaderConnection implements DataTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         try {
@@ -129,25 +130,25 @@ public final class DBReaderConnection implements DataTable {
             int type = meta.getColumnType(dbIdx);
             DataType newType;
             switch (type) {
-                case Types.INTEGER:
-                case Types.BIT:
-                case Types.BINARY:
-                case Types.BOOLEAN:
-                case Types.VARBINARY:
-                case Types.SMALLINT:
-                case Types.TINYINT:
-                case Types.BIGINT:
-                    newType = IntCell.TYPE;
-                    break;
-                case Types.FLOAT:
-                case Types.DOUBLE:
-                case Types.NUMERIC:
-                case Types.DECIMAL:
-                case Types.REAL:
-                    newType = DoubleCell.TYPE;
-                    break;
-                default:
-                    newType = StringCell.TYPE;
+            case Types.INTEGER:
+            case Types.BIT:
+            case Types.BINARY:
+            case Types.BOOLEAN:
+            case Types.VARBINARY:
+            case Types.SMALLINT:
+            case Types.TINYINT:
+            case Types.BIGINT:
+                newType = IntCell.TYPE;
+                break;
+            case Types.FLOAT:
+            case Types.DOUBLE:
+            case Types.NUMERIC:
+            case Types.DECIMAL:
+            case Types.REAL:
+                newType = DoubleCell.TYPE;
+                break;
+            default:
+                newType = StringCell.TYPE;
             }
             cspecs[i] = new DataColumnSpecCreator(name, newType).createSpec();
         }
@@ -160,8 +161,8 @@ public final class DBReaderConnection implements DataTable {
  */
 final class DBRowIterator extends RowIterator {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(DBReaderConnection.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(DBReaderConnection.class);
 
     private boolean m_end;
 
@@ -182,7 +183,7 @@ final class DBRowIterator extends RowIterator {
     }
 
     /**
-     * @see org.knime.core.data.RowIterator#hasNext()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasNext() {
@@ -190,7 +191,7 @@ final class DBRowIterator extends RowIterator {
     }
 
     /**
-     * @see org.knime.core.data.RowIterator#next()
+     * {@inheritDoc}
      */
     @Override
     public DataRow next() {
@@ -201,10 +202,10 @@ final class DBRowIterator extends RowIterator {
                 try {
                     int integer = m_result.getInt(i + 1);
                     if (wasNull()) {
-                    	cells[i] = DataType.getMissingCell();
-                	} else {
-                    	cells[i] = new IntCell(integer);
-                	}
+                        cells[i] = DataType.getMissingCell();
+                    } else {
+                        cells[i] = new IntCell(integer);
+                    }
                 } catch (SQLException sqle) {
                     LOGGER.error("SQL Exception reading Int:", sqle);
                     cells[i] = DataType.getMissingCell();
@@ -213,10 +214,10 @@ final class DBRowIterator extends RowIterator {
                 try {
                     double dbl = m_result.getDouble(i + 1);
                     if (wasNull()) {
-                    	cells[i] = DataType.getMissingCell();
-                	} else {
-                    	cells[i] = new DoubleCell(dbl);
-                	}
+                        cells[i] = DataType.getMissingCell();
+                    } else {
+                        cells[i] = new DoubleCell(dbl);
+                    }
                 } catch (SQLException sqle) {
                     LOGGER.error("SQL Exception reading Double:", sqle);
                     cells[i] = DataType.getMissingCell();
@@ -230,8 +231,9 @@ final class DBRowIterator extends RowIterator {
                         if (wasNull() || clob == null) {
                             s = null;
                         } else {
-                            BufferedReader buf = new BufferedReader(
-                                    clob.getCharacterStream());
+                            BufferedReader buf =
+                                    new BufferedReader(clob
+                                            .getCharacterStream());
                             StringBuilder sb = new StringBuilder();
                             String line;
                             while ((line = buf.readLine()) != null) {
@@ -245,8 +247,9 @@ final class DBRowIterator extends RowIterator {
                             s = null;
                         } else {
                             InputStream is = blob.getBinaryStream();
-                            BufferedReader buf = new BufferedReader(
-                                    new InputStreamReader(is));
+                            BufferedReader buf =
+                                    new BufferedReader(
+                                            new InputStreamReader(is));
                             StringBuilder sb = new StringBuilder();
                             String line;
                             while ((line = buf.readLine()) != null) {
@@ -255,10 +258,10 @@ final class DBRowIterator extends RowIterator {
                             s = sb.toString();
                         }
                     } else {
-	                    s = m_result.getString(i + 1);
-	                    if (wasNull()) {
-    						s = null;
-    					}
+                        s = m_result.getString(i + 1);
+                        if (wasNull()) {
+                            s = null;
+                        }
                     }
                 } catch (SQLException sqle) {
                     LOGGER.error("SQL Exception reading String:", sqle);
@@ -276,12 +279,12 @@ final class DBRowIterator extends RowIterator {
         try {
             rowId = m_result.getRow();
         } catch (SQLException sqle) {
-            LOGGER.error("SQL Exception:", sqle);        
+            LOGGER.error("SQL Exception:", sqle);
         }
         m_end = end();
         return new DefaultRow(new StringCell("Row_" + rowId), cells);
     }
-    
+
     private boolean end() {
         try {
             return !m_result.next();
@@ -290,7 +293,7 @@ final class DBRowIterator extends RowIterator {
             return true;
         }
     }
-    
+
     private boolean wasNull() {
         try {
             return m_result.wasNull();

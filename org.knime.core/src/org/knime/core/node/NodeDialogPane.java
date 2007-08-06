@@ -53,7 +53,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.Node.MemoryPolicy;
 
-
 /**
  * The base class for all node dialogs. It provides a tabbed pane to which the
  * derived dialog can add its own components (method
@@ -65,7 +64,20 @@ import org.knime.core.node.Node.MemoryPolicy;
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodeDialogPane {
-    
+    // This listener needs to be static and not an anonymous inner class
+    // because it stays registered in some static Swing classes. Thus a long
+    // reference chain will prevent quite a lot of memory to get garbage
+    // collected even if all workflows are closed.
+    private static final HierarchyListener HIERARCHY_LISTENER =
+        new HierarchyListener() {
+            /**
+             * {@inheritDoc}
+             */
+            public void hierarchyChanged(final HierarchyEvent e) {
+                noLightWeight(e.getComponent());
+            }
+        };
+        
     private static final String TAB_NAME_MISCELLANEOUS = 
         "General Node Settings";
 
@@ -84,6 +96,7 @@ public abstract class NodeDialogPane {
     /** Node reference set once which is informed about the dialog's apply. 
      * @deprecated This member as NodeContainer will be moved into the 
      *             {@link NodeDialog}. */
+    @Deprecated
     private Node m_node;
     
     /** The additional tab in which the user can set the memory options. 
@@ -93,14 +106,6 @@ public abstract class NodeDialogPane {
 
     /** The underlying panel which keeps all the tabs. */
     private final JPanel m_panel;
-    
-    /** Added to all components and listens for new added once components. */
-    private static final HierarchyListener HIERARCHY_LISTENER = 
-            new HierarchyListener() { 
-        public void hierarchyChanged(final HierarchyEvent e) {
-            noLightWeight(e.getComponent());
-        }
-    };
     
     /**
      * Creates a new dialog with the given title. The pane holds a tabbed pane
@@ -125,6 +130,7 @@ public abstract class NodeDialogPane {
      * @deprecated The <code>Node</code> member inside the dialog pane is
      *             obsolete.
      */
+    @Deprecated
     final void setNode(final Node node) {
         assert (m_node == null && node != null);
         m_node = node;
@@ -141,7 +147,7 @@ public abstract class NodeDialogPane {
      * @param is The XML stream to read the settings from.
      * @throws IOException If the stream is not valid.
      * @throws NotConfigurableException if the dialog cannot be opened because
-     * of real invalid settings or if any predconditions are not fulfilled, e.g.
+     * of real invalid settings or if any preconditions are not fulfilled, e.g.
      * no predecessor node, no nominal column in input table, etc.
      */
     public final void loadSettings(final InputStream is)
@@ -214,7 +220,7 @@ public abstract class NodeDialogPane {
     }
     
     /**
-     * Called from the node when the current settings shall be writting to 
+     * Called from the node when the current settings shall be writing to 
      * a NodeSettings object. It will call the abstract saveSettingsTo method
      * and finally write misc settings to the argument object. Misc settings 
      * @param settings To write to. Forwarded to abstract saveSettings method.
@@ -247,7 +253,7 @@ public abstract class NodeDialogPane {
      * @param specs The input data table specs. Items of the array could be null
      *            if no spec is available from the corresponding input port.
      * @throws NotConfigurableException if the dialog cannot be opened because
-     * of real invalid settings or if any predconditions are not fulfilled, e.g.
+     * of real invalid settings or if any preconditions are not fulfilled, e.g.
      * no predecessor node, no nominal column in input table, etc.
      * @see NodeModel#loadSettingsFrom(NodeSettingsRO)
      */
@@ -308,7 +314,7 @@ public abstract class NodeDialogPane {
     }
     
     /**
-     * Determines wether the settings in the dialog are the same as 
+     * Determines whether the settings in the dialog are the same as 
      * in the model.
      * 
      * @return true if the settings are equal
@@ -335,10 +341,10 @@ public abstract class NodeDialogPane {
     }
 
     /**
-     * JSpinner seem to have the "feature" that their value is not commited when
-     * they are being edited (by hand, not with the arrows) and someone presses
-     * an button. This method traverse all components recursively and commits
-     * the values if it finds components that are JSpinners.
+     * JSpinner seem to have the "feature" that their value is not committed 
+     * when* they are being edited (by hand, not with the arrows) and someone 
+     * presses an button. This method traverse all components recursively and 
+     * commits the values if it finds components that are JSpinners.
      * 
      * @param c Component to find JSpinner in.
      */
@@ -530,8 +536,7 @@ public abstract class NodeDialogPane {
     static class MiscNodeDialogPane extends NodeDialogPane {
         
         /**
-         * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, 
-         *      DataTableSpec[])
+         * {@inheritDoc}
          */
         @Override
         protected void loadSettingsFrom(final NodeSettingsRO settings, 
@@ -540,7 +545,7 @@ public abstract class NodeDialogPane {
         }
 
         /**
-         * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
+         * {@inheritDoc}
          */
         @Override
         protected void saveSettingsTo(final NodeSettingsWO settings)

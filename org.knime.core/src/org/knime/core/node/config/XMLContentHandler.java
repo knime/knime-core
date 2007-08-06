@@ -59,7 +59,7 @@ class XMLContentHandler extends DefaultHandler {
     }
 
     /**
-     * @see DefaultHandler#characters(char[], int, int)
+     * {@inheritDoc}
      */
     @Override
     public void characters(final char[] ch, final int start, final int length)
@@ -67,7 +67,7 @@ class XMLContentHandler extends DefaultHandler {
     }
 
     /**
-     * @see DefaultHandler#endElement(String, String, String)
+     * {@inheritDoc}
      */
     @Override
     public void endElement(
@@ -80,7 +80,7 @@ class XMLContentHandler extends DefaultHandler {
     }
     
     /**
-     * @see DefaultHandler#error(SAXParseException)
+     * {@inheritDoc}
      */
     @Override
     public void error(final SAXParseException e) throws SAXException {
@@ -89,7 +89,7 @@ class XMLContentHandler extends DefaultHandler {
     }
     
     /**
-     * @see DefaultHandler#warning(SAXParseException)
+     * {@inheritDoc}
      */
     @Override
     public void warning(final SAXParseException e) throws SAXException {
@@ -98,7 +98,7 @@ class XMLContentHandler extends DefaultHandler {
     }
 
     /**
-     * @see DefaultHandler#fatalError(SAXParseException)
+     * {@inheritDoc}
      */
     @Override
     public void fatalError(final SAXParseException e) throws SAXException {
@@ -123,7 +123,7 @@ class XMLContentHandler extends DefaultHandler {
     }
 
     /**
-     * @see DefaultHandler#startElement(String, String, String, Attributes)
+     * {@inheritDoc}
      */
     @Override
     public void startElement(final String uri, final String localName, 
@@ -163,7 +163,7 @@ class XMLContentHandler extends DefaultHandler {
     }
 
     /**
-     * @see org.xml.sax.EntityResolver#resolveEntity(String, String)
+     * {@inheritDoc}
      */
     @Override
     public InputSource resolveEntity(

@@ -219,7 +219,7 @@ public final class ShapeFactory {
                 final boolean hilited, final boolean selected, 
                 final boolean faded) {
             Color backupColor = g.getColor();
-            if (faded) {
+            if (faded && !hilited) {
                 if (!selected) {
                     g.setColor(ColorAttr.INACTIVE);
                 } else {
@@ -229,7 +229,7 @@ public final class ShapeFactory {
                 g.setColor(color);
             }
             paintShape(g, x, y, size, selected, hilited);
-            if (hilited || selected) {
+            if (hilited && !faded || selected) {
                 paintBorder(g, x, y, size, hilited, selected);
             }
             g.setColor(backupColor);
@@ -250,8 +250,7 @@ public final class ShapeFactory {
                 final boolean selected, final boolean hilited);
         
         /**
-         * 
-         * @see java.lang.Object#toString()
+         * {@inheritDoc}
          */
         @Override
         public abstract String toString();
@@ -267,9 +266,7 @@ public final class ShapeFactory {
     private static class Asterisk extends Shape {
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, int, int, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y,
@@ -290,8 +287,7 @@ public final class ShapeFactory {
 
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -308,9 +304,7 @@ public final class ShapeFactory {
     private static class Circle extends Shape {
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, int, int, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y,
@@ -323,8 +317,7 @@ public final class ShapeFactory {
         
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -340,9 +333,7 @@ public final class ShapeFactory {
     private static class Cross extends Shape {
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, int, int, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y, 
@@ -366,8 +357,7 @@ public final class ShapeFactory {
         
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -384,9 +374,7 @@ public final class ShapeFactory {
     private static class Diamond extends Shape {
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, int, int, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y,
@@ -407,8 +395,7 @@ public final class ShapeFactory {
         }
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -424,9 +411,7 @@ public final class ShapeFactory {
     private static class HorizontalStroke extends Shape {
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, int, int, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y, 
@@ -444,8 +429,7 @@ public final class ShapeFactory {
         }
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -461,9 +445,7 @@ public final class ShapeFactory {
     private static class Rectangle extends Shape { 
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, int, int, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y,
@@ -476,8 +458,7 @@ public final class ShapeFactory {
 
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -493,9 +474,7 @@ public final class ShapeFactory {
     private static class ReverseTriangle extends Shape {
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, int, int, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y, 
@@ -510,8 +489,7 @@ public final class ShapeFactory {
         }
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -527,9 +505,7 @@ public final class ShapeFactory {
     private static class Triangle extends Shape {
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, int, int, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y, 
@@ -545,8 +521,7 @@ public final class ShapeFactory {
         }
         
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -564,9 +539,7 @@ public final class ShapeFactory {
 
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, int, int, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y, 
@@ -583,8 +556,7 @@ public final class ShapeFactory {
         }
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -600,9 +572,7 @@ public final class ShapeFactory {
     private static class XShape extends Shape {
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, int, int, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void paintShape(final Graphics g, final int x, final int y,
@@ -622,8 +592,7 @@ public final class ShapeFactory {
         }
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {

@@ -35,8 +35,7 @@ public class BasicDrawingPaneImpl extends BasicDrawingPane {
 
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractDrawingPane#paintContent(
-     * java.awt.Graphics)
+     * {@inheritDoc}
      */
     @Override
     public void paintContent(final Graphics g) {

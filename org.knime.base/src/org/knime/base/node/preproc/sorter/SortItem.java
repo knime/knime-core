@@ -38,6 +38,9 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.border.Border;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+
 /**
  * The SortItem is a JPanel with a JComboBox and two JRadioButtons.
  * 
@@ -91,14 +94,15 @@ public class SortItem extends JPanel {
      * @param selected the selected column
      * @param sortOrder the sort
      */
-    SortItem(final int id, final Vector<?> values, final Object selected,
-            final boolean sortOrder) {
+    SortItem(final int id, final Vector<DataColumnSpec> values, 
+            final DataColumnSpec selected, final boolean sortOrder) {
         m_id = id;
         m_combovalues = values;
 
         GridLayout gl = new GridLayout(2, 2);
         super.setLayout(gl);
         m_combo = new JComboBox(m_combovalues);
+        m_combo.setRenderer(new DataColumnSpecListCellRenderer());
         m_combo.setLightWeightPopupEnabled(false);
         m_combo.setSelectedItem(selected);
         m_combo.setMaximumSize(new Dimension(150, 25));
@@ -161,7 +165,7 @@ public class SortItem extends JPanel {
      * 
      * @return the selected column
      */
-    public Object getSelectedColumn() {
-        return m_combo.getSelectedItem();
+    public DataColumnSpec getSelectedColumn() {
+        return (DataColumnSpec) m_combo.getSelectedItem();
     }
 }

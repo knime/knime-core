@@ -37,13 +37,10 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
  * Panel is used inside the basisfunction dialogs for general settings, such as
@@ -59,15 +56,15 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
     
     /** Value of maximum number of epochs. */
     private final JSpinner m_maxEpochs;
-    
-    /** Select target column with class-label. */
-    private final JComboBox m_targetColumn;
 
     /** Holds all possible distance functions. */
     private final JComboBox m_distance;
 
     /** Shrink after commit. */
     private final JCheckBox m_shrinkAfterCommit;
+    
+    /** Cover only pattern with maximum degree. */
+    private final JCheckBox m_coverMax;
 
     /** Missing replacement function. */
     private final JComboBox m_missings;
@@ -77,18 +74,8 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
      * information and a column name for the basisfunction model column.
      */
     public BasisFunctionLearnerNodeDialogPanel() {
-        super.setName(" Basics ");
+        super.setName("Options");
         super.setLayout(new GridLayout(0, 1));
-        
-        // target column
-        m_targetColumn = new JComboBox();
-        m_targetColumn.setRenderer(new DataColumnSpecListCellRenderer());
-        m_targetColumn.setPreferredSize(new Dimension(200, 25));
-        JPanel targetPanel = new JPanel();
-        targetPanel.setBorder(BorderFactory
-                .createTitledBorder(" Target Column "));
-        targetPanel.add(m_targetColumn);
-        super.add(targetPanel);
         
         // missing function
         m_missings = new JComboBox(BasisFunctionLearnerTable.MISSINGS);
@@ -121,10 +108,16 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
         // shrink after commit
         m_shrinkAfterCommit = new JCheckBox(" Shrink After Commit ");
         m_shrinkAfterCommit.setPreferredSize(new Dimension(200, 25));
-        JPanel shrinkPanel = new JPanel();
-        shrinkPanel.setBorder(BorderFactory.createTitledBorder(" Properties "));
-        shrinkPanel.add(m_shrinkAfterCommit);
-        super.add(shrinkPanel);
+        
+        // maximum coverage degree
+        m_coverMax = new JCheckBox(" Use class with max coverage ");
+        m_coverMax.setPreferredSize(new Dimension(200, 25));
+        
+        JPanel advancedPanel = new JPanel(new GridLayout(2, 1));
+        advancedPanel.setBorder(BorderFactory.createTitledBorder(" Advanced "));
+        advancedPanel.add(m_shrinkAfterCommit);
+        advancedPanel.add(m_coverMax);
+        super.add(advancedPanel);
         
         // maximum number of epochs
         m_isMaxEpochs = new JCheckBox(" Use ", false);
@@ -161,13 +154,10 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
      * Loads given settings.
      * @param settings read settings from
      * @param specs data table spec from the input
-     * @throws NotConfigurableException if no column to select available
      */
     public void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        // update target columns
-        setTargetColumns(settings.getString(
-                BasisFunctionLearnerNodeModel.TARGET_COLUMN, null), specs[0]);
+            final DataTableSpec[] specs) {
+        assert specs == specs;
         // update choice of distance function
         setDistance(settings.getInt(
                 BasisFunctionLearnerNodeModel.DISTANCE, 0));
@@ -178,6 +168,10 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
         boolean shrinkAfterCommit = settings.getBoolean(
                 BasisFunctionLearnerNodeModel.SHRINK_AFTER_COMMIT, false);
         setShrinkAfterCommit(shrinkAfterCommit);
+        // max class coverage
+        boolean coverMax = settings.getBoolean(
+                BasisFunctionLearnerNodeModel.MAX_CLASS_COVERAGE, true);
+        setCoverMax(coverMax);
         // maximum number of epochs
         int maxEpochs = settings.getInt(
                 BasisFunctionLearnerNodeModel.MAX_EPOCHS, -1);
@@ -219,10 +213,6 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
         // everything fine, set values in the model
         // 
 
-        // set target column
-        settings.addString(BasisFunctionLearnerNodeModel.TARGET_COLUMN,
-                getSelectedTargetColumn().getName());
-
         // distance
         settings.addInt(BasisFunctionLearnerNodeModel.DISTANCE, distance);
 
@@ -232,6 +222,10 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
         // shrink after commit
         settings.addBoolean(BasisFunctionLearnerNodeModel.SHRINK_AFTER_COMMIT,
                 isShrinkAfterCommit());
+
+        // max class coverage
+        settings.addBoolean(BasisFunctionLearnerNodeModel.MAX_CLASS_COVERAGE,
+                isCoverMax());
         
         // maximum number of epochs
         if (m_isMaxEpochs.isSelected()) {
@@ -240,59 +234,6 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
                     maxEpochs);
         } else {
             settings.addInt(BasisFunctionLearnerNodeModel.MAX_EPOCHS, -1);
-        }
-    }
-  
-
-    /**
-     * Returns the selected target column name.
-     * 
-     * @return the target column name
-     */
-    private DataColumnSpec getSelectedTargetColumn() {
-        return (DataColumnSpec)m_targetColumn.getSelectedItem();
-    }
-
-    /**
-     * Sets a new selected target column.
-     * 
-     * @param target the column to select
-     */
-    private void setSelectedTargetColumn(final DataColumnSpec target) {
-        if (target != null) {
-            m_targetColumn.setSelectedItem(target);
-        }
-    }
-
-    /**
-     * Sets a new list of target column name using the input spec.
-     * 
-     * @param target the target column to select
-     * @param spec the spec to retrieve column names from
-     * @throws NotConfigurableException if the spec is <code>null</code> or
-     *             contains no columns
-     */
-    private void setTargetColumns(final String target, final DataTableSpec spec)
-            throws NotConfigurableException {
-        m_targetColumn.removeAllItems();
-        if (spec == null || spec.getNumColumns() == 0) {
-            throw new NotConfigurableException("No data spec found");
-        }
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            m_targetColumn.addItem(spec.getColumnSpec(i));
-        }
-        // always select the last column first
-        int cnt = m_targetColumn.getItemCount();
-        if (cnt > 0) {
-            m_targetColumn.setSelectedIndex(cnt - 1);
-        }
-        // then try to select given target column
-        if (target != null) {
-            int idxTarget = spec.findColumnIndex(target);
-            if (idxTarget >= 0) {
-                // select the target column
-                setSelectedTargetColumn(spec.getColumnSpec(idxTarget));
-            }
         }
     }
 
@@ -324,12 +265,29 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
     }
 
     /**
-     * Sets the <i>shrink_after_commit</i> flag.
+     * Sets the <i>cover_max</i> flag.
      * 
      * @param flag the flag
      */
     private void setShrinkAfterCommit(final boolean flag) {
         m_shrinkAfterCommit.setSelected(flag);
+    }
+    
+    /**
+     * @return <code>true</code> if the <i>cover_max</i> check box
+     *         has been selected
+     */
+    private boolean isCoverMax() {
+        return m_coverMax.isSelected();
+    }
+
+    /**
+     * Sets the <i>shrink_after_commit</i> flag.
+     * 
+     * @param flag the flag
+     */
+    private void setCoverMax(final boolean flag) {
+        m_coverMax.setSelected(flag);
     }
 
     /**

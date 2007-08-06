@@ -32,7 +32,7 @@ import org.knime.core.data.DataColumnSpec;
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class BitVectorColumnCellFactory 
-    extends BitVectorRowCellFactory {
+    extends BitVectorCellFactory {
     
     private int m_columnIndex;
     
@@ -42,7 +42,7 @@ public abstract class BitVectorColumnCellFactory
      * @param columnSpec the spec of the new column
      * @param columnIndex index of the column to be replaced
      */
-    public BitVectorColumnCellFactory(final DataColumnSpec columnSpec, 
+    public BitVectorColumnCellFactory(final DataColumnSpec columnSpec,    
             final int columnIndex) {
         super(columnSpec);
         m_columnIndex = columnIndex;

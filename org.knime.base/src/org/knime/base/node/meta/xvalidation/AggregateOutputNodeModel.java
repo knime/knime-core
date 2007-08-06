@@ -80,7 +80,7 @@ public class AggregateOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -185,7 +185,7 @@ public class AggregateOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -221,7 +221,7 @@ public class AggregateOutputNodeModel extends NodeModel {
         }
         DataRow stats = new DefaultRow(
                 new RowKey("fold " + m_foldStatistics.size()), 
-                new DoubleCell(incorrect / (double)rowCount),
+                new DoubleCell(100.0 * incorrect / rowCount),
                 new IntCell(rowCount),
                 new IntCell(incorrect));
         BufferedDataContainer bufOut2 = 
@@ -233,7 +233,7 @@ public class AggregateOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadInternals(File, ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(
@@ -243,7 +243,7 @@ public class AggregateOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -253,7 +253,7 @@ public class AggregateOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -265,7 +265,7 @@ public class AggregateOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveInternals(File, ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(
@@ -275,7 +275,7 @@ public class AggregateOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -286,7 +286,7 @@ public class AggregateOutputNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)

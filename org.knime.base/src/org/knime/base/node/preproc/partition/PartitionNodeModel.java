@@ -55,8 +55,7 @@ public class PartitionNodeModel extends AbstractSamplingNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#execute( BufferedDataTable[],
-     *      ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -102,7 +101,7 @@ public class PartitionNodeModel extends AbstractSamplingNodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)

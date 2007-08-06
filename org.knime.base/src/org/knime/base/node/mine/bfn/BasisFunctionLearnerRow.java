@@ -24,9 +24,7 @@ package org.knime.base.node.mine.bfn;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
@@ -34,13 +32,14 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultCellIterator;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 
 /**
  * General <code>BasisFunctionLearnerRow</code> prototype which provides
- * functions to shink, cover, and reset rules; and to be compared with others by
- * its coverage. This basis function also keeps a list of all covered trainings
- * examples.
+ * functions to shrink, cover, and reset rules; and to be compared with others 
+ * by its coverage. This basis function also keeps a list of all covered 
+ * training examples.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -54,31 +53,21 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
 
     /** Keeps the initial anchor vector. */
     private final DataRow m_centroid;
-
-    /** Default level, used for hierarchical rule learning only. */
-    private static final DataCell DFT_LEVEL = new IntCell(1);
-
-    /** Level of detail, by default all are assigned to 1. */
-    private IntCell m_level = null;
-
-    /** <code>true</code> if an additional column show the hierarchy level. */
-    private final boolean m_hierarchy;
     
-    /** Keeps the data cell ids of all pattern covered by this basisfunction. */
-    private Map<DataCell, Set<DataCell>> m_coveredPattern;
+    /** Keeps key of all covered pattern. */
+    private final Set<DataCell> m_coveredPattern;
 
     /**
-     * Inits a new basisfunction rule with one covered pattern since this rule
-     * is also covered by itself. The number of explained pattern is set to
+     * Initialise a new basisfunction rule with one covered pattern since this
+     * rule is also covered by itself. The number of explained pattern is set to
      * zero.
      * 
      * @param key of this row
      * @param centroid the initial center vector
      * @param classInfo the class info value
-     * @param hierarchy <code>true</code> if hierarchy is trained
      */
     protected BasisFunctionLearnerRow(final RowKey key, final DataRow centroid,
-            final DataCell classInfo, final boolean hierarchy) {
+            final DataCell classInfo) {
         // check inputs
         assert (key != null);
         assert (centroid != null);
@@ -86,12 +75,11 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
         m_key = key;
         m_centroid = centroid;
         m_classInfo = classInfo;
-        m_hierarchy = hierarchy;
-        m_coveredPattern = new LinkedHashMap<DataCell, Set<DataCell>>();
+        m_coveredPattern = new LinkedHashSet<DataCell>();
     }
 
     /**
-     * @return Underlying predictor row.
+     * @return underlying predictor row
      */
     public abstract BasisFunctionPredictorRow getPredictorRow();
 
@@ -105,19 +93,15 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getNumCells()
+     * {@inheritDoc}
      */
-    public final int getNumCells() {
-        if (m_hierarchy) {
-            return m_centroid.getNumCells() + 2; // + 1 for class label
-            // + 1 for hierarchy level
-        } else {
-            return m_centroid.getNumCells() + 1; // + 1 for class label
-        }
+    public int getNumCells() {
+        // #attributes + class, weight, spread, features, variance
+        return m_centroid.getNumCells() + 5; 
     }
 
-    /** 
-     * @see org.knime.core.data.DataRow#getKey()
+    /**
+     * {@inheritDoc}
      */
     public RowKey getKey() {
         return m_key;
@@ -131,26 +115,28 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getCell(int)
+     * {@inheritDoc}
      */
-    public final DataCell getCell(final int index) {
-        if (index < m_centroid.getNumCells()) {
+    public DataCell getCell(final int index) {
+        final int nrCells = m_centroid.getNumCells();
+        if (index < nrCells) {
             return getFinalCell(index);
+        } else if (index == nrCells) {
+            return getClassLabel();
+        } else if (index == nrCells + 1) {
+            assert m_coveredPattern.size() > 0;
+            return new IntCell(m_coveredPattern.size());
+        } else if (index == nrCells + 2) {
+            return new DoubleCell(computeSpread());
+        } else if (index == nrCells + 3) {
+            return new IntCell(getPredictorRow().getNrUsedFeatures());
         } else {
-            if (m_hierarchy && index == getNumCells() - 1) {
-                if (m_level == null) {
-                    return DFT_LEVEL;
-                } else {
-                    return m_level;
-                }
-            } else {
-                return getClassLabel();
-            }
+            return new DoubleCell(getVariance());
         }
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);
@@ -162,25 +148,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @param index cell for index
      * @return a basis function cell
      */
-    protected abstract DataCell getFinalCell(final int index);
-
-    /**
-     * Sets a new level of detail.
-     * 
-     * @param level level of detail which has to be greater 0
-     */
-    public final void setLevel(final int level) {
-        m_level = new IntCell(level);
-    }
-
-    /**
-     * Returns the level of detail this basis function is assigned to.
-     * 
-     * @return level of detail
-     */
-    public final int getLevel() {
-        return (m_level == null ? -1 : m_level.getIntValue());
-    }
+    public abstract DataCell getFinalCell(final int index);
 
     /**
      * @param col the column index
@@ -200,7 +168,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @throws NullPointerException if the given <code>other</code> basis
      *             function is <code>null</code>
      */
-    protected abstract boolean compareCoverage(final BasisFunctionLearnerRow o,
+    public abstract boolean compareCoverage(final BasisFunctionLearnerRow o,
             final DataRow r);
 
     /**
@@ -210,32 +178,36 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @return set of covered input pattern
      */
     public final Set<DataCell> getAllCoveredPattern() {
-        Set<DataCell> allCov = new LinkedHashSet<DataCell>();
-        for (DataCell key : m_coveredPattern.keySet()) {
-            allCov.addAll(m_coveredPattern.get(key));
-        }
-        return Collections.unmodifiableSet(allCov);
+        return Collections.unmodifiableSet(m_coveredPattern);
     }
     
     /**
-     * Returns a value for the coverage of this basis function, e.g. the volume,
-     * number of covered pattern.
+     * Returns a value for the spread of this rule.
      * 
-     * @return a coverage value
+     * @return rule spread value
      */
-    public abstract double computeCoverage();
+    public abstract double computeSpread();
+    
+    /**
+     * Returns the within-cluster variance.
+     * 
+     * @return within-cluster variance
+     */
+    public final double getVariance() {
+        return getPredictorRow().getVariance();
+    }
 
     /**
      * Computes the overlapping of two basis functions.
      * 
-     * @param symetric if the result is proportional to both basis functions,
+     * @param symmetric if the result is proportional to both basis functions,
      *            and thus symmetric, or if it is proportional to the area of 
      *            the basisfunction on which the function is called.
      * @param bf the other basisfunction to compute overlapping with
-     * @return if both are overlapping
+     * @return true, if both are overlapping
      */
     public abstract double overlap(final BasisFunctionLearnerRow bf,
-            final boolean symetric);
+            final boolean symmetric);
 
     /**
      * Computes the overlapping based on two lines.
@@ -245,9 +217,9 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @param minB left point line B
      * @param maxB right point line B
      * @param symmetric if the result is proportional to both basis functions,
-     *            and thus symetric, or if it is proportional to the area of the
-     *            basis function on which the function is called
-     * @return The positive overlapping spread of this two lines or zero if none
+     *        and thus symmetric, or if it is proportional to the area of the
+     *        basis function on which the function is called
+     * @return the positive overlapping spread of this two lines or zero if none
      */
     public static final double overlapping(final double minA,
             final double maxA, final double minB, final double maxB,
@@ -297,19 +269,12 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     /**
      * If a new instance of this class is covered.
      * 
-     * @param key the instance's key
+     * @param row to cover
      * @param classInfo and class.
      */
-    public final void addCovered(final DataCell key, final DataCell classInfo) {
-        Set<DataCell> covSet;
-        if (m_coveredPattern.containsKey(classInfo)) {
-            covSet = m_coveredPattern.get(classInfo);
-        } else {
-            covSet = new LinkedHashSet<DataCell>();
-            m_coveredPattern.put(classInfo, covSet);
-        }
-        covSet.add(key);
-        getPredictorRow().cover(classInfo);
+    public final void addCovered(final DataRow row, final DataCell classInfo) {
+        m_coveredPattern.add(row.getKey().getId());
+        getPredictorRow().cover(row, classInfo);
     }
 
     /**
@@ -334,10 +299,35 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     final void coverIntern(final DataRow row) {
         assert (row != null);
         // increase covered pattern
-        addCovered(row.getKey().getId(), m_classInfo);
+        addCovered(row, m_classInfo);
         // called in derived class
         cover(row);
     }
+    
+    /**
+     * Computes the intersection of instances covered by this and the other
+     * basisfunction - its fraction to the total number of instances is 
+     * returned.
+     * @param bf the other basisfunction to get covered instances from
+     * @return the intersection ratio of both covered sets
+     */
+    public final double computeCoverage(final BasisFunctionLearnerRow bf) {
+        Set<DataCell> c1 = this.getAllCoveredPattern();
+        Set<DataCell> c2 = bf.getAllCoveredPattern();
+        int cnt = 0;
+        for (DataCell cell : c1) {
+            if (c2.contains(cell)) {
+               cnt++;
+            }
+        }
+        int sizeC1 = c1.size();
+        int sizeC2 = c2.size();
+        if (sizeC1 + sizeC2 == 0) {
+            assert cnt == 0;
+            return 0;
+        }
+        return 1.0 * cnt / (sizeC1 + sizeC2 - cnt);
+    }   
 
     /* --- print function --- */
 
@@ -392,7 +382,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @param row to check coverage
      * @return <code>true</code> if covered, otherwise <code>false</code>
      */
-    protected abstract boolean covers(final DataRow row);
+    public abstract boolean covers(final DataRow row);
 
     /**
      * Returns <code>true</code> if the input row is explained by this row,
@@ -402,7 +392,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @param row to check coverage
      * @return <code>true</code> if explained, otherwise <code>false</code>
      */
-    protected abstract boolean explains(final DataRow row);
+    public abstract boolean explains(final DataRow row);
 
     /**
      * Called if a new row has to be adjusted.
@@ -411,7 +401,7 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @return a value greater zero if a conflict has to be solved. The value
      *         indicates relative loss in coverage for this basis function.
      */
-    protected abstract boolean getShrinkValue(final DataRow row);
+    public abstract boolean getShrinkValue(final DataRow row);
 
     /**
      * Called if a new row has to be adjusted, all conflicting rows are
@@ -421,20 +411,20 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * @return <code>true</code> if this basis function was effected by any
      *         change, otherwise <code>false</code>
      */
-    protected abstract boolean shrink(final DataRow row);
+    public abstract boolean shrink(final DataRow row);
 
     /**
      * Called if the algorithms starts a new run overall input pattern; some
      * variables might need to be reset.
      */
-    protected abstract void reset();
+    public abstract void reset();
 
     /**
      * Called if a row covers a new <code>DataRow</code>.
      * 
      * @param row the new covered <code>DataRow</code>
      */
-    protected abstract void cover(final DataRow row);
+    public abstract void cover(final DataRow row);
 
     /**
      * Check if two BasisFunctionLearnerRow objects are equal by its centroid.
@@ -475,6 +465,6 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     @Override
     public int hashCode() {
         return getAnchor().hashCode() * m_classInfo.hashCode();
-    }
+    }   
     
 }

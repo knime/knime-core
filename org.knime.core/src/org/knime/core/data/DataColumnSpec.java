@@ -25,6 +25,10 @@
  */
 package org.knime.core.data;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
@@ -49,6 +53,12 @@ public final class DataColumnSpec {
 
     /** Keeps the column name. */
     private final String m_name;
+    
+    /** Names array of sub elements such as bit vector positions or 
+     * array types. By default contains m_name in an array of length 1.
+     * We use a unmodifiable list here. 
+     */
+    private final List<String> m_elementNames;
 
     /** Keeps the column type. */
     private final DataType m_type;
@@ -70,6 +80,9 @@ public final class DataColumnSpec {
 
     /** Config key for the column name. */
     private static final String CFG_COLUMN_NAME = "column_name";
+    
+    /** Config key for the element names. */
+    private static final String CFG_ELEMENT_NAMES = "element_names";
 
     /** Config key for the column type. */
     private static final String CFG_COLUMN_TYPE = "column_type";
@@ -95,6 +108,8 @@ public final class DataColumnSpec {
      * called from the {@link DataColumnSpecCreator} in this package.
      * 
      * @param name the name of the column, must not be <code>null</code>
+     * @param elNames Names of sub elements (if any), 
+     * must not be <code>null</code>, nor contain <code>null</code> elements.
      * @param type the type of the column, must not be <code>null</code>
      * @param domain the domain, must not be <code>null</code>
      * @param props additional properties, must not be <code>null</code>
@@ -104,15 +119,23 @@ public final class DataColumnSpec {
      * @throws NullPointerException if either column name, type, domain, or
      *             properties are <code>null</code>
      */
-    DataColumnSpec(final String name, final DataType type,
-            final DataColumnDomain domain, final DataColumnProperties props,
-            final SizeHandler sizeHdl, final ColorHandler colorHdl,
-            final ShapeHandler shapeHdl) {
-        if (name == null || type == null || domain == null || props == null) {
+    DataColumnSpec(final String name, final String[] elNames,
+            final DataType type, final DataColumnDomain domain,
+            final DataColumnProperties props, final SizeHandler sizeHdl,
+            final ColorHandler colorHdl, final ShapeHandler shapeHdl) {
+        if (name == null || type == null || domain == null || props == null
+                || elNames == null) {
             throw new NullPointerException("Do not init DataColumnSpec with"
                     + " null arguments!");
         }
+        List<String> elNamesAsList = 
+            Collections.unmodifiableList(Arrays.asList(elNames));
+        if (elNamesAsList.contains(null)) {
+            throw new NullPointerException(
+                    "Element names must not contain null elements");
+        }
         m_name = name;
+        m_elementNames = elNamesAsList;
         m_type = type;
         m_domain = domain;
         m_properties = props;
@@ -128,6 +151,23 @@ public final class DataColumnSpec {
      */
     public String getName() {
         return m_name;
+    }
+    
+    /**
+     * Get names of sub elements such as bit vector positions or elements of
+     * other vector data types. For non-vector types (most types are non-vector
+     * types) this list typically contains a single value whose value is equal
+     * to {@link #getName()}. For vector type columns (i.e. those which contain
+     * vectors of <code>DataCell</code> or a <code>BitVectorCell</code>)
+     * the elements of this list represent identifiers for each of the different
+     * vector positions. There is, however, no need that such a list is set.
+     * 
+     * @return Names of the elements in a unmodifiable, random access list. The
+     *         returned value will never be null, nor contain null elements. The
+     *         length of the list may vary from 0 to any length.
+     */
+    public List<String> getElementNames() {
+        return m_elementNames;
     }
 
     /**
@@ -260,8 +300,7 @@ public final class DataColumnSpec {
 
     /**
      * The hash code is computed based on the hash code of column name and type.
-     * 
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc} 
      */
     @Override
     public int hashCode() {
@@ -287,6 +326,11 @@ public final class DataColumnSpec {
      */
     public void save(final ConfigWO config) {
         config.addString(CFG_COLUMN_NAME, m_name);
+        if (m_elementNames.size() != 1 
+                || !m_name.equals(m_elementNames.get(0))) {
+            config.addStringArray(CFG_ELEMENT_NAMES, 
+                    m_elementNames.toArray(new String[m_elementNames.size()]));
+        }
         m_type.save(config.addConfig(CFG_COLUMN_TYPE));
         m_domain.save(config.addConfig(CFG_COLUMN_DOMAIN));
         m_properties.save(config.addConfig(CFG_COLUMN_PROPS));
@@ -316,6 +360,11 @@ public final class DataColumnSpec {
     public static DataColumnSpec load(final ConfigRO config)
             throws InvalidSettingsException {
         String name = config.getString(CFG_COLUMN_NAME);
+        String[] elNames = config.getStringArray(
+                CFG_ELEMENT_NAMES, (String[])null);
+        if (elNames == null) {
+            elNames = new String[]{name};
+        }
         DataType type = DataType.load(config.getConfig(CFG_COLUMN_TYPE));
         DataColumnDomain domain =
                 DataColumnDomain.load(config.getConfig(CFG_COLUMN_DOMAIN));
@@ -333,8 +382,8 @@ public final class DataColumnSpec {
         if (config.containsKey(CFG_SHAPES)) {
             shape = ShapeHandler.load(config.getConfig(CFG_SHAPES));
         }
-        return new DataColumnSpec(name, type, domain, properties, size, color,
-                shape);
+        return new DataColumnSpec(name, elNames, type, domain, properties,
+                size, color, shape);
     }
 
 } // DataColumnSpec

@@ -46,7 +46,9 @@ class MultiLineToolTipUI extends BasicToolTipUI {
     private static JTextArea textArea;
 
     /**
-     * @see javax.swing.plaf.ComponentUI#createUI(javax.swing.JComponent)
+     * Creates the UI component.
+     * @param c A <code>JComponent</code>.
+     * @return The sharde instance of the UI component.
      */
     public static ComponentUI createUI(final JComponent c) {
         return sharedInstance;
@@ -60,7 +62,7 @@ class MultiLineToolTipUI extends BasicToolTipUI {
     }
 
     /**
-     * @see javax.swing.plaf.ComponentUI#installUI(javax.swing.JComponent)
+     * {@inheritDoc}
      */
     @Override
     public void installUI(final JComponent c) {
@@ -70,7 +72,7 @@ class MultiLineToolTipUI extends BasicToolTipUI {
     }
 
     /**
-     * @see javax.swing.plaf.ComponentUI#uninstallUI(javax.swing.JComponent)
+     * {@inheritDoc}
      */
     @Override
     public void uninstallUI(final JComponent c) {
@@ -80,7 +82,7 @@ class MultiLineToolTipUI extends BasicToolTipUI {
     }
 
     /**
-     * @see javax.swing.plaf.ComponentUI#paint(Graphics, JComponent)
+     * {@inheritDoc}
      */
     @Override
     public void paint(final Graphics g, final JComponent c) {
@@ -91,7 +93,7 @@ class MultiLineToolTipUI extends BasicToolTipUI {
     }
 
     /**
-     * @see javax.swing.plaf.ComponentUI#getPreferredSize(JComponent)
+     * {@inheritDoc}
      */
     @Override
     public Dimension getPreferredSize(final JComponent c) {
@@ -129,7 +131,7 @@ class MultiLineToolTipUI extends BasicToolTipUI {
     }
 
     /**
-     * @see javax.swing.plaf.ComponentUI#getMinimumSize(javax.swing.JComponent)
+     * {@inheritDoc}
      */
     @Override
     public Dimension getMinimumSize(final JComponent c) {
@@ -137,7 +139,7 @@ class MultiLineToolTipUI extends BasicToolTipUI {
     }
 
     /**
-     * @see javax.swing.plaf.ComponentUI#getMaximumSize(javax.swing.JComponent)
+     * {@inheritDoc}
      */
     @Override
     public Dimension getMaximumSize(final JComponent c) {

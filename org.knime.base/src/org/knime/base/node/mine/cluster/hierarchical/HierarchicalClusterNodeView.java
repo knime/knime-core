@@ -34,8 +34,8 @@ import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
-import org.knime.base.node.viz.plotter.dendrogram.ClusterNode;
 import org.knime.base.node.viz.plotter.dendrogram.DendrogramPlotter;
+import org.knime.base.node.viz.plotter.dendrogram.DendrogramNode;
 import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotter;
 import org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane;
@@ -77,7 +77,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
                 m_properties) {
 
             @Override
-            public void fillPopupMenu(JPopupMenu popupMenu) {
+            public void fillPopupMenu(final JPopupMenu popupMenu) {
                 // nothing: no hiliting supported
             }
 
@@ -98,7 +98,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
         
         m_properties.getDotSizeSpinner().addChangeListener(
                 new ChangeListener() {
-                    public void stateChanged(ChangeEvent e) {
+                    public void stateChanged(final ChangeEvent e) {
                         ((ScatterPlotterDrawingPane)m_distancePlotter
                                 .getDrawingPane()).setDotSize((Integer)
                                 m_properties.getDotSizeSpinner().getValue());
@@ -108,7 +108,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
         });
         m_properties.getThicknessSpinner().addChangeListener(
                 new ChangeListener() {
-                    public void stateChanged(ChangeEvent e) {
+                    public void stateChanged(final ChangeEvent e) {
                         m_thickness = (Integer)m_properties
                             .getThicknessSpinner().getValue();
                         modelChanged();
@@ -117,7 +117,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
         });
         m_properties.getShowHideCheckbox().addChangeListener(
                 new ChangeListener() {
-                    public void stateChanged(ChangeEvent e) {
+                    public void stateChanged(final ChangeEvent e) {
                         m_distancePlotter.setHideMode(
                                 !m_properties.getShowHideCheckbox()
                                 .isSelected());
@@ -130,13 +130,13 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
 
 
     /**
-     * 
-     * @see DefaultVisualizationNodeView#modelChanged()
+     * {@inheritDoc}
      */
     @Override
     public void modelChanged() {
         if (getNodeModel() == null 
-                || ((DataProvider)getNodeModel()).getDataArray(0) == null) {
+                || ((DataProvider)getNodeModel()).getDataArray(0) == null
+                || ((DataProvider)getNodeModel()).getDataArray(0).size() == 0) {
             return;
         }
         NodeModel model = getNodeModel();
@@ -147,7 +147,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
         m_dendroPlotter.setDataProvider((DataProvider)model);
         m_distancePlotter.setDataProvider((DataProvider)model);
         m_distancePlotter.setHiLiteHandler(model.getInHiLiteHandler(0));
-        ClusterNode rootNode = ((HierarchicalClusterNodeModel)getNodeModel())
+        DendrogramNode rootNode = ((HierarchicalClusterNodeModel)getNodeModel())
             .getRootNode();
         DataArray distanceTable = ((DataProvider)getNodeModel())
             .getDataArray(0);
@@ -173,7 +173,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onClose()
+     * {@inheritDoc}
      */
     @Override
     protected void onClose() {
@@ -181,7 +181,7 @@ public class HierarchicalClusterNodeView extends DefaultVisualizationNodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onOpen()
+     * {@inheritDoc}
      */
     @Override
     protected void onOpen() {

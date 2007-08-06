@@ -898,7 +898,7 @@ public class TableView extends JScrollPane {
         }
         
         /**
-         * @see PropertyChangeListener#propertyChange(PropertyChangeEvent)
+         * {@inheritDoc}
          */
         public void propertyChange(final PropertyChangeEvent evt) {
             JComponent source = (JComponent)evt.getSource();

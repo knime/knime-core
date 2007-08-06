@@ -203,6 +203,16 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         } else {
             m_rowComparator.update(xColType.getComparator(), m_xColIdx);
         }
+//        if (BinningUtil.binNominal(m_xColSpec, getNoOfBins())) {
+//            setBinNominal(true);
+//        } else {
+//            final boolean wasNominal = isBinNominal();
+//            setBinNominal(false);
+//            //if we have binned nominal reset the number of bins to default
+//            if (wasNominal) {
+//                updateNoOfBins(DEFAULT_NO_OF_BINS);
+//            }
+//        }
         if (xColType.isCompatible(
                 DoubleValue.class)) {
             final boolean wasNominal = isBinNominal();
@@ -346,14 +356,25 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         if (m_aggrColumns == null || m_aggrColumns.size() < 1) {
             //if the user hsn't selected a aggregation column
             for (DataRow row : getSortedRows()) {
-                final DataCell xVal = row.getCell(m_xColIdx);
+                final DataCell xCell = row.getCell(m_xColIdx);
                 final Color color = 
                     m_tableSpec.getRowColor(row).getColor(false, false);
                 final DataCell id = row.getKey().getId();
-                startBin = BinningUtil.addDataRow2Bin(
-                        isBinNominal(), bins, missingValBin, startBin, 
-                        xVal, color, id, m_aggrColumns, 
-                        DataType.getMissingCell());
+                try {
+                    startBin = BinningUtil.addDataRow2Bin(
+                            isBinNominal(), bins, missingValBin, startBin, 
+                            xCell, color, id, m_aggrColumns, 
+                            DataType.getMissingCell());
+                } catch (IllegalArgumentException e) {
+                    if (!BinningUtil.checkDomainRange(xCell, 
+                            getXColumnSpec())) {
+                        throw new IllegalStateException(
+                            "Invalid column domain for column " 
+                            + m_xColSpec.getName()
+                            + ". " + e.getMessage());
+                    }
+                    throw e;
+                }
             }
         } else {
             final DataTableSpec tableSpec = getTableSpec();
@@ -365,7 +386,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
                         aggrColumn.getColumnName());
             }
             for (DataRow row : getSortedRows()) {
-                final DataCell xVal = row.getCell(m_xColIdx);
+                final DataCell xCell = row.getCell(m_xColIdx);
                 final Color color = 
                     m_tableSpec.getRowColor(row).getColor(false, false);
                 final DataCell id = row.getKey().getId();
@@ -373,9 +394,20 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
                 for (int j = 0, length = aggrIdx.length; j < length; j++) {
                     aggrVals[j] = row.getCell(aggrIdx[j]);
                 }
-                startBin = BinningUtil.addDataRow2Bin(
-                        isBinNominal(), bins, missingValBin, startBin, 
-                        xVal, color, id, m_aggrColumns, aggrVals);
+                try {
+                    startBin = BinningUtil.addDataRow2Bin(
+                            isBinNominal(), bins, missingValBin, startBin, 
+                            xCell, color, id, m_aggrColumns, aggrVals);
+                } catch (IllegalArgumentException e) {
+                        if (!BinningUtil.checkDomainRange(xCell, 
+                                getXColumnSpec())) {
+                            throw new IllegalStateException(
+                                "Invalid column domain for column " 
+                                + m_xColSpec.getName()
+                                + ". " + e.getMessage());
+                        }
+                        throw e;
+                    }
             }
         }
     }

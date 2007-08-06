@@ -275,7 +275,7 @@
       <key
             commandId="knime.commands.reset"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="M1+BS"/>          
+            sequence="Ctrl+7"/>          
             
             
    </extension>

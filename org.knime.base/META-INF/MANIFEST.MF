@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-Name: KNIME Base Nodes
 Bundle-SymbolicName: org.knime.base;singleton:=true
 Bundle-ManifestVersion: 2
-Bundle-Version: 1.2.2
+Bundle-Version: 1.2.0
 Bundle-ClassPath: knime-base.jar
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, University of Konstanz, Germany
 Bundle-Localization: plugin
@@ -127,8 +127,7 @@ Export-Package: org.knime.base.data.append.column,
  org.knime.base.node.mine.bfn.radial,
  org.knime.base.node.mine.cluster.fuzzycmeans,
  org.knime.base.node.mine.cluster.kmeans,
- org.knime.base.node.mine.decisiontree.predictor,
- org.knime.base.node.mine.decisiontree.predictor.decisiontree,
+ org.knime.base.node.mine.decisiontree2.model,
  org.knime.base.node.mine.knn,
  org.knime.base.node.mine.neural.mlp,
  org.knime.base.node.mine.neural.rprop,
@@ -140,8 +139,11 @@ Export-Package: org.knime.base.data.append.column,
  org.knime.base.node.mine.scorer.hilitescorer,
  org.knime.base.node.mine.smote,
  org.knime.base.node.mine.sota,
- org.knime.base.node.mine.sota.dialog,
+ org.knime.base.node.mine.sota.distances,
+ org.knime.base.node.mine.sota.logic,
+ org.knime.base.node.mine.sota.predictor,
  org.knime.base.node.mine.sota.view,
+ org.knime.base.node.mine.sota.view.interaction,
  org.knime.base.node.mine.subgroupminer,
  org.knime.base.node.mine.subgroupminer.apriori,
  org.knime.base.node.mine.subgroupminer.freqitemset,
@@ -199,6 +201,7 @@ Export-Package: org.knime.base.data.append.column,
  org.knime.base.node.viz.scatterplot,
  org.knime.base.node.viz.statistics,
  org.knime.base.node.viz.table,
+ org.knime.base.util,
  org.knime.base.util.coordinate,
  org.knime.base.util.kdtree,
  org.knime.base.util.math

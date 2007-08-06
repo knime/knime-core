@@ -124,13 +124,13 @@ public final class SizeHandler implements PropertyHandler {
     
     /**
      * Internal <code>SizeModel</code> used to request sizes by 
-     * <code>DataCell</code> attribut value.
+     * <code>DataCell</code> attribute value.
      */
     interface SizeModel {
         /**
          * Returns a <code>double</code> value for a given <code>DataCell</code>
          * within 0 and 1, or -1 if no color setting available.
-         * @param dc The attribut value to get size for.
+         * @param dc The attribute value to get size for.
          * @return A <code>double</code> between 0 and 1.
          */
         double getSize(DataCell dc);

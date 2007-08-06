@@ -173,8 +173,7 @@ public final class FuzzyNumberCell extends DataCell implements
     }
 
     /**
-     * @see org.knime.core.data.DataCell
-     *      #equalsDataCell(org.knime.core.data.DataCell)
+     * {@inheritDoc}
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
@@ -189,7 +188,7 @@ public final class FuzzyNumberCell extends DataCell implements
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -201,7 +200,7 @@ public final class FuzzyNumberCell extends DataCell implements
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -212,7 +211,7 @@ public final class FuzzyNumberCell extends DataCell implements
     private static class FuzzyNumberSerializer implements
             DataCellSerializer<FuzzyNumberCell> {
         /**
-         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         * {@inheritDoc}
          */
         public void serialize(final FuzzyNumberCell cell,
                 final DataOutput output) throws IOException {
@@ -222,7 +221,7 @@ public final class FuzzyNumberCell extends DataCell implements
         }
 
         /**
-         * @see DataCellSerializer#deserialize(DataInput)
+         * {@inheritDoc}
          */
         public FuzzyNumberCell deserialize(final DataInput input)
                 throws IOException {
@@ -232,5 +231,4 @@ public final class FuzzyNumberCell extends DataCell implements
             return new FuzzyNumberCell(minSupp, core, maxSupp);
         }
     }
-
 }

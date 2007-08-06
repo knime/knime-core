@@ -196,14 +196,14 @@ public class DefaultDataValueRendererFamily implements DataValueRendererFamily {
     }
 
     /**
-     * @see DataValueRenderer#getPreferredSize()
+     * {@inheritDoc}
      */
     public Dimension getPreferredSize() {
         return m_active.getPreferredSize();
     }
 
     /**
-     * @see DataValueRendererFamily#getRendererDescriptions()
+     * {@inheritDoc}
      */
     public String[] getRendererDescriptions() {
         String[] result = new String[m_renderers.length];
@@ -214,7 +214,7 @@ public class DefaultDataValueRendererFamily implements DataValueRendererFamily {
     }
 
     /**
-     * @see DataValueRendererFamily#setActiveRenderer(String)
+     * {@inheritDoc}
      */
     public void setActiveRenderer(final String description) {
         for (DataValueRenderer r : m_renderers) {
@@ -226,14 +226,14 @@ public class DefaultDataValueRendererFamily implements DataValueRendererFamily {
     }
 
     /**
-     * @see DataValueRenderer#getDescription()
+     * {@inheritDoc}
      */
     public String getDescription() {
         return m_active.getDescription();
     }
     
     /**
-     * @see DataValueRenderer#getRendererComponent(Object)
+     * {@inheritDoc}
      */
     public Component getRendererComponent(final Object val) {
         return m_active.getRendererComponent(val);
@@ -254,7 +254,7 @@ public class DefaultDataValueRendererFamily implements DataValueRendererFamily {
     }
     
     /**
-     * @see DataValueRenderer#accepts(DataColumnSpec)
+     * {@inheritDoc}
      */
     public boolean accepts(final DataColumnSpec spec) {
         return m_active.accepts(spec);

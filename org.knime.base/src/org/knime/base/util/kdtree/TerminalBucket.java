@@ -46,7 +46,7 @@ class TerminalBucket<T> implements Node, Iterable<TerminalNode<T>> {
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public Iterator<TerminalNode<T>> iterator() {
         return m_nodes.iterator();

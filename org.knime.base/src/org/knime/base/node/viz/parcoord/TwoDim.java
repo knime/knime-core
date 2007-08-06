@@ -105,7 +105,7 @@ public class TwoDim implements Serializable {
     }
     
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

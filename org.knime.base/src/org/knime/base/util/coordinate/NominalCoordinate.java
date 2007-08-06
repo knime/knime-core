@@ -224,7 +224,7 @@ public class NominalCoordinate extends Coordinate {
     }
 
     /**
-     * @see org.knime.base.util.coordinate.Coordinate#isNominal()
+     * {@inheritDoc}
      */
     @Override
     public boolean isNominal() {
@@ -232,7 +232,7 @@ public class NominalCoordinate extends Coordinate {
     }
 
     /**
-     * @see Coordinate#getUnusedDistBetweenTicks(double)
+     * {@inheritDoc}
      */
     @Override
     public double getUnusedDistBetweenTicks(final double absoluteLength) {

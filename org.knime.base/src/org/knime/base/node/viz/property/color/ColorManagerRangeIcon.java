@@ -41,7 +41,8 @@ import org.knime.core.data.property.ColorAttr;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class ColorManagerRangeIcon extends JPanel {
+public class ColorManagerRangeIcon extends JPanel {
+    
     private Color m_min;
 
     private Color m_max;
@@ -51,7 +52,7 @@ class ColorManagerRangeIcon extends JPanel {
      * 
      * @see ColorAttr#DEFAULT
      */
-    ColorManagerRangeIcon() {
+    public ColorManagerRangeIcon() {
         this(ColorAttr.DEFAULT.getColor(), ColorAttr.DEFAULT.getColor());
     }
 
@@ -62,7 +63,7 @@ class ColorManagerRangeIcon extends JPanel {
      * @param max the right color
      * @throws NullPointerException if on the colors is <code>null</code>
      */
-    ColorManagerRangeIcon(final Color min, final Color max) {
+    public ColorManagerRangeIcon(final Color min, final Color max) {
         super(null);
         super.setPreferredSize(new Dimension(super.getWidth(), 15));
         if (min == null || max == null) {
@@ -77,10 +78,17 @@ class ColorManagerRangeIcon extends JPanel {
      * 
      * @param min the left color
      */
-    void setMinColor(final Color min) {
+    public void setMinColor(final Color min) {
         m_min = min;
         super.validate();
         super.repaint();
+    }
+    
+    /**
+     * @return current minimum color of this range icon
+     */
+    public Color getMinColor() {
+        return m_min;
     }
 
     /**
@@ -88,14 +96,21 @@ class ColorManagerRangeIcon extends JPanel {
      * 
      * @param max the right color
      */
-    void setMaxColor(final Color max) {
+    public void setMaxColor(final Color max) {
         m_max = max;
         super.validate();
         super.repaint();
     }
+    
+    /**
+     * @return current maximum color of this range icon
+     */
+    public Color getMaxColor() {
+        return m_max;
+    }
 
     /**
-     * @see javax.swing.JComponent#paintComponent(java.awt.Graphics)
+     * {@inheritDoc}
      */
     @Override
     public void paintComponent(final Graphics gx) {

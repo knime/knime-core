@@ -32,6 +32,8 @@ import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
+import javax.swing.ToolTipManager;
+
 import org.knime.base.node.viz.plotter.LabelPaintUtil;
 import org.knime.base.node.viz.plotter.scatter.DotInfo;
 import org.knime.base.node.viz.plotter.scatter.DotInfoArray;
@@ -66,7 +68,7 @@ public class BoxPlotDrawingPane extends ScatterPlotterDrawingPane {
      */
     public BoxPlotDrawingPane() {
         setDotSize(DOT_SIZE);
-        setToolTipText("");
+        ToolTipManager.sharedInstance().registerComponent(this);
     }
     /**
      * 
@@ -93,8 +95,7 @@ public class BoxPlotDrawingPane extends ScatterPlotterDrawingPane {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractDrawingPane#paintContent(
-     * java.awt.Graphics)
+     * {@inheritDoc}
      */
     @Override
     public void paintContent(final Graphics g) {
@@ -218,8 +219,7 @@ public class BoxPlotDrawingPane extends ScatterPlotterDrawingPane {
     }
     
     /**
-     * 
-     * @see javax.swing.JComponent#getToolTipText(java.awt.event.MouseEvent)
+     * {@inheritDoc}
      */
     @Override
     public String getToolTipText(final MouseEvent e) {
@@ -231,8 +231,14 @@ public class BoxPlotDrawingPane extends ScatterPlotterDrawingPane {
                 tooltip.append(box.getToolTip(e.getY()));
             }
         }
-        tooltip.append(super.getToolTipText(e));
-        return tooltip.toString();
+        if (super.getToolTipText(e) != null) {
+            tooltip.append(super.getToolTipText(e));
+        }
+        if (tooltip.toString().length() > 0) {
+            return tooltip.toString();    
+        } 
+        return null;
+        
     }
 
 }

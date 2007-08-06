@@ -37,6 +37,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -44,6 +45,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
@@ -87,6 +90,8 @@ public final class ColPropertyDialog extends JDialog {
     private Vector<ColProperty> m_allColProps;
 
     // the components to read new user settings from
+    private JCheckBox m_skipColumn;
+    
     private JTextField m_colNameField;
 
     private JComboBox m_typeChooser;
@@ -122,7 +127,17 @@ public final class ColPropertyDialog extends JDialog {
         m_result = null;
 
         // instantiate the components of the dialog
-
+        m_skipColumn = new JCheckBox("DON'T include column in output table");
+        m_skipColumn.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                skipColumnHasChanged();
+            }
+        });
+        Box skipPanel = Box.createHorizontalBox();
+        skipPanel.add(Box.createHorizontalGlue());
+        skipPanel.add(m_skipColumn);
+        skipPanel.add(Box.createHorizontalGlue());
+        
         // column name goes first
         JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 3, 5));
         m_colNameField = new JTextField(8);
@@ -191,6 +206,7 @@ public final class ColPropertyDialog extends JDialog {
         dlgPanel.setLayout(new BoxLayout(dlgPanel, BoxLayout.Y_AXIS));
         dlgPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Column Properties"));
+        dlgPanel.add(skipPanel);
         dlgPanel.add(namePanel);
         dlgPanel.add(typePanel);
         dlgPanel.add(missPanel);
@@ -208,7 +224,15 @@ public final class ColPropertyDialog extends JDialog {
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
     }
-
+ 
+    private void skipColumnHasChanged() {
+        boolean useIt = !m_skipColumn.isSelected();
+        m_colNameField.setEnabled(useIt);
+        m_missValueField.setEnabled(useIt);
+        m_typeChooser.setEnabled(useIt);
+        setEnableStatusOfDomainButton();
+    }
+    
     /**
      * Called when "domain..." button is pressed. Opens the dialog for domain
      * settings, with components depending on the currently selected type.
@@ -249,30 +273,42 @@ public final class ColPropertyDialog extends JDialog {
             m_userDomainSettings = null;
             m_warnLabel.setText("Domain settings were reset!!");
         }
-
-        DataType selectedType = getTypeFromComboIndex(m_typeChooser
-                .getSelectedIndex());
+        
+        setEnableStatusOfDomainButton();
+        
+    }
+    
+    private void setEnableStatusOfDomainButton() {
+        
+        if (m_skipColumn.isSelected()) {
+            m_domainButton.setEnabled(false);
+            return;
+        }
+        
+        DataType selectedType =
+                getTypeFromComboIndex(m_typeChooser.getSelectedIndex());
+        
         if (selectedType == null) {
             m_domainButton.setEnabled(false);
-        } else {
+            return;
+        } 
             // if (selectedType.isCompatible(StringValue.class)
-            // || selectedType.isCompatible(IntValue.class)) {
-            /*
-             * TODO: The DataContainer doesn't support nominal values for
-             * integer columns yet. If it does, replace the if stmt below with
-             * the one above (the domain dialog already supports int types).
-             * Also, somehow, tell the data container about the user's decision.
-             */
-            if (selectedType.isCompatible(StringValue.class) 
-                    && selectedType.isCompatible(NominalValue.class)) {
-                m_domainButton.setEnabled(true);
-            } else {
-                m_domainButton.setEnabled(false);
-            }
+        // || selectedType.isCompatible(IntValue.class)) {
+        /*
+         * TODO: The DataContainer doesn't support nominal values for integer
+         * columns yet. If it does, replace the if stmt below with the one above
+         * (the domain dialog already supports int types). Also, somehow, tell
+         * the data container about the user's decision.
+         */
+        if (selectedType.isCompatible(StringValue.class)
+                && selectedType.isCompatible(NominalValue.class)) {
+            m_domainButton.setEnabled(true);
+        } else {
+            m_domainButton.setEnabled(false);
         }
-
     }
 
+    
     /**
      * Opens a Dialog to receive user settings for column name, type, missing
      * value pattern, and domain. If the user cancels the dialog no changes will
@@ -319,6 +355,9 @@ public final class ColPropertyDialog extends JDialog {
         DataColumnSpec theColSpec = theColProp.getColumnSpec();
 
         // set the values in the components:
+        // the skip flag
+        m_skipColumn.setSelected(theColProp.getSkipThisColumn());
+        skipColumnHasChanged();
         // the column name
         m_colNameField.setText(theColSpec.getName().toString());
         // figure out the old type index (in the combo box) to pre-set it
@@ -378,7 +417,6 @@ public final class ColPropertyDialog extends JDialog {
 
     private Vector<ColProperty> takeOverSettings() {
         ColProperty theColProp = m_allColProps.get(m_colIdx);
-        DataColumnSpec theColSpec = theColProp.getColumnSpec();
 
         // get the new values
         int newType = m_typeChooser.getSelectedIndex();
@@ -389,9 +427,12 @@ public final class ColPropertyDialog extends JDialog {
         ColProperty newColProp = (ColProperty)theColProp.clone();
         // if he says okay its always user settings (even if nothing changed)
         newColProp.setUserSettings(true);
-
-        // see if the new vals are different from the old values
-        if (!newName.equals(theColSpec.getName().toString())) {
+        newColProp.setSkipThisColumn(m_skipColumn.isSelected());
+        
+        // check name for uniqueness 
+            
+        // only if we include the column in the table
+        if (!newColProp.getSkipThisColumn()) {
             /* user changed column name. */
             /* Make sure its valid */
             if (newName.length() < 1) {
@@ -408,24 +449,26 @@ public final class ColPropertyDialog extends JDialog {
                     continue;
                 }
                 ColProperty colProp = m_allColProps.get(c);
+                if (colProp.getSkipThisColumn()) {
+                    // don't compare with names we don't use.
+                    continue;
+                }
                 String otherName = colProp.getColumnSpec().getName().toString();
                 if (newName.equals(otherName)) {
-                    JOptionPane
-                            .showMessageDialog(
-                                    this,
-                                    "Specified column name ('"
-                                            + newName
-                                            + "') is already in use for "
-                                            + "another column."
-                                            + " Enter unique name or press "
-                                            + "cancel.",
-                                    "Duplicate column names",
-                                    JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this,
+                            "Specified column name ('" + newName
+                                    + "') is already in use for "
+                                    + "another column."
+                                    + " Enter unique name or press "
+                                    + "cancel.", "Duplicate column names",
+                            JOptionPane.ERROR_MESSAGE);
                     return null;
                 }
             }
-            newColProp.changeColumnName(newName);
         }
+
+        // take over the new value
+        newColProp.changeColumnName(newName);
 
         if (newType != m_oldType) {
             /* user changed column type. Take it over. */
@@ -503,4 +546,5 @@ public final class ColPropertyDialog extends JDialog {
             return TYPE_STRING;
         }
     }
+    
 }

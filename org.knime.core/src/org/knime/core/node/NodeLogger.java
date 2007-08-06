@@ -149,7 +149,7 @@ public final class NodeLogger {
             }
 
             if (System.getProperty("log4j.configuration") == null) {
-                DOMConfigurator.configure(log4j.toURL());
+                DOMConfigurator.configure(log4j.toURI().toURL());
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -266,7 +266,7 @@ public final class NodeLogger {
         NodeLogger l = getLogger(NodeLogger.class);
         l.info("#############################################################");
         l.info("#                                                           #");
-        l.info("# Welcome to KNIME v1.2.2 (Build July 6, 2007)              #");
+        l.info("# Welcome to KNIME v1.2.0 (Build February 5, 2007)          #");
         l.info("# the Konstanz Information Miner                            #");
         l.info("# Based on Eclipse 3.2, www.eclipse.org                     #");
         l.info("# Uses: Java5, GEF, Log4J                                   #");
@@ -469,12 +469,15 @@ public final class NodeLogger {
     public void error(final Object o, final Throwable t) {
         if (isIgnoreLoadDataWarning 
                 && m_logger.getName().equals(WorkflowManager.class.getName())
-                && t != null 
+                && t != null && t.getMessage() != null
                 && t.getMessage().startsWith("No such data file: ")) {
             debug(o, t);
         } else {
             this.error(o);
-            this.error(t.getMessage());
+            String message = t.getMessage();
+            if (message != null && message.trim().length() > 0) {
+                this.error(message);
+            }
             this.debug(o, t);
         }
     }
@@ -504,7 +507,12 @@ public final class NodeLogger {
     public void assertLog(final boolean b, final String m,
             final AssertionError e) {
         if (ASSERT) {
-            m_logger.assertLog(b, "ASSERT " + m + " " + e.getMessage());
+            String message = e.getMessage();
+            if (message != null && message.trim().length() > 0) {
+                m_logger.assertLog(b, "ASSERT " + m + " " + message);
+            } else {
+                m_logger.assertLog(b, "ASSERT " + m);
+            }
             m_logger.debug("ASSERT\t " + m, e);
         } else {
             // assertions are off, but write to knime.log anyway
@@ -530,7 +538,10 @@ public final class NodeLogger {
      */
     public void coding(final Object o, final Throwable t) {
         this.coding(o);
-        this.coding(t.getMessage());
+        String message = t.getMessage();
+        if (message != null && message.trim().length() > 0) {
+            this.coding(message);
+        }
         this.debug(o, t);
     }
 
@@ -542,7 +553,10 @@ public final class NodeLogger {
      */
     public void fatal(final Object o, final Throwable t) {
         this.fatal(o);
-        this.fatal(t.getMessage());
+        String message = t.getMessage();
+        if (message != null && message.trim().length() > 0) {
+            this.fatal(message);
+        }
         this.debug(o, t);
     }
 
@@ -567,8 +581,8 @@ public final class NodeLogger {
                         + MAX_CHARS + "m\n"), writer);
         app.setImmediateFlush(true);
         LevelRangeFilter filter = new LevelRangeFilter();
-        filter.setLevelMin(getLevel(minLevel));
-        filter.setLevelMax(getLevel(maxLevel));
+        filter.setLevelMin(transLEVEL(minLevel));
+        filter.setLevelMax(transLEVEL(maxLevel));
         app.addFilter(filter);
         Logger.getRootLogger().addAppender(app);
         WRITER.put(writer, app);
@@ -592,19 +606,28 @@ public final class NodeLogger {
     }
 
     /**
+     * @param level minimum log level
+     * @see #setLevel(NodeLogger.LEVEL)
+     */
+    @Deprecated
+    public static void setLevelIntern(final LEVEL level) {
+        setLevel(level);
+    }
+    
+    /**
      * Sets an new minimum logging level for all internal appenders, that are,
      * log file, and <code>System.out</code> and <code>System.err</code>
      * appender. The maximum logging level stays <code>LEVEL.ALL</code> for
      * all appenders.
      * 
-     * @param level The new minimum logging level.
+     * @param level new minimum logging level
      */
-    public static void setLevelIntern(final LEVEL level) {
+    public static void setLevel(final LEVEL level) {
         getLogger(NodeLogger.class).info(
                 "Changing logging level to " + level.toString());
         LevelRangeFilter filter = new LevelRangeFilter();
-        filter.setLevelMin(getLevel(level));
-        filter.setLevelMax(getLevel(LEVEL.FATAL));
+        filter.setLevelMin(transLEVEL(level));
+        filter.setLevelMax(transLEVEL(LEVEL.FATAL));
         FILE_APPENDER.clearFilters();
         // SERR_APPENDER.clearFilters();
         SOUT_APPENDER.clearFilters();
@@ -612,14 +635,51 @@ public final class NodeLogger {
         // SERR_APPENDER.addFilter(filter);
         SOUT_APPENDER.addFilter(filter);
     }
+    
+    /**
+     * Returns the minimum logging retrieved from the underlying Log4J logger.
+     * @return minimum logging level
+     */
+    public LEVEL getLevel() {
+        return transLevel(m_logger.getLevel());
+    }
+    
+    /**   
+     * Checks if debug logging level is enabled.
+     * @return <code>true</code> if debug logging level is enabled, otherwise 
+     *         <code>false</code>     
+     */
+    public boolean isDebugEnabled() {
+        return m_logger.isDebugEnabled();
+    }
+    
+    /**   
+     * Checks if info logging level is enabled.
+     * @return <code>true</code> if info logging level is enabled, otherwise 
+     *         <code>false</code>     
+     */
+    public boolean isInfoEnabled() {
+        return m_logger.isInfoEnabled();
+    }
+    
+    /**
+     * Returns <code>true</code> if the underlying Log4J logger is enabled 
+     * for the given <code>level</code>.
+     * @param level to test logging enabled
+     * @return <code>true</code> if logging is enabled, otherwise 
+     *         <code>false</code>
+     */
+    public boolean isEnabledFor(final LEVEL level) {
+        return m_logger.isEnabledFor(transLEVEL(level));
+    }
 
     /**
-     * Translates this logging levels into Log4J logging levels.
+     * Translates this logging <code>LEVEL</code> into Log4J logging levels.
      * 
-     * @param level The level to translate.
-     * @return The Log4J logging level.
+     * @param level the <code>LEVEL</code> to translate
+     * @return the Log4J logging level
      */
-    private static Level getLevel(final LEVEL level) {
+    private static Level transLEVEL(final LEVEL level) {
         switch (level) {
         case DEBUG:
             return Level.DEBUG;
@@ -631,10 +691,30 @@ public final class NodeLogger {
             return Level.ERROR;
         case FATAL:
             return Level.FATAL;
-        case ALL:
-            return Level.ALL;
         default:
             return Level.ALL;
+        }
+    }
+    
+    /**
+     * Translates Log4J logging level into this <code>LEVEL</code>.
+     * 
+     * @param level the Level to translate
+     * @return this logging LEVEL
+     */
+    private static LEVEL transLevel(final Level level) {
+        if (level == Level.DEBUG) {
+            return LEVEL.DEBUG;
+        } else if (level == Level.INFO) {
+            return LEVEL.INFO;
+        } else if (level == Level.WARN) {
+            return LEVEL.WARN;
+        } else if (level == Level.ERROR) {
+            return LEVEL.ERROR;
+        } else if (level == Level.FATAL) {
+            return LEVEL.FATAL;
+        } else {
+            return LEVEL.ALL;
         }
     }
 

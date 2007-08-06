@@ -73,8 +73,7 @@ public final class MultiLineStringValueRenderer extends
     }
 
     /**
-     * @see org.knime.core.data.renderer.DefaultDataValueRenderer
-     *      #getDescription()
+     * {@inheritDoc}
      */
     @Override
     public String getDescription() {
@@ -82,7 +81,7 @@ public final class MultiLineStringValueRenderer extends
     }
 
     /**
-     * @see javax.swing.JComponent#getPreferredSize()
+     * {@inheritDoc}
      */
     @Override
     public Dimension getPreferredSize() {
@@ -96,7 +95,7 @@ public final class MultiLineStringValueRenderer extends
     }
 
     /**
-     * @see javax.swing.JComponent#setFont(java.awt.Font)
+     * {@inheritDoc}
      */
     @Override
     public void setFont(final Font font) {
@@ -114,7 +113,7 @@ public final class MultiLineStringValueRenderer extends
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -122,7 +121,7 @@ public final class MultiLineStringValueRenderer extends
     }
     
     /**
-     * @see java.lang.Object#equals(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object obj) {

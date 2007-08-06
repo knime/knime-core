@@ -149,14 +149,14 @@ public class JoinedTable implements DataTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         if (m_inMemory) {

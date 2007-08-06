@@ -46,7 +46,7 @@ public class BasisFunctionSymmetricRowOverlap implements DegreeOfAffinity {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

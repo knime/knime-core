@@ -492,6 +492,20 @@ public class MembershipFunction {
         }
         return (getMaxCore() - getMinCore());
     }
+    
+    /**
+     * @return min of this membership (not min support)
+     */
+    public final MutableDouble getMin() {
+        return m_min;
+    }
+    
+    /**
+     * @return max of this membership (not max support)
+     */
+    public final MutableDouble getMax() {
+        return m_max;
+    }
 
     /**
      * getActivation(.).

@@ -22,6 +22,7 @@
  * History
  *   07.07.2005 (mb): created
  *   21.06.06 (bw & po): reviewed
+ *   27.02.07 (po): implements ComplexNumberValue now
  */
 package org.knime.core.data.def;
 
@@ -29,6 +30,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
@@ -46,7 +48,7 @@ import org.knime.core.data.FuzzyNumberValue;
  * @author Michael Berthold, University of Konstanz
  */
 public final class DoubleCell extends DataCell implements DoubleValue,
-        FuzzyNumberValue, FuzzyIntervalValue {
+        ComplexNumberValue, FuzzyNumberValue, FuzzyIntervalValue {
     
     /** Convenience access member for 
      * <code>DataType.getType(DoubleCell.class)</code>. 
@@ -89,57 +91,70 @@ public final class DoubleCell extends DataCell implements DoubleValue,
     }
 
     /**
-     * @see org.knime.core.data.DoubleValue#getDoubleValue()
+     * {@inheritDoc}
      */
     public double getDoubleValue() {
         return m_double;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyNumberValue#getCore()
+     * {@inheritDoc}
      */
     public double getCore() {
         return m_double;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyNumberValue#getMaxSupport()
+     * {@inheritDoc}
      */
     public double getMaxSupport() {
         return m_double;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyNumberValue#getMinSupport()
+     * {@inheritDoc}
      */
     public double getMinSupport() {
         return m_double;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMaxCore()
+     * {@inheritDoc}
      */
     public double getMaxCore() {
         return m_double;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getMinCore()
+     * {@inheritDoc}
      */
     public double getMinCore() {
         return m_double;
     }
 
     /**
-     * @see org.knime.core.data.FuzzyIntervalValue#getCenterOfGravity()
+     * {@inheritDoc}
      */
     public double getCenterOfGravity() {
         return m_double;
     }
 
     /**
-     * @see org.knime.core.data.DataCell
-     *      #equalsDataCell(org.knime.core.data.DataCell)
+     * {@inheritDoc}
+     */
+    public double getImaginaryValue() {
+        return 0.0;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public double getRealValue() {
+        return m_double;
+    }
+    
+    /**
+     * {@inheritDoc}
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
@@ -152,7 +167,7 @@ public final class DoubleCell extends DataCell implements DoubleValue,
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -161,7 +176,7 @@ public final class DoubleCell extends DataCell implements DoubleValue,
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -173,7 +188,7 @@ public final class DoubleCell extends DataCell implements DoubleValue,
         implements DataCellSerializer<DoubleCell> {
 
         /**
-         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         * {@inheritDoc}
          */
         public void serialize(
                 final DoubleCell cell, final DataOutput out) 
@@ -182,7 +197,7 @@ public final class DoubleCell extends DataCell implements DoubleValue,
         }
         
         /**
-         * @see DataCellSerializer#deserialize(DataInput)
+         * {@inheritDoc}
          */
         public DoubleCell deserialize(final DataInput input) 
             throws IOException {

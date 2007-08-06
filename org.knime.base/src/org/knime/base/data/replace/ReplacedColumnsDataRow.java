@@ -86,21 +86,21 @@ public class ReplacedColumnsDataRow implements DataRow {
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getNumCells()
+     * {@inheritDoc}
      */
     public int getNumCells() {
         return m_row.getNumCells();
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getKey()
+     * {@inheritDoc}
      */
     public RowKey getKey() {
         return m_row.getKey();
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getCell(int)
+     * {@inheritDoc}
      */
     public DataCell getCell(final int index) {
         for (int i = 0; i < m_columns.length; i++) {
@@ -112,7 +112,7 @@ public class ReplacedColumnsDataRow implements DataRow {
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);

@@ -93,8 +93,7 @@ public class Rule2DPlotter extends ScatterPlotter {
         m_rules = rules;
         getDrawingPane().addMouseListener(new MouseAdapter() {
             /**
-             * @see java.awt.event.MouseAdapter#
-             *      mouseReleased(java.awt.event.MouseEvent)
+             * {@inheritDoc}
              */
             @Override
             public void mouseReleased(final MouseEvent arg0) {
@@ -131,8 +130,7 @@ public class Rule2DPlotter extends ScatterPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.scatterplot.ScatterPlotter
-     *      #getHiLiteMenu()
+     * {@inheritDoc}
      */
     @Override
     public JMenu getHiLiteMenu() {
@@ -163,8 +161,7 @@ public class Rule2DPlotter extends ScatterPlotter {
     /*------------action listener--------------*/
 
     /**
-     * @see java.awt.event.ActionListener
-     *      #actionPerformed(java.awt.event.ActionEvent)
+     * {@inheritDoc}
      */
     @Override
     public void actionPerformed(final ActionEvent e) {
@@ -185,8 +182,7 @@ public class Rule2DPlotter extends ScatterPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.scatterplot.ScatterPlotter
-     *      #fillPopupMenu(javax.swing.JPopupMenu)
+     * {@inheritDoc}
      */
     @Override
     protected void fillPopupMenu(final JPopupMenu menu) {
@@ -223,8 +219,7 @@ public class Rule2DPlotter extends ScatterPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.scatterplot.ScatterPlotter
-     *      #updatePaintModel()
+     * {@inheritDoc}
      */
     @Override
     protected void updatePaintModel() {
@@ -360,8 +355,7 @@ public class Rule2DPlotter extends ScatterPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter2D.AbstractPlotter2D
-     *      #getDrawingPane()
+     * {@inheritDoc}
      */
     @Override
     public Rule2DDrawingPane getDrawingPane() {

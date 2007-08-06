@@ -6,7 +6,7 @@
    <aboutInfo>
       <image path="/org.knime.product/icons/knime64.gif"/>
       <text>
-         Welcome to KNIME v1.2.2 (Build July 6, 2007)
+         Welcome to KNIME v1.2.0 (Build February 5, 2007)
 the Konstanz Information Miner
 Copyright, 2003 - 2007
 email: contact@knime.org
@@ -25,7 +25,7 @@ Uses: Java5, GEF, Log4J
 
    <launcherArgs>
       <programArgs>-clean</programArgs>
-      <vmArgs>-Xmx256M -XX:MaxPermSize=128m</vmArgs>
+      <vmArgs>-Xmx256M -XX:MaxPermSize=128m -server</vmArgs>
    </launcherArgs>
 
    <windowImages/>
@@ -97,7 +97,7 @@ Uses: Java5, GEF, Log4J
       <feature id="org.eclipse.gef" version="3.2.0.v20060626"/>
       <feature id="org.eclipse.platform" version="3.2.0.v20060609m-AgOexn6hlEUsvBO"/>
       <feature id="org.eclipse.rcp" version="3.2.0.v20060609m-SVDNgVrNoh-MeGG"/>
-      <feature id="org.knime.features.base" version="1.2.2"/>
+      <feature id="org.knime.features.base" version="1.2.0"/>
    </features>
 
 </product>

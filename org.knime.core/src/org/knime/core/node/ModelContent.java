@@ -50,7 +50,7 @@ public final class ModelContent extends Config
     }
 
     /**
-     * @see org.knime.core.node.config.Config#getInstance(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public Config getInstance(final String key) {
@@ -74,23 +74,21 @@ public final class ModelContent extends Config
     }
     
     /**
-     * @see org.knime.core.node.ModelContentWO
-     * #addModelContent(ModelContent)
+     * {@inheritDoc}
      */
     public void addModelContent(final ModelContent modelContent) {
         super.addConfig(modelContent);
     }
 
     /**
-     * @see org.knime.core.node.ModelContentWO#addModelContent(String)
+     * {@inheritDoc}
      */
     public ModelContentWO addModelContent(final String key) {
         return (ModelContent) super.addConfig(key);
     }
 
-    /** 
-     * @see org.knime.core.node.ModelContentRO
-     *  #getModelContent(java.lang.String)
+    /**
+     * {@inheritDoc}
      */
     public ModelContent getModelContent(final String key)
             throws InvalidSettingsException {

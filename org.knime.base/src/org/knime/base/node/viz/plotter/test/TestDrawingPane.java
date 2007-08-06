@@ -55,7 +55,7 @@ public class TestDrawingPane extends BasicDrawingPane {
     }
 
     /**
-     * @see BasicDrawingPane#paintContent(java.awt.Graphics)
+     * {@inheritDoc}
      */
     @Override
     public void paintContent(final Graphics g) {

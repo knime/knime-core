@@ -25,18 +25,15 @@
 package org.knime.base.node.viz.plotter.node;
 
 import java.awt.event.ActionEvent;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JTabbedPane;
-import javax.swing.SwingUtilities;
 
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.DataProvider;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -52,9 +49,6 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Fabian Dill, University of Konstanz
  */
 public class DefaultVisualizationNodeView extends NodeView {
-	
-	private NodeLogger LOGGER = NodeLogger.getLogger(
-			DefaultVisualizationNodeView.class);
     
     private JTabbedPane m_tabs;
     
@@ -141,51 +135,36 @@ public class DefaultVisualizationNodeView extends NodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#modelChanged()
+     * {@inheritDoc}
      */
     @Override
     protected void modelChanged() {
-            Runnable run = new Runnable() {
-                public void run() {
-                    NodeModel model = getNodeModel();
-                    if (model == null) {
-                        return;
-                    }
-                    if (!(model instanceof DataProvider)) {
-                        throw new IllegalArgumentException(
-                                "Model must implement the DataProvider " 
-                        		+ "interface!");
-                    }
-                    DataProvider provider = (DataProvider)model;
-                    HiLiteHandler hiliteHandler = model.getInHiLiteHandler(0);
-                    boolean useAntiAlias = false;
-                    if (model instanceof DefaultVisualizationNodeModel) {
-                        useAntiAlias = ((DefaultVisualizationNodeModel)model)
-                            .antiAliasingOn();
-                    }
-                    if (m_plotters != null) {
-                        for (AbstractPlotter plotter : m_plotters) {
-                            plotter.reset();
-                            plotter.setHiLiteHandler(hiliteHandler);
-                            plotter.setAntialiasing(useAntiAlias);
-                            plotter.setDataProvider(provider);
-                            plotter.updatePaintModel();
-                        }
-                    }
-                }
-            };
-            if (SwingUtilities.isEventDispatchThread()) {
-                run.run();
-            } else {
-                try {
-                    SwingUtilities.invokeAndWait(run);
-                } catch (InvocationTargetException ite) {
-                    LOGGER.error("Exception while setting new component", ite);
-                } catch (InterruptedException ie) {
-                    // do nothing here.
-                }
-            } 
-        }    	
+        NodeModel model = getNodeModel();
+        if (model == null) {
+            return;
+        }
+        if (!(model instanceof DataProvider)) {
+            throw new IllegalArgumentException(
+                    "Model must implement the DataProvider " 
+            		+ "interface!");
+        }
+        DataProvider provider = (DataProvider)model;
+        HiLiteHandler hiliteHandler = model.getInHiLiteHandler(0);
+        boolean useAntiAlias = false;
+        if (model instanceof DefaultVisualizationNodeModel) {
+            useAntiAlias = ((DefaultVisualizationNodeModel)model)
+                .antiAliasingOn();
+        }
+        if (m_plotters != null) {
+            for (AbstractPlotter plotter : m_plotters) {
+                plotter.reset();
+                plotter.setHiLiteHandler(hiliteHandler);
+                plotter.setAntialiasing(useAntiAlias);
+                plotter.setDataProvider(provider);
+                plotter.updatePaintModel();
+            }
+        }
+    }
     
     /**
      * Dynamically creates a hilite menu with the typical hilite options:
@@ -227,14 +206,14 @@ public class DefaultVisualizationNodeView extends NodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onClose()
+     * {@inheritDoc}
      */
     @Override
     protected void onClose() {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onOpen()
+     * {@inheritDoc}
      */
     @Override
     protected void onOpen() {

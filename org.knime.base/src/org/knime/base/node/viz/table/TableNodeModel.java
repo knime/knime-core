@@ -107,8 +107,7 @@ public class TableNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File internDir,
@@ -116,8 +115,7 @@ public class TableNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File internDir,
@@ -125,7 +123,7 @@ public class TableNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -135,7 +133,7 @@ public class TableNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) {
@@ -143,7 +141,7 @@ public class TableNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -151,14 +149,14 @@ public class TableNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)

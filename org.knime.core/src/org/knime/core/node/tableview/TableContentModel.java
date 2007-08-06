@@ -547,7 +547,7 @@ public class TableContentModel extends AbstractTableModel
     } // getValueAt(int, int)
 
     /**
-     * @see TableContentInterface#getRowKey(int)
+     * {@inheritDoc}
      */
     public RowKey getRowKey(final int row) {
         DataRow result = getRow(row);
@@ -703,7 +703,7 @@ public class TableContentModel extends AbstractTableModel
     } // getChunkSize()
     
     /**
-     * @see TableContentInterface#isHiLit(int)
+     * {@inheritDoc}
      */
     public boolean isHiLit(final int row) {
         // ensure row is cached
@@ -764,15 +764,15 @@ public class TableContentModel extends AbstractTableModel
         }
     } // clearHilite()
     
-    /** 
-     * @see HiLiteListener#hiLite(KeyEvent)
+    /**
+     * {@inheritDoc}
      */
     public void hiLite(final KeyEvent e) {
         processHiLiteEvent(e, true);
     } // hiLite(KeyEvent)
     
     /**
-     * @see HiLiteListener#unHiLite(KeyEvent)
+     * {@inheritDoc}
      */
     public void unHiLite(final KeyEvent e) {
         processHiLiteEvent(e, false);
@@ -780,7 +780,7 @@ public class TableContentModel extends AbstractTableModel
     
 
     /**
-     * @see HiLiteListener#unHiLiteAll()
+     * {@inheritDoc}
      */
     public void unHiLiteAll() {
         if (!hasData()) {

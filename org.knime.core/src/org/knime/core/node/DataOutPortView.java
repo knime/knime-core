@@ -39,7 +39,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -52,7 +51,7 @@ import org.knime.core.data.property.SizeHandler;
 import org.knime.core.node.tableview.TableView;
 
 /**
- * Implements a view to inspect the data, tablespec and other stuff currently
+ * Implements a view to inspect the data, table spec and other stuff currently
  * stored in an output port.
  * 
  * @author Peter Ohl, University of Konstanz
@@ -82,14 +81,10 @@ final class DataOutPortView extends NodeOutPortView {
     
     /** Updates are synchronized on this object. Declaring the methods
      * as synchronized (i.e. using "this" as mutex) does not work as swing
-     * also aquires locks on this graphical object.
+     * also acquires locks on this graphical object.
      */
     private final Object m_updateLock = new Object();
     
-    private static final DataRow EMPTY_ROW =
-            new DefaultRow(new StringCell(""), new DataCell[]{new StringCell(
-                    "<null>")});
-
     /**
      * A view showing the data stored in the specified output port.
      * 
@@ -116,6 +111,7 @@ final class DataOutPortView extends NodeOutPortView {
         m_specView.setShowIconInColumnHeader(false);
         m_dataView = new TableView();
         m_propsView = new TableView();
+        m_propsView.setShowIconInColumnHeader(false);
         m_dataView.getHeaderTable().setShowColorInfo(false);
         // in the data view our columns are all of type string. Don't show that.
         // Users confuse it with the type of their table.
@@ -282,7 +278,6 @@ final class DataOutPortView extends NodeOutPortView {
                     new DataContainer(new DataTableSpec(
                             new String[]{"No outgoing table spec"},
                             new DataType[]{StringCell.TYPE}));
-            result.addRowToTable(EMPTY_ROW);
             result.close();
             return result.getTable();
 
@@ -300,7 +295,8 @@ final class DataOutPortView extends NodeOutPortView {
             names = new String[numCols];
             types = new DataType[numCols];
             for (int c = 0; c < numCols; c++) {
-                names[c] = "Col_" + c;
+//                names[c] = "Col_" + c;
+                names[c] = spec.getColumnSpec(c).getName();
                 types[c] = StringCell.TYPE;
             }
         } else {
@@ -317,9 +313,6 @@ final class DataOutPortView extends NodeOutPortView {
             addInfoRowsToDataContainer(result, spec);
             addPossValuesRowsToDataContainer(result, spec);
 
-        } else {
-
-            result.addRowToTable(EMPTY_ROW);
         }
 
         // create the new table
@@ -335,23 +328,35 @@ final class DataOutPortView extends NodeOutPortView {
 
         int numCols = spec.getNumColumns();
 
-        // 1st row: displays the name of each column
-        DataCell[] cols = new DataCell[numCols];
-        for (int c = 0; c < numCols; c++) {
-            cols[c] = new StringCell(spec.getColumnSpec(c).getName());
-        }
-        result.addRowToTable(new DefaultRow(new StringCell("<html><b>Name"),
-                cols));
-
+//        // 1st row: displays the name of each column
+//        DataCell[] cols = new DataCell[numCols];
+//        for (int c = 0; c < numCols; c++) {
+//            cols[c] = new StringCell(spec.getColumnSpec(c).getName());
+//        }
+//        result.addRowToTable(new DefaultRow(new StringCell("<html><b>Name"),
+//                cols));
+        
+        DataCell[] cols;
+        
         // 2nd row: displays type of column
         cols = new DataCell[numCols];
         for (int c = 0; c < numCols; c++) {
             String typename = spec.getColumnSpec(c).getType().toString();
             cols[c] = new StringCell(typename);
         }
-        result.addRowToTable(new DefaultRow(new StringCell("<html><b>Type"),
+        result.addRowToTable(new DefaultRow(new StringCell("Column Type"),
                 cols));
 
+        
+        // 1st row: show the column number 
+        cols = new DataCell[numCols];
+        for (int c = 0; c < numCols; c++) {
+            cols[c] = new StringCell("" + c);
+        }
+        result.addRowToTable(new DefaultRow(new StringCell("Column Index"), 
+                cols));
+        
+        
         // 3rd row: shows who has a color handler set
         cols = new DataCell[numCols];
         for (int c = 0; c < numCols; c++) {
@@ -366,7 +371,7 @@ final class DataOutPortView extends NodeOutPortView {
                 cols[c] = new StringCell(colHdlStr);
             }
         }
-        result.addRowToTable(new DefaultRow(new StringCell("ColorHandler"),
+        result.addRowToTable(new DefaultRow(new StringCell("Color Handler"),
                 cols));
 
         // 4th row: shows who has a SizeHandler set
@@ -382,7 +387,7 @@ final class DataOutPortView extends NodeOutPortView {
             }
         }
         result
-                .addRowToTable(new DefaultRow(new StringCell("SizeHandler"),
+                .addRowToTable(new DefaultRow(new StringCell("Size Handler"),
                         cols));
 
         // 5th row: shows where the shape handler is attached to.
@@ -397,13 +402,13 @@ final class DataOutPortView extends NodeOutPortView {
                 cols[c] = new StringCell(hdlrStr);
             }
         }
-        result.addRowToTable(new DefaultRow(new StringCell("ShapeHandler"),
+        result.addRowToTable(new DefaultRow(new StringCell("Shape Handler"),
                 cols));
 
         // 6th row: displays the lower bound of the domain
         cols = new DataCell[numCols];
         for (int c = 0; c < numCols; c++) {
-            String boundText = "<null>";
+            String boundText = "<undefined>";
             if (spec.getColumnSpec(c).getDomain().getLowerBound() != null) {
                 boundText =
                         spec.getColumnSpec(c).getDomain().getLowerBound()
@@ -411,13 +416,13 @@ final class DataOutPortView extends NodeOutPortView {
             }
             cols[c] = new StringCell(boundText);
         }
-        result.addRowToTable(new DefaultRow(new StringCell("lower bound"),
+        result.addRowToTable(new DefaultRow(new StringCell("Lower Bound"),
                         cols));
 
         // 7th row: shows the upper bound value of the domain
         cols = new DataCell[numCols];
         for (int c = 0; c < numCols; c++) {
-            String boundText = "<null>";
+            String boundText = "<undefined>";
             if (spec.getColumnSpec(c).getDomain().getUpperBound() != null) {
                 boundText =
                         spec.getColumnSpec(c).getDomain().getUpperBound()
@@ -426,7 +431,7 @@ final class DataOutPortView extends NodeOutPortView {
             cols[c] = new StringCell(boundText);
         }
         result
-                .addRowToTable(new DefaultRow(new StringCell("upper bound"),
+                .addRowToTable(new DefaultRow(new StringCell("Upper Bound"),
                         cols));
 
     }
@@ -470,7 +475,7 @@ final class DataOutPortView extends NodeOutPortView {
                     cols[c] = new StringCell(valueIter[c].next().toString());
                 }
             }
-            result.addRowToTable(new DefaultRow(new StringCell("Val_" + r),
+            result.addRowToTable(new DefaultRow(new StringCell("Value " + r),
                     cols));
         }
 
@@ -537,7 +542,7 @@ final class DataOutPortView extends NodeOutPortView {
     }
 
     /**
-     * @see java.awt.Component#setVisible(boolean)
+     * {@inheritDoc}
      */
     @Override
     public void setVisible(final boolean b) {

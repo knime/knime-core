@@ -53,16 +53,16 @@ public class PartitionNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        m_panel.loadSettingsFrom(settings);
+        m_panel.loadSettingsFrom(settings, specs[0]);
     }
 
     /**
-     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)

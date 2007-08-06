@@ -24,8 +24,13 @@
  */
 package org.knime.base.node.preproc.rowkey;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.knime.base.data.append.column.AppendedColumnTable;
 import org.knime.core.data.DataCell;
@@ -118,6 +123,8 @@ public class RowKeyUtil {
      * aren't unique
      * @param replaceMissingVals if set to <code>true</code> the method 
      * replaces missing values with ?
+     * @param removeRowKeyCol removes the selected row key column if set
+     * to <code>true</code> 
      * @return the {@link BufferedDataTable} with the replaced row key and
      * the optional appended new column with the old row keys.
      * @throws Exception if the cancel button was pressed or the input data
@@ -126,14 +133,22 @@ public class RowKeyUtil {
     public BufferedDataTable changeRowKey(final BufferedDataTable inData,
             final ExecutionContext exec, final String selRowKeyColName, 
             final boolean appendColumn, final DataColumnSpec newColSpec,
-            final boolean ensureUniqueness, final boolean replaceMissingVals)
+            final boolean ensureUniqueness, final boolean replaceMissingVals, 
+            final boolean removeRowKeyCol)
     throws Exception {
         LOGGER.debug("Entering changeRowKey(inData, exec, selRowKeyColName, " 
                 + "newColName) of class RowKeyUtil.");
         final DataTableSpec inSpec = inData.getDataTableSpec();
         DataTableSpec outSpec = inSpec;
+        if (removeRowKeyCol) {
+            outSpec = createTableSpec(outSpec, selRowKeyColName);
+        }
         if (appendColumn) {
-            outSpec = AppendedColumnTable.getTableSpec(inSpec, newColSpec);
+            if (newColSpec == null) {
+                throw new NullPointerException(
+                        "NewColumnSpec must not be null");
+            }
+            outSpec = AppendedColumnTable.getTableSpec(outSpec, newColSpec);
         }
         final BufferedDataContainer newContainer =
             exec.createDataContainer(outSpec, false);
@@ -155,8 +170,12 @@ public class RowKeyUtil {
         for (DataRow row : inData) {
             rowCounter++;
             final DataCell[] cells = new DataCell[noOfCols];
+            int newCellCounter = 0;
             for (int i = 0, length = inSpec.getNumColumns(); i < length; i++) {
-                cells[i] = row.getCell(i);
+                if (removeRowKeyCol && i == newRowKeyColIdx) {
+                    continue;
+                }
+                cells[newCellCounter++] = row.getCell(i);
             }
             if (appendColumn) {
                 cells[noOfCols - 1] = row.getKey().getId();
@@ -196,14 +215,13 @@ public class RowKeyUtil {
                                 + "Multiple missing values found. Check the '" 
                                 + RowKeyNodeDialog.ENSURE_UNIQUENESS_LABEL 
                                 + "' option to handle multiple occurrences.");
-                    } else {
-                        throw new InvalidSettingsException(
-                                "Error in row " + rowCounter + ": "
-                                + "Duplicate value: " + key 
-                                + " already exists. Check the '" 
-                                + RowKeyNodeDialog.ENSURE_UNIQUENESS_LABEL 
-                                + "' option to handle duplicates.");
-                    }
+                    }  
+                    throw new InvalidSettingsException(
+                            "Error in row " + rowCounter + ": "
+                            + "Duplicate value: " + key 
+                            + " already exists. Check the '" 
+                            + RowKeyNodeDialog.ENSURE_UNIQUENESS_LABEL 
+                            + "' option to handle duplicates.");
                 }
             }
             //put the current key which is new into the values map
@@ -240,5 +258,38 @@ public class RowKeyUtil {
      */
     public int getDuplicatesCounter() {
         return m_duplicatesCounter;
+    }
+    
+    /**
+     * @param spec the original {@link DataTableSpec}
+     * @param columnNames2Drop the names of the column to remove from the 
+     * original table specification
+     * @return the original table specification without the column 
+     * specifications of the given names
+     */
+    public static DataTableSpec createTableSpec(final DataTableSpec spec,
+            final String... columnNames2Drop) {
+        if (spec == null) {
+            return null;
+        }
+        if (columnNames2Drop == null || columnNames2Drop.length < 1) {
+            return spec;
+        }
+        final int numColumns = spec.getNumColumns();
+        if (columnNames2Drop.length > numColumns) {
+            throw new IllegalArgumentException("Number of skipped columns is "
+                    + "greater than total number of columns.");
+        }
+        final Set<String> names2Drop = 
+            new HashSet<String>(Arrays.asList(columnNames2Drop));
+        final Collection<DataColumnSpec> newColSpecs = 
+            new ArrayList<DataColumnSpec>(numColumns - columnNames2Drop.length);
+        for (DataColumnSpec columnSpec : spec) {
+            if (names2Drop.contains(columnSpec.getName())) {
+                continue;
+            }
+            newColSpecs.add(columnSpec);
+        }
+        return new DataTableSpec(newColSpecs.toArray(new DataColumnSpec[0]));
     }
 }

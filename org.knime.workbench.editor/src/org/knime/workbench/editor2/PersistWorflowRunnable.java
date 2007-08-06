@@ -133,8 +133,7 @@ abstract class PersistWorflowRunnable implements IRunnableWithProgress {
         }
 
         /**
-         * @see org.knime.core.node.NodeProgressListener
-         *      #progressChanged(NodeProgressEvent)
+         * {@inheritDoc}
          */
         public synchronized void progressChanged(final NodeProgressEvent pe) {
             Display.getDefault().asyncExec(new Runnable() {

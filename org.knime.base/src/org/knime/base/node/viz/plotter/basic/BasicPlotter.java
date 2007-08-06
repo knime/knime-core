@@ -97,7 +97,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
 
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
+     * {@inheritDoc}
      */
     @Override
     public void reset() {
@@ -214,7 +214,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
                 .calculateMappedValue(new DoubleCell(value), 
                         getDrawingPaneDimension().height, true);
             int mappedX = (int)getXAxis().getCoordinate()
-                .calculateMappedValue(new IntCell((int)xCoords[i]), 
+                .calculateMappedValue(new IntCell(xCoords[i]), 
                         getDrawingPaneDimension().width, true);
             Point p = new Point(mappedX, (int)getScreenYCoordinate(
                     mappedValue));
@@ -275,7 +275,7 @@ public abstract class BasicPlotter extends AbstractPlotter {
                 new DoubleCell(value), getDrawingPaneDimension().height,
                 true);
         int mappedX = (int)getXAxis().getCoordinate().calculateMappedValue(
-                new IntCell((int)x[i]), getDrawingPaneDimension().width, true);
+                new DoubleCell(x[i]), getDrawingPaneDimension().width, true);
         Point p = new Point(mappedX, (int)getScreenYCoordinate(mappedValue));
         line.addPoint(p);
         line.addDomainValue(new DataCellPoint(new DoubleCell(x[i]), 

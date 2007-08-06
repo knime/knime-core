@@ -38,16 +38,19 @@ public class SimpleFileFilter extends FileFilter {
 
     /**
      * Creates a new simple file filter that filters out all files not
-     * mathcing the given extensions.
+     * matching the given extensions.
      * 
      * @param exts allowed extensions
      */
     public SimpleFileFilter(final String... exts) {
+        if (exts == null) {
+            throw new NullPointerException("Extensions must not be null");
+        }
         m_validExtensions = exts;
     }
 
     /**
-     * @see java.io.FileFilter#accept(java.io.File)
+     * {@inheritDoc}
      */
     @Override
     public boolean accept(final File f) {
@@ -66,7 +69,14 @@ public class SimpleFileFilter extends FileFilter {
     }
 
     /**
-     * @see javax.swing.filechooser.FileFilter#getDescription()
+     * @return all extensions which are accepted by this filter
+     */
+    public String[] getValidExtensions() {
+        return m_validExtensions;
+    }
+    
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String getDescription() {

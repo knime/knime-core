@@ -51,7 +51,7 @@ public abstract class RowFilterPanel extends JPanel {
      * @param width minimum width of the panel
      * @param height minimum height of the panel
      */
-    RowFilterPanel(final int width, final int height) {
+    public RowFilterPanel(final int width, final int height) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         m_panel = new JPanel();
 
@@ -76,7 +76,7 @@ public abstract class RowFilterPanel extends JPanel {
     }
 
     /**
-     * @see java.awt.Container#add(java.awt.Component)
+     * {@inheritDoc}
      */
     @Override
     public Component add(final Component comp) {

@@ -28,9 +28,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
-import org.eclipse.draw2d.MouseEvent;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.workbench.editor2.figures.NewToolTipFigure;
 import org.knime.workbench.editor2.figures.NodeOutPortFigure;
 
 /**
@@ -47,7 +47,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
     }
 
     /**
-     * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart#createFigure()
+     * {@inheritDoc}
      */
     @Override
     protected IFigure createFigure() {
@@ -56,27 +56,38 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
         // container
         NodeContainer container = getNodeContainer();
         boolean isModelPort = container.isPredictorOutPort(getId());
-        NodeOutPortFigure portFigure = new NodeOutPortFigure(getId(), container
-                .getNrModelContentOutPorts(), container.getNrDataOutPorts(),
-                container.getOutportName(getId()), isModelPort);
+        NodeOutPortFigure portFigure =
+                new NodeOutPortFigure(getId(), container
+                        .getNrModelContentOutPorts(), container
+                        .getNrDataOutPorts(),
+                        container.getOutportName(getId()), isModelPort);
 
         // BW: double click on port has been disabled
-//        portFigure.addMouseListener(this);
+        // portFigure.addMouseListener(this);
 
         return portFigure;
     }
 
     /**
-     * Opens the outport table on double click.
-     * 
-     * @see org.knime.workbench.editor2.editparts.KnimeAbstractPart#
-     *      doubleClick(org.eclipse.draw2d.MouseEvent)
+     * Tries to build the tooltip from the port name and if this is a data
+     * outport and the node is configured/executed, it appends also the number
+     * of columns and rows
      */
-    public void doubleClick(final MouseEvent me) {
-
-        ((NodeContainerEditPart)getParent()).getNodeContainer().openPortView(
-                getId());
-
+    public void rebuildTooltip() {
+        String name = getNodeContainer().getOutportName(getId());
+        int cols = getNodeContainer().getNumOutportCols(getId());
+        int rows = getNodeContainer().getNumOutportRows(getId());
+        StringBuilder sb = new StringBuilder();
+        sb.append(name);
+        if (cols >= 0) {
+            sb.append(" (Cols: " + cols);
+            if (rows >= 0) {
+                sb.append(", Rows: " + rows + ")");
+            } else {
+                sb.append(")");
+            }
+        }
+        ((NewToolTipFigure)getFigure().getToolTip()).setText(sb.toString());
     }
 
     /**
@@ -90,8 +101,9 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
     @Override
     public List getModelSourceConnections() {
         List<ConnectionContainer> containers;
-        containers = getManager().getOutgoingConnectionsAt(getNodeContainer(),
-                getId());
+        containers =
+                getManager().getOutgoingConnectionsAt(getNodeContainer(),
+                        getId());
 
         if (containers != null) {
             return containers;
@@ -101,8 +113,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
     }
 
     /**
-     * @see org.knime.workbench.editor2.editparts.AbstractPortEditPart#
-     *      isModelPort()
+     * {@inheritDoc}
      */
     @Override
     public boolean isModelPort() {

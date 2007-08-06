@@ -25,6 +25,7 @@
 package org.knime.base.node.mine.bfn.fuzzy;
 
 import org.knime.base.node.mine.bfn.BasisFunctionPredictorRow;
+import org.knime.base.node.mine.bfn.Distance;
 import org.knime.base.node.mine.bfn.fuzzy.membership.MembershipFunction;
 import org.knime.base.node.mine.bfn.fuzzy.norm.Norm;
 import org.knime.core.data.DataCell;
@@ -33,10 +34,11 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.util.MutableDouble;
 
 /**
  * 
- * @author Thoams Gabriel, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
  */
 public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     
@@ -56,12 +58,11 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param classLabel The class label of this rule.
      * @param mem An array of membership functions each per dimension. 
      * @param norm A fuzzy norm to combine activations via all dimensions.
-     * @param numPat The overall number of pattern used for training. 
      */
-    FuzzyBasisFunctionPredictorRow(final DataCell key,
+    protected FuzzyBasisFunctionPredictorRow(final DataCell key,
             final DataCell classLabel, final MembershipFunction[] mem,
-            final int norm, final int numPat) {
-        super(key, classLabel, numPat, MINACT);
+            final int norm) {
+        super(key, classLabel, MINACT);
         m_norm = norm;
         m_mem = mem;
     }
@@ -101,13 +102,19 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
     public MembershipFunction getMemship(final int i) {
         return m_mem[i];
     }
+    
+    /**
+     * @return array of fuzzy membership function
+     */
+    public MembershipFunction[] getMemships() {
+        return m_mem;
+    }
 
     /**
-     * @see BasisFunctionPredictorRow
-     *      #save(org.knime.core.node.ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
-    protected void save(final ModelContentWO pp) {
+    public void save(final ModelContentWO pp) {
         super.save(pp);
         pp.addInt(Norm.NORM_KEY, m_norm);
         ModelContentWO memParams = pp.addModelContent("membership_functions");
@@ -153,7 +160,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
                 continue;
             }
             // gets cell at index i
-            double value = ((DoubleValue)cell).getDoubleValue();
+            double value = ((DoubleValue) cell).getDoubleValue();
             // act in current dimension
             double act = m_mem[i].getActivation(value);
             if (i == 0) {
@@ -167,4 +174,73 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
         // returns membership degree
         return degree;
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public double computeDistance(final DataRow row) {
+        assert row.getNumCells() == m_mem.length;
+        double[] d1 = new double[m_mem.length];
+        double[] d2 = new double[m_mem.length];
+        for (int i = 0; i < m_mem.length; i++) {
+            DataCell cell = row.getCell(i);
+            if (cell.isMissing()) {
+                d1[i] = Double.NaN;
+            } else {
+                d1[i] = ((DoubleValue) cell).getDoubleValue();
+            }
+            if (m_mem[i].isMissingIntern()) {
+                d2[i] = Double.NaN;
+            } else {
+                d2[i] = m_mem[i].getAnchor();
+            }
+        }
+        return Distance.getInstance().compute(d1, d2);
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrUsedFeatures() {
+        int used = 0;
+        for (MembershipFunction mem : m_mem) {
+            if (!mem.isSuppLeftMax() || !mem.isSuppRightMax()) {
+                used++;
+            }
+        }
+        return used; 
+    }
+    
+    /**
+     * @return fuzzy norm
+     */
+    public final int getNorm() {
+        return m_norm;
+    }
+    
+    /**
+     * @return array of minimum bounds
+     */
+    public final MutableDouble[] getMins() {
+        MutableDouble[] mins = new MutableDouble[m_mem.length];
+        for (int i = 0; i < mins.length; i++) {
+            mins[i] = m_mem[i].getMin();
+        }
+        return mins;
+    }
+    
+    /**
+     * @return array of maximum bounds
+     */
+    public final MutableDouble[] getMaxs() {
+        MutableDouble[] maxs = new MutableDouble[m_mem.length];
+        for (int i = 0; i < maxs.length; i++) {
+            maxs[i] = m_mem[i].getMax();
+        }
+        return maxs;
+    }
+
 }

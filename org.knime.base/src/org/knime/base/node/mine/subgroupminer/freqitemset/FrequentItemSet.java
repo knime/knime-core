@@ -239,7 +239,7 @@ public class FrequentItemSet implements Iterable<Integer> {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

@@ -26,7 +26,7 @@ package org.knime.base.node.mine.subgroupminer;
 import java.util.BitSet;
 
 import org.knime.base.data.bitvector.BitVectorCell;
-import org.knime.base.data.bitvector.BitVectorRowCellFactory;
+import org.knime.base.data.bitvector.BitVectorCellFactory;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -36,7 +36,8 @@ import org.knime.core.data.DoubleValue;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class Numeric2BitVectorThresholdCellFactory extends BitVectorRowCellFactory {
+public class Numeric2BitVectorThresholdCellFactory 
+    extends BitVectorCellFactory {
     
     
     
@@ -50,7 +51,8 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorRowCellFacto
      * bitvectors
      * @param threshold the threshold above which the bit is set
      */
-    public Numeric2BitVectorThresholdCellFactory(final DataColumnSpec bitColSpec,
+    public Numeric2BitVectorThresholdCellFactory(
+            final DataColumnSpec bitColSpec,
             final double threshold) {
         super(bitColSpec);
         m_threshold = threshold;
@@ -58,9 +60,7 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorRowCellFacto
 
 
     /**
-     * 
-     * @see org.knime.base.data.bitvector.BitVectorRowCellFactory
-     * #getNumberOfNotSetBits()
+     * {@inheritDoc}
      */
     @Override
     public int getNumberOfNotSetBits() {
@@ -68,9 +68,7 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorRowCellFacto
     }
 
     /**
-     * 
-     * @see org.knime.base.data.bitvector.BitVectorRowCellFactory
-     * #getNumberOfSetBits()
+     * {@inheritDoc}
      */
     @Override
     public int getNumberOfSetBits() {
@@ -79,9 +77,7 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorRowCellFacto
 
 
     /**
-     * 
-     * @see org.knime.base.data.bitvector.BitVectorRowCellFactory
-     * #wasSuccessful()
+     * {@inheritDoc}
      */
     @Override
     public boolean wasSuccessful() {
@@ -89,11 +85,10 @@ public class Numeric2BitVectorThresholdCellFactory extends BitVectorRowCellFacto
     }
 
     /**
-     * @see org.knime.core.data.container.SingleCellFactory#getCell(
-     * org.knime.core.data.DataRow)
+     * {@inheritDoc}
      */
     @Override
-    public DataCell getCell(DataRow row) {
+    public DataCell getCell(final DataRow row) {
         incrementNrOfRows();
         BitSet currBitSet = new BitSet(row.getNumCells());
         for (int i = 0; i < row.getNumCells(); i++) {

@@ -25,6 +25,8 @@ package org.knime.base.node.meta.xvalidation;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -56,7 +58,7 @@ public class XValidateDialog extends NodeDialogPane {
     @SuppressWarnings("unchecked")
     private final ColumnSelectionComboxBox m_classColumn = 
         new ColumnSelectionComboxBox((Border) null, StringValue.class);
-    
+    private final JCheckBox m_leaveOneOut = new JCheckBox();
     
     /**
      * Creates a new dialog for the cross validation settings.
@@ -80,6 +82,19 @@ public class XValidateDialog extends NodeDialogPane {
         p.add(new JLabel("Random sampling   "), c);
         c.gridx = 1;
         p.add(m_randomSampling, c);
+
+        
+        c.gridy++;
+        c.gridx = 0;
+        p.add(new JLabel("Leave-one-out   "), c);
+        c.gridx = 1;
+        p.add(m_leaveOneOut, c);
+        m_leaveOneOut.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                m_validations.setEnabled(!m_leaveOneOut.isSelected());
+                m_randomSampling.setEnabled(!m_leaveOneOut.isSelected());
+            }
+        });
         
         c.gridy++;
         c.gridx = 0;
@@ -92,9 +107,7 @@ public class XValidateDialog extends NodeDialogPane {
     }
 
     /**
-     * @see org.knime.core.node.NodeDialogPane
-     *  #loadSettingsFrom(NodeSettingsRO,
-     *  org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
@@ -107,14 +120,17 @@ public class XValidateDialog extends NodeDialogPane {
 
         m_validations.setValue(m_settings.validations());
         m_randomSampling.setSelected(m_settings.randomSampling());
+        m_leaveOneOut.setSelected(m_settings.leaveOneOut());
+        m_validations.setEnabled(!m_settings.leaveOneOut());
+        m_randomSampling.setEnabled(!m_settings.leaveOneOut());
+        
         if (specs[0] != null) {
             m_classColumn.update(specs[0], m_settings.classColumnName());
         }
     }
 
     /**
-     * @see org.knime.core.node.NodeDialogPane
-     *  #saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
@@ -122,6 +138,7 @@ public class XValidateDialog extends NodeDialogPane {
         m_settings.validations((byte) Math.min(100,
                 ((Number) m_validations.getValue()).intValue()));
         m_settings.randomSampling(m_randomSampling.isSelected());
+        m_settings.leaveOneOut(m_leaveOneOut.isSelected());
         m_settings.classColumnName(m_classColumn.getSelectedColumn());
         m_settings.saveSettingsTo(settings);
     }

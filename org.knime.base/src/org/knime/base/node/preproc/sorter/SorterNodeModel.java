@@ -156,7 +156,7 @@ public class SorterNodeModel extends NodeModel {
      * {@link DataTableSpec} at the inport. If everything is ok, the v from the
      * inport is translated without modification to the outport.
      * 
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -167,9 +167,11 @@ public class SorterNodeModel extends NodeModel {
         // check if the values of the include List
         // exist in the DataTableSpec
         for (String ic : m_inclList) {
-            if ((inSpecs[INPORT].findColumnIndex(ic) == -1)) {
-                throw new InvalidSettingsException("Column " + ic
-                        + " not in spec.");
+            if (!ic.equals(SorterNodeDialogPanel2.NOSORT.getName())) {
+                if ((inSpecs[INPORT].findColumnIndex(ic) == -1)) {
+                    throw new InvalidSettingsException("Column " + ic
+                            + " not in spec.");
+                }
             }
         }
         return new DataTableSpec[]{inSpecs[INPORT]};
@@ -179,11 +181,12 @@ public class SorterNodeModel extends NodeModel {
      * The list of included columns and their sort order are stored in the
      * settings.
      * 
-     * @see org.knime.core.node.NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         if (m_inclList != null) {
+            
             settings.addStringArray(INCLUDELIST_KEY, m_inclList
                     .toArray(new String[0]));
         }
@@ -197,7 +200,7 @@ public class SorterNodeModel extends NodeModel {
      * Valid settings should contain the list of columns and a corresponding
      * sort order array of same size.
      * 
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -228,7 +231,7 @@ public class SorterNodeModel extends NodeModel {
     /**
      * Load the settings (includelist and sort order) in the SorterNodeModel.
      * 
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -246,8 +249,7 @@ public class SorterNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -256,8 +258,7 @@ public class SorterNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

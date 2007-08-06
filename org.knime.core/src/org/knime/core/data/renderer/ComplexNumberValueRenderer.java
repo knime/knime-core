@@ -109,7 +109,7 @@ public class ComplexNumberValueRenderer extends DefaultDataValueRenderer {
     }
 
     /**
-     * @see DefaultDataValueRenderer#getDescription()
+     * {@inheritDoc}
      */
     @Override
     public String getDescription() {

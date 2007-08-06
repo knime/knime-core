@@ -587,8 +587,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter2D.AbstractPlotter2D
-     *      #fillPopupMenu(javax.swing.JPopupMenu)
+     * {@inheritDoc}
      */
     @Override
     protected void fillPopupMenu(final JPopupMenu menu) {
@@ -666,9 +665,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements
     }
 
     /**
-     * 
-     * @see java.awt.event.MouseListener#mouseReleased(
-     *      java.awt.event.MouseEvent)
+     * {@inheritDoc}
      */
     @Override
     public void mouseReleased(final MouseEvent e) {
@@ -753,8 +750,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements
     }
 
     /**
-     * @see java.awt.event.ActionListener#actionPerformed
-     *      (java.awt.event.ActionEvent)
+     * {@inheritDoc}
      */
     public void actionPerformed(final ActionEvent e) {
         if (e.getActionCommand().equals(POPUP_HILITE_SELECTED)) {
@@ -828,16 +824,14 @@ public class ScatterPlotter extends AbstractPlotter2D implements
     }
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener
-     *      #hiLite(KeyEvent)
+     * {@inheritDoc}
      */
     public void hiLite(final KeyEvent event) {
         changeHiLiteTo(true, event.keys());
     }
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener
-     *      #unHiLite(KeyEvent)
+     * {@inheritDoc}
      */
     public void unHiLite(final KeyEvent event) {
         changeHiLiteTo(false, event.keys());
@@ -845,8 +839,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements
 
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener
-     *      #unHiLiteAll()
+     * {@inheritDoc}
      */
     public void unHiLiteAll() {
         clearHilite();
@@ -1285,7 +1278,7 @@ public class ScatterPlotter extends AbstractPlotter2D implements
     }
 
     /**
-     * @see AbstractPlotter2D#updatePaintModel()
+     * {@inheritDoc}
      */
     @Override
     protected void updatePaintModel() {

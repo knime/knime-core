@@ -33,7 +33,7 @@ import org.knime.workbench.repository.RepositoryManager;
 public class KNIMEBatchApplication implements IPlatformRunnable {
 
     /**
-     * @see org.eclipse.core.runtime.IPlatformRunnable#run(java.lang.Object)
+     * {@inheritDoc}
      */
     public Object run(final Object args) throws Exception {
         // unless the user specified this property, we set it to true here
@@ -64,7 +64,12 @@ public class KNIMEBatchApplication implements IPlatformRunnable {
         }
         // this actually returns with a non-0 value when failed, 
         // we ignore it here
-        BatchExecutor.mainRun(stringArgs);
+        try {
+            BatchExecutor.mainRun(stringArgs);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
         return EXIT_OK;
     }
 }

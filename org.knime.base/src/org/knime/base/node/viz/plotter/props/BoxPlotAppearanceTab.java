@@ -61,8 +61,7 @@ public class BoxPlotAppearanceTab extends PropertiesTab {
     }
     
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.props.PropertiesTab#getDefaultName()
+     * {@inheritDoc}
      */
     @Override
     public String getDefaultName() {

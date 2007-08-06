@@ -188,7 +188,7 @@ public final class DialogComponentString extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateStettingsBeforeSave()
+    protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
         updateModel();
     }

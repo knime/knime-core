@@ -69,17 +69,14 @@ public class NewOverviewOutlinePage extends Page
     }
 
     /**
-     * @see org.eclipse.jface.viewers.ISelectionProvider
-     *      #addSelectionChangedListener
-     *      (org.eclipse.jface.viewers.ISelectionChangedListener)
+     * {@inheritDoc}
      */
     public void addSelectionChangedListener(
             final ISelectionChangedListener listener) {
     }
 
     /**
-     * @see org.eclipse.ui.part.IPage
-     *      #createControl(org.eclipse.swt.widgets.Composite)
+     * {@inheritDoc}
      */
     @Override
     public void createControl(final Composite parent) {
@@ -97,7 +94,7 @@ public class NewOverviewOutlinePage extends Page
     }
 
     /**
-     * @see org.eclipse.ui.part.IPage#dispose()
+     * {@inheritDoc}
      */
     @Override
     public void dispose() {
@@ -109,7 +106,7 @@ public class NewOverviewOutlinePage extends Page
     }
 
     /**
-     * @see org.eclipse.ui.part.IPage#getControl()
+     * {@inheritDoc}
      */
     @Override
     public Control getControl() {
@@ -117,16 +114,14 @@ public class NewOverviewOutlinePage extends Page
     }
 
     /**
-     * @see org.eclipse.jface.viewers.ISelectionProvider#getSelection()
+     * {@inheritDoc}
      */
     public ISelection getSelection() {
         return StructuredSelection.EMPTY;
     }
 
     /**
-     * @see org.eclipse.jface.viewers.ISelectionProvider#
-     *      removeSelectionChangedListener
-     *      (org.eclipse.jface.viewers.ISelectionChangedListener)
+     * {@inheritDoc}
      */
     public void removeSelectionChangedListener(
             final ISelectionChangedListener listener) {
@@ -134,7 +129,7 @@ public class NewOverviewOutlinePage extends Page
     }
 
     /**
-     * @see org.eclipse.ui.part.IPage#setFocus()
+     * {@inheritDoc}
      */
     @Override
     public void setFocus() {
@@ -144,8 +139,7 @@ public class NewOverviewOutlinePage extends Page
     }
 
     /**
-     * @see org.eclipse.jface.viewers.ISelectionProvider
-     *      #setSelection(org.eclipse.jface.viewers.ISelection)
+     * {@inheritDoc}
      */
     public void setSelection(final ISelection selection) {
         // nothing

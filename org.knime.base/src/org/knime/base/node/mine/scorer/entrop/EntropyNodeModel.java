@@ -101,7 +101,7 @@ public class EntropyNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -112,7 +112,7 @@ public class EntropyNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -122,7 +122,7 @@ public class EntropyNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -132,7 +132,7 @@ public class EntropyNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -151,7 +151,7 @@ public class EntropyNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -160,7 +160,7 @@ public class EntropyNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -185,7 +185,7 @@ public class EntropyNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#setInHiLiteHandler(int, HiLiteHandler)
+     * {@inheritDoc}
      */
     @Override
     protected void setInHiLiteHandler(final int inIndex,
@@ -198,8 +198,7 @@ public class EntropyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File internDir,
@@ -217,8 +216,7 @@ public class EntropyNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #saveInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File internDir,

@@ -79,7 +79,7 @@ public interface DoubleValue extends DataValue {
         }
 
         /**
-         * @see DataValue.UtilityFactory#getIcon()
+         * {@inheritDoc}
          */
         @Override
         public Icon getIcon() {
@@ -87,7 +87,7 @@ public interface DoubleValue extends DataValue {
         }
 
         /**
-         * @see UtilityFactory#getComparator()
+         * {@inheritDoc}
          */
         @Override
         protected DataValueComparator getComparator() {
@@ -95,13 +95,14 @@ public interface DoubleValue extends DataValue {
         }
 
         /**
-         * @see UtilityFactory#getRendererFamily(DataColumnSpec)
+         * {@inheritDoc}
          */
         @Override
         protected DataValueRendererFamily getRendererFamily(
                 final DataColumnSpec spec) {
             return new DefaultDataValueRendererFamily(
                     DoubleValueRenderer.STANDARD_RENDERER, 
+                    DoubleValueRenderer.FULL_PRECISION_RENDERER, 
                     DoubleValueRenderer.PERCENT_RENDERER,
                     new DoubleGrayValueRenderer(spec),
                     new DoubleBarRenderer(spec)); 

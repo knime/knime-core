@@ -61,7 +61,7 @@ public class MetaNodeFactory extends NodeFactory {
     }
     
     /**
-     * @see NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {

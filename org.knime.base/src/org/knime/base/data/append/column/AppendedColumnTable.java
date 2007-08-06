@@ -96,14 +96,14 @@ public class AppendedColumnTable implements DataTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         return new AppendedColumnRowIterator(this);

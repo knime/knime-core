@@ -63,6 +63,7 @@ import org.knime.workbench.editor2.ImageRepository;
  * and the center icon</li>
  * <li><code>StatusFigure</code> - contains description text and some color
  * codes</li>
+ * <li><code>ProgressFigure</code> - displaying the execution progress</li>
  * </ul>
  * 
  * @author Florian Georg, University of Konstanz
@@ -137,7 +138,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private static final Font FONT_USER_NAME;
 
-    //private static final Font FONT_EXECUTING;
+    // private static final Font FONT_EXECUTING;
 
     private static final Font FONT_EXECUTED;
 
@@ -153,12 +154,12 @@ public class NodeContainerFigure extends RectangleFigure {
             name = systemFontData[0].getName();
             height = systemFontData[0].getHeight();
         }
-        
-        //FONT_NORMAL = new Font(current, name, height, SWT.NORMAL);
+
+        // FONT_NORMAL = new Font(current, name, height, SWT.NORMAL);
         FONT_USER_NAME = new Font(current, name, height, SWT.NORMAL);
-        //FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
+        // FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
         FONT_EXECUTED = new Font(current, name, height, SWT.BOLD);
-        FONT_NORMAL = FONT_EXECUTED; 
+        FONT_NORMAL = FONT_EXECUTED;
     }
 
     /** tooltip for displaying the full heading. * */
@@ -293,8 +294,36 @@ public class NodeContainerFigure extends RectangleFigure {
      * @param text The text to set.
      */
     public void setLabelText(final String text) {
-        m_heading.setText(text);
+        m_heading.setText(wrapText(text));
         m_headingTooltip.setText(text);
+    }
+
+    public String wrapText(String text) {
+        // wrap the text with line breaks if too long
+        // we split just one time (i.e. two lines at most)
+        if (text.trim().length() < 20) {
+            return text.trim();
+        }
+        if (text.trim().indexOf(" ") < 0) {
+            return text.trim();
+        }
+        int middle = text.length() / 2;
+        // now go left and right to the next space
+        // the closest space is used for a split
+        int indexLeft = middle;
+        int indexRight = middle + 1;
+        for (; indexLeft >= 0 && indexRight < text.length(); indexLeft--, indexRight++) {
+            if (text.charAt(indexLeft) == ' ') {
+                StringBuilder sb = new StringBuilder(text);
+                return sb.replace(indexLeft, indexLeft + 1, "\n").toString();
+            }
+            if (text.charAt(indexRight) == ' ') {
+                StringBuilder sb = new StringBuilder(text);
+                return sb.replace(indexRight, indexRight + 1, "\n").toString();
+            }
+        }
+
+        return text;
     }
 
     /**
@@ -424,7 +453,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // in every case reset the progress bar
         m_progressFigure.reset();
-        
+
         // remove both intergangable onse
         if (isChild(m_progressFigure)) {
             remove(m_progressFigure);
@@ -448,14 +477,14 @@ public class NodeContainerFigure extends RectangleFigure {
 
         switch (state) {
         case STATE_NOT_CONFIGURED:
-            m_heading.setFont(FONT_NORMAL);
-            m_heading.setEnabled(false);
+//            m_heading.setFont(FONT_NORMAL);
+//            m_heading.setEnabled(false);
             setStatusAmple();
             m_statusFigure.setIcon(RED);
             break;
         case STATE_READY:
-            m_heading.setFont(FONT_NORMAL);
-            m_heading.setEnabled(true);
+//            m_heading.setFont(FONT_NORMAL);
+//            m_heading.setEnabled(true);
 
             setStatusAmple();
             m_statusFigure.setIcon(YELLOW);
@@ -467,41 +496,41 @@ public class NodeContainerFigure extends RectangleFigure {
         // m_statusFigure.setEnabled(false);
         // break;
         case STATE_EXECUTING:
-            //m_heading.setFont(FONT_EXECUTING);
-            m_heading.setEnabled(true);
+            // m_heading.setFont(FONT_EXECUTING);
+           // m_heading.setEnabled(true);
 
             setProgressBar(true);
-            //m_heading.setFont(FONT_EXECUTING);
+            // m_heading.setFont(FONT_EXECUTING);
             // m_contentFigure.removeWarningSign();
             break;
         case STATE_QUEUED:
-            //m_heading.setFont(FONT_NORMAL);
-            m_heading.setEnabled(true);
+            // m_heading.setFont(FONT_NORMAL);
+           // m_heading.setEnabled(true);
 
             setProgressBar(false);
             break;
         case STATE_EXECUTED:
-            //m_heading.setFont(FONT_EXECUTED);
-            m_heading.setEnabled(true);
+            // m_heading.setFont(FONT_EXECUTED);
+           // m_heading.setEnabled(true);
 
             setStatusAmple();
             m_statusFigure.setIcon(GREEN);
             break;
         case STATE_WARNING:
-            //m_heading.setFont(FONT_NORMAL);
-            m_heading.setEnabled(true);
+            // m_heading.setFont(FONT_NORMAL);
+           // m_heading.setEnabled(true);
             m_infoWarnErrorPanel.setWarning(message);
             // m_contentFigure.setWarning(message, WarnErrorToolTip.WARNING);
             break;
         case STATE_ERROR:
-            //m_heading.setFont(FONT_NORMAL);
-            m_heading.setEnabled(true);
+            // m_heading.setFont(FONT_NORMAL);
+          //  m_heading.setEnabled(true);
             m_infoWarnErrorPanel.setError(message);
             // m_contentFigure.setWarning(message, WarnErrorToolTip.ERROR);
             break;
         default:
-            //m_heading.setFont(FONT_NORMAL);
-            m_heading.setEnabled(false);
+            // m_heading.setFont(FONT_NORMAL);
+           // m_heading.setEnabled(false);
 
             setStatusAmple();
             m_statusFigure.setIcon(RED);
@@ -514,8 +543,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * 
-     * @see org.eclipse.draw2d.IFigure#getMinimumSize(int, int)
+     * {@inheritDoc}
      */
     @Override
     public Dimension getMinimumSize(final int whint, final int hhint) {
@@ -523,7 +551,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
+     * {@inheritDoc}
      */
     @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
@@ -543,12 +571,12 @@ public class NodeContainerFigure extends RectangleFigure {
                         + m_contentFigure.getPreferredSize().height
                         + m_infoWarnErrorPanel.getPreferredSize().height
                         + m_statusFigure.getPreferredSize().height
-                        + m_name.getPreferredSize().height + 8;
+                        + m_name.getPreferredSize().height + 20;
         return new Dimension(prefWidth, prefHeight);
     }
 
     /**
-     * @see org.eclipse.draw2d.IFigure#getBackgroundColor()
+     * {@inheritDoc}
      */
     @Override
     public Color getBackgroundColor() {
@@ -556,7 +584,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * @see org.eclipse.draw2d.IFigure#getForegroundColor()
+     * {@inheritDoc}
      */
     @Override
     public Color getForegroundColor() {
@@ -589,7 +617,7 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * @see org.eclipse.draw2d.Figure#paintFigure(org.eclipse.draw2d.Graphics)
+     * {@inheritDoc}
      */
     @Override
     public void paintFigure(final Graphics graphics) {
@@ -772,8 +800,7 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         /**
-         * 
-         * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
+         * {@inheritDoc}
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
@@ -891,6 +918,7 @@ public class NodeContainerFigure extends RectangleFigure {
                         WarnErrorToolTip.WARNING);
             }
 
+            
             repaint();
         }
 
@@ -975,12 +1003,11 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         /**
-         * 
-         * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
+         * {@inheritDoc}
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
-            return super.getPreferredSize(WIDTH,
+            return new Dimension(WIDTH,
                     m_label.getPreferredSize().height);
         }
 
@@ -1063,7 +1090,7 @@ public class NodeContainerFigure extends RectangleFigure {
         }
 
         /**
-         * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
+         * {@inheritDoc}
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {

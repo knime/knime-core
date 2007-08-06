@@ -206,7 +206,7 @@ public class RPropNodeModel extends NodeModel {
     /**
      * returns null.
      * 
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -219,6 +219,21 @@ public class RPropNodeModel extends NodeModel {
                     if (!colspec.getType().isCompatible(DoubleValue.class)) {
                         throw new InvalidSettingsException(
                                 "Only double columns for input");
+                    } else {
+                        DataColumnDomain domain = colspec.getDomain();
+                        if (domain.hasBounds()) {
+                            double lower =
+                                    ((DoubleValue)domain.getLowerBound())
+                                            .getDoubleValue();
+                            double upper =
+                                    ((DoubleValue)domain.getUpperBound())
+                                            .getDoubleValue();
+                            if (lower < 0 || upper > 1) {
+                                setWarningMessage("Input data not normalized." 
+                                       + " Please consider using the " 
+                                       + "Normalizer Node first.");
+                            }
+                        }
                     }
                 } else {
                     classcolinspec = true;
@@ -262,7 +277,7 @@ public class RPropNodeModel extends NodeModel {
      * <li>The neural net is trained.</li>
      * </ol>
      * 
-     * @see NodeModel#execute(BufferedDataTable[], ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -437,7 +452,7 @@ public class RPropNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -447,7 +462,7 @@ public class RPropNodeModel extends NodeModel {
     /**
      * Stores the model of the trained neural network for later use.
      * 
-     * @see NodeModel#saveModelContent(int,ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveModelContent(final int index,
@@ -459,7 +474,7 @@ public class RPropNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -471,7 +486,7 @@ public class RPropNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -484,7 +499,7 @@ public class RPropNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -505,9 +520,8 @@ public class RPropNodeModel extends NodeModel {
     }
 
      /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadInternals(java.io.File,ExecutionMonitor)
-     */
+      * {@inheritDoc}
+      */
     @Override
     protected void loadInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException {
@@ -523,8 +537,7 @@ public class RPropNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #saveInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File internDir,

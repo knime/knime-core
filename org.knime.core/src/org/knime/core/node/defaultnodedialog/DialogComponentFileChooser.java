@@ -147,8 +147,7 @@ public class DialogComponentFileChooser extends DialogComponent {
         m_fileComboBox.addItemListener(new ItemListener() {
 
             /**
-             * @see java.awt.event.ItemListener#itemStateChanged(
-             * java.awt.event.ItemEvent)
+             * {@inheritDoc}
              */
             public void itemStateChanged(final ItemEvent e) {
                 String fileName = (String)m_fileComboBox.getSelectedItem();
@@ -243,8 +242,7 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodedialog.DialogComponent
-     *      #saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     public void saveSettingsTo(final NodeSettingsWO settings) {
@@ -256,8 +254,7 @@ public class DialogComponentFileChooser extends DialogComponent {
     }
 
     /**
-     * @see org.knime.core.node.defaultnodedialog.DialogComponent
-     *      #setEnabledComponents(boolean)
+     * {@inheritDoc}
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {

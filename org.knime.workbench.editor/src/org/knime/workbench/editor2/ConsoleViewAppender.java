@@ -71,7 +71,7 @@ public final class ConsoleViewAppender extends Writer {
 
     /** Color: debug. * */
     public static final Color COLOR_DEBUG = Display.getDefault()
-            .getSystemColor(SWT.COLOR_GRAY);
+            .getSystemColor(SWT.COLOR_DARK_GRAY);
     
     private final Color m_color;
 
@@ -94,7 +94,7 @@ public final class ConsoleViewAppender extends Writer {
 
     /** Appender: debug. */
     public static final ConsoleViewAppender DEBUG_APPENDER
-        = new ConsoleViewAppender(COLOR_DEBUG, "DEBUG", NodeLogger.LEVEL.DEBUG);
+        = new ConsoleViewAppender(COLOR_DEBUG, "Debug", NodeLogger.LEVEL.DEBUG);
 
     private final String m_name;
     
@@ -205,7 +205,7 @@ public final class ConsoleViewAppender extends Writer {
         new ConsoleWriteJob();
 
     /**
-     * @see java.io.Writer#write(char[], int, int)
+     * {@inheritDoc}
      */
     @Override
     public void write(final char[] cbuf, final int off, final int len)
@@ -220,7 +220,7 @@ public final class ConsoleViewAppender extends Writer {
     }
 
     /**
-     * @see java.io.Writer#flush()
+     * {@inheritDoc}
      */
     @Override
     public void flush() throws IOException {
@@ -228,7 +228,7 @@ public final class ConsoleViewAppender extends Writer {
     }
 
     /**
-     * @see java.io.Writer#close()
+     * {@inheritDoc}
      */
     @Override
     public void close() throws IOException {
@@ -270,7 +270,7 @@ public final class ConsoleViewAppender extends Writer {
         }
         
         /**
-         * @see Job#run(IProgressMonitor)
+         * {@inheritDoc}
          */
         @Override
         protected IStatus run(final IProgressMonitor monitor) {

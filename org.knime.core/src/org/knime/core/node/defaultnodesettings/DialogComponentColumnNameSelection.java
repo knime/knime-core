@@ -113,6 +113,26 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
         this(model, label, specIndex, isRequired, 
                 new DataValueColumnFilter(classFilter));
     }
+
+    /**
+     * Constructor that puts label and combobox into the panel.
+     * 
+     * @param model the model holding the value of this component
+     * @param label label for dialog in front of checkbox
+     * @param specIndex index of (input) port listing available columns
+     * @param isRequired true, if the component should throw an exception in
+     *            case of no available compatible column, false otherwise.
+     * @param addNoneCol true, if a none option should be added to the column
+     * list
+     * @param classFilter which classes are available for selection
+     */
+    public DialogComponentColumnNameSelection(final SettingsModelString model,
+            final String label, final int specIndex, final boolean isRequired,
+            final boolean addNoneCol,
+            final Class<? extends DataValue>... classFilter) {
+        this(model, label, specIndex, isRequired, addNoneCol,
+                new DataValueColumnFilter(classFilter));
+    }
     
     /**
      * Constructor that puts label and combobox into the panel.
@@ -129,15 +149,35 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
     public DialogComponentColumnNameSelection(final SettingsModelString model,
             final String label, final int specIndex, final boolean isRequired,
             final ColumnFilter columnFilter) {
+        this(model, label, specIndex, isRequired, false, columnFilter);
+    }
+    
+    /**
+     * Constructor that puts label and combobox into the panel.
+     * 
+     * @param model the model holding the value of this component
+     * @param label label for dialog in front of checkbox
+     * @param specIndex index of (input) port listing available columns
+     * @param isRequired true, if the component should throw an exception in
+     *            case of no available compatible column, false otherwise.
+     * @param addNoneCol true, if a none option should be added to the column
+     * list
+     * @param columnFilter {@link ColumnFilter}. The combo box
+     *            will allow to select only columns compatible with the 
+     *            column filter. All other columns will be ignored.
+     */
+    public DialogComponentColumnNameSelection(final SettingsModelString model,
+            final String label, final int specIndex, final boolean isRequired,
+            final boolean addNoneCol, final ColumnFilter columnFilter) {
         super(model);
         m_label = new JLabel(label);
         getComponentPanel().add(m_label);
         m_isRequired = isRequired;
         m_columnFilter = columnFilter;
-        m_chooser = new ColumnSelectionPanel((Border)null, m_columnFilter);
+        m_chooser = 
+            new ColumnSelectionPanel((Border)null, m_columnFilter, addNoneCol);
         m_chooser.setRequired(m_isRequired);
         getComponentPanel().add(m_chooser);
-
         m_specIndex = specIndex;
 
         // we are not listening to the selection panel and not updating the
@@ -164,6 +204,25 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
                 setEnabledComponents(getModel().isEnabled());
             }
         });
+    }
+    
+    /** Returns the {@link DataColumnSpec} of the currently selected item. 
+     * This method delegates to 
+     *{@link ColumnSelectionPanel#getSelectedColumnAsSpec()}.
+     * @return The currently selected item as {@link DataColumnSpec} or null
+     * if none is selected (the list is empty).
+     */
+    public final DataColumnSpec getSelectedAsSpec() {
+        return m_chooser.getSelectedColumnAsSpec();
+    }
+    
+    /** Returns the name of the currently selected item. This method delegates
+     * to {@link ColumnSelectionPanel#getSelectedColumn()}.
+     * @return The name of the currently selected item or null if none is 
+     * selected (the list is empty).
+     */
+    public final String getSelected() {
+        return m_chooser.getSelectedColumn();
     }
 
     /**
@@ -239,7 +298,7 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateStettingsBeforeSave()
+    protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
         // just in case we didn't get notified about the last selection ...
         updateModel();

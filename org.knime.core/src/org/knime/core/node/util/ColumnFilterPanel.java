@@ -89,10 +89,10 @@ public class ColumnFilterPanel extends JPanel {
     /** Exclude model. */
     private final DefaultListModel m_exclMdl;
 
-    /** Hilight all search hits in the include model. */
+    /** Highlight all search hits in the include model. */
     private final JCheckBox m_markAllHitsIncl;
 
-    /** Hilight all search hits in the exclude model. */
+    /** Highlight all search hits in the exclude model. */
     private final JCheckBox m_markAllHitsExcl;
 
     /** Remove all button. */
@@ -341,7 +341,7 @@ public class ColumnFilterPanel extends JPanel {
     
     /**
      * Enables or disables all components on this panel.
-     * @see javax.swing.JComponent#setEnabled(boolean)
+     * {@inheritDoc}
      */
     @Override
     public void setEnabled(final boolean enabled) {
@@ -484,7 +484,7 @@ public class ColumnFilterPanel extends JPanel {
      * from the spec afterwards.
      * 
      * @param spec the spec to retrieve the column names from
-     * @param exclude the flag if <code>excl</code> contains the columns to
+     * @param exclude the flag if <code>cells</code> contains the columns to
      *            exclude (otherwise include).
      * @param cells an array of data cells to either in- or exclude.
      */
@@ -512,13 +512,13 @@ public class ColumnFilterPanel extends JPanel {
      * from the spec afterwards.
      * 
      * @param spec the spec to retrieve the column names from
-     * @param exclude the flag if <code>excl</code> contains the columns to
+     * @param exclude the flag if <code>list</code> contains the columns to
      *            exclude otherwise include
-     * @param excl the list of columns to exclude or include
+     * @param list the list of columns to exclude or include
      */
     public void update(final DataTableSpec spec, final boolean exclude,
-            final Collection<String> excl) {
-        assert (spec != null && excl != null);
+            final Collection<String> list) {
+        assert (spec != null && list != null);
         m_order.clear();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
@@ -531,13 +531,13 @@ public class ColumnFilterPanel extends JPanel {
             final String c = cSpec.getName();
             m_order.add(cSpec);
             if (exclude) {
-                if (excl.contains(c)) {
+                if (list.contains(c)) {
                     m_exclMdl.addElement(cSpec);
                 } else {
                     m_inclMdl.addElement(cSpec);
                 }
             } else {
-                if (excl.contains(c)) {
+                if (list.contains(c)) {
                     m_inclMdl.addElement(cSpec);
                 } else {
                     m_exclMdl.addElement(cSpec);
@@ -764,9 +764,10 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Removes the given columns form either include or exclude list and notfies
-     * all listeners. Does not throw an exception if the argument contains
-     * <code>null</code> elements or is not contained in any of the lists.
+     * Removes the given columns form either include or exclude list and 
+     * notifies all listeners. Does not throw an exception if the argument 
+     * contains <code>null</code> elements or is not contained in any of the 
+     * lists.
      * 
      * @param columns the columns to remove
      */
@@ -824,7 +825,7 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Setter for the original "remove All" button.
+     * Setter for the original "Remove All" button.
      * 
      * @param text the new button title
      */
@@ -833,7 +834,7 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Setter for the original "add All" button.
+     * Setter for the original "Add All" button.
      * 
      * @param text the new button title
      */
@@ -842,7 +843,7 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
-     * Setter for the original "remove" button.
+     * Setter for the original "Remove" button.
      * 
      * @param text the new button title
      */

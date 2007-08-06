@@ -24,7 +24,6 @@
  */
 package org.knime.base.node.preproc.sorter;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -37,14 +36,16 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JFormattedTextField;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.JSpinner.NumberEditor;
 import javax.swing.border.Border;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 
 
 /**
@@ -56,10 +57,11 @@ import org.knime.core.data.DataTableSpec;
 public class SorterNodeDialogPanel2 extends JPanel {
     private static final long serialVersionUID = -1757898824881266019L;
 
-    /*
-     * The entry in the JComboBox for not sorting a column
+    /**
+     * The entry in the JComboBox for not sorting a column.
      */
-    private static final String NOSORT = "- DO NOT SORT -";
+    public static final DataColumnSpec NOSORT = new DataColumnSpecCreator(
+            "- DO NOT SORT -", DataType.getType(DataCell.class)).createSpec();
 
     /*
      * Keeps track of the components on this JPanel
@@ -80,8 +82,8 @@ public class SorterNodeDialogPanel2 extends JPanel {
      * Corresponding checkbox
      */
     private JCheckBox m_memorycheckb;
-    
-     /**
+
+    /**
      * Constructs a new empty JPanel used for displaying the three first
      * selected columns in the according order and the sorting order for each.
      * 
@@ -113,38 +115,33 @@ public class SorterNodeDialogPanel2 extends JPanel {
         int interncounter = 0;
 
         if (spec != null) {
-            Vector<String> values = new Vector<String>();
+            Vector<DataColumnSpec> values = new Vector<DataColumnSpec>();
             values.add(NOSORT);
             for (int j = 0; j < spec.getNumColumns(); j++) {
-                values.add(spec.getColumnSpec(j).getName());
+                values.add(spec.getColumnSpec(j));
             }
             if ((incl == null) && (sortOrder == null)) {
 
                 for (int i = 0; i < nrsortitems 
                 && i < spec.getNumColumns(); i++) {
-                    Object selected = (i == 0) ? values.get(i + 1) : values
-                            .get(0);
+                    DataColumnSpec selected = 
+                            (i == 0) ? values.get(i + 1) : values.get(0);
                     SortItem temp = new SortItem(i, values, selected, true);
                     super.add(temp);
                     m_components.add(temp);
                 }
             } else {
                 for (int i = 0; i < incl.size(); i++) {
-                    String toInclude = incl.get(i);
-                    if (spec.findColumnIndex(toInclude) != -1) {
-                        SortItem temp = new SortItem(interncounter, values,
-                                toInclude, sortOrder[interncounter]);
-                        super.add(temp);
-                        m_components.add(temp);
-                        interncounter++;
-                    } else if (toInclude.toString().equals(NOSORT)) {
-                        SortItem temp = new SortItem(interncounter, values,
-                                toInclude, sortOrder[interncounter]);
+                    int toInclude = spec.findColumnIndex(incl.get(i));
+                    if (toInclude != -1) {
+                        DataColumnSpec colspec = spec.getColumnSpec(toInclude);
+                        SortItem temp =
+                                new SortItem(interncounter, values, colspec,
+                                        sortOrder[interncounter]);
                         super.add(temp);
                         m_components.add(temp);
                         interncounter++;
                     }
-
                 }
             }
             Box buttonbox = Box.createHorizontalBox();
@@ -152,40 +149,23 @@ public class SorterNodeDialogPanel2 extends JPanel {
                     .createTitledBorder("Add columns");
             buttonbox.setBorder(addColumnBorder);
             int maxCols = m_spec.getNumColumns() - m_components.size();
-            
-            JButton addSortItemButton = new JButton("new columns");
-            final JSpinner spinner = new JSpinner();
-            SpinnerNumberModel snm;
-            if (maxCols == 0) {
-                snm = new SpinnerNumberModel(0, 0, maxCols, 1);
-                spinner.setEnabled(false);
-                addSortItemButton.setEnabled(false);
-            } else {
-                snm = new SpinnerNumberModel(1, 1, maxCols, 1);
-            }
-            spinner.setModel(snm);
+            SpinnerNumberModel snm = new SpinnerNumberModel(0, 0, maxCols, 1);
+            final JSpinner spinner = new JSpinner(snm);
             spinner.setMaximumSize(new Dimension(100, 30));
             spinner.setPreferredSize(new Dimension(100, 30));
-            NumberEditor ne = (NumberEditor)spinner.getEditor();
-            final JFormattedTextField spinnertextfield = ne.getTextField();
-            // workaround to ensure same background color
-            Color backColor = spinnertextfield.getBackground();
-            // when spinner's text field is editable false
-            spinnertextfield.setEditable(false);
-            spinnertextfield.setBackground(backColor);
-
+            JButton addSortItemButton = new JButton("new columns");
             addSortItemButton.addActionListener(new ActionListener() {
                 public void actionPerformed(final ActionEvent ae) {
                     ArrayList<String> newlist = new ArrayList<String>();
                     for (int i = 0; i < m_components.size(); i++) {
                         SortItem temp = m_components.get(i);
-                        newlist.add(temp.getSelectedColumn().toString());
+                        newlist.add(temp.getSelectedColumn().getName());
                     }
                     int oldsize = m_components.size();
                     String temp = spinner.getValue().toString();
                     int newsize = Integer.parseInt(temp);
                     for (int n = oldsize; n < oldsize + newsize; n++) {
-                        newlist.add(NOSORT);
+                        newlist.add(m_spec.getColumnSpec(n).getName());
                     }
                     boolean[] oldbool = new boolean[oldsize];
                     boolean[] newbool = new boolean[oldsize + newsize];
@@ -232,8 +212,8 @@ public class SorterNodeDialogPanel2 extends JPanel {
         ArrayList<String> list = new ArrayList<String>();
         for (int i = 0; i < m_components.size(); i++) {
             SortItem temp = m_components.get(i);
-            if (!(temp.getSelectedColumn().toString().equals(NOSORT))) {
-                list.add(temp.getSelectedColumn().toString());
+            if (!(temp.getSelectedColumn().equals(NOSORT))) {
+                list.add(temp.getSelectedColumn().getName());
             }
         }
         return list;
@@ -248,7 +228,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
         Vector<Boolean> boolvector = new Vector<Boolean>();
         for (int i = 0; i < m_components.size(); i++) {
             SortItem temp = m_components.get(i);
-            if (!(temp.getSelectedColumn().toString().equals(NOSORT))) {
+            if (!(temp.getSelectedColumn().equals(NOSORT))) {
                 boolvector.add(temp.getSortOrder());
             }
         }

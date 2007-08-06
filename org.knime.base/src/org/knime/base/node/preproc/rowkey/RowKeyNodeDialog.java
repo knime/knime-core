@@ -28,6 +28,7 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
@@ -56,9 +57,14 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
     /**The label of the new row key column select box.*/
     private static final String NEW_ROW_KEY_COLUMN_LABEL = 
         "New RowID column:";
+    /**The label of the uniqueness check box.*/
+    private  static final String REMOVE_ROWKEY_COL_LABEL = 
+        "Remove selected column";
+    private  static final String REMOVE_ROWKEY_COL_TOOLTIP = 
+        "Removes the selected new RowID column";
     
     /**The label of the replace missing values check box.*/
-    protected static final String HANDLE_MISSING_VALUES_LABEL = 
+    private static final String HANDLE_MISSING_VALUES_LABEL = 
         "Handle missing values";
     /**The tool tip of the replace missing value check box.*/
     private static final String HANDLEMISSING_VALUES_TOOLTIP = 
@@ -84,24 +90,21 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
     
     /**The label of the new column name input field.*/
     private static final String NEW_COLUMN_NAME_LABEL = "New column name:";
+
+    private final SettingsModelBoolean m_replaceKey;
     
-    private final DialogComponentBoolean m_replaceRowKey;
+    private final SettingsModelString m_newRowKeyColumn;
     
-    /**
-     * The dialog component which holds the column the user has selected as 
-     * new row key column.
-     */
-    private final DialogComponentColumnNameSelection m_newRowKeyCol;
+    private final SettingsModelBoolean m_removeRowKeyCol;
     
-    private final DialogComponentBoolean m_appendRowKeyCol;
+    private final SettingsModelBoolean m_ensureUniqueness;
+
+    private final SettingsModelBoolean m_handleMissingVals;
     
-    private final DialogComponentBoolean m_ensureUniqueness;
+    private final SettingsModelBoolean m_appendRowKey;
+
+    private final SettingsModelString m_newColumnName;    
     
-    private final DialogComponentBoolean m_replaceMissingvals;
-    
-    /**The dialog component which holds the name of the new column which
-     * should contain the row key as value.*/
-    private final DialogComponentString m_newColumnName;
     
     /**
      * New dialog for configuring the the row key node.
@@ -109,59 +112,74 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
     public RowKeyNodeDialog() {
         super();
+        m_replaceKey = new SettingsModelBoolean(
+                RowKeyNodeModel.REPLACE_ROWKEY, true);
+        m_newRowKeyColumn = new SettingsModelString(
+                RowKeyNodeModel.SELECTED_NEW_ROWKEY_COL, (String)null);
+        m_newRowKeyColumn.setEnabled(m_replaceKey.getBooleanValue());
+        m_removeRowKeyCol = new SettingsModelBoolean(
+                RowKeyNodeModel.REMOVE_ROW_KEY_COLUM, false);
+        m_removeRowKeyCol.setEnabled(m_replaceKey.getBooleanValue());
+        m_ensureUniqueness = new SettingsModelBoolean(
+                RowKeyNodeModel.ENSURE_UNIQUNESS, false);
+        m_ensureUniqueness.setEnabled(m_replaceKey.getBooleanValue());
+        m_handleMissingVals = new SettingsModelBoolean(
+                RowKeyNodeModel.HANDLE_MISSING_VALS, false);
+        m_handleMissingVals.setEnabled(m_replaceKey.getBooleanValue());
+        m_appendRowKey = new SettingsModelBoolean(
+                RowKeyNodeModel.APPEND_ROWKEY_COLUMN, false);
+        m_newColumnName = new SettingsModelString(
+                RowKeyNodeModel.NEW_COL_NAME_4_ROWKEY_VALS, (String)null);
+        m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
+        
+        m_replaceKey.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                final boolean b = m_replaceKey.getBooleanValue();
+                m_newRowKeyColumn.setEnabled(b);
+                m_removeRowKeyCol.setEnabled(b);
+                m_ensureUniqueness.setEnabled(b);
+                m_handleMissingVals.setEnabled(b);
+            }
+        });
+        m_appendRowKey.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
+            }
+        });
+
         createNewGroup(REPLACE_ROW_KEY_GROUP_LABEL);
-        final SettingsModelBoolean replaceKeyModel = 
-            new SettingsModelBoolean(RowKeyNodeModel.REPLACE_ROWKEY, true);
-        replaceKeyModel.addChangeListener(
-                new ChangeListener() {
-                    public void stateChanged(final ChangeEvent e) {
-                        final boolean b = m_replaceRowKey.isSelected();
-                        m_newRowKeyCol.setEnabled(b);
-                        m_ensureUniqueness.setEnabled(b);
-                        m_replaceMissingvals.setEnabled(b);
-                    }
-                });
-        m_replaceRowKey = 
-            new DialogComponentBoolean(replaceKeyModel, REPLACE_ROW_BOX_LABEL);
-        addDialogComponent(m_replaceRowKey);
-         m_newRowKeyCol = new DialogComponentColumnNameSelection(
-                 new SettingsModelString(
-                         RowKeyNodeModel.SELECTED_NEW_ROWKEY_COL, (String)null),
-                 NEW_ROW_KEY_COLUMN_LABEL, RowKeyNodeModel.DATA_IN_PORT,
-                DataValue.class);
-         final boolean replaceKey = m_replaceRowKey.isSelected();
-         m_newRowKeyCol.setEnabled(replaceKey);
-         addDialogComponent(m_newRowKeyCol);
-         m_ensureUniqueness = new DialogComponentBoolean(
-                 new SettingsModelBoolean(RowKeyNodeModel.ENSURE_UNIQUNESS, 
-                         false),
-         ENSURE_UNIQUENESS_LABEL);
-         m_ensureUniqueness.setToolTipText(ENSURE_UNIQUENESS_TOOLTIP);
-         addDialogComponent(m_ensureUniqueness);
-         m_replaceMissingvals = new DialogComponentBoolean(
-                 new SettingsModelBoolean(RowKeyNodeModel.REPLACE_MISSING_VALS, 
-                         false), HANDLE_MISSING_VALUES_LABEL);
-         m_replaceMissingvals.setToolTipText(HANDLEMISSING_VALUES_TOOLTIP);
-         addDialogComponent(m_replaceMissingvals);
-         
-         createNewGroup(APPEND_ROW_KEY_GROUP_LABEL);
-         final SettingsModelBoolean appendRowModel = new SettingsModelBoolean(
-                 RowKeyNodeModel.APPEND_ROWKEY_COLUMN, false);
-         appendRowModel.addChangeListener(
-                 new ChangeListener() {
-                    public void stateChanged(final ChangeEvent e) {
-                        m_newColumnName.setEnabled(
-                                m_appendRowKeyCol.isSelected());
-                    }
-                 });
-         m_appendRowKeyCol = 
-             new DialogComponentBoolean(appendRowModel, 
-                     APPEND_ROW_KEY_COLUMN_LABEL);
-         addDialogComponent(m_appendRowKeyCol);
-         m_newColumnName = new DialogComponentString(new SettingsModelString(
-                 RowKeyNodeModel.NEW_COL_NAME_4_ROWKEY_VALS, (String)null),
-                 NEW_COLUMN_NAME_LABEL);
-         m_newColumnName.setEnabled(m_appendRowKeyCol.isSelected());
-         addDialogComponent(m_newColumnName);
+        final DialogComponent replaceRowKey = new DialogComponentBoolean(
+                m_replaceKey, REPLACE_ROW_BOX_LABEL);
+        addDialogComponent(replaceRowKey);
+
+        final DialogComponent newRowKeyCol = 
+            new DialogComponentColumnNameSelection(m_newRowKeyColumn, 
+                    NEW_ROW_KEY_COLUMN_LABEL, RowKeyNodeModel.DATA_IN_PORT, 
+                    DataValue.class);
+        addDialogComponent(newRowKeyCol);
+        
+        final DialogComponent removeRowKeyCol = new DialogComponentBoolean(
+                m_removeRowKeyCol, REMOVE_ROWKEY_COL_LABEL);
+        removeRowKeyCol.setToolTipText(REMOVE_ROWKEY_COL_TOOLTIP);
+        addDialogComponent(removeRowKeyCol);
+        
+        final DialogComponent ensureUniqueness = new DialogComponentBoolean(
+                m_ensureUniqueness, ENSURE_UNIQUENESS_LABEL);
+        ensureUniqueness.setToolTipText(ENSURE_UNIQUENESS_TOOLTIP);
+        addDialogComponent(ensureUniqueness);
+
+        final DialogComponent replaceMissingvals = new DialogComponentBoolean(
+                m_handleMissingVals, HANDLE_MISSING_VALUES_LABEL);
+        replaceMissingvals.setToolTipText(HANDLEMISSING_VALUES_TOOLTIP);
+        addDialogComponent(replaceMissingvals);
+
+        createNewGroup(APPEND_ROW_KEY_GROUP_LABEL);
+        final DialogComponent appendRowKeyCol = new DialogComponentBoolean(
+                m_appendRowKey, APPEND_ROW_KEY_COLUMN_LABEL);
+        addDialogComponent(appendRowKeyCol);
+
+        final DialogComponent newColumnName = new DialogComponentString(
+                m_newColumnName, NEW_COLUMN_NAME_LABEL);
+        addDialogComponent(newColumnName);
     }
 }

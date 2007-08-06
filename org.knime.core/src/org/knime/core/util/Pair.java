@@ -59,20 +59,20 @@ public final class Pair<T, M> {
     public M getSecond() { return m_second; }
 
     /**
-     * @see java.lang.Object#equals(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof Pair)) { return false; }
         
-        Pair p = (Pair) o;
+        Pair<?, ?> p = (Pair) o;
         if (!m_first.equals(p.m_first)) { return false; }
         if (!m_second.equals(p.m_second)) { return false; }
         return true;
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {

@@ -960,7 +960,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(File, ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -989,7 +989,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(File, ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

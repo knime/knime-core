@@ -99,15 +99,30 @@ class UniquifyPanel extends JPanel {
         result.add(Box.createVerticalGlue());
         return result;
     }
+    
+    /**
+     * Checks the current values in the panel.
+     * 
+     * @return null, if settings are okay and can be applied. An error message
+     *         if not.
+     */
+    String checkSettings() {
+        return null;
+    }
+
+
 
     /**
      * Transfers the current settings from the panel in the passed object.
      * Overwriting the corresponding values in the object.
      * 
      * @param settings the settings object to fill in the currently set values
+     * @return true if the new settings are different from the one passed in.
      */
-    void overrideSettings(final FileReaderNodeSettings settings) {
+    boolean overrideSettings(final FileReaderNodeSettings settings) {
+        boolean oldVal = settings.uniquifyRowIDs();
         settings.setUniquifyRowIDs(m_uniquifyRowIDs.isSelected());
+        return oldVal != settings.uniquifyRowIDs();
     }
 
     /**

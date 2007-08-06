@@ -22,6 +22,7 @@
  * History
  *   23.03.2006 (cebron): created
  *   21.06.06 (bw & po): reviewed
+ *   27.02.07 (po): removed DoubleValue implementation
  */
 package org.knime.core.data.def;
 
@@ -34,7 +35,6 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
 
 /**
  * A data cell implementation holding a complex number value by storing this
@@ -44,7 +44,7 @@ import org.knime.core.data.DoubleValue;
  * @author ciobaca, University of Konstanz
  */
 public final class ComplexNumberCell extends DataCell implements
-        ComplexNumberValue, DoubleValue {
+        ComplexNumberValue {
 
     /**
      * Convenience access method for DataType.getType(ComplexNumberCell.class).
@@ -95,22 +95,21 @@ public final class ComplexNumberCell extends DataCell implements
     }
 
     /**
-     * @see org.knime.core.data.ComplexNumberValue#getRealValue()
+     * {@inheritDoc}
      */
     public double getRealValue() {
         return m_real;
     }
 
     /**
-     * @see org.knime.core.data.ComplexNumberValue#getRealValue()
+     * {@inheritDoc}
      */
     public double getImaginaryValue() {
         return m_imag;
     }
 
     /**
-     * @see org.knime.core.data.DataCell
-     *      #equalsDataCell(org.knime.core.data.DataCell)
+     * {@inheritDoc}
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
@@ -124,7 +123,7 @@ public final class ComplexNumberCell extends DataCell implements
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -135,7 +134,7 @@ public final class ComplexNumberCell extends DataCell implements
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -148,22 +147,13 @@ public final class ComplexNumberCell extends DataCell implements
     }
 
     /**
-     * Implements the getter method of the {@link DoubleValue} interface.
-     * 
-     * @return The magnitude of the complex number.
+     * Factory for (de-)serializing a {@link ComplexNumberCell}.
      */
-    public double getDoubleValue() {
-        return Math.sqrt(m_real * m_real + m_imag * m_imag);
-    }
-
-    /** 
-     * Factory for (de-)serializing a {@link ComplexNumberCell}. 
-     * */
     private static class ComplexNumberSerializer implements
             DataCellSerializer<ComplexNumberCell> {
 
         /**
-         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         * {@inheritDoc}
          */
         public void serialize(final ComplexNumberCell cell,
                 final DataOutput output) throws IOException {
@@ -172,7 +162,7 @@ public final class ComplexNumberCell extends DataCell implements
         }
 
         /**
-         * @see DataCellSerializer#deserialize(DataInput)
+         * {@inheritDoc}
          */
         public ComplexNumberCell deserialize(final DataInput input)
                 throws IOException {

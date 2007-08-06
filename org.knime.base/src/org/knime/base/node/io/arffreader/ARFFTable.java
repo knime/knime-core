@@ -90,14 +90,14 @@ public class ARFFTable implements DataTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_tSpec;
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         try {

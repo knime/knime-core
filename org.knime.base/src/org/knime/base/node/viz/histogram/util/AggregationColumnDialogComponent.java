@@ -126,7 +126,7 @@ public class AggregationColumnDialogComponent extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateStettingsBeforeSave() {
+    protected void validateSettingsBeforeSave() {
 //      just in case we didn't get notified about the last selection ...
         updateModel();
     }

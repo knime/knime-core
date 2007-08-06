@@ -29,6 +29,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.JoinedRow;
 import org.knime.core.node.NodeLogger;
 
 
@@ -113,7 +114,7 @@ class JoinedTableRowIterator extends RowIterator {
     }
 
     /**
-     * @see org.knime.core.data.RowIterator#hasNext()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasNext() {
@@ -121,7 +122,7 @@ class JoinedTableRowIterator extends RowIterator {
     }
 
     /**
-     * @see org.knime.core.data.RowIterator#next()
+     * {@inheritDoc}
      */
     @Override
     public DataRow next() {

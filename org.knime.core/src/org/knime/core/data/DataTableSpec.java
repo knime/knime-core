@@ -594,7 +594,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * value of the corresponding cell of the given row.
      * 
      * @param row the row for which the size is requested
-     * @return size in [0,1] or -1 if an error occured (illegal cell, missing)
+     * @return size in [0,1] or -1 if an error occurred (illegal cell, missing)
      */
     public double getRowSize(final DataRow row) {
         if (m_sizeHandlerColIndex == -1) {
@@ -605,7 +605,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -691,6 +691,77 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
             }
         }
         return idx;
+    }
+    
+    /**
+     * This method merges two or more <code>DataTableSpec</code>s. 
+     * If the <code>DataTableSpec</code>s have equal structure
+     * (which is required if you call this method)
+     * their domains, Color-, Shape and Size-Handlers are merged. That means:
+     * <ul>
+     * <li>If any of the columns has a color/shape/size handler attached, it
+     * must be the same handler for the respective column in all tables.</li>
+     * <li>If columns have properties attached (defined through 
+     * {@link DataColumnSpec#getProperties()}), they will be merged, the 
+     * merged <code>DataColumnSpec</code> will contain the intersection of all 
+     * properties (key and value must be the same).</li>
+     * <li>The {@link DataColumnSpec#getDomain() domains} will be updated, the 
+     * possible values list will contain the union of all possible values and
+     * the min/max values will be set appropriately. 
+     * </ul>
+     * 
+     * <p>This factory method is used when two or more tables shall be 
+     * (row-wise) concatenated, for instance in
+     * {@link org.knime.core.node.ExecutionContext#createConcatenateTable(
+     * org.knime.core.node.ExecutionMonitor, 
+     * org.knime.core.node.BufferedDataTable[]) 
+     * ExecutionContext#createConcatenateTable}.
+     * @param specs The DataTableSpecs to merge. 
+     * @return a DataTableSpec with merged domain information
+     * from both input DataTableSpecs.
+     * @throws IllegalArgumentException if the structures of the DataTableSpecs
+     * do not match, the array is empty, or the array is <code>null</code>.
+     */
+    public static DataTableSpec mergeDataTableSpecs(
+            final DataTableSpec... specs) {
+        if (specs == null || Arrays.asList(specs).contains(null)) {
+            throw new IllegalArgumentException("Argument array must not " 
+                    + "be null, nor contain null values.");
+        }
+        if (specs.length == 0) {
+            throw new IllegalArgumentException(
+                    "Argument array must not be empty.");
+        }
+        // initialize with first DataTableSpec
+        DataTableSpec firstSpec = specs[0];
+        // make sure that all DataTableSpecs have equal structure
+        for (int i = 1; i < specs.length; i++) {
+            if (!firstSpec.equalStructure(specs[i])) {
+                throw new IllegalArgumentException(
+                        "Cannot merge DataTableSpecs,"
+                                + " they don't have equal structure");
+            }
+        }
+        DataColumnSpecCreator[] mergedColSpecCreators =
+                new DataColumnSpecCreator[firstSpec.getNumColumns()];
+        for (int i = 0; i < mergedColSpecCreators.length; i++) {
+            mergedColSpecCreators[i] =
+                    new DataColumnSpecCreator(firstSpec.getColumnSpec(i));
+        }
+
+        // merge with ColumnSpecs from other DataTableSpecs
+        for (int i = 1; i < specs.length; i++) {
+            DataTableSpec spec = specs[i];
+            for (int c = 0; c < spec.getNumColumns(); c++) {
+                mergedColSpecCreators[c].merge(spec.getColumnSpec(c));
+            }
+        }
+        DataColumnSpec[] mergedcolspecs =
+                new DataColumnSpec[mergedColSpecCreators.length];
+        for (int i = 0; i < mergedcolspecs.length; i++) {
+            mergedcolspecs[i] = mergedColSpecCreators[i].createSpec();
+        }
+        return new DataTableSpec(mergedcolspecs);
     }
 
     /**

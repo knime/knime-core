@@ -47,8 +47,7 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
     }
 
     /**
-     * @see org.knime.workbench.editor2.editparts.AbstractPortEditPart
-     *  #isModelPort()
+     * {@inheritDoc}
      */
     @Override
     public boolean isModelPort() {
@@ -56,7 +55,7 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
     }
 
     /**
-     * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart#createFigure()
+     * {@inheritDoc}
      */
     @Override
     protected IFigure createFigure() {

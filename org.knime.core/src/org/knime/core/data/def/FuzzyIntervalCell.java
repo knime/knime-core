@@ -94,7 +94,7 @@ public final class FuzzyIntervalCell extends DataCell implements
      * core.
      * 
      * @param minSupp Minimum support value.
-     * @param minCore Minumum core value.
+     * @param minCore Minimum core value.
      * @param maxCore Maximum core value.
      * @param maxSupp Maximum support value.
      * @throws IllegalArgumentException If not <code>a <= b <= c <= d</code>.
@@ -168,8 +168,7 @@ public final class FuzzyIntervalCell extends DataCell implements
     }
 
     /**
-     * @see org.knime.core.data.DataCell
-     *      #equalsDataCell(org.knime.core.data.DataCell)
+     * {@inheritDoc}
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
@@ -186,7 +185,7 @@ public final class FuzzyIntervalCell extends DataCell implements
 
     /**
      * Computes hash code based on all private members.
-     * @see DataCell#hashCode()
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {
@@ -200,7 +199,7 @@ public final class FuzzyIntervalCell extends DataCell implements
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -213,7 +212,7 @@ public final class FuzzyIntervalCell extends DataCell implements
         implements DataCellSerializer<FuzzyIntervalCell> {
         
         /**
-         * @see DataCellSerializer#serialize(DataCell, DataOutput)
+         * {@inheritDoc}
          */
         public void serialize(final FuzzyIntervalCell cell, 
                 final DataOutput output) throws IOException {
@@ -224,7 +223,7 @@ public final class FuzzyIntervalCell extends DataCell implements
         }
         
         /**
-         * @see DataCellSerializer#deserialize(DataInput)
+         * {@inheritDoc}
          */
         public FuzzyIntervalCell deserialize(
                 final DataInput input) throws IOException {
@@ -236,5 +235,4 @@ public final class FuzzyIntervalCell extends DataCell implements
                     minSupp, minCore, maxCore, maxSupp);
         }
     }
-
 }

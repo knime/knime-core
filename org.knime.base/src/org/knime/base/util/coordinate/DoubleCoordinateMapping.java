@@ -51,7 +51,7 @@ public class DoubleCoordinateMapping extends CoordinateMapping {
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

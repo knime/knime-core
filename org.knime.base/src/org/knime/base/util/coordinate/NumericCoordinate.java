@@ -72,7 +72,7 @@ public abstract class NumericCoordinate extends Coordinate {
             final double absolutLength, final boolean naturalMapping);
 
     /**
-     * @see org.knime.base.util.coordinate.Coordinate#isNominal()
+     * {@inheritDoc}
      */
     @Override
     public boolean isNominal() {

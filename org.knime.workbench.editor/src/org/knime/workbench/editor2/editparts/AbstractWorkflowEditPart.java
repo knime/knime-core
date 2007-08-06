@@ -24,6 +24,7 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
 
 /**
  * Abstract base class for all edit parts that are not connections.
@@ -31,6 +32,6 @@ package org.knime.workbench.editor2.editparts;
  * @author Florian Georg, University of Konstanz
  */
 public abstract class AbstractWorkflowEditPart extends
-        KnimeAbstractPart {
+        AbstractGraphicalEditPart {
 
 }

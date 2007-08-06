@@ -40,8 +40,7 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  */
 public class NewConnectionComponentEditPolicy extends ComponentEditPolicy {
     /**
-     * @see org.eclipse.gef.editpolicies.ComponentEditPolicy
-     *      #createDeleteCommand(org.eclipse.gef.requests.GroupRequest)
+     * {@inheritDoc}
      */
     @Override
     protected Command createDeleteCommand(final GroupRequest deleteRequest) {

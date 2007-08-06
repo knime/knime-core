@@ -56,9 +56,8 @@ public abstract class MetaInputModel extends NodeModel {
      */
     public abstract boolean canBeExecuted();
 
-    /** 
-     * @see org.knime.core.node.NodeModel
-     *  #loadInternals(java.io.File, org.knime.core.node.ExecutionMonitor)
+    /**
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -67,9 +66,8 @@ public abstract class MetaInputModel extends NodeModel {
         // nothing to do here
     }
 
-    /** 
-     * @see org.knime.core.node.NodeModel
-     *  #saveInternals(java.io.File, org.knime.core.node.ExecutionMonitor)
+    /**
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

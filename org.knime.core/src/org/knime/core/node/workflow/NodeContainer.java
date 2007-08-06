@@ -40,9 +40,12 @@ import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.DataOutPort;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -94,8 +97,8 @@ public class NodeContainer implements NodeStateListener {
     private static final String KEY_IS_DELETABLE = "isDeletable";
 
     // The logger for static methods
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(NodeContainer.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(NodeContainer.class);
 
     /**
      * Creates the <code>NodeExtraInfo</code> from given settings, describing
@@ -110,12 +113,13 @@ public class NodeContainer implements NodeStateListener {
         NodeExtraInfo extraInfo = null; // null if it doesn't exist
         if (sett.containsKey(NodeContainer.KEY_EXTRAINFOCLASS)) {
             // if it does exist, determine type of extrainfo
-            String extraInfoClassName = sett
-                    .getString(NodeContainer.KEY_EXTRAINFOCLASS);
+            String extraInfoClassName =
+                    sett.getString(NodeContainer.KEY_EXTRAINFOCLASS);
             try {
                 // use global Class Creator utility for Eclipse "compatibility"
-                extraInfo = (NodeExtraInfo)(GlobalClassCreator
-                        .createClass(extraInfoClassName).newInstance());
+                extraInfo =
+                        (NodeExtraInfo)(GlobalClassCreator
+                                .createClass(extraInfoClassName).newInstance());
                 // and load content of extrainfo
                 extraInfo.load(sett);
             } catch (Exception e) {
@@ -134,8 +138,9 @@ public class NodeContainer implements NodeStateListener {
         // use global Class Creator utility for Eclipse "compatibility"
 
         try {
-            NodeFactory f = (NodeFactory)((GlobalClassCreator
-                    .createClass(factoryClassName)).newInstance());
+            NodeFactory f =
+                    (NodeFactory)((GlobalClassCreator
+                            .createClass(factoryClassName)).newInstance());
             return f;
         } catch (ClassNotFoundException ex) {
             String[] x = factoryClassName.split("\\.");
@@ -143,8 +148,9 @@ public class NodeContainer implements NodeStateListener {
 
             for (String s : NodeFactory.getLoadedNodeFactories()) {
                 if (s.endsWith("." + simpleClassName)) {
-                    NodeFactory f = (NodeFactory)((GlobalClassCreator
-                            .createClass(s)).newInstance());
+                    NodeFactory f =
+                            (NodeFactory)((GlobalClassCreator.createClass(s))
+                                    .newInstance());
                     LOGGER.warn("Substituted '" + f.getClass().getName()
                             + "' for unknown factory '" + factoryClassName
                             + "'");
@@ -176,7 +182,7 @@ public class NodeContainer implements NodeStateListener {
     private boolean m_executionRunning;
 
     private boolean m_isQueued;
-    
+
     // Also hold an object storing information about this node's
     // position on the visual representation of this workflow (or
     // other supplemental info) - if available. The NodeContainer
@@ -402,7 +408,7 @@ public class NodeContainer implements NodeStateListener {
         m_node.getInPort(inPort)
                 .connectPort(outNode.m_node.getOutPort(outPort));
     }
-    
+
     /**
      * Checks if the inport can be connected to the outport.
      * 
@@ -412,9 +418,9 @@ public class NodeContainer implements NodeStateListener {
      */
     void checkConnectPorts(final int inPort, final NodeContainer outNode,
             final int outPort) {
-        
-        m_node.getInPort(inPort)
-                .checkConnectPort(outNode.m_node.getOutPort(outPort));
+
+        m_node.getInPort(inPort).checkConnectPort(
+                outNode.m_node.getOutPort(outPort));
     }
 
     /**
@@ -493,6 +499,7 @@ public class NodeContainer implements NodeStateListener {
 
     /**
      * Returns the node dialog's pane.
+     * 
      * @return node dialog's pane
      * @see Node#getDialogPane()
      * @throws NotConfigurableException If dialog is not configurable.
@@ -675,6 +682,41 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
+     * @param port the port index to retrieve the columns for.
+     * 
+     * @return the number of columns for the given port or -1 if not appropriate
+     *         (i.e. not configured or executed or not a data port)
+     */
+    public int getNumOutportCols(final int port) {
+        NodeOutPort outport = m_node.getOutPort(port);
+        if (outport instanceof DataOutPort) {
+            DataTableSpec spec = ((DataOutPort)outport).getDataTableSpec();
+            if (spec != null) {
+                return spec.getNumColumns();
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * @param port the port index to retrieve the rows for.
+     * 
+     * @return the number of rows for the given port or -1 if not appropriate
+     *         (i.e. not configured or executed or not a data port)
+     */
+    public int getNumOutportRows(final int port) {
+        NodeOutPort outport = m_node.getOutPort(port);
+        if (outport instanceof DataOutPort) {
+            BufferedDataTable table =
+                    ((DataOutPort)outport).getBufferedDataTable();
+            if (table != null) {
+                return table.getRowCount();
+            }
+        }
+        return -1;
+    }
+
+    /**
      * Returns an array of direct predecessors of this node.
      * 
      * @return an array of NodeContainers
@@ -766,12 +808,14 @@ public class NodeContainer implements NodeStateListener {
 
     /**
      * Returns if this node is currently being executed.
-     * @return <code>true</code> if is executing, <code>false</code> otherwise
+     * 
+     * @return <code>true</code> if is executing, <code>false</code>
+     *         otherwise
      */
     public boolean isExecuting() {
         return m_executionRunning;
     }
-    
+
     /**
      * Check if node can be executed - this is also true if all nodes leading up
      * to this node can be executed. In a GUI this would mean that this node
@@ -832,8 +876,9 @@ public class NodeContainer implements NodeStateListener {
             if (nextNodes[i] != null) {
                 for (int j = 0; j < nextNodes[i].length; j++) {
                     if (nextNodes[i][j] != null) {
-                        hasReached = hasReached
-                                || nextNodes[i][j].isFollowedBy(target);
+                        hasReached =
+                                hasReached
+                                        || nextNodes[i][j].isFollowedBy(target);
                     }
                 }
             }
@@ -898,23 +943,25 @@ public class NodeContainer implements NodeStateListener {
             final NodeProgressMonitor progMon) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
         HashMap<Integer, ContainerTable> bufferRep = m_wfm.getTableRepository();
-        ExecutionContext context = 
-            new ExecutionContext(progMon, m_node, bufferRep);
+        ExecutionContext context =
+                new ExecutionContext(progMon, m_node, bufferRep);
         m_node.load(loadID, nodeFile, context, bufferRep);
         putOutputTablesIntoGlobalRepository(context);
     }
-    
-    /** Enumerates the output tables and puts them into the worflow global
-     * repository of tables. All other (temporary) tables that were created
-     * in the given execution context, will be put in a set of temporary
-     * tables in the node.
+
+    /**
+     * Enumerates the output tables and puts them into the worflow global
+     * repository of tables. All other (temporary) tables that were created in
+     * the given execution context, will be put in a set of temporary tables in
+     * the node.
+     * 
      * @param c The execution context containing the (so far) local tables.
      */
     private void putOutputTablesIntoGlobalRepository(final ExecutionContext c) {
         HashMap<Integer, ContainerTable> globalRep = m_wfm.getTableRepository();
         m_node.putOutputTablesIntoGlobalRepository(globalRep);
-        HashMap<Integer, ContainerTable> localRep = 
-            Node.getLocalTableRepositoryFromContext(c);
+        HashMap<Integer, ContainerTable> localRep =
+                Node.getLocalTableRepositoryFromContext(c);
         Set<ContainerTable> localTables = new HashSet<ContainerTable>();
         for (Map.Entry<Integer, ContainerTable> t : localRep.entrySet()) {
             ContainerTable fromGlob = globalRep.get(t.getKey());
@@ -1114,19 +1161,19 @@ public class NodeContainer implements NodeStateListener {
 
         Runnable r = new Runnable() {
             public void run() {
-                try {                    
+                try {
                     m_executionRunning = true;
                     m_isQueued = false;
                     pm.checkCanceled();
                     pm.setMessage("Preparing...");
                     HashMap<Integer, ContainerTable> bufferRep =
-                        m_wfm.getTableRepository();
+                            m_wfm.getTableRepository();
                     // executeNode() should return as soon as possible if
                     // canceled - or after it has been finished of course
                     // NOTE: the return from this call may happen AFTER
                     // the state-changed event has already been processed!
-                    ExecutionContext exec = 
-                        new ExecutionContext(pm, m_node, bufferRep);
+                    ExecutionContext exec =
+                            new ExecutionContext(pm, m_node, bufferRep);
                     m_node.execute(exec);
                     putOutputTablesIntoGlobalRepository(exec);
                 } catch (CanceledExecutionException ex) {
@@ -1272,17 +1319,18 @@ public class NodeContainer implements NodeStateListener {
      * Sets the progress listener for the node container. NOTE: this listener is
      * not directly used in the container. The "container" just holds this
      * listener until it is needed to listen.
+     * 
      * @param progListener new progress listener
      */
     public void setProgressListener(final NodeProgressListener progListener) {
         m_progressListener = progListener;
     }
-    
+
     /**
      * @return underlying workflow manager
      */
     WorkflowManager getWorkflowManager() {
         return m_wfm;
     }
-    
+
 }

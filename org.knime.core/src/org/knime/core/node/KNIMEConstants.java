@@ -45,7 +45,7 @@ public final class KNIMEConstants {
     /** KNIME's minor release number. */
     public static final int MINOR = 2;
     /** KNIME's revision number. */
-    public static final int REV = 2; // Please change this on upgrade: 1.2.2 
+    public static final int REV = 0; // Please change this on upgrade: 1.2.0 
     
     // IMPORTANT: Remember to also update the NodeLogger welcome screen with
     // the current version and the prerequisites
@@ -70,7 +70,7 @@ public final class KNIMEConstants {
      */
     public static final String WELCOME_MESSAGE =
       "******************************************************************\n"
-    + "***  Welcome to KNIME v1.2.2 - the Konstanz Information Miner  ***\n"
+    + "***  Welcome to KNIME v1.2.0 - the Konstanz Information Miner  ***\n"
     + "*** Copyright, 2003-2007, Uni Konstanz and KNIME GmbH, Germany ***\n"
     + "******************************************************************\n";
 

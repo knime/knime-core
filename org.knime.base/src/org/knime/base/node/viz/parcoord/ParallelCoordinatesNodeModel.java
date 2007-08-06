@@ -78,8 +78,7 @@ final class ParallelCoordinatesNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #execute(BufferedDataTable[],ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -97,7 +96,7 @@ final class ParallelCoordinatesNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -106,8 +105,7 @@ final class ParallelCoordinatesNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #configure(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -144,7 +142,7 @@ final class ParallelCoordinatesNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)

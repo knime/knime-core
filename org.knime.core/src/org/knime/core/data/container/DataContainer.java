@@ -50,6 +50,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.DuplicateChecker;
@@ -341,7 +342,7 @@ public class DataContainer implements RowAppender {
      * @throws DuplicateKeyException If the final check for duplicate row 
      * keys fails.
      * @throws RuntimeException If the duplicate check fails for an unknown IO
-     * problem    
+     * problem
      */
     public void close() {
         if (isClosed()) {
@@ -374,7 +375,6 @@ public class DataContainer implements RowAppender {
         }
         m_duplicateChecker.clear();
         m_duplicateChecker = null;
-
         m_possibleValues = null;
         m_minCells = null;
         m_maxCells = null;
@@ -394,7 +394,7 @@ public class DataContainer implements RowAppender {
         if (!isOpen()) {
             throw new IllegalStateException("Container is not open.");
         }
-        return m_buffer.size();
+        return m_buffer != null ? m_buffer.size() : 0;
     }
 
     /**
@@ -436,8 +436,8 @@ public class DataContainer implements RowAppender {
         throw new IllegalStateException("Cannot get spec: container not open.");
     }
     
-    /** 
-     * @see RowAppender#addRowToTable(DataRow)
+    /**
+     * {@inheritDoc}
      */
     public void addRowToTable(final DataRow row) {
         if (!isOpen()) {
@@ -494,16 +494,9 @@ public class DataContainer implements RowAppender {
             updateMinMax(c, value);
             
         } // for all cells
-        try {
-            m_duplicateChecker.addKey(key.toString());
-        } catch (IOException ioe) { 
-            throw new RuntimeException(ioe.getClass().getSimpleName() 
-                    + " while checking for duplicate row IDs", ioe);
-        } catch (DuplicateKeyException dke) {
-            throw new DuplicateKeyException("Encountered duplicate row ID  \"" 
-                    + dke.getKey() + "\" at row number " 
-                    + (m_buffer.size() + 1), dke.getKey());
-        }
+        // do not swap the following two lines:
+        // addRowKeyForDuplicateCheck relies on m_buffer.size()
+        addRowKeyForDuplicateCheck(key);
         m_buffer.addRow(row);
     } // addRowToTable(DataRow)
     
@@ -528,6 +521,35 @@ public class DataContainer implements RowAppender {
     }
     
     /**
+     * Method being called when {@link #addRowToTable(DataRow)} is called. This
+     * method will add the given row key to the internal row key hashing 
+     * structure, which allows for duplicate checking.
+     * 
+     * <p>This method may be overridden to disable duplicate checks. The 
+     * overriding class must ensure that there are no duplicates being added
+     * whatsoever.
+     * @param key Key being added. This implementation extracts the string 
+     * representation from it and adds it to an internal 
+     * {@link DuplicateChecker} instance.
+     * @throws RuntimeException This implementation may throw a generic 
+     * <code>RuntimeException</code> when 
+     * {@link DuplicateChecker#addKey(String)} throws an {@link IOException}.
+     * @throws DuplicateKeyException If a duplicate is encountered.
+     */
+    protected void addRowKeyForDuplicateCheck(final RowKey key) {
+        try {
+            m_duplicateChecker.addKey(key.toString());
+        } catch (IOException ioe) { 
+            throw new RuntimeException(ioe.getClass().getSimpleName() 
+                    + " while checking for duplicate row IDs", ioe);
+        } catch (DuplicateKeyException dke) {
+            throw new DuplicateKeyException("Encountered duplicate row ID  \"" 
+                    + dke.getKey() + "\" at row number " 
+                    + (m_buffer.size() + 1), dke.getKey());
+        }
+    }
+    
+    /**
      * Get the map of buffers that potentially have written blob objects. 
      * If m_buffer needs to serialize a blob, it will check if any other buffer
      * has written the blob already and then reference to this buffer rather 
@@ -549,8 +571,7 @@ public class DataContainer implements RowAppender {
     
     /**
      * Get the local repository. Overridden in 
-     * {@link 
-     * org.knime.core.node.BufferedDataContainer#getLocalTableRepository()}
+     * {@link org.knime.core.node.BufferedDataContainer}
      * @return A local repository to which tables are added that have been
      * created during the node's execution.
      */
@@ -631,7 +652,7 @@ public class DataContainer implements RowAppender {
     }
     
     /** Convenience method that will buffer the entire argument table. This is
-     * usefull if you have a wrapper table at hand and want to make sure that 
+     * useful if you have a wrapper table at hand and want to make sure that 
      * all calculations are done here 
      * @param table The table to cache.
      * @param exec The execution monitor to report progress to and to check
@@ -663,7 +684,7 @@ public class DataContainer implements RowAppender {
     }
     
     /** Convenience method that will buffer the entire argument table. This is
-     * usefull if you have a wrapper table at hand and want to make sure that 
+     * useful if you have a wrapper table at hand and want to make sure that 
      * all calculations are done here 
      * @param table The table to cache.
      * @param exec The execution monitor to report progress to and to check
@@ -825,15 +846,26 @@ public class DataContainer implements RowAppender {
         String date = DATE_FORMAT.format(new Date());
         String fileName = "knime_container_" + date + "_";
         String suffix = ".bin.gz";
-        File f = File.createTempFile(fileName, suffix);
+        // the preference page contains an entry to set the temp dir
+        // we evaluate it here explicitly as the environment variable may
+        // not have been set by the preference page when File.createTempFile
+        // is called the very first time (may happen in some early plugin load)
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        File tmpDirFile = null;
+        if (tmpDir != null) {
+            tmpDirFile = new File(tmpDir);
+            if (!tmpDirFile.isDirectory()) {
+                NodeLogger.getLogger(DataContainer.class).warn(
+                        "System property \"java.io.tmpdir\" (\""
+                        + tmpDir + "\") does not point to existing directory," 
+                        + " using default");
+                tmpDir = null;
+            }
+        }
+        File f = File.createTempFile(fileName, suffix, tmpDirFile);
         f.deleteOnExit();
         return f;
     }
-    
-    /**
-     * Get the next running index of the table id counter. This id is supposed
-     * to be unique.
-     */
     
     /** Returns <code>true</code> if the given argument table has been created
      * by the DataContainer, <code>false</code> otherwise.

@@ -130,8 +130,7 @@ public class KnnNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #configure(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -180,9 +179,7 @@ public class KnnNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #execute(org.knime.core.node.BufferedDataTable[],
-     *      org.knime.core.node.ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -227,6 +224,14 @@ public class KnnNodeModel extends NodeModel {
         exec.setMessage("Building kd-tree");
         KDTree<DataCell> tree =
                 treeBuilder.buildTree(exec.createSubProgress(0.3));
+        
+        if (tree.size() < m_settings.k()) {
+            throw new InvalidSettingsException("There are only " + tree.size()
+                    + " patterns in the input table, but " + m_settings.k()
+                    + " nearest neighbours were requested for classification. "
+                    + "Please select at most " + tree.size() + " neighbours.");
+        }
+        
         exec.setMessage("Classifying");
         ColumnRearranger c =
                 createRearranger(inSpec, classColumnSpec, featureColumns,
@@ -238,7 +243,7 @@ public class KnnNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -246,8 +251,7 @@ public class KnnNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #saveSettingsTo(org.knime.core.node.NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -255,8 +259,7 @@ public class KnnNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #validateSettings(org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -265,8 +268,7 @@ public class KnnNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadValidatedSettingsFrom(org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -275,8 +277,7 @@ public class KnnNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
@@ -286,8 +287,7 @@ public class KnnNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -312,8 +312,7 @@ public class KnnNodeModel extends NodeModel {
 
         c.append(new SingleCellFactory(crea.createSpec()) {
             /**
-             * @see org.knime.core.data.container.SingleCellFactory
-             *      #getCell(org.knime.core.data.DataRow)
+             * {@inheritDoc}
              */
             @Override
             public DataCell getCell(final DataRow row) {
@@ -321,9 +320,7 @@ public class KnnNodeModel extends NodeModel {
             }
 
             /**
-             * @see org.knime.core.data.container.SingleCellFactory
-             *      #setProgress(int, int, org.knime.core.data.RowKey,
-             *      org.knime.core.node.ExecutionMonitor)
+             * {@inheritDoc}
              */
             @Override
             public void setProgress(final int curRowNr, final int rowCount,

@@ -40,6 +40,7 @@ import org.knime.core.data.DataType;
  * @author Thomas Gabriel, University of Konstanz
  */
 class ColorManagerIcon implements Icon {
+    
     private Color m_color;
 
     private final DataCell m_cell;
@@ -109,21 +110,21 @@ class ColorManagerIcon implements Icon {
     }
 
     /**
-     * @see javax.swing.Icon#getIconHeight()
+     * {@inheritDoc}
      */
     public int getIconHeight() {
         return SIZE;
     }
 
     /**
-     * @see javax.swing.Icon#getIconWidth()
+     * {@inheritDoc}
      */
     public int getIconWidth() {
         return SIZE;
     }
 
     /**
-     * @see Icon#paintIcon(java.awt.Component, java.awt.Graphics, int, int)
+     * {@inheritDoc}
      */
     public void paintIcon(final Component c, final Graphics g, final int x,
             final int y) {

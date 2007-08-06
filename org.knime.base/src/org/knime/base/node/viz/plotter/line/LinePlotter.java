@@ -111,8 +111,7 @@ public class LinePlotter extends ScatterPlotter {
             columnFilter.addChangeListener(
                     new ChangeListener() {
                         /**
-                         * @see javax.swing.event.ChangeListener#stateChanged(
-                         * javax.swing.event.ChangeEvent)
+                         * {@inheritDoc}
                          */
                         public void stateChanged(final ChangeEvent e) {
                             if (getDataProvider() != null 
@@ -134,8 +133,7 @@ public class LinePlotter extends ScatterPlotter {
                 = ((LinePlotterProperties)getProperties()).getColorLegend();
             legend.addChangeListener(new ChangeListener() {
                 /**
-                 * @see javax.swing.event.ChangeListener#stateChanged(
-                 * javax.swing.event.ChangeEvent)
+                 * {@inheritDoc}
                  */
                 public void stateChanged(final ChangeEvent e) {
                     // get the mapping and update model
@@ -147,8 +145,7 @@ public class LinePlotter extends ScatterPlotter {
                 .getInterpolationCheckBox();
             box.addItemListener(new ItemListener() {
                 /**
-                 * @see java.awt.event.ItemListener#itemStateChanged(
-                 * java.awt.event.ItemEvent)
+                 * {@inheritDoc}
                  */
                 public void itemStateChanged(final ItemEvent e) {
                     setInterpolation(box.isSelected());
@@ -159,8 +156,7 @@ public class LinePlotter extends ScatterPlotter {
                 = ((LinePlotterProperties)getProperties()).getShowDotsBox();
             showDotsBox.addItemListener(new ItemListener() {
                 /**
-                 * @see java.awt.event.ItemListener#itemStateChanged(
-                 * java.awt.event.ItemEvent)
+                 * {@inheritDoc}
                  */
                 public void itemStateChanged(final ItemEvent e) {
                     ((LinePlotterDrawingPane)getDrawingPane()).setShowDots(
@@ -172,8 +168,7 @@ public class LinePlotter extends ScatterPlotter {
                 .getDotSizeSpinner();
             dotSize.addChangeListener(new ChangeListener() {
                 /**
-                 * @see javax.swing.event.ChangeListener#stateChanged(
-                 * javax.swing.event.ChangeEvent)
+                 * {@inheritDoc}
                  */
                 public void stateChanged(final ChangeEvent e) {
                     setDotSize((Integer)dotSize.getValue());
@@ -184,8 +179,7 @@ public class LinePlotter extends ScatterPlotter {
                 .getThicknessSpinner();
             thickness.addChangeListener(new ChangeListener() {
             /**
-             * @see javax.swing.event.ChangeListener#stateChanged(
-             * javax.swing.event.ChangeEvent)
+             * {@inheritDoc}
              */
             public void stateChanged(final ChangeEvent e) {
                 ((LinePlotterDrawingPane)getDrawingPane()).setLineThickness(
@@ -441,7 +435,7 @@ public class LinePlotter extends ScatterPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.scatter.ScatterPlotter#updateSize()
+     * {@inheritDoc}
      */
     @Override
     public void updateSize() {

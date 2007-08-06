@@ -39,8 +39,11 @@ public interface RowAppender {
      * the container or table has been constructed. 
      * @param row <code>DataRow</code> to be added
      * @throws NullPointerException if the argument is <code>null</code>
-     * @throws IllegalStateException if the structure of the row forbids to
-     *         add it to the table or the row's key is already in the container
+     * @throws IllegalStateException If the state forbids to add rows.
+     * @throws IllegalArgumentException if the structure of the row forbids to
+     *         add it to the table 
+     * @throws org.knime.core.util.DuplicateKeyException 
+     *         If the row's key has already been added.
      */
     public void addRowToTable(final DataRow row);
 }

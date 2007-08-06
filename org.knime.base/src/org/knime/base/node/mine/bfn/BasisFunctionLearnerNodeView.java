@@ -65,7 +65,7 @@ public class BasisFunctionLearnerNodeView extends NodeView {
      * @see org.knime.core.node.NodeView#modelChanged()
      */
     @Override
-    protected void modelChanged() {
+    public void modelChanged() {
         BasisFunctionLearnerNodeModel model = 
             (BasisFunctionLearnerNodeModel)super.getNodeModel();
         ModelContentRO pp = model.getModelInfo();
@@ -104,18 +104,18 @@ public class BasisFunctionLearnerNodeView extends NodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onClose()
+     * {@inheritDoc}
      */
     @Override
-    protected void onClose() {
+    public void onClose() {
 
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onOpen()
+     * {@inheritDoc}
      */
     @Override
-    protected void onOpen() {
+    public void onOpen() {
 
     }
 }

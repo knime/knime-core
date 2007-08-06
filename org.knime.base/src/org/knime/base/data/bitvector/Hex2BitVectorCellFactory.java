@@ -70,9 +70,7 @@ public class Hex2BitVectorCellFactory extends BitVectorColumnCellFactory {
 
 
     /**
-     * 
-     * @see org.knime.core.data.container.SingleCellFactory#getCell(
-     * org.knime.core.data.DataRow)
+     * {@inheritDoc}
      */
     @Override
     public DataCell getCell(final DataRow row) {

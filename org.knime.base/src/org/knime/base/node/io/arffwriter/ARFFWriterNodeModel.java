@@ -103,7 +103,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -116,7 +116,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -127,7 +127,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -137,7 +137,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -278,7 +278,7 @@ public class ARFFWriterNodeModel extends NodeModel {
         writer.flush();
         writer.close();
 
-        ARFFReaderNodeModel.addToFileHistory(m_file.toURL().toString());
+        ARFFReaderNodeModel.addToFileHistory(m_file.toURI().toURL().toString());
         
         // execution successful return empty array
         return new BufferedDataTable[0];
@@ -340,7 +340,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
     
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -348,8 +348,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #loadInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -359,8 +358,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #saveInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
@@ -370,7 +368,7 @@ public class ARFFWriterNodeModel extends NodeModel {
     }
 
     /**
-     * @see NodeModel#configure(DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)

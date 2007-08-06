@@ -177,7 +177,7 @@ public abstract class NodeModel {
      * 
      * @param nodeInternDir The directory to write into.
      * @param exec Used to report progress and to cancel the save process.
-     * @throws IOException If an error occurs during writting to this dir.
+     * @throws IOException If an error occurs during writing to this dir.
      * @throws CanceledExecutionException If the saving has been canceled.
      * @see #loadInternals(File,ExecutionMonitor)
      * @see #setAutoExecutable(boolean)
@@ -253,8 +253,8 @@ public abstract class NodeModel {
         assert view != null;
         boolean success = m_views.remove(view);
         if (success) {
-            m_logger.debug("Unregistering view from model (" + m_views.size()
-                    + " remaining).");
+            m_logger.debug("Unregistering view from model (" 
+                    + m_views.size() + " remaining).");
         } else {
             m_logger.debug("Can't remove view from model, not registered.");
         }
@@ -273,7 +273,9 @@ public abstract class NodeModel {
      * @return All registered views.
      */
     final Set<NodeView> getViews() {
-        return Collections.unmodifiableSet(m_views);
+        synchronized (m_views) {
+            return Collections.unmodifiableSet(m_views);
+        }
     }
 
     /**
@@ -443,26 +445,55 @@ public abstract class NodeModel {
         // if execution was canceled without exception flying return false
         if (exec.isCanceled()) {
             throw new CanceledExecutionException(
-                    "Result discarded due to user " + "cancel");
+                    "Result discarded due to user cancel");
         }
 
         // if number of out tables does not match: fail
         if (outData == null || outData.length != m_nrDataOuts) {
             throw new IllegalStateException(
-                    "Invalid result. Execution failed, "
-                            + "reason: data is null or number "
-                            + "of outputs wrong.");
+                    "Invalid result. Execution failed. "
+                            + "Reason: Incorrect implementation; the execute"
+                            + " method in " + this.getClass().getSimpleName()
+                            + " returned null or an incorrect number of output"
+                            + " tables.");
         }
 
         // check the result, data tables must not be null
         for (int i = 0; i < outData.length; i++) {
             if (outData[i] == null) {
-                m_logger.error("execution failed: null data at port: " + i);
+                m_logger.error("Execution failed: Incorrect implementation;"
+                        + " the execute method in " 
+                        + this.getClass().getSimpleName() 
+                        + "returned a null data table at port: " + i);
                 throw new IllegalStateException("Invalid result. "
                         + "Execution failed, reason: data at output " + i
                         + " is null.");
             }
         }
+        // check meaningfulness of result and warn,
+        // - only if the execute didn't issue a warning already 
+        if ((getWarningMessage() == null) 
+                || (getWarningMessage().length() == 0)) { 
+            boolean warn = false;
+            for (int i = 0; i < outData.length; i++) {
+                if (outData[i].getDataTableSpec().getNumColumns() < 1) {
+                    m_logger.info("The result table at port " + i 
+                            + " has no columns");
+                    warn = true;
+                }
+                if (outData[i].getRowCount() < 1) {
+                    m_logger.info("The result table at port " + i 
+                            + " contains no rows");
+                    warn = true;
+                }
+            }
+            if (warn) {
+                setWarningMessage(
+                        "Node created empty data table(s) at the output");   
+            }
+        }
+        
+            
         setExecuted(true);
         return outData;
     } // executeModel(DataTable[],ExecutionMonitor)
@@ -554,15 +585,21 @@ public abstract class NodeModel {
      * views about the changes.
      */
     final void resetModel() {
-        // reset in derived model
-        reset();
-        // set state to not executed and not configured
-        m_executed = false;
-        m_configured = false;
-        // reset these property handlers
-        resetHiLiteHandlers();
-        // and notify all views
-        stateChanged();
+        try {
+            // reset in derived model
+            reset();
+        } catch (Throwable t) {
+            String name = t.getClass().getSimpleName();
+            m_logger.coding("Reset failed due to a " + name, t);
+        } finally {
+            // set state to not executed and not configured
+            m_executed = false;
+            m_configured = false;
+            // reset these property handlers
+            resetHiLiteHandlers();
+            // and notify all views
+            stateChanged();
+        }
     }
 
     /**
@@ -579,7 +616,7 @@ public abstract class NodeModel {
      * called by functions of the abstract class that modify the model (like
      * <code>#executeModel()</code> and <code>#resetModel()</code> ).
      */
-    protected synchronized void stateChanged() {
+    protected final void stateChanged() {
         for (NodeView view : m_views) {
             try {
                 view.callModelChanged();

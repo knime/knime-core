@@ -176,7 +176,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateStettingsBeforeSave()
+    protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
         updateModel();
     }

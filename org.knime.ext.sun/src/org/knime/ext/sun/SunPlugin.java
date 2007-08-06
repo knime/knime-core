@@ -43,7 +43,7 @@ public class SunPlugin extends Plugin {
 	}
 
 	/**
-	 * @see org.eclipse.core.runtime.Plugins#start(org.osgi.framework.BundleContext)
+	 * {@inheritDoc}
 	 */
 	@Override
     public void start(BundleContext context) throws Exception {
@@ -51,7 +51,7 @@ public class SunPlugin extends Plugin {
 	}
 
 	/**
-	 * @see org.eclipse.core.runtime.Plugin#stop(org.osgi.framework.BundleContext)
+	 * {@inheritDoc}
 	 */
 	@Override
     public void stop(BundleContext context) throws Exception {

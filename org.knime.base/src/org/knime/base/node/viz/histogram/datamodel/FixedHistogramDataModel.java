@@ -104,6 +104,13 @@ public class FixedHistogramDataModel {
             throw new NullPointerException(
                     "The x column domain must not be null");
         }
+//        if (BinningUtil.binNominal(xColSpec, noOfBins)) {
+//            m_binNominal = true;
+//            m_bins = BinningUtil.createNominalBins(xColSpec);
+//        } else {
+//            m_binNominal = false;
+//            m_bins = BinningUtil.createIntervalBins(xColSpec, noOfBins);
+//        }
         if (m_xColSpec.getType().isCompatible(
                 DoubleValue.class)) {
             m_binNominal = false;
@@ -157,8 +164,18 @@ public class FixedHistogramDataModel {
             m_rowColors.add(rowColor);
         }
         final int startBin = 0;
-        BinningUtil.addDataRow2Bin(m_binNominal, m_bins, m_missingValueBin, 
-                startBin, xCell, rowColor, id, m_aggrColumns, aggrCells);
+        try {
+            BinningUtil.addDataRow2Bin(m_binNominal, m_bins, m_missingValueBin, 
+                    startBin, xCell, rowColor, id, m_aggrColumns, aggrCells);
+        } catch (IllegalArgumentException e) {
+            if (!BinningUtil.checkDomainRange(xCell, getXColumnSpec())) {
+                throw new IllegalStateException(
+                    "Invalid column domain for column " 
+                    + m_xColSpec.getName()
+                    + ". " + e.getMessage());
+            } 
+            throw e;
+        }
     }
 
     /**

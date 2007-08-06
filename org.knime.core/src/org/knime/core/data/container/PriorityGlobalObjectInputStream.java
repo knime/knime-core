@@ -48,7 +48,7 @@ class PriorityGlobalObjectInputStream extends GlobalObjectInputStream {
     }
     
     /**
-     * @see java.io.ObjectInputStream#resolveClass(ObjectStreamClass)
+     * {@inheritDoc}
      */
     @Override
     protected Class<?> resolveClass(final ObjectStreamClass desc) 

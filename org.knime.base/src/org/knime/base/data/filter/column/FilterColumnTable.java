@@ -347,14 +347,14 @@ public final class FilterColumnTable implements DataTable {
     }
 
     /**
-     * @see org.knime.core.data.DataTable#getDataTableSpec()
+     * {@inheritDoc}
      */
     public DataTableSpec getDataTableSpec() {
         return m_tableSpec;
     }
 
     /**
-     * @see org.knime.core.data.DataTable#iterator()
+     * {@inheritDoc}
      */
     public RowIterator iterator() {
         return new FilterColumnRowIterator(m_data.iterator(), m_columns);

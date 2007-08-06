@@ -109,6 +109,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
     
     private final JCheckBox m_memoryCB;
 
+    private final JCheckBox m_measuresCB;
     /*
      * The tab's name.
      */
@@ -163,6 +164,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         gbl.setConstraints(m_maxNrIterationsSpinner, c); 
         clusterPropPane.add(maxNrIterationsLabel);
         clusterPropPane.add(m_maxNrIterationsSpinner);
+
         JLabel fuzzifierLabel = new JLabel("Fuzzifier: ");
         c.gridx = 0;                      
         c.gridy = 2;                      
@@ -249,9 +251,11 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
         gbl.setConstraints(m_lambdaSpinner, c);
         noisePropPane.add(m_lambdaSpinner);
         m_memoryCB = new JCheckBox("Perform the clustering in memory");
+        m_measuresCB = new JCheckBox("Compute cluster quality measures");
         all.add(clusterPropPane);
         all.add(noisePropPane);
         all.add(m_memoryCB);
+        all.add(m_measuresCB);
         super.addTab(TAB, all);
         m_filterpanel = new ColumnFilterPanel(DoubleValue.class);
         super.addTab(TAB2, m_filterpanel);
@@ -260,7 +264,7 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
     /**
      * Loads the settings from the model, Number of Clusters and
      * maximum number of Iterations.
-     * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
@@ -384,13 +388,23 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
                 // nothing to do here.
             }
         }
+        
+        if (settings.containsKey(FuzzyClusterNodeModel.MEASURES_KEY)) {
+            try {
+                boolean measures = settings
+                        .getBoolean(FuzzyClusterNodeModel.MEASURES_KEY);
+                m_measuresCB.setSelected(measures);
+            } catch (InvalidSettingsException e) {
+                // nothing to do here.
+            }
+        }
     }
 
     /**
      * Save the settings from the dialog, Number of Clusters and
      * maximum number of Iterations. 
      * 
-     * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
@@ -443,6 +457,8 @@ public class FuzzyClusterNodeDialog extends NodeDialogPane {
             settings.addDouble(FuzzyClusterNodeModel.LAMBDAVALUE_KEY, -1);
         }
         settings.addBoolean(FuzzyClusterNodeModel.MEMORY_KEY, m_memoryCB
+                .isSelected());
+        settings.addBoolean(FuzzyClusterNodeModel.MEASURES_KEY, m_measuresCB
                 .isSelected());
 
     }

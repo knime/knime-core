@@ -60,7 +60,7 @@ public class OpenViewEmbeddedAction extends OpenViewAction {
     }
 
     /**
-     * @see org.knime.workbench.editor2.actions.OpenViewAction#run()
+     * {@inheritDoc}
      */
     @Override
     public void run() {

@@ -141,6 +141,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
         String[] allVals = history.getHistory();
         LinkedHashSet<String> list = new LinkedHashSet<String>();
         for (int i = 0; i < allVals.length; i++) {
+            // we used to store URLs in the history. Be backward compatible.
             try {
                 String cur = allVals[i];
                 File file = textToFile(cur);
@@ -156,7 +157,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
             comboModel.addElement(it.next());
         }
         // changing the model will also change the minimum size to be
-        // quite big. We have tooltips, we don't need that
+        // quite big. We have a tooltip, we don't need that
         Dimension newMin = new Dimension(0, getPreferredSize().height);
         setMinimumSize(newMin);
     }
@@ -207,8 +208,7 @@ public final class CSVFilesHistoryPanel extends JPanel {
     /** renderer that also supports to show customized tooltip. */
     private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
         /**
-         * @see BasicComboBoxRenderer#getListCellRendererComponent(
-         *      javax.swing.JList, java.lang.Object, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public Component getListCellRendererComponent(final JList list,

@@ -232,7 +232,7 @@ public class DotInfoArray {
         }
 
         /**
-         * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+         * {@inheritDoc}
          */
         public int compare(final DotInfo o1, final DotInfo o2) {
 

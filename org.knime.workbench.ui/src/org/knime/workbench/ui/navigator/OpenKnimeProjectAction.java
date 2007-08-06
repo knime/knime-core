@@ -62,7 +62,7 @@ public class OpenKnimeProjectAction extends Action {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#run()
+     * {@inheritDoc}
      */
     @Override
     public void run() {

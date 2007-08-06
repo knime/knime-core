@@ -171,7 +171,7 @@ public class SnapToPortGeometry extends SnapToHelper {
         }
 
         /**
-         * @see java.lang.Object#toString()
+         * {@inheritDoc}
          */
         @Override
         public String toString() {
@@ -495,8 +495,7 @@ public class SnapToPortGeometry extends SnapToHelper {
     }
 
     /**
-     * @see SnapToHelper#snapRectangle(Request, int, PrecisionRectangle,
-     *      PrecisionRectangle)
+     * {@inheritDoc}
      */
     @Override
     public int snapRectangle(final Request request, int snapOrientation,

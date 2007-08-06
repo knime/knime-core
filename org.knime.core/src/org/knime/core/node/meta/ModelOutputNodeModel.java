@@ -48,8 +48,7 @@ public class ModelOutputNodeModel extends MetaOutputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -58,8 +57,7 @@ public class ModelOutputNodeModel extends MetaOutputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -69,8 +67,7 @@ public class ModelOutputNodeModel extends MetaOutputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -80,9 +77,7 @@ public class ModelOutputNodeModel extends MetaOutputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #execute(BufferedDataTable[],
-     *      ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -91,7 +86,7 @@ public class ModelOutputNodeModel extends MetaOutputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -99,8 +94,7 @@ public class ModelOutputNodeModel extends MetaOutputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #configure(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -109,8 +103,7 @@ public class ModelOutputNodeModel extends MetaOutputModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #loadModelContent(int,
-     *      ModelContentRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadModelContent(final int index,

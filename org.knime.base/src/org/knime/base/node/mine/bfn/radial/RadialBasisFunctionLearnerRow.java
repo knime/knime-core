@@ -22,7 +22,6 @@
 package org.knime.base.node.mine.bfn.radial;
 
 import org.knime.base.node.mine.bfn.BasisFunctionLearnerRow;
-import org.knime.base.node.mine.bfn.BasisFunctionPredictorRow;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
@@ -34,14 +33,14 @@ import org.knime.core.data.RowKey;
  * use radial basis function prototypes for training. This prototype keeps an
  * Gaussian functions is internal representation. This function is created
  * infinity which means cover the entry domain. During training the function is
- * shrinked if new conflicting instances are obmitted. Therefore two parameters
+ * shrunk if new conflicting instances are omitted. Therefore two parameters
  * have been introduced. One is <code>m_thetaMinus</code> which is used to
  * describe an upper bound of conflicting instances; and 
  * <code>m_thetaPlus</code>, to lower bound for non-conflicting instances.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
+public class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     
     /** The upper bound for conflicting instances. */
     private final double m_thetaMinus;
@@ -67,15 +66,12 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @param thetaMinus upper bound for conflicting instances
      * @param thetaPlus lower bound for non-conflicting instances
      * @param distance choice of the distance function between patterns.
-     * @param numPat The overall number of pattern used for training. 
-     * @param isHierarchical true if the rule is hierarchical, false otherwise.
      */
-    RadialBasisFunctionLearnerRow(final RowKey key, final DataCell classInfo,
-            final DataRow center, final double thetaMinus,
-            final double thetaPlus, final int distance,
-            final int numPat,
-            final boolean isHierarchical) {
-        super(key, center, classInfo, isHierarchical);
+    protected RadialBasisFunctionLearnerRow(final RowKey key, 
+            final DataCell classInfo, final DataRow center, 
+            final double thetaMinus, final double thetaPlus, 
+            final int distance) {
+        super(key, center, classInfo);
         m_thetaMinus = thetaMinus;
         m_thetaMinusSqrtMinusLog = Math.sqrt(-Math.log(m_thetaMinus));
         assert (m_thetaMinus >= 0.0 && m_thetaMinus <= 1.0);
@@ -83,15 +79,15 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
         m_thetaPlusSqrtMinusLog = Math.sqrt(-Math.log(m_thetaPlus));
         assert (m_thetaPlus >= 0.0 && m_thetaPlus <= 1.0);
         m_predRow = new RadialBasisFunctionPredictorRow(key.getId(), center,
-                classInfo, m_thetaMinus, distance, numPat);
-        addCovered(center.getKey().getId(), classInfo);
+                classInfo, m_thetaMinus, distance);
+        addCovered(center, classInfo);
     }
 
     /**
-     * @see BasisFunctionLearnerRow#getPredictorRow()
+     * {@inheritDoc}
      */
     @Override
-    public BasisFunctionPredictorRow getPredictorRow() {
+    public RadialBasisFunctionPredictorRow getPredictorRow() {
         return m_predRow;
     }
 
@@ -119,11 +115,12 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @see #computeActivation(DataRow)
      */
     @Override
-    protected final boolean covers(final DataRow row) {
+    public
+    final boolean covers(final DataRow row) {
         if (m_predRow.isNotShrunk()) {
             return true;
         }
-        return (m_predRow.getStdDev() 
+        return (m_predRow.getStdDev()
             >= m_predRow.computeDistance(row) / m_thetaPlusSqrtMinusLog);
     }
 
@@ -141,7 +138,8 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @see #computeActivation(DataRow)
      */
     @Override
-    protected final boolean explains(final DataRow row) {
+    public
+    final boolean explains(final DataRow row) {
         if (m_predRow.isNotShrunk()) {
             return true;
         }
@@ -167,6 +165,10 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
                 == rbf.getAnchor().getNumCells());
         double overlap = 1.0;
         for (int i = 0; i < this.getAnchor().getNumCells(); i++) {
+            if (this.getAnchor().getCell(i).isMissing()
+                    || rbf.getAnchor().getCell(i).isMissing()) {
+                continue;
+            }
             double a = ((DoubleValue)this.getAnchor().getCell(i))
                     .getDoubleValue();
             double b = ((DoubleValue)rbf.getAnchor().getCell(i))
@@ -189,7 +191,7 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @return the standard deviation
      */
     @Override
-    public double computeCoverage() {
+    public double computeSpread() {
         return m_predRow.getStdDev();
     }
 
@@ -206,7 +208,8 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      *             {@link RadialBasisFunctionLearnerRow}
      */
     @Override
-    protected final boolean compareCoverage(
+    public
+    final boolean compareCoverage(
             final BasisFunctionLearnerRow best, final DataRow row) {
         RadialBasisFunctionLearnerRow rbf 
             = (RadialBasisFunctionLearnerRow) best;
@@ -221,7 +224,8 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      *         indicates relative loss in coverage for this basisfunction.
      */
     @Override
-    protected final boolean getShrinkValue(final DataRow row) {
+    public
+    final boolean getShrinkValue(final DataRow row) {
         return shrinkIt(row, false);
     }
 
@@ -237,7 +241,8 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      *         other wise this function return <code>false</code>
      */
     @Override
-    protected final boolean shrink(final DataRow row) {
+    public
+    final boolean shrink(final DataRow row) {
         return shrinkIt(row, true);
     }
 
@@ -275,7 +280,8 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * Method is empty.
      */
     @Override
-    protected final void reset() {
+    public
+    final void reset() {
         // empty
     }
 
@@ -285,12 +291,13 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * @param row Ignored.
      */
     @Override
-    protected final void cover(final DataRow row) {
+    public
+    final void cover(final DataRow row) {
 
     }
 
     /**
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -298,19 +305,33 @@ class RadialBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
     }
 
     /**
-     * @see BasisFunctionLearnerRow#getFinalCell(int)
+     * {@inheritDoc}
      */
     @Override
-    protected DataCell getFinalCell(final int index) {
+    public DataCell getFinalCell(final int index) {
         return super.getAnchor().getCell(index);
     }
 
     /**
-     * @see BasisFunctionLearnerRow
-     *      #computeActivation(org.knime.core.data.DataRow)
+     * {@inheritDoc}
      */
     @Override
     public double computeActivation(final DataRow row) {
         return m_predRow.computeActivation(row);
     }
+    
+    /**
+     * @return theta minus
+     */
+    public final double getThetaMinus() {
+        return m_thetaMinus;
+    }
+
+    /**
+     * @return theta plus
+     */
+    public final double getThetaPlus() {
+        return m_thetaPlus;
+    }
+    
 }

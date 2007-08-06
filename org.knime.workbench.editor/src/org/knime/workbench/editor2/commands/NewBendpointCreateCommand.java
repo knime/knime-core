@@ -73,7 +73,7 @@ public class NewBendpointCreateCommand extends Command {
     }
 
     /**
-     * @see org.eclipse.gef.commands.Command#execute()
+     * {@inheritDoc}
      */
     @Override
     public void execute() {
@@ -89,7 +89,7 @@ public class NewBendpointCreateCommand extends Command {
     }
 
     /**
-     * @see org.eclipse.gef.commands.Command#redo()
+     * {@inheritDoc}
      */
     @Override
     public void redo() {
@@ -103,7 +103,7 @@ public class NewBendpointCreateCommand extends Command {
     }
 
     /**
-     * @see org.eclipse.gef.commands.Command#undo()
+     * {@inheritDoc}
      */
     @Override
     public void undo() {

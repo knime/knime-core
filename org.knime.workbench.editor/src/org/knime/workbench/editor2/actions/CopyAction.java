@@ -62,7 +62,7 @@ public class CopyAction extends AbstractClipboardAction {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getId()
+     * {@inheritDoc}
      */
     @Override
     public String getId() {
@@ -71,7 +71,7 @@ public class CopyAction extends AbstractClipboardAction {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getImageDescriptor()
+     * {@inheritDoc}
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
@@ -82,7 +82,7 @@ public class CopyAction extends AbstractClipboardAction {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getText()
+     * {@inheritDoc}
      */
     @Override
     public String getText() {
@@ -146,8 +146,7 @@ public class CopyAction extends AbstractClipboardAction {
     }
 
     /**
-     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
-     *  #runOnNodes(org.knime.workbench.editor2.editparts.NodeContainerEditPart[])
+     * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {

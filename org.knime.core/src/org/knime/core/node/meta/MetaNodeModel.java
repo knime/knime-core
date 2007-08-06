@@ -310,8 +310,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.SpecialNodeModel #saveSettingsTo(java.io.File,
-     *      NodeSettingsWO, org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final File nodeDir,
@@ -369,8 +368,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.SpecialNodeModel
-     *      #inportHasNewDataTable(BufferedDataTable, int)
+     * {@inheritDoc}
      */
     @Override
     protected void inportHasNewDataTable(final BufferedDataTable table,
@@ -379,8 +377,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.SpecialNodeModel
-     *      #inportHasNewTableSpec(org.knime.core.data.DataTableSpec, int)
+     * {@inheritDoc}
      */
     @Override
     protected void inportHasNewTableSpec(final DataTableSpec spec,
@@ -399,7 +396,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.SpecialNodeModel#inportWasDisconnected(int)
+     * {@inheritDoc}
      */
     @Override
     protected void inportWasDisconnected(final int inPortID) {
@@ -429,7 +426,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     private boolean m_wfmInitialized;
 
     /**
-     * @see org.knime.core.node.SpecialNodeModel#internalWFM()
+     * {@inheritDoc}
      */
     @Override
     protected final WorkflowManager internalWFM() {
@@ -446,9 +443,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.SpecialNodeModel
-     *      #loadValidatedSettingsFrom(java.io.File, NodeSettingsRO,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final File nodeDir,
@@ -549,8 +544,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeStateListener
-     *      #stateChanged(org.knime.core.node.NodeStatus, int)
+     * {@inheritDoc}
      */
     public void stateChanged(final NodeStatus state, final int id) {
         boolean outNode = false;
@@ -583,8 +577,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.SpecialNodeModel #validateSettings(java.io.File,
-     *      NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final File nodeFile,
@@ -605,7 +598,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #loadModelContent(int, ModelContentRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadModelContent(final int index,
@@ -614,7 +607,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #saveModelContent(int, ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveModelContent(final int index,
@@ -623,8 +616,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #loadInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -634,8 +626,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #saveInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,
@@ -685,8 +676,7 @@ public class MetaNodeModel extends SpecialNodeModel implements
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #saveSettingsTo(org.knime.core.node.NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {

@@ -37,7 +37,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
  * 
  * @author Thorsten Meinl, University of Konstanz
@@ -74,7 +73,9 @@ public class XValidatePartitionModel extends NodeModel {
      * @param partNo the partition number
      */
     void setPartitionNumber(final short partNo) {
-        if ((partNo < 0) || (partNo >= m_settings.validations())) {
+        if ((partNo < 0)
+                || ((partNo >= m_settings.validations() && !m_settings
+                        .leaveOneOut()))) {
             throw new IllegalArgumentException("Illegal partition number: "
                     + partNo);
         }
@@ -82,7 +83,7 @@ public class XValidatePartitionModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -90,7 +91,7 @@ public class XValidatePartitionModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
@@ -99,8 +100,7 @@ public class XValidatePartitionModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -109,24 +109,23 @@ public class XValidatePartitionModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #execute(BufferedDataTable[],
-     *      ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        if (m_partNumbers == null) {
+        if (m_partNumbers == null && !m_settings.leaveOneOut()) {
             m_partNumbers = new short[inData[0].getRowCount()];
 
-            final double partSize = m_partNumbers.length
-                    / (double)m_settings.validations();
+            final double partSize =
+                    m_partNumbers.length / (double)m_settings.validations();
             for (int i = 0; i < m_partNumbers.length; i++) {
                 m_partNumbers[i] = (short)(i / partSize);
             }
-            
+
             if (m_settings.randomSampling()) {
                 for (int i = 0; i < m_partNumbers.length; i++) {
-                    int pos = (int) (Math.random() * m_partNumbers.length);
+                    int pos = (int)(Math.random() * m_partNumbers.length);
                     short x = m_partNumbers[pos];
                     m_partNumbers[pos] = m_partNumbers[i];
                     m_partNumbers[i] = x;
@@ -136,18 +135,21 @@ public class XValidatePartitionModel extends NodeModel {
             m_currentPartition = 0;
         }
 
-        BufferedDataContainer test = exec.createDataContainer(inData[0]
-                .getDataTableSpec());
+        BufferedDataContainer test =
+                exec.createDataContainer(inData[0].getDataTableSpec());
 
-        BufferedDataContainer train = exec.createDataContainer(inData[0]
-                .getDataTableSpec());
+        BufferedDataContainer train =
+                exec.createDataContainer(inData[0].getDataTableSpec());
 
         int count = 0;
         final double max = inData[0].getRowCount();
         for (DataRow row : inData[0]) {
             exec.setProgress(count / max);
 
-            if (m_partNumbers[count] == m_currentPartition) {
+            if (m_settings.leaveOneOut() && (count == m_currentPartition)) {
+                test.addRowToTable(row);
+            } else if (!m_settings.leaveOneOut()
+                    && (m_partNumbers[count] == m_currentPartition)) {
                 test.addRowToTable(row);
             } else {
                 train.addRowToTable(row);
@@ -165,25 +167,25 @@ public class XValidatePartitionModel extends NodeModel {
      * validation cycle.
      * 
      * @param b <code>true</code> if the reset should be ignored,
-     * <code>false</code> otherwise
+     *            <code>false</code> otherwise
      */
     void setIgnoreNextReset(final boolean b) {
         m_ignoreNextReset = b;
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
         if (!m_ignoreNextReset) {
             m_partNumbers = null;
+            m_currentPartition = 0;
         }
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #configure(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -192,8 +194,7 @@ public class XValidatePartitionModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel #loadInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -203,8 +204,7 @@ public class XValidatePartitionModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir,

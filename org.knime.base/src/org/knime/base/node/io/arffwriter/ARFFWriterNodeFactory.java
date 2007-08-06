@@ -54,7 +54,7 @@ public class ARFFWriterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#createNodeDialogPane()
+     * {@inheritDoc}
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
@@ -62,7 +62,7 @@ public class ARFFWriterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
@@ -74,7 +74,7 @@ public class ARFFWriterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#createNodeView(int, NodeModel)
+     * {@inheritDoc}
      */
     @Override
     public NodeView createNodeView(final int viewIndex,
@@ -83,7 +83,7 @@ public class ARFFWriterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#getNrNodeViews()
+     * {@inheritDoc}
      */
     @Override
     public int getNrNodeViews() {
@@ -91,7 +91,7 @@ public class ARFFWriterNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see org.knime.core.node.NodeFactory#hasDialog()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasDialog() {

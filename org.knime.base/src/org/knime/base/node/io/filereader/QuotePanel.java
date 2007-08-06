@@ -460,13 +460,29 @@ public class QuotePanel extends JPanel {
     }
 
     /**
+     * Checks the current values in the panel.
+     * 
+     * @return null, if settings are okay and can be applied. An error message
+     *         if not.
+     */
+    String checkSettings() {
+        return null;
+    }
+
+
+    /**
      * Deletes all quotes defined in the passed object, reads the currently
      * listed quotes from the JList and adds them to the settings object.
      * 
      * @param settings the settings object to replace the quotes in with the
      *            quotes currently defined in the panel
+     * @return true if the new settings are different from the one passed in.
      */
-    void overrideSettings(final FileReaderNodeSettings settings) {
+    boolean overrideSettings(final FileReaderNodeSettings settings) {
+
+        // save'm to decide whether the new settings are different
+        Vector<Quote> oldQuotes = settings.getAllQuotes();
+        
         settings.removeAllQuotes();
         for (int i = 0; i < m_currQuotes.getModel().getSize(); i++) {
             String lEntry = (String)m_currQuotes.getModel().getElementAt(i);
@@ -480,6 +496,22 @@ public class QuotePanel extends JPanel {
         }
         // fix the settings.
         settings.setQuoteUserSet(true);
+        
+        // decide whether we need to re-analyze the file (whether we have
+        // new quote settings)
+        Vector<Quote> newQuotes = settings.getAllQuotes();
+        if (newQuotes.size() != oldQuotes.size()) {
+            // need to re-analyze with different quotes.
+            return true;
+        }
+        for (Quote q : newQuotes) {
+            if (!oldQuotes.contains(q)) {
+                return true;
+            }
+        }
+        return false;
+        
+        
     }
 
     /**

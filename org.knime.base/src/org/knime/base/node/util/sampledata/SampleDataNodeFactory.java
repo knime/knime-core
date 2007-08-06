@@ -34,7 +34,7 @@ import org.knime.core.node.NodeView;
  */
 public class SampleDataNodeFactory extends NodeFactory {
     /**
-     * @see org.knime.core.node.NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {

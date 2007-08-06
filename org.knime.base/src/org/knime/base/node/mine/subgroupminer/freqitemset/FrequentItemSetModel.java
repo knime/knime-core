@@ -139,6 +139,7 @@ public class FrequentItemSetModel {
         if (m_alwaysFrequent.size() > 0) {
             ModelContentWO alwaysFrequentModel = itemSetsModel
                     .addModelContent(ITEMSET + m_itemSetCounter++);
+            m_itemCounter = 0;
             for (FrequentItemSet set : m_alwaysFrequent) {
                 saveItemSetTo(alwaysFrequentModel, set);
             }

@@ -35,7 +35,7 @@ import org.knime.core.node.NodeView;
 public class AppendedRowsNodeFactory extends NodeFactory {
 
     /**
-     * @see NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
@@ -43,7 +43,7 @@ public class AppendedRowsNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#getNrNodeViews()
+     * {@inheritDoc}
      */
     @Override
     public int getNrNodeViews() {
@@ -51,7 +51,7 @@ public class AppendedRowsNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#createNodeView(int, NodeModel)
+     * {@inheritDoc}
      */
     @Override
     public NodeView createNodeView(final int viewIndex,
@@ -60,7 +60,7 @@ public class AppendedRowsNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#hasDialog()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasDialog() {
@@ -68,7 +68,7 @@ public class AppendedRowsNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#createNodeDialogPane()
+     * {@inheritDoc}
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {

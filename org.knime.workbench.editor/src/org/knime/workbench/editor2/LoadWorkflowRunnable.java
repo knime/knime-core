@@ -105,8 +105,10 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             LOGGER
                     .info("Canceled loading worflow: "
                             + m_workflowFile.getName());
+            m_editor.getWorkflowManager().shutdown();
             m_editor.setWorkflowManager(null);
             m_editor.setLoadingCanceled(true);
+            m_editor.setLoadingCanceledMessage(cee.getMessage());
         } catch (WorkflowException we) {
             // the workflow exception is a collection exception
             // it is stored to show the errors in a window

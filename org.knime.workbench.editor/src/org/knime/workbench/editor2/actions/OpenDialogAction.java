@@ -58,7 +58,7 @@ public class OpenDialogAction extends AbstractNodeAction {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getId()
+     * {@inheritDoc}
      */
     @Override
     public String getId() {
@@ -66,7 +66,7 @@ public class OpenDialogAction extends AbstractNodeAction {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getText()
+     * {@inheritDoc}
      */
     @Override
     public String getText() {
@@ -74,7 +74,7 @@ public class OpenDialogAction extends AbstractNodeAction {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getImageDescriptor()
+     * {@inheritDoc}
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
@@ -82,7 +82,7 @@ public class OpenDialogAction extends AbstractNodeAction {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getToolTipText()
+     * {@inheritDoc}
      */
     @Override
     public String getToolTipText() {
@@ -106,10 +106,7 @@ public class OpenDialogAction extends AbstractNodeAction {
     }
 
     /**
-     * 
-     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
-     *      #runOnNodes(org.knime.workbench.editor2.
-     *      editparts.NodeContainerEditPart[])
+     * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {

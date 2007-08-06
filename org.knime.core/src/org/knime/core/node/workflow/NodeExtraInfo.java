@@ -47,10 +47,10 @@ public interface NodeExtraInfo extends ExtraInfo {
      * 
      * @param moveDist the distance to change position
      */
-    public void changePosition(final int moveDist);
+    public void changePosition(final int[] moveDist);
 
     /**
-     * @see Object#clone()
+     * {@inheritDoc}
      */
     public Object clone() throws CloneNotSupportedException;
 }

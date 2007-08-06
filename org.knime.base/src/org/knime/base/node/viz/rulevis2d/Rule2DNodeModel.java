@@ -156,7 +156,7 @@ public class Rule2DNodeModel extends NodeModel implements Rule2DDataProvider {
     }
 
     /**
-     * @see NodeModel#loadValidatedSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -179,8 +179,7 @@ public class Rule2DNodeModel extends NodeModel implements Rule2DDataProvider {
     }
 
     /**
-     * 
-     * @see NodeModel#saveSettingsTo(NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -191,8 +190,7 @@ public class Rule2DNodeModel extends NodeModel implements Rule2DDataProvider {
     }
 
     /**
-     * 
-     * @see NodeModel#validateSettings(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)

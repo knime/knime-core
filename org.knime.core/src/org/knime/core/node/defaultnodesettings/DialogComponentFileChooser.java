@@ -35,6 +35,8 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -46,6 +48,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
@@ -72,6 +75,8 @@ public class DialogComponentFileChooser extends DialogComponent {
 
     private final TitledBorder m_border;
 
+    private final List<SimpleFileFilter> m_fileFilter;
+    
     /**
      * Constructor that creates a file chooser with an
      * {@link JFileChooser#OPEN_DIALOG} that filters files according to the
@@ -164,6 +169,16 @@ public class DialogComponentFileChooser extends DialogComponent {
         p.add(m_browseButton);
         getComponentPanel().add(p);
 
+        if (validExtensions != null) {
+            m_fileFilter = 
+                new ArrayList<SimpleFileFilter>(validExtensions.length);
+            for (String extension : validExtensions) {
+                m_fileFilter.add(new SimpleFileFilter(extension));
+            }
+        } else {
+            m_fileFilter = new ArrayList<SimpleFileFilter>(0);
+        }
+        
         m_browseButton.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
                 // sets the path in the file text field.
@@ -178,14 +193,16 @@ public class DialogComponentFileChooser extends DialogComponent {
                     chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 } else {
                     // if extensions are defined
-                    if (validExtensions != null && validExtensions.length > 0) {
+                    if (m_fileFilter != null 
+                            && m_fileFilter.size() > 0) {
                         // disable "All Files" selection
                         chooser.setAcceptAllFileFilterUsed(false);
-                        // set file filter for given extensions
-                        for (String extension : validExtensions) {
-                            chooser.setFileFilter(new SimpleFileFilter(
-                                    extension));
+                        // set the file filter for the given extensions
+                        for (FileFilter filter : m_fileFilter) {
+                            chooser.setFileFilter(filter);
                         }
+                        //set the first filter as default filter
+                        chooser.setFileFilter(m_fileFilter.get(0));
                     }
                 }
                 int returnVal =
@@ -197,13 +214,40 @@ public class DialogComponentFileChooser extends DialogComponent {
                         newFile =
                                 chooser.getSelectedFile().getAbsoluteFile()
                                         .toString();
-                        // if file selection and only on extension available
-                        if (!directoryOnly && validExtensions != null 
-                                && validExtensions.length == 1) {
-                            // and the file names has no this extension
-                            if (!newFile.endsWith(validExtensions[0])) {
-                                // then append it
-                                newFile += validExtensions[0];
+                        //check if the user has added the extension
+                        if (!directoryOnly && m_fileFilter != null) {
+                            boolean extensionFound = false;
+                            for (SimpleFileFilter filter : m_fileFilter) {
+                                final String[] extensions = 
+                                    filter.getValidExtensions();
+                                for (String extension : extensions) {
+                                    if (newFile.endsWith(extension)) {
+                                        extensionFound = true;
+                                        break;
+                                    }
+                                }
+                                if (extensionFound) {
+                                    break;
+                                }
+                            }
+                            //otherwise add the extension of the selected
+                            //FileFilter
+                            if (!extensionFound) {
+                                final FileFilter fileFilter = 
+                                    chooser.getFileFilter();
+                                if (fileFilter != null 
+                                        && fileFilter 
+                                        instanceof SimpleFileFilter) {
+                                    final SimpleFileFilter filter = 
+                                        (SimpleFileFilter)fileFilter;
+                                    final String[] extensions = 
+                                        filter.getValidExtensions();
+                                    if (extensions != null 
+                                            && extensions.length > 0) {
+                                        //append the first extension
+                                        newFile = newFile + extensions[0];
+                                    }
+                                }
                             }
                         }
                     } catch (SecurityException se) {
@@ -387,7 +431,7 @@ public class DialogComponentFileChooser extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateStettingsBeforeSave()
+    protected void validateSettingsBeforeSave()
             throws InvalidSettingsException {
         // just in case we didn't get notified about the last change...
         updateModel(false); // mark the erroneous component red.

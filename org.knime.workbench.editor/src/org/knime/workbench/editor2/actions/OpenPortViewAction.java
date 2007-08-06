@@ -57,7 +57,7 @@ public class OpenPortViewAction extends Action {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getImageDescriptor()
+     * {@inheritDoc}
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
@@ -65,7 +65,7 @@ public class OpenPortViewAction extends Action {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getToolTipText()
+     * {@inheritDoc}
      */
     @Override
     public String getToolTipText() {
@@ -73,7 +73,7 @@ public class OpenPortViewAction extends Action {
     }
 
     /**
-     * @see org.eclipse.jface.action.IAction#getText()
+     * {@inheritDoc}
      */
     @Override
     public String getText() {
@@ -96,7 +96,7 @@ public class OpenPortViewAction extends Action {
     }
 
     /**
-     * @see org.eclipse.jface.action.Action#run()
+     * {@inheritDoc}
      */
     @Override
     public void run() {

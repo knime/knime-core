@@ -69,7 +69,7 @@ public class SetOfRendererFamilies implements DataValueRendererFamily {
     }
 
     /**
-     * @see DataValueRendererFamily#getRendererDescriptions()
+     * {@inheritDoc}
      */
     public String[] getRendererDescriptions() {
         LinkedHashSet<String> set = new LinkedHashSet<String>();
@@ -80,7 +80,7 @@ public class SetOfRendererFamilies implements DataValueRendererFamily {
     }
 
     /**
-     * @see DataValueRendererFamily#setActiveRenderer(java.lang.String)
+     * {@inheritDoc}
      */
     public void setActiveRenderer(final String desc) {
         for (DataValueRendererFamily e : m_list) {
@@ -93,22 +93,21 @@ public class SetOfRendererFamilies implements DataValueRendererFamily {
     }
 
     /**
-     * @see DataValueRenderer#getDescription()
+     * {@inheritDoc}
      */
     public String getDescription() {
         return m_active.getDescription();
     }
 
     /**
-     * @see DataValueRenderer#getPreferredSize()
+     * {@inheritDoc}
      */
     public Dimension getPreferredSize() {
         return m_active.getPreferredSize();
     }
 
     /**
-     * @see javax.swing.table.TableCellRenderer#getTableCellRendererComponent(
-     * javax.swing.JTable, Object, boolean, boolean, int, int)
+     * {@inheritDoc}
      */
     public Component getTableCellRendererComponent(
             final JTable table, final Object value, final boolean isSelected, 
@@ -118,8 +117,7 @@ public class SetOfRendererFamilies implements DataValueRendererFamily {
     }
 
     /**
-     * @see javax.swing.ListCellRenderer#getListCellRendererComponent(
-     * javax.swing.JList, java.lang.Object, int, boolean, boolean)
+     * {@inheritDoc}
      */
     public Component getListCellRendererComponent(final JList list,
             final Object value, final int index, 
@@ -129,14 +127,14 @@ public class SetOfRendererFamilies implements DataValueRendererFamily {
     }
     
     /**
-     * @see DataValueRenderer#getRendererComponent(Object)
+     * {@inheritDoc}
      */
     public Component getRendererComponent(final Object val) {
         return m_active.getRendererComponent(val);
     }
 
     /**
-     * @see DataValueRendererFamily#accepts(String, DataColumnSpec)
+     * {@inheritDoc}
      */
     public boolean accepts(final String desc, final DataColumnSpec spec) {
         for (DataValueRendererFamily e : m_list) {
@@ -149,7 +147,7 @@ public class SetOfRendererFamilies implements DataValueRendererFamily {
     }
 
     /**
-     * @see DataValueRenderer#accepts(DataColumnSpec)
+     * {@inheritDoc}
      */
     public boolean accepts(final DataColumnSpec spec) {
         return m_active.accepts(spec);

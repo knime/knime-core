@@ -67,14 +67,14 @@ public class DefaultCellIterator implements Iterator<DataCell> {
     }
 
     /**
-     * @see java.util.Iterator#hasNext()
+     * {@inheritDoc}
      */
     public boolean hasNext() {
         return m_index < m_row.getNumCells();
     }
 
     /**
-     * @see java.util.Iterator#next()
+     * {@inheritDoc}
      */
     public DataCell next() {
         if (!hasNext()) {

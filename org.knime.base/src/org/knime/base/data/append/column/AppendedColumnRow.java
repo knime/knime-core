@@ -91,21 +91,21 @@ public class AppendedColumnRow implements DataRow {
     }
     
     /**
-     * @see org.knime.core.data.DataRow#getNumCells()
+     * {@inheritDoc}
      */
     public int getNumCells() {
         return m_baseRow.getNumCells() + m_appendCell.length;
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getKey()
+     * {@inheritDoc}
      */
     public RowKey getKey() {
         return m_baseRow.getKey();
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getCell(int)
+     * {@inheritDoc}
      */
     public DataCell getCell(final int index) {
         if (index < 0 || index >= getNumCells()) {
@@ -119,7 +119,7 @@ public class AppendedColumnRow implements DataRow {
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);

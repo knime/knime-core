@@ -123,8 +123,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
 
 
     /**
-     * @see org.knime.core.node.NodeModel#configure(
-     * org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
@@ -146,9 +145,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#execute(
-     * org.knime.core.node.BufferedDataTable[], 
-     * org.knime.core.node.ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
@@ -360,27 +357,21 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     }
     
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.box.BoxPlotDataProvider
-     * #getStatistics()
+     * {@inheritDoc}
      */
     public Map<DataColumnSpec, double[]>getStatistics() {
         return m_statistics;
     }
     
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.box.BoxPlotDataProvider
-     * #getMildOutliers()
+     * {@inheritDoc}
      */
     public Map<String, Map<Double, RowKey>> getMildOutliers() {
         return m_mildOutliers;
     }
     
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.box.BoxPlotDataProvider
-     * #getExtremeOutliers()
+     * {@inheritDoc}
      */
     public Map<String, Map<Double, RowKey>> getExtremeOutliers() {
         return m_extremeOutliers;
@@ -388,15 +379,14 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     
 
     /**
-     * @see org.knime.base.node.viz.plotter.DataProvider#getDataArray(int)
+     * {@inheritDoc}
      */
     public DataArray getDataArray(final int index) {
         return m_array;
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#loadValidatedSettingsFrom(
-     * org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
@@ -405,7 +395,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -414,8 +404,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     }
     
     /**
-     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File,
-     *      org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
@@ -470,8 +459,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     
 
     /**
-     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File, 
-     * org.knime.core.node.ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File nodeInternDir, 
@@ -529,8 +517,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveSettingsTo(
-     * org.knime.core.node.NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -539,8 +526,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#validateSettings(
-     * org.knime.core.node.NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)

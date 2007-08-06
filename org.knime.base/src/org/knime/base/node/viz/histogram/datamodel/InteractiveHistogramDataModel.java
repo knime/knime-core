@@ -38,7 +38,7 @@ import org.knime.core.data.DataTableSpec;
 
 /**
  * This data model holds all information (DataRows, DataTableSpec) to provide
- * the flexibiliy.
+ * the flexibility.
  * 
  * @author Tobias Koetter, University of Konstanz
  */

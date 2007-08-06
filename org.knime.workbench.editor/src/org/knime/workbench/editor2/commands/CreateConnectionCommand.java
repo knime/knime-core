@@ -194,12 +194,13 @@ public class CreateConnectionCommand extends Command {
      */
     @Override
     public boolean canUndo() {
-        return (m_connection != null) && (!(m_sourceNode.isLocked()))
-                && (!(m_targetNode.isLocked()));
+        return false;
+        // return (m_connection != null) && (!(m_sourceNode.isLocked()))
+        // && (!(m_targetNode.isLocked()));
     }
 
     /**
-     * @see org.eclipse.gef.commands.Command#execute()
+     * {@inheritDoc}
      */
     @Override
     public void execute() {
@@ -234,7 +235,7 @@ public class CreateConnectionCommand extends Command {
     }
 
     /**
-     * @see org.eclipse.gef.commands.Command#undo()
+     * {@inheritDoc}
      */
     @Override
     public void undo() {

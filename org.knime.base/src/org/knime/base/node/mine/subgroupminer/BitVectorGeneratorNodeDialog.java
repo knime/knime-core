@@ -127,8 +127,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         m_numericRadio.addChangeListener(new ChangeListener() {
 
             /**
-             * @see javax.swing.event.ChangeListener#stateChanged(
-             *      javax.swing.event.ChangeEvent)
+             * {@inheritDoc}
              */
             public void stateChanged(final ChangeEvent arg0) {
                 if (m_numericRadio.isSelected()) {
@@ -149,8 +148,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
         m_stringRadio.addChangeListener(new ChangeListener() {
 
             /**
-             * @see javax.swing.event.ChangeListener#stateChanged(
-             *      javax.swing.event.ChangeEvent)
+             * {@inheritDoc}
              */
             public void stateChanged(final ChangeEvent arg0) {
                 if (m_stringRadio.isSelected()) {
@@ -268,8 +266,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * @see org.knime.core.node.NodeDialogPane#loadSettingsFrom(
-     *      NodeSettingsRO, org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
@@ -314,8 +311,7 @@ public class BitVectorGeneratorNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * @see org.knime.core.node.NodeDialogPane#saveSettingsTo(
-     *      NodeSettingsWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)

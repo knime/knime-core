@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Vector;
 
 import org.eclipse.draw2d.IFigure;
-import org.eclipse.draw2d.MouseEvent;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPolicy;
@@ -127,8 +126,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * 
-     * @see org.eclipse.gef.EditPart#activate()
+     * {@inheritDoc}
      */
     @Override
     public void activate() {
@@ -185,8 +183,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * 
-     * @see org.eclipse.gef.EditPart#deactivate()
+     * {@inheritDoc}
      */
     @Override
     public void deactivate() {
@@ -196,7 +193,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart#createFigure()
+     * {@inheritDoc}
      */
     @Override
     protected IFigure createFigure() {
@@ -217,9 +214,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // create the visuals for the node container
         NodeContainerFigure nodeFigure =
                 new NodeContainerFigure((ProgressFigure)currentListener);
-
-        // register a listener to open a nodes dialog when double clicked
-        nodeFigure.addMouseListener(this);
 
         // init the user specified node name
         nodeFigure.setCustomName(getNodeContainer().getCustomName());
@@ -251,14 +245,15 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * @see org.eclipse.gef.EditPart#performRequest(org.eclipse.gef.Request)
+     * {@inheritDoc}
      */
     @Override
     public void performRequest(final Request request) {
-
         if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
-
             performDirectEdit();
+        } else if (request.getType() == RequestConstants.REQ_OPEN) {
+            // caused by a double click on this edit part
+            openDialog();
         }
     }
 
@@ -442,6 +437,16 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                             .getDescription());
                 }
                 updateNodeStatus();
+
+                // reset the tooltip text of the outports
+                for (Object part : getChildren()) {
+
+                    if (part instanceof NodeOutPortEditPart) {
+                        NodeOutPortEditPart outPortPart =
+                                (NodeOutPortEditPart)part;
+                        outPortPart.rebuildTooltip();
+                    }
+                }
 
                 // always refresh visuals
                 refreshVisuals();
@@ -649,10 +654,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * Opens the node dialog on double click.
      * 
-     * @see org.knime.workbench.editor2.editparts.KnimeAbstractPart#
-     *      doubleClick(org.eclipse.draw2d.MouseEvent)
      */
-    public void doubleClick(final MouseEvent me) {
+    public void openDialog() {
         NodeContainer container = (NodeContainer)getModel();
 
         // if this node does not have a dialog
@@ -683,87 +686,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             mb.setMessage("The dialog cannot be opened for the following"
                     + " reason:\n" + ex.getMessage());
             mb.open();
+        } catch (Throwable t) {
+            LOGGER.error("The dialog pane for node '"
+                    + container.getNameWithID() + "' has thrown a '"
+                    + t.getClass().getSimpleName()
+                    + "'. That is most likely an implementation error.", t);
         }
     }
-
-    // TODO: double click event can not be received (maybe due to draw2d bug
-    // fix in later release
-    // /**
-    // * @see
-    // org.eclipse.draw2d.MouseListener#
-    // mousePressed(org.eclipse.draw2d.MouseEvent)
-    // */
-    // public synchronized void mousePressed(final MouseEvent me) {
-    //
-    // //me.consume();
-    // // System.err.println("Var if");
-    // // if (System.currentTimeMillis() - m_lastClick <=
-    // Display.getCurrent().getDoubleClickTime()) {
-    // // System.err.println("in if");
-    // // doubleClicked(me);
-    // //
-    // // // m_lastClick = 0;
-    // // }
-    // //
-    // // // set the time of the last click to the current time
-    // // m_lastClick = System.currentTimeMillis();
-    // // System.err.println("Ende mouse pressed");
-    // }
-    //
-    // /**
-    // * @see
-    // org.eclipse.draw2d.MouseListener#
-    // mouseReleased(org.eclipse.draw2d.MouseEvent)
-    // */
-    // public void mouseReleased(final MouseEvent me) {
-    // // do nothing
-    // }
-    //
-    // /**
-    // * Opens this nodes dialog if double clicked. Unfortunately draw2D does
-    // not
-    // * process this event, so the double click event is checked manually in
-    // the
-    // * <code>mousePressed</code> method. The <code>mouseDoubleClicke</code>
-    // * method is then invoked manually from the <code>mousePressed</code>
-    // * method.
-    // *
-    // * @see
-    // org.eclipse.draw2d.MouseListener#
-    // mouseDoubleClicked(org.eclipse.draw2d.MouseEvent)
-    // */
-    // public void doubleClicked(final MouseEvent me) {
-    // // open this nodes dialog
-    // LOGGER.debug("Opening node dialog...");
-    // NodeContainer container = getNodeContainer();
-    //
-    // //
-    // // This is embedded in a special JFace wrapper dialog
-    // //
-    // WrappedNodeDialog dlg = new WrappedNodeDialog(Display.getCurrent()
-    // .getActiveShell(), container);
-    // dlg.open();
-    //
-    // }
-    //
-    // public void mouseDoubleClicked(final MouseEvent me) {
-    // doubleClicked(me);
-    // }
-
-    // /**
-    // * Creates a new <code>OpenDialogAction</code> action on the current
-    // * active editor and instantly runs it.
-    // *
-    // * @see org.eclipse.draw2d.MouseListener
-    // * #mouseDoubleClicked(org.eclipse.draw2d.MouseEvent)
-    // */
-    // public void mouseDoubleClicked(final MouseEvent me) {
-    // // get the current active editor
-    // WorkflowEditor editor = (WorkflowEditor) Workbench.getInstance()
-    // .getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-    // // ... and create a new action
-    // OpenDialogAction action = new OpenDialogAction(editor);
-    // action.run();
-    //
-    // }
 }

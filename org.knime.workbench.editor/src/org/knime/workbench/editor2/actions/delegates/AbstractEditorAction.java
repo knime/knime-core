@@ -49,9 +49,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
     private AbstractNodeAction m_decoratedAction;
 
     /**
-     * @see org.eclipse.ui.IEditorActionDelegate
-     *      #setActiveEditor(org.eclipse.jface.action.IAction,
-     *      org.eclipse.ui.IEditorPart)
+     * {@inheritDoc}
      */
     public final void setActiveEditor(final IAction action,
             final IEditorPart targetEditor) {
@@ -75,7 +73,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
     }
 
     /**
-     * @see org.eclipse.ui.IActionDelegate#run(org.eclipse.jface.action.IAction)
+     * {@inheritDoc}
      */
     public final void run(final IAction action) {
         if (m_decoratedAction != null) {
@@ -84,9 +82,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
     }
 
     /**
-     * @see org.eclipse.ui.IActionDelegate
-     *      #selectionChanged(org.eclipse.jface.action.IAction,
-     *      org.eclipse.jface.viewers.ISelection)
+     * {@inheritDoc}
      */
     public final void selectionChanged(final IAction action,
             final ISelection selection) {
@@ -126,8 +122,7 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
     }
 
     /**
-     * @see org.knime.core.node.workflow.WorkflowListener
-     *      #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
+     * {@inheritDoc}
      */
     public void workflowChanged(final WorkflowEvent event) {
         m_selectionRunnable.asyncExec();

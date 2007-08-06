@@ -31,7 +31,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.ConnectionExtraInfo;
 
-
 /**
  * Default implementation of a connection extra info.
  * 
@@ -47,13 +46,13 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
     public static final String KEY_BENDPOINTS = "extrainfo.conn.bendpoints";
 
     private ArrayList<int[]> m_bendpoints = new ArrayList<int[]>();
-    
+
     /**
      * Constructs a <code>ModellingConnectionExtraInfo</code>.
      * 
      */
     public ModellingConnectionExtraInfo() {
-        
+
     }
 
     /**
@@ -96,27 +95,38 @@ public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
     }
 
     /**
-     * @see org.knime.core.node.workflow.ConnectionExtraInfo
-     *      #save(NodeSettingsWO)
+     * {@inheritDoc}
      */
     public void save(final NodeSettingsWO config) {
         config.addInt(KEY_BENDPOINTS + "_size", m_bendpoints.size());
         for (int i = 0; i < m_bendpoints.size(); i++) {
-            config.addIntArray(KEY_BENDPOINTS + "_" + i, m_bendpoints
-                    .get(i));
+            config.addIntArray(KEY_BENDPOINTS + "_" + i, m_bendpoints.get(i));
         }
 
     }
 
     /**
-     * @see org.knime.core.node.workflow.ConnectionExtraInfo
-     *      #load(NodeSettingsRO)
+     * {@inheritDoc}
      */
     public void load(final NodeSettingsRO config)
             throws InvalidSettingsException {
         int size = config.getInt(KEY_BENDPOINTS + "_size");
         for (int i = 0; i < size; i++) {
             m_bendpoints.add(i, config.getIntArray(KEY_BENDPOINTS + "_" + i));
+        }
+    }
+
+    /**
+     * Changes the position by setting the bend points according to the given
+     * moving distance.
+     * 
+     * @param moveDist the distance to change the bend points
+     */
+    public void changePosition(final int[] moveDist) {
+
+        for (int[] point : m_bendpoints) {
+            point[0] += moveDist[0];
+            point[1] += moveDist[1];
         }
     }
 }

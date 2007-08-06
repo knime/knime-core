@@ -145,8 +145,7 @@ public class BinaryTreeNode<T> {
     }
     
     /**
-     * 
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

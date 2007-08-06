@@ -34,8 +34,7 @@ import org.eclipse.ui.IPerspectiveFactory;
  */
 public class ModellerPerspectiveFactory implements IPerspectiveFactory {
     /**
-     * @see org.eclipse.ui.IPerspectiveFactory
-     *      #createInitialLayout(org.eclipse.ui.IPageLayout)
+     * {@inheritDoc}
      */
     public void createInitialLayout(final IPageLayout layout) {
         // layout.addView(IPageLayout.ID_RES_NAV,IPageLayout.LEFT,0.3f,

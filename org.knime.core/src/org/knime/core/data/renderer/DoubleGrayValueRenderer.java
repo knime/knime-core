@@ -62,7 +62,7 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
     }
     
     /** Overridden to ignore any invocation.
-     * @see javax.swing.JLabel#setText(java.lang.String)
+     * {@inheritDoc}
      */
     @Override
     public void setText(final String text) {
@@ -119,13 +119,16 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
                 min = 0.0;
                 max = 1.0;
             }
+            setToolTipText(Double.toString(val));
             c = setDoubleValue(val, min, max);
             setIconColor(c);
             setTextInternal(null);
         } else if (isPaintCrossForMissing()) {
+            setToolTipText("Missing Value");
             setIconColor(null);
             setTextInternal(null);
         } else {
+            setToolTipText("Missing Value");
             setIcon(null);
             setTextInternal(DataType.getMissingCell().toString());
         }
@@ -191,14 +194,14 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
         private Color m_color = Color.WHITE;
 
         /**
-         * @see javax.swing.Icon#getIconHeight()
+         * {@inheritDoc}
          */
         public int getIconHeight() {
             return DoubleGrayValueRenderer.this.getIconHeight();
         }
         
         /**
-         * @see javax.swing.Icon#getIconWidth()
+         * {@inheritDoc}
          */
         public int getIconWidth() {
             return DoubleGrayValueRenderer.this.getIconWidth();
@@ -212,8 +215,7 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
         }
         
         /**
-         * @see javax.swing.Icon#paintIcon(
-         *      java.awt.Component, java.awt.Graphics, int, int)
+         * {@inheritDoc}
          */
         public void paintIcon(
             final Component c, final Graphics g, final int x, final int y) {

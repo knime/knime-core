@@ -56,42 +56,42 @@ public class MetaWorkflowEditorInput implements IEditorInput {
     }
 
     /**
-     * @see org.eclipse.ui.IEditorInput#exists()
+     * {@inheritDoc}
      */
     public boolean exists() {
         return m_nodeContainer != null;
     }
 
     /**
-     * @see org.eclipse.ui.IEditorInput#getImageDescriptor()
+     * {@inheritDoc}
      */
     public ImageDescriptor getImageDescriptor() {
         return null;
     }
 
     /**
-     * @see org.eclipse.ui.IEditorInput#getName()
+     * {@inheritDoc}
      */
     public String getName() {
         return "Meta-workflow editor";
     }
 
     /**
-     * @see org.eclipse.ui.IEditorInput#getPersistable()
+     * {@inheritDoc}
      */
     public IPersistableElement getPersistable() {
         return null;
     }
 
     /**
-     * @see org.eclipse.ui.IEditorInput#getToolTipText()
+     * {@inheritDoc}
      */
     public String getToolTipText() {
         return "Meta-workflow editor";
     }
 
     /**
-     * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
+     * {@inheritDoc}
      */
     public Object getAdapter(final Class adapter) {
         return null;

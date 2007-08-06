@@ -200,8 +200,7 @@ public abstract class ParallelAxis {
     }
     
     /**
-     * 
-     * @see java.lang.Object#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

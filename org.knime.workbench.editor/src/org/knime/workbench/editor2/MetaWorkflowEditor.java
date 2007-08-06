@@ -189,7 +189,7 @@ public class MetaWorkflowEditor extends WorkflowEditor implements
     }
 
     /**
-     * @see org.eclipse.ui.part.EditorPart#isDirty()
+     * {@inheritDoc}
      */
     @Override
     public boolean isDirty() {
@@ -210,8 +210,7 @@ public class MetaWorkflowEditor extends WorkflowEditor implements
     }
 
     /**
-     * @see org.knime.core.node.NodeStateListener#
-     *      stateChanged(org.knime.core.node.NodeStatus, int)
+     * {@inheritDoc}
      */
     public void stateChanged(final NodeStatus state, final int id) {
         if (state instanceof NodeStatus.CustomName) {

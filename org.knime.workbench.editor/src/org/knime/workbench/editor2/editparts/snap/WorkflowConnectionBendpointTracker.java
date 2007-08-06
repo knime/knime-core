@@ -65,7 +65,7 @@ public class WorkflowConnectionBendpointTracker extends
     }
 
     /**
-     * @see org.eclipse.gef.tools.SimpleDragTracker#updateSourceRequest()
+     * {@inheritDoc}
      */
     @Override
     protected void updateSourceRequest() {

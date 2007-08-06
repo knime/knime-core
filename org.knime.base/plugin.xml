@@ -21,6 +21,12 @@
             path="/io"/>
       <category
             after="io"
+            icon="icons/16x16/category_database.png"
+            level-id="database"
+            name="Database"
+            path="/"/>
+      <category
+            after="database"
             icon="icons/16x16/category_transform.gif"
             level-id="manipulation"
             name="Data Manipulation"
@@ -108,7 +114,7 @@
       <category
             icon="icons/missing.gif"
             level-id="modeleval"
-            name="Model Evaluation"
+            name="Scoring"
             path="/mining"/>
       <category
             after="write"
@@ -228,6 +234,10 @@
             id="org.knime.base.node.preproc.join.JoinerNodeFactory"/>
       <node
             category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.joiner.NewJoinerNodeFactory"
+            id="org.knime.base.node.preproc.joiner.NewJoinerNodeFactory"/>
+      <node
+            category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.split.SplitNodeFactory"
             id="org.knime.base.node.preproc.split.SplitNodeFactory"/>
       <node
@@ -299,7 +309,7 @@
             factory-class="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"
             id="org.knime.base.node.io.predictor.PredictorReaderNodeFactory"/>
       <node
-            category-path="/io/read"
+            category-path="/database"
             factory-class="org.knime.base.node.io.database.DBReaderNodeFactory"
             id="org.knime.base.node.io.database.DBReaderNodeFactory"/>
       <node
@@ -308,8 +318,8 @@
             id="org.knime.base.node.preproc.transpose.TransposeTableNodeFactory"/>
       <node
             category-path="/mining/dtree"
-            factory-class="org.knime.base.node.mine.decisiontree.predictor.DecTreePredictorNodeFactory"
-            id="org.knime.base.node.mine.decisiontree.predictor.DecTreePredictorNodeFactory"/>
+            factory-class="org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeFactory"
+            id="org.knime.base.node.mine.decisiontreenew.predictor.DecTreePredictorNodeFactory"/>
       <node
             category-path="/view"
             factory-class="org.knime.base.node.viz.rulevis2d.Rule2DNodeFactory"
@@ -356,7 +366,7 @@
 	          factory-class="org.knime.base.node.io.table.write.WriteTableNodeFactory"
 	          id="org.knime.base.node.io.table.write.WriteTableNodeFactory"/>
 	     <node
-	          category-path="/io/write"
+	          category-path="/database"
 	          factory-class="org.knime.base.node.io.database.DBWriterNodeFactory"
 	          id="org.knime.base.node.io.database.DBWriterNodeFactory"/>
      <node
@@ -446,7 +456,19 @@
    <node
          category-path="/mining/clustering"
          factory-class="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"
-         id="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"/>         
+         id="org.knime.base.node.mine.cluster.hierarchical.HierarchicalClusterNodeFactory"/>
+   <node
+         category-path="/mining/clustering"
+         factory-class="org.knime.base.node.mine.sota.predictor.SotaPredictorNodeFactory"
+         id="org.knime.base.node.mine.sota.predictor.SotaPredictorNodeFactory"/>         
+      <node
+            category-path="/statistics/regression"
+            factory-class="org.knime.base.node.mine.regression.polynomial.learner.PolyRegLearnerNodeFactory"
+	        id="org.knime.dev.nodes.polyreg.learner.PolyRegLearnerNodeFactory"/>
+      <node
+            category-path="/statistics/regression"
+            factory-class="org.knime.base.node.mine.regression.polynomial.predictor.PolyRegPredictorNodeFactory"
+	        id="org.knime.dev.nodes.polyreg.predictor.PolyRegPredictorNodeFactory"/>
             
    </extension>
    

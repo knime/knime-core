@@ -33,6 +33,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.ToolTipManager;
+
 import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.property.ShapeFactory;
@@ -64,8 +66,9 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
      */
     public ScatterPlotterDrawingPane() {
         super();
+        m_dots = new DotInfoArray(0);
         m_selDots = new HashSet<DataCell>();
-        setToolTipText("");
+        ToolTipManager.sharedInstance().registerComponent(this);
     }
     
     /**
@@ -93,8 +96,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
     }
     
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractDrawingPane
-     * #paintContent(java.awt.Graphics)
+     * {@inheritDoc}
      */
     @Override
     public void paintContent(final Graphics g) {
@@ -149,8 +151,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
         int y = dot.getYCoord();
         int size = (int)(m_dotSize 
                 + (m_dotSize * dot.getSize()));
-        shape.paint(g, x, y, size, c, isHilite, isSelected, 
-                (m_fade && !isHilite));
+        shape.paint(g, x, y, size, c, isHilite, isSelected, m_fade);
     }
     
     /**
@@ -207,7 +208,11 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
      * @param dotInfo the dots to be painted.
      */
     public void setDotInfoArray(final DotInfoArray dotInfo) {
-        m_dots = dotInfo;
+        if (dotInfo != null) {
+            m_dots = dotInfo;
+        } else {
+            m_dots = new DotInfoArray(0);
+        }
     }
     
     /**
@@ -219,8 +224,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
     }
     
     /**
-     * 
-     * @see javax.swing.JComponent#getToolTipText(java.awt.event.MouseEvent)
+     * {@inheritDoc}
      */
     @Override
     public String getToolTipText(final MouseEvent e) {
@@ -253,7 +257,11 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
                 points++;
             }
         }
-        return tooltip.toString();
+        if (tooltip.toString().length() > 0) {
+            return tooltip.toString();
+        } else {
+            return null;
+        }
     }
 
 }

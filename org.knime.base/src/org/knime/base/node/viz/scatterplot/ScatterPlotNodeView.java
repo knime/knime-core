@@ -113,7 +113,7 @@ public class ScatterPlotNodeView extends NodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onClose()
+     * {@inheritDoc}
      */
     @Override
     protected void onClose() {
@@ -121,7 +121,7 @@ public class ScatterPlotNodeView extends NodeView {
     }
 
     /**
-     * @see org.knime.core.node.NodeView#onOpen()
+     * {@inheritDoc}
      */
     @Override
     protected void onOpen() {

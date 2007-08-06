@@ -24,9 +24,6 @@
  */
 package org.knime.base.node.viz.plotter.scatter;
 
-
-
-
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -55,13 +52,13 @@ import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
- * Maps the two selected columns to the screen coordinates. 
- * The resulting points in 2-dimensional space are represented by 
- * {@link org.knime.base.node.viz.plotter.scatter.DotInfo}s, which are 
- * stored in a {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}
- * which is then passed to the 
+ * Maps the two selected columns to the screen coordinates. The resulting points
+ * in 2-dimensional space are represented by
+ * {@link org.knime.base.node.viz.plotter.scatter.DotInfo}s, which are stored
+ * in a {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} which is
+ * then passed to the
  * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}.
- * For nominal values it is typically that many points are on the same 
+ * For nominal values it is typically that many points are on the same
  * coordinate which leads to overplotting. One possible solution is to jitter
  * the points around the original point, to visualize that many points are on
  * the same coordinate. The jittering for nominal values is done here.
@@ -69,22 +66,21 @@ import org.knime.core.node.property.hilite.KeyEvent;
  * @author Fabian Dill, University of Konstanz
  */
 public class ScatterPlotter extends TwoColumnPlotter {
-    
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            ScatterPlotter.class);
-    
+
+    // private static final NodeLogger LOGGER = NodeLogger.getLogger(
+    // ScatterPlotter.class);
+
     private int m_dotSize = ScatterPlotterProperties.DEFAULT_DOT_SIZE;
-    
+
     private int m_jitterRate = 1;
-    
+
     /**
      * Flag whether to show or hide the unhilited dots.
      */
     private boolean m_hide;
-   
-    
+
     /**
-     * Construction kit constructor to construct a customized plotter, 
+     * Construction kit constructor to construct a customized plotter,
      * registeres all necessary listeners.
      * 
      * @param panel the drawing pane
@@ -99,8 +95,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
             getScatterPlotterProperties().addDotSizeChangeListener(
                     new ChangeListener() {
                         /**
-                         * @see javax.swing.event.ChangeListener#
-                         *      stateChanged(javax.swing.event.ChangeEvent)
+                         * {@inheritDoc}
                          */
                         public void stateChanged(final ChangeEvent e) {
                             setDotSize(getScatterPlotterProperties()
@@ -116,13 +111,13 @@ public class ScatterPlotter extends TwoColumnPlotter {
                     new MouseAdapter() {
 
                         /**
-                         * @see java.awt.event.MouseAdapter#mouseReleased(
-                         *      java.awt.event.MouseEvent)
+                         * {@inheritDoc}
                          */
                         @Override
                         public void mouseReleased(final MouseEvent e) {
-                            int jitter = getScatterPlotterProperties()
-                                    .getJitterSlider().getValue();
+                            int jitter =
+                                    getScatterPlotterProperties()
+                                            .getJitterSlider().getValue();
                             m_jitterRate = jitter / 10;
                             updateSize();
                             getDrawingPane().repaint();
@@ -132,34 +127,35 @@ public class ScatterPlotter extends TwoColumnPlotter {
         }
         if (isScatterPlotterDrawingPane() && isScatterPlotterProperties()) {
             getScatterPlotterDrawingPane().setDotSize(
-                    getScatterPlotterProperties().getDotSize());        
+                    getScatterPlotterProperties().getDotSize());
         }
     }
+
     /**
-     * Default constructor with 
+     * Default constructor with
      * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}
-     * and 
+     * and
      * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterProperties}.
-     *
+     * 
      */
     public ScatterPlotter() {
         this(new ScatterPlotterDrawingPane(), new ScatterPlotterProperties());
     }
-    
+
     /**
-     * Passes an empty 
-     * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} to the 
+     * Passes an empty
+     * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} to the
      * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}.
+     * 
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
      */
     @Override
     public void reset() {
         super.reset();
-        getScatterPlotterDrawingPane().setDotInfoArray(new DotInfoArray(
-                new DotInfo[0]));
+        getScatterPlotterDrawingPane().setDotInfoArray(
+                new DotInfoArray(new DotInfo[0]));
     }
-    
-    
+
     /**
      * Sets the size of the dots and sets a tick offset to both axes to ensure
      * that the points are always completely visible.
@@ -176,7 +172,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
             getScatterPlotterDrawingPane().setDotSize(m_dotSize);
         }
     }
-    
+
     /**
      * 
      * @return the dot size.
@@ -184,7 +180,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     public int getDotSize() {
         return m_dotSize;
     }
-    
+
     /**
      * 
      * @param jitterRate the jitter rate.
@@ -192,7 +188,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     protected void setJitterRate(final int jitterRate) {
         m_jitterRate = jitterRate;
     }
-    
+
     /**
      * 
      * @return the jitter rate (its 1/10 iof the value displayed in the slider).
@@ -200,14 +196,14 @@ public class ScatterPlotter extends TwoColumnPlotter {
     protected int getJitterRate() {
         return m_jitterRate;
     }
-    
+
     /**
      * The <code>ScatterPlotter</code> adds the posssibility to show, fade or
-     * hide unhilited dots and this is the show all action.
-     * The hide flag is administered in the <code>ScatterPlotter</code>, since
-     * hidden points are not passed to the 
+     * hide unhilited dots and this is the show all action. The hide flag is
+     * administered in the <code>ScatterPlotter</code>, since hidden points
+     * are not passed to the
      * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
-     * the fade flag is administered in the 
+     * the fade flag is administered in the
      * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
      * since the dots are painted but with a different (faded) color.
      * 
@@ -216,27 +212,26 @@ public class ScatterPlotter extends TwoColumnPlotter {
     public Action getShowAllAction() {
         Action show = new AbstractAction(AbstractPlotter.SHOW_ALL) {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
-                   m_hide = false;
-                   if (getDrawingPane() instanceof ScatterPlotterDrawingPane) {
-                       getScatterPlotterDrawingPane().setFadeUnhilited(false);
-                   }
-                   updatePaintModel();
+                m_hide = false;
+                if (getDrawingPane() instanceof ScatterPlotterDrawingPane) {
+                    getScatterPlotterDrawingPane().setFadeUnhilited(false);
+                }
+                updatePaintModel();
             }
         };
         return show;
     }
-    
+
     /**
      * The <code>ScatterPlotter</code> adds the posssibility to show, fade or
-     * hide unhilited dots and this is the hide unhilited action.
-     * The hide flag is administered in the <code>ScatterPlotter</code>, since
-     * hidden points are not passed to the 
+     * hide unhilited dots and this is the hide unhilited action. The hide flag
+     * is administered in the <code>ScatterPlotter</code>, since hidden
+     * points are not passed to the
      * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
-     * the fade flag is administered in the 
+     * the fade flag is administered in the
      * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
      * since the dots are painted but with a different (faded) color.
      * 
@@ -245,8 +240,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     public Action getHideAction() {
         Action hide = new AbstractAction(AbstractPlotter.HIDE_UNHILITED) {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
                 m_hide = true;
@@ -254,11 +248,11 @@ public class ScatterPlotter extends TwoColumnPlotter {
                     getScatterPlotterDrawingPane().setFadeUnhilited(false);
                 }
                 updatePaintModel();
-            } 
+            }
         };
         return hide;
     }
-    
+
     /**
      * 
      * @return true if only hilited dots should be painted.
@@ -266,7 +260,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     protected boolean isHideMode() {
         return m_hide;
     }
-    
+
     /**
      * 
      * @param hide flag whether to hide unhilited dots.
@@ -274,23 +268,23 @@ public class ScatterPlotter extends TwoColumnPlotter {
     public void setHideMode(final boolean hide) {
         m_hide = hide;
     }
-    
+
     /**
      * The <code>ScatterPlotter</code> adds the posssibility to show, fade or
-     * hide unhilited dots and this is the fade unhilited action.
-     * The hide flag is administered in the <code>ScatterPlotter</code>, since
-     * hidden points are not passed to the 
+     * hide unhilited dots and this is the fade unhilited action. The hide flag
+     * is administered in the <code>ScatterPlotter</code>, since hidden
+     * points are not passed to the
      * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
-     * the fade flag is administered in the 
+     * the fade flag is administered in the
      * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
      * since the dots are painted but with a different (faded) color.
+     * 
      * @return the menu item for fade unhilited.
      */
     public Action getFadeAction() {
         Action fade = new AbstractAction(AbstractPlotter.FADE_UNHILITED) {
             /**
-             * @see java.awt.event.ActionListener#actionPerformed(
-             * java.awt.event.ActionEvent)
+             * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent e) {
                 if (getDrawingPane() instanceof ScatterPlotterDrawingPane) {
@@ -298,24 +292,23 @@ public class ScatterPlotter extends TwoColumnPlotter {
                 }
                 m_hide = false;
                 updatePaintModel();
-            };
+            }
         };
         return fade;
     }
-    
 
     /**
      * The <code>ScatterPlotter</code> adds the posssibility to show, fade or
-     * hide unhilited dots and this is the complete menu to hide, fade.
-     * The hide flag is administered in the <code>ScatterPlotter</code>, since
-     * hidden points are not passed to the 
+     * hide unhilited dots and this is the complete menu to hide, fade. The hide
+     * flag is administered in the <code>ScatterPlotter</code>, since hidden
+     * points are not passed to the
      * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
-     * the fade flag is administered in the 
+     * the fade flag is administered in the
      * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
      * since the dots are painted but with a different (faded) color.
      * 
-     * @return an additional menu for the NodeView's menu bar containing
-     * the actions for show, fade and hide unhilited dots.
+     * @return an additional menu for the NodeView's menu bar containing the
+     *         actions for show, fade and hide unhilited dots.
      */
     public JMenu getShowHideMenu() {
         JMenu menu = new JMenu(SHOW_HIDE);
@@ -324,15 +317,14 @@ public class ScatterPlotter extends TwoColumnPlotter {
         menu.add(getFadeAction());
         return menu;
     }
-    
 
     /**
-     * The inherited hilite menu from the 
-     * {@link org.knime.base.node.viz.plotter.AbstractPlotter} and the 
-     * show all, fade or hide unhilited menu.
+     * The inherited hilite menu from the
+     * {@link org.knime.base.node.viz.plotter.AbstractPlotter} and the show all,
+     * fade or hide unhilited menu.
      * 
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#fillPopupMenu(
-     * javax.swing.JPopupMenu)
+     *      javax.swing.JPopupMenu)
      */
     @Override
     public void fillPopupMenu(final JPopupMenu popupMenu) {
@@ -341,55 +333,60 @@ public class ScatterPlotter extends TwoColumnPlotter {
         popupMenu.add(getShowAllAction());
         popupMenu.add(getHideAction());
         popupMenu.add(getFadeAction());
-        
+
     }
-    
+
     /**
-     * The data points of the data to visulaize are mapped to screen 
-     * coordinates, represented by 
+     * The data points of the data to visulaize are mapped to screen
+     * coordinates, represented by
      * {@link org.knime.base.node.viz.plotter.scatter.DotInfo} and are passed in
-     * a {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} to the 
+     * a {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} to the
      * {@link org.knime.base.node.viz.plotter.scatter
      * .ScatterPlotterDrawingPane}. Repaint of the drawing pane is triggered.
      * Jittering is also triggered from here.
      * 
      * 
      * @see org.knime.base.node.viz.plotter.columns.TwoColumnPlotter
-     * #updatePaintModel()
+     *      #updatePaintModel()
      */
     @Override
     public void updatePaintModel() {
-        if (getDataProvider() == null 
+        if (getDataProvider() == null
                 || getDataProvider().getDataArray(0) == null) {
             return;
         }
         if (getSelectedXColumnIndex() == -1 || getSelectedYColumnIndex() == -1) {
-        	return;
+            return;
         }
         // check if the selected column indices are available
         int xIdx = getSelectedXColumnIndex();
         int yIdx = getSelectedYColumnIndex();
-        int numCols = getDataProvider().getDataArray(0).getDataTableSpec()
-        	.getNumColumns(); 
+        int numCols =
+                getDataProvider().getDataArray(0).getDataTableSpec()
+                        .getNumColumns();
         if (xIdx >= numCols || yIdx >= numCols) {
-        	return;
+            return;
         }
-//        getScatterPlotterDrawingPane().clearSelection();
+        // getScatterPlotterDrawingPane().clearSelection();
         // get the rowInfo from the model
         DataArray rowsCont = getDataProvider().getDataArray(0);
         if (rowsCont != null) {
-//            LOGGER.debug("row container != null");
+            // LOGGER.debug("row container != null");
             // and create a new DotInfo array with the rowKeys in the DotInfos.
             List<DotInfo> dotList = new ArrayList<DotInfo>();
             int rowNr = 0;
             for (DataRow row : rowsCont) {
                 double size = rowsCont.getDataTableSpec().getRowSize(row);
-                ColorAttr colorAttr = rowsCont.getDataTableSpec()
-                .getRowColor(row);
+                ColorAttr colorAttr =
+                        rowsCont.getDataTableSpec().getRowColor(row);
                 boolean isHilite = delegateIsHiLit(row.getKey().getId());
                 if ((isHilite && m_hide) || !m_hide) {
-                    DotInfo dot = new DotInfo(0, 0, row.getKey(), isHilite, 
-                            colorAttr, size, rowNr);
+                    if (m_hide) {
+                        isHilite = false;
+                    }
+                    DotInfo dot =
+                            new DotInfo(0, 0, row.getKey(), isHilite,
+                                    colorAttr, size, rowNr);
                     dot.setShape(rowsCont.getDataTableSpec().getRowShape(row));
                     DataCell xDomain = row.getCell(getSelectedXColumnIndex());
                     dot.setXDomainValue(xDomain);
@@ -412,7 +409,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
         }
         getDrawingPane().repaint();
     }
-    
+
     /**
      * Given the actual size of the drawing pane, the actual zoom factor, and
      * min/max values it calculates the screen coordinates for each dot info in
@@ -442,8 +439,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
         }
 
         // the max dot size is subtracted as a dot can vary in size
-        int width = getDrawingPaneDimension().width - (2 * m_dotSize);  
-        int height = getDrawingPaneDimension().height - (2 * m_dotSize);  
+        int width = getDrawingPaneDimension().width - (2 * m_dotSize);
+        int height = getDrawingPaneDimension().height - (2 * m_dotSize);
 
         // get the coordinates from the headers
         Coordinate xCoordinate = getXAxis().getCoordinate();
@@ -469,14 +466,16 @@ public class ScatterPlotter extends TwoColumnPlotter {
             if (!xCell.isMissing() && !yCell.isMissing()) {
 
                 // temp variables for the coordinates
-                int x = (int)(xCoordinate.calculateMappedValue(xCell, width,
-                        true));
+                int x =
+                        (int)(xCoordinate.calculateMappedValue(xCell, width,
+                                true));
                 // translate the x position to the right to center it at its pos
                 x += m_dotSize;
                 // need to be transformed to lower left origin later on
                 // (see below)
-                int y = (int)(yCoordinate.calculateMappedValue(yCell, height,
-                        true));
+                int y =
+                        (int)(yCoordinate.calculateMappedValue(yCell, height,
+                                true));
                 // if one of the values is not a valid one set -1 for both
                 if (x < 0 || y < 0) {
                     dots[i].setXCoord(-1);
@@ -510,10 +509,12 @@ public class ScatterPlotter extends TwoColumnPlotter {
             // for jittering only 90% of the available space are used
             // to avoid that the dots of different nominal values touces each
             // other
-            int xAxisJitterRange = (int)(Math.round(xCoordinate
-                    .getUnusedDistBetweenTicks(width)) * 0.9);
-            int yAxisJitterRange = (int)(Math.round(yCoordinate
-                    .getUnusedDistBetweenTicks(height)) * 0.9);
+            int xAxisJitterRange =
+                    (int)(Math.round(xCoordinate
+                            .getUnusedDistBetweenTicks(width)) * 0.9);
+            int yAxisJitterRange =
+                    (int)(Math.round(yCoordinate
+                            .getUnusedDistBetweenTicks(height)) * 0.9);
             jitterDots(dots, xAxisJitterRange, yAxisJitterRange);
         }
         getScatterPlotterDrawingPane().setDotInfoArray(new DotInfoArray(dots));
@@ -554,8 +555,9 @@ public class ScatterPlotter extends TwoColumnPlotter {
                 yVal = dots[i].getYCoord();
 
                 // jitter the dot
-                int[] jitteredValues = jitterDot(xVal, yVal, xAxisJitterRange,
-                        yAxisJitterRange, j);
+                int[] jitteredValues =
+                        jitterDot(xVal, yVal, xAxisJitterRange,
+                                yAxisJitterRange, j);
 
                 dots[i].setXCoord(jitteredValues[0]);
                 dots[i].setYCoord(jitteredValues[1]);
@@ -619,9 +621,9 @@ public class ScatterPlotter extends TwoColumnPlotter {
 
         if (localJitterRange1 > 0 && jitterRange2 > 0) {
 
-            secondDimJitter = ((int)Math.floor(jitterNumber
-                    / (double)localJitterRange1))
-                    % jitterRange2;
+            secondDimJitter =
+                    ((int)Math.floor(jitterNumber / (double)localJitterRange1))
+                            % jitterRange2;
         } else {
             secondDimJitter = 0;
         }
@@ -663,12 +665,12 @@ public class ScatterPlotter extends TwoColumnPlotter {
         int absoluteChange = (int)Math.ceil(oneDimJitterNumber / 2.0);
 
         return absoluteChange * sideMultiplicator;
-    }    
-    
+    }
+
     private ScatterPlotterDrawingPane getScatterPlotterDrawingPane() {
         return (ScatterPlotterDrawingPane)getDrawingPane();
     }
-    
+
     /**
      * 
      * @return true if the drawing pane is a scatterplotter drawing pane.
@@ -676,11 +678,11 @@ public class ScatterPlotter extends TwoColumnPlotter {
     protected boolean isScatterPlotterDrawingPane() {
         return getDrawingPane() instanceof ScatterPlotterDrawingPane;
     }
-    
+
     private ScatterPlotterProperties getScatterPlotterProperties() {
         return (ScatterPlotterProperties)getProperties();
     }
-    
+
     /**
      * 
      * @return true if the properties are scatter plotter properties.
@@ -689,10 +691,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
         return getProperties() instanceof ScatterPlotterProperties;
     }
 
-
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter#updateSize()
+     * {@inheritDoc}
      */
     @Override
     public void updateSize() {
@@ -703,44 +703,34 @@ public class ScatterPlotter extends TwoColumnPlotter {
             getDrawingPane().repaint();
         }
     }
-    
-    
-
 
     /**
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter
-     * #selectElementsIn(java.awt.Rectangle)
+     * {@inheritDoc}
      */
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {
         if (isScatterPlotterDrawingPane()) {
-        getScatterPlotterDrawingPane().selectElementsIn(selectionRectangle.x,
-                selectionRectangle.y,
-                selectionRectangle.x + selectionRectangle.width,
-                selectionRectangle.y 
-                        + selectionRectangle.height);
+            getScatterPlotterDrawingPane().selectElementsIn(
+                    selectionRectangle.x, selectionRectangle.y,
+                    selectionRectangle.x + selectionRectangle.width,
+                    selectionRectangle.y + selectionRectangle.height);
         }
     }
-    
+
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter
-     * #selectClickedElement(java.awt.Point)
+     * {@inheritDoc}
      */
     @Override
     public void selectClickedElement(final Point p) {
         if (isScatterPlotterDrawingPane()) {
-        getScatterPlotterDrawingPane().selectElementsIn(
-                p.x - (m_dotSize / 2),
-                p.y - (m_dotSize / 2),
-                p.x + (m_dotSize / 2),
-                p.y + (m_dotSize / 2));
+            getScatterPlotterDrawingPane().selectElementsIn(
+                    p.x - (m_dotSize / 2), p.y - (m_dotSize / 2),
+                    p.x + (m_dotSize / 2), p.y + (m_dotSize / 2));
         }
     }
-    
+
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.basic.BasicPlotter#clearSelection()
+     * {@inheritDoc}
      */
     @Override
     public void clearSelection() {
@@ -749,11 +739,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
         }
     }
 
-
-
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void hiLiteSelected() {
@@ -762,10 +749,9 @@ public class ScatterPlotter extends TwoColumnPlotter {
                     .getSelectedDots(), true);
         }
     }
-    
+
     /**
-     * 
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLiteSelected()
+     * {@inheritDoc}
      */
     @Override
     public void unHiLiteSelected() {
@@ -774,8 +760,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
                     .getSelectedDots(), false);
         }
     }
-    
-    private void changeHiliteStateTo(final Set<DataCell> rowIds, 
+
+    private void changeHiliteStateTo(final Set<DataCell> rowIds,
             final boolean state) {
         if (state) {
             delegateHiLite(rowIds);
@@ -783,8 +769,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
             delegateUnHiLite(rowIds);
         }
         if (isScatterPlotterDrawingPane()) {
-            DotInfoArray dots = getScatterPlotterDrawingPane()
-                    .getDotInfoArray();
+            DotInfoArray dots =
+                    getScatterPlotterDrawingPane().getDotInfoArray();
             if (dots == null) {
                 return;
             }
@@ -797,14 +783,13 @@ public class ScatterPlotter extends TwoColumnPlotter {
         }
     }
 
-    
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
+     * {@inheritDoc}
      */
     public void unHiLiteAll() {
         if (isScatterPlotterDrawingPane()) {
-            DotInfoArray dotArray = getScatterPlotterDrawingPane()
-                    .getDotInfoArray();
+            DotInfoArray dotArray =
+                    getScatterPlotterDrawingPane().getDotInfoArray();
             if (dotArray == null) {
                 return;
             }
@@ -815,10 +800,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
         }
     }
 
-
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#hiLite(
-     * org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     @Override
     public void hiLite(final KeyEvent event) {
@@ -826,8 +809,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
     }
 
     /**
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#unHiLite(
-     * org.knime.core.node.property.hilite.KeyEvent)
+     * {@inheritDoc}
      */
     @Override
     public void unHiLite(final KeyEvent event) {

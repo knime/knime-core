@@ -25,8 +25,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
@@ -51,6 +53,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -67,13 +71,22 @@ public class ClusterNodeModel extends NodeModel {
     /** Constant for the RowKey generation and identification in the view. */
     public static final String CLUSTER = "cluster_";
 
-    private static final int INITIAL_NR_CLUSTERS = 3;
+    /** Constant for the initial number of clusters used in the dialog. */
+    public static final int INITIAL_NR_CLUSTERS = 3;
 
-    private static final int INITIAL_MAX_ITERATIONS = 99;
+    /** Constant for the initial number of iterations used in the dialog. */ 
+    public static final int INITIAL_MAX_ITERATIONS = 99;
 
+    /** Config key for the number of clusters. */
+    public static final String CFG_NR_OF_CLUSTERS = "nrClusters";
+    
+    /** Config key for the maximal number of iterations. */
+    public static final String CFG_MAX_ITERATIONS = "maxNrIterations";
+    
+    /** Config key for the used columns. */
+    public static final String CFG_COLUMNS = "cfgColmns";
+    
     private static final String SETTINGS_FILE_NAME = "kMeansInternalSettings";
-
-    private static final String CFG_NR_OF_CLUSTERS = "nrOfClusters";
 
     private static final String CFG_COVERAGE = "clusterCoverage";
 
@@ -82,9 +95,6 @@ public class ClusterNodeModel extends NodeModel {
     private static final String CFG_IGNORED_COLS = "ignoredColumns";
 
     private static final String CFG_CLUSTER = "kMeansCluster";
-
-    // information about the clusters
-    private int m_nrClusters; // number of clusters to be used
 
     private int m_dimension; // dimension of input space
 
@@ -99,8 +109,6 @@ public class ClusterNodeModel extends NodeModel {
 
     private int[] m_clusterCoverage; // #patterns covered by each cluster
 
-    // information controlling the algorithm's operation
-    private int m_maxNrIterations; // max number of iterations
 
     // mapping from cluster to covering data point
 
@@ -108,12 +116,12 @@ public class ClusterNodeModel extends NodeModel {
     
     private DefaultHiLiteMapper m_mapper;
 
-    // predictor params constants
 
     private DataTableSpec m_spec;
 
     private DataTableSpec m_appendedSpec;
 
+    // predictor params constants
     private static final String CFG_PROTOTYPES = "prototypes";
 
     private static final String CFG_PROTOTYPE = "prototype";
@@ -123,15 +131,28 @@ public class ClusterNodeModel extends NodeModel {
     private static final String CFG_FEATURE_NAMES = "FeatureNames";
     
     private static final String CFG_HILITEMAPPING = "HiLiteMapping";
+    
+    /*
+     * Use settings models and dialog components.
+     * Introduced a column filter.
+     * 02.05.2007 Dill
+     */
+    private SettingsModelIntegerBounded m_nrOfClusters 
+        = new SettingsModelIntegerBounded(CFG_NR_OF_CLUSTERS, 
+                INITIAL_NR_CLUSTERS, 1, Integer.MAX_VALUE);
+    
+    private SettingsModelIntegerBounded m_nrMaxIterations
+        = new SettingsModelIntegerBounded(CFG_MAX_ITERATIONS, 
+                INITIAL_MAX_ITERATIONS, 1, Integer.MAX_VALUE);
+    
+    private SettingsModelFilterString m_usedColumns 
+        = new SettingsModelFilterString(CFG_COLUMNS);
 
     /**
      * Constructor, remember parent and initialize status.
      */
     ClusterNodeModel() {
         super(1, 1, 0, 1); // specify one input, one output and one model
-        // output
-        m_nrClusters = INITIAL_NR_CLUSTERS;
-        m_maxNrIterations = INITIAL_MAX_ITERATIONS;
         m_mapper = null;
         m_translator = new HiLiteTranslator(new DefaultHiLiteHandler(),
                 m_mapper);
@@ -145,7 +166,7 @@ public class ClusterNodeModel extends NodeModel {
     }
     
     /**
-     * @see NodeModel#setInHiLiteHandler(int, HiLiteHandler)
+     * {@inheritDoc}
      */
     @Override
     protected void setInHiLiteHandler(final int inIndex, 
@@ -167,8 +188,9 @@ public class ClusterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         assert (settings != null);
-        settings.addInt("nrClusters", m_nrClusters);
-        settings.addInt("maxNrIterations", m_maxNrIterations);
+        m_nrOfClusters.saveSettingsTo(settings);
+        m_nrMaxIterations.saveSettingsTo(settings);
+        m_usedColumns.saveSettingsTo(settings);
     }
 
     /**
@@ -184,20 +206,14 @@ public class ClusterNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         assert (settings != null);
-        // check values for parameters - simply throw any exceptions
-        // from the config object to next caller of this function.
-        // number of clusters:
-        int newNrClusters = settings.getInt("nrClusters");
-        if (!((1 < newNrClusters) && (newNrClusters < 9999))) {
-            throw new InvalidSettingsException(
-                    "Value out of range for number of"
-                            + " clusters, must be in [1,9999]");
-        }
-        // maximum number of iterations:
-        int newMaxNrIterations = settings.getInt("maxNrIterations");
-        if (!((1 <= newMaxNrIterations) && (newMaxNrIterations < 9999))) {
-            throw new InvalidSettingsException("Value out of range for maximum"
-                    + " number of iterations, must be in [1,9999]");
+        m_nrOfClusters.validateSettings(settings);
+        m_nrMaxIterations.validateSettings(settings);
+        // if exception is thrown -> catch it, and remember it
+        // in configure set all numeric columns into includeList
+        try {
+            m_usedColumns.validateSettings(settings);
+        } catch (InvalidSettingsException ise) {
+            // do nothing: problably an old workflow
         }
     }
 
@@ -215,11 +231,13 @@ public class ClusterNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         assert (settings != null);
-        // set values for all (previously validated) parameters
-        // number of clusters:
-        m_nrClusters = settings.getInt("nrClusters");
-        // maximum number of iterations:
-        m_maxNrIterations = settings.getInt("maxNrIterations");
+        m_nrOfClusters.loadSettingsFrom(settings);
+        m_nrMaxIterations.loadSettingsFrom(settings);
+        try {
+            m_usedColumns.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            // do nothing, probably an old workflow
+        }
     }
 
     /**
@@ -228,7 +246,7 @@ public class ClusterNodeModel extends NodeModel {
      * @return number of clusters
      */
     int getNumClusters() {
-        return m_nrClusters;
+        return m_nrOfClusters.getIntValue();
     }
 
     /**
@@ -237,7 +255,7 @@ public class ClusterNodeModel extends NodeModel {
      * @param n number of clusters
      */
     void setNumClusters(final int n) {
-        m_nrClusters = n;
+        m_nrOfClusters.setIntValue(n);
     }
 
     /**
@@ -246,7 +264,7 @@ public class ClusterNodeModel extends NodeModel {
      * @return maximum number of iterations currently chosen
      */
     int getMaxNumIterations() {
-        return m_maxNrIterations;
+        return m_nrMaxIterations.getIntValue();
     }
 
     /**
@@ -255,7 +273,7 @@ public class ClusterNodeModel extends NodeModel {
      * @param i maximum number of iterations
      */
     void setMaxNumIterations(final int i) {
-        m_maxNrIterations = i;
+        m_nrMaxIterations.setIntValue(i);
     }
 
     /**
@@ -320,7 +338,7 @@ public class ClusterNodeModel extends NodeModel {
      * clusters. Currently the objective function only looks for cluster centers
      * that are extremely similar to the first n patterns...
      * 
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
@@ -334,24 +352,25 @@ public class ClusterNodeModel extends NodeModel {
         initialize(data[0]);
         // --------- create clusters --------------
         // reserve space for cluster center updates (do batch update!)
-        double[][] delta = new double[m_nrClusters][];
-        for (int c = 0; c < m_nrClusters; c++) {
+        double[][] delta = new double[m_nrOfClusters.getIntValue()][];
+        for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
             delta[c] = new double[m_dimension - m_nrIgnoredColumns];
         }
         // also keep counts of how many patterns fall in a specific cluster
-        m_clusterCoverage = new int[m_nrClusters];
+        m_clusterCoverage = new int[m_nrOfClusters.getIntValue()];
         // main loop - until clusters stop changing or maxNrIterations reached
         int currentIteration = 0;
         boolean finished = false;
-        while ((!finished) && (currentIteration < m_maxNrIterations)) {
+        while ((!finished) 
+                && (currentIteration < m_nrMaxIterations.getIntValue())) {
             if (exec != null) {
                 exec.checkCanceled();
                 exec.setProgress((double)currentIteration
-                        / (double)m_maxNrIterations, "Iteration "
+                        / (double)m_nrMaxIterations.getIntValue(), "Iteration "
                         + currentIteration);
             }
             // initialize counts and cluster-deltas
-            for (int c = 0; c < m_nrClusters; c++) {
+            for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
                 m_clusterCoverage[c] = 0;
                 delta[c] = new double[m_dimension - m_nrIgnoredColumns];
                 int deltaPos = 0;
@@ -392,7 +411,7 @@ public class ClusterNodeModel extends NodeModel {
                 nrOverallPatterns++;
             }
             // update cluster centers
-            for (int c = 0; c < m_nrClusters; c++) {
+            for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
                 if (m_clusterCoverage[c] > 0) {
                     // only update clusters who do cover some pattern:
                     int pos = 0;
@@ -447,27 +466,15 @@ public class ClusterNodeModel extends NodeModel {
     }
 
     private void initialize(final DataTable input) {
-        // Find out which columns we can use (must be Double compatible)
-        // Note that, for simplicity, we still use the entire dimensionality
-        // for cluster prototypes below and simply ignore useless columns.
-        m_ignoreColumn = new boolean[m_dimension];
-        m_nrIgnoredColumns = 0;
-        for (int i = 0; i < m_dimension; i++) {
-            m_ignoreColumn[i] = !(input.getDataTableSpec().getColumnSpec(i)
-                    .getType().isCompatible(DoubleValue.class));
-            if (m_ignoreColumn[i]) {
-                m_nrIgnoredColumns++;
-            }
-        }
         // initialize matrix of double (nr clusters * input dimension)
-        m_clusters = new double[m_nrClusters][];
-        for (int c = 0; c < m_nrClusters; c++) {
+        m_clusters = new double[m_nrOfClusters.getIntValue()][];
+        for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
             m_clusters[c] = new double[m_dimension - m_nrIgnoredColumns];
         }
         // initialize cluster centers with values of first rows in table
         RowIterator rowIt = input.iterator();
         int c = 0;
-        while (rowIt.hasNext() && c < m_nrClusters) {
+        while (rowIt.hasNext() && c < m_nrOfClusters.getIntValue()) {
             DataRow currentRow = rowIt.next();
             int pos = 0;
             for (int i = 0; i < currentRow.getNumCells(); i++) {
@@ -493,7 +500,7 @@ public class ClusterNodeModel extends NodeModel {
         // find closest cluster center
         int winner = -1; // closest cluster so far
         double winnerDistance = Double.MAX_VALUE; // best distance
-        for (int c = 0; c < m_nrClusters; c++) {
+        for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
             double distance = 0.0;
             int pos = 0;
             for (int i = 0; i < m_dimension; i++) {
@@ -523,8 +530,7 @@ public class ClusterNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#saveModelContent(int,
-     *      ModelContentWO)
+     * {@inheritDoc}
      */
     @Override
     protected void saveModelContent(final int index,
@@ -539,7 +545,7 @@ public class ClusterNodeModel extends NodeModel {
             }
         }
         clusterConfig.addStringArray(CFG_USED_COLS, colsUsed);
-        for (int c = 0; c < m_nrClusters; c++) {
+        for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
             clusterConfig.addDoubleArray(CFG_PROTOTYPE + c, m_clusters[c]);
         }
     }
@@ -571,24 +577,53 @@ public class ClusterNodeModel extends NodeModel {
         assert (inSpecs.length == 1);
         // input is output spec with all double compatible values set to
         // Double.
-
         m_dimension = inSpecs[0].getNumColumns();
         m_spec = inSpecs[0];
         // Find out which columns we can use (must be Double compatible)
         // Note that, for simplicity, we still use the entire dimensionality
         // for cluster prototypes below and simply ignore useless columns.
-        boolean[] ignoreColumn = new boolean[m_dimension];
-        int nrIgnoredColumns = 0;
+        m_ignoreColumn = new boolean[m_dimension];
+        m_nrIgnoredColumns = 0;
+        
+        // if not configured yet fill include list with 
+        // double compatible columns
+        if (m_usedColumns.getIncludeList().size() == 0 
+                && m_usedColumns.getExcludeList().size() == 0) {
+            List<String> includedColumns = new ArrayList<String>();
+            List<String> excludedColumns = new ArrayList<String>();
+            for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
+                DataColumnSpec colSpec = inSpecs[0].getColumnSpec(i);
+                if (colSpec.getType().isCompatible(DoubleValue.class)) {
+                    includedColumns.add(colSpec.getName());        
+                } else {
+                    excludedColumns.add(colSpec.getName());
+                }
+            }
+            // set all double compatible columns as include list
+            m_usedColumns.setIncludeList(includedColumns);
+            m_usedColumns.setExcludeList(excludedColumns);
+        }
+        // add all excluded columns to the ignore list
         for (int i = 0; i < m_dimension; i++) {
-            ignoreColumn[i] = !(inSpecs[0].getColumnSpec(i).getType()
-                    .isCompatible(DoubleValue.class));
-            if (ignoreColumn[i]) {
-                nrIgnoredColumns++;
+            // ignore if not compatible with double
+            m_ignoreColumn[i] = !(inSpecs[0].getColumnSpec(i).getType()
+                    .isCompatible(DoubleValue.class)) 
+                    || 
+                    //  or if it is in the exclude list:
+                    m_usedColumns.getExcludeList()
+                    .contains(inSpecs[0].getColumnSpec(i).getName());
+            if (m_ignoreColumn[i]) {
+                m_nrIgnoredColumns++;
             }
         }
+        // check if some columns are included
+        if (m_usedColumns.getIncludeList().size() <= 0) {
+            setWarningMessage("No column in include list! " 
+                    + "Produces one huge cluster");
+        }
         // determine the possible values of the appended column
-        DataCell[] possibleValues = new DataCell[m_nrClusters];
-        for (int i = 0; i < m_nrClusters; i++) {
+        DataCell[] possibleValues = new DataCell[m_nrOfClusters.getIntValue()];
+        for (int i = 0; i < m_nrOfClusters.getIntValue(); i++) {
             DataCell key = new StringCell(CLUSTER + i);
             possibleValues[i] = key;
         }
@@ -614,8 +649,7 @@ public class ClusterNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #loadInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void loadInternals(final File internDir,
@@ -624,12 +658,11 @@ public class ClusterNodeModel extends NodeModel {
         FileInputStream in = new FileInputStream(settingsFile);
         NodeSettingsRO settings = NodeSettings.loadFromXML(in);
         try {
-            m_nrClusters = settings.getInt(CFG_NR_OF_CLUSTERS);
             m_dimension = settings.getInt(CFG_DIMENSION);
             m_nrIgnoredColumns = settings.getInt(CFG_IGNORED_COLS);
             m_clusterCoverage = settings.getIntArray(CFG_COVERAGE);
-            m_clusters = new double[m_nrClusters][m_dimension];
-            for (int i = 0; i < m_nrClusters; i++) {
+            m_clusters = new double[m_nrOfClusters.getIntValue()][m_dimension];
+            for (int i = 0; i < m_nrOfClusters.getIntValue(); i++) {
                 m_clusters[i] = settings.getDoubleArray(CFG_CLUSTER + i);
             }
             try {
@@ -637,7 +670,8 @@ public class ClusterNodeModel extends NodeModel {
                 // ignore and set mapper to null if info is not available.
                 // (fixes bug #1016)
                 m_featureNames = settings.getStringArray(CFG_FEATURE_NAMES);
-                NodeSettingsRO mapSet = settings.getNodeSettings(CFG_HILITEMAPPING);
+                NodeSettingsRO mapSet = settings.getNodeSettings(
+                        CFG_HILITEMAPPING);
                 m_mapper = DefaultHiLiteMapper.load(mapSet);
                 m_translator.setMapper(m_mapper);
             } catch (InvalidSettingsException e) {
@@ -650,19 +684,17 @@ public class ClusterNodeModel extends NodeModel {
     }
 
     /**
-     * @see org.knime.core.node.NodeModel
-     *      #saveInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     protected void saveInternals(final File internDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         NodeSettings internalSettings = new NodeSettings("kMeans");
-        internalSettings.addInt(CFG_NR_OF_CLUSTERS, m_nrClusters);
         internalSettings.addInt(CFG_DIMENSION, m_dimension);
         internalSettings.addInt(CFG_IGNORED_COLS, m_nrIgnoredColumns);
         internalSettings.addIntArray(CFG_COVERAGE, m_clusterCoverage);
-        for (int i = 0; i < m_nrClusters; i++) {
+        for (int i = 0; i < m_nrOfClusters.getIntValue(); i++) {
             internalSettings.addDoubleArray(CFG_CLUSTER + i, m_clusters[i]);
         }
         internalSettings.addStringArray(CFG_FEATURE_NAMES, m_featureNames);

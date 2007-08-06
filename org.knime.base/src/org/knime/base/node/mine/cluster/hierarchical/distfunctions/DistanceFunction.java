@@ -52,9 +52,10 @@ public interface DistanceFunction extends Serializable {
      * 
      * @param firstDataRow the first data row used to calculate the distance
      * @param secondDataRow the second data row used to calculate the distance
+     * @param includedCols the columns to use for the distance calculation
      * 
      * @return the distance of the two rows
      */
-    public double calcDistance(DataRow firstDataRow, DataRow secondDataRow);
-    
+    public double calcDistance(DataRow firstDataRow, DataRow secondDataRow,
+            int[] includedCols);    
 }

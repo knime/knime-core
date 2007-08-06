@@ -141,20 +141,16 @@ public abstract class NodeFactory {
 
     static {
         try {
-            String imagePath = "./default.png";
-            if (!imagePath.startsWith("/")) {
-                imagePath =
-                        NodeFactory.class.getPackage().getName().replace('.',
-                                '/')
-                                + "/" + imagePath;
-            }
+            String imagePath =
+                    NodeFactory.class.getPackage().getName().replace('.', '/')
+                            + "/default.png";
 
             URL iconURL =
                     NodeFactory.class.getClassLoader().getResource(imagePath);
 
             defaultIcon = iconURL;
         } catch (Exception ioe) {
-            LOGGER.error("Default icon could not be read.");
+            LOGGER.error("Default icon could not be read.", ioe);
         }
     }
 
@@ -625,7 +621,8 @@ public abstract class NodeFactory {
      * @return an input port description
      */
     public String getInportDataName(final int index) {
-        if (m_inDataPorts == null) {
+        if ((m_inDataPorts == null) || (index >= m_inDataPorts.size())
+                || (m_inDataPorts.get(index) == null)) {
             return "";
         } else {
             return m_inDataPorts.get(index);
@@ -639,7 +636,8 @@ public abstract class NodeFactory {
      * @return an output port description
      */
     public String getOutportDataName(final int index) {
-        if (m_outDataPorts == null) {
+        if ((m_outDataPorts == null) || (index >= m_outDataPorts.size())
+                || (m_outDataPorts.get(index) == null)) {
             return "";
         } else {
             return m_outDataPorts.get(index);
@@ -653,7 +651,8 @@ public abstract class NodeFactory {
      * @return an predictor parameter input port description
      */
     public String getInportModelName(final int index) {
-        if (m_modelIns == null) {
+        if ((m_modelIns == null) || (index >= m_modelIns.size())
+                || (m_modelIns.get(index) == null)) {
             return "";
         } else {
             return m_modelIns.get(index);
@@ -667,7 +666,8 @@ public abstract class NodeFactory {
      * @return an predictor parameter output port description
      */
     public String getOutportModelName(final int index) {
-        if (m_modelOuts == null) {
+        if ((m_modelOuts == null) || (index >= m_modelOuts.size())
+                || (m_modelOuts.get(index) == null)) {
             return "";
         } else {
             return m_modelOuts.get(index);
@@ -681,7 +681,8 @@ public abstract class NodeFactory {
      * @return an input port description
      */
     public final String getInportDataDescription(final int index) {
-        if (m_inDataPortsDesc == null) {
+        if ((m_inDataPortsDesc == null) || (index >= m_inDataPortsDesc.size())
+                || (m_inDataPortsDesc.get(index) == null)) {
             return "No description available";
         } else {
             return m_inDataPortsDesc.get(index);
@@ -695,7 +696,8 @@ public abstract class NodeFactory {
      * @return an output port description
      */
     public final String getOutportDataDescription(final int index) {
-        if (m_outDataPortsDesc == null) {
+        if ((m_outDataPortsDesc == null) || (index >= m_outDataPortsDesc.size())
+                || (m_outDataPortsDesc.get(index) == null)) {
             return "No description available";
         } else {
             return m_outDataPortsDesc.get(index);
@@ -709,7 +711,8 @@ public abstract class NodeFactory {
      * @return an predictor parameter input port description
      */
     public final String getInportModelDescription(final int index) {
-        if (m_modelInsDesc == null) {
+        if ((m_modelInsDesc == null) || (index >= m_modelInsDesc.size())
+                || (m_modelInsDesc.get(index) == null)) {
             return "No description available";
         } else {
             return m_modelInsDesc.get(index);
@@ -723,7 +726,8 @@ public abstract class NodeFactory {
      * @return an predictor parameter output port description
      */
     public final String getOutportModelDescription(final int index) {
-        if (m_modelOutsDesc == null) {
+        if ((m_modelOutsDesc == null) || (index >= m_modelOutsDesc.size())
+                || (m_modelOutsDesc.get(index) == null)) {
             return "No description available";
         } else {
             return m_modelOutsDesc.get(index);

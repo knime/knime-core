@@ -30,7 +30,6 @@ import java.util.Set;
 
 import org.knime.core.data.DataCell;
 
-
 /**
  * A translator for hilite events between two {@link HiLiteHandler}s, 
  * the source hilite handler has to be set during creating of this object, 
@@ -40,7 +39,8 @@ import org.knime.core.data.DataCell;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class HiLiteTranslator implements HiLiteListener {
+public class HiLiteTranslator {
+    
     /** Handlers where to fire events to. Contains the patterns. */
     private final Set<HiLiteHandler> m_toHandlers;
     
@@ -50,14 +50,74 @@ public class HiLiteTranslator implements HiLiteListener {
     /** Containing cluster to pattern mapping. */
     private HiLiteMapper m_mapper;
     
-    
-    /** Listener that sends events back in the opposite direction. */
-    private final HiLiteListener m_sendBackListener;
+    /** Listener used to forward events from the from-handler to all
+     * registered to-handlers.
+     */
+    private final HiLiteListener m_fromHiLiteListener = new HiLiteListener() {
+
+        public void hiLite(final KeyEvent event) {
+            if (m_mapper != null && m_toHandlers.size() > 0) {
+                HashSet<DataCell> fireSet = new HashSet<DataCell>();
+                for (DataCell key : event.keys()) {
+                    if (key != null) {
+                        Set<DataCell> s = m_mapper.getKeys(key);
+                        if (s != null && !s.isEmpty()) {
+                            fireSet.addAll(s);
+                        }
+                    }     
+                }
+                if (!fireSet.isEmpty()) {
+                    for (HiLiteHandler h : m_toHandlers) {
+                        h.fireHiLiteEvent(fireSet);
+                    }
+                }
+            }
+        }
+
+        public void unHiLite(final KeyEvent event) {
+            if (m_mapper != null && m_toHandlers.size() > 0) {
+                HashSet<DataCell> fireSet = new HashSet<DataCell>();
+                for (DataCell key : event.keys()) {
+                    if (key != null) {
+                        Set<DataCell> s = m_mapper.getKeys(key);
+                        if (s != null && !s.isEmpty()) {
+                            fireSet.addAll(s);
+                        }
+                    }     
+                }
+                if (!fireSet.isEmpty()) {
+                    for (HiLiteHandler h : m_toHandlers) {
+                        h.fireUnHiLiteEvent(fireSet);
+                    }
+                }
+            }
+        }
+
+        public void unHiLiteAll() {
+            for (HiLiteHandler h : m_toHandlers) {
+                h.fireClearHiLiteEvent();
+            }
+        }
+    };
+        
+    /** Listener that sends clear hilite events to the from handler. Used 
+     * to propagate clear events. */
+    private final HiLiteListener m_sendBackListener = new HiLiteListener() {
+        public void hiLite(final KeyEvent event) { /* do nothing */ }
+        public void unHiLite(final KeyEvent event) { /* do nothing */ }
+        public void unHiLiteAll() {
+            // to avoid that the event travels forth and back
+            // do a check here if there is still something to unhilite
+            if (m_fromHandler.getHiLitKeys().size() > 0) {
+                m_fromHandler.fireClearHiLiteEvent();
+            }
+        }
+    };
     
     /**
      * Default constructor with no hilite handler and no initial mapping to
-     * translate. This instance will add itself as listener to the
-     * <code>fromHandler</code>.
+     * translate. This instance will add its own private listener to the
+     * <code>fromHandler</code>. 
      * 
      * @param fromHandler the handler to translate events from
      */
@@ -66,21 +126,8 @@ public class HiLiteTranslator implements HiLiteListener {
             throw new IllegalArgumentException("Handler must not be null.");
         }
         m_fromHandler = fromHandler;
-        m_fromHandler.addHiLiteListener(this);
         m_toHandlers = new LinkedHashSet<HiLiteHandler>();
         m_mapper = null;
-        
-        m_sendBackListener = new HiLiteListener() {
-            public void hiLite(final KeyEvent event) { /* do nothing */ }
-            public void unHiLite(final KeyEvent event) { /* do nothing */ }
-            public void unHiLiteAll() {
-                // to avoid that the event travels forth and back
-                // do a check here if there is still something to unhilite
-                if (m_fromHandler.getHiLitKeys().size() > 0) {
-                    m_fromHandler.fireClearHiLiteEvent();
-                }
-            }
-        };
     }
     
     /**
@@ -116,7 +163,9 @@ public class HiLiteTranslator implements HiLiteListener {
     }
         
     /**
-     * Removes a <code>HiLiteHandler</code> from "to"-set.
+     * Removes the <code>HiLiteHandler</code> from the list of registered 
+     * hilite handlers and removes the private from-listener from the 
+     * from-handler when the list is empty.
      * 
      * @param toHandler the hilite handler to remove
      */
@@ -124,16 +173,24 @@ public class HiLiteTranslator implements HiLiteListener {
         if (toHandler != null) {
             m_toHandlers.remove(toHandler);
             toHandler.removeHiLiteListener(m_sendBackListener);
+            if (m_toHandlers.isEmpty()) {
+                m_fromHandler.removeHiLiteListener(m_fromHiLiteListener);
+            }
         }
     }    
 
     /**
-     * Adds a <code>HiLiteHandler</code>.
+     * Adds the <code>HiLiteHandler</code> to the list of registered 
+     * hilite handlers and adds the private from-listener to the from-handler
+     * when this list is not empty.
      * 
      * @param toHandler the new to-hilite handler to add
      */
     public void addToHiLiteHandler(final HiLiteHandler toHandler) {
         if (toHandler != null) {
+            if (m_toHandlers.isEmpty()) {
+                m_fromHandler.addHiLiteListener(m_fromHiLiteListener);
+            }
             m_toHandlers.add(toHandler);
             toHandler.addHiLiteListener(m_sendBackListener);
         }
@@ -149,7 +206,7 @@ public class HiLiteTranslator implements HiLiteListener {
     }
     
     /**
-     * Removes all receiving hilite handlers from this translator. To be
+     * Removes all to-hilite handlers from this translator. To be
      * used from the node that instantiates this instance when a new 
      * connection is made. 
      */
@@ -158,6 +215,7 @@ public class HiLiteTranslator implements HiLiteListener {
             hh.removeHiLiteListener(m_sendBackListener);
         }
         m_toHandlers.clear();
+        m_fromHandler.removeHiLiteListener(m_fromHiLiteListener);
     }
 
     /**
@@ -169,56 +227,4 @@ public class HiLiteTranslator implements HiLiteListener {
         return m_fromHandler;
     }
 
-    /**
-     * @see HiLiteListener#hiLite(KeyEvent)
-     */
-    public void hiLite(final KeyEvent event) {
-        if (m_mapper != null && m_toHandlers.size() > 0) {
-            HashSet<DataCell> fireSet = new HashSet<DataCell>();
-            for (DataCell key : event.keys()) {
-                if (key != null) {
-                    Set<DataCell> s = m_mapper.getKeys(key);
-                    if (s != null && !s.isEmpty()) {
-                        fireSet.addAll(s);
-                    }
-                }     
-            }
-            if (!fireSet.isEmpty()) {
-                for (HiLiteHandler h : m_toHandlers) {
-                    h.fireHiLiteEvent(fireSet);
-                }
-            }
-        }
-    }
-
-    /**
-     * @see HiLiteListener#unHiLite(KeyEvent)
-     */
-    public void unHiLite(final KeyEvent event) {
-        if (m_mapper != null && m_toHandlers.size() > 0) {
-            HashSet<DataCell> fireSet = new HashSet<DataCell>();
-            for (DataCell key : event.keys()) {
-                if (key != null) {
-                    Set<DataCell> s = m_mapper.getKeys(key);
-                    if (s != null && !s.isEmpty()) {
-                        fireSet.addAll(s);
-                    }
-                }     
-            }
-            if (!fireSet.isEmpty()) {
-                for (HiLiteHandler h : m_toHandlers) {
-                    h.fireUnHiLiteEvent(fireSet);
-                }
-            }
-        }
-    }
-
-    /**
-     * @see HiLiteListener#unHiLiteAll()
-     */
-    public void unHiLiteAll() {
-        for (HiLiteHandler h : m_toHandlers) {
-            h.fireClearHiLiteEvent();
-        }
-    }
 }

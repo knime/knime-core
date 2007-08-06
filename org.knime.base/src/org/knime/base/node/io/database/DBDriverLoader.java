@@ -66,7 +66,8 @@ final class DBDriverLoader {
         DRIVER_TO_URL.put("com.ibm.db2.jcc.DB2Driver", "jdbc:db2:");
         DRIVER_TO_URL.put("org.firebirdsql.jdbc.FBDriver", "jdbc:firebirdsql:");
         DRIVER_TO_URL.put("com.mysql.jdbc.Driver", "jdbc:mysql:");
-        DRIVER_TO_URL.put("oracle.jdbc.driver.OracleDriver", "jdbc:mysql:thin:");
+        DRIVER_TO_URL.put(
+                "oracle.jdbc.driver.OracleDriver", "jdbc:mysql:thin:");
         DRIVER_TO_URL.put("org.postgresql.Driver", "jdbc:postgresql:");
         DRIVER_TO_URL.put("com.microsoft.sqlserver.jdbc.SQLServerDriver", 
                 "jdbc:sqlserver:");
@@ -174,7 +175,7 @@ final class DBDriverLoader {
     private static void readZip(final File file, final ZipFile zipFile) 
             throws Exception {
         final ClassLoader cl = new URLClassLoader(
-                new URL[]{file.toURL()}, CLASS_LOADER);
+                new URL[]{file.toURI().toURL()}, CLASS_LOADER);
         for (Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
             zipEntries.hasMoreElements();) {
             ZipEntry e = zipEntries.nextElement();

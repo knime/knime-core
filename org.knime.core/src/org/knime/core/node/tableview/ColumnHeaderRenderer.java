@@ -49,8 +49,7 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
     private boolean m_showIcon = true;
 
     /**
-     * @see javax.swing.table.TableCellRenderer#getTableCellRendererComponent(
-     *      JTable, Object, boolean, boolean, int, int)
+     * {@inheritDoc}
      */
     @Override
     public Component getTableCellRendererComponent(final JTable table, 
@@ -78,6 +77,7 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
         } else {
             setIcon(null);
         }
+        setToolTipText(newValue != null ? newValue.toString() : null);
         setValue(newValue);
         return this;
     }
@@ -95,5 +95,5 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
     public void setShowIcon(final boolean showIcon) {
         m_showIcon = showIcon;
     }
-
+    
 }

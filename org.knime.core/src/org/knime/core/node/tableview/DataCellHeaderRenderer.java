@@ -64,8 +64,7 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
     } // DataCellHeaderRenderer()
     
     /**
-     * @see javax.swing.table.TableCellRenderer#getTableCellRendererComponent(
-     * javax.swing.JTable,java.lang.Object, boolean, boolean, int, int)
+     * {@inheritDoc}
      */
     @Override
     public Component getTableCellRendererComponent(final JTable table,
@@ -77,7 +76,7 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
     }
     
     /**
-     * @see java.awt.Component#setBounds(int, int, int, int)
+     * {@inheritDoc}
      */
     @Override
     public void setBounds(
@@ -174,14 +173,14 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         private Color m_color = Color.WHITE;
 
         /**
-         * @see javax.swing.Icon#getIconHeight()
+         * {@inheritDoc}
          */
         public int getIconHeight() {
             return m_height;
         }
         
         /**
-         * @see javax.swing.Icon#getIconWidth()
+         * {@inheritDoc}
          */
         public int getIconWidth() {
             return m_width;
@@ -212,8 +211,7 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         }
 
         /**
-         * @see javax.swing.Icon#paintIcon(
-         *      java.awt.Component, java.awt.Graphics, int, int)
+         * {@inheritDoc}
          */
         public void paintIcon(
             final Component c, final Graphics g, final int x, final int y) {

@@ -149,28 +149,28 @@ public class FrequentItemSetRow implements DataRow {
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getNumCells()
+     * {@inheritDoc}
      */
     public int getNumCells() {
         return m_length + 1;
     }
 
     /**
-     * @see java.lang.Iterable#iterator()
+     * {@inheritDoc}
      */
     public Iterator<DataCell> iterator() {
         return new DefaultCellIterator(this);
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getKey()
+     * {@inheritDoc}
      */
     public RowKey getKey() {
         return m_key;
     }
 
     /**
-     * @see org.knime.core.data.DataRow#getCell(int)
+     * {@inheritDoc}
      */
     public DataCell getCell(final int index) {
         return m_cells[index];

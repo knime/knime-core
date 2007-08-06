@@ -48,8 +48,8 @@ public final class NodeSettings extends Config
         super(key);
     }
     
-    /** 
-     * @see org.knime.core.node.config.Config#getInstance(java.lang.String)
+    /**
+     * {@inheritDoc}
      */
     @Override
     public Config getInstance(final String key) {
@@ -81,26 +81,23 @@ public final class NodeSettings extends Config
     }
 
 
-    /** 
-     * @see org.knime.core.node.NodeSettingsWO
-     *  #addNodeSettings(java.lang.String)
+    /**
+     * {@inheritDoc}
      */
     public NodeSettingsWO addNodeSettings(final String key) {
         return (NodeSettings)super.addConfig(key);
     }
 
     /**
-     * @see org.knime.core.node.NodeSettingsWO
-     * #addNodeSettings(org.knime.core.node.NodeSettings)
+     * {@inheritDoc}
      */
     public void addNodeSettings(final NodeSettings settings) {
         super.addConfig(settings);
     }
 
 
-    /** 
-     * @see org.knime.core.node.NodeSettingsRO
-     *  #getNodeSettings(java.lang.String)
+    /**
+     * {@inheritDoc}
      */
     public NodeSettings getNodeSettings(final String key)
             throws InvalidSettingsException {

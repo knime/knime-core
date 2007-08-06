@@ -40,7 +40,7 @@ and links to already existing views (<a href="#impl">Implementations</a>).
 <h2><a name="overview">Overview</a></h2>
 <p>
 The basic elements of the visualization framework is a so-called plotter. A 
-plotter consists of four components:
+plotter consists of four components:</p>
 <ul>
 <li>the plotter itself,</li>
 <li>an embedded scroll pane (which is not visible and acessible to deriving classes),</li>
@@ -48,11 +48,10 @@ plotter consists of four components:
 <li>and the properties panel which provides interactive control elements for the view.</li>
 </ul>
 Illustration 1 displays the arrangement of these components.
-</p>
 <img src="overviewPic.png" alt="The combination of the above listet plotter elements" />
 <p>
 In the following the scroll pane is ignored since it is transparent to the user.
-The remaing three components follow the Model-View-Controller pattern. 
+The remaining three components follow the Model-View-Controller pattern. 
 </p>
 
 <h3>Plotter</h3>
@@ -102,24 +101,24 @@ over the three abstract layers, which are described in the following.
 <h4>AbstractPlotter</h4>
 <p>
 The core of the visualization framework is the AbstractPlotter. It provides all 
-core functionality common to all plotters in the visualization framework, i.e.
+core functionality common to all plotters in the visualization framework, i.e.</p>
 <ul>
 <li>selection,</li>
 <li>zooming and</li>
 <li>moving the zoomed drawing pane.</li>
 </ul>
+<p>
 The zooming, moving and resizing is all done in the abstract plotter. Since the 
 selection depends on the displayed elements the selection mouse events are 
-forwarded to the methods
+forwarded to the methods</p>
 <pre>
 selectClickedElement(Point p)
 selectElementsIn(Rectangle r)
 clearSelection()
 </pre>
-</p>
 <p>
 The AbstractPlotter is also responsible for the HiLiting. It holds a 
-HiLiteHandler which is accessible via the delegate methods
+HiLiteHandler which is accessible via the delegate methods</p>
 <pre>
 delegateAddHiLiteListener
 delegateGetHiLiteKeys
@@ -130,22 +129,21 @@ delegateRemoveHiLiteListener
 delegateUnHiLite
 delegateUnHiLiteAll
 </pre>
-
-Since the hiliting depends on the underlying elements the HiLiteListener methods are abstract:
+<p>
+Since the hiliting depends on the underlying elements the HiLiteListener methods are abstract:</p>
 <pre>
 hiLite
 hiLiteSelected
 unHiLite
 unHiLiteSelected
 </pre>
-</p>
 <p>
-The most important abstract methods of the AbstractPlotter are
+The most important abstract methods of the AbstractPlotter are</p>
 <pre>
 updatePaintModel and
 updateSize
 </pre>
-
+<p>
 In the updatePaintModel a new model is available: new selection of columns, 
 new underlying dataset or whatever and the mapping of all data has to be done, 
 properties have to be updated and so on. In updateSize only the size of the 
@@ -153,41 +151,41 @@ plotter has changed and only the mapping has to be re-calculated.
 The mapping is done with the help of the axes. An axis holds a coordinate which 
 is responsible for the mapping from domain values to mapped values. A coordinate 
 is created with a DataColumnSpec (numeric columns must contain the lower and 
-upper bound, nominal columns must contain the possible values)
+upper bound, nominal columns must contain the possible values)</p>
 <pre>
 Coordinate.createCoordinate(DataColumnSpec colSpec)
 </pre>
-
-Other possibilities to create the coordinates are:
+<p>
+Other possibilities to create the coordinates are:</p>
 <pre>
 createXCoordinate(double min, double max)
 createXCoordinate(int min, int max)
 createNominalXCoordinate(Set&lt;DataCell&gt; possibleValues)
 </pre>
+<p>
 Same methods are available for the y axis.
 
-The mapped value can be retrieved with
+The mapped value can be retrieved with</p>
 <pre>
 getMappedXValue(DataCell domainValue)
 getMappedYValue(DataCell domainValue)
 </pre>
-</p>
 
 <p>
-The AbstractPlotter itselft doesn't create any axes or coordinates but provides 
+The AbstractPlotter itself doesn't create any axes or coordinates but provides 
 all functionality to do so. Still unanswered is the question how the plotter can 
-access the data to visualize, escpecially how the connection to the underlying 
+access the data to visualize, especially how the connection to the underlying 
 NodeModel is realized. For this purpose a new interface DataProvider was introduced. 
-The DataProvider has one method:
+The DataProvider has one method:</p>
 <pre>
 getDataArray(int index)
 </pre>
-
+<p>
 A NodeModel implementing this interface should convert the input data into a 
 DataArray and return it in this method. The index allows several different data 
 arrays , e.g. from different inports, in the plotter to be visualized.
 Even if your node creates a visualization model of the data which doesn't fit 
-into a DataArray and there is no need to implemenet the DataProvider interface, 
+into a DataArray and there is no need to implement the DataProvider interface, 
 the way how NodeModel, NodeView and Plotter are connected should be the same and is 
 described in the following.
 </p>
@@ -208,11 +206,11 @@ create a new NodeView with a new Plotter.
 <h4>AbstractDrawingPane</h4>
 <p>
 As pointed out above the drawing pane simply draws the mapped elements, hence, 
-the single abstract method to implement is 
+the single abstract method to implement is</p>
 <pre>
 paintContent(Graphics g)
 </pre>
-
+<p>
 This means that the data structures to be visualized have to be stored in the drawing pane. 
 </p>
 
@@ -230,14 +228,14 @@ add your own tab.
 The idea behind the BasicPlotter is to provide a small fraction of the 
 functionality known from &quot;R&quot; or &quot;GnuPlot&quot;. If you have 
 some basic elements, such as lines, ellipses, rectangles, you want to add to 
-your view you can use the BasicPlotter. 
+your view you can use the BasicPlotter.</p>
 <pre>
 addLine(double[] yValues, Color color, Stroke stroke)
 addLine(double[] xValues, double[] yValues, Color color, Stroke stroke)
 addRectangle(double x, double y, int width, int height, Color color, Stroke stroke, boolean filled)
 addEllipse(double xCenter, double yCenter, double width, double height, Color color, Stroke stroke, boolean filled)
 </pre>
-
+<p>
 The usage of the BasicPlotter methods only makes sense, if you know the domain 
 values of the elements but have no clue about the mapped values. One example is 
 a ScatterPlot where you want to add a regression line. Here you only know the 
@@ -254,12 +252,11 @@ addLine(DataArray data, int columnIndex, Color color, Stroke stroke)
 </p>
 <p>
 If you want to add a specific element to the basic plotter you can extend the 
-BasicDrawingElement or the Basic2DDrawingElement (described below) with 
+BasicDrawingElement or the Basic2DDrawingElement (described below) with</p>
 
 <pre>
 addBasicDrawingElement(BasicDrawingElement element)
 </pre>
-</p>
 
 <h4>BasicDrawingElement and Basic2DDrawingElement</h4>
 <p>
@@ -278,13 +275,12 @@ or fill the shape.
 <h4>BasicDrawingPane</h4>
 <p>
 You can add BasicDrawingElements to the BasicDrawingPane, get them and clear the 
-BasicDrawingElements with the following methods:
+BasicDrawingElements with the following methods:</p>
 <pre>
 addDrawingElement(BasicDrawingElement element)
 getDrawingElements()
 clearPlot()
 </pre>
-</p>
 
 <h4>TwoColumnPlotter</h4>
 <p>
@@ -302,7 +298,7 @@ updatePaintModel is called, whenever the column selection changes.
 <p>
 As already mentioned, the Properties are organized in tabs, i.e. for each 
 specific plotter property exist a tab which can easily be reused if the same 
-adjusments are needed for your implementation. For example the ScatterMatrix 
+adjustments are needed for your implementation. For example the ScatterMatrix 
 uses the same properties for the appearance but obviously a different column 
 selection mechanism.
 </p>
@@ -320,19 +316,19 @@ or NominalValue and NominalValues with no or more than 60 possible values.
 </p>
 <p>
 The DefaultVisualizationNodeView comes with two different constructors, each 
-taking a plotter as an argument:
+taking a plotter as an argument:</p>
 <pre>
 DefaultVisualizationNodeView(NodeModel model, AbstractPlotter plotter)
 DefaultVisualizationNodeView(NodeModel model, AbstractPlotter plotter, String title)
 </pre>
-
+<p>
 The difference between the two constructors is, that the latter places the 
 plotter in a tab with the passes title. You may add additional plotters to the 
-NodeView using
+NodeView using</p>
 <pre>
 addVisualization(AbstractPlotter plotter, String title)
 </pre>
-
+<p>
 which puts the passed plotter in a tab with the passed title and adds it to the NodeView.
 The DefaultVisualizationNodeView maintains the plotters, i. e. sets the model as 
 the DataProvider, gets the HiliteHandler from the model and adds it to the plotter, etc. 
@@ -342,7 +338,7 @@ return the DefaultNodeModel as the NodeModel and the DefaultVisualizationNodeVie
 with your plotter as the NodeView.
 </p>
 <p>
-If the DefaultVisualizationNodeView doesn't fit your needs you have to take care that:
+If the DefaultVisualizationNodeView doesn't fit your needs you have to take care that:</p>
 <ul>
 <li>Each NodeView has its own plotter instances: visual components can not be shared!</li>
 <li>If you want to support hiliting the hilite menu has to be set in the NodeView's constructor with:
@@ -360,7 +356,6 @@ getJMenuBar().add(plotter.getHiLiteMenu());
 </ol>
 </li>
 </ul>
-</p>
 
 
 <h2><a name="impl">Implementations</a></h2>

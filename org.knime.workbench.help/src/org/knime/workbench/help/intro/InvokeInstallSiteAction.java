@@ -55,7 +55,7 @@ public class InvokeInstallSiteAction extends Action {
     }
 
     /**
-     * @see org.eclipse.jface.action.Action#run()
+     * {@inheritDoc}
      */
     public void run() {
         openInstaller();

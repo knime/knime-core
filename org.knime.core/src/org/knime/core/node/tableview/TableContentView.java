@@ -704,7 +704,7 @@ public class TableContentView extends JTable {
     }
     
     /**
-     * @see JTable#tableChanged(TableModelEvent)
+     * {@inheritDoc}
      */
     @Override
     public void tableChanged(final TableModelEvent e) {

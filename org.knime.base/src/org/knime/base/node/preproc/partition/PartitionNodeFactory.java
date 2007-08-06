@@ -36,7 +36,7 @@ import org.knime.core.node.NodeView;
  */
 public class PartitionNodeFactory extends NodeFactory {
     /**
-     * @see NodeFactory#createNodeModel()
+     * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
@@ -44,7 +44,7 @@ public class PartitionNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#getNrNodeViews()
+     * {@inheritDoc}
      */
     @Override
     public int getNrNodeViews() {
@@ -52,7 +52,7 @@ public class PartitionNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#createNodeView(int, NodeModel)
+     * {@inheritDoc}
      */
     @Override
     public NodeView createNodeView(final int viewIndex,
@@ -61,7 +61,7 @@ public class PartitionNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#hasDialog()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasDialog() {
@@ -69,7 +69,7 @@ public class PartitionNodeFactory extends NodeFactory {
     }
 
     /**
-     * @see NodeFactory#createNodeDialogPane()
+     * {@inheritDoc}
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
