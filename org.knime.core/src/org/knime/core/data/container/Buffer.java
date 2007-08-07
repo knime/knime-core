@@ -48,6 +48,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -1537,13 +1538,13 @@ class Buffer {
         private static final NodeLogger THREAD_LOGGER = 
             NodeLogger.getLogger(DeleteInBackgroundThread.class);
         private static DeleteInBackgroundThread instance;
-        private final LinkedList<File> m_filesToDeleteList;
+        private final LinkedBlockingQueue<File> m_filesToDeleteList;
         
         private static final Object LOCK = new Object();
         
         private DeleteInBackgroundThread() {
             super("KNIME Temp File Deleter");
-            m_filesToDeleteList = new LinkedList<File>();
+            m_filesToDeleteList = new LinkedBlockingQueue<File>();
         }
         
         /** Queues a set of files for deletion and returns immediately.
@@ -1609,11 +1610,8 @@ class Buffer {
         
         private synchronized void executeDeletion() {
             try {
-                while (!m_filesToDeleteList.isEmpty()) {
-                    File first;
-                    synchronized (m_filesToDeleteList) {
-                        first = m_filesToDeleteList.removeFirst();
-                    }
+                File first;
+                while ((first = m_filesToDeleteList.poll()) != null) {
                     String type = first.isFile() ? "file" : "directory";
                     boolean deleted = deleteRecursively(first);
                     if (!deleted && first.exists()) {
