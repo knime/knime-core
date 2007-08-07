@@ -88,7 +88,9 @@ public class SorterNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-
+        if (specs[0].getNumColumns() == 0) {
+            throw new NotConfigurableException("No columns to sort.");
+        }
         List<String> list = null;
         boolean[] sortOrder = null;
         boolean sortinMemory = false;
