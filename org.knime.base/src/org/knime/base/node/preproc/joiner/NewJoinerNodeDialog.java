@@ -25,6 +25,7 @@ package org.knime.base.node.preproc.joiner;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
@@ -71,7 +72,7 @@ public class NewJoinerNodeDialog extends NodeDialogPane {
     private final JRadioButton m_appendSuffix =
             new JRadioButton("Append suffix");
 
-    private final JTextField m_suffix = new JTextField(10);
+    private final JTextField m_suffix = new JTextField();
 
     private final NewJoinerSettings m_settings = new NewJoinerSettings();
 
@@ -82,17 +83,19 @@ public class NewJoinerNodeDialog extends NodeDialogPane {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
+        c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.NORTHWEST;
+        c.insets = new Insets(2, 2, 2, 2);
         c.gridx = 0;
         c.gridy = 0;
-        p.add(new JLabel("Join column from second table   "), c);
+        p.add(new JLabel("Join column from second table   ", JLabel.RIGHT), c);
         c.gridx++;
         p.add(m_secondTableColumn, c);
         m_secondTableColumn.setRenderer(new ColumnSpecListRenderer());
 
         c.gridx = 0;
         c.gridy++;
-        p.add(new JLabel("Duplicate column handling   "), c);
+        p.add(new JLabel("Duplicate column handling   ", JLabel.RIGHT), c);
         c.gridx++;
         p.add(m_filterDuplicates, c);
 
@@ -106,7 +109,7 @@ public class NewJoinerNodeDialog extends NodeDialogPane {
 
         c.gridx = 0;
         c.gridy++;
-        p.add(new JLabel("Join mode  "), c);
+        p.add(new JLabel("Join mode  ", JLabel.RIGHT), c);
         c.gridx++;
         p.add(m_joinMode, c);
 
