@@ -101,11 +101,23 @@ public final class KNIMEConstants {
             // do nothing.
         }
 
-        int maxThreads =
-                Integer.parseInt(System.getProperty(
-                        "org.knime.core.maxThreads",
-                        "" + (Runtime.getRuntime().availableProcessors() + 2)));
-
+        int maxThreads = Runtime.getRuntime().availableProcessors() + 2;
+        String maxThreadsString = 
+            System.getProperty("org.knime.core.maxThreads");
+        try {
+            if (maxThreadsString != null && maxThreadsString.length() > 0) {
+                int val = Integer.parseInt(maxThreadsString);
+                if (val <= 0) {
+                    throw new NumberFormatException("Not positive");
+                }
+                maxThreads = val;
+            }
+        } catch (NumberFormatException nfe) {
+            // no NodeLogger available yet!
+            System.err.println("Unable to parse system property "
+                    + "\"org.knime.core.maxThreads\" (\"" + maxThreadsString 
+                    + "\") as number: " + nfe.getMessage());
+        }
         GLOBAL_THREAD_POOL = new ThreadPool(maxThreads);
     }
 
