@@ -240,7 +240,8 @@ public class SortedTable implements DataTable {
         int nrRows = dataTable.getRowCount();
         int currentRowNr = 0;
 
-        int nrContainerRows = CONTAINERSIZE / m_spec.getNumColumns();
+        int nrContainerRows = CONTAINERSIZE
+            / Math.max(1, m_spec.getNumColumns());
         // wrap all DataRows in Containers of size containerSize
         // sort each container before it is'stored'.
         BufferedDataContainer newContainer = 
