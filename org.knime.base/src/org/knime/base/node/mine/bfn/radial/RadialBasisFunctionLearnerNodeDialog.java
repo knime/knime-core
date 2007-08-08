@@ -135,7 +135,7 @@ public class RadialBasisFunctionLearnerNodeDialog
         });
         
         // add the learner tab to this dialog
-        super.addTab("Advanced", p);
+        super.addTab("PNN", p);
     }
 
     /**

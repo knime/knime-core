@@ -9,74 +9,85 @@
 	
 	<fullDescription>
 		<intro>		
-	 		Generates a Probabilistic Neural Network (PNN) based on the DDA 
-	 		(Dynamic Decay Adjustment) algorithm on labeled data using
+	 		Trains a Probabilistic Neural Network (PNN) based on the DDA 
+	 		(Dynamic Decay Adjustment) method on labeled data using
 			<a href="http://www.inf.uni-konstanz.de/bioml2/publications/Papers1998/BeDi98_dda_neurocomp.pdf">
 			Constructive Training of Probabilistic Neural Networks</a> as the
 			underlying algorithm.<br />
-			All numeric columns are used as input columns for training and one 
-		   	additional column is used as the classification target.
-		   	The input port contains the training data and the data output port 
-		   	contains the center vectors of the PNN rules.
-		   	During the learning process the algorithm uses high-dimensional 
-		   	Gaussian functions to cover instances that are adjusted by two 
-		   	thresholds, theta minus and theta plus, to avoid conflicts with
-		   	rules of different classes.
+			This algorithm generates rules based on numeric data. Each rule is
+			defined as high-dimensional Gaussian function that is adjusted by
+		   	two thresholds, theta minus and theta plus, to avoid conflicts with
+		   	rules of different classes. Each Gaussian function is defined by
+		   	a center vector (from the first covered instance) and a standard
+		   	deviation which is adjusted during training to cover only 
+		   	non-conflicting instances. The selected numeric columns of the
+			input data are used as input data for training and additional 
+			columns are used as classification target, either one column holding
+			the class information or a number of numeric columns with class 
+			degrees between 0 and 1 can	be selected. The data output contains 
+			the rules after execution along with a number of of rule 
+			measurements. The model output port contains the PNN model, 
+			which can be used for prediction in the PNN Predictor node.
 		</intro>
-		
-	<option name="Target Column">
-		Select the target(s) to be used for classification. If more
-		than one column is selected, the columns must contain the class
-		membership values between 0 and 1 for each class given by the column
-		name.
-	</option>
-	<option name="Missing Values">
-	    Select one method to handle missing values: "Incorp" may generate fuzzy 
-	    rules with missing values if no replacement value has been 
+	    <option name="Missing Values">
+	    Select one method to handle missing values: "Incorp" may generate  
+	    rules with missing values, if no replacement value has been 
 	    found during the learning process. "Best Guess" computes the optimal
-	    replacement value by projecting the fuzzy rule (with missing value(s))
-	    to the missing dimension(s) of all other rules. "Mean", "Min", and "Max"
-	    replace the missing value with each column's statistical property. 
+	    replacement value by projecting the rule (with missing value(s))
+	    onto the missing dimension(s) of all other rules. "Mean", "Min", and "Max"
+	    replaces the missing value with each column's statistical property. 
 	    "Zero" and "One" perform a constant replacement by inserting either zero
 	    or one.
-	</option>
-	<option name="Properties">
-	    If this is selected, a shrink should be performed immediately after a 
-	    new rule has been introduced, i.e. the new rule is reduced so that 
-	    conflicts with all other rules of different classes are avoided.
-	</option>
-    <option name="Maximum #Epochs">
-    	If this is selected, this option defines the maximum number of epochs 
+		</option>
+		<option name="Advanced">
+	    <b>Shrink after commit</b> If selected, a shrink to reduce conflicting 
+	    rules is executed immediately after a new rule is committed, i.e. the 
+	    new rule is reduced so that conflicts with all other rules of different
+	    classes are avoided.<br />
+	    <b>Use class with max coverage</b> If selected, only the class with
+	    maximum coverage degree of the target columns is used during training,
+	    otherwise all class columns are considered for coverage. 
+		</option>
+	    <option name="Maximum #Epochs">
+    	If selected, the option defines the maximum number of epochs 
     	the algorithm has to process the entire data set, otherwise it repeats 
     	this process until this rule model is stable, i.e. no new rule has been 
-    	commited and/or no shrink has been executed.
-	</option>
-		<option name="Theta Minus">
-			This defines the upper boundary on activation for conflicting rules:
-			default value is 0.2. 
+    	committed and/or no shrink is executed.
 		</option>
-		<option name="Theta Plus">
-			This defines the lower boundary on activation for non-conflicting 
-			rules: default value is 0.4.
+		<option name="Data Columns">
+		Select at least one column used as numeric input for the training 
+		algorithm.
+		</option>
+		<option name="Target Columns">
+		Select the target(s) to be used for classification. If more
+		than one column (numeric) is selected, the columns must contain the 
+		class membership values between 0 and 1 for each class given by the 
+		column name.
+		</option>
+		<option name="PNN">
+		<b>Theta Minus</b> This defines the upper boundary of activation for 
+		conflicting rules: default value is 0.2.<br />
+		<b>Theta Plus</b> This defines the lower boundary of activation for 
+		non-conflicting rules: default value is 0.4.
 		</option>
 	</fullDescription>
 	
-	<ports>
+    <ports>
 		<dataIn index="0" name="Training Data">
-			Data used for training. This should contain numeric data and
-			one target attribute for classification.
+			Numeric data as well as class information used for training.
 		</dataIn>
-		<dataOut index="0" name="PNN Rule Table">
-			Table with generated center vectors and one classification attribute.
+		<dataOut index="0" name="PNN Rules">
+			Rules as Gaussian functions, classification columns,
+			and additional rule measures.
 		</dataOut>
-		<modelOut index="0" name="PNN Rule Model" type="PNNModel">
-			The generated PNN model can be used for prediction.
+		<modelOut index="0" name="PNN Model" type="PNNModel">
+			PNN model can be used for prediction.
 		</modelOut>
 	</ports>
 	
 	<views>
-		<view index="0" name="PNN Rule Model View">
-			Displays a summary of the generated PNN rule model.
+		<view index="0" name="PNN Learner Statistics">
+			Displays a summary of the learning process.
 		</view>
 	</views>
 	

@@ -71,7 +71,7 @@ public class FuzzyBasisFunctionLearnerNodeDialog
         shrinkPanel.add(m_shrink);
         p.add(shrinkPanel);
         // add fuzzy learner tab
-        super.addTab("Advanced", p);
+        super.addTab("Fuzzy", p);
     }
 
     /**

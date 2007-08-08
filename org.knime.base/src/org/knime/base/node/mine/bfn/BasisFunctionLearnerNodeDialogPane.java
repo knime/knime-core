@@ -67,13 +67,13 @@ public abstract class BasisFunctionLearnerNodeDialogPane
         m_dataColumns = new ColumnFilterPanel(DoubleValue.class);
         m_dataColumns.setBorder(BorderFactory
                 .createTitledBorder(" Data columns "));
-        super.addTab("Data columns", m_dataColumns);
+        super.addTab("Data Columns", m_dataColumns);
 
         // target columns
         m_targetColumns = new ColumnFilterPanel();
         m_targetColumns.setBorder(BorderFactory
                 .createTitledBorder(" Target columns "));
-        super.addTab("Target columns", m_targetColumns);
+        super.addTab("Target Columns", m_targetColumns);
     }
 
     /**

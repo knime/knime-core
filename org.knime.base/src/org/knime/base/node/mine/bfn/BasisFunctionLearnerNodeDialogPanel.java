@@ -106,7 +106,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
         distancePanel.add(m_distance);
 
         // shrink after commit
-        m_shrinkAfterCommit = new JCheckBox(" Shrink After Commit ");
+        m_shrinkAfterCommit = new JCheckBox(" Shrink after commit ");
         m_shrinkAfterCommit.setPreferredSize(new Dimension(200, 25));
         
         // maximum coverage degree

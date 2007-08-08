@@ -3,15 +3,16 @@
 <knimeNode type="Predictor" icon="./rbfprediction_small.ico">
 	<name>PNN Predictor</name>
 	
-	<shortDescription>
-	    Applies unknown data to a Probabilistic Neural Network (PNN).
+    <shortDescription>
+	    Applies a PNN Model to numeric data and outputs a classification.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
-	    The first input port contains the test data while the second one 
-	    contains the PNN Model to which the data is applied. The output data has one additional column
-	    containing the predicted class attribute.
+	    The first input port contains the test data while the second contains 
+	    the PNN Model that is applied to the test data. The output data 
+	    has then one additional column containing the predicted class attribute
+	    which is the best match for all rules.
 		</intro>
 		
 	    <option name="Choose Name">
@@ -19,22 +20,27 @@
 			data.    
 		</option>
 	    <option name="Don't Know Class">
-		    A probability between 0.0 and 1.0. Instances where the activation lies 
+		    <b>Ignore</b> If selected, no lower degree of class activation 
+		    is set, otherwise the specified value between 0 and 1 is used.<br />
+		    <b>Default</b> Use the minimum activation threshold from the
+		    learning algorithm.<br />
+		    <b>Use</b> Instances where the activation lies 
 		    above this threshold are classified as a missing (unknown) class. 
 		    This is useful in cases where the feature space is not completely 
 		    covered by rules.
 	    </option>
 	</fullDescription>
-	
+
 	<ports>
 		<dataIn index="0" name="Test Data">
-			Test data must have same column names and types as the PNN model.
+			Test data matching the PNN Model structure.
 		</dataIn>
-    	<dataOut index="0" name="Classified Test Data">
-    		Test data with one additional column appended.
+    	<dataOut index="0" name="Predicted Data">
+    		Predicted data with one additional classification column.
     	</dataOut>
 		<modelIn index="0" name="PNN Model" type="PNNModel">
-			PNN model used to classify the test data.
+			PNN Model to which test data is applied.
 		</modelIn>
 	</ports>
+	
 </knimeNode>
