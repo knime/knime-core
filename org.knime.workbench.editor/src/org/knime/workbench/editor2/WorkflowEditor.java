@@ -243,10 +243,25 @@ public class WorkflowEditor extends GraphicalEditor implements
         } catch (IOException ioe) {
             LOGGER.error("Could not print welcome message: ", ioe);
         }
-        KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(pStore
-                .getInt(PreferenceConstants.P_MAXIMUM_THREADS));
-        System.setProperty("java.io.tmpdir", pStore
-                .getString(PreferenceConstants.P_TEMP_DIR));
+        int maxThreads = pStore.getInt(PreferenceConstants.P_MAXIMUM_THREADS);
+        if (maxThreads <= 0) {
+            LOGGER.warn("Can set " + maxThreads 
+                    + " as number of threads to use");
+        } else {
+            KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(maxThreads);
+            LOGGER.debug("Setting KNIME max thread count to " + maxThreads);
+        }
+        String tmpDir = pStore.getString(PreferenceConstants.P_TEMP_DIR);
+        // check for existence and if writable
+        File tmpDirFile = new File(tmpDir);
+        if (!(tmpDirFile.isDirectory() && tmpDirFile.canWrite())) {
+            LOGGER.error("Can't set temp directory to \"" + tmpDir + "\", " 
+                    + "not a directory or not writable");
+        } else {
+            System.setProperty("java.io.tmpdir", tmpDir);
+            LOGGER.debug("Setting temp dir environment variable "
+                    + "(java.io.tmpdir) to \"" + tmpDir + "\"");
+        }
         pStore.addPropertyChangeListener(new IPropertyChangeListener() {
             public void propertyChange(final PropertyChangeEvent event) {
                 if (event.getProperty().equals(
