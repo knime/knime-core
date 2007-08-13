@@ -144,16 +144,19 @@ public class KnimeTestCase extends TestCase {
                     new WorkflowManager(m_knimeSettings,
                             new DefaultNodeProgressMonitor());
         } catch (WorkflowException ex) {
+            String msg = ex.getMessage();
+            logger.error("Error during workflow loading:"
+                    + (msg == null ? "<no details>" : msg));
+            wrapUp();  
+            fail();
             
+        } catch (Throwable t) {
+            String msg = t.getMessage();
+            logger.error("Caught a throwable during workflow loading:"
+                    + (msg == null ? "<no details>" : msg));
             wrapUp();
-            
-            WorkflowException t = ex.getNextException();
-            if (t != null) {
-                throw t;
-            } else {
-                throw ex;
-            }
-        }
+            fail();
+        } 
     }
 
     /**
@@ -200,6 +203,10 @@ public class KnimeTestCase extends TestCase {
                     }
                 }
             }
+        } catch (Throwable t) {
+            String msg = t.getMessage();
+            logger.error("Caught a throwable during workflow loading:"
+                    + (msg == null ? "<no details>" : msg));
         } finally {
             // always close these views.
             for (NodeContainer nodecont : m_manager.getNodes()) {

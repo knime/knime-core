@@ -25,11 +25,14 @@ package org.knime.testing.core;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Enumeration;
 
 import junit.framework.Test;
+import junit.framework.TestFailure;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.KNIMEConstants;
@@ -105,6 +108,9 @@ public class KNIMETestingApplication implements IApplication {
         String outPath = null;
         if (m_analyzeOutputDir != null) {
             outPath = m_analyzeOutputDir.getAbsolutePath();
+        } else {
+            // set the runtime work space as default
+            outPath = Platform.getLocation().toString();
         }
         TestingDialog dlg =
                 new TestingDialog(null, m_testNamePattern, m_analyzeLogFile,
@@ -138,32 +144,68 @@ public class KNIMETestingApplication implements IApplication {
         KnimeTestRegistry registry = new KnimeTestRegistry(testPattern);
         Test tests = (TestSuite)registry.collectTestCases();
 
-        System.out.println("===============  Running...  ====================");
+        System.out.println("=============  Running...  ==================");
 
         if (tests.countTestCases() > 0) {
             m_results = new TestResult();
+            
+            // run'em
             tests.run(m_results);
+            
             if (m_results.shouldStop()) {
                 System.out.println("  #### TESTS INTERRUPTED! ####");
             }
-            System.out.println("Testing results:");
-            System.out.println("----------------");
-            System.out.println("Tests run:" + m_results.runCount());
-            System.out.println("Errors: " + m_results.errorCount());
-            System.out.println("Failures: " + m_results.failureCount());
-            int good =
-                    m_results.runCount() - m_results.errorCount()
-                            - m_results.failureCount();
-            double percent = (int)(good / (m_results.runCount() / 100.0));
-            System.out.println("Succeeded: " + good + " (" + percent + "%)");
 
+            printTestResult();
+            
         } else {
             System.out.println("Nothing to test.");
         }
-        System.out.println("=================================================");
+        System.out.println("=============================================");
 
     }
 
+    private void printTestResult() {
+        
+        System.out.println("=============================================");
+        System.out.println("Testing results:");
+        System.out.println("----------------");
+        System.out.println("Tests run:" + m_results.runCount());
+        System.out.println("Errors: " + m_results.errorCount());
+        System.out.println("Failures: " + m_results.failureCount());
+        int good =
+                m_results.runCount() - m_results.errorCount()
+                        - m_results.failureCount();
+        double percent = (int)(good / (m_results.runCount() / 100.0));
+        System.out.println("Succeeded: " + good + " (" + percent + "%)");
+        
+        System.out.println("-------------------");
+        if (m_results.errorCount() > 0) {
+            System.out.println("Errors:");
+            Enumeration<TestFailure> errs = m_results.errors();
+            while (errs.hasMoreElements()) {
+                TestFailure err = errs.nextElement();
+                Test errTest = err.failedTest();
+                System.out.print("     " + errTest.toString());
+                System.out.print("   , Msg: " + err.exceptionMessage());
+                System.out.println();
+            }
+        }
+        if (m_results.failureCount() > 0) {
+            System.out.println("Failures:");
+            Enumeration<TestFailure> fails = m_results.failures();
+            while (fails.hasMoreElements()) {
+                TestFailure fail = fails.nextElement();
+                Test failTest = fail.failedTest();
+                System.out.print("     " + failTest.toString());
+                System.out.print("   , Msg: " + fail.exceptionMessage());
+                System.out.println();
+            }
+            
+        }
+
+    }
+    
     private boolean analyzeLogFile() {
 
         if (m_analyzeOutputDir != null) {
