@@ -104,8 +104,12 @@ class TestingDialog extends JDialog {
         panel.add(getPatternBox());
         // the box for the analyze log file choices
         panel.add(getAnalBox());
+        // make it look better when resized
+        panel.add(Box.createVerticalGlue());
+        panel.add(Box.createVerticalGlue());
         // the box with the OK and Cancel button
         panel.add(getControlBox());
+        panel.add(Box.createVerticalGlue());
 
         return panel;
     }
@@ -158,21 +162,24 @@ class TestingDialog extends JDialog {
         analBox.add(checkBox);
 
         Box labelBox = Box.createHorizontalBox();
-        labelBox.add(Box.createHorizontalGlue());
+        labelBox.add(Box.createHorizontalStrut(30));
         labelBox.add(new JLabel("Enter directory for analysis results:"));
+        labelBox.add(Box.createHorizontalGlue());
         analBox.add(labelBox);
 
         Box editBox = Box.createHorizontalBox();
-        editBox.add(Box.createHorizontalGlue());
+        editBox.add(Box.createHorizontalStrut(30));
         m_analout.setPreferredSize(new Dimension(300, 25));
         m_analout.setMinimumSize(new Dimension(300, 25));
         m_analout.setMaximumSize(new Dimension(300, 25));
         editBox.add(m_analout);
+        editBox.add(Box.createHorizontalGlue());
         analBox.add(editBox);
 
         labelBox = Box.createHorizontalBox();
-        labelBox.add(Box.createHorizontalGlue());
+        labelBox.add(Box.createHorizontalStrut(30));
         labelBox.add(new JLabel("(leave emtpy to use Java temp dir)"));
+        labelBox.add(Box.createHorizontalGlue());
         analBox.add(labelBox);
 
         return analBox;
