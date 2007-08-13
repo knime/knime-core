@@ -406,12 +406,12 @@ public abstract class AbstractHistogramVizModel {
             final DataColumnDomain domain = xColSpec.getDomain();
             if (domain == null) {
                 throw new IllegalStateException(
-                        "X column domain must not be null");
+                        "Binning column domain must not be null");
             }
             final Set<DataCell> values = domain.getValues();
             if (values == null) {
                 throw new IllegalStateException(
-                        "Values of x column domain must not be null");
+                        "Values of binning column domain must not be null");
             }
             m_maxNoOfBins = values.size();
             return;

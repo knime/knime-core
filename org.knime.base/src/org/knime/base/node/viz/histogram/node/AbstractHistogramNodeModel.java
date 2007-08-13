@@ -33,6 +33,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
@@ -111,7 +114,20 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     public AbstractHistogramNodeModel(final int nrDataIns, 
             final int nrDataOuts) {
         super(nrDataIns, nrDataOuts);
+        m_allRows.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                m_noOfRows.setEnabled(!m_allRows.getBooleanValue());
+            }
+        });
         m_noOfRows.setEnabled(!m_allRows.getBooleanValue());
+        
+    }
+    
+    /**
+     * @param allRows set the default value of the all rows select box.
+     */
+    protected void setAllRowsDefault(final boolean allRows) {
+        m_allRows.setBooleanValue(allRows);
     }
 
     /**
@@ -140,7 +156,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             //It's an older node which hasn't stored the aggregation column
             final String xCol = settings.getString("xColumn");
             if (xCol == null || xCol.length() < 1) {
-                throw new InvalidSettingsException("Invalid x column");
+                throw new InvalidSettingsException("Invalid binning column");
             }
         } 
         try {
@@ -303,9 +319,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                     "Input table should have at least 1 column.");
         }
 
-        final String xCol = m_xColName.getStringValue();
-        m_xColSpec = tableSpec.getColumnSpec(xCol);
-        if (!tableSpec.containsName(xCol)) {
+        if (!tableSpec.containsName(m_xColName.getStringValue())) {
             // if the input table has only two columns where only one column
             // is numerical select these two columns as default columns
             // if both are numeric we don't know which one the user wants as
@@ -351,13 +365,14 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                                     tableSpec.getColumnSpec(0).getName()));
                 } else {
                     throw new InvalidSettingsException(
-                            "Please define the x column name.");
+                            "Please define the binning column.");
                 }
             } else {
                 throw new InvalidSettingsException(
-                        "Please define the x column name.");
+                        "Please define the binning column.");
             }
         }
+        m_xColSpec = tableSpec.getColumnSpec(m_xColName.getStringValue());
         //check if the table contains value which don't have a valid domain 
         //and display a warning that they are ignored
         final ColumnFilter filter = NoDomainColumnFilter.getInstance();
@@ -416,11 +431,12 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
         final String xCol = m_xColName.getStringValue();
         m_xColSpec = m_tableSpec.getColumnSpec(xCol);
         if (m_xColSpec == null) {
-            throw new IllegalArgumentException("X column not found");
+            throw new IllegalArgumentException("Binning column not found");
         }
         m_xColIdx = m_tableSpec.findColumnIndex(xCol);
         if (m_xColIdx < 0) {
-            throw new IllegalArgumentException("X column index not found");
+            throw new IllegalArgumentException(
+                    "Binning column index not found");
         }
         final ColorColumn[] aggrCols = m_aggrColName.getColorNameColumns();
         if (aggrCols == null) {

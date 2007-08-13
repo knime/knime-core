@@ -61,7 +61,7 @@ public class FixedHistogramProperties extends
 
     private static final long serialVersionUID = -6177238900813927896L;
 
-    private static final String X_COLUMN_LABEL = "X Column:";
+    private static final String X_COLUMN_LABEL = "Binning column:";
 
     private static final String AGGREGATION_COLUMN_LABEL = 
         "Aggregation column:";

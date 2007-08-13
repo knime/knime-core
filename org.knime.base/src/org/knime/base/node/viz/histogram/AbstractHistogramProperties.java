@@ -96,7 +96,7 @@ public abstract class AbstractHistogramProperties extends
         "Show missing value bin";
 
     private static final String SHOW_MISSING_VAL_BIN_TOOLTIP = "Shows a bin "
-            + "with rows which have a missing value for the selected x column.";
+    + "with rows which have a missing value for the selected binning column.";
 
     private static final String SHOW_EMPTY_BINS_LABEL = "Show empty bins";
 

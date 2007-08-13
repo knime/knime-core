@@ -36,10 +36,12 @@ import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -68,12 +70,16 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
             CFGKEY_NO_OF_BINS, AbstractHistogramVizModel.DEFAULT_NO_OF_BINS);
     /**The data model on which the plotter based on.*/
     private FixedHistogramDataModel m_model;
-    
+
     /**
      * The constructor.
      */
     protected FixedColumnHistogramNodeModel() {
         super(1, 0); // one input, no outputs
+        //set the all rows select box to true as default value since that's the
+        //reason why we have two implementations and this one is the one which
+        //should handle a large amount of data.
+        setAllRowsDefault(true);
     }
     /**
      * {@inheritDoc}
@@ -176,6 +182,23 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         exec.setProgress(1.0, "Histogram finished.");
         LOGGER.debug("Exiting createHistogramModel(exec, table) "
                 + "of class FixedColumnHistogramNodeModel.");
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) 
+        throws InvalidSettingsException {
+        final DataTableSpec[] specs = super.configure(inSpecs);
+        //enable/disable the number of bins spinner depending on the selected
+        //x column. We have to set in here and in the dialog because the dialog
+        //settings are replaced by the settings from the SettingsModelString
+        //of the node model!!!
+        final DataColumnSpec xColSpec = getXColSpec();
+        m_noOfBins.setEnabled((xColSpec == null 
+                || xColSpec.getType().isCompatible(DoubleValue.class)));
+        return specs;
     }
 
     /**

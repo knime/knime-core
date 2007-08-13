@@ -139,7 +139,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         }
         if (xColSpec == null) {
             throw new IllegalArgumentException(
-            "No column specification found for selected x column");
+            "No column specification found for selected binning column");
         }
         if (rows == null) {
             throw new IllegalArgumentException("Rows must not be null");
@@ -184,11 +184,11 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
     public boolean setXColumn(final DataColumnSpec xColSpec) {
         if (xColSpec == null) {
             throw new IllegalArgumentException(
-                    "X column specification must not be null");
+                    "Binning column specification must not be null");
         }
         final int xColIdx = m_tableSpec.findColumnIndex(xColSpec.getName());
         if (xColIdx < 0) {
-            throw new IllegalArgumentException("X column not found");
+            throw new IllegalArgumentException("Binning column not found");
         }
         if (xColIdx == m_xColIdx) {
             return false;

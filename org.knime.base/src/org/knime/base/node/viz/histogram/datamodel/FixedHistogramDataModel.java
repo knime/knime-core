@@ -95,14 +95,14 @@ public class FixedHistogramDataModel {
                 + "of class HistogramDataModel.");
         if (xColSpec == null) {
             throw new NullPointerException(
-                    "X column specification must not be null");
+                    "Binning column specification must not be null");
         }
         m_aggrColumns = aggrColumns;
         m_xColSpec = xColSpec;
         final DataColumnDomain domain = m_xColSpec.getDomain();
         if (domain == null) {
             throw new NullPointerException(
-                    "The x column domain must not be null");
+                    "The binning column domain must not be null");
         }
 //        if (BinningUtil.binNominal(xColSpec, noOfBins)) {
 //            m_binNominal = true;
@@ -275,7 +275,7 @@ public class FixedHistogramDataModel {
         m_xColSpec.save(settings);
         settings.saveToXML(settingsOS);
         if (exec != null) {
-            exec.setProgress(0.1, "X column specification saved");
+            exec.setProgress(0.1, "Binning column specification saved");
             exec.setMessage("Start saving aggregation columns...");
         }
         final File dataFile = new File(directory, CFG_DATA_FILE);
@@ -322,7 +322,7 @@ public class FixedHistogramDataModel {
         final ConfigRO settings = NodeSettings.loadFromXML(in);
         DataColumnSpec xColSpec = DataColumnSpec.load(settings);
         if (exec != null) {
-            exec.setProgress(0.1, "X column specification loaded");
+            exec.setProgress(0.1, "Binning column specification loaded");
             exec.setProgress("Loading aggregation columns...");
         }
         final File dataFile = new File(directory, CFG_DATA_FILE);

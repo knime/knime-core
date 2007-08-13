@@ -25,7 +25,13 @@
 
 package org.knime.base.node.viz.histogram.node;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
@@ -39,22 +45,37 @@ public class FixedColumnHistogramDialogPane extends HistogramNodeDialogPane {
     private static final String NUMBER_OF_BINS_LABEL = "Number of bins:";
 
     private static final String NUMBER_OF_BINS_TOOLTIP = 
-        "Ignored if the selected x column is nominal";
-    
-    private final DialogComponentNumber m_noOfBins;
+        "Ignored if the selected binning column is nominal";
+    private final SettingsModelIntegerBounded m_noOfBins;
     
     /**Constructor for class FixedColumnHistogramDialogPane.
      */
     protected FixedColumnHistogramDialogPane() {
         super();
         createNewGroup("Binning options");
-        m_noOfBins = new DialogComponentNumber(
-                new SettingsModelIntegerBounded(
-                        FixedColumnHistogramNodeModel.CFGKEY_NO_OF_BINS,
-                        AbstractHistogramVizModel.DEFAULT_NO_OF_BINS, 1, 
-                        Integer.MAX_VALUE),
-                        NUMBER_OF_BINS_LABEL, 1);
-        m_noOfBins.setToolTipText(NUMBER_OF_BINS_TOOLTIP);
-        addDialogComponent(m_noOfBins);
+        m_noOfBins = new SettingsModelIntegerBounded(
+                            FixedColumnHistogramNodeModel.CFGKEY_NO_OF_BINS,
+                            AbstractHistogramVizModel.DEFAULT_NO_OF_BINS, 1, 
+                            Integer.MAX_VALUE);
+        final DialogComponent noOfBins = new DialogComponentNumber(
+                m_noOfBins, NUMBER_OF_BINS_LABEL, 1);
+        noOfBins.setToolTipText(NUMBER_OF_BINS_TOOLTIP);
+        m_noOfBins.setEnabled(isNumericalXColumn());
+        addDialogComponent(noOfBins);
+        super.addXColumnChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
+                m_noOfBins.setEnabled(isNumericalXColumn());
+            }});
+    }
+    
+    /**
+     * Checks if the current selected x column is numerical.
+     * @return <code>true</code> if the selected x column is numerical or no
+     * column is selected
+     */
+    protected boolean isNumericalXColumn() {
+        final DataColumnSpec xColSpec = super.getSelectedXColumnSpec();
+        return (xColSpec == null || xColSpec.getType().isCompatible(
+                DoubleValue.class));
     }
 }

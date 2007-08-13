@@ -414,7 +414,8 @@ public final class BinningUtil {
                     || !lowerBoundCell.getType().isCompatible(
                             DoubleValue.class)) {
                 throw new IllegalArgumentException(
-                "The lower bound of the x column domain should be defined");
+                        "The lower bound of the binning column domain "
+                        + "should be defined");
             }
             final double lowerBound = 
                 ((DoubleValue)lowerBoundCell).getDoubleValue();
@@ -423,7 +424,8 @@ public final class BinningUtil {
                     || !upperBoundCell.getType().isCompatible(
                             DoubleValue.class)) {
                 throw new IllegalArgumentException(
-                "The upper bound of the x column domain should be defined");
+                        "The upper bound of the binning column domain "
+                        + "should be defined");
             }
             final double upperBound = 
                 ((DoubleValue)upperBoundCell).getDoubleValue();
@@ -500,7 +502,8 @@ public final class BinningUtil {
                     || !lowerBoundCell.getType().isCompatible(
                             DoubleValue.class)) {
                 throw new IllegalArgumentException(
-                "The lower bound of the x column domain should be defined");
+                        "The lower bound of the binning column domain "
+                        + "should be defined");
             }
             double lowerBound = ((DoubleValue)lowerBoundCell).getDoubleValue();
             final DataCell upperBoundCell = domain.getUpperBound();
@@ -508,7 +511,8 @@ public final class BinningUtil {
                     || !upperBoundCell.getType().isCompatible(
                             DoubleValue.class)) {
                 throw new IllegalArgumentException(
-                "The upper bound of the x column domain should be defined");
+                        "The upper bound of the binning column domain "
+                        + "should be defined");
             }
             final double upperBound = 
                 ((DoubleValue)upperBoundCell).getDoubleValue();
@@ -750,7 +754,8 @@ public final class BinningUtil {
                     || !lowerBoundCell.getType().isCompatible(
                             DoubleValue.class)) {
                 throw new IllegalArgumentException(
-                "The lower bound of the x column domain should be defined");
+                        "The lower bound of the binning column domain " 
+                        + "should be defined");
             }
             double lowerBound = 
                 ((DoubleValue)lowerBoundCell).getDoubleValue();
@@ -759,7 +764,8 @@ public final class BinningUtil {
                     || !upperBoundCell.getType().isCompatible(
                             DoubleValue.class)) {
                 throw new IllegalArgumentException(
-                "The upper bound of the x column domain should be defined");
+                    "The upper bound of the binning column domain "
+                        + "should be defined");
             }
             final double upperBound = 
                 ((DoubleValue)upperBoundCell).getDoubleValue();

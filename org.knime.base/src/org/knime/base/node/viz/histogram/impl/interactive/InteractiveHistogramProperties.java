@@ -67,7 +67,7 @@ public class InteractiveHistogramProperties extends
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(InteractiveHistogramProperties.class);
 
-    private static final String X_COLUMN_LABEL = "X Column:";
+    private static final String X_COLUMN_LABEL = "Binning column:";
 
     private static final String AGGREGATION_COLUMN_LABEL = 
         "Aggregation column:";
@@ -175,7 +175,7 @@ public class InteractiveHistogramProperties extends
             final AggregationMethod aggrMethod) {
         try {
             if (xColName == null) {
-                final String er = "No x column available";
+                final String er = "No binning column available";
                 LOGGER.warn(er);
                 throw new IllegalArgumentException(er);
             }
