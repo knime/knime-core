@@ -177,6 +177,7 @@ public class DefaultNodeSettingsPane extends NodeDialogPane {
         }
         m_currentPanel = m_compositePanel;
         m_currentBox = createBox(m_horizontal);
+        m_currentPanel.add(m_currentBox);
     }
 
     /**
