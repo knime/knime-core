@@ -1,0 +1,119 @@
+/* 
+ * -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+ * -------------------------------------------------------------------
+ * 
+ */
+package org.knime.core.data.renderer;
+
+import java.awt.Component;
+
+import javax.swing.JList;
+import javax.swing.UIManager;
+import javax.swing.table.DefaultTableCellRenderer;
+
+import org.knime.core.data.DataColumnSpec;
+
+
+/**
+ * Default renderer to be used as to render a <code>DataCell</code>. It will 
+ * simply use the <code>DataCell</code>'s <code>toString()</code> method and 
+ * display this String. 
+ *  
+ * @author Bernd Wiswedel, University of Konstanz
+ */
+public class DefaultDataValueRenderer 
+    extends DefaultTableCellRenderer implements DataValueRenderer {
+    
+    /** The spec to the column for which this renderer is being used. */
+    private final DataColumnSpec m_colSpec;
+    
+    /** Creates new instance given a null column spec. */
+    public DefaultDataValueRenderer() {
+        this(null);
+    }
+    
+    /**
+     * Creates new renderer and memorizes the column spec. The argument may
+     * be, however, null.
+     * @param spec The column spec of the column for which this renderer is 
+     * used. 
+     */
+    public DefaultDataValueRenderer(final DataColumnSpec spec) {
+        m_colSpec = spec;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public String getDescription() {
+        return "Default";
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public Component getListCellRendererComponent(
+            final JList list, final Object value, final int index, 
+            final boolean isSelected, final boolean cellHasFocus) {
+        /* Copied almost all code from DefaultListCellRenderer */
+        setComponentOrientation(list.getComponentOrientation());
+        if (isSelected) {
+            setBackground(list.getSelectionBackground());
+            setForeground(list.getSelectionForeground());
+        } else {
+            setBackground(list.getBackground());
+            setForeground(list.getForeground());
+        }
+
+        setValue(value);
+        setEnabled(list.isEnabled());
+        setFont(list.getFont());
+        setBorder((cellHasFocus) 
+                ? UIManager.getBorder("List.focusCellHighlightBorder") 
+                : noFocusBorder);
+        return this;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public Component getRendererComponent(final Object val) {
+        setValue(val);
+        return this;
+    }
+    
+    /**
+     * Get reference to the constructor's argument. The return value may be
+     * null (in particular if the empty constructor has been used).
+     * @return The column spec for this renderer.
+     */
+    protected DataColumnSpec getColSpec() {
+        return m_colSpec;
+    }
+
+    /**
+     * Returns always <code>true</code>.
+     * @see DataValueRenderer#accepts(DataColumnSpec)
+     */
+    public boolean accepts(final DataColumnSpec spec) {
+        return true;
+    }
+    
+}

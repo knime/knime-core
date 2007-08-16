@@ -1,0 +1,39 @@
+<!--
+====================================================================
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+====================================================================
+-->
+<body>
+Provides default implementations for all (except 
+{@link org.knime.core.data.DataTable DataTable}) abstract 
+classes in the data package.<br>
+<br>
+The default implementations of classes derived from 
+{@link org.knime.core.data.DataCell DataCell} just store their
+values in members of the appropriate java type (like 
+{@link org.knime.core.data.def.DoubleCell DoubleCell} has a private
+member of Java type double, etc.).<br>
+<br>
+The default implementation of {@link org.knime.core.data.DataTable DataTable}
+is deprecated and shouldn't be used.
+Rather use the {@link org.knime.core.data.container.DataContainer DataContainer} 
+(or in the {@link org.knime.core.node.NodeModel NodeModel}'s execute method, the 
+{@link org.knime.core.node.BufferedDataTable BufferedDataTable}.
+<br>
+</body>

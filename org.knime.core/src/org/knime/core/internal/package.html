@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<!--
+====================================================================
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+====================================================================
+-->
+</head>
+<body>
+	Contains class for internal use. <br/>
+	This package contains classes that intantiated at very beginning of the KNIME
+	life cycle when started in Eclipse or as RCP. 
+	The CorePlugin class serves as plugin activator to set the workspace path
+	in the KNIMEPath class. The KNIMEConstants class will later on look
+	at the variables in KNIMEPath to create the log file etc.
+	
+	<p><b>Note</b>This package is not exported. Dependent plugins won't see any
+	of the classes in here.
+</body>
+</html>
