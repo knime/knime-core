@@ -23,20 +23,28 @@
  */
 package org.knime.testing.core;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Enumeration;
 
 import junit.framework.Test;
 import junit.framework.TestFailure;
 import junit.framework.TestResult;
-import junit.framework.TestSuite;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.repository.RepositoryManager;
 
 /**
@@ -49,6 +57,8 @@ public class KNIMETestingApplication implements IApplication {
     private File m_analyzeOutputDir = null;
 
     private String m_testNamePattern = null;
+
+    private String m_rootDir = null;
 
     // if this is not null, tests are running - and can be stopped in here.
     private TestResult m_results = null;
@@ -81,7 +91,7 @@ public class KNIMETestingApplication implements IApplication {
             return EXIT_OK;
         }
 
-        if (m_testNamePattern == null) {
+        if ((m_testNamePattern == null) || (m_rootDir == null)) {
             // if no (or not enough) command line arguments were specified:
             boolean okay = getParametersFromUser();
             if (!okay) {
@@ -113,8 +123,8 @@ public class KNIMETestingApplication implements IApplication {
             outPath = Platform.getLocation().toString();
         }
         TestingDialog dlg =
-                new TestingDialog(null, m_testNamePattern, m_analyzeLogFile,
-                        outPath);
+                new TestingDialog(null, m_testNamePattern, findTestCases(),
+                        m_analyzeLogFile, outPath);
         dlg.setVisible(true);
         dlg.dispose();
         if (!dlg.closedViaOK()) {
@@ -123,6 +133,7 @@ public class KNIMETestingApplication implements IApplication {
         }
 
         m_testNamePattern = dlg.getTestNamePattern();
+        m_rootDir = dlg.getTestRootDir();
         m_analyzeLogFile = dlg.getAnalyzeLogFile();
         String outDir = dlg.getAnalysisOutputDir();
         if ((outDir == null) || (outDir.length() == 0)) {
@@ -130,8 +141,66 @@ public class KNIMETestingApplication implements IApplication {
         } else {
             m_analyzeOutputDir = new File(outDir);
         }
+        if (m_rootDir == null) {
+            System.err
+                    .println("No root directory for the testflows specified.");
+            return false;
+        }
 
         return true;
+    }
+
+    /**
+     * tries to guess a starting directory for the testcase search. Any dir with
+     * "_testflow" in its name would be a good guess.
+     * 
+     * @return
+     */
+    private File findTestCases() {
+        try {
+            // see if the testcases are somewhere located next to the plugins
+            // (which is the case in a developer environment)
+            URL devWorkSpace =
+                    FileLocator.toFileURL(FileLocator.find(KNIMECorePlugin
+                            .getDefault().getBundle(), new Path("/"), null));
+            File loc = new File(devWorkSpace.getFile().toString());
+            if ((!loc.exists()) || (loc.getParentFile() == null)) {
+                // weird, but lets return something...
+                return loc;
+            }
+
+            // go one level up and try finding a dir with suffix _testflows
+            loc = loc.getParentFile();
+            File[] dirs = loc.listFiles(new FileFilter() {
+                public boolean accept(final File pathname) {
+                    if (pathname.isDirectory()) {
+                        return true;
+                    }
+                    return false;
+                }
+            });
+            // return the first match
+            for (File dir : dirs) {
+                if (dir.getName().endsWith("_testflows")) {
+                    return dir;
+                }
+            }
+
+            // no testflows found.
+            // Find out if we are in the Eclipse/KNIME installation directory
+            for (File dir : dirs) {
+                if (dir.getName().startsWith("org.eclipse")) {
+                    // eclispe plugins are only in installation directories
+                    return null;
+                }
+            }
+
+            // return the workspace dir
+            return loc;
+
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**
@@ -142,22 +211,22 @@ public class KNIMETestingApplication implements IApplication {
     private void runRegressionTests(final String testPattern) {
 
         KnimeTestRegistry registry = new KnimeTestRegistry(testPattern);
-        Test tests = (TestSuite)registry.collectTestCases();
+        Test tests = registry.collectTestCases(new File(m_rootDir));
 
         System.out.println("=============  Running...  ==================");
 
         if (tests.countTestCases() > 0) {
             m_results = new TestResult();
-            
+
             // run'em
             tests.run(m_results);
-            
+
             if (m_results.shouldStop()) {
                 System.out.println("  #### TESTS INTERRUPTED! ####");
             }
 
             printTestResult();
-            
+
         } else {
             System.out.println("Nothing to test.");
         }
@@ -165,8 +234,9 @@ public class KNIMETestingApplication implements IApplication {
 
     }
 
+    @SuppressWarnings("unchecked")
     private void printTestResult() {
-        
+
         System.out.println("=============================================");
         System.out.println("Testing results:");
         System.out.println("----------------");
@@ -178,7 +248,7 @@ public class KNIMETestingApplication implements IApplication {
                         - m_results.failureCount();
         double percent = (int)(good / (m_results.runCount() / 100.0));
         System.out.println("Succeeded: " + good + " (" + percent + "%)");
-        
+
         System.out.println("-------------------");
         if (m_results.errorCount() > 0) {
             System.out.println("Errors:");
@@ -201,11 +271,11 @@ public class KNIMETestingApplication implements IApplication {
                 System.out.print("   , Msg: " + fail.exceptionMessage());
                 System.out.println();
             }
-            
+
         }
 
     }
-    
+
     private boolean analyzeLogFile() {
 
         if (m_analyzeOutputDir != null) {
@@ -227,12 +297,13 @@ public class KNIMETestingApplication implements IApplication {
                 }
             }
         }
-        
+
         File logfile =
-                new File(KNIMEConstants.getKNIMEHomeDir() + File.separator
-                        + NodeLogger.LOG_FILE);
+                new File(KNIMEConstants.getKNIMEHomeDir(), NodeLogger.LOG_FILE);
 
         try {
+            // extract the tail of the logfile that contains the last run:
+            logfile = extractLastTestRun(logfile);
             new AnalyzeLogFile(logfile, m_analyzeOutputDir);
             return true;
 
@@ -313,6 +384,26 @@ public class KNIMETestingApplication implements IApplication {
                 continue;
             }
 
+            // "-root" specifies the root dir of all testcases
+            if ((stringArgs[i] != null) && stringArgs[i].equals("-root")) {
+                if (m_rootDir != null) {
+                    System.err.println("You can't specify multiple -root "
+                            + "options at the command line");
+                    return false;
+                }
+
+                i++;
+                // requires another argument
+                if ((i >= stringArgs.length) || (stringArgs[i] == null)
+                        || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing <dir_name> for option -root.");
+                    printUsage();
+                    return false;
+                }
+                m_rootDir = stringArgs[i++];
+                continue;
+            }
+
             System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
             printUsage();
             return false;
@@ -335,6 +426,42 @@ public class KNIMETestingApplication implements IApplication {
                 + "be placed in a directory in the " + "specified dir.");
         System.err.println("                         If "
                 + "<dir_name> is omitted the Java temp dir is used.");
+        System.err.println("    -root <dir_name>: optional, specifies the"
+                + " root dir where all testcases are located in.");
+        System.err.println("IF -pattern OR -root IS OMITTED A DIALOG OPENS"
+                + " REQUESTING USER INPUT.");
+
+    }
+
+    /**
+     * Copies the part of the specified log file that contains the log from the
+     * last (possibly still running) KNIME run.
+     * 
+     * @param logFile the log file to analyze and copy the last run from
+     * @return a file in the same dir as the specified log file containing the
+     *         last run of the specified file.
+     */
+    private File extractLastTestRun(final File logFile) throws IOException {
+
+        final String startLine = "# Welcome to KNIME";
+
+        File copyFile =
+                new File(logFile.getParent(), "KNIMELastRunLogCopy.log");
+
+        BufferedReader reader = new BufferedReader(new FileReader(logFile));
+        String line;
+        BufferedWriter writer = new BufferedWriter(new FileWriter(copyFile));
+        
+        while ((line = reader.readLine()) != null) {
+            if (line.contains(startLine) && line.endsWith("#")) {
+                // (re-) open the output file, overriding any previous content
+                writer = new BufferedWriter(new FileWriter(copyFile));
+            }
+            writer.write(line + "\n");
+        }
+        writer.close();
+        
+        return copyFile;
     }
 
     /**

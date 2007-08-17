@@ -27,15 +27,12 @@ package org.knime.testing.core;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.eclipse.core.runtime.FileLocator;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -50,11 +47,6 @@ public class KnimeTestRegistry {
      */
     public static final String OWNER_FILE = "owner";
 
-    // the work flows to run are at the root dir of the project
-    private final String TEST_REPOSITORY_DIR = "testWorkflows";
-
-    private final String PROJECT_DIR = "org.knime.testing";
-
     /* ---------- end of static stuff ---------------------- */
 
     private static NodeLogger m_logger =
@@ -65,10 +57,10 @@ public class KnimeTestRegistry {
     /**
      * pattern (regular expression) used to select test cases to run
      */
-    private String m_pattern = null;
+    private final String m_pattern;
 
     /**
-     * Constructor. Isn't it?<br>
+     * Constructor. Isn't it?
      * 
      * @param testNamePattern the pattern test names are matched against
      *            (regular expression). If null (or empty) all tests are run.
@@ -76,50 +68,20 @@ public class KnimeTestRegistry {
     public KnimeTestRegistry(final String testNamePattern) {
         m_registry = new ArrayList<KnimeTestCase>();
 
-        m_pattern = testNamePattern;
-        if ((m_pattern != null) && (m_pattern.length() == 0)) {
+        if ((testNamePattern != null) && (testNamePattern.length() == 0)) {
             m_pattern = ".*";
+        } else {
+            m_pattern = testNamePattern;
         }
-
     }
 
     /**
+     * @param testRootDir the dir to start the search in
      * @return all registered test cases.
      */
-    public Test collectTestCases() {
+    public Test collectTestCases(final File testRootDir) {
 
-        File testWorkflowsDir = null;
-        try {
-            URL classLoc = KnimeTestRegistry.class.getResource(".");
-            URL dotLoc = FileLocator.toFileURL(classLoc);
-            if (!dotLoc.getProtocol().equalsIgnoreCase("file")) {
-                // if this is not a file we are in trouble.
-                System.err.println("Couldn't locate plugin-path "
-                        + "- unable to collect test cases.");
-                return null;
-            }
-            testWorkflowsDir = new File(dotLoc.getPath());
-
-        } catch (IOException ioe) {
-            System.err.println("Couldn't locate plugin-path "
-                    + "- unable to collect test cases.");
-            return null;
-        }
-
-        while (!testWorkflowsDir.getName().equalsIgnoreCase(PROJECT_DIR)) {
-            testWorkflowsDir = testWorkflowsDir.getParentFile();
-            assert testWorkflowsDir != null : "Couldn't find the project "
-                    + "dir '" + PROJECT_DIR
-                    + "' (on my search of the test repository. Did you "
-                    + "rename the project?!?";
-        }
-        testWorkflowsDir = new File(testWorkflowsDir, TEST_REPOSITORY_DIR);
-
-        if (!testWorkflowsDir.isDirectory()) {
-            throw new IllegalStateException(testWorkflowsDir.getAbsolutePath()
-                    + " is no directory");
-        }
-        searchDirectory(testWorkflowsDir);
+        searchDirectory(testRootDir);
 
         if ((m_pattern != null) && (m_registry.size() == 0)) {
             System.out.println("Found no matching tests. "
