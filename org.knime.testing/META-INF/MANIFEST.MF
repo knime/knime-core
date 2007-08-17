@@ -8,22 +8,10 @@ Bundle-Vendor:
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime,
  org.knime.workbench.core,
- org.knime.workbench.editor,
  org.knime.workbench.repository,
  org.knime.base,
- org.knime.ext.sun,
- org.knime.ext.jfreechart,
- org.knime.ext.chem.cdk,
- org.knime.ext.chem.moss,
  org.junit,
- org.knime.ext.weka,
- org.knime.deprecated,
- org.knime.chem.base,
- org.knime.chem.types,
- org.knime.exp.chem,
- org.knime.dev,
- org.knime.ext.c45r8,
- org.knime.ext.jython
+ org.eclipse.core.resources
 Eclipse-RegisterBuddy: org.knime.base
 Eclipse-AutoStart: true
 Export-Package: org.knime.testing,
