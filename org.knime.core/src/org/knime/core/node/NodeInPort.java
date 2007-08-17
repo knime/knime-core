@@ -82,8 +82,8 @@ public abstract class NodeInPort extends NodePort {
     
     /**
      * Checks if the outport can be connected to this inport. This method just
-     * checks basic stuff like "not null". Detailed, port type dependant things
-     * are checked in overriden methods of special port types.
+     * checks basic stuff like "not null". Detailed, port type dependent things
+     * are checked in overridden methods of special port types.
      * 
      * @param connPort the outport to check
      */

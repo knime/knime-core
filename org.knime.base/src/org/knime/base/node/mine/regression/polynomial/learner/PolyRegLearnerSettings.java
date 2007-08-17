@@ -58,7 +58,7 @@ public class PolyRegLearnerSettings {
     }
 
     /**
-     * Returns the name of the target column that holds the dependant variable.
+     * Returns the name of the target column that holds the dependent variable.
      * 
      * @return the target column's name
      */
@@ -109,7 +109,7 @@ public class PolyRegLearnerSettings {
     }
 
     /**
-     * Sets the name of the target column that holds the dependant variable.
+     * Sets the name of the target column that holds the dependent variable.
      * 
      * @param targetColumn the target column's name
      */

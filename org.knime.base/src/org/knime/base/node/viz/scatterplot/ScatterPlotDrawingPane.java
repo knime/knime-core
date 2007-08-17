@@ -405,7 +405,7 @@ public class ScatterPlotDrawingPane extends AbstractDrawingPane {
                     g.setColor(dotInfo[i].getColor().getBorderColor(isSelected,
                             isHilit));
 
-                    // calculate the width of the border dependant on
+                    // calculate the width of the border dependent on
                     // the size of the dot (assume 30% of the size)
                     int selectionBorderWidth = 1; // (int)Math.ceil(size *
                     // 0.2);

@@ -148,7 +148,7 @@
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="To set/view the user specified node name and a context dependant description."/>
+               tooltip="To set/view the user specified node name and a context dependent description."/>
                
          <action
                class="org.knime.workbench.editor2.actions.delegates.ResetEditorAction"
@@ -249,7 +249,7 @@
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="To set/view the user specified node name and a context dependant description."/>
+               tooltip="To set/view the user specified node name and a context dependent description."/>
                
          <action
                class="org.knime.workbench.editor2.actions.delegates.ResetEditorAction"

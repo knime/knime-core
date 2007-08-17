@@ -63,7 +63,7 @@ public class ClipboardObject {
 
     /**
      * Increments the retrieval counter. The correct incrementation is
-     * application dependant.
+     * application dependent.
      */
     public void incrementRetrievalCounter() {
         m_retrievalCounter++;

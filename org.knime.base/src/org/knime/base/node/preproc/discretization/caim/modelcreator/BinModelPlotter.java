@@ -186,7 +186,7 @@ public class BinModelPlotter extends AbstractPlotter {
         // determine the width available for a bin ruler
         int rulerWidth = getDrawingPaneDimension().width - 2 * m_hMargin;
 
-        // set the height of the plotter dependant on the number of bin models
+        // set the height of the plotter dependent on the number of bin models
         // to display
         // TODO: do it
 

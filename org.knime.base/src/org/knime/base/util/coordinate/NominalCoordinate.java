@@ -196,7 +196,7 @@ public class NominalCoordinate extends Coordinate {
     public double calculateMappedValue(final DataCell domainValueCell,
             final double absolutLength, final boolean naturalMapping) {
 
-        // get the mapping for all values dependant on the absolute mapping
+        // get the mapping for all values dependent on the absolute mapping
         // length
         CoordinateMapping[] mappings = getTickPositions(absolutLength,
                 naturalMapping);

@@ -88,7 +88,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Set/view the user specified node name and a context dependant description.";
+        return "Set/view the user specified node name and a context dependent description.";
     }
 
     /**

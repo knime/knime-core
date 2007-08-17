@@ -40,9 +40,9 @@ import org.knime.core.data.DoubleValue;
  * This class represents a numeric coordinate defined by a given
  * {@link org.knime.core.data.DataColumnSpec}. The class provides
  * functionality for extension of coordinates beyond the domain length.
- * Furthermore the label ticks can be determined dependant on given properties.
+ * Furthermore the label ticks can be determined dependent on given properties.
  * All these sizes are normalized (0-1) but there are also methods to convert
- * them to absolut values given an absolut maximum length.
+ * them to absolute values given an absolute maximum length.
  * 
  * @author Christoph Sieb, University of Konstanz
  */
@@ -83,9 +83,9 @@ public class DoubleCoordinate extends NumericCoordinate {
     private double m_coordPostfix;
 
     /**
-     * The abolute tick distance is used when absolute values according to the
+     * The absolute tick distance is used when absolute values according to the
      * placement of a tick are requested. The absolute tick distance is
-     * dependant on the usage.
+     * dependent on the usage.
      */
     private double m_absoluteTickDistance;
 
