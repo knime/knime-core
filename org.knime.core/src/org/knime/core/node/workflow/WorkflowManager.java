@@ -148,8 +148,8 @@ public class WorkflowManager implements WorkflowListener {
         private final Map<NodeContainer, CountDownLatch> m_waitLocks =
                 new WeakHashMap<NodeContainer, CountDownLatch>();
 
-        private final Object m_addLock = new Object(),
-                m_transferLock = new Object(), m_finishLock = new Object();
+        private final Object m_transferLock = new Object(),
+            m_finishLock = new Object();
 
         private boolean m_checkAutoExecNodes = false;
         
@@ -187,7 +187,7 @@ public class WorkflowManager implements WorkflowListener {
                 }
                 if (!b) {
                     MyNodePM pm = new MyNodePM(nc);
-                    synchronized (m_addLock) {
+                    synchronized (m_finishLock) {
                         if (m_executionTime == 0 && m_waitingNodes.size() == 0
                                 && m_runningNodes.size() == 0) {
                             m_executionTime = System.currentTimeMillis();
@@ -225,7 +225,7 @@ public class WorkflowManager implements WorkflowListener {
             // avoid that a node is added to m_waitingNodes after the finish
             // events have been sent and before the map is cleared;
             // we will miss the finish event for this node otherwise
-            synchronized (m_addLock) {
+            synchronized (m_finishLock) {
                 Set<NodeContainer> temp =
                         new HashSet<NodeContainer>(m_waitingNodes.keySet());
                 m_waitingNodes.clear();
@@ -374,7 +374,7 @@ public class WorkflowManager implements WorkflowListener {
                         if (watchdog) {
                             LOGGER.error("Whoa there, the watchdog found a "
                                     + "possible deadlock situation! Some nodes "
-                                    + "are still waiting, but none is running"
+                                    + "are still waiting, but none is running "
                                     + m_waitingNodes);
                         } else {
                             LOGGER.warn("Some nodes were still waiting but "
