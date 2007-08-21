@@ -80,8 +80,13 @@ public class KnimeContentProvider extends WorkbenchContentProvider {
             if (display != null && !display.isDisposed() && m_viewer != null) {
                 display.syncExec(new Runnable() {
                     public void run() {
-                        m_viewer.refresh();
-                        m_viewer.expandAll();
+                        // best effort refresh
+                        try {
+                            m_viewer.refresh();
+                            m_viewer.expandAll();
+                        } catch (Throwable t) {
+                            // do nothing
+                        }
                     }
                 });
             }
