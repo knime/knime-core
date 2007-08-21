@@ -76,12 +76,15 @@ public class KnimeContentProvider extends WorkbenchContentProvider {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            Display.getDefault().syncExec(new Runnable() {
-                public void run() {
-                    m_viewer.refresh();
-                    m_viewer.expandAll();
-                }
-            });
+            Display display = Display.getDefault();
+            if (display != null && !display.isDisposed() && m_viewer != null) {
+                display.syncExec(new Runnable() {
+                    public void run() {
+                        m_viewer.refresh();
+                        m_viewer.expandAll();
+                    }
+                });
+            }
         }
     }
 }
