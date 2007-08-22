@@ -67,6 +67,7 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.meta.MetaNodeModel;
+import org.w3c.dom.Element;
 
 /**
  * Wrapper for a Node and the surrounding graph information, i.e. successors and
@@ -527,13 +528,6 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see org.knime.core.node.Node#getFullHTMLDescription()
-     */
-    public String getFullHTMLNodeDescription() {
-        return m_node.getFullHTMLDescription();
-    }
-
-    /**
      * @return the icon associated with this node
      */
     public URL getIcon() {
@@ -650,10 +644,34 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @see Node#getOneLineDescription()
+     * @deprecated Use 
+     *  {@link org.knime.workbench.helpview.view.NodeFactoryHTMLCreator} in 
+     *  connection with the {@link #getXMLDescription()}. 
+     * @see Node#getXMLDescription()
      */
+    @Deprecated
     public String getOneLineDescription() {
         return m_node.getOneLineDescription();
+    }
+    
+    /**
+     * @deprecated Use 
+     *  {@link org.knime.workbench.helpview.view.NodeFactoryHTMLCreator} in 
+     *  connection with the {@link #getXMLDescription()}.
+     * @see org.knime.core.node.Node#getXMLDescription()
+     */
+    @Deprecated
+    public String getFullHTMLNodeDescription() {
+        return m_node.getFullHTMLDescription();
+    }
+    
+    
+    /**
+     * 
+     * @return XML description of the node
+     */
+    public Element getXMLDescription() {
+        return m_node.getXMLDescription();
     }
 
     /**

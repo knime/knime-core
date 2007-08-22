@@ -50,6 +50,7 @@ import org.knime.core.node.meta.MetaNodeModel;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
+import org.w3c.dom.Element;
 
 /**
  * Implementation of a node as basic processing unit within the workflow. A Node
@@ -579,9 +580,13 @@ public final class Node {
     /**
      * A detailed description of this node as html.
      * 
+     * @deprecated Use 
+     *  {@link org.knime.workbench.helpview.view.NodeFactoryHTMLCreator} in 
+     *  connection with the {@link #getXMLDescription()}. 
      * @return A html page containing the node's detailed description.
-     * @see org.knime.core.node.NodeFactory#getNodeFullHTMLDescription
+     * @see org.knime.core.node.NodeFactory#getXMLDescription
      */
+    @Deprecated
     public String getFullHTMLDescription() {
         return m_factory.getNodeFullHTMLDescription();
     }
@@ -589,11 +594,28 @@ public final class Node {
     /**
      * A short description of this node.
      * 
+     * @deprecated Use
+     *             {@link org.knime.workbench.helpview.view.NodeFactoryHTMLCreator}
+     *             in connection with the {@link #getXMLDescription()}.
      * @return A single line containing a brief node description.
-     * @see org.knime.core.node.NodeFactory#getNodeOneLineDescription
+     * @see org.knime.core.node.NodeFactory#getXMLDescription
      */
+    @Deprecated
     public String getOneLineDescription() {
         return m_factory.getNodeOneLineDescription();
+    }
+    
+    /**
+     * The XML description can be used with the 
+     * org.knime.workbench.helpview.view.NodeFactoryHTMLCreator in order to get
+     * a converted HTML description of it, which fits the overall KNIME HTML 
+     * style.
+     * 
+     * @return XML description of the node
+     * @see org.knime.core.node.NodeFactory#getXMLDescription()
+     */
+    public Element getXMLDescription() {
+        return m_factory.getXMLDescription();
     }
 
     /**

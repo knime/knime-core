@@ -420,6 +420,29 @@ public abstract class NodeFactory {
         }
         return w3cNodeChild.getNodeValue();
     }
+    
+    private String readFullDescription() {
+        StreamResult result = new StreamResult(new StringWriter());
+        DOMSource source = new DOMSource(m_knimeNode);
+        try {
+            transformer.transform(source, result);
+        } catch (TransformerException ex) {
+            m_logger.coding("Unable to process fullDescription in " + "xml: "
+                    + ex.getMessage(), ex);
+        }
+        return result.getWriter().toString();
+    }
+    
+    /**
+     * The XML description can be used with the 
+     * org.knime.workbench.helpview.view.NodeFactoryHTMLCreator in order to get
+     * a converted HTML description of it, which fits the overall KNIME HTML 
+     * style.
+     * @return XML description of this node 
+     */
+    public Element getXMLDescription() {
+        return m_knimeNode;
+    }
 
     /**
      * Read the port descriptions of the node from the xml file. If an error
@@ -591,18 +614,6 @@ public abstract class NodeFactory {
             return;
         }
         descList.set(index, value.trim().replaceAll("(?:\\s+|\n)", " "));
-    }
-
-    private String readFullDescription() {
-        StreamResult result = new StreamResult(new StringWriter());
-        DOMSource source = new DOMSource(m_knimeNode);
-        try {
-            transformer.transform(source, result);
-        } catch (TransformerException ex) {
-            m_logger.coding("Unable to process fullDescription in " + "xml: "
-                    + ex.getMessage(), ex);
-        }
-        return result.getWriter().toString();
     }
 
     /**
@@ -833,10 +844,15 @@ public abstract class NodeFactory {
     protected abstract NodeDialogPane createNodeDialogPane();
 
     /**
+     * @deprecated Use the 
+     *  {@link org.knime.workbench.helpview.view.NodeFactoryHTMLCreator}
+     *  in connection with the @link {@link #getXMLDescription()} method.
+     *  
      * @return A short description (like 50 characters) of the functionality the
      *         corresponding node provides. This string should not contain any
      *         formatting or html specific parts or characters.
      */
+    @Deprecated
     public final String getNodeOneLineDescription() {
         return m_shortDescription;
     }
@@ -855,10 +871,15 @@ public abstract class NodeFactory {
      * description. The xml content is processed with a stylesheet that layouts
      * all available information.
      * 
+     * @deprecated Use the 
+     *  {@link org.knime.workbench.helpview.view.NodeFactoryHTMLCreator} 
+     *  in connection with the {@link #getXMLDescription()}.
      * @return An html string containing a full description of the node's
      *         functionality, all parameters, inport data, output of the node,
      *         and views.
+     *         
      */
+    @Deprecated
     public final String getNodeFullHTMLDescription() {
         return m_fullAsHTML;
     }
