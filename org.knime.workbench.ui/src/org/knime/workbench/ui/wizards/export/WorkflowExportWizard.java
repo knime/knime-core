@@ -172,13 +172,7 @@ public class WorkflowExportWizard extends ExportWizard implements IExportWizard 
         }
 
         // get extension to check if this resource is a zip file
-        String fileExt = name.substring(name.length() - 3, name.length());
-
-        if (fileExt.equals("zip")) {
-            return true;
-        }
-
-        return false;
+        return name.toLowerCase().endsWith(".zip");
     }
 
     private void addNonExcludingFiles(final List resouceList,
