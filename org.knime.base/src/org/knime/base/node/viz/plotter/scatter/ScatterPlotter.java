@@ -145,7 +145,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
     /**
      * Passes an empty
      * {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray} to the
-     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane}.
+     * {@link org.knime.base.node.viz.plotter.scatter
+     * .ScatterPlotterDrawingPane}.
      * 
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
      */
@@ -202,9 +203,11 @@ public class ScatterPlotter extends TwoColumnPlotter {
      * hide unhilited dots and this is the show all action. The hide flag is
      * administered in the <code>ScatterPlotter</code>, since hidden points
      * are not passed to the
-     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * {@link org.knime.base.node.viz.plotter.scatter
+     * .ScatterPlotterDrawingPane},
      * the fade flag is administered in the
-     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * {@link org.knime.base.node.viz.plotter.scatter
+     * .ScatterPlotterDrawingPane},
      * since the dots are painted but with a different (faded) color.
      * 
      * @return the menu item for show all.
@@ -230,9 +233,11 @@ public class ScatterPlotter extends TwoColumnPlotter {
      * hide unhilited dots and this is the hide unhilited action. The hide flag
      * is administered in the <code>ScatterPlotter</code>, since hidden
      * points are not passed to the
-     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * {@link org.knime.base.node.viz.plotter.scatter
+     * .ScatterPlotterDrawingPane},
      * the fade flag is administered in the
-     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * {@link org.knime.base.node.viz.plotter.scatter
+     * .ScatterPlotterDrawingPane},
      * since the dots are painted but with a different (faded) color.
      * 
      * @return the menu item for hide unhilited.
@@ -274,9 +279,11 @@ public class ScatterPlotter extends TwoColumnPlotter {
      * hide unhilited dots and this is the fade unhilited action. The hide flag
      * is administered in the <code>ScatterPlotter</code>, since hidden
      * points are not passed to the
-     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * {@link org.knime.base.node.viz.plotter.scatter
+     * .ScatterPlotterDrawingPane},
      * the fade flag is administered in the
-     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * {@link org.knime.base.node.viz.plotter.scatter
+     * .ScatterPlotterDrawingPane},
      * since the dots are painted but with a different (faded) color.
      * 
      * @return the menu item for fade unhilited.
@@ -302,9 +309,11 @@ public class ScatterPlotter extends TwoColumnPlotter {
      * hide unhilited dots and this is the complete menu to hide, fade. The hide
      * flag is administered in the <code>ScatterPlotter</code>, since hidden
      * points are not passed to the
-     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * {@link org.knime.base.node.viz.plotter.scatter
+     * .ScatterPlotterDrawingPane},
      * the fade flag is administered in the
-     * {@link org.knime.base.node.viz.plotter.scatter.ScatterPlotterDrawingPane},
+     * {@link org.knime.base.node.viz.plotter.scatter
+     * .ScatterPlotterDrawingPane},
      * since the dots are painted but with a different (faded) color.
      * 
      * @return an additional menu for the NodeView's menu bar containing the
@@ -323,8 +332,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
      * {@link org.knime.base.node.viz.plotter.AbstractPlotter} and the show all,
      * fade or hide unhilited menu.
      * 
-     * @see org.knime.base.node.viz.plotter.AbstractPlotter#fillPopupMenu(
-     *      javax.swing.JPopupMenu)
+     * {@inheritDoc}
      */
     @Override
     public void fillPopupMenu(final JPopupMenu popupMenu) {
@@ -352,24 +360,25 @@ public class ScatterPlotter extends TwoColumnPlotter {
     @Override
     public void updatePaintModel() {
         if (getDataProvider() == null
-                || getDataProvider().getDataArray(0) == null) {
+                || getDataProvider().getDataArray(getDataArrayIdx()) == null) {
             return;
         }
-        if (getSelectedXColumnIndex() == -1 || getSelectedYColumnIndex() == -1) {
+        if (getSelectedXColumnIndex() == -1 
+                || getSelectedYColumnIndex() == -1) {
             return;
         }
         // check if the selected column indices are available
         int xIdx = getSelectedXColumnIndex();
         int yIdx = getSelectedYColumnIndex();
         int numCols =
-                getDataProvider().getDataArray(0).getDataTableSpec()
-                        .getNumColumns();
+                getDataProvider().getDataArray(getDataArrayIdx())
+                    .getDataTableSpec().getNumColumns();
         if (xIdx >= numCols || yIdx >= numCols) {
             return;
         }
         // getScatterPlotterDrawingPane().clearSelection();
         // get the rowInfo from the model
-        DataArray rowsCont = getDataProvider().getDataArray(0);
+        DataArray rowsCont = getDataProvider().getDataArray(getDataArrayIdx());
         if (rowsCont != null) {
             // LOGGER.debug("row container != null");
             // and create a new DotInfo array with the rowKeys in the DotInfos.
@@ -434,7 +443,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
         }
 
         // check whether there is a row container
-        if (getDataProvider().getDataArray(0) == null) {
+        if (getDataProvider().getDataArray(getDataArrayIdx()) == null) {
             return;
         }
 
@@ -459,7 +468,8 @@ public class ScatterPlotter extends TwoColumnPlotter {
             // therefore the row id is retrieved from the dot info
             int rowId = dots[i].getRowIndex();
 
-            DataRow row = getDataProvider().getDataArray(0).getRow(rowId);
+            DataRow row = getDataProvider().getDataArray(getDataArrayIdx())
+                .getRow(rowId);
             DataCell xCell = row.getCell(getSelectedXColumnIndex());
             DataCell yCell = row.getCell(getSelectedYColumnIndex());
 

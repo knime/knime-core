@@ -113,13 +113,13 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     private static final int DRAG_TOLERANCE = 5;
     
     /** The drawing pane. */
-    private AbstractDrawingPane m_drawingPane;
+    private final AbstractDrawingPane m_drawingPane;
     
     /** The scroll pane the drawing pane is embedded in. */
-    private Plotter2DScrollPane m_scroller;
+    private final Plotter2DScrollPane m_scroller;
     
     /** Thew properties panel. */
-    private AbstractPlotterProperties m_properties;
+    private final AbstractPlotterProperties m_properties;
     
     private boolean m_isDragged;
     
@@ -147,7 +147,10 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      */
     private boolean m_preserve = true;
     
+    //default value is the first index: 0
+    private int m_dataArrayIdx = 0;
     
+
     /**
      * Creates a new plotter with a drawing pane and a properties panel.
      * The listener to the default properties (selection, zooming, moving, 
@@ -378,8 +381,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     /**
      * Resizes the axes and calls {@link #updateSize()}, the drawing pane is 
      * adapted to the new space only if the size is increased. 
-     * @see java.awt.event.ComponentListener#componentResized(
-     * java.awt.event.ComponentEvent)
+     * 
+     * {@inheritDoc}
      */
     public final void componentResized(final ComponentEvent e) {
         if (m_scroller.getViewport().getSize().width > m_width) {
@@ -525,6 +528,22 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     public DataProvider getDataProvider() {
         return m_dataProvider;
     }
+    
+    
+    /**
+     * @return the dataArrayIdx
+     */
+    public int getDataArrayIdx() {
+        return m_dataArrayIdx;
+    }
+
+    /**
+     * @param dataArrayIdx the dataArrayIdx to set
+     */
+    public void setDataArrayIdx(final int dataArrayIdx) {
+        m_dataArrayIdx = dataArrayIdx;
+    }
+    
     
     /**
      * 
@@ -1259,8 +1278,8 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
                 actualMax = (int)Math.max(max, ((NumericCoordinate)getXAxis()
                         .getCoordinate()).getMaxDomainValue());
             }
-            xDomainCreator.setLowerBound(new IntCell((int)actualMin));
-            xDomainCreator.setUpperBound(new IntCell((int)actualMax));
+            xDomainCreator.setLowerBound(new IntCell(actualMin));
+            xDomainCreator.setUpperBound(new IntCell(actualMax));
             DataColumnSpecCreator xSpecCreator = new DataColumnSpecCreator("X",
                     IntCell.TYPE);
             xSpecCreator.setDomain(xDomainCreator.createDomain());
