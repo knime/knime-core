@@ -237,6 +237,9 @@ final class DBRowIterator extends RowIterator {
                             StringBuilder sb = new StringBuilder();
                             String line;
                             while ((line = buf.readLine()) != null) {
+                                if (sb.length() > 0) {
+                                    sb.append("\n");
+                                }
                                 sb.append(line);
                             }
                             s = sb.toString();
@@ -253,6 +256,9 @@ final class DBRowIterator extends RowIterator {
                             StringBuilder sb = new StringBuilder();
                             String line;
                             while ((line = buf.readLine()) != null) {
+                                if (sb.length() > 0) {
+                                    sb.append("\n");
+                                }
                                 sb.append(line);
                             }
                             s = sb.toString();
