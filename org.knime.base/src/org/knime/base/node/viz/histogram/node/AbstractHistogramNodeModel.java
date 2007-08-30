@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    13.03.2007 (Tobias Koetter): created
  */
@@ -65,7 +65,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.ColumnFilter;
 
 /**
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramNodeModel extends NodeModel {
@@ -85,8 +85,8 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     private static final String CFG_TABLESPEC_FILE = "histoTableSpec";
     /**The root tag of the table specification.*/
     private static final String CFG_TABLESPEC_TAG = "tableSpec";
-    
-    /**The name of the directory which holds the optional data of the 
+
+    /**The name of the directory which holds the optional data of the
      * different histogram implementations.*/
     public static final String CFG_DATA_DIR_NAME = "histoData";
 
@@ -94,8 +94,8 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     private DataColumnSpec m_xColSpec;
     private int m_xColIdx;
     private Collection<ColorColumn> m_aggrCols;
-    
-    private final SettingsModelIntegerBounded m_noOfRows = 
+
+    private final SettingsModelIntegerBounded m_noOfRows =
         new SettingsModelIntegerBounded(
                 CFGKEY_NO_OF_ROWS, DEFAULT_NO_OF_ROWS, 0, Integer.MAX_VALUE);
     private final SettingsModelBoolean m_allRows = new SettingsModelBoolean(
@@ -103,15 +103,15 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     /** The name of the x column. */
     private final SettingsModelString m_xColName = new SettingsModelString(
                 CFGKEY_X_COLNAME, "");
-    private SettingsModelColorNameColumns m_aggrColName = 
+    private final SettingsModelColorNameColumns m_aggrColName =
         new SettingsModelColorNameColumns(CFGKEY_AGGR_COLNAME, null);
 
     /**Constructor for class AbstractHistogramNodeModel.
-     * 
+     *
      * @param nrDataIns Number of data inputs.
      * @param nrDataOuts Number of data outputs.
      */
-    public AbstractHistogramNodeModel(final int nrDataIns, 
+    public AbstractHistogramNodeModel(final int nrDataIns,
             final int nrDataOuts) {
         super(nrDataIns, nrDataOuts);
         m_allRows.addChangeListener(new ChangeListener() {
@@ -120,9 +120,9 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             }
         });
         m_noOfRows.setEnabled(!m_allRows.getBooleanValue());
-        
+
     }
-    
+
     /**
      * @param allRows set the default value of the all rows select box.
      */
@@ -134,17 +134,17 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings) 
+    protected void validateSettings(final NodeSettingsRO settings)
     throws InvalidSettingsException {
-        final SettingsModelBoolean model = 
+        final SettingsModelBoolean model =
             m_allRows.createCloneWithValidatedValue(settings);
         if (!model.getBooleanValue()) {
-            //read the spinner value only if the user hasn't selected to 
+            //read the spinner value only if the user hasn't selected to
             //retrieve all values
             m_noOfRows.validateSettings(settings);
-            final SettingsModelInteger copy = 
+            final SettingsModelInteger copy =
                 m_noOfRows.createCloneWithValidatedValue(settings);
-            if (copy.getIntValue() > Integer.MAX_VALUE 
+            if (copy.getIntValue() > Integer.MAX_VALUE
                     || copy.getIntValue() <= 0) {
                 throw new InvalidSettingsException(
                         "No of rows must be greater zero");
@@ -152,51 +152,51 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
         }
         try {
             m_xColName.validateSettings(settings);
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             //It's an older node which hasn't stored the aggregation column
             final String xCol = settings.getString("xColumn");
             if (xCol == null || xCol.length() < 1) {
                 throw new InvalidSettingsException("Invalid binning column");
             }
-        } 
+        }
         try {
             m_aggrColName.validateSettings(settings);
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             //It's an older node which hasn't stored the aggregation column
-            LOGGER.debug("Exception while validating settings: " 
+            LOGGER.debug("Exception while validating settings: "
                     + e.getMessage());
-        } 
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) 
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         try {
             m_allRows.loadSettingsFrom(settings);
             m_noOfRows.loadSettingsFrom(settings);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // In case of older nodes the row number is not available
             m_allRows.setBooleanValue(false);
             m_noOfRows.setIntValue(DEFAULT_NO_OF_ROWS);
         }
         try {
             m_xColName.loadSettingsFrom(settings);
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             //It's an older node which had a different name for the x column
             final String xCol = settings.getString("xColumn");
             m_xColName.setStringValue(xCol);
             LOGGER.debug("Old histogram settings found");
-        } 
+        }
         try {
             m_aggrColName.loadSettingsFrom(settings);
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             //It's an older node which hasn't stored the aggregation column
-            m_aggrColName.setColorNameColumns(null);
+            m_aggrColName.setColorNameColumns((ColorColumn)null);
             LOGGER.debug("Exception while loading settings use default values");
-            
+
         }
     }
 
@@ -215,25 +215,26 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) {
         try {
-            final File settingsFile = 
+            final File settingsFile =
                 new File(nodeInternDir, CFG_TABLESPEC_FILE);
-            FileInputStream settingsIS = new FileInputStream(settingsFile);
+            final FileInputStream settingsIS =
+                new FileInputStream(settingsFile);
             final ConfigRO settings = NodeSettings.loadFromXML(settingsIS);
             m_tableSpec = DataTableSpec.load(settings);
-            final File histoDataDir = 
+            final File histoDataDir =
                 new File(nodeInternDir, CFG_DATA_DIR_NAME);
             //load the data of the implementation
             loadHistogramInternals(histoDataDir, exec);
-        } catch (Exception e) {
-            LOGGER.debug("Error while loading table specification: " 
+        } catch (final Exception e) {
+            LOGGER.debug("Error while loading table specification: "
                     + e.getMessage());
             m_tableSpec = null;
         }
     }
-    
+
     /**
      * Called from the {@link #loadInternals(File, ExecutionMonitor)} method
      * to let the histogram implementation load own internal data.
@@ -241,22 +242,22 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      * @param exec the {@link ExecutionMonitor} to provide progress message
      * @throws Exception if an exception occurs
      */
-    protected abstract void loadHistogramInternals(final File dataDir, 
+    protected abstract void loadHistogramInternals(final File dataDir,
             final ExecutionMonitor exec) throws Exception;
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) {
         if (m_tableSpec == null) {
             return;
         }
         try {
-            final File settingsFile = 
+            final File settingsFile =
                 new File(nodeInternDir, CFG_TABLESPEC_FILE);
-            final FileOutputStream settingsOS = 
+            final FileOutputStream settingsOS =
                 new FileOutputStream(settingsFile);
             final NodeSettings settings = new NodeSettings(CFG_TABLESPEC_TAG);
             m_tableSpec.save(settings);
@@ -264,12 +265,12 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             if (!new File(nodeInternDir, CFG_DATA_DIR_NAME).mkdir()) {
                 throw new Exception("Unable to create internal data directory");
             }
-            final File histoDataDir = 
+            final File histoDataDir =
                 new File(nodeInternDir, CFG_DATA_DIR_NAME);
             //save the data of the implementation
             saveHistogramInternals(histoDataDir, exec);
-        } catch (Exception e) {
-            LOGGER.warn("Error while saving table specification: " 
+        } catch (final Exception e) {
+            LOGGER.warn("Error while saving table specification: "
                     + e.getMessage());
         }
     }
@@ -280,9 +281,9 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      * @param exec the {@link ExecutionMonitor} to provide progress message
      * @throws Exception if an exception occurs
      */
-    protected abstract void saveHistogramInternals(final File dataDir, 
+    protected abstract void saveHistogramInternals(final File dataDir,
             final ExecutionMonitor exec) throws Exception;
-    
+
     /**
      * {@inheritDoc}
      */
@@ -297,8 +298,8 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     /**
      * This method creates a new {@link AbstractHistogramVizModel} each time
      * it is called.
-     * 
-     * @return the histogram viz model or <code>null</code> if not 
+     *
+     * @return the histogram viz model or <code>null</code> if not
      * all information are available yet
      */
     protected abstract AbstractHistogramVizModel getHistogramVizModel();
@@ -307,7 +308,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) 
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
     throws InvalidSettingsException {
         if (inSpecs == null || inSpecs[0] == null) {
             throw new InvalidSettingsException(
@@ -324,9 +325,9 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             // is numerical select these two columns as default columns
             // if both are numeric we don't know which one the user wants as
             // aggregation column and which one as x column
-            final ColumnFilter xFilter = 
+            final ColumnFilter xFilter =
                 AbstractHistogramPlotter.X_COLUMN_FILTER;
-            final ColumnFilter aggrFilter = 
+            final ColumnFilter aggrFilter =
                 AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER;
             if (tableSpec.getNumColumns() == 1) {
                 final DataColumnSpec columnSpec0 = tableSpec.getColumnSpec(0);
@@ -352,7 +353,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                     m_xColName.setStringValue(tableSpec.getColumnSpec(0)
                             .getName());
                     m_aggrColName.setColorNameColumns(
-                            new ColorColumn(Color.lightGray, 
+                            new ColorColumn(Color.lightGray,
                                     tableSpec.getColumnSpec(1).getName()));
                 } else if (type0.isCompatible(DoubleValue.class)
                         && type1.isCompatible(StringValue.class)
@@ -361,7 +362,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                     m_xColName.setStringValue(tableSpec.getColumnSpec(1)
                             .getName());
                     m_aggrColName.setColorNameColumns(
-                            new ColorColumn(Color.lightGray, 
+                            new ColorColumn(Color.lightGray,
                                     tableSpec.getColumnSpec(0).getName()));
                 } else {
                     throw new InvalidSettingsException(
@@ -373,11 +374,11 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             }
         }
         m_xColSpec = tableSpec.getColumnSpec(m_xColName.getStringValue());
-        //check if the table contains value which don't have a valid domain 
+        //check if the table contains value which don't have a valid domain
         //and display a warning that they are ignored
         final ColumnFilter filter = NoDomainColumnFilter.getInstance();
         final int numColumns = tableSpec.getNumColumns();
-        List<DataColumnSpec> invalidCols = 
+        final List<DataColumnSpec> invalidCols =
             new ArrayList<DataColumnSpec>(numColumns);
         for (int i = 0; i < numColumns; i++) {
             final DataColumnSpec columnSpec = tableSpec.getColumnSpec(i);
@@ -386,7 +387,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             }
         }
         if (invalidCols.size() > 0) {
-            StringBuilder buf = new StringBuilder();
+            final StringBuilder buf = new StringBuilder();
             if (invalidCols.size() == 1) {
                 buf.append("Column ");
                 buf.append(invalidCols.get(0).getName());
@@ -395,13 +396,13 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                 buf.append(invalidCols.size());
                 buf.append(" columns without a valid domain will be ignored.");
             }
-            buf.append(" In order to calculate the domain use the" 
+            buf.append(" In order to calculate the domain use the"
                     + " Nominal Values or Domain Calculator node.");
             setWarningMessage(buf.toString());
         }
         return new DataTableSpec[0];
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -445,14 +446,14 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             m_aggrCols = null;
         } else {
             m_aggrCols = new ArrayList<ColorColumn>(aggrCols.length);
-            for (ColorColumn column : aggrCols) {
+            for (final ColorColumn column : aggrCols) {
                 final String columnName = column.getColumnName();
                 final int aggrColIdx = m_tableSpec.findColumnIndex(columnName);
                 if (aggrColIdx < 0) {
                     throw new IllegalArgumentException(
                             "Selected aggregation column not found.");
                 }
-                final ColorColumn aggrColumn = 
+                final ColorColumn aggrColumn =
                     new ColorColumn(column.getColor(), columnName);
                 m_aggrCols.add(aggrColumn);
             }
@@ -468,7 +469,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
         }
         //final int noOfRows = inData[0].getRowCount();
         if ((selectedNoOfRows) < maxNoOfRows) {
-            setWarningMessage("Only the first " + selectedNoOfRows + " of " 
+            setWarningMessage("Only the first " + selectedNoOfRows + " of "
                     + maxNoOfRows + " rows are displayed.");
         } else if (selectedNoOfRows > maxNoOfRows) {
             selectedNoOfRows = maxNoOfRows;
@@ -478,7 +479,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
                 + "FixedColumnHistogramNodeModel.");
         return new BufferedDataTable[0];
     }
-    
+
     /**
      * This method should use the given information to create the internal
      * histogram data model.
@@ -488,10 +489,10 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      * @throws CanceledExecutionException if the user has canceled the
      * node execution
      */
-    protected abstract void createHistogramModel(final ExecutionContext exec, 
-            final int noOfRows, final DataTable table) 
+    protected abstract void createHistogramModel(final ExecutionContext exec,
+            final int noOfRows, final DataTable table)
     throws CanceledExecutionException;
-    
+
     /**
      * @return the {@link DataTableSpec} of the input table
      */
@@ -506,7 +507,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
     protected Collection<ColorColumn> getAggrColumns() {
         return m_aggrCols;
     }
-    
+
     /**
      * @return the name of the selected x column or null if none is selected
      */
@@ -517,7 +518,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
         }
         return value;
     }
-    
+
     /**
      * @param name the new selected x column name
      */
@@ -527,7 +528,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
         }
         m_xColName.setStringValue(name);
     }
-    
+
     /**
      * @param aggrCols the new selected aggregation column
      */
@@ -538,16 +539,16 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
         }
         m_aggrColName.setColorNameColumns(aggrCols);
     }
-    
+
     /**
      * @return the {@link DataColumnSpec} of the selected x column
      */
     protected DataColumnSpec getXColSpec() {
         return m_xColSpec;
     }
-    
+
     /**
-     * @return the index of the selected x column in the given 
+     * @return the index of the selected x column in the given
      * {@link DataTableSpec}
      */
     protected int getXColIdx() {

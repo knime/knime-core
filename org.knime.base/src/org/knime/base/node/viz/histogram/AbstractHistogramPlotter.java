@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.08.2006 (Tobias Koetter): created
  */
@@ -68,9 +68,9 @@ import org.knime.core.node.util.CombinedColumnFilter;
 import org.knime.core.node.util.DataValueColumnFilter;
 
 /**
- * Abstract class which is the coordinator between the 
+ * Abstract class which is the coordinator between the
  * {@link HistogramDrawingPane} and the {@link AbstractHistogramVizModel}.
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramPlotter extends AbstractPlotter {
@@ -80,35 +80,35 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     public static final String COL_NAME_COUNT = "Count";
     /**Number of digits used in an interval.*/
     public static final int INTERVAL_DIGITS = 2;
-    
+
     /**This column filter should be used in all x column select boxes.*/
-    public static final ColumnFilter X_COLUMN_FILTER = 
+    public static final ColumnFilter X_COLUMN_FILTER =
         NoDomainColumnFilter.getInstance();
-    
-    /**This column filter should be used in all aggregation column 
+
+    /**This column filter should be used in all aggregation column
      * select boxes.*/
     @SuppressWarnings("unchecked")
     public static final ColumnFilter AGGREGATION_COLUMN_FILTER =
-        new CombinedColumnFilter(new DataValueColumnFilter(DoubleValue.class), 
+        new CombinedColumnFilter(new DataValueColumnFilter(DoubleValue.class),
             NoDomainColumnFilter.getInstance());
-    
+
     /** The <code>DataTableSpec</code> of the input data. */
     private DataTableSpec m_tableSpec;
 
     /**
-     * The <code>HistogramVizModel</code> which holds the basic 
+     * The <code>HistogramVizModel</code> which holds the basic
      * information.
      */
     private AbstractHistogramVizModel m_vizModel;
-    
+
     private final AbstractHistogramProperties m_histoProps;
-    
+
     /**If the user changes the layout to side-by-side we automatically
      * set the bin width to maximum. If he goes back to stacked layout
      * show the bars with the original bar width. Thats what this variable
      * stores.*/
     private int m_lastStackedBinWidth = -1;
-        
+
     /**Constructor for class AbstractHistogramPlotter.
      * @param histogramProps the histogram properties panel
      * @param handler the HiLiteHandler to use
@@ -128,7 +128,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         // set the hilitehandler for highlighting stuff
         if (handler != null) {
             super.setHiLiteHandler(handler);
-        } 
+        }
 //        else {
 //            throw new IllegalArgumentException("HiLiteHandler not defined.");
 //        }
@@ -136,7 +136,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 
     /**
      * Registers all histogram properties listener to the histogram
-     * properties panel. 
+     * properties panel.
      */
     private void registerPropertiesChangeListener() {
         if (m_histoProps == null) {
@@ -151,12 +151,12 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         });
         m_histoProps.addShowBinOutlineChangedListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
-                final AbstractHistogramVizModel vizModel = 
+                final AbstractHistogramVizModel vizModel =
                     getHistogramVizModel();
                 if (vizModel != null) {
                     vizModel.setShowBinOutline(
                             e.getStateChange() == ItemEvent.SELECTED);
-                    final HistogramDrawingPane histoDrawingPane = 
+                    final HistogramDrawingPane histoDrawingPane =
                         getHistogramDrawingPane();
                     histoDrawingPane.repaint();
                 }
@@ -164,12 +164,12 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         });
         m_histoProps.addShowBarOutlineChangedListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
-                final AbstractHistogramVizModel vizModel = 
+                final AbstractHistogramVizModel vizModel =
                     getHistogramVizModel();
                 if (vizModel != null) {
                     vizModel.setShowBarOutline(
                             e.getStateChange() == ItemEvent.SELECTED);
-                    final HistogramDrawingPane histoDrawingPane = 
+                    final HistogramDrawingPane histoDrawingPane =
                         getHistogramDrawingPane();
                     histoDrawingPane.repaint();
                 }
@@ -177,12 +177,12 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         });
         m_histoProps.addShowElementOutlineChangedListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
-                final AbstractHistogramVizModel vizModel = 
+                final AbstractHistogramVizModel vizModel =
                     getHistogramVizModel();
                 if (vizModel != null) {
                     vizModel.setShowElementOutline(
                             e.getStateChange() == ItemEvent.SELECTED);
-                    final HistogramDrawingPane histoDrawingPane = 
+                    final HistogramDrawingPane histoDrawingPane =
                         getHistogramDrawingPane();
                     histoDrawingPane.repaint();
                 }
@@ -190,15 +190,15 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         });
         m_histoProps.addLabelOrientationListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                final AbstractHistogramVizModel vizModel = 
+                final AbstractHistogramVizModel vizModel =
                     getHistogramVizModel();
                 if (vizModel != null) {
-                    final AbstractHistogramProperties histoProps = 
+                    final AbstractHistogramProperties histoProps =
                         getHistogramPropertiesPanel();
                     if (histoProps != null) {
                         vizModel.setShowLabelVertical(
                                 histoProps.isShowLabelVertical());
-                        final HistogramDrawingPane histoDrawingPane = 
+                        final HistogramDrawingPane histoDrawingPane =
                             getHistogramDrawingPane();
                         histoDrawingPane.repaint();
                     }
@@ -207,15 +207,15 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         });
         m_histoProps.addLabelDisplayListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                final AbstractHistogramVizModel vizModel = 
+                final AbstractHistogramVizModel vizModel =
                     getHistogramVizModel();
                 if (vizModel != null) {
-                    final AbstractHistogramProperties histoProps = 
+                    final AbstractHistogramProperties histoProps =
                         getHistogramPropertiesPanel();
                     if (histoProps != null) {
                         vizModel.setLabelDisplayPolicy(
                                 histoProps.getLabelDisplayPolicy());
-                        final HistogramDrawingPane histoDrawingPane = 
+                        final HistogramDrawingPane histoDrawingPane =
                             getHistogramDrawingPane();
                         histoDrawingPane.repaint();
                     }
@@ -224,7 +224,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         });
         m_histoProps.addLayoutListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                final AbstractHistogramProperties histoProps = 
+                final AbstractHistogramProperties histoProps =
                     getHistogramPropertiesPanel();
                 if (histoProps != null) {
                     setHistogramLayout(histoProps.getHistogramLayout());
@@ -240,7 +240,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         });
         m_histoProps.addNoOfBinsChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                JSlider source = (JSlider)e.getSource();
+                final JSlider source = (JSlider)e.getSource();
                 //react only if the slider is in is final position
                 if (!source.getValueIsAdjusting()) {
                     final int noOfBins = source.getValue();
@@ -257,7 +257,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     throw new IllegalArgumentException(
                             "No valid aggregation method");
                 }
-                final AggregationMethod aggrMethod = 
+                final AggregationMethod aggrMethod =
                     AggregationMethod.getMethod4String(methodName);
                 if (setAggregationMethod(aggrMethod)) {
                     updatePaintModel();
@@ -281,7 +281,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             }
         });
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -297,16 +297,16 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             return;
         }
         if (HistogramLayout.SIDE_BY_SIDE.equals(
-                vizModel.getHistogramLayout()) 
+                vizModel.getHistogramLayout())
                 || vizModel.containsNotPresentableBin()) {
             //set the bin with to the maximum bin if the layout
-            //is side-by-side or the bin is not presentable with 
+            //is side-by-side or the bin is not presentable with
             //the current width
             vizModel.setBinWidth(vizModel.getMaxBinWidth());
         }
         updatePaintModel();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -323,18 +323,18 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final Dimension drawingSpace = vizModel.getDrawingSpace();
         setHistogramBinRectangle(vizModel, xCoordinates, yCoordinates);
         final double drawingHeight = drawingSpace.getHeight();
-        if (!yCoordinates.isNominal() 
-                && ((NumericCoordinate)yCoordinates).getMinDomainValue() 
+        if (!yCoordinates.isNominal()
+                && ((NumericCoordinate)yCoordinates).getMinDomainValue()
                     < 0) {
-            final int baseLine = (int)(drawingHeight 
+            final int baseLine = (int)(drawingHeight
                     - yCoordinates.calculateMappedValue(
                             new DoubleCell(0), drawingHeight, true));
-            drawingPane.setBaseLine(baseLine);
+            drawingPane.setBaseLine(new Integer(baseLine));
         } else {
             drawingPane.setBaseLine(null);
         }
         if (vizModel.isShowGridLines()) {
-            final int[] gridLines = 
+            final int[] gridLines =
                 getGridLineCoordinates(yCoordinates, drawingHeight);
             drawingPane.setGridLines(gridLines);
         } else {
@@ -343,10 +343,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         //update the properties panel as well since something could have changed
         drawingPane.setHistogramVizModel(vizModel, true);
     }
-    
+
     /**
      * Updates ONLY the width of the bins.
-     * @param binWidth the new bin width 
+     * @param binWidth the new bin width
      */
     protected void updateBinWidth(final int binWidth) {
         final AbstractHistogramVizModel vizModel = getHistogramVizModel();
@@ -365,19 +365,19 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final double drawingHeight = drawingSpace.getHeight();
         final Coordinate xCoordinates = getXCoordinate();
         final Coordinate aggrCoordinate = getAggregationCoordinate();
-        final int baseLine = 
+        final int baseLine =
             (int)(drawingHeight - aggrCoordinate.calculateMappedValue(
                             new DoubleCell(0), drawingHeight, true));
         final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
-        
+
         final int newBinWidth = vizModel.getBinWidth();
         final HistogramLayout layout = vizModel.getHistogramLayout();
-        final SortedSet<Color> barElementColors = 
+        final SortedSet<Color> barElementColors =
             vizModel.getRowColors();
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
-        final Collection<ColorColumn> aggrColumns = 
+        final Collection<ColorColumn> aggrColumns =
             vizModel.getAggrColumns();
-        for (BinDataModel bin : vizModel.getBins()) {
+        for (final BinDataModel bin : vizModel.getBins()) {
             final DataCell captionCell = bin.getXAxisCaptionCell();
             final double labelCoord = xCoordinates.calculateMappedValue(
                     captionCell, drawingWidth, true);
@@ -424,13 +424,13 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         }
         return aggrCoordinate;
     }
-    
+
     /**
      * Calculates and sets the drawing rectangle of each bin.
-     * @param xCoordinates The <code>Coordinate</code> object which contains 
-     * the start position of an bar on the x axis 
-     * @param yCoordinates The <code>Coordinate</code> object which contains 
-     * the start position of an bar on the y axis 
+     * @param xCoordinates The <code>Coordinate</code> object which contains
+     * the start position of an bar on the x axis
+     * @param yCoordinates The <code>Coordinate</code> object which contains
+     * the start position of an bar on the y axis
      * @param drawingSpace A <code>Rectangle</code> which defines the available
      * drawing space
      */
@@ -440,14 +440,14 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final Dimension drawingSpace = vizModel.getDrawingSpace();
         final int binWidth = vizModel.getBinWidth();
         final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
-        final SortedSet<Color> barElementColors = 
+        final SortedSet<Color> barElementColors =
             vizModel.getRowColors();
-        final Collection<ColorColumn> aggrColumns = 
+        final Collection<ColorColumn> aggrColumns =
             vizModel.getAggrColumns();
         final HistogramLayout layout = vizModel.getHistogramLayout();
         final double drawingWidth = drawingSpace.getWidth();
         final double drawingHeight = drawingSpace.getHeight();
-        final int baseLine = 
+        final int baseLine =
             (int)(drawingHeight - yCoordinates.calculateMappedValue(
                             new DoubleCell(0), drawingHeight, true));
         // this is the minimum size of a bar with an aggregation value > 0
@@ -456,7 +456,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 AbstractHistogramVizModel.MINIMUM_BAR_HEIGHT);
         // get the default width for all bins
 //        final int binWidth = getBinWidth();
-        for (BinDataModel bin : vizModel.getBins()) {
+        for (final BinDataModel bin : vizModel.getBins()) {
             final DataCell captionCell = bin.getXAxisCaptionCell();
             final double labelCoord = xCoordinates.calculateMappedValue(
                     captionCell, drawingWidth, true);
@@ -464,7 +464,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 //this bin is not on the x axis (because it is empty and the
                 //empty bins shouldn't be displayed) so we simply set the
                 //rectangle to null and continue
-                bin.setBinRectangle(null, aggrMethod, layout, baseLine, 
+                bin.setBinRectangle(null, aggrMethod, layout, baseLine,
                         barElementColors, aggrColumns);
                 continue;
             }
@@ -478,21 +478,21 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             //subtract half of the bar width from the start position to place
             //the middle point of the bar on the mapped coordinate position
             final int xCoord = (int)(labelCoord - (binWidth / 2));
-            int upperY = (int)(drawingHeight 
+            final int upperY = (int)(drawingHeight
                     - yCoordinates.calculateMappedValue(
                             new DoubleCell(maxAggrVal), drawingHeight, true));
-            int lowerY = (int)(drawingHeight 
+            final int lowerY = (int)(drawingHeight
                     - yCoordinates.calculateMappedValue(
                             new DoubleCell(minAggrVal), drawingHeight, true));
-            final Rectangle binRect = calculateBorderRectangle(xCoord, lowerY, 
+            final Rectangle binRect = calculateBorderRectangle(xCoord, lowerY,
                     upperY, minHeight, binWidth, maxAggrVal, baseLine);
-            bin.setBinRectangle(binRect, aggrMethod, layout, baseLine, 
+            bin.setBinRectangle(binRect, aggrMethod, layout, baseLine,
                     barElementColors, aggrColumns);
         } // end of for loop over the x axis coordinates
     }
 
-    private static Rectangle calculateBorderRectangle(final int xCoord, 
-            final int lowerY, final int upperY, final int minHeight, 
+    private static Rectangle calculateBorderRectangle(final int xCoord,
+            final int lowerY, final int upperY, final int minHeight,
             final int width, final double maxAggrVal, final int baseLine) {
         int height = lowerY - upperY;
         int yCoord = upperY;
@@ -515,13 +515,13 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         }
         return new Rectangle(xCoord, yCoord, width, height);
     }
-    
+
     /**
-     * Sets the x coordinates for the current 
+     * Sets the x coordinates for the current
      * {@link AbstractHistogramVizModel}.
      */
     protected void setXCoordinates() {
-        DataColumnSpec colSpec = getXColumnSpec();
+        final DataColumnSpec colSpec = getXColumnSpec();
 //         tell the headers to display the new column names
         final Coordinate xCoordinate = Coordinate.createCoordinate(colSpec);
         if (xCoordinate == null) {
@@ -529,7 +529,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     + " Unable to create x coordinates");
         }
         if (getXAxis() == null) {
-            final Axis xAxis = new Axis(Axis.HORIZONTAL, 
+            final Axis xAxis = new Axis(Axis.HORIZONTAL,
                     getDrawingPaneDimension().width);
             setXAxis(xAxis);
         }
@@ -538,7 +538,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
     /**
-     * Sets the y coordinates for the current 
+     * Sets the y coordinates for the current
      * {@link AbstractHistogramVizModel}.
      */
     protected void setYCoordinates() {
@@ -547,7 +547,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 //         tell the headers to display the new column names
         final Coordinate yCoordinate = Coordinate.createCoordinate(aggrColSpec);
         if (getYAxis() == null) {
-            final Axis yAxis = new Axis(Axis.VERTICAL, 
+            final Axis yAxis = new Axis(Axis.VERTICAL,
                     getDrawingPaneDimension().height);
             setYAxis(yAxis);
         }
@@ -556,7 +556,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
       /**
-     * @param noOfBins sets the number of bins which is used for binning of 
+     * @param noOfBins sets the number of bins which is used for binning of
      * none nominal attributes
      * @return <code>true</code> if the value has changed
      */
@@ -575,7 +575,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
             if (HistogramLayout.SIDE_BY_SIDE.equals(
                     vizModel.getHistogramLayout())
-                    || (vizModel.getAggrColumns() != null 
+                    || (vizModel.getAggrColumns() != null
                             && vizModel.getAggrColumns().size() > 1)) {
                 vizModel.setBinWidth(vizModel.getMaxBinWidth());
             }
@@ -589,10 +589,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 
     /**
      * Sets new aggregation columns and recalculates/repaints.
-     * 
+     *
      * @param aggrMethod The aggregation method
-     * @return <code>true</code> if the method has change otherwise 
-     * <code>false</code>. 
+     * @return <code>true</code> if the method has change otherwise
+     * <code>false</code>.
      */
     public boolean setAggregationMethod(final AggregationMethod aggrMethod) {
         if (aggrMethod == null) {
@@ -616,11 +616,11 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 
     /**
      * Convenience method to cast the drawing pane.
-     * 
+     *
      * @return the underlying scatter plotter drawing pane
      */
     protected HistogramDrawingPane getHistogramDrawingPane() {
-        HistogramDrawingPane myPane = (HistogramDrawingPane)getDrawingPane();
+        final HistogramDrawingPane myPane = (HistogramDrawingPane)getDrawingPane();
         if (myPane == null) {
             throw new IllegalStateException("Drawing pane must not be null");
         }
@@ -648,21 +648,21 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         double lowerBound = vizModel.getMinAggregationValue();
         double upperBound = vizModel.getMaxAggregationValue();
         //set the upper bound for negative values and the lower bound for
-        //positive values to 0 to ensure that the 0 is displayed on the 
+        //positive values to 0 to ensure that the 0 is displayed on the
         //coordinate
         if (lowerBound > 0) {
             lowerBound = 0;
         } else if (upperBound < 0) {
             upperBound = 0;
         }
-        final AggregationMethod aggrMethod = 
+        final AggregationMethod aggrMethod =
             vizModel.getAggregationMethod();
         // set the column type depending on the aggregation method and type of
         // the aggregation column. If the method is count set it to integer. If
         // the aggregation method is summary and the data type of the
         // aggregation column is integer the result must be an integer itself
         DataType type = DoubleCell.TYPE;
-        final Collection<? extends ColorColumn> columnNames = 
+        final Collection<? extends ColorColumn> columnNames =
             vizModel.getAggrColumns();
         if (AggregationMethod.COUNT.equals(aggrMethod)) {
             type = IntCell.TYPE;
@@ -670,10 +670,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (AggregationMethod.SUM.equals(aggrMethod) && columnNames != null) {
             //if the aggregation method is summary and ...
             boolean allInteger = true;
-            for (ColorColumn column : columnNames) {
-                final DataColumnSpec colSpec = 
+            for (final ColorColumn column : columnNames) {
+                final DataColumnSpec colSpec =
                     m_tableSpec.getColumnSpec(column.getColumnName());
-                if (colSpec == null 
+                if (colSpec == null
                         || !colSpec.getType().isCompatible(IntValue.class)) {
                     allInteger = false;
                     break;
@@ -681,7 +681,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             }
             //... all columns of the int type we can set the column type to int
             if (allInteger) {
-                type = IntCell.TYPE;    
+                type = IntCell.TYPE;
             }
         }
         final String displayColumnName = createAggregationColumnName(
@@ -693,7 +693,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
 
     /**
      * Returns the <code>DataColumnSpec</code> of the x column.
-     * 
+     *
      * @return the <code>DataColumnSpec</code> of the x column
      */
     private DataColumnSpec getXColumnSpec() {
@@ -714,32 +714,32 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (binCaptions.size() < 1) {
             binCaptions.add(new StringCell(
                     "Only missing or too many values"));
-            DataColumnSpec colSpec = createColumnSpec(colName,
+            final DataColumnSpec colSpec = createColumnSpec(colName,
                     StringCell.TYPE, Double.NaN, Double.NaN, binCaptions);
             return colSpec;
         }
-        DataColumnSpec colSpec = createColumnSpec(colName, StringCell.TYPE,
+        final DataColumnSpec colSpec = createColumnSpec(colName, StringCell.TYPE,
                 Double.NaN, Double.NaN, binCaptions);
         return colSpec;
     }
 
     /**
      * Returns <code>DataColumnSpec</code> object with the given properties.
-     * 
-     * @param columnName name of the column. 
-     * @param type the <code>DataType</code> of the column 
-     * @param lowerBound the lower bound if available if not set it to 
-     * <code>Double.NaN</code> @param upperBoundthe upper bound if available if 
-     * not set it to <code>Double.NaN</code> 
-     * @param values the possible values for nominal types or <code>null</code> 
-     * for discrete types 
+     *
+     * @param columnName name of the column.
+     * @param type the <code>DataType</code> of the column
+     * @param lowerBound the lower bound if available if not set it to
+     * <code>Double.NaN</code> @param upperBoundthe upper bound if available if
+     * not set it to <code>Double.NaN</code>
+     * @param values the possible values for nominal types or <code>null</code>
+     * for discrete types
      * @return the <code>DataColumnSpec</code> object created using the
      * given values
      */
-    private DataColumnSpec createColumnSpec(final String columnName, 
-            final DataType type, final double lowerBound, 
+    private DataColumnSpec createColumnSpec(final String columnName,
+            final DataType type, final double lowerBound,
             final double upperBound, final Set<DataCell> values) {
-        DataColumnDomainCreator domainCreator = new DataColumnDomainCreator();
+        final DataColumnDomainCreator domainCreator = new DataColumnDomainCreator();
         if (!Double.isNaN(lowerBound) && !Double.isNaN(upperBound)) {
             DataCell lowerBoundCell = null;
             DataCell upperBoundCell = null;
@@ -756,29 +756,29 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (values != null && values.size() > 0) {
             domainCreator.setValues(values);
         }
-        DataColumnSpecCreator specCreator = new DataColumnSpecCreator(
+        final DataColumnSpecCreator specCreator = new DataColumnSpecCreator(
                 columnName, type);
         specCreator.setDomain(domainCreator.createDomain());
-        DataColumnSpec spec = specCreator.createSpec();
+        final DataColumnSpec spec = specCreator.createSpec();
         return spec;
     }
 
     /**
      * Returns the column name including the aggregation method.
-     * 
+     *
      * @param columnNames the origin column name
      * @param aggrMethod the aggregation method
      * @return column name with a hint about the aggregation method
      */
     private String createAggregationColumnName(
-            final Collection<? extends ColorColumn> columnNames, 
+            final Collection<? extends ColorColumn> columnNames,
             final AggregationMethod aggrMethod) {
         if (aggrMethod.equals(AggregationMethod.COUNT)) {
             return AbstractHistogramPlotter.COL_NAME_COUNT;
         }
-        StringBuilder name = new StringBuilder();
+        final StringBuilder name = new StringBuilder();
         if (columnNames == null || columnNames.size() < 0) {
-            //if the method is not count the user has to 
+            //if the method is not count the user has to
             //select a aggregation column
             throw new IllegalArgumentException("Column name not defined.");
         } else if (aggrMethod.equals(AggregationMethod.SUM)) {
@@ -790,7 +790,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     "Aggregation method not supported.");
         }
         boolean first = true;
-        for (ColorColumn column : columnNames) {
+        for (final ColorColumn column : columnNames) {
             if (first) {
                 first = false;
             } else {
@@ -798,7 +798,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             }
             name.append(column.getColumnName());
         }
-        return name.toString(); 
+        return name.toString();
     }
 
     /**
@@ -822,9 +822,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 if (yCoordinates == null) {
                     return;
                 }
-                final double drawingHeight = 
+                final double drawingHeight =
                     vizModel.getDrawingSpace().getHeight();
-                final int[] gridLines = 
+                final int[] gridLines =
                     getGridLineCoordinates(yCoordinates, drawingHeight);
                 drawingPane.setGridLines(gridLines);
             } else {
@@ -853,7 +853,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         }
         return gridLines;
     }
-    
+
     /**
      * @param layout the {@link HistogramLayout} to use
      */
@@ -865,13 +865,13 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (vizModel.setHistogramLayout(layout)) {
 //          if the layout has changed we have to update the y coordinates
             setYCoordinates();
-            if (HistogramLayout.SIDE_BY_SIDE.equals(layout) 
-                    || (vizModel.getAggrColumns() != null 
+            if (HistogramLayout.SIDE_BY_SIDE.equals(layout)
+                    || (vizModel.getAggrColumns() != null
                             && vizModel.getAggrColumns().size() > 1)) {
                 //save the current bin width to restore it after changing the
                 //layout again
                 m_lastStackedBinWidth = vizModel.getBinWidth();
-                //... and set the bin width to the maximum bin 
+                //... and set the bin width to the maximum bin
                 //with by changing to the side by side layout
                 vizModel.setBinWidth(vizModel.getMaxBinWidth());
             } else if (HistogramLayout.STACKED.equals(layout)) {
@@ -881,7 +881,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             updatePaintModel();
         }
     }
-    
+
     /**
      * @param showEmptyBins set to <code>true</code> if the empty bins should
      * be displayed
@@ -969,11 +969,11 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     }
 
     /**
-     * Returns the <code>AbstractHistogramVizModel</code> on which the 
-     * visualisation bases on. It creates the model if it doesn't exists by 
-     * using the information of the getXColName method and the m_rowContainer 
+     * Returns the <code>AbstractHistogramVizModel</code> on which the
+     * visualisation bases on. It creates the model if it doesn't exists by
+     * using the information of the getXColName method and the m_rowContainer
      * variable.
-     * 
+     *
      * @return the model on which the visualisation is based on
      */
     public AbstractHistogramVizModel getHistogramVizModel() {
@@ -1013,7 +1013,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         setYCoordinates();
         // select the x column also in the select box of the properties
         // panel
-       m_histoProps.updateColumnSelection(m_tableSpec, 
+       m_histoProps.updateColumnSelection(m_tableSpec,
                vizModel.getXColumnName(), vizModel.getAggrColumns(),
                vizModel.getAggregationMethod());
        if (!vizModel.isFixed()) {
@@ -1093,7 +1093,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
-        final Set<DataCell> selectedKeys = 
+        final Set<DataCell> selectedKeys =
             vizModel.getSelectedKeys();
         delegateHiLite(selectedKeys);
         repaint();
@@ -1109,12 +1109,12 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
         }
-        final Set<DataCell> selectedKeys = 
+        final Set<DataCell> selectedKeys =
             vizModel.getSelectedKeys();
         delegateUnHiLite(selectedKeys);
         repaint();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -1146,7 +1146,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 vizModel.getHTMLDetailData());
         repaint();
     }
-    
+
     /**
      * {@inheritDoc}
      */

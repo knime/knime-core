@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    26.02.2007 (Tobias Koetter): created
  */
@@ -51,22 +51,22 @@ import org.knime.core.data.def.StringCell;
  * This is the basic visualization model for a histogram. It handles bin
  * creation and hilite handling and defines the constants which effect the
  * drawing like minimum space between bins and elements.
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramVizModel {
 
     /**This message is displayed in the details tab if no element is selected.*/
-    public static final String NO_ELEMENT_SELECTED_TEXT = 
+    public static final String NO_ELEMENT_SELECTED_TEXT =
         "Select an element for detailed information";
 
     /** The caption of the bar which holds all missing values. */
     public static final String MISSING_VAL_BAR_CAPTION = "Missing_values";
-    
+
     /** Defines the minimum width of a bin. Should be more than the base line
      * stroke.*/
     public static final int MIN_BIN_WIDTH = 6;
-    
+
     /**
      * The default number of bars which get created if the createBinnedBars
      * method is called with a number smaller then 1.
@@ -94,13 +94,13 @@ public abstract class AbstractHistogramVizModel {
     private HistogramLayout m_layout;
 
     private boolean m_showMissingValBin = true;
-    
+
     /**If set to true the plotter paints the grid lines for the y axis values.*/
     private boolean m_showGridLines = true;
-    
+
     /**If set to true the plotter paints the bin outline.*/
     private boolean m_showBinOutline = true;
-    
+
     /**If set to true the plotter paints the bar outline.*/
     private boolean m_showBarOutline = false;
 
@@ -108,18 +108,18 @@ public abstract class AbstractHistogramVizModel {
      * is always painted for highlighted blocks!.*/
     private boolean m_showElementOutlines = false;
 
-    /**If set to <code>true</code> the bar labels are displayed vertical 
+    /**If set to <code>true</code> the bar labels are displayed vertical
      * otherwise they are displayed horizontal.*/
     private boolean m_showLabelVertical = true;
 
     /**The label display policy defines for which bars the labels should be
      * displayed.*/
-    private LabelDisplayPolicy m_labelDisplayPolicy = 
+    private LabelDisplayPolicy m_labelDisplayPolicy =
         LabelDisplayPolicy.getDefaultOption();
-  
+
     /** The current basic width of the bins. */
     private int m_binWidth = Integer.MAX_VALUE;
-    
+
     private int m_maxBinWidth;
 
     /**
@@ -127,28 +127,28 @@ public abstract class AbstractHistogramVizModel {
      */
     private boolean m_showEmptyBins = false;
 
-    private BinDataModel m_missingValueBin; 
-    
+    private BinDataModel m_missingValueBin;
+
     private final List<BinDataModel> m_bins = new ArrayList<BinDataModel>(50);
 
     private int m_noOfBins = 1;
-    
+
     private int m_maxNoOfBins;
 
     /**Holds the actual size of the drawing space.*/
     private Dimension m_drawingSpace;
-    
+
     /**The thickness of a bin which is used to show the different bins.*/
     public static final int BIN_SURROUNDING_SPACE = 4;
-    
+
     /** This is the minimum space between two bins. */
     public static final int SPACE_BETWEEN_BINS = 2 * BIN_SURROUNDING_SPACE + 3;
-    
-    /**The space around a bar which is used to show the aggregation 
+
+    /**The space around a bar which is used to show the aggregation
      * column color.*/
-    public static final int BAR_SURROUNDING_SPACE = 
+    public static final int BAR_SURROUNDING_SPACE =
         Math.min(BIN_SURROUNDING_SPACE, 3);
-    
+
     /**The space between to bars in pixel. Must be greater 0.*/
     public static final int SPACE_BETWEEN_BARS = 2 * BAR_SURROUNDING_SPACE + 3;
 
@@ -157,14 +157,14 @@ public abstract class AbstractHistogramVizModel {
      * layout in  pixel. Must be greater 0.
      */
     public static final int SPACE_BETWEEN_ELEMENTS = 2;
-    
+
     /**The minimum width of an bar/element.*/
     public static final int MINIMUM_ELEMENT_WIDTH = 6;
 
     /** The minimum height of a bar.*/
     public static final int MINIMUM_BAR_HEIGHT = 4;
 
-    
+
     /**Constructor for class HistogramVizModel.
      * @param rowColors all possible colors the user has defined for a row
      * @param layout the {@link HistogramLayout} to use
@@ -172,7 +172,7 @@ public abstract class AbstractHistogramVizModel {
      * @param noOfBins the no of bins to create
      */
     public AbstractHistogramVizModel(final SortedSet<Color> rowColors,
-            final AggregationMethod aggrMethod, final HistogramLayout layout, 
+            final AggregationMethod aggrMethod, final HistogramLayout layout,
             final int noOfBins) {
         if (rowColors == null) {
             throw new IllegalArgumentException(
@@ -183,16 +183,16 @@ public abstract class AbstractHistogramVizModel {
         m_layout = layout;
         m_noOfBins = noOfBins;
     }
-    
-    
+
+
     /**
      * @return the drawingSpace
      */
     public Dimension getDrawingSpace() {
         return m_drawingSpace;
     }
-    
-    
+
+
     /**
      * @param drawingSpace the drawingSpace to set
      * @return <code>true</code> if the parameter has changed
@@ -202,16 +202,16 @@ public abstract class AbstractHistogramVizModel {
             throw new IllegalArgumentException(
                     "Drawing space must not be null");
         }
-        if (drawingSpace == null || drawingSpace.equals(m_drawingSpace)) {
+        if (drawingSpace.equals(m_drawingSpace)) {
             return false;
         }
         m_drawingSpace = drawingSpace;
         return true;
     }
-    
+
     /**
-     * @return all {@link BinDataModel} objects of this 
-     * histogram including the missing value bin if the showMissingValue 
+     * @return all {@link BinDataModel} objects of this
+     * histogram including the missing value bin if the showMissingValue
      * bin variable is set to
      * <code>true</code>
      */
@@ -220,7 +220,7 @@ public abstract class AbstractHistogramVizModel {
             final BinDataModel missingValueBin = getMissingValueBin();
             if (isShowMissingValBin()) {
                 final int missingValBinIdx = m_bins.size() - 1;
-                if (missingValBinIdx < 0 
+                if (missingValBinIdx < 0
                         || m_bins.get(missingValBinIdx) != missingValueBin) {
                     m_bins.add(missingValueBin);
                 }
@@ -237,15 +237,15 @@ public abstract class AbstractHistogramVizModel {
         }
         return m_bins;
     }
-    
+
     /**
      * @return all bins which are selected
      */
     public List<BinDataModel> getSelectedBins() {
         final List<BinDataModel> bins = getBins();
-        final List<BinDataModel> selectedBins = 
+        final List<BinDataModel> selectedBins =
             new ArrayList<BinDataModel>(bins.size());
-        for (BinDataModel model : bins) {
+        for (final BinDataModel model : bins) {
             if (model.isSelected()) {
                 selectedBins.add(model);
             }
@@ -285,7 +285,7 @@ public abstract class AbstractHistogramVizModel {
     }
 
     /**
-     * @return the maximum number of bins which fit into the 
+     * @return the maximum number of bins which fit into the
      * current drawing space
      */
     public int getMaxNoOfBins() {
@@ -301,7 +301,7 @@ public abstract class AbstractHistogramVizModel {
         checkBinWidth();
         return m_binWidth;
     }
-    
+
     /**
      * Calculates the current preferred width of the bars.
      */
@@ -312,8 +312,8 @@ public abstract class AbstractHistogramVizModel {
         int binWidth = m_binWidth;
         if (binWidth < 0) {
             // that only occurs at the first call
-            //we have to use the getBinCaptions method which checks if the 
-            //missing value bin should be included or not and if empty 
+            //we have to use the getBinCaptions method which checks if the
+            //missing value bin should be included or not and if empty
             //bins should be displayed
             final int noOfBins = getDisplayedNoOfBins();
             binWidth = (int)(m_drawingSpace.getWidth() / noOfBins)
@@ -333,7 +333,7 @@ public abstract class AbstractHistogramVizModel {
         }
         m_binWidth = binWidth;
     }
-    
+
     /**
      * Calculates the maximum width per bar for the current display settings.
      */
@@ -349,7 +349,7 @@ public abstract class AbstractHistogramVizModel {
         m_maxBinWidth = Math.max((int)(m_drawingSpace.getWidth() / noOfBins)
                 - AbstractHistogramVizModel.SPACE_BETWEEN_BINS, 1);
     }
-    
+
     /**
      * @return the maximum bin width
      */
@@ -373,13 +373,13 @@ public abstract class AbstractHistogramVizModel {
         }
         return true;
     }
-    
+
     /**
      * @param noOfBins the new number of bins to create
      * @return <code>true</code> if the number of bins has changed
      */
     public boolean setNoOfBins(final int noOfBins) {
-        int noOf = Math.min(noOfBins, getMaxNoOfBins());
+        final int noOf = Math.min(noOfBins, getMaxNoOfBins());
         if (m_noOfBins == noOf) {
             return false;
         }
@@ -389,7 +389,7 @@ public abstract class AbstractHistogramVizModel {
 
     /**
      * @param noOfBins updates the number of bins but doesn't check if the
-     * number has changed and thus doesn't recreate the bins if the 
+     * number has changed and thus doesn't recreate the bins if the
      * number has changed.
      */
     protected void updateNoOfBins(final int noOfBins) {
@@ -422,8 +422,8 @@ public abstract class AbstractHistogramVizModel {
             m_maxNoOfBins = m_bins.size();
             return;
         }
-        int maxNoOfBins = (int)(m_drawingSpace.getWidth() 
-                / (AbstractHistogramVizModel.MIN_BIN_WIDTH 
+        int maxNoOfBins = (int)(m_drawingSpace.getWidth()
+                / (AbstractHistogramVizModel.MIN_BIN_WIDTH
                         + AbstractHistogramVizModel.SPACE_BETWEEN_BINS));
         if (isShowMissingValBin() && containsMissingValueBin()) {
             maxNoOfBins--;
@@ -431,16 +431,16 @@ public abstract class AbstractHistogramVizModel {
         //handle integer values special
         final DataColumnSpec xColSpec = getXColumnSpec();
         if (xColSpec != null) {
-            final boolean isInteger = 
+            final boolean isInteger =
                 xColSpec.getType().isCompatible(IntValue.class);
             if (isInteger) {
                 final DataColumnDomain domain = xColSpec.getDomain();
                 if (domain != null) {
-                    final IntCell lowerBound = 
+                    final IntCell lowerBound =
                         (IntCell)domain.getLowerBound();
-                    final IntCell upperBound = 
+                    final IntCell upperBound =
                         (IntCell)domain.getUpperBound();
-                    final int range = 
+                    final int range =
                         upperBound.getIntValue() - lowerBound.getIntValue()
                         + 1;
                     if (maxNoOfBins > range) {
@@ -462,7 +462,7 @@ public abstract class AbstractHistogramVizModel {
     public int getDisplayedNoOfBins() {
         return getBinCaptions().size();
     }
-    
+
     /**
      * @param caption the caption of the bin of interest
      * @return the bin with the given caption or <code>null</code> if no bin
@@ -476,7 +476,7 @@ public abstract class AbstractHistogramVizModel {
         }
         return null;
     }
-    
+
     /**
      * @param idx the index of the bin
      * @return the {@link BinDataModel} at the given index
@@ -490,7 +490,7 @@ public abstract class AbstractHistogramVizModel {
      */
     public Set<DataCell> getBinCaptions() {
         final Collection<BinDataModel> bins = getBins();
-        final Set<DataCell> captions = 
+        final Set<DataCell> captions =
             new LinkedHashSet<DataCell>(bins.size());
         for (final BinDataModel bin : bins) {
             if (m_showEmptyBins || bin.getMaxBarRowCount() > 0) {
@@ -516,7 +516,7 @@ public abstract class AbstractHistogramVizModel {
      * <code>false</code>
      */
     public abstract boolean isFixed();
-    
+
     /**
      * @return the maximum aggregation value
      */
@@ -558,7 +558,7 @@ public abstract class AbstractHistogramVizModel {
      * @return <code>true</code> if this model contains a missing value bin
      */
     public boolean containsMissingValueBin() {
-        return (m_missingValueBin != null 
+        return (m_missingValueBin != null
                 && m_missingValueBin.getMaxBarRowCount() > 0);
     }
 
@@ -583,7 +583,7 @@ public abstract class AbstractHistogramVizModel {
     }
 
     /**
-     * @param showEmptyBins set to <code>true</code> if also the empty bins 
+     * @param showEmptyBins set to <code>true</code> if also the empty bins
      * should be shown
      * @return <code>true</code> if the variable has changed
      */
@@ -596,7 +596,7 @@ public abstract class AbstractHistogramVizModel {
     }
 
     /**
-     * @return the aggregation method which is used to calculate the 
+     * @return the aggregation method which is used to calculate the
      * aggregation value
      */
     public AggregationMethod getAggregationMethod() {
@@ -612,7 +612,7 @@ public abstract class AbstractHistogramVizModel {
         if (m_aggrMethod.equals(aggrMethod)) {
             return false;
         }
-        if (!AggregationMethod.COUNT.equals(aggrMethod) 
+        if (!AggregationMethod.COUNT.equals(aggrMethod)
                 && (getAggrColumns() == null || getAggrColumns().size() < 1)) {
             throw new IllegalArgumentException("Aggregation method only "
                     + "valid with a selected aggregation column");
@@ -636,7 +636,7 @@ public abstract class AbstractHistogramVizModel {
         if (layout != null && !m_layout.equals(layout)) {
             if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
                 setShowBinOutline(true);
-            } else if (getAggrColumns() == null 
+            } else if (getAggrColumns() == null
                     || getAggrColumns().size() < 2) {
                 setShowBinOutline(false);
             }
@@ -664,15 +664,15 @@ public abstract class AbstractHistogramVizModel {
         m_showMissingValBin = inclMissingValBin;
         return true;
     }
-    
+
     /**
      * @return the showGridLines
      */
     public boolean isShowGridLines() {
         return m_showGridLines;
     }
-    
-    
+
+
     /**
      * @param showGridLines the showGridLines to set
      * @return <code>true</code> if the parameter has changed
@@ -684,16 +684,16 @@ public abstract class AbstractHistogramVizModel {
         }
         return false;
     }
-    
-    
+
+
     /**
      * @return the showBinOutline
      */
     public boolean isShowBinOutline() {
         return m_showBinOutline;
     }
-    
-    
+
+
     /**
      * @param showBinOutline the showBinOutline to set
      * @return <code>true</code> if the parameter has changed
@@ -705,15 +705,15 @@ public abstract class AbstractHistogramVizModel {
         }
         return false;
     }
-    
+
     /**
      * @return the showBarOutline
      */
     public boolean isShowBarOutline() {
         return m_showBarOutline;
     }
-    
-    
+
+
     /**
      * @param showBarOutline the showBarOutline to set
      * @return <code>true</code> if the parameter has changed
@@ -725,7 +725,7 @@ public abstract class AbstractHistogramVizModel {
         }
         return false;
     }
-    
+
     /**
      * @param showElementOutline the showElementOutlines to set
      * @return <code>true</code> if the parameter has changed
@@ -744,16 +744,16 @@ public abstract class AbstractHistogramVizModel {
     public boolean isShowElementOutline() {
         return m_showElementOutlines;
     }
-    
+
     /**
      * @return the showLabelVertical
      */
     public boolean isShowLabelVertical() {
         return m_showLabelVertical;
     }
-    
+
     /**
-     * @param showLabelVertical if <code>true</code> the bar labels are 
+     * @param showLabelVertical if <code>true</code> the bar labels are
      * displayed vertical otherwise horizontal.
      * @return <code>true</code> if the parameter has changed
      */
@@ -764,14 +764,14 @@ public abstract class AbstractHistogramVizModel {
         }
         return false;
     }
-    
+
     /**
      * @return the labelDisplayPolicy
      */
     public LabelDisplayPolicy getLabelDisplayPolicy() {
         return m_labelDisplayPolicy;
     }
-    
+
     /**
      * @param labelDisplayPolicy the display policy
      * @return <code>true</code> if the parameter has changed
@@ -784,7 +784,7 @@ public abstract class AbstractHistogramVizModel {
         }
         return false;
     }
-    
+
     /**
      * @return all keys of hilited rows
      */
@@ -825,11 +825,11 @@ public abstract class AbstractHistogramVizModel {
             bin.setSelected(false);
         }
     }
-    
+
     /**
      * This method un/hilites all rows with the given key.
      * @param hilited the rowKeys of the rows to un/hilite
-     * @param hilite if the given keys should be hilited <code>true</code> 
+     * @param hilite if the given keys should be hilited <code>true</code>
      * or unhilited <code>false</code>
      */
     public abstract void updateHiliteInfo(final Set<DataCell> hilited,
@@ -862,7 +862,7 @@ public abstract class AbstractHistogramVizModel {
         final String aggrMethodHead = aggrHeadBuf.toString();
         final StringBuilder buf = new StringBuilder();
         buf.append("<table border='1'>");
-        for (BinDataModel bin : selectedBins) {
+        for (final BinDataModel bin : selectedBins) {
             buf.append("<tr>");
             buf.append("<td title='");
             buf.append(bin.getXAxisCaption());
@@ -870,14 +870,14 @@ public abstract class AbstractHistogramVizModel {
             buf.append(bin.getXAxisCaption());
             buf.append("</td>");
             buf.append("<td>");
-            final List<BarDataModel> selectedBars = 
+            final List<BarDataModel> selectedBars =
                 bin.getSelectedBars();
             if (selectedBars == null || selectedBars.size() < 1) {
                 buf.append("No bars selected");
             } else {
                 //bar table
                 buf.append("<table border='1'>");
-                for (BarDataModel bar : selectedBars) {
+                for (final BarDataModel bar : selectedBars) {
                     final String barBgColor = "#" + Integer.toHexString(
                             bar.getColor().getRGB() & 0x00ffffff);
                     buf.append("<tr>");
@@ -894,15 +894,15 @@ public abstract class AbstractHistogramVizModel {
                     buf.append("</tr>");
                     buf.append("<tr>");
                     buf.append("<td>");
-                    final Collection<BarElementDataModel> selectedElements = 
+                    final Collection<BarElementDataModel> selectedElements =
                         bar.getSelectedElements();
-                    if (selectedElements == null 
+                    if (selectedElements == null
                             || selectedElements.size() < 1) {
                         buf.append("No elements selected");
                     } else {
                         //element table
                         buf.append("<table border='1'>");
-                        //display all aggregation values of the 
+                        //display all aggregation values of the
                         //selected element
                         buf.append("<tr>");
                         buf.append("<th>");
@@ -912,8 +912,9 @@ public abstract class AbstractHistogramVizModel {
                         buf.append("</tr>");
                         int totalCount = 0;
                         double totalSum = 0;
-                        for (BarElementDataModel element : selectedElements) {
-                            String bgColor = "#" + Integer.toHexString(
+                        for (final BarElementDataModel element
+                                : selectedElements) {
+                            final String bgColor = "#" + Integer.toHexString(
                                     element.getColor().getRGB() & 0x00ffffff);
                             buf.append("<tr>");
                             buf.append("<td bgcolor='");
@@ -960,10 +961,10 @@ public abstract class AbstractHistogramVizModel {
                             } else {
                                 buf.append("&nbsp;");
                             }
-                            buf.append("</td>"); 
+                            buf.append("</td>");
                             buf.append("</tr>");
                         }
-                        buf.append("</table>");        
+                        buf.append("</table>");
                     }
                     buf.append("</td>");
                     buf.append("</tr>");
@@ -985,12 +986,12 @@ public abstract class AbstractHistogramVizModel {
     protected void setBinNominal(final boolean nominal) {
         m_binNominal = nominal;
     }
-    
+
     /**
      * @param bins the bins to display
      * @param missingValueBin the missing value bin
      */
-    protected void setBins(final List<? extends BinDataModel> bins, 
+    protected void setBins(final List<? extends BinDataModel> bins,
             final BinDataModel missingValueBin) {
         if (bins == null) {
             throw new NullPointerException("Bins must not be null");
@@ -1020,7 +1021,7 @@ public abstract class AbstractHistogramVizModel {
 
 
     /**
-     * Calculates a surrounding rectangle with the given thickness 
+     * Calculates a surrounding rectangle with the given thickness
      * for the given rectangle.
      * @param rect the rectangle to draw the surrounding for
      * @param baseLine the base line to know if the bar is negative or
@@ -1047,14 +1048,14 @@ public abstract class AbstractHistogramVizModel {
             horizontalFactor = 1;
         }
         //calculate the new y coordinate and height
-        final int newHeight = 
+        final int newHeight =
             Math.max(height + thickness * horizontalFactor, 1);
         int newY = y;
         if (y < baseLine) {
             //it's a positive bar so we have to subtract the difference
             newY -= (newHeight - height) / horizontalFactor;
         }
-        
+
         //calculate the new x coordinate and width
         final int newWidth = Math.max(width + 2 * thickness, 2);
         final int newX = (int)((x + width / 2.0) - newWidth / 2.0);

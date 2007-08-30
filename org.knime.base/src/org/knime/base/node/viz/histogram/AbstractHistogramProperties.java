@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.08.2006 (Tobias Koetter): created
  */
@@ -57,7 +57,7 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * Abstract class which handles the default properties like layouting.
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramProperties extends
@@ -65,22 +65,22 @@ public abstract class AbstractHistogramProperties extends
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(AbstractHistogramProperties.class);
 
-    private static final String COLUMN_TAB_LABEL = 
+    private static final String COLUMN_TAB_LABEL =
         "Column/Aggregation settings";
-    
-    private static final String BIN_AGGR_TAB_LABEL = 
+
+    private static final String BIN_AGGR_TAB_LABEL =
         "Bin settings";
 
-//    private static final String AGGREGATION_TAB_LABEL = 
+//    private static final String AGGREGATION_TAB_LABEL =
 //        "Aggregation settings";
 
-    private static final String VIZ_SETTINGS_TAB_LABEL = 
+    private static final String VIZ_SETTINGS_TAB_LABEL =
         "Visualization settings";
 
-    private static final String DETAILS_TAB_LABEL = 
+    private static final String DETAILS_TAB_LABEL =
         "Details";
 
-    private static final String AGGREGATION_METHOD_LABEL = 
+    private static final String AGGREGATION_METHOD_LABEL =
         "Aggregation method:";
 
     private static final String BIN_SIZE_LABEL = "Bin size:";
@@ -89,10 +89,10 @@ public abstract class AbstractHistogramProperties extends
 
     private static final String NUMBER_OF_BINS_LABEL = "Number of bins:";
 
-    private static final String NO_OF_BINS_TOOLTIP = 
+    private static final String NO_OF_BINS_TOOLTIP =
         "Number of bins (incl. empty bins, excl. missing value bin)";
 
-    private static final String SHOW_MISSING_VALUE_BIN_LABEL = 
+    private static final String SHOW_MISSING_VALUE_BIN_LABEL =
         "Show missing value bin";
 
     private static final String SHOW_MISSING_VAL_BIN_TOOLTIP = "Shows a bin "
@@ -103,13 +103,13 @@ public abstract class AbstractHistogramProperties extends
     private static final String SHOW_GRID_LABEL = "Show grid lines";
 
     private static final String SHOW_BIN_OUTLINE_LABEL = "Show bin outline";
-    
+
     private static final String SHOW_BAR_OUTLINE_LABEL = "Show bar outline";
-    
-    private static final String SHOW_ELEMENT_OUTLINE_LABEL = 
+
+    private static final String SHOW_ELEMENT_OUTLINE_LABEL =
         "Show element outline";
-    
-    private static final String AGGR_METHOD_DISABLED_TOOLTIP = 
+
+    private static final String AGGR_METHOD_DISABLED_TOOLTIP =
         "Only available with aggregation column";
 
 //    private static final String APPLY_BUTTON_LABEL = "Apply";
@@ -127,11 +127,11 @@ public abstract class AbstractHistogramProperties extends
     private final JCheckBox m_showEmptyBins;
 
     private final JCheckBox m_showMissingValBin;
-    
+
     private final JPanel m_detailsPane;
-    
+
     private final JScrollPane m_detailsScrollPane;
-    
+
     private final JEditorPane m_detailsHtmlPane;
 
 //    private final JButton m_applyAggrSettingsButton;
@@ -141,9 +141,9 @@ public abstract class AbstractHistogramProperties extends
     private final JCheckBox m_showGrid;
 
     private final JCheckBox m_showBinOutline;
-    
+
     private final JCheckBox m_showBarOutline;
-    
+
     private final JCheckBox m_showElementOutline;
 
     private final ButtonGroup m_labelDisplayPolicy;
@@ -160,11 +160,11 @@ public abstract class AbstractHistogramProperties extends
 
     /**
      * Constructor for class AbstractHistogramProperties.
-     * 
+     *
      * @param tableSpec the {@link DataTableSpec} to initialize the column
      * @param vizModel the aggregation method to set
      */
-    public AbstractHistogramProperties(final DataTableSpec tableSpec, 
+    public AbstractHistogramProperties(final DataTableSpec tableSpec,
             final AbstractHistogramVizModel vizModel) {
         if (vizModel == null) {
             throw new IllegalArgumentException("VizModel must not be null");
@@ -172,10 +172,10 @@ public abstract class AbstractHistogramProperties extends
         if (tableSpec == null) {
             throw new IllegalArgumentException("TableSpec must not be null");
         }
-     
+
         // create the additional settings components which get added to the
         // histogram settings panel
-        m_binWidth = new JSlider(0, vizModel.getBinWidth(), 
+        m_binWidth = new JSlider(0, vizModel.getBinWidth(),
                 vizModel.getBinWidth());
         m_binWidth.setEnabled(false);
         m_noOfBins = new JSlider(1, 1, 1);
@@ -228,9 +228,9 @@ public abstract class AbstractHistogramProperties extends
                 button.setSelected(true);
             }
         }
-        m_showEmptyBins = new JCheckBox(SHOW_EMPTY_BINS_LABEL, 
+        m_showEmptyBins = new JCheckBox(SHOW_EMPTY_BINS_LABEL,
                 vizModel.isShowEmptyBins());
-        m_showMissingValBin = new JCheckBox(SHOW_MISSING_VALUE_BIN_LABEL, 
+        m_showMissingValBin = new JCheckBox(SHOW_MISSING_VALUE_BIN_LABEL,
                 vizModel.isShowEmptyBins());
         m_showMissingValBin.setToolTipText(SHOW_MISSING_VAL_BIN_TOOLTIP);
 //        m_applyAggrSettingsButton = new JButton(
@@ -272,7 +272,7 @@ public abstract class AbstractHistogramProperties extends
 
         final JPanel visOptionPanel = createVizSettingsPanel();
         addTab(VIZ_SETTINGS_TAB_LABEL, visOptionPanel);
-        
+
         //create the details panel
         m_detailsHtmlPane = new JEditorPane("text/html", "");
         //I have to subtract the tab height from the preferred size
@@ -294,16 +294,16 @@ public abstract class AbstractHistogramProperties extends
     private Dimension getTabSize() {
         try {
             final Dimension totalSize = getPreferredSize();
-            return new Dimension((int)totalSize.getWidth(), 
+            return new Dimension((int)totalSize.getWidth(),
                     (int) totalSize.getHeight() - 10);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOGGER.debug("Exception in getTabSize: " + e.getMessage());
         }
         return null;
     }
 //
 //    /**
-//     * This method is called to resize the tabs. 
+//     * This method is called to resize the tabs.
 //     */
 //    public void resize() {
 //        final Dimension tabSize = getTabSize();
@@ -311,7 +311,7 @@ public abstract class AbstractHistogramProperties extends
 //            m_detailsScrollPane.setPreferredSize(tabSize);
 //        }
 //    }
-    
+
     /**
      * @param html the new details view
      */
@@ -336,7 +336,7 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
-     * @param colBox the box with the implementation specific column 
+     * @param colBox the box with the implementation specific column
      * information
      */
     protected void addColumnTab(final Box colBox) {
@@ -355,7 +355,7 @@ public abstract class AbstractHistogramProperties extends
         final Box aggrButtonBox = AbstractHistogramProperties
                 .createButtonGroupBox(m_aggrMethButtonGrp, true, null);
         aggrButtonBox.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
+
         final Box aggrLabelButtonBox = Box.createVerticalBox();
         aggrLabelButtonBox.setBorder(BorderFactory
                 .createEtchedBorder(EtchedBorder.RAISED));
@@ -375,14 +375,14 @@ public abstract class AbstractHistogramProperties extends
         insertTab(COLUMN_TAB_LABEL, null, columnPanel,
                 null, colTabIdx);
     }
-    
+
     /**
      * The visualization panel with the following options:
      * <ol>
      * <li>Show grid line</li>
      * <li>Show bar outline</li>
      * </ol>.
-     * 
+     *
      * @return the visualization settings panel
      */
     private JPanel createVizSettingsPanel() {
@@ -417,9 +417,9 @@ public abstract class AbstractHistogramProperties extends
 //        vizBox.add(Box.createVerticalGlue());
 //        vizBox.add(Box.createVerticalGlue());
 //        vizBox.add(m_showElementOutline);
-        
-        
-//label layout box  
+
+
+//label layout box
         final Box labelBox = Box.createHorizontalBox();
         labelBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Labels"));
@@ -433,8 +433,8 @@ public abstract class AbstractHistogramProperties extends
                         LABEL_ORIENTATION_LABEL);
         labelBox.add(labelOrientationBox);
         labelBox.add(Box.createHorizontalGlue());
-        
-//bar layout box                
+
+//bar layout box
         final Box layoutDisplayBox = AbstractHistogramProperties
         .createButtonGroupBox(m_layoutDisplayPolicy, false, null);
         final Box binWidthBox = Box.createVerticalBox();
@@ -483,7 +483,7 @@ public abstract class AbstractHistogramProperties extends
      * <li>aggregation method</li>
      * <li>aggregation column</li>
      * </ol>.
-     * 
+     *
      * @return the aggregation settings panel
      */
 //    private JPanel createAggregationSettingsPanel() {
@@ -501,7 +501,7 @@ public abstract class AbstractHistogramProperties extends
      * <li>show empty bins</li>
      * <li>show missing value bin</li>
      * </ol>.
-     * 
+     *
      * @return the panel with all bar related settings
      */
     private JPanel createBinSettingsPanel() {
@@ -551,7 +551,7 @@ public abstract class AbstractHistogramProperties extends
         binBox.add(binNoBox);
         binBox.add(Box.createHorizontalGlue());
         binBox.add(binSelButtonBox);
-        
+
         final JPanel binPanel = new JPanel();
         binPanel.add(binBox);
         return binPanel;
@@ -576,7 +576,7 @@ public abstract class AbstractHistogramProperties extends
             }
         }
 
-        for (final Enumeration<AbstractButton> buttons = group.getElements(); 
+        for (final Enumeration<AbstractButton> buttons = group.getElements();
             buttons.hasMoreElements();) {
             final AbstractButton button = buttons.nextElement();
             buttonBox.add(button);
@@ -591,7 +591,7 @@ public abstract class AbstractHistogramProperties extends
 
     /**
      * Sets the label of the given slider.
-     * 
+     *
      * @param slider the slider to label
      * @param divisor the steps are calculated
      *            <code>maxVal - minVal / divisor</code>
@@ -605,7 +605,7 @@ public abstract class AbstractHistogramProperties extends
         if (increment < 1) {
             // if their is no increment we don't need to enable this slider
             // Hashtable labels = m_barWidth.createStandardLabels(1);
-            final Hashtable<Integer, JLabel> labels = 
+            final Hashtable<Integer, JLabel> labels =
                 new Hashtable<Integer, JLabel>(1);
             labels.put(minimum, new JLabel("Min"));
             slider.setLabelTable(labels);
@@ -613,7 +613,7 @@ public abstract class AbstractHistogramProperties extends
             slider.setEnabled(false);
         } else if (showDigitsAndTicks) {
             // slider.setLabelTable(slider.createStandardLabels(increment));
-            final Hashtable<Integer, JLabel> labels = 
+            final Hashtable<Integer, JLabel> labels =
                 new Hashtable<Integer, JLabel>();
             // labels.put(minimum, new JLabel("Min"));
             labels.put(minimum, new JLabel(Integer.toString(minimum)));
@@ -630,7 +630,7 @@ public abstract class AbstractHistogramProperties extends
             // slider.setSnapToTicks(true);
             slider.setEnabled(true);
         } else {
-            final Hashtable<Integer, JLabel> labels = 
+            final Hashtable<Integer, JLabel> labels =
                 new Hashtable<Integer, JLabel>();
             labels.put(minimum, new JLabel("Min"));
             labels.put(maximum, new JLabel("Max"));
@@ -641,7 +641,7 @@ public abstract class AbstractHistogramProperties extends
     }
 
     /**
-     * 
+     *
      * @param spec current data table specification
      * @param xColName preselected x column name
      * @param yColumns preselected y column names
@@ -654,7 +654,7 @@ public abstract class AbstractHistogramProperties extends
     /**
      * Updates the available slider with the current values of the Histogram
      * plotter.
-     * 
+     *
      * @param vizModel the {@link AbstractHistogramVizModel} object which
      *            contains the data
      */
@@ -668,10 +668,10 @@ public abstract class AbstractHistogramProperties extends
         }
 //update the bin settings tab components
         //update the number of bin values
-        int maxNoOfBins = vizModel.getMaxNoOfBins();
+        final int maxNoOfBins = vizModel.getMaxNoOfBins();
         final int currentNoOfBins = vizModel.getNoOfBins();
         final ChangeListener[] noOfListeners = m_noOfBins.getChangeListeners();
-        for (ChangeListener listener : noOfListeners) {
+        for (final ChangeListener listener : noOfListeners) {
             m_noOfBins.removeChangeListener(listener);
         }
         m_noOfBins.setMaximum(maxNoOfBins);
@@ -693,20 +693,20 @@ public abstract class AbstractHistogramProperties extends
             m_noOfBins.setToolTipText(
                     AbstractHistogramProperties.NO_OF_BINS_TOOLTIP);
         }
-        for (ChangeListener listener : noOfListeners) {
+        for (final ChangeListener listener : noOfListeners) {
             m_noOfBins.addChangeListener(listener);
         }
         //show empty bins box
         updateCheckBox(m_showEmptyBins, vizModel.isShowEmptyBins(),
                 vizModel.containsEmptyBins());
         //show missing value bin box
-        updateCheckBox(m_showMissingValBin, vizModel.isShowMissingValBin(), 
+        updateCheckBox(m_showMissingValBin, vizModel.isShowMissingValBin(),
                 vizModel.containsMissingValueBin());
-//update the aggregation settings tab        
+//update the aggregation settings tab
 //      set the right aggregation method settings
         //since the set selected method doesn't trigger an event
         //we don't need to remove/add the action listener
-        final Collection<? extends ColorColumn> aggrColumns = 
+        final Collection<? extends ColorColumn> aggrColumns =
             vizModel.getAggrColumns();
         if ((aggrColumns == null || aggrColumns.size() < 1)
                 && vizModel.isFixed()) {
@@ -763,11 +763,11 @@ public abstract class AbstractHistogramProperties extends
                 .getElements(); buttons.hasMoreElements();) {
             final AbstractButton button = buttons.nextElement();
             if (button.getActionCommand()
-                    .equals(LABEL_ORIENTATION_VERTICAL) 
+                    .equals(LABEL_ORIENTATION_VERTICAL)
                     && vizModel.isShowLabelVertical()) {
                 button.setSelected(true);
             } else if (button.getActionCommand()
-                    .equals(LABEL_ORIENTATION_HORIZONTAL) 
+                    .equals(LABEL_ORIENTATION_HORIZONTAL)
                     && !vizModel.isShowLabelVertical()) {
                 button.setSelected(true);
             }
@@ -790,9 +790,9 @@ public abstract class AbstractHistogramProperties extends
         if (minBinWidth > maxBinWidth) {
             minBinWidth = maxBinWidth;
         }
-        // update the bin width values        
+        // update the bin width values
         final ChangeListener[] widthListeners = m_binWidth.getChangeListeners();
-        for (ChangeListener listener : widthListeners) {
+        for (final ChangeListener listener : widthListeners) {
             m_binWidth.removeChangeListener(listener);
         }
         m_binWidth.setMaximum(maxBinWidth);
@@ -802,21 +802,21 @@ public abstract class AbstractHistogramProperties extends
         m_binWidth.setToolTipText(
                 AbstractHistogramProperties.BIN_WIDTH_TOOLTIP);
         AbstractHistogramProperties.setSliderLabels(m_binWidth, 2, false);
-        for (ChangeListener listener : widthListeners) {
+        for (final ChangeListener listener : widthListeners) {
             m_binWidth.addChangeListener(listener);
         }
         //show bin outline
-        updateCheckBox(m_showBinOutline, vizModel.isShowBinOutline(), 
+        updateCheckBox(m_showBinOutline, vizModel.isShowBinOutline(),
                 true);
         //show bar outline
-        updateCheckBox(m_showBarOutline, vizModel.isShowBarOutline(), 
+        updateCheckBox(m_showBarOutline, vizModel.isShowBarOutline(),
                 true);
         //show element outline
-        updateCheckBox(m_showElementOutline, vizModel.isShowElementOutline(), 
+        updateCheckBox(m_showElementOutline, vizModel.isShowElementOutline(),
                 true);
         final long endTime = System.currentTimeMillis();
         final long durationTime = endTime - startTime;
-        LOGGER.debug("Time for updateHistogramSettings. " 
+        LOGGER.debug("Time for updateHistogramSettings. "
                 + durationTime + " ms");
         LOGGER.debug("Exiting updateHistogramSettings(vizModel) "
                 + "of class AbstractHistogramProperties.");
@@ -829,20 +829,19 @@ public abstract class AbstractHistogramProperties extends
      * @param selected the selected value
      * @param enabled the enable value
      */
-    private static void updateCheckBox(final JCheckBox box, 
-            final boolean selected, 
+    private static void updateCheckBox(final JCheckBox box,
+            final boolean selected,
             final boolean enabled) {
         LOGGER.debug("Entering updateSelectBox(box, selected, enabled) "
                 + "of class AbstractHistogramProperties.");
-        final ItemListener[] listeners = 
+        final ItemListener[] listeners =
             box.getItemListeners();
-        LOGGER.debug("No of select box listener: " + listeners.length);
-        for (ItemListener listener : listeners) {
+        for (final ItemListener listener : listeners) {
             box.removeItemListener(listener);
         }
         box.setSelected(selected);
         box.setEnabled(enabled);
-        for (ItemListener listener : listeners) {
+        for (final ItemListener listener : listeners) {
             box.addItemListener(listener);
         }
         LOGGER.debug("Exiting updateSelectBox(box, selected, enabled) "
@@ -886,7 +885,7 @@ public abstract class AbstractHistogramProperties extends
 
     /**
      * Helper method to update the number of bins text field.
-     * 
+     *
      * @param noOfbins the number of bins
      */
     protected void updateNoOfBinsText(final int noOfbins) {
@@ -907,14 +906,14 @@ public abstract class AbstractHistogramProperties extends
     public boolean isShowBinOutline() {
         return m_showBinOutline.isSelected();
     }
-    
+
     /**
      * @return the current value of the show bar outline select box
      */
     public boolean isShowBarOutline() {
         return m_showBarOutline.isSelected();
     }
-    
+
     /**
      * @return the current value of the show element outline select box
      */
@@ -1022,7 +1021,7 @@ public abstract class AbstractHistogramProperties extends
     public void addShowBarOutlineChangedListener(final ItemListener listener) {
         m_showBarOutline.addItemListener(listener);
     }
-    
+
     /**
      * @param listener adds a listener to the show element outline check box.
      */
@@ -1030,7 +1029,7 @@ public abstract class AbstractHistogramProperties extends
             final ItemListener listener) {
         m_showElementOutline.addItemListener(listener);
     }
-    
+
     /**
      * @param listener adds the listener to the bin width slider
      */
@@ -1044,7 +1043,7 @@ public abstract class AbstractHistogramProperties extends
     protected void addShowGridChangedListener(final ItemListener listener) {
         m_showGrid.addItemListener(listener);
     }
-    
+
     /**
      * @param listener adds the listener to the number of bars slider
      */
@@ -1064,16 +1063,16 @@ public abstract class AbstractHistogramProperties extends
             button.addActionListener(listener);
         }
     }
-    
+
     /**
      * @param listener adds the listener to the show empty bins select box
      */
     protected void addShowEmptyBinListener(final ItemListener listener) {
         m_showEmptyBins.addItemListener(listener);
     }
-    
+
     /**
-     * @param listener adds the listener to the show missing value bin 
+     * @param listener adds the listener to the show missing value bin
      * select box
      */
     protected void addShowMissingValBinListener(final ItemListener listener) {

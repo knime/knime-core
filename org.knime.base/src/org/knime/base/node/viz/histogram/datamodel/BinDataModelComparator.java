@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    23.02.2007 (Tobias Koetter): created
  */
@@ -30,7 +30,7 @@ import java.util.Comparator;
 
 /**
  * Used to sort the bins in their natural order by their caption or boundaries.
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public class BinDataModelComparator implements Comparator<BinDataModel> {
@@ -40,15 +40,15 @@ public class BinDataModelComparator implements Comparator<BinDataModel> {
      * order.
      */
     public static final int COMPARE_CAPTION = 1;
-    
+
     /**
      * This method compares the boundaries of a bin and orders from lowest
      * upper bound to highest upper bound.
      */
     public static final int COMPARE_BOUNDARIES = 2;
-    
+
     private final int m_compareMethod;
-    
+
     /**Constructor for class BinDataModelComparator.
      * @param compareMethod the method used to compare
      * @see #COMPARE_BOUNDARIES
@@ -57,7 +57,7 @@ public class BinDataModelComparator implements Comparator<BinDataModel> {
     public BinDataModelComparator(final int compareMethod) {
         m_compareMethod = compareMethod;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -66,10 +66,11 @@ public class BinDataModelComparator implements Comparator<BinDataModel> {
             case COMPARE_CAPTION:
                 return o1.getXAxisCaption().compareTo(o2.getXAxisCaption());
             case COMPARE_BOUNDARIES:
-                return Double.compare(o1.getUpperBound(), o2.getUpperBound());
+                return Double.compare(o1.getUpperBound().doubleValue(),
+                        o2.getUpperBound().doubleValue());
             default:
                 return o1.getXAxisCaption().compareTo(o2.getXAxisCaption());
         }
     }
-        
+
 }

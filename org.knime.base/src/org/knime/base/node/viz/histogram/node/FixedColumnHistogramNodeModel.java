@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   08.06.2006 (Tobias Koetter): created
  */
@@ -55,17 +55,17 @@ import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 
 /**
  * The NodeModel class of the histogram plotter.
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(FixedColumnHistogramNodeModel.class);
 
     /**The number of bins configuration key.*/
     protected static final String CFGKEY_NO_OF_BINS = "noOfBins";
-    
+
     private final SettingsModelInteger m_noOfBins = new SettingsModelInteger(
             CFGKEY_NO_OF_BINS, AbstractHistogramVizModel.DEFAULT_NO_OF_BINS);
     /**The data model on which the plotter based on.*/
@@ -85,12 +85,12 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings) 
+    protected void validateSettings(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         super.validateSettings(settings);
         try {
             m_noOfBins.validateSettings(settings);
-        } catch (InvalidSettingsException e) {
+        } catch (final InvalidSettingsException e) {
             //this is an older implementation
             LOGGER.debug("Old implementation found");
         }
@@ -100,12 +100,12 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) 
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         super.loadValidatedSettingsFrom(settings);
         try {
             m_noOfBins.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException e) {
+        } catch (final InvalidSettingsException e) {
             m_noOfBins.setIntValue(
                     AbstractHistogramVizModel.DEFAULT_NO_OF_BINS);
             LOGGER.debug("Old settings found using default number of bins");
@@ -120,13 +120,13 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         super.saveSettingsTo(settings);
         m_noOfBins.saveSettingsTo(settings);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void createHistogramModel(final ExecutionContext exec, 
-            final int noOfRows, final DataTable table) 
+    protected void createHistogramModel(final ExecutionContext exec,
+            final int noOfRows, final DataTable table)
     throws CanceledExecutionException {
         LOGGER.debug("Entering createHistogramModel(exec, table) "
                 + "of class FixedColumnHistogramNodeModel.");
@@ -136,7 +136,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         }
         final Collection<ColorColumn> aggrColumns = getAggrColumns();
         final int noOfBins = m_noOfBins.getIntValue();
-        m_model = 
+        m_model =
             new FixedHistogramDataModel(getXColSpec(), aggrColumns, noOfBins);
         exec.setMessage("Adding data rows to histogram...");
         final double progressPerRow = 1.0 / noOfRows;
@@ -149,31 +149,31 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         final int xColIdx = getXColIdx();
         //save the aggregation column indices
         final int[] aggrColIdxs = new int[aggrColSize];
-        if (aggrColSize > 0) {
+        if (aggrColumns != null) {
             int idx = 0;
-            for (ColorColumn aggrCol : aggrColumns) {
+            for (final ColorColumn aggrCol : aggrColumns) {
                 aggrColIdxs[idx++] = tableSpec.findColumnIndex(
                         aggrCol.getColumnName());
             }
         }
         final RowIterator rowIterator = table.iterator();
-        for (int rowCounter = 0; rowCounter < noOfRows 
+        for (int rowCounter = 0; rowCounter < noOfRows
         && rowIterator.hasNext(); rowCounter++) {
             final DataRow row = rowIterator.next();
-            final Color color = 
+            final Color color =
                 tableSpec.getRowColor(row).getColor(false, false);
             if (aggrColSize < 1) {
-                m_model.addDataRow(row.getKey().getId(), color, 
+                m_model.addDataRow(row.getKey().getId(), color,
                         row.getCell(xColIdx), DataType.getMissingCell());
             } else {
-                DataCell[] aggrCells = new DataCell[aggrColSize];
+                final DataCell[] aggrCells = new DataCell[aggrColSize];
                 for (int i = 0, length = aggrColIdxs.length; i < length; i++) {
                     aggrCells[i] = row.getCell(aggrColIdxs[i]);
                 }
-                m_model.addDataRow(row.getKey().getId(), color, 
+                m_model.addDataRow(row.getKey().getId(), color,
                         row.getCell(xColIdx), aggrCells);
             }
-            
+
             progress += progressPerRow;
             exec.setProgress(progress, "Adding data rows to histogram...");
             exec.checkCanceled();
@@ -183,12 +183,12 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         LOGGER.debug("Exiting createHistogramModel(exec, table) "
                 + "of class FixedColumnHistogramNodeModel.");
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) 
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
         throws InvalidSettingsException {
         final DataTableSpec[] specs = super.configure(inSpecs);
         //enable/disable the number of bins spinner depending on the selected
@@ -196,7 +196,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         //settings are replaced by the settings from the SettingsModelString
         //of the node model!!!
         final DataColumnSpec xColSpec = getXColSpec();
-        m_noOfBins.setEnabled((xColSpec == null 
+        m_noOfBins.setEnabled((xColSpec == null
                 || xColSpec.getType().isCompatible(DoubleValue.class)));
         return specs;
     }
@@ -219,10 +219,10 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
             return null;
         }
         final AbstractHistogramVizModel vizModel = new FixedHistogramVizModel(
-                m_model.getRowColors(), m_model.getClonedBins(), 
+                m_model.getRowColors(), m_model.getClonedBins(),
                 m_model.getClonedMissingValueBin(), m_model.getXColumnSpec(),
                 m_model.getAggrColumns(),
-                AggregationMethod.getDefaultMethod(), 
+                AggregationMethod.getDefaultMethod(),
                 HistogramLayout.getDefaultLayout());
         return vizModel;
     }
@@ -231,14 +231,14 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadHistogramInternals(final File dataDir, 
+    protected void loadHistogramInternals(final File dataDir,
             final ExecutionMonitor exec) throws Exception {
         try {
             m_model = FixedHistogramDataModel.loadFromFile(dataDir, exec);
-        } catch (FileNotFoundException e) {
+        } catch (final FileNotFoundException e) {
             LOGGER.debug("Previous implementations haven't stored the data");
             m_model = null;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOGGER.warn("Error while saveHistogramInternals of "
                     + "FixedColumn implementation: " + e.getMessage());
             m_model = null;
@@ -249,14 +249,14 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveHistogramInternals(final File dataDir, 
+    protected void saveHistogramInternals(final File dataDir,
             final ExecutionMonitor exec) throws Exception {
         if (m_model == null) {
             return;
         }
         try {
             m_model.save2File(dataDir, exec);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOGGER.warn("Error while saveHistogramInternals of "
                     + "FixedColumn implementation: " + e.getMessage());
             throw e;

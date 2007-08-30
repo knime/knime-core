@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   08.06.2006 (Tobias Koetter): created
  */
@@ -43,7 +43,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * The dialog of the {@link HistogramNodeModel} where the user can
- * define the x column and the number of rows. 
+ * define the x column and the number of rows.
  * @author Tobias Koetter, University of Konstanz
  */
 public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
@@ -59,13 +59,13 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
     private final SettingsModelIntegerBounded m_noOfRows;
 
     private final SettingsModelBoolean m_allRows;
-    
+
     private final SettingsModelString m_xColumnModel;
-    
+
     private final DialogComponentColumnNameSelection m_xColumnSelectBox;
     /**
      * Constructor for class HistogramNodeDialogPane.
-     * 
+     *
      */
     @SuppressWarnings("unchecked")
     protected HistogramNodeDialogPane() {
@@ -75,9 +75,9 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
                 AbstractHistogramNodeModel.CFGKEY_NO_OF_ROWS,
                 AbstractHistogramNodeModel.DEFAULT_NO_OF_ROWS, 0,
                 Integer.MAX_VALUE);
-        final DialogComponentNumber noOfRowsComp = 
+        final DialogComponentNumber noOfRowsComp =
             new DialogComponentNumber(m_noOfRows,
-                NO_OF_ROWS_LABEL, 1);
+                NO_OF_ROWS_LABEL, new Integer(1));
         m_allRows = new SettingsModelBoolean(
                 AbstractHistogramNodeModel.CFGKEY_ALL_ROWS, false);
         m_allRows.addChangeListener(new ChangeListener() {
@@ -85,7 +85,7 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
                 m_noOfRows.setEnabled(!m_allRows.getBooleanValue());
             }
         });
-        final DialogComponentBoolean allRowsComp = 
+        final DialogComponentBoolean allRowsComp =
             new DialogComponentBoolean(m_allRows, ALL_ROWS_LABEL);
         addDialogComponent(allRowsComp);
         addDialogComponent(noOfRowsComp);
@@ -95,7 +95,7 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
                 AbstractHistogramNodeModel.CFGKEY_X_COLNAME, "");
         m_xColumnSelectBox = new DialogComponentColumnNameSelection(
                         m_xColumnModel,
-                        HistogramNodeDialogPane.X_COL_SEL_LABEL, 0, true, 
+                        HistogramNodeDialogPane.X_COL_SEL_LABEL, 0, true,
                         AbstractHistogramPlotter.X_COLUMN_FILTER);
         //the x column select box
         addDialogComponent(m_xColumnSelectBox);
@@ -103,17 +103,17 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
         //the aggregation column select box
 //        addDialogComponent(new DialogComponentColumnNameSelection(
 //                ,
-//                AGGR_COL_SEL_LABEL, 0, false, 
+//                AGGR_COL_SEL_LABEL, 0, false,
 //                AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER));
-        final AggregationColumnDialogComponent aggrCols = 
+        final AggregationColumnDialogComponent aggrCols =
             new AggregationColumnDialogComponent(AGGR_COL_SEL_LABEL,
                     new SettingsModelColorNameColumns(
                         AbstractHistogramNodeModel.CFGKEY_AGGR_COLNAME, null),
-                        new Dimension(150, 155), 
+                        new Dimension(150, 155),
                 AbstractHistogramPlotter.AGGREGATION_COLUMN_FILTER);
         addDialogComponent(aggrCols);
     }
-    
+
     /**
      * @param listener the {@link ChangeListener} to add to the x column
      * select box
@@ -121,9 +121,9 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
     protected void addXColumnChangeListener(final ChangeListener listener) {
         m_xColumnModel.addChangeListener(listener);
     }
-    
+
     /**
-     * @return the {@link DataColumnSpec} of the selected x column or 
+     * @return the {@link DataColumnSpec} of the selected x column or
      * <code>null</code> if none is selected
      */
     protected DataColumnSpec getSelectedXColumnSpec() {

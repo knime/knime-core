@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    14.03.2007 (Tobias Koetter): created
  */
@@ -37,17 +37,17 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 
 /**
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public class FixedColumnHistogramDialogPane extends HistogramNodeDialogPane {
 
     private static final String NUMBER_OF_BINS_LABEL = "Number of bins:";
 
-    private static final String NUMBER_OF_BINS_TOOLTIP = 
+    private static final String NUMBER_OF_BINS_TOOLTIP =
         "Ignored if the selected binning column is nominal";
     private final SettingsModelIntegerBounded m_noOfBins;
-    
+
     /**Constructor for class FixedColumnHistogramDialogPane.
      */
     protected FixedColumnHistogramDialogPane() {
@@ -55,19 +55,20 @@ public class FixedColumnHistogramDialogPane extends HistogramNodeDialogPane {
         createNewGroup("Binning options");
         m_noOfBins = new SettingsModelIntegerBounded(
                             FixedColumnHistogramNodeModel.CFGKEY_NO_OF_BINS,
-                            AbstractHistogramVizModel.DEFAULT_NO_OF_BINS, 1, 
+                            AbstractHistogramVizModel.DEFAULT_NO_OF_BINS, 1,
                             Integer.MAX_VALUE);
         final DialogComponent noOfBins = new DialogComponentNumber(
-                m_noOfBins, NUMBER_OF_BINS_LABEL, 1);
+                m_noOfBins, NUMBER_OF_BINS_LABEL, new Integer(1));
         noOfBins.setToolTipText(NUMBER_OF_BINS_TOOLTIP);
         m_noOfBins.setEnabled(isNumericalXColumn());
         addDialogComponent(noOfBins);
         super.addXColumnChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 m_noOfBins.setEnabled(isNumericalXColumn());
-            }});
+            }
+        });
     }
-    
+
     /**
      * Checks if the current selected x column is numerical.
      * @return <code>true</code> if the selected x column is numerical or no
