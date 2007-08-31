@@ -59,8 +59,10 @@ public class KnimeContentProvider extends WorkbenchContentProvider {
         // this causes the plus signs to disappear
         // the first thread tries to remove the sign quickly
         // if this is too early the second thread removes them later
-        new UpdateThread(30).start();
-        new UpdateThread(500).start();
+        // new UpdateThread(30).start();
+        // new UpdateThread(500).start();
+        // new UpdateThread(1000).start();
+        new UpdateThread(20);
     }
 
     private class UpdateThread extends Thread {
