@@ -26,9 +26,9 @@ package org.knime.core.node;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
@@ -69,7 +69,7 @@ public abstract class NodeModel {
     private final HiLiteHandler[] m_inHiLiteHdls;
 
     /** Keeps a list of registered views. */
-    private final Set<NodeView> m_views;
+    private final CopyOnWriteArrayList<NodeView> m_views;
 
     /** Stores the result of the last call of <code>#configure()</code>. */
     private boolean m_configured;
@@ -131,7 +131,7 @@ public abstract class NodeModel {
         }
 
         // keeps set of registered views in the order they are added
-        m_views = Collections.synchronizedSet(new LinkedHashSet<NodeView>());
+        m_views = new CopyOnWriteArrayList<NodeView>();
     }
 
     /**
@@ -272,10 +272,8 @@ public abstract class NodeModel {
     /**
      * @return All registered views.
      */
-    final Set<NodeView> getViews() {
-        synchronized (m_views) {
-            return Collections.unmodifiableSet(m_views);
-        }
+    final Collection<NodeView> getViews() {
+        return Collections.unmodifiableCollection(m_views);
     }
 
     /**
