@@ -23,10 +23,6 @@
  */
 package org.knime.workbench.ui.navigator;
 
-import org.eclipse.core.resources.IResourceDelta;
-import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.model.WorkbenchContentProvider;
 
 /**
@@ -35,63 +31,13 @@ import org.eclipse.ui.model.WorkbenchContentProvider;
  */
 public class KnimeContentProvider extends WorkbenchContentProvider {
 
-    private TreeViewer m_viewer;
-
     /**
      * {@inheritDoc}
      */
     @Override
-    public void inputChanged(final Viewer viewer, final Object oldInput,
-            final Object newInput) {
-        super.inputChanged(viewer, oldInput, newInput);
-        m_viewer = (TreeViewer)viewer;
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void processDelta(final IResourceDelta delta) {
-        super.processDelta(delta);
-        // Workaround to remove the plus signs from the workflow projects
-        // the update threads invoke the expandAll method on the viewer
-        // this causes the plus signs to disappear
-        // the first thread tries to remove the sign quickly
-        // if this is too early the second thread removes them later
-        // new UpdateThread(30).start();
-        // new UpdateThread(500).start();
-        // new UpdateThread(1000).start();
-        new UpdateThread(20);
-    }
-
-    private class UpdateThread extends Thread {
-        private long m_waitTime;
-
-        public UpdateThread(final long waitTime) {
-            m_waitTime = waitTime;
-        }
-
-        public void run() {
-            try {
-                Thread.sleep(m_waitTime);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            Display display = Display.getDefault();
-            if (display != null && !display.isDisposed() && m_viewer != null) {
-                display.syncExec(new Runnable() {
-                    public void run() {
-                        // best effort refresh
-                        try {
-                            m_viewer.refresh();
-                            m_viewer.expandAll();
-                        } catch (Throwable t) {
-                            // do nothing
-                        }
-                    }
-                });
-            }
-        }
+    public boolean hasChildren(final Object element) {
+        // the knime navigator does not has any children except the first root
+        // level
+        return false;
     }
 }
