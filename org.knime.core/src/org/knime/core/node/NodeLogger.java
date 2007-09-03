@@ -491,9 +491,6 @@ public final class NodeLogger {
     public void assertLog(final boolean b, final String m) {
         if (ASSERT) {
             m_logger.assertLog(b, "ASSERT " + m);
-        } else {
-            // assertions are off, but write to knime.log anyway
-            m_logger.debug("ASSERT\t " + m);
         }
     }
 
@@ -513,9 +510,6 @@ public final class NodeLogger {
             } else {
                 m_logger.assertLog(b, "ASSERT " + m);
             }
-            m_logger.debug("ASSERT\t " + m, e);
-        } else {
-            // assertions are off, but write to knime.log anyway
             m_logger.debug("ASSERT\t " + m, e);
         }
     }
