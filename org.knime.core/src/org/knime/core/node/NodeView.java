@@ -26,31 +26,22 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
 
-import javax.imageio.ImageIO;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
-
-import org.knime.core.util.FileReaderFileFilter;
 
 /**
  * Node view base class which implements the basic and common window properties.
@@ -132,11 +123,6 @@ public abstract class NodeView {
     private boolean m_alwaysOnTop = false;
 
     /**
-     * The directory to export the view as image.
-     */
-    private static String exportDir;
-
-    /**
      * This class sends property events when the status changes. 
      */ 
     public static final String PROP_CHANGE_CLOSE = "nodeview_close";
@@ -203,14 +189,7 @@ public abstract class NodeView {
         });
         menu.add(item);
 
-        // create close entry
-        item = new JMenuItem("Export as image");
-        item.setMnemonic('E');
-        item.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent event) {
-                exportAsImage();
-            }
-        });
+        item = NodeViewExport.createNewMenu(m_frame.getContentPane());
         menu.add(item);
 
         // create close entry
@@ -238,94 +217,6 @@ public abstract class NodeView {
         m_nodeModel.registerView(this);
 
     } // NodeView(NodeModel,String)
-
-    /**
-     * Exports the current view to an image file.
-     */
-    private void exportAsImage() {
-        
-        // create an image from the view component
-        Container cont = m_frame.getContentPane();
-        int width = cont.getWidth();
-        int height = cont.getHeight();
-        if (width <= 0 || height <= 0) {
-            String msg = "View is too small to be exported.";
-            JOptionPane.showConfirmDialog(m_frame, msg, "Warning", 
-                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
-
-            m_logger.warn(msg);
-            return;
-        }
-
-        // get a possible previous save location
-        // get the location to export the view
-        File exportDirFile = null;
-        try {
-
-            exportDirFile = new File(new URL(exportDir).getFile());
-
-        } catch (Exception e) {
-
-            // do nothing here
-            // in case of an wrong / invalid path, the
-            // file chooser starts at the default location
-        }
-
-        String path;
-        JFileChooser chooser = new JFileChooser(exportDirFile);
-        chooser.setFileFilter(new FileReaderFileFilter("png",
-                "PNG - Portable Network Graphics"));
-
-        int returnVal = chooser.showSaveDialog(m_frame);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-
-            try {
-                String fileName = chooser.getSelectedFile().getAbsolutePath();
-
-                // append "zip" extension if not there.
-                String extension = fileName.substring(fileName.length() - 4,
-                        fileName.length());
-
-                if (!extension.equals(".png")) {
-                    fileName = fileName + ".png";
-                }
-                path = fileName;
-            } catch (Exception e) {
-                path = "<Error: Couldn't create file>";
-            }
-            exportDir = path;
-        } else {
-            // do not save anything
-            return;
-        }
-        
-        BufferedImage image = new BufferedImage(width, height,
-                    BufferedImage.TYPE_INT_RGB);
-
-        // create graphics object to paint in
-        Graphics2D graphics = image.createGraphics();
-
-        cont.paint(graphics);
-
-        // write image to file
-        try {
-            File exportFile = new File(exportDir);
-            exportFile.createNewFile();
-            ImageIO.write(image, "png", exportFile);
-        } catch (Exception e) {
-
-            JOptionPane.showConfirmDialog(m_frame,
-                    "View could not be exported.", "Warning",
-                    JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
-
-            m_logger.warn("View could not be exported due to io problems: ", e);
-            return;
-        }
-
-        JOptionPane.showConfirmDialog(m_frame, "View successfully exported.",
-                "Info", JOptionPane.DEFAULT_OPTION,
-                JOptionPane.INFORMATION_MESSAGE);
-    }
 
     /**
      * Get reference to underlying <code>NodeModel</code>. Access this if
