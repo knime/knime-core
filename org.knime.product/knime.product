@@ -46,10 +46,6 @@ Uses: Java5, GEF, Log4J
       </win>
    </launcher>
 
-   <vm>
-      <linux type="jre">sun-jre-1.6.0.02</linux>
-   </vm>
-
    <plugins>
       <plugin id="org.apache.lucene"/>
       <plugin id="org.eclipse.ant.core"/>
@@ -75,7 +71,7 @@ Uses: Java5, GEF, Log4J
       <plugin id="org.eclipse.osgi.util"/>
       <plugin id="org.eclipse.platform"/>
       <plugin id="org.eclipse.swt"/>
-      <plugin id="org.eclipse.swt.gtk.linux.x86" fragment="true"/>
+      <plugin id="org.eclipse.swt.gtk.linux.x86"/>
       <plugin id="org.eclipse.text"/>
       <plugin id="org.eclipse.ui"/>
       <plugin id="org.eclipse.ui.cheatsheets"/>
@@ -88,14 +84,14 @@ Uses: Java5, GEF, Log4J
       <plugin id="org.eclipse.ui.workbench.texteditor"/>
       <plugin id="org.eclipse.update.configurator"/>
       <plugin id="org.eclipse.update.core"/>
-      <plugin id="org.eclipse.update.core.linux" fragment="true"/>
+      <plugin id="org.eclipse.update.core.linux"/>
       <plugin id="org.eclipse.update.ui"/>
    </plugins>
 
    <features>
-      <feature id="org.eclipse.gef" version="3.2.0.v20060626"/>
-      <feature id="org.eclipse.platform" version="3.2.0.v20060609m-AgOexn6hlEUsvBO"/>
-      <feature id="org.eclipse.rcp" version="3.2.0.v20060609m-SVDNgVrNoh-MeGG"/>
+      <feature id="org.eclipse.gef" version="3.2.2.v20070208"/>
+      <feature id="org.eclipse.platform" version="3.2.2.r322_v20070119-RQghndJN8IM0MsK"/>
+      <feature id="org.eclipse.rcp" version="3.2.2.r322_v20070104-8pcviKVqd8J7C1U"/>
       <feature id="org.knime.features.base" version="1.2.0"/>
    </features>
 
