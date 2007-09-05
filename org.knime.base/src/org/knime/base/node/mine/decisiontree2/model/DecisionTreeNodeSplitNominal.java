@@ -120,23 +120,28 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
             final DecisionTreeNode[] children) {
         super(nodeId, majorityClass, classCounts, splitAttribute);
 
-        assert splitValues.length == children.length;
         // make room for branches and split values
         int nrSplits = children.length;
         assert (nrSplits >= 1);
         super.makeRoomForKids(nrSplits);
         m_splitValues = splitValues;
 
-        for (int i = 0; i < children.length; i++) {
-            super.setChildNodeIndex(i, children[i].getOwnIndex());
-            addNode(children[i], i);
-            children[i].setParent(this);
-        }
-        
-        for (int i = 0; i < m_splitValues.length; i++) {
-            if (super.getChildNodeAt(i) != null) {
-                super.getChildNodeAt(i).setPrefix(
-                        getSplitAttr() + " = " + m_splitValues[i]);
+        // if the number of split values is not equal to the number of
+        // children, this is a non-standart-nominal split, (extended)
+        // thus do not continue as the sub class performs this
+        if (splitValues.length == children.length) {
+
+            for (int i = 0; i < children.length; i++) {
+                super.setChildNodeIndex(i, children[i].getOwnIndex());
+                addNode(children[i], i);
+                children[i].setParent(this);
+            }
+
+            for (int i = 0; i < m_splitValues.length; i++) {
+                if (super.getChildNodeAt(i) != null) {
+                    super.getChildNodeAt(i).setPrefix(
+                            getSplitAttr() + " = " + m_splitValues[i]);
+                }
             }
         }
     }
@@ -269,7 +274,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
             throws InvalidSettingsException {
         m_splitValues = pConf.getDataCellArray("splitValues");
     }
-    
+
     /**
      * Returns the values array of this nodes split attribute.
      * 
