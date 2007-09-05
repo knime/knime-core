@@ -79,7 +79,7 @@ public final class HalfFloatMatrix {
      */
     public void set(final int row, final int col, final float value) {
         if (!m_withDiagonal && row == col) {
-            throw new IllegalArgumentException("Can't set value in diagonal " 
+            throw new IllegalArgumentException("Can't set value in diagonal "
                     + "of the matrix (no space reserved)");
         }
         if (row > col) {
@@ -107,7 +107,7 @@ public final class HalfFloatMatrix {
      */
     public float get(final int row, final int col) {
         if (!m_withDiagonal && row == col) {
-            throw new IllegalArgumentException("Can't read value in diagonal " 
+            throw new IllegalArgumentException("Can't read value in diagonal "
                     + "of the matrix (not saved)");
         }
         if (row > col) {
@@ -167,5 +167,37 @@ public final class HalfFloatMatrix {
         } else {
             return (1 + (int)Math.sqrt(1 + 8 * m_matrix.length)) / 2;
         }
+    }
+
+    /**
+     * Permutes the matrix based on the permutation given in the parameter.
+     * 
+     * @param permutation an array in which at position <i>i</i> is the index
+     *            where the old row <i>i</i> is moved to, i.e.
+     *            <code>{ 2, 3, 0, 1 }</code> means that rows (and columns) 0
+     *            and 2 are swapped and rows 1 and 3
+     */
+    public void permute(final int[] permutation) {
+        final int rc = getRowCount();
+        if (permutation.length != rc) {
+            throw new IllegalArgumentException(
+                    "Size of permutation array does not match the matrix row "
+                            + "count: " + permutation.length + " vs. " + rc);
+        }
+
+        HalfFloatMatrix temp = new HalfFloatMatrix(rc, m_withDiagonal);
+        for (int i = 0; i < rc; i++) {
+            final int newI = permutation[i];
+
+            for (int j = 0; j <= i; j++) {
+                final int newJ = permutation[j];
+
+                if (m_withDiagonal || (j != i)) {
+                    temp.set(newI, newJ, get(i, j));
+                }
+            }
+        }
+
+        System.arraycopy(temp.m_matrix, 0, m_matrix, 0, m_matrix.length);
     }
 }
