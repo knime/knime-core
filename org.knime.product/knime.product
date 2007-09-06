@@ -46,6 +46,9 @@ Uses: Java5, GEF, Log4J
       </win>
    </launcher>
 
+   <vm>
+   </vm>
+
    <plugins>
       <plugin id="org.apache.lucene"/>
       <plugin id="org.eclipse.ant.core"/>
@@ -89,9 +92,9 @@ Uses: Java5, GEF, Log4J
    </plugins>
 
    <features>
-      <feature id="org.eclipse.gef" version="3.2.2.v20070208"/>
-      <feature id="org.eclipse.platform" version="3.2.2.r322_v20070119-RQghndJN8IM0MsK"/>
-      <feature id="org.eclipse.rcp" version="3.2.2.r322_v20070104-8pcviKVqd8J7C1U"/>
+      <feature id="org.eclipse.gef" version="3.3.0.v20070620"/>
+      <feature id="org.eclipse.platform" version="3.3.0.v20070612-_19UEkLEzwsdF9jSqQ-G"/>
+      <feature id="org.eclipse.rcp" version="3.3.0.v20070607-8y8eE8NEbsN3X_fjWS8HPNG"/>
       <feature id="org.knime.features.base" version="1.2.0"/>
    </features>
 
