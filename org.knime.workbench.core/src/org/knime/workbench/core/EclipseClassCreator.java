@@ -35,7 +35,6 @@ import org.knime.core.eclipseUtil.ClassCreator;
 import org.knime.core.node.NodeLogger;
 import org.osgi.framework.Bundle;
 
-
 /**
  * Class creator, used inside Eclipse to load classes for the KNIME core. We
  * need this to lookup classes from the contributing plugins.
@@ -50,7 +49,31 @@ import org.osgi.framework.Bundle;
  */
 public class EclipseClassCreator implements ClassCreator {
     private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(EclipseClassCreator.class);
+            NodeLogger.getLogger(EclipseClassCreator.class);
+
+    /**
+     * As deprecated plugins do not have extension points they must be loaded
+     * manually.
+     */
+    private final static String[] DEPRECATED_PLUGINS =
+            {"org.knime.deprecated", "org.knime.ext.weka.deprecated"};
+
+    static {
+        try {
+            for (String s : DEPRECATED_PLUGINS) {
+                try {
+                    Platform.getBundle(s).start();
+                } catch (Throwable ex) {
+                    LOGGER.warn("Could not load " + s + ". The "
+                            + "deprecated nodes will not be available.", ex);
+                }
+            }
+
+        } catch (Throwable ex) {
+            LOGGER.warn("Could not load org.knime.deprecated plugin. The "
+                    + "deprecated nodes will not be available.", ex);
+        }
+    }
 
     private IExtension[] m_extensions;
 
@@ -95,7 +118,7 @@ public class EclipseClassCreator implements ClassCreator {
                 // ignore
             }
         }
-        
+
         /**
          * Look at all extensions, and try to load class from the plugin
          */
@@ -113,12 +136,12 @@ public class EclipseClassCreator implements ClassCreator {
                 // no chance to get a proper class loader from the Bundle.
                 // NOTE: all that is obsolete. It will be removed by the buddy
                 // class loading concept in later versions.
-                IPluginDescriptor pluginDesc = 
-                    ext.getDeclaringPluginDescriptor();
+                IPluginDescriptor pluginDesc =
+                        ext.getDeclaringPluginDescriptor();
                 if (pluginDesc != null) {
                     ClassLoader l = pluginDesc.getPluginClassLoader();
                     clazz = Class.forName(className, false, l);
-                } else { 
+                } else {
                     Bundle p = Platform.getBundle(pluginID);
                     clazz = p.loadClass(className);
                 }
@@ -128,19 +151,21 @@ public class EclipseClassCreator implements ClassCreator {
         }
 
         if (clazz == null) {
-            // also check the deprecated plugin; this is not contained
-            // in the extensions and thus not covered by the above loop
-            Bundle p;
-            try {
-                p = Platform.getBundle("org.knime.deprecated");                
-            } catch (Throwable ex) {
-                LOGGER.warn("Could not load org.knime.deprecated plugin. The "
-                        + "deprecated nodes will not be available.", ex);
-                return clazz;
+            for (String s : DEPRECATED_PLUGINS) {
+                // also check the deprecated plugin; this is not contained
+                // in the extensions and thus not covered by the above loop
+                Bundle p = null;
+                try {
+                    p = Platform.getBundle(s);
+                    clazz = p.loadClass(className);
+                    return clazz;
+
+                } catch (ClassNotFoundException cnfe) {
+                } catch (Throwable ex) {
+                    LOGGER.warn("Could not load " + s + " plugin. The "
+                            + "deprecated nodes will not be available.", ex);
+                }
             }
-            try {
-                clazz = p.loadClass(className);
-            } catch (Exception ex) { /* ignore it */ }
         }
 
         return clazz;
