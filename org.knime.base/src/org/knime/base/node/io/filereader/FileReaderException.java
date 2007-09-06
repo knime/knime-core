@@ -41,6 +41,8 @@ public class FileReaderException extends RuntimeException {
 
     private final int m_lineNumber;
 
+    private String m_detailsMsg;
+
     /**
      * Always provide a good user message why things go wrong.
      * 
@@ -50,6 +52,7 @@ public class FileReaderException extends RuntimeException {
         super(msg);
         m_row = null;
         m_lineNumber = -1;
+        m_detailsMsg = null;
     }
 
     /**
@@ -76,10 +79,29 @@ public class FileReaderException extends RuntimeException {
     }
 
     /**
-     * @return the line number where the error occured in the file. Could be -1
+     * @return the line number where the error occurred in the file. Could be -1
      *         if not set.
      */
     int getErrorLineNumber() {
         return m_lineNumber;
     }
+
+    /**
+     * Sets an additional message.
+     * 
+     * @param msg the additional message
+     */
+    void setDetailsMessage(final String msg) {
+        m_detailsMsg = msg;
+    }
+
+    /**
+     * @return the previously set message, or null.
+     */
+    String getDetailedMessage() {
+        return m_detailsMsg;
+    }
+    
+
 }
+

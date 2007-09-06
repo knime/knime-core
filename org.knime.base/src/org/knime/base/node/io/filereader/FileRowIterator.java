@@ -49,7 +49,7 @@ import org.knime.core.util.MutableInteger;
  * 
  * @see org.knime.core.data.RowIterator
  */
-final class FileRowIterator extends RowIterator {
+class FileRowIterator extends RowIterator {
 
     /* The tokenizer reads the next token from the input stream. */
     private final FileTokenizer m_tokenizer;
@@ -345,10 +345,18 @@ final class FileRowIterator extends RowIterator {
             }
         } else {
             if (createdCols < rowLength) {
-                throw prepareForException("Too few data elements in row "
-                        + "(line: " + lineNr + " (" + rowHeader
-                        + "), source: '" + m_frSettings.getDataFileLocation()
-                        + "')", lineNr, rowHeader, row);
+                FileReaderException ex =
+                        prepareForException("Too few data elements "
+                                + "(line: " + lineNr + " (" + rowHeader
+                                + "), source: '"
+                                + m_frSettings.getDataFileLocation() + "')",
+                                lineNr, rowHeader, row);
+                if (m_frSettings.getColumnNumDeterminingLineNumber() >= 0) {
+                    ex.setDetailsMessage("The number of columns was "
+                            + "determined by line no."
+                            + m_frSettings.getColumnNumDeterminingLineNumber());
+                }
+                throw ex;
             }
         }
 
@@ -370,10 +378,17 @@ final class FileRowIterator extends RowIterator {
         // now read the row delimiter from the file, and in case there are more
         // data items in the file than we needed for one row: barf and die.
         if (!m_frSettings.isRowDelimiter(token)) {
-            throw prepareForException("Too many data elements in row "
-                    + "(line: " + lineNr + " (" + rowHeader + "), source: '"
-                    + m_frSettings.getDataFileLocation() + "')", lineNr,
-                    rowHeader, row);
+            FileReaderException ex =
+                    prepareForException("Too many data elements " + "(line: "
+                            + lineNr + " (" + rowHeader + "), source: '"
+                            + m_frSettings.getDataFileLocation() + "')",
+                            lineNr, rowHeader, row);
+            if (m_frSettings.getColumnNumDeterminingLineNumber() >= 0) {
+                ex.setDetailsMessage("The number of columns was "
+                        + "determined by line no."
+                        + m_frSettings.getColumnNumDeterminingLineNumber());
+            }
+            throw ex;
         }
         m_rowNumber++;
 
@@ -656,4 +671,27 @@ final class FileRowIterator extends RowIterator {
     public boolean iteratorEndedEarly() {
         return m_fileWasNotCompletelyRead;
     }
+    
+    /**
+     * If the source read was a ZIP archive this method tests if there are more
+     * than one entry in the archive. If the source was not compressed or a gzip
+     * file, it always returns false. If the EOF has not been read from the 
+     * source, the result is always false.  
+     * 
+     * @return true, if the source was read til the end and it is a ZIP archive
+     * with more than one entry
+     */
+    public boolean zippedSourceHasMoreEntries() {
+        return m_source.hasMoreZipEntries();
+    }
+    
+    /**
+     * @return if the underlying source is a ZIP archive it returns the entry
+     *         read. Null if not a ZIP source.
+     */
+    public String getZipEntryName() {
+        return m_source.getZipEntryName();
+    }
+    
+    
 }

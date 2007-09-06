@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
@@ -52,7 +53,7 @@ import org.knime.core.node.NodeSettingsWO;
  */
 public class FileReaderSettings extends FileTokenizerSettings {
 
-    /** The node logger fot this class. */
+    /** The node logger for this class. */
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(FileReaderSettings.class);
 
@@ -116,6 +117,13 @@ public class FileReaderSettings extends FileTokenizerSettings {
      */
     private long m_maxNumberOfRowsToRead;
 
+    // for nicer error messages
+    private int m_columnNumberDeterminingLine;
+    
+    // name of the character set used to decode the stream. 
+    // Null uses VM default.
+    private String m_charsetName;
+
     /**
      * This will be used if the file has not row headers and no row prefix is
      * set.
@@ -155,6 +163,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
     
     private static final String CFGKEY_MAXROWS = "MaxNumOfRows";
 
+    private static final String CFGKEY_COLDETERMLINENUM = "ColNumDetermLine";
+    
+    private static final String CFGKEY_CHARSETNAME = "CharsetName";
+    
+
     /**
      * Creates a new object holding all settings needed to read the specified
      * file. The file must be an ASCII representation of the data to read. We
@@ -186,6 +199,10 @@ public class FileReaderSettings extends FileTokenizerSettings {
         
         m_rowDelimiters = new HashSet<String>();
         m_missingPatterns = new Vector<String>();
+        m_columnNumberDeterminingLine = -1;
+        
+        m_charsetName = null; // uses the default char set name
+
     }
 
     /**
@@ -302,7 +319,13 @@ public class FileReaderSettings extends FileTokenizerSettings {
             // default to "read them all", for backward compatibility
             m_maxNumberOfRowsToRead = cfg.getLong(CFGKEY_MAXROWS, -1);
             
+            m_columnNumberDeterminingLine =
+                    cfg.getInt(CFGKEY_COLDETERMLINENUM, -1);
+
             readRowDelimitersFromConfig(rowDelimConf);
+            
+            // default to null - which uses the default char set name
+            m_charsetName = cfg.getString(CFGKEY_CHARSETNAME, null);
 
         } // if (cfg != null)
 
@@ -343,7 +366,9 @@ public class FileReaderSettings extends FileTokenizerSettings {
         cfg.addBoolean(CFGKEY_SHORTLINES, m_supportShortLines);
         cfg.addBoolean(CFGKEY_UNIQUIFYID, m_uniquifyRowIDs);
         cfg.addLong(CFGKEY_MAXROWS, m_maxNumberOfRowsToRead);
-        
+        cfg.addInt(CFGKEY_COLDETERMLINENUM, m_columnNumberDeterminingLine);
+        cfg.addString(CFGKEY_CHARSETNAME, m_charsetName);
+
     }
 
     /*
@@ -518,14 +543,44 @@ public class FileReaderSettings extends FileTokenizerSettings {
     }
 
     /**
+     * Set the new character set name that will be used the next time a new
+     * input reader is created (see {@link #createNewInputReader()}).
+     * 
+     * @param name any character set supported by Java, or null to use the VM
+     *            default char set.
+     * @throws IllegalArgumentException if the specified name is not supported.
+     * @throws java.nio.charset.IllegalCharsetNameException if the specified
+     *             name is not supported.
+     */
+    public void setCharsetName(final String name) {
+        if (name == null) {
+            m_charsetName = null;
+        } else {
+            if (!Charset.isSupported(name)) {
+                throw new IllegalArgumentException("Unsupported charset name '"
+                        + name + "'.");
+            }
+            m_charsetName = name;
+        }
+    }
+    
+    /**
+     * @return the charset name set, or null if the VM's default is used
+     */
+    public String getCharsetName() {
+       return m_charsetName; 
+    }
+    
+    /**
      * @return a new reader to read from the data file location. It will create
-     *         a buffered reader, and for locations ending on ".gz" a GZIP one.
+     *         a buffered reader, and for zipped sources a GZIP one.
      *         If the data location is not set an exception will fly.
      * @throws NullPointerException if the data location is not set
      * @throws IOException if an IO Error occurred when opening the stream
      */
     public BufferedFileReader createNewInputReader() throws IOException {
-        return BufferedFileReader.createNewReader(getDataFileLocation());
+        return BufferedFileReader.createNewReader(getDataFileLocation(),
+                getCharsetName());
     }
 
     /**
@@ -860,6 +915,24 @@ public class FileReaderSettings extends FileTokenizerSettings {
         return m_supportShortLines;
     }
     
+    /**
+     * @return the line number in the file that determined the number of
+     *         columns. Or -1 if not set yet (or no file analysis took place).
+     */
+    public int getColumnNumDeterminingLineNumber() {
+        return m_columnNumberDeterminingLine;
+    }
+    
+    /**
+     * Sets the line number in the file that determined the number of columns.
+     * 
+     * @param lineNumber the line number in the file that determined the number
+     *            of columns.
+     */
+    public void setColumnNumDeterminingLineNumber(final int lineNumber) {
+        m_columnNumberDeterminingLine = lineNumber;
+    }
+
     /**
      * @return the maximum number of lines that should be read from the source.
      *         If -1 is returned all rows should be read.

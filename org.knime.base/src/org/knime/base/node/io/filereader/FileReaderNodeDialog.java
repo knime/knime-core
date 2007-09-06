@@ -170,6 +170,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     private Vector<String> m_prevWhiteSpaces;
 
     private JLabel m_errorLabel;
+    
+    private JLabel m_errorDetail;
 
     private JLabel m_analyzeWarn;
 
@@ -485,17 +487,27 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         // add a panel for the errors:
         m_errorLabel = new JLabel("");
         m_errorLabel.setForeground(Color.red);
+        m_errorDetail = new JLabel("");
+        m_errorDetail.setForeground(Color.red);
         JPanel errorBox = new JPanel();
         errorBox.setLayout(new BoxLayout(errorBox, BoxLayout.X_AXIS));
         errorBox.add(Box.createHorizontalGlue());
         errorBox.add(m_errorLabel);
         // reserve a certain height for the (in the beginning invisible) label
-        errorBox.add(Box.createVerticalStrut(25));
+        errorBox.add(Box.createVerticalStrut(17));
         errorBox.add(Box.createHorizontalGlue());
+        JPanel detailBox = new JPanel();
+        detailBox.setLayout(new BoxLayout(detailBox, BoxLayout.X_AXIS));
+        detailBox.add(Box.createHorizontalGlue());
+        detailBox.add(m_errorDetail);
+        // reserve a certain height for the (in the beginning invisible) label
+        detailBox.add(Box.createVerticalStrut(17));
+        detailBox.add(Box.createHorizontalGlue());
         JPanel result = new JPanel();
         result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
         result.add(panel);
         result.add(errorBox);
+        result.add(detailBox);
         return result;
     }
 
@@ -1043,7 +1055,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             throw new InvalidSettingsException("I/O Error while accessing '"
                     + m_frSettings.getDataFileLocation().toString() + "'.");
         } catch (NullPointerException npe) {
-            // occures with Windows and a space in the path
+            // occurres with Windows and a space in the path
             throw new InvalidSettingsException("I/O Error while accessing '"
                     + m_frSettings.getDataFileLocation().toString() + "'.");
         }
@@ -1202,7 +1214,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             new FileReaderPreviewTable(tSpec, previewSettings, null);
         m_previewTable.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                setErrorLabelText(m_previewTable.getErrorMsg());
+                setErrorLabelText(m_previewTable.getErrorMsg(), m_previewTable
+                        .getErrorDetail());
             }
         });
         m_previewTableView.setDataTable(m_previewTable);
@@ -1539,7 +1552,16 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     }
 
     private void setErrorLabelText(final String text) {
+        setErrorLabelText(text, null);
+    }
+    
+    private void setErrorLabelText(final String text, final String detailMsg) {
         m_errorLabel.setText(text);
+        if (detailMsg == null) {
+            m_errorDetail.setText("");
+        } else {
+            m_errorDetail.setText(detailMsg);
+        }
         getPanel().invalidate();
         getPanel().validate();
     }

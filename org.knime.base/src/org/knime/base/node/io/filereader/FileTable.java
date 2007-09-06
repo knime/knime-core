@@ -138,7 +138,7 @@ public class FileTable implements DataTable {
     /**
      * {@inheritDoc}
      */
-    public RowIterator iterator() {
+    public FileRowIterator iterator() {
         try {
             return new FileRowIterator(m_frSettings, m_tableSpec, m_skipColums,
                     m_exec);

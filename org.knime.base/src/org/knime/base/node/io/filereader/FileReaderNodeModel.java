@@ -30,7 +30,6 @@ import java.util.Vector;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -156,8 +155,14 @@ public class FileReaderNodeModel extends NodeModel {
         BufferedDataContainer c = exec.createDataContainer(
                 fTable.getDataTableSpec(), /*initDomain=*/true);
         int row = 0;
-        RowIterator it = fTable.iterator();
+        FileRowIterator it = fTable.iterator();
         try {
+            if (it.getZipEntryName() != null) {
+                // seems we are reading a ZIP archive.
+                LOGGER.info("Reading entry '" + it.getZipEntryName()
+                        + "' from the specified ZIP archive.");
+            }
+            
             while (it.hasNext()) {
                 row++;
                 DataRow next = it.next();
@@ -167,6 +172,14 @@ public class FileReaderNodeModel extends NodeModel {
                 exec.checkCanceled();
                 c.addRowToTable(next);
             }
+            
+            if (it.zippedSourceHasMoreEntries()) {
+                // after reading til the end of the file this returns a valid
+                // result
+                setWarningMessage("Source is a ZIP archive with multiple "
+                        + "entries. Only reading first entry!");
+            }
+            
         } catch (DuplicateKeyException dke) {
             setWarningMessage("Duplicate row IDs. Consider making IDs unique in"
                     + " the advanced settings.");
@@ -176,11 +189,8 @@ public class FileReaderNodeModel extends NodeModel {
         }
         
         // user settings allow for truncating the table
-        if (it instanceof FileRowIterator) {
-            FileRowIterator fit = (FileRowIterator)it;
-            if (fit.iteratorEndedEarly()) {
-                setWarningMessage("Data was truncated due to user settings.");
-            }
+        if (it.iteratorEndedEarly()) {
+            setWarningMessage("Data was truncated due to user settings.");
         }
         BufferedDataTable out = c.getTable();
             

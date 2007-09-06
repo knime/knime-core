@@ -29,6 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.node.ExecutionContext;
@@ -46,12 +47,16 @@ import org.knime.core.node.NodeLogger;
  * 
  * @author Peter Ohl, University of Konstanz
  */
-public class FileReaderPreviewTable extends FileTable {
+public class FileReaderPreviewTable implements DataTable {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(FileReaderPreviewTable.class);
     
+    private final FileTable m_table;
+    
     private String m_errorMsg;
 
+    private String m_errorDetail;
+    
     private int m_errorLine;
 
     private final CopyOnWriteArrayList<ChangeListener> m_listeners;
@@ -68,28 +73,38 @@ public class FileReaderPreviewTable extends FileTable {
     FileReaderPreviewTable(final DataTableSpec tableSpec,
             final FileReaderNodeSettings settings, 
             final ExecutionContext exec) {
-        super(tableSpec, settings, exec);
+        m_table = new FileTable(tableSpec, settings, exec);
         m_listeners = new CopyOnWriteArrayList<ChangeListener>();
         m_errorMsg = null;
+        m_errorDetail = null;
         m_errorLine = -1;
     }
     
     /**
      * {@inheritDoc}
      */
-    @Override
     public RowIterator iterator() {
-        return new FileReaderPreviewRowIterator(super.iterator(), this);
+        return new FileReaderPreviewRowIterator(m_table.iterator(), this);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public DataTableSpec getDataTableSpec() {
+        return m_table.getDataTableSpec();
+    }
+    
     /**
      * This sets the flag indicating that the row iterator ended the table with
      * an error.
      * 
-     * @param msg the message to store
-     * @param lineNumber the line in which the error occurred
+     * @param fre the exception thrown by the error.
      */
-    void setError(final String msg, final int lineNumber) {
+    void setError(final FileReaderException fre) {
+        final String msg = fre.getMessage();
+        final int lineNumber = fre.getErrorLineNumber();
+        final String errDetail = fre.getDetailedMessage();
+        
         if (msg == null) {
             throw new NullPointerException("Set a nice error message");
         }
@@ -99,6 +114,8 @@ public class FileReaderPreviewTable extends FileTable {
         }
         m_errorMsg = msg;
         m_errorLine = lineNumber;
+        m_errorDetail = errDetail;
+        
         // notify all interested
         fireErrorOccuredEvent();
     }
@@ -120,6 +137,14 @@ public class FileReaderPreviewTable extends FileTable {
      */
     String getErrorMsg() {
         return m_errorMsg;
+    }
+    
+    /**
+     * @return a message containing more details about the error occurred. Could
+     *         be null if no details are available.
+     */
+    String getErrorDetail() {
+        return m_errorDetail;
     }
 
     /**

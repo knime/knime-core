@@ -55,8 +55,6 @@ public class FileReaderAdvancedDialog extends JDialog {
 
     private JPanel m_mainPanel = null;
 
-    private QuotePanel m_quotePanel = null;
-
     private boolean m_closedViaReadXML = false;
 
     private boolean m_closedViaOK = false;
@@ -70,6 +68,8 @@ public class FileReaderAdvancedDialog extends JDialog {
     // these settings are taken over (without any validation checks).
     private FileReaderNodeSettings m_settings;
 
+    private QuotePanel m_quotePanel = null;
+
     private DecSepPanel m_decSepPanel;
 
     private IgnoreDelimsPanel m_ignoreDelimsPanel;
@@ -79,7 +79,15 @@ public class FileReaderAdvancedDialog extends JDialog {
     private UniquifyPanel m_uniquifyPanel;
 
     private LimitRowsPanel m_limitRowsPanel;
-
+    
+    private CharsetNamePanel m_charsetNamePanel;
+    
+    /*
+     * !!! READ THIS: Adding new advanced settings?? Don't forget to copy these
+     * settings in the FileAnalyzer from the user settings into the result
+     * settings.
+     */
+    
     /**
      * This is the default constructor.
      * 
@@ -127,6 +135,8 @@ public class FileReaderAdvancedDialog extends JDialog {
                     "Disable unique making of row IDs");
             m_jTabbedPane.addTab("Limit Rows", null, getLimitRowsPanel(),
                     "Specify the max. number of rows read");
+            m_jTabbedPane.addTab("Character decoding", null, 
+                    getCharsetNamePanel(), "");
         }
         return m_jTabbedPane;
     }
@@ -146,6 +156,7 @@ public class FileReaderAdvancedDialog extends JDialog {
         m_doAnalyze |= getShortLinesPanel().overrideSettings(settings);
         m_doAnalyze |= getUniquifyPanel().overrideSettings(settings);
         m_doAnalyze |= getLimitRowsPanel().overrideSettings(settings);
+        m_doAnalyze |= getCharsetNamePanel().overrideSettings(settings);
     }
 
     /**
@@ -193,7 +204,12 @@ public class FileReaderAdvancedDialog extends JDialog {
             result.append("Limit Rows: ");
             result.append(panelMsg);
         }
-        
+        panelMsg = getCharsetNamePanel().checkSettings();
+        if (panelMsg != null) {
+            result.append('\n');
+            result.append("Character decoding: ");
+            result.append(panelMsg);
+        }
         if (result.length() > 0) {
             return result.toString();
         } else {
@@ -413,6 +429,13 @@ public class FileReaderAdvancedDialog extends JDialog {
         return m_limitRowsPanel;
     }
 
+    private CharsetNamePanel getCharsetNamePanel() {
+        if (m_charsetNamePanel == null) {
+            m_charsetNamePanel = new CharsetNamePanel(m_settings);
+        }
+        return m_charsetNamePanel;
+    }
+    
     /**
      * The main.
      * 

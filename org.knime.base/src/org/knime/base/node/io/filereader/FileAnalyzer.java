@@ -93,6 +93,7 @@ public final class FileAnalyzer {
         result.setUniquifyRowIDs(userSettings.uniquifyRowIDs());
         result.setMaximumNumberOfRowsToRead(userSettings
                 .getMaximumNumberOfRowsToRead());
+        result.setCharsetName(userSettings.getCharsetName());
         result.setAnalyzeUsedAllRows(true); // default is true, to avoid warning
 
         if (!userSettings.isCommentUserSet()) {
@@ -843,7 +844,7 @@ public final class FileAnalyzer {
 
         }
 
-        if (reader.read() != -1) {
+        if (linesRead >= NUMOFLINES) {
             // if the next char is EOF we've seen all rows.
             settings.setAnalyzeUsedAllRows(false);
         }
@@ -1340,6 +1341,8 @@ public final class FileAnalyzer {
                 if (colCount > numOfCols) {
                     // we are supposed to return the maximum
                     numOfCols = colCount;
+                    settings.setColumnNumDeterminingLineNumber(
+                            tokenizer.getLineNumber());
                 }
 
                 colCount = 0;

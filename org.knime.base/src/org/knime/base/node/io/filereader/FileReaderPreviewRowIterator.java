@@ -79,10 +79,10 @@ class FileReaderPreviewRowIterator extends RowIterator {
         try {
             nextRow = m_rowIter.next();
         } catch (FileReaderException fre) {
-            // after an error occured all missing elements read would be
+            // after an error occurred all missing elements read would be
             // junk. Thus we end the table after the first exception.
             m_done = true;
-            m_table.setError(fre.getMessage(), fre.getErrorLineNumber());
+            m_table.setError(fre);
             nextRow = fre.getErrorRow();
 
         }
