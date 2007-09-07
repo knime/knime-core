@@ -436,6 +436,10 @@ public final class NodeLogger {
      */
     public void warn(final Object o, final Throwable t) {
         this.warn(o);
+        String message = (t != null ? t.getMessage() : null);
+        if (message != null && message.trim().length() > 0) {
+            this.warn(message);
+        }
         this.debug(o, t);
     }
 
@@ -457,6 +461,10 @@ public final class NodeLogger {
      */
     public void info(final Object o, final Throwable t) {
         this.info(o);
+        String message = (t != null ? t.getMessage() : null);
+        if (message != null && message.trim().length() > 0) {
+            this.info(message);
+        }
         this.debug(o, t);
     }
 
@@ -474,7 +482,7 @@ public final class NodeLogger {
             debug(o, t);
         } else {
             this.error(o);
-            String message = t.getMessage();
+            String message = (t != null ? t.getMessage() : null);
             if (message != null && message.trim().length() > 0) {
                 this.error(message);
             }
@@ -504,13 +512,16 @@ public final class NodeLogger {
     public void assertLog(final boolean b, final String m,
             final AssertionError e) {
         if (ASSERT) {
-            String message = e.getMessage();
+            String message = (e != null ? e.getMessage() : null);
             if (message != null && message.trim().length() > 0) {
                 m_logger.assertLog(b, "ASSERT " + m + " " + message);
             } else {
                 m_logger.assertLog(b, "ASSERT " + m);
             }
-            m_logger.debug("ASSERT\t " + m, e);
+            // for stacktrace
+            if (!b & e != null) {
+                m_logger.debug("ASSERT\t " + m, e);
+            }
         }
     }
 
@@ -532,7 +543,7 @@ public final class NodeLogger {
      */
     public void coding(final Object o, final Throwable t) {
         this.coding(o);
-        String message = t.getMessage();
+        String message = (t != null ? t.getMessage() : null);
         if (message != null && message.trim().length() > 0) {
             this.coding(message);
         }
@@ -547,7 +558,7 @@ public final class NodeLogger {
      */
     public void fatal(final Object o, final Throwable t) {
         this.fatal(o);
-        String message = t.getMessage();
+        String message = (t != null ? t.getMessage() : null);
         if (message != null && message.trim().length() > 0) {
             this.fatal(message);
         }
