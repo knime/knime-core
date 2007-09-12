@@ -305,10 +305,13 @@ public final class RepositoryManager {
         // if errors occured show an information box
         if (errorString.length() > 0) {
 
+            
+            // TODO: validate if the this works without getting the active shell
             // get an appropriate shell
+            
             Display defaultDisplay = Display.getDefault();
             if (defaultDisplay != null) {
-
+                /*
                 Shell[] parent = new Shell[1];
                 parent[0] = defaultDisplay.getActiveShell();
                 if (parent[0] == null) {
@@ -319,41 +322,49 @@ public final class RepositoryManager {
                     showErrorMessage(parent[0], errorString.toString());
                 }
             }
-
+            */
+            showErrorMessage(errorString.toString());
             WorkbenchErrorLogger
                     .warning("Could not load all contributed nodes: \n"
                             + errorString);
+            }
         }
 
     }
 
-    private void showErrorMessage(final Shell parent, final String errorMessage) {
+    private void showErrorMessage(final String errorMessage) {
         // create a dummy shell, to force the message box to the top
         // otherwise it could be lost in the background of the
         // desktop
-
-        new Thread() {
-            @Override
-            public void run() {
-                Display.getDefault().syncExec(new Runnable() {
-                    public void run() {
-                        Shell dummy = new Shell(parent, SWT.DIALOG_TRIM
-                                | SWT.ON_TOP);
-                        MessageBox mb = new MessageBox(dummy, SWT.ICON_WARNING
-                                | SWT.OK | SWT.ON_TOP);
-                        mb
-                                .setText("KNIME extension(s) could not be created or are duplicates!");
-                        mb
-                                .setMessage("Some contributed KNIME extensions"
-                                        + " could not be created or are duplicates, they will be "
-                                        + "skipped: \n\n'"
-                                        + errorMessage.toString());
-                        mb.open();
-                    }
-                });
-            }
-        }.start();
-
+        // instead of taking the parent simply take the Display.getDefault();
+        // TODO: validate this
+        try {
+            new Thread() {
+                @Override
+                public void run() {
+                    Display.getDefault().syncExec(new Runnable() {
+                        public void run() {
+                            Shell dummy =
+                                    new Shell(Display.getDefault(),
+                                            SWT.DIALOG_TRIM | SWT.ON_TOP);
+                            MessageBox mb =
+                                    new MessageBox(dummy, SWT.ICON_WARNING
+                                            | SWT.OK | SWT.ON_TOP);
+                            mb.setText("KNIME extension(s) could not be " 
+                                    + "created or are duplicates!");
+                            mb.setMessage("Some contributed KNIME extensions"
+                                            + " could not be created or are " 
+                                            + "duplicates, they will be "
+                                            + "skipped: \n\n'"
+                                            + errorMessage.toString());
+                            mb.open();
+                        }
+                    });
+                }
+            }.start();
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     /**
