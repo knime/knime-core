@@ -484,9 +484,17 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         private double calcSubProgress(final double progress) {
             Double progressOfParent = m_parent.getProgress();
+            double boundedProgress = Math.min(progress, 1.0);
             // diff to the last progress update
-            double diff = progress - m_lastProg;
-            m_lastProg = progress;
+            double diff = boundedProgress - m_lastProg;
+            if (diff < 0.001) {
+                if (progressOfParent != null) {
+                    return progressOfParent;
+                } else {
+                    return 0;
+                }
+            }
+            m_lastProg = boundedProgress;
             if (progressOfParent == null) {
                 return Math.min(m_maxProg, diff * m_maxProg);
             } else {
