@@ -469,6 +469,11 @@
             category-path="/statistics/regression"
             factory-class="org.knime.base.node.mine.regression.polynomial.predictor.PolyRegPredictorNodeFactory"
 	        id="org.knime.dev.nodes.polyreg.predictor.PolyRegPredictorNodeFactory"/>
+      <node
+            category-path="/view"
+            factory-class="org.knime.base.node.viz.pie.node.fixed.PieNodeFactory"
+            id="org.knime.base.node.viz.pie.node.PieNodeFactory">
+      </node>
             
    </extension>
    
