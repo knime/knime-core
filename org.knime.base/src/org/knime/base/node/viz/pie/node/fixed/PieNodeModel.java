@@ -63,6 +63,9 @@ public class PieNodeModel extends NodeModel {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PieNodeModel.class);
 
+    /**The name of the directory which holds the optional data of the
+     * different histogram implementations.*/
+    public static final String CFG_DATA_DIR_NAME = "pieData";
     /**Default number of rows to use.*/
     protected static final int DEFAULT_NO_OF_ROWS = 2500;
     /**Settings name for the take all rows select box.*/
@@ -217,7 +220,7 @@ public class PieNodeModel extends NodeModel {
         final String aggrCol = m_aggrColumn.getStringValue();
         final int aggrColIdx = spec.findColumnIndex(aggrCol);
         final int pieColIdx = spec.findColumnIndex(pieCol.getName());
-        m_model = new PieDataModel(pieCol, true);
+        m_model = new PieDataModel(pieCol, false);
         for (final DataRow row : dataTable) {
             final Color rowColor = spec.getRowColor(row).getColor(false, false);
             final DataCell pieCell = row.getCell(pieColIdx);
@@ -262,9 +265,18 @@ public class PieNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        // TK_TODO Auto-generated method stub
-
+            throws CanceledExecutionException {
+        try {
+            final File dataDir =
+                new File(nodeInternDir, CFG_DATA_DIR_NAME);
+            m_model = PieDataModel.loadFromFile(dataDir, exec);
+        } catch (final CanceledExecutionException e) {
+            throw e;
+        } catch (final Exception e) {
+            LOGGER.debug("Error while loading internals: "
+                    + e.getMessage());
+            m_model = null;
+        }
     }
 
 
@@ -275,7 +287,22 @@ public class PieNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
-        // TK_TODO Auto-generated method stub
-
+        try {
+            if (!new File(nodeInternDir, CFG_DATA_DIR_NAME).mkdir()) {
+                throw new Exception("Unable to create internal data directory");
+            }
+            final File dataDir =
+                new File(nodeInternDir, CFG_DATA_DIR_NAME);
+            if (m_model == null) {
+                return;
+            }
+            m_model.save2File(dataDir, exec);
+        } catch (final CanceledExecutionException e) {
+            throw e;
+        } catch (final Exception e) {
+            LOGGER.warn("Error while saving saving internals: "
+                    + e.getMessage());
+            throw new IOException(e);
+        }
     }
 }

@@ -29,6 +29,7 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.Arc2D;
+import java.awt.geom.Rectangle2D;
 import java.util.List;
 import java.util.Set;
 
@@ -38,6 +39,7 @@ import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.base.node.viz.pie.datamodel.PieVizModel.PieHiliteCalculator;
+import org.knime.base.node.viz.pie.util.GeometryUtil;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataCell;
@@ -149,28 +151,34 @@ public class PiePlotter extends AbstractPlotter {
      * @param vizModel
      */
     private void setPieSections(final PieVizModel vizModel) {
-        final Point rootPoint = vizModel.getRootPoint();
-        final int diameter = vizModel.getRootDiameter();
+        final Rectangle2D pieArea = vizModel.getPieArea();
+        final Rectangle2D explodedArea = vizModel.getExplodedArea();
+        final double explodePercentage = vizModel.getExplodePercentage();
         final double total = vizModel.getAggregationValue();
         final AggregationMethod method = vizModel.getAggregationMethod();
         final PieHiliteCalculator calculator = vizModel.getCalculator();
         final int noOfSections = vizModel.getNoOfSections();
         final List<PieSectionDataModel> pieSections = vizModel.getSections();
-//        final double curVal = 0;
         int startAngle = 0;
         for (int i = 0; i < noOfSections; i++) {
             final PieSectionDataModel section = pieSections.get(i);
             final double value = section.getAggregationValue(method);
-//            startAngle = (int)(curVal * 360 / total);
             int arcAngle = (int)(value * 360 / total);
             //avoid a rounding gap
             if (i == noOfSections - 1) {
                 arcAngle = 360 - startAngle;
             }
-            final Arc2D arc = new Arc2D.Double(rootPoint.x, rootPoint.y,
-                    diameter, diameter, startAngle, arcAngle, Arc2D.PIE);
+            final Rectangle2D bounds;
+            //explode selected sections
+            if (section.isSelected()) {
+                bounds = GeometryUtil.getArcBounds(pieArea, explodedArea,
+                        startAngle, arcAngle, explodePercentage);
+            } else {
+                bounds = pieArea;
+            }
+            final Arc2D arc = new Arc2D.Double(bounds, startAngle, arcAngle,
+                    Arc2D.PIE);
             section.setPieSection(arc, calculator);
-//            curVal += value;
             startAngle += arcAngle;
         }
     }
@@ -198,6 +206,7 @@ public class PiePlotter extends AbstractPlotter {
             return;
         }
         vizModel.selectElement(clicked);
+        updatePaintModel();
         repaint();
     }
 
@@ -211,6 +220,7 @@ public class PiePlotter extends AbstractPlotter {
             return;
         }
         vizModel.selectElement(selectionRectangle);
+        updatePaintModel();
         repaint();
     }
 

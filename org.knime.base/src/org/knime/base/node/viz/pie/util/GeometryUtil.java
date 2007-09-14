@@ -26,6 +26,8 @@
 package org.knime.base.node.viz.pie.util;
 
 import java.awt.geom.Arc2D;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 
 /**
@@ -87,5 +89,65 @@ public final class GeometryUtil {
     public static double calculatePartialExtent(final Arc2D arc,
             final double fraction) {
         return arc.getAngleExtent() * fraction;
+    }
+
+    /**
+     * Returns <code>true</code> if the point is in the first half of a circle.
+     * 0 - 180 degree is the first half.
+     *
+     * @param angle  the angle.
+     *
+     * @return A boolean.
+     */
+    public static boolean isFirstHalf(final double angle) {
+        return (Math.sin(Math.toRadians(angle)) > 0.0);
+    }
+
+    /**
+     * Returns <code>true</code> if the point is in the second half of a circle.
+     * 180 - 360 degrees is the second half.
+     *
+     * @param angle  the angle.
+     *
+     * @return <code>true</code> if the angle is at the back of the pie.
+     */
+    public static boolean isSecondHalf(final double angle) {
+        return (Math.sin(Math.toRadians(angle)) < 0.0);
+    }
+
+    /**
+     * Returns a rectangle that can be used to create a pie section (taking
+     * into account the amount by which the pie section is 'exploded').
+     *
+     * @param unexploded  the area inside which the unexploded pie sections are
+     *                    drawn.
+     * @param exploded  the area inside which the exploded pie sections are
+     *                  drawn.
+     * @param angle  the start angle.
+     * @param extent  the extent of the arc.
+     * @param explodePercent  the amount by which the pie section is exploded.
+     *
+     * @return A rectangle that can be used to create a pie section.
+     */
+    public static Rectangle2D getArcBounds(final Rectangle2D unexploded,
+            final Rectangle2D exploded, final double angle, final double extent,
+            final double explodePercent) {
+        if (explodePercent == 0.0) {
+            return unexploded;
+        }
+        final Arc2D arc1 = new Arc2D.Double(
+            unexploded, angle, extent / 2, Arc2D.OPEN
+        );
+        final Point2D point1 = arc1.getEndPoint();
+        final Arc2D.Double arc2 = new Arc2D.Double(
+            exploded, angle, extent / 2, Arc2D.OPEN
+        );
+        final Point2D point2 = arc2.getEndPoint();
+        final double deltaX = (point1.getX() - point2.getX()) * explodePercent;
+        final double deltaY = (point1.getY() - point2.getY()) * explodePercent;
+        return new Rectangle2D.Double(
+            unexploded.getX() - deltaX, unexploded.getY() - deltaY,
+            unexploded.getWidth(), unexploded.getHeight()
+        );
     }
 }

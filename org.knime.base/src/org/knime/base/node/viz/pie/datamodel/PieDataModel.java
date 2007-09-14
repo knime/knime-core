@@ -26,6 +26,12 @@
 package org.knime.base.node.viz.pie.datamodel;
 
 import java.awt.Color;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +44,8 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 
 
 
@@ -47,6 +55,9 @@ import org.knime.core.data.def.IntCell;
  * @author Tobias Koetter, University of Konstanz
  */
 public class PieDataModel {
+
+    /**The name of the data file which contains all data in serialized form.*/
+    private static final String CFG_DATA_FILE = "dataFile";
 
     private final List<PieSectionDataModel> m_sections;
 
@@ -219,5 +230,91 @@ public class PieDataModel {
             sum += m_missingSection.getAggregationValue(aggrMethod);
         }
         return sum;
+    }
+
+    /**
+     * @param directory the directory to write to
+     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @throws IOException if a file exception occurs
+     * @throws CanceledExecutionException if the operation was canceled
+     */
+    public void save2File(final File directory,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        if (exec != null) {
+            exec.setProgress(0.0, "Start saving histogram data model to file");
+        }
+        final File dataFile = new File(directory, CFG_DATA_FILE);
+        final FileOutputStream dataOS = new FileOutputStream(dataFile);
+        final ObjectOutputStream os = new ObjectOutputStream(dataOS);
+        if (exec != null) {
+            exec.setProgress(0.3, "Start saving sections...");
+            exec.checkCanceled();
+        }
+        os.writeObject(m_sections);
+        if (exec != null) {
+            exec.setProgress(0.8, "Start saving missing section...");
+            exec.checkCanceled();
+        }
+        os.writeObject(m_missingSection);
+        if (exec != null) {
+            exec.setProgress(0.9, "Start saving hiliting flag...");
+            exec.checkCanceled();
+        }
+        os.writeBoolean(m_supportHiliting);
+        os.flush();
+        os.close();
+        dataOS.flush();
+        dataOS.close();
+        if (exec != null) {
+            exec.setProgress(1.0, "Pie data model saved");
+        }
+    }
+
+    /**
+     * @param directory the directory to write to
+     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @return the data model
+     * wasn't valid
+     * @throws IOException if a file exception occurs
+     * @throws ClassNotFoundException if a class couldn't be deserialized
+     * @throws CanceledExecutionException if the operation was canceled
+     */
+    @SuppressWarnings("unchecked")
+    public static PieDataModel loadFromFile(final File directory,
+            final ExecutionMonitor exec) throws IOException,
+            ClassNotFoundException, CanceledExecutionException {
+        if (exec != null) {
+            exec.setProgress(0.0, "Start reading data from file");
+        }
+        final File dataFile = new File(directory, CFG_DATA_FILE);
+        final FileInputStream dataIS = new FileInputStream(dataFile);
+        final ObjectInputStream os = new ObjectInputStream(dataIS);
+        if (exec != null) {
+            exec.setProgress(0.3, "Loading sections...");
+            exec.checkCanceled();
+        }
+        final List<PieSectionDataModel> sections =
+            (List<PieSectionDataModel>)os.readObject();
+
+        if (exec != null) {
+            exec.setProgress(0.8, "Loading missing section...");
+            exec.checkCanceled();
+        }
+        final PieSectionDataModel missingSection = (
+                PieSectionDataModel)os.readObject();
+
+        if (exec != null) {
+            exec.setProgress(0.0, "Loading hiliting flag...");
+            exec.checkCanceled();
+        }
+        final boolean supportHiliting = os.readBoolean();
+        if (exec != null) {
+            exec.setProgress(1.0, "Pie data mdoel loaded ");
+        }
+        //close the streams
+        os.close();
+        dataIS.close();
+        return new PieDataModel(sections, missingSection, supportHiliting);
     }
 }

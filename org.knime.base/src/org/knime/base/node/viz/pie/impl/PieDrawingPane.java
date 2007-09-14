@@ -148,7 +148,8 @@ public class PieDrawingPane extends AbstractDrawingPane {
                     DrawingUtils.drawOutline(g2, element,
                             SECTION_OUTLINE_COLOR, SECTION_OUTLINE_STROKE);
                 }
-                if (section.isHilited() && section.getHiliteShape() != null) {
+                if (section.supportsHiliting() && section.isHilited()
+                        && section.getHiliteShape() != null) {
                     final Shape hiliteElement = section.getHiliteShape();
                     DrawingUtils.drawBlock(g2, hiliteElement, HILITE_FILLING,
                             HILITE_FILLING_ALPHA);

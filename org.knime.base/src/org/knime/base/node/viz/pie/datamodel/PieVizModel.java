@@ -30,6 +30,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.Arc2D;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -55,6 +56,13 @@ public class PieVizModel extends PieDataModel {
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PieVizModel.class);
+
+    /**The size of the root pie in percentage of the available space.*/
+    public static final double PIE_SIZE_FACTOR = 0.6;
+
+    /**The size of the exploded pie in percentage of the available space.*/
+    public static final double EXPLODE_SIZE_FACTOR = 0.3;
+
 
     /**
      * The hilite calculator for the pie chart.
@@ -108,9 +116,6 @@ public class PieVizModel extends PieDataModel {
                     fraction);
         }
     }
-
-    /**The size of the root pie in percentage of the available space.*/
-    public static final double SIZE_FACTOR = 0.9;
 
     private boolean m_showMissingValSection = true;
 
@@ -299,29 +304,71 @@ public class PieVizModel extends PieDataModel {
     }
 
     /**
-     * @return the upper left point of the rectangle which surrounds the pie
+     * @return the percentage of the section explosion
      */
-    public Point getRootPoint() {
-        if (m_drawingSpace == null) {
-            return null;
-        }
-        final int diameter = getRootDiameter();
-        final int rootX = (int)((m_drawingSpace.getWidth()
-                - diameter) / 2);
-        final int rootY = (int)((m_drawingSpace.getHeight()
-                - diameter) / 2);
-        return new Point(rootX, rootY);
+    public double getExplodePercentage() {
+        return EXPLODE_SIZE_FACTOR;
+    }
+
+    public Rectangle2D getLinkArea() {
+        final Dimension plotArea = getDrawingSpace();
+        final double labelWidth = 0.0;
+        final double gapHorizontal
+            = plotArea.getWidth() * (0.25 + labelWidth);
+        final double gapVertical = plotArea.getHeight() * 0.25;
+        double linkX = 0 + gapHorizontal / 2;
+        double linkY = 0 + gapVertical / 2;
+        double linkW = plotArea.getWidth() - gapHorizontal;
+        double linkH = plotArea.getHeight() - gapVertical;
+        final double min = Math.min(linkW, linkH) / 2;
+        linkX = (linkX + linkX + linkW) / 2 - min;
+        linkY = (linkY + linkY + linkH) / 2 - min;
+        linkW = 2 * min;
+        linkH = 2 * min;
+
+        // the link area defines the dog leg points for the linking lines to
+        // the labels
+        final Rectangle2D linkArea = new Rectangle2D.Double(
+            linkX, linkY, linkW, linkH);
+        return linkArea;
     }
 
     /**
-     * @return the diameter of the pie
+     * @return the {@link Rectangle} to draw the exploded pie sections in
      */
-    public int getRootDiameter() {
-        if (m_drawingSpace == null) {
-            return -1;
-        }
-        return (int)(Math.min(m_drawingSpace.getWidth(),
-                m_drawingSpace.getHeight()) * SIZE_FACTOR);
+    public Rectangle2D getExplodedArea() {
+        final Rectangle2D linkArea = getLinkArea();
+        // the explode area defines the max circle/ellipse for the exploded
+        // pie sections.  it is defined by shrinking the linkArea by the
+        // linkMargin factor.
+        final double linkX = linkArea.getX();
+        final double linkY = linkArea.getY();
+        final double linkW = linkArea.getWidth();
+        final double linkH = linkArea.getHeight();
+        final double hh = linkArea.getWidth() * 0.05;
+        final double vv = linkArea.getHeight() * 0.05;
+        final Rectangle2D explodeArea = new Rectangle2D.Double(
+            linkX + hh / 2.0, linkY + vv / 2.0, linkW - hh, linkH - vv
+        );
+        return explodeArea;
+    }
+
+    /**
+     * @return the {@link Rectangle} to draw the pie
+     */
+    public Rectangle2D getPieArea() {
+        final Rectangle2D explodeArea = getExplodedArea();
+        // the pie area defines the circle/ellipse for regular pie sections.
+        // it is defined by shrinking the explodeArea by the explodeMargin
+        // factor.
+        final double percent = EXPLODE_SIZE_FACTOR;
+        final double h1 = explodeArea.getWidth() * percent;
+        final double v1 = explodeArea.getHeight() * percent;
+        final Rectangle2D pieArea = new Rectangle2D.Double(
+            explodeArea.getX() + h1 / 2.0, explodeArea.getY() + v1 / 2.0,
+            explodeArea.getWidth() - h1, explodeArea.getHeight() - v1
+        );
+        return pieArea;
     }
 
     /**
@@ -413,20 +460,27 @@ public class PieVizModel extends PieDataModel {
     /**
      * Selects the element which contains the given point.
      * @param point the point on the screen to select
+     * @return <code>true</code> if the selection has changed
      */
-    public void selectElement(final Point point) {
+    public boolean selectElement(final Point point) {
+        boolean changed = false;
         for (final PieSectionDataModel section : getSections()) {
-            section.selectElement(point, showDetails());
+            changed = section.selectElement(point, showDetails())
+            || changed;
         }
+        return changed;
     }
 
     /**
      * Selects the element which contains the given point.
      * @param rect the rectangle on the screen to select
+     * @return <code>true</code> if the selection has changed
      */
-    public void selectElement(final Rectangle rect) {
+    public boolean selectElement(final Rectangle rect) {
+        boolean changed = false;
         for (final PieSectionDataModel section : getSections()) {
-            section.selectElement(rect, showDetails());
+            changed = section.selectElement(rect, showDetails()) || changed;
         }
+        return changed;
     }
 }
