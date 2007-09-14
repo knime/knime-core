@@ -233,7 +233,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * @return the enableHiliting variable
      */
-    protected boolean supportsHiliting() {
+    public boolean supportsHiliting() {
         return m_supportHiliting;
     }
 
@@ -380,6 +380,8 @@ implements Serializable, AggregationModel<S, H> {
         if (calculator == null) {
             return;
         }
-        setHiliteShape(calculator.calculateHiliteShape(this));
+        if (supportsHiliting()) {
+            setHiliteShape(calculator.calculateHiliteShape(this));
+        }
     }
 }

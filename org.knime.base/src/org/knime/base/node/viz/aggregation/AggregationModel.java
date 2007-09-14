@@ -63,11 +63,6 @@ public interface AggregationModel<S, H extends Shape> {
     public S getShape();
 
     /**
-     * @return the hilite shape of this element
-     */
-    public H getHiliteShape();
-
-    /**
      * @return <code>true</code> if the sub elements should be drawn
      */
     public boolean isPresentable();
@@ -79,19 +74,34 @@ public interface AggregationModel<S, H extends Shape> {
     public boolean isSelected();
 
     /**
+     * @return <code>true</code> if hiliting is supported
+     */
+    public boolean supportsHiliting();
+
+    /**
      * @return <code>true</code> if at least one row of this element is hilited
      */
     public boolean isHilited();
+
+    /**
+     * Call the {@link #supportsHiliting()} method to check if hiliting
+     * is supported.
+     * @return the hilite shape of this element
+     */
+    public H getHiliteShape();
+
+    /**
+     * Call the {@link #supportsHiliting()} method to check if hiliting
+     * is supported.
+     * @return the number of hilited rows in this element
+     */
+    public int getHiliteRowCount();
 
     /**
      * @return the number of rows of this element
      */
     public int getRowCount();
 
-    /**
-     * @return the number of hilited rows in this element
-     */
-    public int getHiliteRowCount();
 
     /**
      * @return the number of real values (without missing values)

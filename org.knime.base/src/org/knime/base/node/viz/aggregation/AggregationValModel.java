@@ -30,14 +30,12 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.node.NodeLogger;
 
 /**
  *
@@ -49,9 +47,6 @@ import org.knime.core.node.NodeLogger;
 public abstract class AggregationValModel
 <T extends AggregationValSubModel<S, H>, S extends Shape, H extends Shape>
 implements Serializable, AggregationModel<S, H> {
-
-    private static final NodeLogger LOGGER = NodeLogger
-                .getLogger(AggregationValModel.class);
 
     private final String m_name;
 
@@ -175,13 +170,6 @@ implements Serializable, AggregationModel<S, H> {
      * sub element with the given color exists
      */
     public T getElement(final Color color) {
-        if (m_elements == null) {
-            //this could only happen if the deserialization of a previous
-            //version failed
-            LOGGER.warn("Unable to load data from previous version. "
-                    + "Please reexecute the histogram node.");
-            return null;
-        }
         return m_elements.get(color);
     }
 
@@ -189,13 +177,6 @@ implements Serializable, AggregationModel<S, H> {
      * @return all sub elements of this element
      */
     public Collection<T> getElements() {
-        if (m_elements == null) {
-            //this could only happen if the deserialization of a previous
-            //version failed
-            LOGGER.warn("Unable to load data from previous version. "
-                    + "Please reexecute the histogram node.");
-            return new ArrayList<T>();
-        }
         return m_elements.values();
     }
 
@@ -203,13 +184,6 @@ implements Serializable, AggregationModel<S, H> {
      * @return the number of sub elements
      */
     public int getNoOfElements() {
-        if (m_elements == null) {
-            //this could only happen if the deserialization of a previous
-            //version failed
-            LOGGER.warn("Unable to load data from previous version. "
-                    + "Please reexecute the histogram node.");
-            return 0;
-        }
         return m_elements.size();
     }
 
@@ -478,7 +452,9 @@ implements Serializable, AggregationModel<S, H> {
         if (calculator == null) {
             return;
         }
-        setHiliteShape(calculator.calculateHiliteShape(
+        if (supportsHiliting()) {
+            setHiliteShape(calculator.calculateHiliteShape(
                 (AggregationValModel<AggregationValSubModel<S, H>, S, H>)this));
+        }
     }
 }
