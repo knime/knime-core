@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    01.01.2007 (Tobias Koetter): created
  */
@@ -60,28 +60,28 @@ import org.knime.core.node.config.ConfigRO;
  */
 public class FixedHistogramDataModel {
 
-    private static final NodeLogger LOGGER = 
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(FixedHistogramDataModel.class);
-        
+
     /**The name of the xml file which contains the x column specification.*/
     private static final String CFG_SETTINGS_FILE = "settingsFile";
 
     /**The name of the root tag of the x column specification.*/
     private static final String CFG_SETTINGS_NAME = "histoSettings";
-    
+
     /**The name of the data file which contains all data in serialized form.*/
     private static final String CFG_DATA_FILE = "dataFile";
-    
+
     private final DataColumnSpec m_xColSpec;
-   
+
     private final Collection<ColorColumn> m_aggrColumns;
-    
+
     private final SortedSet<Color> m_rowColors;
-    
+
     private boolean m_binNominal;
-    
+
     private final List<BinDataModel> m_bins;
-    
+
     private final BinDataModel m_missingValueBin;
 
     /**Constructor for class HistogramDataModel.
@@ -121,12 +121,12 @@ public class FixedHistogramDataModel {
         }
         m_missingValueBin  = new BinDataModel(
                 AbstractHistogramVizModel.MISSING_VAL_BAR_CAPTION, 0, 0);
-        m_rowColors  = 
+        m_rowColors  =
             new TreeSet<Color>(HSBColorComparator.getInstance());
         LOGGER.debug("Exiting HistogramDataModel(xColSpec, aggrColumns) "
                 + "of class HistogramDataModel.");
     }
-    
+
     /**Constructor for class FixedHistogramDataModel used in serialization.
      * @param xColSpecxColSpec the column specification of the bin column
      * @param aggrColumns the aggregation columns
@@ -136,7 +136,7 @@ public class FixedHistogramDataModel {
      * @param rowColors the row colors
      */
     private FixedHistogramDataModel(final DataColumnSpec xColSpec,
-            final Collection<ColorColumn> aggrColumns, 
+            final Collection<ColorColumn> aggrColumns,
             final boolean binNominal,
             final List<BinDataModel> bins, final BinDataModel missingBin,
             final SortedSet<Color> rowColors) {
@@ -147,7 +147,7 @@ public class FixedHistogramDataModel {
         m_missingValueBin = missingBin;
         m_rowColors = rowColors;
     }
-   
+
     /**
      * Adds the given row values to the histogram.
      * @param id the row key of this row
@@ -155,7 +155,7 @@ public class FixedHistogramDataModel {
      * @param xCell the x value
      * @param aggrCells the aggregation values
      */
-    public void addDataRow(final DataCell id, final Color rowColor, 
+    public void addDataRow(final DataCell id, final Color rowColor,
             final DataCell xCell, final DataCell... aggrCells) {
         if (xCell == null) {
             throw new NullPointerException("X value must not be null.");
@@ -165,15 +165,15 @@ public class FixedHistogramDataModel {
         }
         final int startBin = 0;
         try {
-            BinningUtil.addDataRow2Bin(m_binNominal, m_bins, m_missingValueBin, 
+            BinningUtil.addDataRow2Bin(m_binNominal, m_bins, m_missingValueBin,
                     startBin, xCell, rowColor, id, m_aggrColumns, aggrCells);
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             if (!BinningUtil.checkDomainRange(xCell, getXColumnSpec())) {
                 throw new IllegalStateException(
-                    "Invalid column domain for column " 
+                    "Invalid column domain for column "
                     + m_xColSpec.getName()
                     + ". " + e.getMessage());
-            } 
+            }
             throw e;
         }
     }
@@ -210,15 +210,15 @@ public class FixedHistogramDataModel {
     public SortedSet<Color> getRowColors() {
         return Collections.unmodifiableSortedSet(m_rowColors);
     }
-    
+
     /**
      * @return <code>true</code> if the bins are nominal
      */
     public boolean getBinNominal() {
         return m_binNominal;
     }
-    
-    
+
+
     /**
      * @return a copy of all bins
      */
@@ -231,14 +231,14 @@ public class FixedHistogramDataModel {
         try {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
             new ObjectOutputStream(baos).writeObject(m_bins);
-            final ByteArrayInputStream bais = 
+            final ByteArrayInputStream bais =
                 new ByteArrayInputStream(baos.toByteArray());
-            binClones = 
+            binClones =
                 (List<BinDataModel>)new ObjectInputStream(bais).readObject();
-        } catch (Exception e) {
-              binClones = 
+        } catch (final Exception e) {
+              binClones =
               new ArrayList<BinDataModel>(m_bins.size());
-              for (BinDataModel bin : m_bins) {
+              for (final BinDataModel bin : m_bins) {
                   binClones.add(bin.clone());
               }
         }
@@ -246,12 +246,12 @@ public class FixedHistogramDataModel {
         final long endTime = System.currentTimeMillis();
         final long durationTime = endTime - startTime;
         LOGGER.debug("Time for cloning. " + durationTime + " ms");
-        LOGGER.debug("Exiting getClonedBins() of class " 
+        LOGGER.debug("Exiting getClonedBins() of class "
                 + "FixedHistogramDataModel.");
         return binClones;
     }
-    
-    
+
+
     /**
      * @return a copy of the bin with all rows where the x value was missing
      */
@@ -264,7 +264,7 @@ public class FixedHistogramDataModel {
      * @param exec the {@link ExecutionMonitor} to provide progress messages
      * @throws IOException if a file exception occurs
      */
-    public void save2File(final File directory, 
+    public void save2File(final File directory,
             final ExecutionMonitor exec) throws IOException {
         if (exec != null) {
             exec.setProgress(0.0, "Start saving histogram data model to file");
@@ -305,22 +305,22 @@ public class FixedHistogramDataModel {
      * @param directory the directory to write to
      * @param exec the {@link ExecutionMonitor} to provide progress messages
      * @return the histogram data model
-     * @throws InvalidSettingsException if the x column specification 
+     * @throws InvalidSettingsException if the x column specification
      * wasn't valid
      * @throws IOException if a file exception occurs
      * @throws ClassNotFoundException if a class couldn't be deserialized
      */
     @SuppressWarnings("unchecked")
-    public static FixedHistogramDataModel loadFromFile(final File directory, 
-            final ExecutionMonitor exec) throws InvalidSettingsException, 
+    public static FixedHistogramDataModel loadFromFile(final File directory,
+            final ExecutionMonitor exec) throws InvalidSettingsException,
             IOException, ClassNotFoundException {
         if (exec != null) {
             exec.setProgress(0.0, "Start reading data from file");
         }
         final File settingsFile = new File(directory, CFG_SETTINGS_FILE);
-        FileInputStream in = new FileInputStream(settingsFile);
+        final FileInputStream in = new FileInputStream(settingsFile);
         final ConfigRO settings = NodeSettings.loadFromXML(in);
-        DataColumnSpec xColSpec = DataColumnSpec.load(settings);
+        final DataColumnSpec xColSpec = DataColumnSpec.load(settings);
         if (exec != null) {
             exec.setProgress(0.1, "Binning column specification loaded");
             exec.setProgress("Loading aggregation columns...");
@@ -328,13 +328,28 @@ public class FixedHistogramDataModel {
         final File dataFile = new File(directory, CFG_DATA_FILE);
         final FileInputStream dataIS = new FileInputStream(dataFile);
         final ObjectInputStream os = new ObjectInputStream(dataIS);
-        final Collection<ColorColumn> aggrColumns = 
+        final Collection<ColorColumn> aggrColumns =
             (Collection<ColorColumn>)os.readObject();
         if (exec != null) {
             exec.setProgress(0.3, "Loading bins...");
         }
         final boolean binNominal = os.readBoolean();
         final List<BinDataModel> bins = (List<BinDataModel>)os.readObject();
+        //test if the workflow was saved before the aggregation model carve out
+        try {
+            if (!bins.isEmpty()) {
+                final Collection<BarDataModel> bars = bins.get(0).getBars();
+                if (!bars.isEmpty()) {
+                    bars.iterator().next().getElements();
+                }
+            }
+        } catch (final Exception e) {
+            final String msg =
+                "Unable to load internal data from previous version. "
+                + "Please reexecute the histogram node.";
+            LOGGER.warn(msg);
+            throw new InvalidSettingsException(msg);
+        }
         final BinDataModel missingBin = (BinDataModel)os.readObject();
         if (exec != null) {
             exec.setProgress(0.8, "Loading element colors...");

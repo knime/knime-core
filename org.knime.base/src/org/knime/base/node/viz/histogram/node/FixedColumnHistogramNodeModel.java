@@ -239,7 +239,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
             LOGGER.debug("Previous implementations haven't stored the data");
             m_model = null;
         } catch (final Exception e) {
-            LOGGER.warn("Error while saveHistogramInternals of "
+            LOGGER.warn("Error while loadHistogramInternals of "
                     + "FixedColumn implementation: " + e.getMessage());
             m_model = null;
             throw e;

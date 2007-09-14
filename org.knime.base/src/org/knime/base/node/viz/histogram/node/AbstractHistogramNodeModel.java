@@ -29,6 +29,7 @@ import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -216,7 +217,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      */
     @Override
     protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) {
+            final ExecutionMonitor exec) throws IOException {
         try {
             final File settingsFile =
                 new File(nodeInternDir, CFG_TABLESPEC_FILE);
@@ -232,6 +233,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             LOGGER.debug("Error while loading table specification: "
                     + e.getMessage());
             m_tableSpec = null;
+            throw new IOException(e.getMessage());
         }
     }
 
