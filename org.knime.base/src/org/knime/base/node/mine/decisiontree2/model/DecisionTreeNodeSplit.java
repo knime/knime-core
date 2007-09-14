@@ -46,6 +46,7 @@ import org.w3c.dom.Node;
  * is not a leaf. It mostly holds information about children.
  * 
  * @author Michael Berthold, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     /** The node logger for this class. */
@@ -281,7 +282,7 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      */
     @Override
     public final void addCoveredPattern(final DataRow row,
-            final DataTableSpec spec) throws Exception {
+            final DataTableSpec spec, final double weight) throws Exception {
         assert (spec != null);
         if (m_splitAttr != null) {
             if (spec != m_previousSpec) {
@@ -299,15 +300,21 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             if (cell.isMissing()) {
                 // if we can not determine the split at this node because
                 // value is missing, we add the row to each child
+                // with the weight proportional to the number of
+                // records belonging to each node
+                double allOverCount = getEntireClassCount();
                 for (DecisionTreeNode child : m_child) {
-                    child.addCoveredPattern(row, spec);
+                    double newWeight =
+                            (child.getEntireClassCount() / allOverCount)
+                                    * weight;
+                    child.addCoveredPattern(row, spec, newWeight);
                 }
                 return;
             }
-            addCoveredPattern(cell, row, spec);
+            addCoveredPattern(cell, row, spec, weight);
             return;
         }
-        addCoveredPattern(null, row, spec);
+        addCoveredPattern(null, row, spec, weight);
     }
 
     /**
@@ -318,17 +325,18 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * @param cell the cell to be used for classification at this node
      * @param row input pattern
      * @param spec the corresponding table spec
+     * @param weight the weight of this row (between 0.0 and 1.0)
      * @throws Exception if something went wrong (unknown attribute for example)
      */
     public abstract void addCoveredPattern(DataCell cell, DataRow row,
-            DataTableSpec spec) throws Exception;
+            DataTableSpec spec, double weight) throws Exception;
 
     /**
      * {@inheritDoc}
      */
     @Override
     public final void addCoveredColor(final DataRow row,
-            final DataTableSpec spec) throws Exception {
+            final DataTableSpec spec, final double weight) throws Exception {
         assert (spec != null);
         if (m_splitAttr != null) {
             if (spec != m_previousSpec) {
@@ -346,15 +354,21 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
             if (cell.isMissing()) {
                 // of we can not determine the split at this node because
                 // value is missing, we add the row to each child
+                // with the weight proportional to the number of
+                // records belonging to each node
+                double allOverCount = getEntireClassCount();
                 for (DecisionTreeNode child : m_child) {
-                    child.addCoveredColor(row, spec);
+                    double newWeight =
+                            (child.getEntireClassCount() / allOverCount)
+                                    * weight;
+                    child.addCoveredColor(row, spec, newWeight);
                 }
                 return;
             }
-            addCoveredColor(cell, row, spec);
+            addCoveredColor(cell, row, spec, weight);
             return;
         }
-        addCoveredColor(null, row, spec);
+        addCoveredColor(null, row, spec, weight);
     }
 
     /**
@@ -364,10 +378,11 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
      * @param cell the call to be used for classification at this node
      * @param row input pattern
      * @param spec the corresponding table spec
+     * @param weight the weight of this row (between 0.0 and 1.0)
      * @throws Exception if something went wrong (unknown attribute for example)
      */
     public abstract void addCoveredColor(DataCell cell, DataRow row,
-            DataTableSpec spec) throws Exception;
+            DataTableSpec spec, double weight) throws Exception;
 
     /**
      * {@inheritDoc}

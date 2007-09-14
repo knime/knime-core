@@ -44,6 +44,7 @@ import org.w3c.dom.NodeList;
 /**
  * 
  * @author Michael Berthold, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     /** The node logger for this class. */
@@ -169,12 +170,12 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
      */
     @Override
     public void addCoveredPattern(final DataCell cell, final DataRow row,
-            final DataTableSpec spec) throws Exception {
+            final DataTableSpec spec, final double weight) throws Exception {
         // first add pattern to the branch that matches the cell's value
         boolean notFound = true;
         for (int i = 0; i < m_splitValues.length; i++) {
             if (m_splitValues[i].equals(cell)) {
-                super.getChildNodeAt(i).addCoveredPattern(row, spec);
+                super.getChildNodeAt(i).addCoveredPattern(row, spec, weight);
                 notFound = false;
                 break;
             }
@@ -186,7 +187,7 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
                     + "Ignoring pattern.");
         }
         Color col = spec.getRowColor(row).getColor();
-        addColorToMap(col);
+        addColorToMap(col, weight);
         return;
     }
 
@@ -197,16 +198,17 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
      * @param cell the cell to be used for the split at this level
      * @param row input pattern
      * @param spec the corresponding table spec
+     * @param weight the weight of the row (between 0.0 and 1.0)
      * @throws Exception if something went wrong (unknown attriubte for example)
      */
     @Override
     public void addCoveredColor(final DataCell cell, final DataRow row,
-            final DataTableSpec spec) throws Exception {
+            final DataTableSpec spec, final double weight) throws Exception {
         for (int i = 0; i < m_splitValues.length; i++) {
             if (m_splitValues[i].equals(cell)) {
-                super.getChildNodeAt(i).addCoveredColor(row, spec);
+                super.getChildNodeAt(i).addCoveredColor(row, spec, weight);
                 Color col = spec.getRowColor(row).getColor();
-                addColorToMap(col);
+                addColorToMap(col, weight);
                 return;
             }
         }

@@ -213,13 +213,14 @@ public class DecisionTreeNodeSplitNominalBinary extends
      */
     @Override
     public void addCoveredPattern(final DataCell cell, final DataRow row,
-            final DataTableSpec spec) throws Exception {
+            final DataTableSpec spec, final double weight) throws Exception {
         // first add pattern to the branch that contains the cell's value
         boolean notFound = true;
         int childIndex = getIndexOfChild(cell);
 
         if (childIndex >= 0) {
-            super.getChildNodeAt(childIndex).addCoveredPattern(row, spec);
+            super.getChildNodeAt(childIndex).addCoveredPattern(row, spec,
+                    weight);
             notFound = false;
         }
 
@@ -230,7 +231,7 @@ public class DecisionTreeNodeSplitNominalBinary extends
                     + "Ignoring pattern.");
         }
         Color col = spec.getRowColor(row).getColor();
-        addColorToMap(col);
+        addColorToMap(col, weight);
         return;
     }
 
@@ -240,11 +241,12 @@ public class DecisionTreeNodeSplitNominalBinary extends
      * @param cell the cell to be used for the split at this level
      * @param row input pattern
      * @param spec the corresponding table spec
+     * @param weight the weight of the row (between 0.0 and 1.0)
      * @throws Exception if something went wrong (unknown attriubte for example)
      */
     @Override
     public void addCoveredColor(final DataCell cell, final DataRow row,
-            final DataTableSpec spec) throws Exception {
+            final DataTableSpec spec, final double weight) throws Exception {
 
         int childIndex = getIndexOfChild(cell);
         if (childIndex < 0) {
@@ -254,9 +256,9 @@ public class DecisionTreeNodeSplitNominalBinary extends
                     + "Ignoring pattern.");
             return;
         }
-        super.getChildNodeAt(childIndex).addCoveredColor(row, spec);
+        super.getChildNodeAt(childIndex).addCoveredColor(row, spec, weight);
         Color col = spec.getRowColor(row).getColor();
-        addColorToMap(col);
+        addColorToMap(col, weight);
         return;
 
     }

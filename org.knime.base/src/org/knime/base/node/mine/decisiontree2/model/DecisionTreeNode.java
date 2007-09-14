@@ -322,10 +322,11 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * 
      * @param row input pattern
      * @param spec the corresponding table spec
+     * @param weight the weight of the row (between 0.0 and 1.0)
      * @throws Exception if something went wrong (unknown attriubte for example)
      */
-    public abstract void addCoveredPattern(DataRow row, DataTableSpec spec)
-            throws Exception;
+    public abstract void addCoveredPattern(DataRow row, DataTableSpec spec,
+            double weight) throws Exception;
 
     /**
      * Add colors for a row of values if they fall within a specific
@@ -334,10 +335,11 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * 
      * @param row input pattern
      * @param spec the corresponding table spec
+     * @param weight the weight of the row (between 0.0 and 1.0)
      * @throws Exception if something went wrong (unknown attriubte for example)
      */
-    public abstract void addCoveredColor(DataRow row, DataTableSpec spec)
-            throws Exception;
+    public abstract void addCoveredColor(DataRow row, DataTableSpec spec,
+            double weight) throws Exception;
 
     /**
      * @return set of data cells which are the row keys that are covered by all
@@ -614,15 +616,16 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * Adds the given color to the color map.
      * 
      * @param col the color to add
+     * @param weight the weight for the color count
      */
-    protected void addColorToMap(final Color col) {
+    protected void addColorToMap(final Color col, final double weight) {
         if (m_coveredColors.containsKey(col)) {
             Double oldCount = m_coveredColors.get(col);
             m_coveredColors.remove(col);
             m_coveredColors.put(col, new Double(
-                    oldCount.doubleValue() + 1.0));
+                    oldCount.doubleValue() + weight));
         } else {
-            m_coveredColors.put(col, new Double(1.0));
+            m_coveredColors.put(col, new Double(weight));
         }
     }
 

@@ -58,7 +58,7 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
 
     private HashSet<DataCell> m_coveredPattern = new HashSet<DataCell>();
     
-    private boolean pureEnough = false;
+    private boolean m_pureEnough = false;
 
     /**
      * Empty Constructor visible only within package.
@@ -130,13 +130,14 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
      * 
      * @param row input pattern
      * @param spec the corresponding table spec
+     * @param weight the weight of the row (between 0.0 and 1.0)
      * @throws Exception if something went wrong (unknown attriubte for example)
      */
     @Override
     public final void addCoveredPattern(final DataRow row,
-            final DataTableSpec spec) throws Exception {
+            final DataTableSpec spec, final double weight) throws Exception {
         m_coveredPattern.add(row.getKey().getId());
-        addCoveredColor(row, spec);
+        addCoveredColor(row, spec, weight);
     }
 
     /**
@@ -145,13 +146,14 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
      * 
      * @param row input pattern
      * @param spec the corresponding table spec
+     * @param weight the weight of the row (between 0.0 and 1.0)
      * @throws Exception if something went wrong (unknown attriubte for example)
      */
     @Override
     public final void addCoveredColor(final DataRow row,
-            final DataTableSpec spec) throws Exception {
+            final DataTableSpec spec, final double weight) throws Exception {
         Color col = spec.getRowColor(row).getColor();
-        addColorToMap(col);
+        addColorToMap(col, weight);
     }
 
     /**
@@ -271,14 +273,14 @@ public class DecisionTreeNodeLeaf extends DecisionTreeNode {
      * properly
      */
     public boolean isPureEnough() {
-        return pureEnough;
+        return m_pureEnough;
     }
 
     /**
-     * Set the marker field for the purity
+     * Set the marker field for the purity.
      * @param pureEnough true if this leaf should be marked as pure enough
      */
-    public void setPureEnough(boolean pureEnough) {
-        this.pureEnough = pureEnough;
+    public void setPureEnough(final boolean pureEnough) {
+        this.m_pureEnough = pureEnough;
     }
 }

@@ -40,6 +40,7 @@ import org.knime.core.node.ModelContentWO;
  * {@link org.knime.core.node.ModelContent} objects.
  * 
  * @author Michael Berthold, University of Konstanz
+ * @author Christoph Sieb, University of Konstanz
  */
 public class DecisionTree implements Serializable {
 
@@ -100,7 +101,7 @@ public class DecisionTree implements Serializable {
      */
     public final void addCoveredPattern(final DataRow row,
             final DataTableSpec spec) throws Exception {
-        m_rootNode.addCoveredPattern(row, spec);
+        m_rootNode.addCoveredPattern(row, spec, 1.0);
     }
 
     /**
@@ -113,7 +114,7 @@ public class DecisionTree implements Serializable {
      */
     public final void addCoveredColor(final DataRow row,
             final DataTableSpec spec) throws Exception {
-        m_rootNode.addCoveredColor(row, spec);
+        m_rootNode.addCoveredColor(row, spec, 1.0);
     }
     
     /**
