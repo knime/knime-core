@@ -36,7 +36,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
-import org.knime.base.node.viz.histogram.AggregationMethod;
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.aggregation.AggregationValModel;
+import org.knime.base.node.viz.aggregation.AggregationValSubModel;
+import org.knime.base.node.viz.aggregation.HiliteShapeCalculator;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.LabelDisplayPolicy;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
@@ -46,6 +49,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.NodeLogger;
 
 /**
  * This is the basic visualization model for a histogram. It handles bin
@@ -55,6 +59,8 @@ import org.knime.core.data.def.StringCell;
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramVizModel {
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(AbstractHistogramVizModel.class);
 
     /**This message is displayed in the details tab if no element is selected.*/
     public static final String NO_ELEMENT_SELECTED_TEXT =
@@ -84,6 +90,148 @@ public abstract class AbstractHistogramVizModel {
      * rectangle. Should be greater 0 and less than 1. 0.8 = 80%
      */
     public static final double HILITE_RECT_WIDTH_FACTOR = 0.5;
+    /**The thickness of a bin which is used to show the different bins.*/
+    public static final int BIN_SURROUNDING_SPACE = 4;
+
+    /** This is the minimum space between two bins. */
+    public static final int SPACE_BETWEEN_BINS = 2 * BIN_SURROUNDING_SPACE + 3;
+
+    /**The space around a bar which is used to show the aggregation
+     * column color.*/
+    public static final int BAR_SURROUNDING_SPACE =
+        Math.min(BIN_SURROUNDING_SPACE, 3);
+
+    /**The space between to bars in pixel. Must be greater 0.*/
+    public static final int SPACE_BETWEEN_BARS = 2 * BAR_SURROUNDING_SPACE + 3;
+
+    /**
+     * The space between to elements in the SIDE_BY_SIDE {@link HistogramLayout}
+     * layout in  pixel. Must be greater 0.
+     */
+    public static final int SPACE_BETWEEN_ELEMENTS = 2;
+
+    /**The minimum width of an bar/element.*/
+    public static final int MINIMUM_ELEMENT_WIDTH = 6;
+
+    /** The minimum height of a bar.*/
+    public static final int MINIMUM_BAR_HEIGHT = 4;
+
+    /**
+    * The histogram hilite shape calculator.
+    * @author Tobias Koetter, University of Konstanz
+    */
+   public class HistogramHiliteCalculator implements
+            HiliteShapeCalculator<Rectangle, Rectangle> {
+
+        /** Constructor for class HistogramHiliteCalculator. */
+        protected HistogramHiliteCalculator() {
+            // nothing todo
+        }
+
+        /**
+         * @return the {@link AggregationMethod}
+         */
+        public AggregationMethod getAggrMethod() {
+            return AbstractHistogramVizModel.this.getAggregationMethod();
+        }
+
+        /**
+         * @return the {@link HistogramLayout}
+         */
+        public HistogramLayout getLayout() {
+            return AbstractHistogramVizModel.this.getHistogramLayout();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public Rectangle calculateHiliteShape(final AggregationValModel
+                <AggregationValSubModel<Rectangle, Rectangle>,
+                Rectangle, Rectangle> model) {
+            if (isFixed()) {
+                return null;
+            }
+            final Rectangle barRectangle = model.getShape();
+            if (model.isPresentable() || barRectangle == null) {
+                return null;
+            }
+            final int noOfHilitedRows = model.getHiliteRowCount();
+            if (noOfHilitedRows <= 0) {
+                return null;
+            }
+            final int barY = (int)barRectangle.getY();
+            final int barHeight = (int)barRectangle.getHeight();
+            final int barWidth = (int)barRectangle.getWidth();
+            final int rowCount = model.getRowCount();
+            final double fraction = noOfHilitedRows / (double)rowCount;
+            int hiliteHeight = (int)(barHeight * fraction);
+            final int hiliteWidth = Math.max((int)(barWidth
+                    * AbstractHistogramVizModel.HILITE_RECT_WIDTH_FACTOR), 1);
+            final int hiliteX =
+                    (int)(barRectangle.getX() + (barWidth - hiliteWidth) / 2);
+            int hiliteY = barY;
+            if (model.getAggregationValue(
+                            getAggregationMethod()) > 0) {
+                hiliteY = hiliteY + barHeight - hiliteHeight;
+            }
+            // check for possible rounding errors
+            if (hiliteHeight > barHeight) {
+                hiliteHeight = barHeight;
+                LOGGER.warn("Hilite rectangle higher than surrounding bar");
+            }
+            if (hiliteY < barY) {
+                hiliteY = barY;
+                LOGGER.warn("Hilite rectangle y coordinate above "
+                        + "surrounding bar y coordinate");
+            }
+            final Rectangle hiliteRect =
+                    new Rectangle(hiliteX, hiliteY, hiliteWidth, hiliteHeight);
+            return hiliteRect;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public Rectangle calculateHiliteShape(
+                final AggregationValSubModel<Rectangle, Rectangle> model) {
+            if (isFixed()) {
+                return null;
+            }
+            final int noOfHilitedKeys = model.getHiliteRowCount();
+            final Rectangle elementRect = model.getShape();
+            if (noOfHilitedKeys < 1 || elementRect == null) {
+                // if their are no rows hilited we have no hilite rectangle
+                return null;
+            }
+            final int totalWidth = (int)elementRect.getWidth();
+            final int hiliteWidth = Math.max((int)(totalWidth
+                    * AbstractHistogramVizModel.HILITE_RECT_WIDTH_FACTOR), 1);
+            final int totalHeight = (int)elementRect.getHeight();
+            final double heightPerRow =
+                    (double)totalHeight / model.getRowCount();
+            final int hiliteHeight =
+                    Math.max((int)(heightPerRow * noOfHilitedKeys), 1);
+            final int xCoord =
+                    (int)elementRect.getX() + (totalWidth / 2)
+                            - (hiliteWidth / 2);
+            final int startY = (int)elementRect.getY();
+            final double aggrVal = model.getAggregationValue(
+                    getAggregationMethod());
+            int yCoord = 0;
+            if (aggrVal >= 0) {
+                // if it's a positive value we draw the hilite rectangle from
+                // bottom to top of the bar
+                yCoord = startY + (totalHeight - hiliteHeight);
+            } else {
+                // if it's a negative value we draw the hilite rectangle from
+                //top to bottom of the bar
+                yCoord = startY;
+            }
+            final Rectangle hiliteRect =
+                    new Rectangle(xCoord, yCoord, hiliteWidth, hiliteHeight);
+            return hiliteRect;
+        }
+    }
 
     private final SortedSet<Color> m_rowColors;
 
@@ -135,34 +283,14 @@ public abstract class AbstractHistogramVizModel {
 
     private int m_maxNoOfBins;
 
+    /**Access this field only via the getter method to ensure that the
+     * aggregation and layout information are actual.
+    */
+    private final HistogramHiliteCalculator m_calculator =
+        new HistogramHiliteCalculator();
+
     /**Holds the actual size of the drawing space.*/
     private Dimension m_drawingSpace;
-
-    /**The thickness of a bin which is used to show the different bins.*/
-    public static final int BIN_SURROUNDING_SPACE = 4;
-
-    /** This is the minimum space between two bins. */
-    public static final int SPACE_BETWEEN_BINS = 2 * BIN_SURROUNDING_SPACE + 3;
-
-    /**The space around a bar which is used to show the aggregation
-     * column color.*/
-    public static final int BAR_SURROUNDING_SPACE =
-        Math.min(BIN_SURROUNDING_SPACE, 3);
-
-    /**The space between to bars in pixel. Must be greater 0.*/
-    public static final int SPACE_BETWEEN_BARS = 2 * BAR_SURROUNDING_SPACE + 3;
-
-    /**
-     * The space between to elements in the SIDE_BY_SIDE {@link HistogramLayout}
-     * layout in  pixel. Must be greater 0.
-     */
-    public static final int SPACE_BETWEEN_ELEMENTS = 2;
-
-    /**The minimum width of an bar/element.*/
-    public static final int MINIMUM_ELEMENT_WIDTH = 6;
-
-    /** The minimum height of a bar.*/
-    public static final int MINIMUM_BAR_HEIGHT = 4;
 
 
     /**Constructor for class HistogramVizModel.
@@ -889,7 +1017,7 @@ public abstract class AbstractHistogramVizModel {
                     buf.append("<td bgcolor='");
                     buf.append(barBgColor);
                     buf.append("'>");
-                    buf.append(bar.getBarName());
+                    buf.append(bar.getName());
                     buf.append("</td>");
                     buf.append("</tr>");
                     buf.append("<tr>");
@@ -1060,5 +1188,12 @@ public abstract class AbstractHistogramVizModel {
         final int newWidth = Math.max(width + 2 * thickness, 2);
         final int newX = (int)((x + width / 2.0) - newWidth / 2.0);
         return new Rectangle(newX, newY, newWidth, newHeight);
+    }
+
+    /**
+     * @return the hilite shape calculator
+     */
+    public HistogramHiliteCalculator getHiliteCalculator() {
+        return m_calculator;
     }
 }

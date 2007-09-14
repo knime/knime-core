@@ -20,38 +20,33 @@
  * -------------------------------------------------------------------
  *
  * History
- *    01.01.2007 (Tobias Koetter): created
+ *    13.09.2007 (Tobias Koetter): created
  */
 
-package org.knime.base.node.viz.histogram.datamodel;
+package org.knime.base.node.viz.aggregation;
 
-import java.awt.Color;
+import java.awt.Shape;
 
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
 
 /**
- * This class extends the {@link BarElementDataModel} to support hiliting.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @param <S> the basic shape
+ * @param <H> the hilite shape
  */
-public class InteractiveBarElementDataModel extends BarElementDataModel {
-
-    private static final long serialVersionUID = -6612680797726333107L;
-
-    /**Constructor for class BarElementDataModel.
-     * @param color the color to use for this bar element
-     */
-    protected InteractiveBarElementDataModel(final Color color) {
-        super(color, true);
-    }
+public interface HiliteShapeCalculator <S extends Shape, H extends Shape> {
 
     /**
-     * {@inheritDoc}
+     * @param model the model to calculate the hilite shape for
+     * @return the hilite shape
      */
-    @Override
-    public void updateElementWidth(final int xCoord, final int elementWidth,
-            final HistogramHiliteCalculator calculator) {
-        super.updateElementWidth(xCoord, elementWidth, calculator);
-        calculateHilitedRectangle(calculator);
-    }
+    public H calculateHiliteShape(final AggregationValModel
+            <AggregationValSubModel<S, H>, S, H> model);
+
+    /**
+     * @param model the model to calculate the hilite shape for
+     * @return the hilite shape
+     */
+    public H calculateHiliteShape(
+            final AggregationValSubModel<S, H> model);
 }

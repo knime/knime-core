@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    01.01.2007 (Tobias Koetter): created
  */
@@ -31,8 +31,10 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.SortedSet;
 
-import org.knime.base.node.viz.histogram.AggregationMethod;
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.aggregation.HiliteShapeCalculator;
 import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeLogger;
@@ -45,22 +47,22 @@ public class InteractiveBinDataModel extends BinDataModel {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(InteractiveBinDataModel.class);
     private static final long serialVersionUID = 4709538043061219689L;
-    
+
     /**If the different bars of this bin can't be draw because the bin
      * is to small this rectangle is calculated to reflect the proportion
      * of hilited rows in this bin. */
     private Rectangle m_hiliteRectangle;
-    
+
     /**Constructor for class BinDataModel.
      * @param xAxisCaption the caption of this bin on the x axis
      * @param lowerBound the lower bound of the bin interval
      * @param upperBound the higher bound of the bin interval
      */
-    public InteractiveBinDataModel(final String xAxisCaption, 
+    public InteractiveBinDataModel(final String xAxisCaption,
             final double lowerBound, final double upperBound) {
         super(xAxisCaption, lowerBound, upperBound);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -72,80 +74,78 @@ public class InteractiveBinDataModel extends BinDataModel {
      * {@inheritDoc}
      */
     @Override
-    public void setBinRectangle(final Rectangle binRectangle, 
-            final AggregationMethod aggrMethod, final HistogramLayout layout, 
-            final int baseLine, final SortedSet<Color> barElementColors, 
-            final Collection<ColorColumn> aggrColumns) {
-        super.setBinRectangle(binRectangle, aggrMethod, layout, baseLine,
-                barElementColors, aggrColumns);
-        calculateHiliteRectangle(aggrMethod, layout);
+    public void setBinRectangle(final Rectangle binRectangle,
+            final int baseLine,
+            final SortedSet<Color> barElementColors,
+            final Collection<ColorColumn> aggrColumns,
+            final HistogramHiliteCalculator calculator) {
+        super.setBinRectangle(binRectangle, baseLine, barElementColors,
+                aggrColumns, calculator);
+        calculateHiliteRectangle(calculator);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public void updateBinWidth(final int startX, final int binWidth, 
-            final HistogramLayout layout, 
-            final SortedSet<Color> barElementColors, 
-            final AggregationMethod aggrMethod, 
-            final Collection<ColorColumn> aggrColumns, final int baseLine) {
-        super.updateBinWidth(startX, binWidth, layout, barElementColors, 
-                aggrMethod, aggrColumns, baseLine);
-        calculateHiliteRectangle(aggrMethod, layout);
+    public void updateBinWidth(final int startX, final int binWidth,
+            final SortedSet<Color> barElementColors,
+            final Collection<ColorColumn> aggrColumns, final int baseLine,
+            final HistogramHiliteCalculator calculator) {
+        super.updateBinWidth(startX, binWidth, barElementColors,
+                aggrColumns, baseLine, calculator);
+        calculateHiliteRectangle(calculator);
     }
-    
+
     /**
      * @return the number of hilited rows in this bin.
      */
     public int getNoOfHilitedRows() {
         int noOfHilitedKeys = 0;
-        for (BarDataModel bar : getBars()) {
-            noOfHilitedKeys += 
-                ((InteractiveBarDataModel)bar).getNoOfHilitedRows();
+        for (final BarDataModel bar : getBars()) {
+            noOfHilitedKeys +=
+                (bar).getHiliteRowCount();
             //we need the number of hilited keys only from one bar
             //since the number is equal for all bars
             break;
         }
         return noOfHilitedKeys;
     }
-    
+
     /**
      * @param hilited the row keys to hilite
-     * @param aggrMethod the current aggregation method
+     * @param calculator the hilite shape calculator
      * @param layout the current {@link HistogramLayout}
      * @return if the hilite keys have changed
      */
-    protected boolean setHilitedKeys(final Set<DataCell> hilited, 
-            final AggregationMethod aggrMethod,
+    protected boolean setHilitedKeys(final Set<DataCell> hilited,
+            final HiliteShapeCalculator<Rectangle, Rectangle> calculator,
             final HistogramLayout layout) {
         boolean changed = false;
         for (final BarDataModel bar : getBars()) {
-            changed = ((InteractiveBarDataModel)bar).setHilitedKeys(hilited, 
-                    aggrMethod, layout) || changed;
+            changed = bar.setHilitedKeys(hilited, calculator) || changed;
         }
         if (changed) {
-            calculateHiliteRectangle(aggrMethod, layout);
+            calculateHiliteRectangle(calculator);
         }
         return changed;
     }
 
     /**
      * @param hilited the row keys to unhilite
-     * @param aggrMethod the current aggregation method
+     * @param calculator the hilite shape calculator
      * @param layout the current {@link HistogramLayout}
      * @return if the hilite keys have changed
      */
-    protected boolean removeHilitedKeys(final Set<DataCell> hilited, 
-            final AggregationMethod aggrMethod, 
+    protected boolean removeHilitedKeys(final Set<DataCell> hilited,
+            final HiliteShapeCalculator<Rectangle, Rectangle> calculator,
             final HistogramLayout layout) {
         boolean changed = false;
         for (final BarDataModel bar : getBars()) {
-            changed = ((InteractiveBarDataModel)bar).removeHilitedKeys(hilited, 
-                    aggrMethod, layout) || changed;
+            changed = bar.removeHilitedKeys(hilited, calculator) || changed;
         }
         if (changed) {
-            calculateHiliteRectangle(aggrMethod, layout);
+            calculateHiliteRectangle(calculator);
         }
         return changed;
     }
@@ -155,12 +155,12 @@ public class InteractiveBinDataModel extends BinDataModel {
      */
     public void clearHilite() {
         for (final BarDataModel bar : getBars()) {
-            ((InteractiveBarDataModel)bar).clearHilite();
+            (bar).clearHilite();
         }
         m_hiliteRectangle = null;
     }
 
-    
+
     /**
      * The proportional hilite rectangle of this bin which
      * could be displayed if the bars of this bin can't be draw.
@@ -169,7 +169,7 @@ public class InteractiveBinDataModel extends BinDataModel {
     public Rectangle getHiliteRectangle() {
         return m_hiliteRectangle;
     }
-    
+
     /**
      * This calculates the proportional hilite rectangle of this bar which
      * could be displayed if the elements of this bar can't be draw.
@@ -177,8 +177,8 @@ public class InteractiveBinDataModel extends BinDataModel {
      * @param aggrMethod the current {@link AggregationMethod}
      * @param layout the current {@link HistogramLayout}
      */
-    private void calculateHiliteRectangle(final AggregationMethod aggrMethod, 
-            final HistogramLayout layout) {
+    private void calculateHiliteRectangle(
+            final HiliteShapeCalculator<Rectangle, Rectangle> calculator) {
         final Rectangle binRectangle = getBinRectangle();
         if (isPresentable() || binRectangle == null) {
             m_hiliteRectangle = null;
@@ -189,6 +189,19 @@ public class InteractiveBinDataModel extends BinDataModel {
             m_hiliteRectangle = null;
             return;
         }
+        if (calculator == null) {
+            return;
+        }
+        final AggregationMethod aggrMethod;
+        final HistogramLayout layout;
+        if (calculator instanceof HistogramHiliteCalculator) {
+            final HistogramHiliteCalculator histoCalculator =
+                (HistogramHiliteCalculator)calculator;
+            aggrMethod = histoCalculator.getAggrMethod();
+            layout = histoCalculator.getLayout();
+        } else {
+            throw new IllegalArgumentException("HiliteCalculator is invalid");
+        }
         final int binY = (int)binRectangle.getY();
         final int binHeight = (int)binRectangle.getHeight();
         final int binWidth = (int)binRectangle.getWidth();
@@ -196,8 +209,8 @@ public class InteractiveBinDataModel extends BinDataModel {
         final double fraction = noOfHilitedRows / (double)rowCount;
         int hiliteHeight = (int)(binHeight * fraction);
         final int hiliteWidth = Math.max(
-                (int)(binWidth 
-        * AbstractHistogramVizModel.HILITE_RECT_WIDTH_FACTOR), 
+                (int)(binWidth
+        * AbstractHistogramVizModel.HILITE_RECT_WIDTH_FACTOR),
         1);
         final int hiliteX = (int) (binRectangle.getX()
                 + (binWidth - hiliteWidth) / 2);
@@ -222,7 +235,7 @@ public class InteractiveBinDataModel extends BinDataModel {
             LOGGER.warn("Hilite rectangle y coordinate above "
                     + "surrounding bar y coordinate");
         }
-        m_hiliteRectangle = 
+        m_hiliteRectangle =
             new Rectangle(hiliteX, hiliteY, hiliteWidth, hiliteHeight);
     }
 }

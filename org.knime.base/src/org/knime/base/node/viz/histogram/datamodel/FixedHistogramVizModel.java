@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
-import org.knime.base.node.viz.histogram.AggregationMethod;
+import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;

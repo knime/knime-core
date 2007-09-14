@@ -27,8 +27,8 @@ package org.knime.base.node.viz.histogram.node;
 import java.awt.Color;
 import java.io.File;
 
+import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
-import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;

@@ -40,8 +40,10 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
@@ -74,6 +76,7 @@ import org.knime.core.node.util.DataValueColumnFilter;
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AbstractHistogramPlotter extends AbstractPlotter {
+
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(AbstractHistogramPlotter.class);
     /**This name is used for the y axis if the aggregation method is count.*/
@@ -258,7 +261,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                             "No valid aggregation method");
                 }
                 final AggregationMethod aggrMethod =
-                    AggregationMethod.getMethod4String(methodName);
+                    AggregationMethod.getMethod4Command(methodName);
                 if (setAggregationMethod(aggrMethod)) {
                     updatePaintModel();
                 }
@@ -371,10 +374,10 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
 
         final int newBinWidth = vizModel.getBinWidth();
-        final HistogramLayout layout = vizModel.getHistogramLayout();
         final SortedSet<Color> barElementColors =
             vizModel.getRowColors();
-        final AggregationMethod aggrMethod = vizModel.getAggregationMethod();
+        final HistogramHiliteCalculator calculator =
+                vizModel.getHiliteCalculator();
         final Collection<ColorColumn> aggrColumns =
             vizModel.getAggrColumns();
         for (final BinDataModel bin : vizModel.getBins()) {
@@ -384,8 +387,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             //subtract half of the bar width from the start position to place
             //the middle point of the bar on the mapped coordinate position
             final int xCoord = (int)(labelCoord - (newBinWidth / 2));
-            bin.updateBinWidth(xCoord, newBinWidth, layout,
-                    barElementColors, aggrMethod, aggrColumns, baseLine);
+            bin.updateBinWidth(xCoord, newBinWidth, barElementColors,
+                    aggrColumns, baseLine, calculator);
         }
         //if only the bar width changes we don't need to update the properties
         //since the bar width change is triggered by the property component
@@ -445,6 +448,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         final Collection<ColorColumn> aggrColumns =
             vizModel.getAggrColumns();
         final HistogramLayout layout = vizModel.getHistogramLayout();
+        final HistogramHiliteCalculator calculator =
+                vizModel.getHiliteCalculator();
         final double drawingWidth = drawingSpace.getWidth();
         final double drawingHeight = drawingSpace.getHeight();
         final int baseLine =
@@ -464,8 +469,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 //this bin is not on the x axis (because it is empty and the
                 //empty bins shouldn't be displayed) so we simply set the
                 //rectangle to null and continue
-                bin.setBinRectangle(null, aggrMethod, layout, baseLine,
-                        barElementColors, aggrColumns);
+                bin.setBinRectangle(null, baseLine, barElementColors,
+                        aggrColumns, calculator);
                 continue;
             }
 
@@ -486,8 +491,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                             new DoubleCell(minAggrVal), drawingHeight, true));
             final Rectangle binRect = calculateBorderRectangle(xCoord, lowerY,
                     upperY, minHeight, binWidth, maxAggrVal, baseLine);
-            bin.setBinRectangle(binRect, aggrMethod, layout, baseLine,
-                    barElementColors, aggrColumns);
+            bin.setBinRectangle(binRect, baseLine, barElementColors,
+                    aggrColumns, calculator);
         } // end of for loop over the x axis coordinates
     }
 
@@ -617,10 +622,11 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     /**
      * Convenience method to cast the drawing pane.
      *
-     * @return the underlying scatter plotter drawing pane
+     * @return the underlying plotter drawing pane
      */
     protected HistogramDrawingPane getHistogramDrawingPane() {
-        final HistogramDrawingPane myPane = (HistogramDrawingPane)getDrawingPane();
+        final HistogramDrawingPane myPane =
+            (HistogramDrawingPane)getDrawingPane();
         if (myPane == null) {
             throw new IllegalStateException("Drawing pane must not be null");
         }
@@ -718,8 +724,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     StringCell.TYPE, Double.NaN, Double.NaN, binCaptions);
             return colSpec;
         }
-        final DataColumnSpec colSpec = createColumnSpec(colName, StringCell.TYPE,
-                Double.NaN, Double.NaN, binCaptions);
+        final DataColumnSpec colSpec = createColumnSpec(colName,
+                StringCell.TYPE, Double.NaN, Double.NaN, binCaptions);
         return colSpec;
     }
 
@@ -739,7 +745,8 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
     private DataColumnSpec createColumnSpec(final String columnName,
             final DataType type, final double lowerBound,
             final double upperBound, final Set<DataCell> values) {
-        final DataColumnDomainCreator domainCreator = new DataColumnDomainCreator();
+        final DataColumnDomainCreator domainCreator =
+            new DataColumnDomainCreator();
         if (!Double.isNaN(lowerBound) && !Double.isNaN(upperBound)) {
             DataCell lowerBoundCell = null;
             DataCell upperBoundCell = null;

@@ -29,7 +29,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 
-import org.knime.base.node.viz.histogram.AggregationMethod;
+import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;

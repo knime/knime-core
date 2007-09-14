@@ -49,11 +49,13 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 /**
  * Abstract class which handles the default properties like layouting.
@@ -188,36 +190,12 @@ public abstract class AbstractHistogramProperties extends
         });
         m_noOfBins.setEnabled(false);
 
-        // set the aggregation method radio buttons
-        final JRadioButton countMethod = new JRadioButton(
-                AggregationMethod.COUNT.name());
-        countMethod.setActionCommand(AggregationMethod.COUNT.name());
-        countMethod.addActionListener(new ActionListener() {
+        m_aggrMethButtonGrp = createButtonGroup(AggregationMethod.values(),
+                new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 onSelectAggrMethod(e.getActionCommand());
             }
         });
-        final JRadioButton sumMethod = new JRadioButton(AggregationMethod.SUM
-                .name());
-        sumMethod.setActionCommand(AggregationMethod.SUM.name());
-        sumMethod.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                onSelectAggrMethod(e.getActionCommand());
-            }
-        });
-        final JRadioButton avgMethod = new JRadioButton(
-                AggregationMethod.AVERAGE.name());
-        avgMethod.setActionCommand(AggregationMethod.AVERAGE.name());
-        avgMethod.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                onSelectAggrMethod(e.getActionCommand());
-            }
-        });
-        // Group the radio buttons.
-        m_aggrMethButtonGrp = new ButtonGroup();
-        m_aggrMethButtonGrp.add(countMethod);
-        m_aggrMethButtonGrp.add(sumMethod);
-        m_aggrMethButtonGrp.add(avgMethod);
 
         // select the right radio button
         for (final Enumeration<AbstractButton> buttons = m_aggrMethButtonGrp
@@ -289,6 +267,32 @@ public abstract class AbstractHistogramProperties extends
         m_detailsPane = new JPanel();
         m_detailsPane.add(m_detailsScrollPane);
         addTab(DETAILS_TAB_LABEL, m_detailsPane);
+    }
+
+    private ButtonGroup createButtonGroup(final AggregationMethod[] elements,
+            final ActionListener l) {
+        final ButtonGroup group = new ButtonGroup();
+        boolean defaultFound = false;
+        for (final ButtonGroupEnumInterface element : elements) {
+            final JRadioButton button = new JRadioButton(element.getText());
+            button.setActionCommand(element.getActionCommand());
+            if (element.isDefault()) {
+                button.setSelected(true);
+                defaultFound = true;
+            }
+            if (element.getToolTip() != null) {
+                button.setToolTipText(element.getToolTip());
+            }
+            if (l != null) {
+                button.addActionListener(l);
+            }
+            group.add(button);
+        }
+        if (!defaultFound && group.getButtonCount() > 0) {
+            //select the first button if none is by default selected
+            group.getElements().nextElement().setSelected(true);
+        }
+        return group;
     }
 
     private Dimension getTabSize() {
@@ -607,7 +611,7 @@ public abstract class AbstractHistogramProperties extends
             // Hashtable labels = m_barWidth.createStandardLabels(1);
             final Hashtable<Integer, JLabel> labels =
                 new Hashtable<Integer, JLabel>(1);
-            labels.put(minimum, new JLabel("Min"));
+            labels.put(new Integer(minimum), new JLabel("Min"));
             slider.setLabelTable(labels);
             slider.setPaintLabels(true);
             slider.setEnabled(false);
@@ -616,13 +620,16 @@ public abstract class AbstractHistogramProperties extends
             final Hashtable<Integer, JLabel> labels =
                 new Hashtable<Integer, JLabel>();
             // labels.put(minimum, new JLabel("Min"));
-            labels.put(minimum, new JLabel(Integer.toString(minimum)));
+            labels.put(new Integer(minimum),
+                    new JLabel(Integer.toString(minimum)));
             for (int i = 1; i < divisor; i++) {
                 final int value = minimum + i * increment;
-                labels.put(value, new JLabel(Integer.toString(value)));
+                labels.put(new Integer(value),
+                        new JLabel(Integer.toString(value)));
             }
             // labels.put(maximum, new JLabel("Max"));
-            labels.put(maximum, new JLabel(Integer.toString(maximum)));
+            labels.put(new Integer(maximum),
+                    new JLabel(Integer.toString(maximum)));
             slider.setLabelTable(labels);
             slider.setPaintLabels(true);
             slider.setMajorTickSpacing(divisor);
@@ -632,8 +639,8 @@ public abstract class AbstractHistogramProperties extends
         } else {
             final Hashtable<Integer, JLabel> labels =
                 new Hashtable<Integer, JLabel>();
-            labels.put(minimum, new JLabel("Min"));
-            labels.put(maximum, new JLabel("Max"));
+            labels.put(new Integer(minimum), new JLabel("Min"));
+            labels.put(new Integer(maximum), new JLabel("Max"));
             slider.setLabelTable(labels);
             slider.setPaintLabels(true);
             slider.setEnabled(true);
@@ -874,7 +881,7 @@ public abstract class AbstractHistogramProperties extends
         if (!AggregationMethod.valid(methodName)) {
             throw new IllegalArgumentException("No valid aggregation method");
         }
-        return AggregationMethod.getMethod4String(methodName);
+        return AggregationMethod.getMethod4Command(methodName);
     }
 
     /**

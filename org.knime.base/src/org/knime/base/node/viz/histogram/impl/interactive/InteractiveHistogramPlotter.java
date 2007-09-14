@@ -31,9 +31,9 @@ import java.util.List;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
-import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
 import org.knime.base.node.viz.histogram.util.ColorColumn;

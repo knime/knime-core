@@ -34,9 +34,9 @@ import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.AbstractHistogramProperties;
-import org.knime.base.node.viz.histogram.AggregationMethod;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.util.AggregationColumnFilterPanel;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
