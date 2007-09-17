@@ -27,18 +27,24 @@ package org.knime.base.node.viz.pie.impl;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.TexturePaint;
+import java.awt.geom.Arc2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
 
+import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.aggregation.AggregationModel;
 import org.knime.base.node.viz.aggregation.DrawingUtils;
+import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.base.node.viz.pie.util.GeometryUtil;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.property.ColorAttr;
 
@@ -49,6 +55,8 @@ import org.knime.core.data.property.ColorAttr;
  */
 public class PieDrawingPane extends AbstractDrawingPane {
 
+    /**The number of digits to display for a label.*/
+    private static final int NO_OF_LABEL_DIGITS = 2;
     /**This stroke is used to draw the rectangle around the hilite rectangle.*/
     private static final BasicStroke SELECTION_OUTLINE_STROKE =
         new BasicStroke(2f);
@@ -108,6 +116,11 @@ public class PieDrawingPane extends AbstractDrawingPane {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                                  RenderingHints.VALUE_ANTIALIAS_OFF);
         }
+        final Rectangle2D explodeArea = m_vizModel.getExplodedArea();
+        final Rectangle2D pieArea = m_vizModel.getPieArea();
+        final double labelMargin = m_vizModel.getLabelLinkSize();
+        final AggregationMethod aggrMethod = m_vizModel.getAggregationMethod();
+        final double totalValue = m_vizModel.getAggregationValue();
         if (m_vizModel.showDetails()) {
             final List<? extends AggregationModel<? extends Shape,
                     ? extends Shape>> drawSubSections =
@@ -136,9 +149,9 @@ public class PieDrawingPane extends AbstractDrawingPane {
                         SECTION_OUTLINE_STROKE);
             }
         } else {
-            for (final AggregationModel<? extends Shape,
-                    ? extends Shape> section : m_vizModel.getDrawSections()) {
-                final Shape element = section.getShape();
+            for (final PieSectionDataModel section : m_vizModel.getSections()) {
+                final double value = section.getAggregationValue(aggrMethod);
+                final Arc2D element = section.getShape();
                 final Color color = section.getColor();
                 DrawingUtils.drawBlock(g2, element, color);
                 if (section.isSelected()) {
@@ -155,11 +168,97 @@ public class PieDrawingPane extends AbstractDrawingPane {
                             HILITE_FILLING_ALPHA);
 
                 }
+                final double labelAngle = GeometryUtil.calculateMidAngle(
+                        element, totalValue, value);
+                final String label = createLabel(section.getName(), aggrMethod,
+                        value);
+                //draw the label
+                if (section.isSelected()) {
+                    drawLabel(g2, label, labelAngle, explodeArea, labelMargin);
+                } else {
+                    drawLabel(g2, label, labelAngle, pieArea, labelMargin);
+                }
             }
         }
-
         //set the old rendering hints
         g2.setRenderingHints(origHints);
+
+        //draw the rectangles for debugging
+        g2.setStroke(SECTION_OUTLINE_STROKE);
+        g2.setColor(Color.CYAN);
+        g2.draw(m_vizModel.getLabelArea());
+        g2.draw(m_vizModel.getExplodedArea());
+        g2.draw(m_vizModel.getPieArea());
+    }
+
+    private static String createLabel(final String name,
+            final AggregationMethod aggrMethod, final double value) {
+        final String valuePart = aggrMethod.createLabel(value,
+                NO_OF_LABEL_DIGITS);
+        if (name != null) {
+            return name + " " + aggrMethod.getText() + ": " + valuePart;
+        }
+        return valuePart;
+
+    }
+
+    /**
+     * @param g2
+     * @param section
+     * @param totalValue
+     * @param aggrMethod
+     * @param labelArea
+     */
+    private static void drawLabel(final Graphics2D g2,
+            final String label, final double angle,
+            final Rectangle2D area, final double labelMargin) {
+//        final String label = section.getName() + " "
+//            + aggrMethod.getText() + ": " + value;
+        final FontMetrics metrics = g2.getFontMetrics();
+        final int textWidth = metrics.stringWidth(label);
+//        final int textHeight = metrics.getHeight();
+        final double borderXend = Math.cos(Math.toRadians(angle))
+                                    * (area.getWidth() / 2);
+        final double borderYend = -Math.sin(Math.toRadians(angle))
+                                    * (area.getWidth() / 2);
+        final double linkX1 = area.getCenterX() + borderXend;
+        final double linkY1 = area.getCenterY() + borderYend;
+        final double linkX2;
+        final double linkY2;
+        final double labelX;
+        final double labelY;
+        final int margin = 30;
+        if (angle > 90 && angle < 270) {
+            //this is the left side of the pie
+            if (angle < 90 + margin) {
+                //this is the top left section
+                linkY2 = linkY1 - labelMargin;
+            } else if (angle > 270 - margin) {
+                //this is the bottom left section
+                linkY2 = linkY1 + labelMargin;
+            } else {
+                linkY2 = linkY1;
+            }
+            linkX2 = linkX1 - labelMargin;
+            labelX = linkX2  - textWidth;
+            labelY = linkY2;
+        } else {
+            //this is the right side of the pie
+            if (angle > 90 - margin && angle < 90) {
+                //this is the top right section
+                linkY2 = linkY1 - labelMargin;
+            } else if (angle < 270 + margin && angle > 270) {
+                //this is the bottom right section
+                linkY2 = linkY1 + labelMargin;
+            } else {
+                linkY2 = linkY1;
+            }
+            linkX2 = linkX1 + labelMargin;
+            labelX = linkX2;
+            labelY = linkY2;
+        }
+        g2.drawLine((int)linkX1, (int)linkY1, (int)linkX2, (int)linkY2);
+        g2.drawString(label, (int)labelX, (int)labelY);
     }
 
     /**

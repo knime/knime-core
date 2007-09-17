@@ -153,7 +153,7 @@ public class PiePlotter extends AbstractPlotter {
     private void setPieSections(final PieVizModel vizModel) {
         final Rectangle2D pieArea = vizModel.getPieArea();
         final Rectangle2D explodedArea = vizModel.getExplodedArea();
-        final double explodePercentage = vizModel.getExplodePercentage();
+//        final double explodePercentage = vizModel.getExplodeMargin();
         final double total = vizModel.getAggregationValue();
         final AggregationMethod method = vizModel.getAggregationMethod();
         final PieHiliteCalculator calculator = vizModel.getCalculator();
@@ -168,11 +168,16 @@ public class PiePlotter extends AbstractPlotter {
             if (i == noOfSections - 1) {
                 arcAngle = 360 - startAngle;
             }
+            if (arcAngle < PieVizModel.MINIMUM_ARC_ANGLE) {
+                //skip this section
+                section.setPieSection(null, calculator);
+                continue;
+            }
             final Rectangle2D bounds;
             //explode selected sections
             if (section.isSelected()) {
                 bounds = GeometryUtil.getArcBounds(pieArea, explodedArea,
-                        startAngle, arcAngle, explodePercentage);
+                        startAngle, arcAngle, 1.0);
             } else {
                 bounds = pieArea;
             }

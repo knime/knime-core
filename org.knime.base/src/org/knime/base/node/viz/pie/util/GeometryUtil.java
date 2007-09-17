@@ -125,7 +125,9 @@ public final class GeometryUtil {
      *                  drawn.
      * @param angle  the start angle.
      * @param extent  the extent of the arc.
-     * @param explodePercent  the amount by which the pie section is exploded.
+     * @param explodePercent  the percent the new arc should reach into the
+     * explode area. 1.0 means the section should be shifted to the border of
+     * the explode area.
      *
      * @return A rectangle that can be used to create a pie section.
      */
@@ -149,5 +151,21 @@ public final class GeometryUtil {
             unexploded.getX() - deltaX, unexploded.getY() - deltaY,
             unexploded.getWidth(), unexploded.getHeight()
         );
+    }
+
+    /**
+     * @param arc the {@link Arc2D} to calculate the mid angle for
+     * @param totalValue the total value of the pie
+     * @param value the value of this arc
+     * @return the mid angle of the given arc
+     */
+    public static double calculateMidAngle(final Arc2D arc,
+            final double totalValue, final double value) {
+        if (arc == null) {
+            throw new NullPointerException("Arc must not be null");
+        }
+        final double startAngle = arc.getAngleStart();
+        final double mid = startAngle + (value / 2 * 360 / totalValue);
+        return mid;
     }
 }

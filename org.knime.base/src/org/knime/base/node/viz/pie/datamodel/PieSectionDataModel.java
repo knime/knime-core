@@ -70,14 +70,20 @@ extends AggregationValModel <PieSubSectionDataModel, Arc2D, Arc2D> {
         setSubSection(arc, calculator);
     }
 
-    /**
-     * @param arc
-     * @param calculator
-     */
     private void setSubSection(final Arc2D arc,
             final PieHiliteCalculator calculator) {
-        final AggregationMethod method = calculator.getAggrMethod();
         final Collection<PieSubSectionDataModel> subSections = getElements();
+        if (subSections == null || subSections.size() < 1) {
+            return;
+        }
+        if (arc == null) {
+            //reset all subsections
+            for (final PieSubSectionDataModel subSection : subSections) {
+                subSection.setSubSection(null, calculator);
+            }
+            return;
+        }
+        final AggregationMethod method = calculator.getAggrMethod();
         double startAngle = arc.getAngleStart();
         //we have to be care full with the value range in stacked layout
         //because of the mixture of positive and negatives

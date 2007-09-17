@@ -57,11 +57,21 @@ public class PieVizModel extends PieDataModel {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PieVizModel.class);
 
-    /**The size of the root pie in percentage of the available space.*/
-    public static final double PIE_SIZE_FACTOR = 0.6;
+    /**The percentage of the drawing space that should be used for drawing.
+     * (0.9 = 90 percent)*/
+    public static final double DRAWING_SPACE_SIZE = 0.99;
 
-    /**The size of the exploded pie in percentage of the available space.*/
-    public static final double EXPLODE_SIZE_FACTOR = 0.3;
+    /**The margin of the label area in percent of the drawing space size.
+     * (0.2 = 20 percent).*/
+    public static final double LABEL_AREA_MARGIN = 0.3;
+
+    /**The margin of the explode are in percent of the label are rectangle.
+     * (0.2 = 20 percent)*/
+    public static final double EXPLODE_AREA_MARGIN = 0.1;
+
+    /**The default minimum arc angle of a pie section to draw.*/
+    public static final double MINIMUM_ARC_ANGLE = 0.0001;
+
 
 
     /**
@@ -304,71 +314,78 @@ public class PieVizModel extends PieDataModel {
     }
 
     /**
-     * @return the percentage of the section explosion
+     * @return the {@link Rectangle} that defines the maximum surrounding of
+     * the label are which includes the {@link #getExplodedArea()}
      */
-    public double getExplodePercentage() {
-        return EXPLODE_SIZE_FACTOR;
-    }
-
-    public Rectangle2D getLinkArea() {
-        final Dimension plotArea = getDrawingSpace();
-        final double labelWidth = 0.0;
-        final double gapHorizontal
-            = plotArea.getWidth() * (0.25 + labelWidth);
-        final double gapVertical = plotArea.getHeight() * 0.25;
-        double linkX = 0 + gapHorizontal / 2;
-        double linkY = 0 + gapVertical / 2;
-        double linkW = plotArea.getWidth() - gapHorizontal;
-        double linkH = plotArea.getHeight() - gapVertical;
-        final double min = Math.min(linkW, linkH) / 2;
-        linkX = (linkX + linkX + linkW) / 2 - min;
-        linkY = (linkY + linkY + linkH) / 2 - min;
-        linkW = 2 * min;
-        linkH = 2 * min;
-
-        // the link area defines the dog leg points for the linking lines to
-        // the labels
-        final Rectangle2D linkArea = new Rectangle2D.Double(
-            linkX, linkY, linkW, linkH);
+    public Rectangle2D getLabelArea() {
+        final Dimension drawingSpace = getDrawingSpace();
+//        final double labelMargin = drawingSpace.getWidth() * LABEL_AREA_MARGIN;
+//        double rootX = labelMargin / 2;
+//        double rootY = rootX;
+//        double areaWidth = drawingSpace.getWidth() - labelMargin;
+//        double areaHeight = drawingSpace.getHeight() - labelMargin;
+//        final double diameter = Math.min(areaWidth, areaHeight);
+//        final double radius = diameter / 2;
+//        rootX = (rootX + rootX + areaWidth) / 2 - radius;
+//        rootY = (rootY + rootY + areaHeight) / 2 - radius;
+//        areaWidth = diameter;
+//        areaHeight = diameter;
+        final double areaWidth = drawingSpace.getWidth() * DRAWING_SPACE_SIZE;
+        final double areaHeight = drawingSpace.getHeight() * DRAWING_SPACE_SIZE;
+        final double centerX = drawingSpace.getWidth() / 2;
+        final double centerY = drawingSpace.getHeight() / 2;
+        final double diameter = Math.min(areaWidth, areaHeight);
+        final double radius = diameter / 2;
+        final double rectX = centerX - radius;
+        final double rectY = centerY - radius;
+        final Rectangle2D linkArea = new Rectangle2D.Double(rectX, rectY,
+                diameter, diameter);
         return linkArea;
     }
 
     /**
-     * @return the {@link Rectangle} to draw the exploded pie sections in
+     * @return the center point of the pie
      */
-    public Rectangle2D getExplodedArea() {
-        final Rectangle2D linkArea = getLinkArea();
-        // the explode area defines the max circle/ellipse for the exploded
-        // pie sections.  it is defined by shrinking the linkArea by the
-        // linkMargin factor.
-        final double linkX = linkArea.getX();
-        final double linkY = linkArea.getY();
-        final double linkW = linkArea.getWidth();
-        final double linkH = linkArea.getHeight();
-        final double hh = linkArea.getWidth() * 0.05;
-        final double vv = linkArea.getHeight() * 0.05;
-        final Rectangle2D explodeArea = new Rectangle2D.Double(
-            linkX + hh / 2.0, linkY + vv / 2.0, linkW - hh, linkH - vv
-        );
-        return explodeArea;
+    public Point getPieCenter() {
+        final Rectangle2D area = getLabelArea();
+        return new Point((int)area.getCenterX(), (int)area.getCenterY());
     }
 
     /**
-     * @return the {@link Rectangle} to draw the pie
+     * @return the size of the label links
+     */
+    public double getLabelLinkSize() {
+        return getExplodedArea().getWidth() * EXPLODE_AREA_MARGIN / 2;
+    }
+
+    /**
+     * @return the {@link Rectangle} that defines the maximum surrounding of
+     * the exploded sections which includes the {@link #getPieArea()} rectangle
+     */
+    public Rectangle2D getExplodedArea() {
+        return calculateSubRectangle(getLabelArea(), LABEL_AREA_MARGIN);
+    }
+
+    /**
+     * @return the {@link Rectangle} to draw the pie in which is surrounded
+     * by the {@link #getExplodedArea()} rectangle which in turn is surrounded
+     * by the {@link #getLabelArea()} rectangle.
      */
     public Rectangle2D getPieArea() {
-        final Rectangle2D explodeArea = getExplodedArea();
-        // the pie area defines the circle/ellipse for regular pie sections.
-        // it is defined by shrinking the explodeArea by the explodeMargin
-        // factor.
-        final double percent = EXPLODE_SIZE_FACTOR;
-        final double h1 = explodeArea.getWidth() * percent;
-        final double v1 = explodeArea.getHeight() * percent;
-        final Rectangle2D pieArea = new Rectangle2D.Double(
-            explodeArea.getX() + h1 / 2.0, explodeArea.getY() + v1 / 2.0,
-            explodeArea.getWidth() - h1, explodeArea.getHeight() - v1
-        );
-        return pieArea;
+        return calculateSubRectangle(getExplodedArea(), EXPLODE_AREA_MARGIN);
+    }
+
+    private final Rectangle2D calculateSubRectangle(final Rectangle2D rect,
+            final double margin) {
+        final double origWidth = rect.getWidth();
+        final double origHeight = rect.getHeight();
+        final double widthMarign = origWidth * margin;
+        final double heightMargin = origHeight * margin;
+        final double rectX = rect.getX() + widthMarign / 2.0;
+        final double rectY = rect.getY() + heightMargin / 2.0;
+        final double rectWidth = origWidth - widthMarign;
+        final double rectHeight = origHeight - heightMargin;
+        return new Rectangle2D.Double(rectX, rectY, rectWidth, rectHeight);
     }
 
     /**
