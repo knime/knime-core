@@ -33,7 +33,6 @@ import java.awt.Stroke;
 import java.awt.TexturePaint;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.text.DecimalFormat;
 import java.util.Collection;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
@@ -58,10 +57,6 @@ import org.knime.core.data.property.ColorAttr;
 public class HistogramDrawingPane extends AbstractDrawingPane {
 
         private static final long serialVersionUID = 7881989778083295425L;
-
-    /**Used to format the aggregation value for the aggregation method count.*/
-    private static final DecimalFormat AGGREGATION_LABEL_FORMATER_COUNT =
-        new DecimalFormat("#");
 
     /**The number of digits to display for a label.*/
     private static final int NO_OF_LABEL_DIGITS = 2;
@@ -532,7 +527,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
             return;
         }
         final String label =
-            createLabel(aggrVal, aggrMethod);
+            aggrMethod.createLabel(aggrVal, NO_OF_LABEL_DIGITS);
         // save the original settings
         final AffineTransform origTransform = g2.getTransform();
         final Font origFont = g2.getFont();
@@ -591,46 +586,5 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         g2.setFont(origFont);
         g2.setPaint(origPaint);
         g2.setStroke(origStroke);
-    }
-
-    /**
-     * @param aggrVal the value to use as label
-     * @param aggrMethod the method used to get the aggregation value
-     * @return the rounded aggregation value as <code>String</code> label
-     */
-    private static String createLabel(final double aggrVal,
-            final AggregationMethod aggrMethod) {
-        // return Double.toString(aggrVal);
-        if (aggrMethod.equals(AggregationMethod.COUNT)) {
-            return AGGREGATION_LABEL_FORMATER_COUNT.format(aggrVal);
-        }
-        // the given doubleVal is less then zero
-        final char[] interval = Double.toString(aggrVal).toCharArray();
-        final StringBuffer decimalFormatBuf = new StringBuffer();
-        boolean digitFound = false;
-        int digitCounter = 0;
-        int positionCounter = 0;
-        boolean dotFound = false;
-        for (final int length = interval.length; positionCounter < length
-                && digitCounter <= NO_OF_LABEL_DIGITS; positionCounter++) {
-            final char c = interval[positionCounter];
-            if (c == '.') {
-                decimalFormatBuf.append(".");
-                dotFound = true;
-            } else {
-                if (c != '0' || digitFound) {
-                    digitFound = true;
-                    if (dotFound) {
-                        digitCounter++;
-                    }
-                }
-                if (digitCounter <= NO_OF_LABEL_DIGITS) {
-                    decimalFormatBuf.append("#");
-                }
-            }
-        }
-        final DecimalFormat df = new DecimalFormat(decimalFormatBuf.toString());
-        final String resultString = df.format(aggrVal);
-        return resultString;
     }
 }

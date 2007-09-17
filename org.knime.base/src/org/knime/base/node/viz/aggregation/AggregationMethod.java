@@ -22,6 +22,7 @@
  */
 package org.knime.base.node.viz.aggregation;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +40,11 @@ public enum AggregationMethod implements ButtonGroupEnumInterface {
     SUM("Sum", "Calculates the sum"),
     /** The number of rows. */
     COUNT("Count", "Counts the number of rows");
+
+
+    /**Used to format the aggregation value for the aggregation method count.*/
+    private static final DecimalFormat AGGREGATION_LABEL_FORMATER_COUNT =
+        new DecimalFormat("#");
 
     private final String m_name;
 
@@ -135,5 +141,45 @@ public enum AggregationMethod implements ButtonGroupEnumInterface {
      */
     public boolean isDefault() {
         return this.equals(AggregationMethod.getDefaultMethod());
+    }
+
+    /**
+     * @param aggrVal the value to use as label
+     * @param noOfDigits the number of digits if it's a floating point number
+     * @return the rounded aggregation value as <code>String</code> label
+     */
+    public String createLabel(final double aggrVal, final int noOfDigits) {
+        // return Double.toString(aggrVal);
+        if (this.equals(AggregationMethod.COUNT)) {
+            return AGGREGATION_LABEL_FORMATER_COUNT.format(aggrVal);
+        }
+        // the given doubleVal is less then zero
+        final char[] interval = Double.toString(aggrVal).toCharArray();
+        final StringBuffer decimalFormatBuf = new StringBuffer();
+        boolean digitFound = false;
+        int digitCounter = 0;
+        int positionCounter = 0;
+        boolean dotFound = false;
+        for (final int length = interval.length; positionCounter < length
+                && digitCounter <= noOfDigits; positionCounter++) {
+            final char c = interval[positionCounter];
+            if (c == '.') {
+                decimalFormatBuf.append(".");
+                dotFound = true;
+            } else {
+                if (c != '0' || digitFound) {
+                    digitFound = true;
+                    if (dotFound) {
+                        digitCounter++;
+                    }
+                }
+                if (digitCounter <= noOfDigits) {
+                    decimalFormatBuf.append("#");
+                }
+            }
+        }
+        final DecimalFormat df = new DecimalFormat(decimalFormatBuf.toString());
+        final String resultString = df.format(aggrVal);
+        return resultString;
     }
 }
