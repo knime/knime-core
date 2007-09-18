@@ -119,7 +119,7 @@ implements Serializable, AggregationModel<S, H> {
      */
     protected void addDataRow(final DataCell rowKey,
             final DataCell aggrValCell) {
-        if (!aggrValCell.isMissing()) {
+        if (aggrValCell != null && !aggrValCell.isMissing()) {
             m_aggrSum += ((DoubleValue)aggrValCell).getDoubleValue();
             m_valueCounter++;
         }

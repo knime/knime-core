@@ -114,7 +114,7 @@ implements Serializable, AggregationModel<S, H> {
      * Adds a new row to this element.
      * @param color the color of the data row
      * @param rowKey the row key
-     * @param cell the aggregation value cell
+     * @param cell the optional aggregation value cell
      */
     public void addDataRow(final Color color, final DataCell rowKey,
             final DataCell cell) {
@@ -124,15 +124,12 @@ implements Serializable, AggregationModel<S, H> {
         if (rowKey == null) {
             throw new NullPointerException("rowKey must not be null");
         }
-        if (cell == null) {
-            throw new NullPointerException("cell must not be null");
-        }
         T element = getElement(color);
         if (element == null) {
             element = createElement(color);
             m_elements.put(color, element);
         }
-        if (!cell.isMissing()) {
+        if (cell != null && !cell.isMissing()) {
             if (!cell.getType().isCompatible(DoubleValue.class)) {
                 throw new IllegalArgumentException(
                         "DataCell should be numeric");
