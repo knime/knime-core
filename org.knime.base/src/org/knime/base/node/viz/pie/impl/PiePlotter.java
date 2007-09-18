@@ -38,7 +38,7 @@ import javax.swing.JPopupMenu;
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.pie.datamodel.PieHiliteCalculator;
 import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
-import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.base.node.viz.pie.datamodel.FixedPieVizModel;
 import org.knime.base.node.viz.pie.util.GeometryUtil;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
@@ -57,7 +57,7 @@ public class PiePlotter extends AbstractPlotter {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PiePlotter.class);
 
-    private PieVizModel m_vizModel;
+    private FixedPieVizModel m_vizModel;
 
     /**Constructor for class PiePlotter.
      * @param properties the properties panel
@@ -87,7 +87,7 @@ public class PiePlotter extends AbstractPlotter {
     /**
      * @param vizModel the vizModel to display
      */
-    public void setVizModel(final PieVizModel vizModel) {
+    public void setVizModel(final FixedPieVizModel vizModel) {
         if (vizModel == null) {
             throw new NullPointerException("vizModel must not be null");
         }
@@ -99,7 +99,7 @@ public class PiePlotter extends AbstractPlotter {
     /**
      * @return the vizModel to display
      */
-    public PieVizModel getVizModel() {
+    public FixedPieVizModel getVizModel() {
         return m_vizModel;
     }
 
@@ -125,7 +125,7 @@ public class PiePlotter extends AbstractPlotter {
      */
     @Override
     public void updateSize() {
-        final PieVizModel vizModel = getVizModel();
+        final FixedPieVizModel vizModel = getVizModel();
         if (vizModel == null) {
             LOGGER.debug("VizModel was null");
             return;
@@ -141,7 +141,7 @@ public class PiePlotter extends AbstractPlotter {
      */
     @Override
     public void updatePaintModel() {
-        final PieVizModel vizModel = getVizModel();
+        final FixedPieVizModel vizModel = getVizModel();
         if (vizModel == null) {
             LOGGER.debug("VizModel was null");
             return;
@@ -153,10 +153,10 @@ public class PiePlotter extends AbstractPlotter {
 
     /**
      * Calculates the size of all pie sections.
-     * @param vizModel the {@link PieVizModel} that provides visualisation
+     * @param vizModel the {@link FixedPieVizModel} that provides visualisation
      * information and the sections
      */
-    private void setPieSections(final PieVizModel vizModel) {
+    private void setPieSections(final FixedPieVizModel vizModel) {
         final Rectangle2D pieArea = vizModel.getPieArea();
         final Rectangle2D explodedArea = vizModel.getExplodedArea();
         final boolean explode = vizModel.explodeSelectedSections();
@@ -177,7 +177,9 @@ public class PiePlotter extends AbstractPlotter {
             if (i == noOfSections - 1) {
                 arcAngle = 360 - startAngle;
             }
-            if (arcAngle < PieVizModel.MINIMUM_ARC_ANGLE) {
+            if (arcAngle < FixedPieVizModel.MINIMUM_ARC_ANGLE) {
+                LOGGER.warn("Pie section: " + vizModel.createLabel(section)
+                        + " to small to display");
                 //skip this section
                 section.setPieSection(null, calculator);
                 continue;
@@ -202,7 +204,7 @@ public class PiePlotter extends AbstractPlotter {
      */
     @Override
     public void clearSelection() {
-        final PieVizModel vizModel = getVizModel();
+        final FixedPieVizModel vizModel = getVizModel();
         if (vizModel == null) {
             return;
         }
@@ -215,7 +217,7 @@ public class PiePlotter extends AbstractPlotter {
      */
     @Override
     public void selectClickedElement(final Point clicked) {
-        final PieVizModel vizModel = getVizModel();
+        final FixedPieVizModel vizModel = getVizModel();
         if (vizModel == null) {
             return;
         }
@@ -229,7 +231,7 @@ public class PiePlotter extends AbstractPlotter {
      */
     @Override
     public void selectElementsIn(final Rectangle selectionRectangle) {
-        final PieVizModel vizModel = getVizModel();
+        final FixedPieVizModel vizModel = getVizModel();
         if (vizModel == null) {
             return;
         }
@@ -243,7 +245,7 @@ public class PiePlotter extends AbstractPlotter {
      */
     @Override
     public void hiLite(final KeyEvent event) {
-        final PieVizModel vizModel = getVizModel();
+        final FixedPieVizModel vizModel = getVizModel();
         if (vizModel == null || !vizModel.supportsHiliting()) {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
@@ -258,7 +260,7 @@ public class PiePlotter extends AbstractPlotter {
      */
     @Override
     public void unHiLite(final KeyEvent event) {
-        final PieVizModel vizModel = getVizModel();
+        final FixedPieVizModel vizModel = getVizModel();
         if (vizModel == null || !vizModel.supportsHiliting()) {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
@@ -273,7 +275,7 @@ public class PiePlotter extends AbstractPlotter {
      */
     @Override
     public void hiLiteSelected() {
-        final PieVizModel vizModel = getVizModel();
+        final FixedPieVizModel vizModel = getVizModel();
         if (vizModel == null || !vizModel.supportsHiliting()) {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
@@ -289,7 +291,7 @@ public class PiePlotter extends AbstractPlotter {
      */
     @Override
     public void unHiLiteSelected() {
-        final PieVizModel vizModel = getVizModel();
+        final FixedPieVizModel vizModel = getVizModel();
         if (vizModel == null || !vizModel.supportsHiliting()) {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
@@ -304,7 +306,7 @@ public class PiePlotter extends AbstractPlotter {
      * {@inheritDoc}
      */
     public void unHiLiteAll() {
-        final PieVizModel vizModel = getVizModel();
+        final FixedPieVizModel vizModel = getVizModel();
         if (vizModel == null || !vizModel.supportsHiliting()) {
             LOGGER.debug("VizModel doesn't support hiliting or was null");
             return;
@@ -318,7 +320,7 @@ public class PiePlotter extends AbstractPlotter {
      */
     @Override
     public void fillPopupMenu(final JPopupMenu popupMenu) {
-        final PieVizModel vizModel = getVizModel();
+        final FixedPieVizModel vizModel = getVizModel();
         if (vizModel == null || !vizModel.supportsHiliting()) {
             //add disable the popup menu since this implementation
             //doesn't supports hiliting

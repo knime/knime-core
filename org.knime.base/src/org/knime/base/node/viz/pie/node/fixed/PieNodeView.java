@@ -24,7 +24,7 @@
  */
 package org.knime.base.node.viz.pie.node.fixed;
 
-import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.base.node.viz.pie.datamodel.FixedPieVizModel;
 import org.knime.base.node.viz.pie.impl.PiePlotter;
 import org.knime.base.node.viz.pie.impl.PieProperties;
 import org.knime.core.node.NodeModel;
@@ -76,7 +76,7 @@ public class PieNodeView extends NodeView {
         if (m_plotter != null) {
             m_plotter.reset();
         }
-        final PieVizModel vizModel = m_nodeModel.getVizModel();
+        final FixedPieVizModel vizModel = m_nodeModel.getVizModel();
         if (vizModel == null) {
             setComponent(null);
             return;

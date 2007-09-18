@@ -29,7 +29,7 @@ import java.awt.geom.Arc2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.base.node.viz.pie.datamodel.FixedPieVizModel;
 
 
 /**
@@ -77,8 +77,8 @@ public final class GeometryUtil {
 //        System.out.println("angleExtent:\t\t\t" + arc.getAngleExtent());
 //        System.out.println("angleStart:\t\t\t" + arc.getAngleStart());
         double hiliteExtend = calculatePartialExtent(arc, fraction);
-        if (hiliteExtend < PieVizModel.MINIMUM_ARC_ANGLE) {
-            hiliteExtend = PieVizModel.MINIMUM_ARC_ANGLE;
+        if (hiliteExtend < FixedPieVizModel.MINIMUM_ARC_ANGLE) {
+            hiliteExtend = FixedPieVizModel.MINIMUM_ARC_ANGLE;
         }
         final Arc2D hiliteArc =
             new Arc2D.Double(arc.getBounds(), arc.getAngleStart(),

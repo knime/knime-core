@@ -33,7 +33,8 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.pie.datamodel.PieDataModel;
-import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.base.node.viz.pie.datamodel.FixedPieDataModel;
+import org.knime.base.node.viz.pie.datamodel.FixedPieVizModel;
 import org.knime.base.node.viz.pie.util.PieColumnFilter;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -155,7 +156,19 @@ public class PieNodeModel extends NodeModel {
         m_noOfRows.validateSettings(settings);
         m_pieColumn.validateSettings(settings);
         m_aggrMethod.validateSettings(settings);
+        final String aggrMethod = ((SettingsModelString)m_aggrMethod
+                .createCloneWithValidatedValue(settings)).getStringValue();
+        final AggregationMethod method =
+            AggregationMethod.getMethod4Command(aggrMethod);
         m_aggrColumn.validateSettings(settings);
+        if (!AggregationMethod.COUNT.equals(method)) {
+            final String value = ((SettingsModelString)m_aggrColumn.
+                    createCloneWithValidatedValue(settings)).getStringValue();
+            if (value == null) {
+                throw new InvalidSettingsException(
+                        "No aggregation column selected");
+            }
+        }
     }
 
     /**
@@ -182,11 +195,15 @@ public class PieNodeModel extends NodeModel {
             throw new IllegalArgumentException(
                     "Table specification must not be null");
         }
+        final String colName = m_pieColumn.getStringValue();
+        if (colName == null || colName.length() < 1) {
+            throw new InvalidSettingsException("Please select the pie column");
+        }
         final DataColumnSpec pieCol =
-            spec.getColumnSpec(m_pieColumn.getStringValue());
+            spec.getColumnSpec(colName);
         if (pieCol == null) {
             throw new InvalidSettingsException(
-                    "No column spec found for column with name: " + pieCol);
+                    "No column spec found for column with name: " + colName);
         }
         final AggregationMethod method =
             AggregationMethod.getMethod4Command(m_aggrMethod.getStringValue());
@@ -226,7 +243,7 @@ public class PieNodeModel extends NodeModel {
         final String aggrCol = m_aggrColumn.getStringValue();
         final int aggrColIdx = spec.findColumnIndex(aggrCol);
         final int pieColIdx = spec.findColumnIndex(pieCol.getName());
-        m_model = new PieDataModel(pieCol, false);
+        m_model = new FixedPieDataModel(pieCol);
         int selectedNoOfRows;
         if (m_allRows.getBooleanValue()) {
             //set the actual number of rows in the selected number of rows
@@ -268,15 +285,15 @@ public class PieNodeModel extends NodeModel {
     }
 
     /**
-     * @return the {@link PieVizModel}
+     * @return the {@link FixedPieVizModel}
      */
-    public PieVizModel getVizModel() {
+    public FixedPieVizModel getVizModel() {
         if (m_model == null) {
             return null;
         }
         final AggregationMethod method =
             AggregationMethod.getMethod4Command(m_aggrMethod.getStringValue());
-        final PieVizModel vizModel = new PieVizModel(m_model);
+        final FixedPieVizModel vizModel = new FixedPieVizModel(m_model);
         vizModel.setAggregationMethod(method);
         return vizModel;
     }
@@ -299,7 +316,7 @@ public class PieNodeModel extends NodeModel {
         try {
             final File dataDir =
                 new File(nodeInternDir, CFG_DATA_DIR_NAME);
-            m_model = PieDataModel.loadFromFile(dataDir, exec);
+            m_model = FixedPieDataModel.loadFromFile(dataDir, exec);
         } catch (final CanceledExecutionException e) {
             throw e;
         } catch (final Exception e) {

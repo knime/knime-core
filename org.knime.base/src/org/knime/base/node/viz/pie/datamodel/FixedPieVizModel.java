@@ -44,15 +44,15 @@ import org.knime.core.node.NodeLogger;
 
 
 /**
- * The pie chart visualization model which extends the {@link PieDataModel}
+ * The pie chart visualization model which extends the {@link FixedPieDataModel}
  * with view specific information like flags for showing the labels,
  * selected section drawing...
  * @author Tobias Koetter, University of Konstanz
  */
-public class PieVizModel extends PieDataModel {
+public class FixedPieVizModel {
 
     private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(PieVizModel.class);
+        NodeLogger.getLogger(FixedPieVizModel.class);
 
     /**The number of digits to display for a label.*/
     private static final int NO_OF_LABEL_DIGITS = 2;
@@ -81,6 +81,8 @@ public class PieVizModel extends PieDataModel {
     /**The default minimum arc angle of a pie section to draw.*/
     public static final double MINIMUM_ARC_ANGLE = 0.0001;
 
+    private final PieDataModel m_model;
+
     private boolean m_showEmptySections = false;
 
     private boolean m_showMissingValSection = true;
@@ -105,9 +107,11 @@ public class PieVizModel extends PieDataModel {
     /**Constructor for class PieVizModel.
      * @param model the data model
      */
-    public PieVizModel(final PieDataModel model) {
-        super(model.getSections(), model.getMissingSection(),
-                model.supportsHiliting());
+    public FixedPieVizModel(final PieDataModel model) {
+        if (model == null) {
+            throw new NullPointerException("model must not be null");
+        }
+        m_model = model;
     }
 
 
@@ -237,7 +241,7 @@ public class PieVizModel extends PieDataModel {
      * @return all sections to draw as a unmodifiable {@link List}
      */
     public List<PieSectionDataModel> getSections2Draw() {
-        final List<PieSectionDataModel> allSections = super.getSections();
+        final List<PieSectionDataModel> allSections = m_model.getSections();
         final List<PieSectionDataModel> resultList =
             new ArrayList<PieSectionDataModel>(allSections.size() + 1);
         for (final PieSectionDataModel section : allSections) {
@@ -245,8 +249,8 @@ public class PieVizModel extends PieDataModel {
                 resultList.add(section);
             }
         }
-        if (m_showMissingValSection && hasMissingSection()) {
-            resultList.add(getMissingSection());
+        if (m_showMissingValSection && m_model.hasMissingSection()) {
+            resultList.add(m_model.getMissingSection());
         }
         return Collections.unmodifiableList(resultList);
     }
@@ -256,7 +260,7 @@ public class PieVizModel extends PieDataModel {
      */
     public List<? extends AggregationModel<? extends Shape, ? extends Shape>>
     getDrawSubSections() {
-        final List<PieSectionDataModel> sections = getSections();
+        final List<PieSectionDataModel> sections = m_model.getSections();
         final List<PieSubSectionDataModel> detailSections =
             new ArrayList<PieSubSectionDataModel>(sections.size() * 2);
         for (final PieSectionDataModel section : sections) {
@@ -414,18 +418,18 @@ public class PieVizModel extends PieDataModel {
         }
         final long startTime = System.currentTimeMillis();
         final PieHiliteCalculator calculator = getCalculator();
-        for (final PieSectionDataModel pieSection : super.getSections()) {
+        for (final PieSectionDataModel pieSection : m_model.getSections()) {
             if (hilite) {
                 pieSection.setHilitedKeys(keys, calculator);
             } else {
                 pieSection.removeHilitedKeys(keys, calculator);
             }
         }
-        if (hasMissingSection()) {
+        if (m_model.hasMissingSection()) {
             if (hilite) {
-                getMissingSection().setHilitedKeys(keys, calculator);
+                m_model.getMissingSection().setHilitedKeys(keys, calculator);
             } else {
-                getMissingSection().removeHilitedKeys(keys, calculator);
+                m_model.getMissingSection().removeHilitedKeys(keys, calculator);
             }
         }
         final long endTime = System.currentTimeMillis();
@@ -440,11 +444,11 @@ public class PieVizModel extends PieDataModel {
      */
     public void unHiliteAll() {
         final long startTime = System.currentTimeMillis();
-        for (final PieSectionDataModel pieSection : super.getSections()) {
+        for (final PieSectionDataModel pieSection : m_model.getSections()) {
             pieSection.clearHilite();
         }
-        if (hasMissingSection()) {
-            getMissingSection().clearHilite();
+        if (m_model.hasMissingSection()) {
+            m_model.getMissingSection().clearHilite();
         }
         final long endTime = System.currentTimeMillis();
         final long durationTime = endTime - startTime;
@@ -456,7 +460,7 @@ public class PieVizModel extends PieDataModel {
      */
     public Set<DataCell> getSelectedKeys() {
         final Set<DataCell> keys = new HashSet<DataCell>();
-        for (final PieSectionDataModel section : getSections()) {
+        for (final PieSectionDataModel section : m_model.getSections()) {
             if (section.isSelected()) {
                 final Collection<PieSubSectionDataModel> subSections =
                     section.getElements();
@@ -474,7 +478,7 @@ public class PieVizModel extends PieDataModel {
      * Clear all selections.
      */
     public void clearSelection() {
-        for (final PieSectionDataModel section : getSections()) {
+        for (final PieSectionDataModel section : m_model.getSections()) {
             section.setSelected(false);
         }
     }
@@ -486,7 +490,7 @@ public class PieVizModel extends PieDataModel {
      */
     public boolean selectElement(final Point point) {
         boolean changed = false;
-        for (final PieSectionDataModel section : getSections()) {
+        for (final PieSectionDataModel section : m_model.getSections()) {
             changed = section.selectElement(point, showDetails())
             || changed;
         }
@@ -500,12 +504,18 @@ public class PieVizModel extends PieDataModel {
      */
     public boolean selectElement(final Rectangle2D rect) {
         boolean changed = false;
-        for (final PieSectionDataModel section : getSections()) {
+        for (final PieSectionDataModel section : m_model.getSections()) {
             changed = section.selectElement(rect, showDetails()) || changed;
         }
         return changed;
     }
 
+    /**
+     * @return <code>true</code> if hiliting is supported
+     */
+    public boolean supportsHiliting() {
+        return m_model.supportsHiliting();
+    }
 
     /**
      * @param section the section to create the label for
