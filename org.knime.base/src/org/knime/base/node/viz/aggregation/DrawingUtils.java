@@ -36,6 +36,7 @@ import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.geom.Rectangle2D;
 
 
 /**
@@ -170,14 +171,14 @@ public final class DrawingUtils {
      * @param stroke the {@link BasicStroke} to use
      */
     public static void drawRectangle(final Graphics2D g2,
-            final Rectangle rect, final Color color,
+            final Rectangle2D rect, final Color color,
             final BasicStroke stroke) {
         if (rect == null) {
             return;
         }
         final Stroke origStroke = g2.getStroke();
         final Paint origPaint = g2.getPaint();
-        final Rectangle borderRect =
+        final Rectangle2D borderRect =
             calculateBorderRect(rect, stroke);
         g2.setStroke(stroke);
         g2.setPaint(color);
@@ -193,7 +194,7 @@ public final class DrawingUtils {
      * @param stroke the stroke which will be used to draw the rectangle
      * @return the {@link Rectangle} to draw
      */
-    public static Rectangle calculateBorderRect(final Rectangle rect,
+    public static Rectangle2D calculateBorderRect(final Rectangle2D rect,
             final BasicStroke stroke) {
         final int strokeWidth = (int)stroke.getLineWidth();
         final int halfStrokeWidth = strokeWidth / 2;
