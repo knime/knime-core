@@ -25,11 +25,11 @@
 
 package org.knime.base.node.viz.pie.datamodel;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Shape;
-import java.awt.geom.Arc2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,10 +40,6 @@ import java.util.Set;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.aggregation.AggregationModel;
-import org.knime.base.node.viz.aggregation.AggregationValModel;
-import org.knime.base.node.viz.aggregation.AggregationValSubModel;
-import org.knime.base.node.viz.aggregation.HiliteShapeCalculator;
-import org.knime.base.node.viz.pie.util.GeometryUtil;
 import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeLogger;
 
@@ -57,9 +53,21 @@ public class PieVizModel extends PieDataModel {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PieVizModel.class);
 
+    /**The number of digits to display for a label.*/
+    private static final int NO_OF_LABEL_DIGITS = 2;
+    /** The caption of the bar which holds all missing values. */
+    public static final String MISSING_VAL_SECTION_CAPTION = "Missing_values";
+    /** The caption of the bar which holds all missing values. */
+    public static final Color MISSING_VAL_SECTION_COLOR = Color.LIGHT_GRAY;
+
     /**The percentage of the drawing space that should be used for drawing.
      * (0.9 = 90 percent)*/
-    public static final double DRAWING_SPACE_SIZE = 0.99;
+    public static final double DEFAULT_PIE_SIZE = 0.99;
+
+    /**The minimum size of the pie drawing space in percent.
+     * (0.3 = 30 percent).
+     */
+    public static final double MINIMUM_PIE_SIZE = 0.3;
 
     /**The margin of the label area in percent of the drawing space size.
      * (0.2 = 20 percent).*/
@@ -72,60 +80,7 @@ public class PieVizModel extends PieDataModel {
     /**The default minimum arc angle of a pie section to draw.*/
     public static final double MINIMUM_ARC_ANGLE = 0.0001;
 
-
-
-    /**
-     * The hilite calculator for the pie chart.
-     * @author Tobias Koetter, University of Konstanz
-     */
-    public class PieHiliteCalculator
-    implements HiliteShapeCalculator<Arc2D, Arc2D> {
-
-        /**Constructor for class PieHiliteCalculator.*/
-        protected PieHiliteCalculator() {
-            //avoid object creation
-        }
-
-        /**
-         * @return the current aggregation method
-         */
-        public AggregationMethod getAggrMethod() {
-            return getAggregationMethod();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public Arc2D calculateHiliteShape(
-                final AggregationValModel<AggregationValSubModel<Arc2D, Arc2D>,
-                Arc2D, Arc2D> model) {
-            final double fraction;
-            if (model.getRowCount() == 0) {
-                fraction = 0;
-            } else {
-                fraction = model.getHiliteRowCount()
-                / (double)model.getRowCount();
-            }
-            return GeometryUtil.calculateSubArc(model.getShape(),
-                    fraction);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public Arc2D calculateHiliteShape(
-                final AggregationValSubModel<Arc2D, Arc2D> model) {
-            final double fraction;
-            if (model.getRowCount() == 0) {
-                fraction = 0;
-            } else {
-                fraction = model.getHiliteRowCount()
-                / (double)model.getRowCount();
-            }
-            return GeometryUtil.calculateSubArc(model.getShape(),
-                    fraction);
-        }
-    }
+    private boolean m_showEmptySections = false;
 
     private boolean m_showMissingValSection = true;
 
@@ -137,9 +92,14 @@ public class PieVizModel extends PieDataModel {
 
     private boolean m_drawSectionOutline = true;
 
+    private boolean m_explodeSelectedSections = false;
+
     private boolean m_drawAntialias = true;
 
-    private final PieHiliteCalculator m_calculator = new PieHiliteCalculator();
+    private double m_pieSize = DEFAULT_PIE_SIZE;
+
+    private final PieHiliteCalculator m_calculator =
+        new PieHiliteCalculator(this);
 
     /**Constructor for class PieVizModel.
      * @param model the data model
@@ -171,6 +131,22 @@ public class PieVizModel extends PieDataModel {
      */
     public void setShowMissingValSection(final boolean showMissingValSection) {
         m_showMissingValSection = showMissingValSection;
+    }
+
+
+    /**
+     * @param showEmptySections <code>true</code> if empty sections
+     * should be displayed
+     */
+    public void setShowEmptySections(final boolean showEmptySections) {
+        m_showEmptySections = showEmptySections;
+    }
+
+    /**
+     * @return <code>true</code> if the empty sections should be displayed
+     */
+    public boolean showEmptySections() {
+        return m_showEmptySections;
     }
 
     /**
@@ -207,6 +183,21 @@ public class PieVizModel extends PieDataModel {
 
 
     /**
+     * @param explode <code>true</code> if selected sections should be
+     * exploded drawn
+     */
+    public void setExplodeSelectedSections(final boolean explode) {
+        m_explodeSelectedSections = explode;
+    }
+
+    /**
+     * @return <code>true</code> if selected section should be exploded drawn
+     */
+    public boolean explodeSelectedSections() {
+        return m_explodeSelectedSections;
+    }
+
+    /**
      * @param drawAntialias <code>true</code> if the shapes should be drawn
      * using antialiasing
      */
@@ -239,37 +230,23 @@ public class PieVizModel extends PieDataModel {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNoOfSections() {
-        if (m_showMissingValSection && hasMissingSection()) {
-            return super.getNoOfSections() + 1;
-        }
-        return super.getNoOfSections();
-    }
-
-    /**
-     * @return an unmodifiable <code>List</code> with all pie section
-     * data models
-     */
-    @Override
-    public List<PieSectionDataModel> getSections() {
-        if (m_showMissingValSection && hasMissingSection()) {
-            final List<PieSectionDataModel> sections =
-                new ArrayList<PieSectionDataModel>(super.getSections());
-            sections.add(getMissingSection());
-            return Collections.unmodifiableList(sections);
-        }
-        return super.getSections();
-    }
-
-    /**
+     * Returns the sections to draw depending on the showMissing and
+     * emptySection flags.
      * @return all sections to draw as a unmodifiable {@link List}
      */
-    public List<? extends AggregationModel<? extends Shape, ? extends Shape>>
-    getDrawSections() {
-        return getSections();
+    public List<PieSectionDataModel> getSections2Draw() {
+        final List<PieSectionDataModel> allSections = super.getSections();
+        final List<PieSectionDataModel> resultList =
+            new ArrayList<PieSectionDataModel>(allSections.size() + 1);
+        for (final PieSectionDataModel section : allSections) {
+            if (!section.isEmpty() || m_showEmptySections) {
+                resultList.add(section);
+            }
+        }
+        if (m_showMissingValSection && hasMissingSection()) {
+            resultList.add(getMissingSection());
+        }
+        return Collections.unmodifiableList(resultList);
     }
 
     /**
@@ -319,19 +296,8 @@ public class PieVizModel extends PieDataModel {
      */
     public Rectangle2D getLabelArea() {
         final Dimension drawingSpace = getDrawingSpace();
-//        final double labelMargin = drawingSpace.getWidth() * LABEL_AREA_MARGIN;
-//        double rootX = labelMargin / 2;
-//        double rootY = rootX;
-//        double areaWidth = drawingSpace.getWidth() - labelMargin;
-//        double areaHeight = drawingSpace.getHeight() - labelMargin;
-//        final double diameter = Math.min(areaWidth, areaHeight);
-//        final double radius = diameter / 2;
-//        rootX = (rootX + rootX + areaWidth) / 2 - radius;
-//        rootY = (rootY + rootY + areaHeight) / 2 - radius;
-//        areaWidth = diameter;
-//        areaHeight = diameter;
-        final double areaWidth = drawingSpace.getWidth() * DRAWING_SPACE_SIZE;
-        final double areaHeight = drawingSpace.getHeight() * DRAWING_SPACE_SIZE;
+        final double areaWidth = drawingSpace.getWidth() * getPieSize();
+        final double areaHeight = drawingSpace.getHeight() * getPieSize();
         final double centerX = drawingSpace.getWidth() / 2;
         final double centerY = drawingSpace.getHeight() / 2;
         final double diameter = Math.min(areaWidth, areaHeight);
@@ -341,6 +307,30 @@ public class PieVizModel extends PieDataModel {
         final Rectangle2D linkArea = new Rectangle2D.Double(rectX, rectY,
                 diameter, diameter);
         return linkArea;
+    }
+
+
+    /**
+     * @param pieSize the pieSize in percent of the drawing space.
+     * (0.9 = 90 percent)
+     */
+    public void setPieSize(final double pieSize) {
+        if (pieSize < MINIMUM_PIE_SIZE) {
+            m_pieSize = MINIMUM_PIE_SIZE;
+        } else if (pieSize > 100) {
+            m_pieSize = 100;
+        } else {
+            m_pieSize = pieSize;
+        }
+    }
+
+
+    /**
+     * @return the size of the pie in percent of the drawing space
+     * (0.9 = 90 percent)
+     */
+    public double getPieSize() {
+        return m_pieSize;
     }
 
     /**
@@ -389,10 +379,16 @@ public class PieVizModel extends PieDataModel {
     }
 
     /**
-     * @return the total aggregation value of the pie
+     * @return the total absolute aggregation value of the sections to draw
      */
-    public double getAggregationValue() {
-        return super.getAggregationValue(m_aggrMethod, m_showMissingValSection);
+    public double getAbsAggregationValue() {
+        final AggregationMethod aggrMethod = getAggregationMethod();
+        final List<PieSectionDataModel> sections = getSections2Draw();
+        double sum = 0;
+        for (final PieSectionDataModel section : sections) {
+            sum += Math.abs(section.getAggregationValue(aggrMethod));
+        }
+        return sum;
     }
 
     /**
@@ -499,5 +495,25 @@ public class PieVizModel extends PieDataModel {
             changed = section.selectElement(rect, showDetails()) || changed;
         }
         return changed;
+    }
+
+
+    /**
+     * @param section the section to create the label for
+     * @return the label of this section depending on the visualization flags
+     */
+    public String createLabel(final PieSectionDataModel section) {
+        if (section == null) {
+            throw new NullPointerException("Section must not be null");
+        }
+        final String name = section.getName();
+        final AggregationMethod aggrMethod = getAggregationMethod();
+        final double value = section.getAggregationValue(aggrMethod);
+        final String valuePart = aggrMethod.createLabel(value,
+                    NO_OF_LABEL_DIGITS);
+        if (name != null) {
+            return name + " " + aggrMethod.getText() + ": " + valuePart;
+        }
+        return valuePart;
     }
 }

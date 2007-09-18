@@ -39,6 +39,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -206,6 +207,11 @@ public class PieNodeModel extends NodeModel {
         if (dataTable == null) {
             throw new IllegalArgumentException("No data found");
         }
+        final int maxNoOfRows = dataTable.getRowCount();
+        if (maxNoOfRows < 1) {
+            setWarningMessage("Data table contains no rows");
+            return new BufferedDataTable[0];
+        }
         if (dataTable.getRowCount() < 1) {
             setWarningMessage("Data table contains no rows");
             return new BufferedDataTable[0];
@@ -221,7 +227,28 @@ public class PieNodeModel extends NodeModel {
         final int aggrColIdx = spec.findColumnIndex(aggrCol);
         final int pieColIdx = spec.findColumnIndex(pieCol.getName());
         m_model = new PieDataModel(pieCol, false);
-        for (final DataRow row : dataTable) {
+        int selectedNoOfRows;
+        if (m_allRows.getBooleanValue()) {
+            //set the actual number of rows in the selected number of rows
+            //object since the user wants to display all rows
+//            m_noOfRows.setIntValue(maxNoOfRows);
+            selectedNoOfRows = maxNoOfRows;
+        } else {
+            selectedNoOfRows = m_noOfRows.getIntValue();
+        }
+        //final int noOfRows = inData[0].getRowCount();
+        if ((selectedNoOfRows) < maxNoOfRows) {
+            setWarningMessage("Only the first " + selectedNoOfRows + " of "
+                    + maxNoOfRows + " rows are displayed.");
+        } else if (selectedNoOfRows > maxNoOfRows) {
+            selectedNoOfRows = maxNoOfRows;
+        }
+        final double progressPerRow = 1.0 / selectedNoOfRows;
+        double progress = 0.0;
+        final RowIterator rowIterator = dataTable.iterator();
+        for (int rowCounter = 0; rowCounter < selectedNoOfRows
+        && rowIterator.hasNext(); rowCounter++) {
+            final DataRow row = rowIterator.next();
             final Color rowColor = spec.getRowColor(row).getColor(false, false);
             final DataCell pieCell = row.getCell(pieColIdx);
             final DataCell aggrCell;
@@ -232,8 +259,11 @@ public class PieNodeModel extends NodeModel {
             }
             m_model.addDataRow(row.getKey().getId(), rowColor, pieCell,
                     aggrCell);
+            progress += progressPerRow;
+            exec.setProgress(progress, "Adding data rows to pie chart...");
             exec.checkCanceled();
         }
+        exec.setProgress(1.0, "Pie chart finished...");
         return new BufferedDataTable[0];
     }
 

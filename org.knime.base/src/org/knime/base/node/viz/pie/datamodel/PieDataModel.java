@@ -37,7 +37,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -61,7 +60,7 @@ public class PieDataModel {
 
     private final List<PieSectionDataModel> m_sections;
 
-    private PieSectionDataModel m_missingSection;
+    private final PieSectionDataModel m_missingSection;
 
     private final boolean m_supportHiliting;
 
@@ -75,6 +74,7 @@ public class PieDataModel {
             throw new NullPointerException("pieColSpec must not be null");
         }
         m_supportHiliting = supportHiliting;
+        m_missingSection = createDefaultMissingSection(supportHiliting);
         final DataColumnDomain domain = pieColSpec.getDomain();
         if (domain == null) {
             throw new IllegalArgumentException(
@@ -135,8 +135,23 @@ public class PieDataModel {
 //            throw new NullPointerException("missingSection must not be null");
 //        }
         m_sections = sections;
-        m_missingSection = missingSection;
+        if (missingSection == null) {
+            m_missingSection = createDefaultMissingSection(supportHiliting);
+        } else {
+            m_missingSection = missingSection;
+        }
         m_supportHiliting = supportHiliting;
+    }
+
+    /**
+     * Creates the default missing section.
+     * @param supportHiliting <code>true</code> if hiliting is supported
+     */
+    private static PieSectionDataModel createDefaultMissingSection(
+            final boolean supportHiliting) {
+        return new PieSectionDataModel(
+                PieVizModel.MISSING_VAL_SECTION_CAPTION,
+                PieVizModel.MISSING_VAL_SECTION_COLOR, supportHiliting);
     }
 
     private static Color generateColor(final int idx, final int size) {
@@ -155,12 +170,18 @@ public class PieDataModel {
     public void addDataRow(final DataCell id, final Color rowColor,
             final DataCell pieCell, final DataCell aggrCell) {
         if (pieCell == null) {
-            throw new NullPointerException("X value must not be null.");
+            throw new NullPointerException(
+                    "Pie section value must not be null.");
         }
-        final PieSectionDataModel section = getSection(pieCell);
-        if (section == null) {
-            throw new IllegalArgumentException("No section found for: "
-                    + pieCell.toString());
+        final PieSectionDataModel section;
+        if (pieCell.isMissing()) {
+            section = m_missingSection;
+        } else {
+            section = getSection(pieCell);
+            if (section == null) {
+                throw new IllegalArgumentException("No section found for: "
+                        + pieCell.toString());
+            }
         }
         section.addDataRow(rowColor, id, aggrCell);
     }
@@ -194,16 +215,23 @@ public class PieDataModel {
     }
 
     /**
-     * @return the number of pie sections
+     * @return the number of all pie sections including empty sections and
+     * without an optional missing section
      */
     public int getNoOfSections() {
         return m_sections.size();
     }
 
     /**
-     * @return the missingSection
+     * Use the {@link #hasMissingSection()} method to check if a missing
+     * section is present or not.
+     * @return the missingSection or <code>null</code> if no missing section
+     * is available
      */
     public PieSectionDataModel getMissingSection() {
+        if (!hasMissingSection()) {
+            return null;
+        }
         return m_missingSection;
     }
 
@@ -211,25 +239,7 @@ public class PieDataModel {
      * @return <code>true</code> if this model contains a missing section
      */
     public boolean hasMissingSection() {
-        return m_missingSection != null;
-    }
-
-    /**
-     * @param aggrMethod the {@link AggregationMethod} to use
-     * @param includeMissing <code>true</code> if the missing value section
-     * should be used as well
-     * @return the total aggregation value of all pie section
-     */
-    protected double getAggregationValue(final AggregationMethod aggrMethod,
-            final boolean includeMissing) {
-        double sum = 0;
-        for (final PieSectionDataModel section : m_sections) {
-            sum += section.getAggregationValue(aggrMethod);
-        }
-        if (includeMissing && hasMissingSection()) {
-            sum += m_missingSection.getAggregationValue(aggrMethod);
-        }
-        return sum;
+        return m_missingSection.getRowCount() > 0;
     }
 
     /**

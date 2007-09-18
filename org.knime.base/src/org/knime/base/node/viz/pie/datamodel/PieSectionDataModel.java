@@ -31,7 +31,6 @@ import java.util.Collection;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.aggregation.AggregationValModel;
-import org.knime.base.node.viz.pie.datamodel.PieVizModel.PieHiliteCalculator;
 import org.knime.base.node.viz.pie.util.GeometryUtil;
 
 

@@ -28,7 +28,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
@@ -111,7 +111,7 @@ public class PieNodeDialogPane extends DefaultNodeSettingsPane {
                                 PieNodeModel.PIE_COLUMN_FILTER);
         final DialogComponentColumnNameSelection aggrCols =
             new DialogComponentColumnNameSelection(m_aggrColumn,
-                    AGGR_COL_SEL_LABEL, 0, false, DataValue.class);
+                    AGGR_COL_SEL_LABEL, 0, false, DoubleValue.class);
 
         final DialogComponentButtonGroup aggrMethod =
             new DialogComponentButtonGroup(m_aggrMethod, "Aggregation method: ",

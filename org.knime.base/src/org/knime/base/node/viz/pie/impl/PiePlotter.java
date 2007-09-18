@@ -36,9 +36,9 @@ import java.util.Set;
 import javax.swing.JPopupMenu;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.pie.datamodel.PieHiliteCalculator;
 import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
-import org.knime.base.node.viz.pie.datamodel.PieVizModel.PieHiliteCalculator;
 import org.knime.base.node.viz.pie.util.GeometryUtil;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
@@ -153,17 +153,20 @@ public class PiePlotter extends AbstractPlotter {
     private void setPieSections(final PieVizModel vizModel) {
         final Rectangle2D pieArea = vizModel.getPieArea();
         final Rectangle2D explodedArea = vizModel.getExplodedArea();
+        final boolean explode = vizModel.explodeSelectedSections();
 //        final double explodePercentage = vizModel.getExplodeMargin();
-        final double total = vizModel.getAggregationValue();
+        final double totalVal = vizModel.getAbsAggregationValue();
+        final double arcPerVal = 360 / totalVal;
         final AggregationMethod method = vizModel.getAggregationMethod();
         final PieHiliteCalculator calculator = vizModel.getCalculator();
-        final int noOfSections = vizModel.getNoOfSections();
-        final List<PieSectionDataModel> pieSections = vizModel.getSections();
-        int startAngle = 0;
+        final List<PieSectionDataModel> pieSections =
+            vizModel.getSections2Draw();
+        final int noOfSections = pieSections.size();
+        double startAngle = 0;
         for (int i = 0; i < noOfSections; i++) {
             final PieSectionDataModel section = pieSections.get(i);
-            final double value = section.getAggregationValue(method);
-            int arcAngle = (int)(value * 360 / total);
+            final double value = Math.abs(section.getAggregationValue(method));
+            double arcAngle = value * arcPerVal;
             //avoid a rounding gap
             if (i == noOfSections - 1) {
                 arcAngle = 360 - startAngle;
@@ -175,7 +178,7 @@ public class PiePlotter extends AbstractPlotter {
             }
             final Rectangle2D bounds;
             //explode selected sections
-            if (section.isSelected()) {
+            if (explode && section.isSelected()) {
                 bounds = GeometryUtil.getArcBounds(pieArea, explodedArea,
                         startAngle, arcAngle, 1.0);
             } else {

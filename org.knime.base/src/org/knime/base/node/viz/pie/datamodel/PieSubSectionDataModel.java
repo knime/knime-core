@@ -29,7 +29,6 @@ import java.awt.Color;
 import java.awt.geom.Arc2D;
 
 import org.knime.base.node.viz.aggregation.AggregationValSubModel;
-import org.knime.base.node.viz.pie.datamodel.PieVizModel.PieHiliteCalculator;
 
 
 /**
