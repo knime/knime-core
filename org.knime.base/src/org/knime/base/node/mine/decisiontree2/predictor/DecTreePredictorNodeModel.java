@@ -39,9 +39,9 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -137,11 +137,11 @@ public class DecTreePredictorNodeModel extends NodeModel {
         LOGGER.info("Decision Tree Predictor: start execution.");
         DataTableSpec outSpec =
                 createOutTableSpec(inData[INDATAPORT].getDataTableSpec());
-        DataContainer outData = new DataContainer(outSpec);
+        BufferedDataContainer outData = exec.createDataContainer(outSpec);
         int coveredPattern = 0;
         int nrPattern = 0;
         int rowCount = 0;
-        double numberRows = inData[INDATAPORT].getRowCount();
+        int numberRows = inData[INDATAPORT].getRowCount();
         exec.setMessage("Classifying...");
         for (DataRow thisRow : inData[INDATAPORT]) {
             DataCell cl = null;
@@ -178,8 +178,8 @@ public class DecTreePredictorNodeModel extends NodeModel {
 
             rowCount++;
             if (rowCount % 100 == 0) {
-                exec.setProgress(rowCount / numberRows, "Classifying... Row "
-                        + rowCount + " of " + numberRows);
+                exec.setProgress(rowCount / (double) numberRows, 
+                        "Classifying... Row " + rowCount + " of " + numberRows);
             }
             exec.checkCanceled();
         }
@@ -192,8 +192,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
         }
         outData.close();
         LOGGER.info("Decision Tree Predictor: end execution.");
-        return new BufferedDataTable[]{exec.createBufferedDataTable(outData
-                .getTable(), exec)};
+        return new BufferedDataTable[]{outData.getTable()};
     }
 
     /**
