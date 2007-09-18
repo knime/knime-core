@@ -41,7 +41,7 @@ public final class PieColumnFilter implements ColumnFilter {
 
     private static PieColumnFilter instance;
 
-    private static final int MAX_RANGE = 25;
+    private static final int MAX_NO_OF_SECTIONS = 250;
 
     private PieColumnFilter() {
         //avoid object creation
@@ -61,7 +61,9 @@ public final class PieColumnFilter implements ColumnFilter {
      * {@inheritDoc}
      */
     public String allFilteredMsg() {
-        return "No column matches filter criteria";
+        return "No column matches filter criteria. Criteria domain must "
+        + "be available and shouldn't extend " + MAX_NO_OF_SECTIONS
+        + " values.";
     }
 
     /**
@@ -77,7 +79,8 @@ public final class PieColumnFilter implements ColumnFilter {
             return false;
         }
         if (colSpec.getType().isCompatible(NominalValue.class)) {
-            if (domain.getValues() == null || domain.getValues().size() < 1) {
+            if (domain.getValues() == null || domain.getValues().size() < 1
+                    || domain.getValues().size() > MAX_NO_OF_SECTIONS) {
                 return false;
             }
             return true;
@@ -88,7 +91,7 @@ public final class PieColumnFilter implements ColumnFilter {
               }
               final int lower = ((IntCell)domain.getLowerBound()).getIntValue();
               final int upper = ((IntCell)domain.getUpperBound()).getIntValue();
-              return (upper - lower < MAX_RANGE);
+              return (upper - lower < MAX_NO_OF_SECTIONS);
           }
         return false;
     }

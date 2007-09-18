@@ -29,9 +29,11 @@ import java.awt.geom.Arc2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
+import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+
 
 /**
- *
+ * Helper class for geometric calculations.
  * @author Tobias Koetter, University of Konstanz
  */
 public final class GeometryUtil {
@@ -41,6 +43,7 @@ public final class GeometryUtil {
     }
 
     /**
+     * Calculates a sub arc that lies in the given arc.
      * @param arc the basic arc
      * @param fraction the fraction defines the size of the new arc in
      * comparison to the basic arc in percentage 0.9 = 90%
@@ -52,7 +55,7 @@ public final class GeometryUtil {
             return null;
         }
         if (fraction < 0 || fraction > 1) {
-            throw new IllegalArgumentException("Fraction < 0 || > 1");
+            throw new IllegalArgumentException("Fraction < 0 & > 1");
         }
         if (fraction <= 0) {
             return null;
@@ -73,7 +76,10 @@ public final class GeometryUtil {
 //        System.out.println("centerY:\t\t\t" + arc.getCenterY());
 //        System.out.println("angleExtent:\t\t\t" + arc.getAngleExtent());
 //        System.out.println("angleStart:\t\t\t" + arc.getAngleStart());
-        final double hiliteExtend = calculatePartialExtent(arc, fraction);
+        double hiliteExtend = calculatePartialExtent(arc, fraction);
+        if (hiliteExtend < PieVizModel.MINIMUM_ARC_ANGLE) {
+            hiliteExtend = PieVizModel.MINIMUM_ARC_ANGLE;
+        }
         final Arc2D hiliteArc =
             new Arc2D.Double(arc.getBounds(), arc.getAngleStart(),
                     hiliteExtend, Arc2D.PIE);
@@ -82,37 +88,13 @@ public final class GeometryUtil {
 
     /**
      * @param arc the basic arc
-     * @param fraction the fraction defines the size of the new arc in
-     * comparison to the basic arc in percentage 0.9 = 90%
+     * @param fraction the fraction defines the size of the extend
+     * in comparison to the extend of the basic arc in percentage 0.9 = 90%
      * @return the fraction of the basic arc extend
      */
     public static double calculatePartialExtent(final Arc2D arc,
             final double fraction) {
         return arc.getAngleExtent() * fraction;
-    }
-
-    /**
-     * Returns <code>true</code> if the point is in the first half of a circle.
-     * 0 - 180 degree is the first half.
-     *
-     * @param angle  the angle.
-     *
-     * @return A boolean.
-     */
-    public static boolean isFirstHalf(final double angle) {
-        return (Math.sin(Math.toRadians(angle)) > 0.0);
-    }
-
-    /**
-     * Returns <code>true</code> if the point is in the second half of a circle.
-     * 180 - 360 degrees is the second half.
-     *
-     * @param angle  the angle.
-     *
-     * @return <code>true</code> if the angle is at the back of the pie.
-     */
-    public static boolean isSecondHalf(final double angle) {
-        return (Math.sin(Math.toRadians(angle)) < 0.0);
     }
 
     /**
@@ -154,8 +136,9 @@ public final class GeometryUtil {
     }
 
     /**
+     * Calculated the mid angle of the given arc.
      * @param arc the {@link Arc2D} to calculate the mid angle for
-     * @param totalValue the total value of the pie
+     * @param totalValue the total value of the total circle
      * @param value the value of this arc
      * @return the mid angle of the given arc
      */

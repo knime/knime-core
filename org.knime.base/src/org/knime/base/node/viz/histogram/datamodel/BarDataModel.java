@@ -209,7 +209,7 @@ implements Serializable {
      * the elements should be drawn
      * @param calculator the hilite shape calculator
      */
-    protected void setBarRectangle(final Rectangle barRect,
+    protected void setBarRectangle(final Rectangle2D barRect,
             final int baseLine, final SortedSet<Color> barElementColors,
             final HistogramHiliteCalculator calculator) {
         setRectangle(barRect, baseLine, calculator);

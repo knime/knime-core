@@ -48,7 +48,7 @@ import org.knime.core.data.property.ColorAttr;
 
 
 /**
- *
+ * The drawing pane implementation of the pie chart.
  * @author Tobias Koetter, University of Konstanz
  */
 public class PieDrawingPane extends AbstractDrawingPane {
@@ -81,7 +81,7 @@ public class PieDrawingPane extends AbstractDrawingPane {
         g2.setColor(Color.GRAY);
         g2.fillRect(0, 0, 1, 1);
         g2.fillRect(1, 1, 1, 1);
-        final Rectangle rect = new Rectangle(img.getWidth(), img.getHeight());
+        final Rectangle2D rect = new Rectangle(img.getWidth(), img.getHeight());
         HILITE_FILLING = new TexturePaint(img, rect);
     }
 
@@ -131,7 +131,7 @@ public class PieDrawingPane extends AbstractDrawingPane {
 //                DrawingUtils.drawBlock(g2, element, color);
 //                if (subSection.isSelected()) {
 //                    DrawingUtils.drawOutline(g2, element,
-//                            SELECTION_OUTLINE_COLOR, SELECTION_OUTLINE_STROKE);
+//                          SELECTION_OUTLINE_COLOR, SELECTION_OUTLINE_STROKE);
 //                }
 //                if (subSection.isHilited()
 //                        && subSection.getHiliteShape() != null) {
@@ -148,8 +148,8 @@ public class PieDrawingPane extends AbstractDrawingPane {
 //                        SECTION_OUTLINE_STROKE);
 //            }
 //        } else {
-            for (final PieSectionDataModel section :
-                m_vizModel.getSections2Draw()) {
+            for (final PieSectionDataModel section
+                    : m_vizModel.getSections2Draw()) {
                 if (!section.isPresentable()) {
                     //skip not presentable sections
                     continue;

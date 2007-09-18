@@ -32,7 +32,7 @@ import org.knime.base.node.viz.aggregation.AggregationValSubModel;
 
 
 /**
- * This class implements a sub secion of a pie chart.
+ * This class implements a sub section of a pie chart.
  * @author Tobias Koetter, University of Konstanz
  */
 public class PieSubSectionDataModel

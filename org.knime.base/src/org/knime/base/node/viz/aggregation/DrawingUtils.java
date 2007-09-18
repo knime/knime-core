@@ -57,7 +57,7 @@ public final class DrawingUtils {
      * @param bounds the boundary to write in
      */
     public static void drawMessage(final Graphics2D g2, final Font font,
-            final String msg, final Rectangle bounds) {
+            final String msg, final Rectangle2D bounds) {
         //save the original settings
         final Font origFont = g2.getFont();
         g2.setFont(font);
@@ -192,7 +192,7 @@ public final class DrawingUtils {
      * Calculates the size of the rectangle with the given stroke.
      * @param rect the original size of the rectangle
      * @param stroke the stroke which will be used to draw the rectangle
-     * @return the {@link Rectangle} to draw
+     * @return the {@link Rectangle2D} to draw
      */
     public static Rectangle2D calculateBorderRect(final Rectangle2D rect,
             final BasicStroke stroke) {
@@ -209,7 +209,7 @@ public final class DrawingUtils {
         if (newHeight <= 0) {
             newHeight = 1;
         }
-        final Rectangle strokeRect =
+        final Rectangle2D strokeRect =
             new Rectangle(newX, newY, newWidth, newHeight);
         return strokeRect;
     }

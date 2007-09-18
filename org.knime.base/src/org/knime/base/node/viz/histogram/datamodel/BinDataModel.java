@@ -296,7 +296,7 @@ public class BinDataModel implements Serializable {
      * @return the {@link Rectangle} the bin should be drawn on the
      * screen
      */
-    public Rectangle getBinRectangle() {
+    public Rectangle2D getBinRectangle() {
         return m_binRectangle;
     }
 

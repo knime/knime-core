@@ -15,14 +15,11 @@ import org.knime.base.node.viz.pie.util.GeometryUtil;
 public class PieHiliteCalculator
 implements HiliteShapeCalculator<Arc2D, Arc2D> {
 
-    /**
-     *
-     */
     private final PieVizModel m_pieVizModel;
 
     /**Constructor for class PieHiliteCalculator.
      * @param pieVizModel the {@link PieVizModel} to calculate the hilite
-     * infos for
+     * info for
      */
     protected PieHiliteCalculator(final PieVizModel pieVizModel) {
         m_pieVizModel = pieVizModel;

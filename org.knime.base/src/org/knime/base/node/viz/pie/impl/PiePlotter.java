@@ -49,10 +49,11 @@ import org.knime.core.node.property.hilite.KeyEvent;
 
 
 /**
- *
+ * The plotter implementation of the pie chart.
  * @author Tobias Koetter, University of Konstanz
  */
 public class PiePlotter extends AbstractPlotter {
+
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PiePlotter.class);
 
@@ -84,16 +85,19 @@ public class PiePlotter extends AbstractPlotter {
     }
 
     /**
-     * @param vizModel the vizModel to set
+     * @param vizModel the vizModel to display
      */
     public void setVizModel(final PieVizModel vizModel) {
+        if (vizModel == null) {
+            throw new NullPointerException("vizModel must not be null");
+        }
         m_vizModel = vizModel;
         m_vizModel.setDrawingSpace(getDrawingPaneDimension());
     }
 
 
     /**
-     * @return the vizModel
+     * @return the vizModel to display
      */
     public PieVizModel getVizModel() {
         return m_vizModel;
@@ -148,7 +152,9 @@ public class PiePlotter extends AbstractPlotter {
     }
 
     /**
-     * @param vizModel
+     * Calculates the size of all pie sections.
+     * @param vizModel the {@link PieVizModel} that provides visualisation
+     * information and the sections
      */
     private void setPieSections(final PieVizModel vizModel) {
         final Rectangle2D pieArea = vizModel.getPieArea();

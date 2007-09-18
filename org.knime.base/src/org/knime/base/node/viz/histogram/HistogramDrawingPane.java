@@ -75,7 +75,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         g2.setColor(Color.GRAY);
         g2.fillRect(0, 0, 1, 1);
         g2.fillRect(1, 1, 1, 1);
-        final Rectangle rect = new Rectangle(img.getWidth(), img.getHeight());
+        final Rectangle2D rect = new Rectangle(img.getWidth(), img.getHeight());
         OVERLOADED_ELEMENT_FILLING = new TexturePaint(img, rect);
     }
 
@@ -281,7 +281,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
     @Override
     public void paintContent(final Graphics g) {
         final Graphics2D g2 = (Graphics2D)g;
-        final Rectangle bounds = getBounds();
+        final Rectangle2D bounds = getBounds();
         String msg = m_infoMsg;
         final AbstractHistogramVizModel vizModel = m_vizModel;
         if (vizModel == null || vizModel.getBins() == null) {
@@ -412,7 +412,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      */
     private void drawLabels(final Graphics2D g2, final BarDataModel bar,
             final AggregationMethod aggrMethod, final HistogramLayout layout,
-            final Rectangle bounds, final LabelDisplayPolicy displayPolicy,
+            final Rectangle2D bounds, final LabelDisplayPolicy displayPolicy,
             final boolean showVertical) {
         if (LabelDisplayPolicy.ALL.equals(
                 displayPolicy)
@@ -522,7 +522,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      */
     private static void paintLabel(final Graphics2D g2,
             final Rectangle2D borderRect, final double aggrVal,
-            final AggregationMethod aggrMethod, final Rectangle drawingSpace,
+            final AggregationMethod aggrMethod, final Rectangle2D drawingSpace,
             final boolean showVertical) {
         if (borderRect == null) {
             return;

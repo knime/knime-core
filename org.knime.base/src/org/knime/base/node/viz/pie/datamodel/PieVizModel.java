@@ -28,7 +28,6 @@ package org.knime.base.node.viz.pie.datamodel;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -45,7 +44,9 @@ import org.knime.core.node.NodeLogger;
 
 
 /**
- *
+ * The pie chart visualization model which extends the {@link PieDataModel}
+ * with view specific information like flags for showing the labels,
+ * selected section drawing...
  * @author Tobias Koetter, University of Konstanz
  */
 public class PieVizModel extends PieDataModel {
@@ -111,7 +112,7 @@ public class PieVizModel extends PieDataModel {
 
 
     /**
-     * @return the calculator
+     * @return the hilite shape calculator
      */
     public PieHiliteCalculator getCalculator() {
         return m_calculator;
@@ -158,7 +159,8 @@ public class PieVizModel extends PieDataModel {
     }
 
     /**
-     * @return <code>true</code> if details are shown
+     * @return <code>true</code> if the sub sections of a section should be
+     * displayed
      */
     public boolean showDetails() {
         return m_showDetails;
@@ -215,7 +217,7 @@ public class PieVizModel extends PieDataModel {
     }
 
     /**
-     * @return the aggrMethod
+     * @return the actual {@link AggregationMethod}
      */
     public AggregationMethod getAggregationMethod() {
         return m_aggrMethod;
@@ -268,7 +270,7 @@ public class PieVizModel extends PieDataModel {
     }
 
     /**
-     * @return the actual drawing space
+     * @return the size of the available drawing space
      */
     public Dimension getDrawingSpace() {
         return m_drawingSpace;
@@ -291,8 +293,8 @@ public class PieVizModel extends PieDataModel {
     }
 
     /**
-     * @return the {@link Rectangle} that defines the maximum surrounding of
-     * the label are which includes the {@link #getExplodedArea()}
+     * @return the {@link Rectangle2D} that defines the maximum surrounding of
+     * the label area which includes the {@link #getExplodedArea()}
      */
     public Rectangle2D getLabelArea() {
         final Dimension drawingSpace = getDrawingSpace();
@@ -349,7 +351,7 @@ public class PieVizModel extends PieDataModel {
     }
 
     /**
-     * @return the {@link Rectangle} that defines the maximum surrounding of
+     * @return the {@link Rectangle2D} that defines the maximum surrounding of
      * the exploded sections which includes the {@link #getPieArea()} rectangle
      */
     public Rectangle2D getExplodedArea() {
@@ -357,7 +359,7 @@ public class PieVizModel extends PieDataModel {
     }
 
     /**
-     * @return the {@link Rectangle} to draw the pie in which is surrounded
+     * @return the {@link Rectangle2D} to draw the pie in which is surrounded
      * by the {@link #getExplodedArea()} rectangle which in turn is surrounded
      * by the {@link #getLabelArea()} rectangle.
      */
@@ -365,6 +367,13 @@ public class PieVizModel extends PieDataModel {
         return calculateSubRectangle(getExplodedArea(), EXPLODE_AREA_MARGIN);
     }
 
+    /**
+     * @param rect the basic {@link Rectangle2D} to scale
+     * @param margin the size of the margin in percent of the size of the
+     * basic rectangle
+     * @return the rectangle which has the size of the basic rectangle
+     * minus the margin
+     */
     private final Rectangle2D calculateSubRectangle(final Rectangle2D rect,
             final double margin) {
         final double origWidth = rect.getWidth();
@@ -427,7 +436,7 @@ public class PieVizModel extends PieDataModel {
     }
 
     /**
-     * Removes the hilite information from all sections.
+     * Unhilites all sections.
      */
     public void unHiliteAll() {
         final long startTime = System.currentTimeMillis();
@@ -485,11 +494,11 @@ public class PieVizModel extends PieDataModel {
     }
 
     /**
-     * Selects the element which contains the given point.
+     * Selects the element which intersects the given rectangle.
      * @param rect the rectangle on the screen to select
      * @return <code>true</code> if the selection has changed
      */
-    public boolean selectElement(final Rectangle rect) {
+    public boolean selectElement(final Rectangle2D rect) {
         boolean changed = false;
         for (final PieSectionDataModel section : getSections()) {
             changed = section.selectElement(rect, showDetails()) || changed;

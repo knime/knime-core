@@ -27,6 +27,7 @@ package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.Set;
 import java.util.SortedSet;
@@ -50,7 +51,7 @@ public class InteractiveBinDataModel extends BinDataModel {
     /**If the different bars of this bin can't be draw because the bin
      * is to small this rectangle is calculated to reflect the proportion
      * of hilited rows in this bin. */
-    private Rectangle m_hiliteRectangle;
+    private Rectangle2D m_hiliteRectangle;
 
     /**Constructor for class BinDataModel.
      * @param xAxisCaption the caption of this bin on the x axis
@@ -161,7 +162,7 @@ public class InteractiveBinDataModel extends BinDataModel {
      * could be displayed if the bars of this bin can't be draw.
      * @return the proportional hilite rectangle
      */
-    public Rectangle getHiliteRectangle() {
+    public Rectangle2D getHiliteRectangle() {
         return m_hiliteRectangle;
     }
 
@@ -174,7 +175,7 @@ public class InteractiveBinDataModel extends BinDataModel {
      */
     private void calculateHiliteRectangle(
             final HistogramHiliteCalculator calculator) {
-        final Rectangle binRectangle = getBinRectangle();
+        final Rectangle2D binRectangle = getBinRectangle();
         if (isPresentable() || binRectangle == null) {
             m_hiliteRectangle = null;
             return;

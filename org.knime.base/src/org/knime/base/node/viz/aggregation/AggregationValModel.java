@@ -27,8 +27,8 @@ package org.knime.base.node.viz.aggregation;
 
 import java.awt.Color;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.Shape;
+import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
@@ -327,12 +327,13 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * Selects all sub element of this element which intersect the given
      * rectangle.
-     * @param rect the {@link Rectangle} to check
+     * @param rect the {@link Rectangle2D} to check
      * @param detailed if also the sub sections should be checked
      * @return <code>true</code> if at least one sub element of this element
      * intersects the rectangle
      */
-    public boolean selectElement(final Rectangle rect, final boolean detailed) {
+    public boolean selectElement(final Rectangle2D rect,
+            final boolean detailed) {
         if (m_shape != null && m_shape.intersects(rect)) {
             //          if the element is to small to draw the different
             //elements we have to select all elements

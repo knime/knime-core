@@ -69,6 +69,13 @@ extends AggregationValModel <PieSubSectionDataModel, Arc2D, Arc2D> {
         setSubSection(arc, calculator);
     }
 
+    /**
+     * Calculates the size of all subsections of this section based on the
+     * size of the given arc.
+     * @param arc the arc of this section
+     * @param calculator the hilite calculator which provides implementation
+     * specific information
+     */
     private void setSubSection(final Arc2D arc,
             final PieHiliteCalculator calculator) {
         final Collection<PieSubSectionDataModel> subSections = getElements();
@@ -84,16 +91,17 @@ extends AggregationValModel <PieSubSectionDataModel, Arc2D, Arc2D> {
         }
         final AggregationMethod method = calculator.getAggrMethod();
         double startAngle = arc.getAngleStart();
-        //we have to be care full with the value range in stacked layout
-        //because of the mixture of positive and negatives
-        double totalValue = getAggregationValue(method);
+        final double totalValue;
         if ((AggregationMethod.AVERAGE.equals(method)
                 || AggregationMethod.SUM.equals(method))) {
-            totalValue = 0;
+            double value = 0;
             for (final PieSubSectionDataModel element : subSections) {
-                totalValue +=
+                value +=
                     Math.abs(element.getAggregationValue(method));
             }
+            totalValue = value;
+        } else {
+            totalValue = getAggregationValue(method);
         }
         for (final PieSubSectionDataModel subSection : subSections) {
             final double value =
@@ -104,12 +112,12 @@ extends AggregationValModel <PieSubSectionDataModel, Arc2D, Arc2D> {
             } else {
                 fraction = value / totalValue;
             }
-            final double partialAngle =
+            final double partialExtend =
                 GeometryUtil.calculatePartialExtent(arc, fraction);
             final Arc2D subArc = new Arc2D.Double(arc.getBounds(), startAngle,
-                    partialAngle, Arc2D.PIE);
+                    partialExtend, Arc2D.PIE);
             subSection.setSubSection(subArc, calculator);
-            startAngle += partialAngle;
+            startAngle += partialExtend;
         }
     }
 }

@@ -29,6 +29,8 @@ import java.awt.Shape;
 
 
 /**
+ * Hilite shape calculator interface which is used in the aggregation value
+ * classes to calculate the hilite shape.
  *
  * @author Tobias Koetter, University of Konstanz
  * @param <S> the basic shape
