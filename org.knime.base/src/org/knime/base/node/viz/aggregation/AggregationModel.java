@@ -74,6 +74,10 @@ public interface AggregationModel<S, H extends Shape> {
     public boolean isSelected();
 
     /**
+     * @return <code>true</code> if this model contains no rows
+     */
+    public boolean isEmpty();
+    /**
      * @return <code>true</code> if hiliting is supported
      */
     public boolean supportsHiliting();

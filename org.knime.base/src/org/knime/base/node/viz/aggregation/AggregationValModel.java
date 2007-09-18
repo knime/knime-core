@@ -65,7 +65,7 @@ implements Serializable, AggregationModel<S, H> {
 
     private double m_aggrSum = 0;
 
-    private boolean m_presentable = true;
+    private boolean m_presentable = false;
 
     private boolean m_isSelected = false;
 
@@ -235,11 +235,16 @@ implements Serializable, AggregationModel<S, H> {
     }
 
     /**
-     * @param shape the shape check for selection
+     * @param shape the shape check for selection and drawing
      * @param calculator the hilite shape calculator
      */
     public void setShape(final S shape,
             final HiliteShapeCalculator<S, H> calculator) {
+        if (m_shape == null) {
+            m_presentable = false;
+        } else {
+            m_presentable = true;
+        }
         m_shape = shape;
         calculateHiliteShape(calculator);
     }
@@ -259,11 +264,10 @@ implements Serializable, AggregationModel<S, H> {
     }
 
     /**
-     * @param showDetails <code>true</code> if also the detailed sub elements
-     * should be displayed
+     * @param presentable <code>true</code> if this element is presentable
      */
-    protected void setPresentable(final boolean showDetails) {
-        m_presentable = showDetails;
+    protected void setPresentable(final boolean presentable) {
+        m_presentable = presentable;
     }
 
     /**
@@ -352,6 +356,13 @@ implements Serializable, AggregationModel<S, H> {
      */
     public boolean supportsHiliting() {
         return m_supportHiliting;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean isEmpty() {
+        return m_rowCounter < 1;
     }
 
     /**

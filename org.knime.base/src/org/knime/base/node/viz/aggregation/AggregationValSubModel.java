@@ -54,6 +54,7 @@ implements Serializable, AggregationModel<S, H> {
     /**The number of rows including empty value rows.*/
     private int m_rowCounter = 0;
     private boolean m_isSelected = false;
+    private boolean m_presentable = false;
     private S m_shape;
     private final Set<DataCell> m_rowKeys;
     private final Set<DataCell> m_hilitedRowKeys;
@@ -189,6 +190,11 @@ implements Serializable, AggregationModel<S, H> {
      */
     protected void setShape(final S shape,
             final HiliteShapeCalculator<S, H> calculator) {
+        if (shape == null) {
+            m_presentable = false;
+        } else {
+            m_presentable = true;
+        }
         m_shape = shape;
         calculateHilitedRectangle(calculator);
     }
@@ -217,9 +223,22 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * {@inheritDoc}
      */
+    public boolean isEmpty() {
+        return m_rowCounter < 1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public boolean isPresentable() {
-        //these elements are always presentable
-        return true;
+        return m_presentable;
+    }
+
+    /**
+     * @param presentable <code>true</code> if this section is presentable
+     */
+    protected void setPresentable(final boolean presentable) {
+        m_presentable = presentable;
     }
 
     /**
