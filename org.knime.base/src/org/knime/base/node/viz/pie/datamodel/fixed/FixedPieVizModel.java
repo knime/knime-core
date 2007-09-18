@@ -1,5 +1,5 @@
 /*
- * ------------------------------------------------------------------
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -18,61 +18,51 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
- *   11.06.2006 (Tobias Koetter): created
+ *    12.09.2007 (Tobias Koetter): created
  */
-package org.knime.base.node.viz.pie.node.fixed;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+package org.knime.base.node.viz.pie.datamodel.fixed;
+
+import java.util.List;
+
+import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
+import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+
+
+
 
 /**
- * Factory class of the interactive histogram.
+ * The pie chart visualization model which extends the {@link PieVizModel}
+ * class.
  * @author Tobias Koetter, University of Konstanz
  */
-public class PieNodeFactory extends NodeFactory {
-    /**
-     * {@inheritDoc}
+public class FixedPieVizModel extends PieVizModel {
+
+    private final FixedPieDataModel m_model;
+
+    /**Constructor for class PieVizModel.
+     * @param model the data model
      */
-    @Override
-    public NodeModel createNodeModel() {
-        return new PieNodeModel();
+    public FixedPieVizModel(final FixedPieDataModel model) {
+        super(model);
+        m_model = model;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getNrNodeViews() {
-        return 1;
+    protected List<PieSectionDataModel> getSections() {
+        return m_model.getSections();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        assert viewIndex == 0;
-        return new PieNodeView(nodeModel);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new PieNodeDialogPane();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
+    protected PieSectionDataModel getMissingSection() {
+        return m_model.getMissingSection();
     }
 }

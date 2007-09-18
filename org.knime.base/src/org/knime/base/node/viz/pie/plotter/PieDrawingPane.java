@@ -23,7 +23,7 @@
  *    12.09.2007 (Tobias Koetter): created
  */
 
-package org.knime.base.node.viz.pie.impl;
+package org.knime.base.node.viz.pie.plotter;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -41,7 +41,7 @@ import java.awt.image.BufferedImage;
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.aggregation.DrawingUtils;
 import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
-import org.knime.base.node.viz.pie.datamodel.FixedPieVizModel;
+import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.base.node.viz.pie.util.GeometryUtil;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.core.data.property.ColorAttr;
@@ -85,12 +85,12 @@ public class PieDrawingPane extends AbstractDrawingPane {
         HILITE_FILLING = new TexturePaint(img, rect);
     }
 
-    private FixedPieVizModel m_vizModel;
+    private PieVizModel m_vizModel;
 
     /**
      * @param vizModel the visualization model to draw
      */
-    public void setVizModel(final FixedPieVizModel vizModel) {
+    public void setVizModel(final PieVizModel vizModel) {
         m_vizModel = vizModel;
     }
 

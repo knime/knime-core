@@ -23,17 +23,19 @@
  *    13.09.2007 (Tobias Koetter): created
  */
 
-package org.knime.base.node.viz.pie.datamodel;
+package org.knime.base.node.viz.pie.datamodel.fixed;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Collections;
 import java.util.List;
 
+import org.knime.base.node.viz.pie.datamodel.PieDataModel;
+import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.CanceledExecutionException;
@@ -46,17 +48,25 @@ import org.knime.core.node.ExecutionMonitor;
  * {@link PieSectionDataModel}s.
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedPieDataModel extends
-PieDataModel {
+public class FixedPieDataModel extends PieDataModel {
 
     /**The name of the data file which contains all data in serialized form.*/
     private static final String CFG_DATA_FILE = "dataFile";
+
+    private final List<PieSectionDataModel> m_sections;
+
+    private final PieSectionDataModel m_missingSection;
 
     /**Constructor for class PieDataModel.
      * @param pieColSpec the column specification of the pie column
      */
     public FixedPieDataModel(final DataColumnSpec pieColSpec) {
-        super(pieColSpec, false);
+        super(false);
+        if (pieColSpec == null) {
+            throw new NullPointerException("pieColSpec must not be null");
+        }
+        m_missingSection = createDefaultMissingSection(false);
+        m_sections = createSections(pieColSpec, false);
     }
 
     /**Constructor for class PieDataModel.
@@ -67,39 +77,27 @@ PieDataModel {
     protected FixedPieDataModel(final List<PieSectionDataModel> sections,
             final PieSectionDataModel missingSection,
             final boolean supportHiliting) {
-        super(sections, missingSection, supportHiliting);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void addDataRow(final DataCell id, final Color rowColor,
-            final DataCell pieCell, final DataCell aggrCell) {
-        if (pieCell == null) {
-            throw new NullPointerException(
-                    "Pie section value must not be null.");
+        super(supportHiliting);
+        if (sections == null) {
+            throw new NullPointerException("sections must not be null");
         }
-        final PieSectionDataModel section;
-        if (pieCell.isMissing()) {
-            section = getMissingSection();
+        m_sections = sections;
+        if (missingSection == null) {
+            m_missingSection = createDefaultMissingSection(supportHiliting);
         } else {
-            section = getSection(pieCell);
-            if (section == null) {
-                throw new IllegalArgumentException("No section found for: "
-                        + pieCell.toString());
-            }
+            m_missingSection = missingSection;
         }
-        section.addDataRow(rowColor, id, aggrCell);
     }
 
+
     /**
-     * {@inheritDoc}
+     * @param directory the directory to write to
+     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @throws IOException if a file exception occurs
+     * @throws CanceledExecutionException if the operation was canceled
      */
-    @Override
     public void save2File(final File directory, final ExecutionMonitor exec)
-    throws IOException,
-            CanceledExecutionException {
+    throws IOException, CanceledExecutionException {
         if (exec != null) {
             exec.setProgress(0.0, "Start saving histogram data model to file");
         }
@@ -176,5 +174,34 @@ PieDataModel {
         os.close();
         dataIS.close();
         return new FixedPieDataModel(sections, missingSection, supportHiliting);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PieSectionDataModel getSection(final DataCell value) {
+        for (final PieSectionDataModel section : m_sections) {
+            if (section.getName().equals(value.toString())) {
+                return section;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<PieSectionDataModel> getSections()  {
+        return Collections.unmodifiableList(m_sections);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PieSectionDataModel getMissingSection()  {
+        return m_missingSection;
     }
 }

@@ -18,20 +18,47 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
- *    12.09.2007 (Tobias Koetter): created
+ *    18.09.2007 (Tobias Koetter): created
  */
 
-package org.knime.base.node.viz.pie.impl;
+package org.knime.base.node.viz.pie.datamodel.interactive;
 
-import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
+import java.util.List;
+
+import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
+import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 
 
 /**
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
-public class PieProperties extends AbstractPlotterProperties {
+public class InteractivePieVizModel extends PieVizModel {
 
+    /**Constructor for class InteractivePieVizModel.
+     * @param model the data model
+     */
+    public InteractivePieVizModel(final InteractivePieDataModel model) {
+        super(model);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected List<PieSectionDataModel> getSections() {
+        // TK_TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PieSectionDataModel getMissingSection() {
+        // TK_TODO Auto-generated method stub
+        return null;
+    }
 }

@@ -22,16 +22,17 @@
  * History
  *   08.06.2006 (Tobias Koetter): created
  */
-package org.knime.base.node.viz.pie.node.fixed;
+package org.knime.base.node.viz.pie.node;
 
-import org.knime.base.node.viz.pie.datamodel.FixedPieVizModel;
-import org.knime.base.node.viz.pie.impl.PiePlotter;
-import org.knime.base.node.viz.pie.impl.PieProperties;
+import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.base.node.viz.pie.node.fixed.FixedPieNodeModel;
+import org.knime.base.node.viz.pie.plotter.PiePlotter;
+import org.knime.base.node.viz.pie.plotter.PieProperties;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * The node view which contains the histogram plotter panel.
+ * The node view which contains the pie chart panel.
  *
  * @author Tobias Koetter, University of Konstanz
  *
@@ -49,10 +50,10 @@ public class PieNodeView extends NodeView {
      */
     PieNodeView(final NodeModel nodeModel) {
         super(nodeModel);
-        if (!(nodeModel instanceof PieNodeModel)) {
+        if (!(nodeModel instanceof FixedPieNodeModel)) {
             throw new IllegalArgumentException(NodeModel.class.getName()
                     + " not an instance of "
-                    + PieNodeModel.class.getName());
+                    + FixedPieNodeModel.class.getName());
         }
         m_nodeModel = (PieNodeModel)nodeModel;
     }
@@ -76,7 +77,7 @@ public class PieNodeView extends NodeView {
         if (m_plotter != null) {
             m_plotter.reset();
         }
-        final FixedPieVizModel vizModel = m_nodeModel.getVizModel();
+        final PieVizModel vizModel = m_nodeModel.getVizModel();
         if (vizModel == null) {
             setComponent(null);
             return;

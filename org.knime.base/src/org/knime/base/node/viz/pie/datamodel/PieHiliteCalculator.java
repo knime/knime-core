@@ -6,6 +6,7 @@ import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.aggregation.AggregationValModel;
 import org.knime.base.node.viz.aggregation.AggregationValSubModel;
 import org.knime.base.node.viz.aggregation.HiliteShapeCalculator;
+import org.knime.base.node.viz.pie.datamodel.fixed.FixedPieVizModel;
 import org.knime.base.node.viz.pie.util.GeometryUtil;
 
 /**
@@ -15,13 +16,13 @@ import org.knime.base.node.viz.pie.util.GeometryUtil;
 public class PieHiliteCalculator
 implements HiliteShapeCalculator<Arc2D, Arc2D> {
 
-    private final FixedPieVizModel m_pieVizModel;
+    private final PieVizModel m_pieVizModel;
 
     /**Constructor for class PieHiliteCalculator.
      * @param pieVizModel the {@link FixedPieVizModel} to calculate the hilite
      * info for
      */
-    protected PieHiliteCalculator(final FixedPieVizModel pieVizModel) {
+    protected PieHiliteCalculator(final PieVizModel pieVizModel) {
         m_pieVizModel = pieVizModel;
     }
 

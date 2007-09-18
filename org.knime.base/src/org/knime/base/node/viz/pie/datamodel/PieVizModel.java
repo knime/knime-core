@@ -20,7 +20,7 @@
  * -------------------------------------------------------------------
  *
  * History
- *    12.09.2007 (Tobias Koetter): created
+ *    18.09.2007 (Tobias Koetter): created
  */
 
 package org.knime.base.node.viz.pie.datamodel;
@@ -42,78 +42,65 @@ import org.knime.base.node.viz.aggregation.AggregationModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeLogger;
 
-
 /**
- * The pie chart visualization model which extends the {@link FixedPieDataModel}
- * with view specific information like flags for showing the labels,
- * selected section drawing...
+ *
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedPieVizModel {
+public abstract class PieVizModel {
 
     private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(FixedPieVizModel.class);
-
+        NodeLogger.getLogger(PieVizModel.class);
     /**The number of digits to display for a label.*/
     private static final int NO_OF_LABEL_DIGITS = 2;
     /** The caption of the bar which holds all missing values. */
     public static final String MISSING_VAL_SECTION_CAPTION = "Missing_values";
     /** The caption of the bar which holds all missing values. */
     public static final Color MISSING_VAL_SECTION_COLOR = Color.LIGHT_GRAY;
-
     /**The percentage of the drawing space that should be used for drawing.
      * (0.9 = 90 percent)*/
     public static final double DEFAULT_PIE_SIZE = 0.99;
-
     /**The minimum size of the pie drawing space in percent.
      * (0.3 = 30 percent).
      */
     public static final double MINIMUM_PIE_SIZE = 0.3;
-
     /**The margin of the label area in percent of the drawing space size.
      * (0.2 = 20 percent).*/
     public static final double LABEL_AREA_MARGIN = 0.3;
-
     /**The margin of the explode are in percent of the label are rectangle.
      * (0.2 = 20 percent)*/
     public static final double EXPLODE_AREA_MARGIN = 0.1;
-
     /**The default minimum arc angle of a pie section to draw.*/
     public static final double MINIMUM_ARC_ANGLE = 0.0001;
-
-    private final PieDataModel m_model;
-
     private boolean m_showEmptySections = false;
-
     private boolean m_showMissingValSection = true;
-
     private Dimension m_drawingSpace;
-
     private AggregationMethod m_aggrMethod;
-
     private boolean m_showDetails = false;
-
     private boolean m_drawSectionOutline = true;
-
     private boolean m_explodeSelectedSections = false;
-
     private boolean m_drawAntialias = true;
-
     private double m_pieSize = DEFAULT_PIE_SIZE;
-
     private final PieHiliteCalculator m_calculator =
         new PieHiliteCalculator(this);
+
+    private final boolean m_supportsHiliting;
 
     /**Constructor for class PieVizModel.
      * @param model the data model
      */
-    public FixedPieVizModel(final PieDataModel model) {
-        if (model == null) {
-            throw new NullPointerException("model must not be null");
-        }
-        m_model = model;
+    public PieVizModel(final PieDataModel model) {
+        m_supportsHiliting = model.supportsHiliting();
     }
 
+    /**
+     * @return all data sections
+     */
+    protected abstract List<PieSectionDataModel> getSections();
+
+    /**
+     * @return the missing value data section
+     */
+    protected abstract PieSectionDataModel getMissingSection();
 
     /**
      * @return the hilite shape calculator
@@ -137,7 +124,6 @@ public class FixedPieVizModel {
     public void setShowMissingValSection(final boolean showMissingValSection) {
         m_showMissingValSection = showMissingValSection;
     }
-
 
     /**
      * @param showEmptySections <code>true</code> if empty sections
@@ -170,7 +156,6 @@ public class FixedPieVizModel {
         return m_showDetails;
     }
 
-
     /**
      * @param drawSectionOutline <code>true</code> if the section outline
      * should be drawn
@@ -179,14 +164,12 @@ public class FixedPieVizModel {
         m_drawSectionOutline = drawSectionOutline;
     }
 
-
     /**
      * @return <code>true</code> if the section outline should be drawn
      */
     public boolean drawSectionOutline() {
         return m_drawSectionOutline;
     }
-
 
     /**
      * @param explode <code>true</code> if selected sections should be
@@ -211,7 +194,6 @@ public class FixedPieVizModel {
         m_drawAntialias = drawAntialias;
     }
 
-
     /**
      * @return <code>true</code> if the shapes should be drawn using
      * antialiasing
@@ -227,7 +209,6 @@ public class FixedPieVizModel {
         return m_aggrMethod;
     }
 
-
     /**
      * @param aggrMethod the aggrMethod to set
      */
@@ -241,7 +222,7 @@ public class FixedPieVizModel {
      * @return all sections to draw as a unmodifiable {@link List}
      */
     public List<PieSectionDataModel> getSections2Draw() {
-        final List<PieSectionDataModel> allSections = m_model.getSections();
+        final List<PieSectionDataModel> allSections = getSections();
         final List<PieSectionDataModel> resultList =
             new ArrayList<PieSectionDataModel>(allSections.size() + 1);
         for (final PieSectionDataModel section : allSections) {
@@ -249,10 +230,17 @@ public class FixedPieVizModel {
                 resultList.add(section);
             }
         }
-        if (m_showMissingValSection && m_model.hasMissingSection()) {
-            resultList.add(m_model.getMissingSection());
+        if (m_showMissingValSection && hasMissingSection()) {
+            resultList.add(getMissingSection());
         }
         return Collections.unmodifiableList(resultList);
+    }
+
+    /**
+     * @return <code>true</code> if this model contains a missing section
+     */
+    private boolean hasMissingSection() {
+        return getMissingSection().getRowCount() > 0;
     }
 
     /**
@@ -260,7 +248,7 @@ public class FixedPieVizModel {
      */
     public List<? extends AggregationModel<? extends Shape, ? extends Shape>>
     getDrawSubSections() {
-        final List<PieSectionDataModel> sections = m_model.getSections();
+        final List<PieSectionDataModel> sections = getSections();
         final List<PieSubSectionDataModel> detailSections =
             new ArrayList<PieSubSectionDataModel>(sections.size() * 2);
         for (final PieSectionDataModel section : sections) {
@@ -315,7 +303,6 @@ public class FixedPieVizModel {
         return linkArea;
     }
 
-
     /**
      * @param pieSize the pieSize in percent of the drawing space.
      * (0.9 = 90 percent)
@@ -329,7 +316,6 @@ public class FixedPieVizModel {
             m_pieSize = pieSize;
         }
     }
-
 
     /**
      * @return the size of the pie in percent of the drawing space
@@ -418,18 +404,18 @@ public class FixedPieVizModel {
         }
         final long startTime = System.currentTimeMillis();
         final PieHiliteCalculator calculator = getCalculator();
-        for (final PieSectionDataModel pieSection : m_model.getSections()) {
+        for (final PieSectionDataModel pieSection : getSections()) {
             if (hilite) {
                 pieSection.setHilitedKeys(keys, calculator);
             } else {
                 pieSection.removeHilitedKeys(keys, calculator);
             }
         }
-        if (m_model.hasMissingSection()) {
+        if (hasMissingSection()) {
             if (hilite) {
-                m_model.getMissingSection().setHilitedKeys(keys, calculator);
+                getMissingSection().setHilitedKeys(keys, calculator);
             } else {
-                m_model.getMissingSection().removeHilitedKeys(keys, calculator);
+                getMissingSection().removeHilitedKeys(keys, calculator);
             }
         }
         final long endTime = System.currentTimeMillis();
@@ -444,11 +430,11 @@ public class FixedPieVizModel {
      */
     public void unHiliteAll() {
         final long startTime = System.currentTimeMillis();
-        for (final PieSectionDataModel pieSection : m_model.getSections()) {
+        for (final PieSectionDataModel pieSection : getSections()) {
             pieSection.clearHilite();
         }
-        if (m_model.hasMissingSection()) {
-            m_model.getMissingSection().clearHilite();
+        if (hasMissingSection()) {
+            getMissingSection().clearHilite();
         }
         final long endTime = System.currentTimeMillis();
         final long durationTime = endTime - startTime;
@@ -460,7 +446,7 @@ public class FixedPieVizModel {
      */
     public Set<DataCell> getSelectedKeys() {
         final Set<DataCell> keys = new HashSet<DataCell>();
-        for (final PieSectionDataModel section : m_model.getSections()) {
+        for (final PieSectionDataModel section : getSections()) {
             if (section.isSelected()) {
                 final Collection<PieSubSectionDataModel> subSections =
                     section.getElements();
@@ -478,7 +464,7 @@ public class FixedPieVizModel {
      * Clear all selections.
      */
     public void clearSelection() {
-        for (final PieSectionDataModel section : m_model.getSections()) {
+        for (final PieSectionDataModel section : getSections()) {
             section.setSelected(false);
         }
     }
@@ -490,7 +476,7 @@ public class FixedPieVizModel {
      */
     public boolean selectElement(final Point point) {
         boolean changed = false;
-        for (final PieSectionDataModel section : m_model.getSections()) {
+        for (final PieSectionDataModel section : getSections()) {
             changed = section.selectElement(point, showDetails())
             || changed;
         }
@@ -504,7 +490,7 @@ public class FixedPieVizModel {
      */
     public boolean selectElement(final Rectangle2D rect) {
         boolean changed = false;
-        for (final PieSectionDataModel section : m_model.getSections()) {
+        for (final PieSectionDataModel section : getSections()) {
             changed = section.selectElement(rect, showDetails()) || changed;
         }
         return changed;
@@ -514,7 +500,7 @@ public class FixedPieVizModel {
      * @return <code>true</code> if hiliting is supported
      */
     public boolean supportsHiliting() {
-        return m_model.supportsHiliting();
+        return m_supportsHiliting;
     }
 
     /**
@@ -535,4 +521,5 @@ public class FixedPieVizModel {
         }
         return valuePart;
     }
+
 }
