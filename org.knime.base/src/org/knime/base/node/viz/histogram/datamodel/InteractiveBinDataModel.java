@@ -32,7 +32,6 @@ import java.util.Set;
 import java.util.SortedSet;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.aggregation.HiliteShapeCalculator;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
@@ -115,12 +114,10 @@ public class InteractiveBinDataModel extends BinDataModel {
     /**
      * @param hilited the row keys to hilite
      * @param calculator the hilite shape calculator
-     * @param layout the current {@link HistogramLayout}
      * @return if the hilite keys have changed
      */
     protected boolean setHilitedKeys(final Set<DataCell> hilited,
-            final HiliteShapeCalculator<Rectangle, Rectangle> calculator,
-            final HistogramLayout layout) {
+            final HistogramHiliteCalculator calculator) {
         boolean changed = false;
         for (final BarDataModel bar : getBars()) {
             changed = bar.setHilitedKeys(hilited, calculator) || changed;
@@ -134,12 +131,10 @@ public class InteractiveBinDataModel extends BinDataModel {
     /**
      * @param hilited the row keys to unhilite
      * @param calculator the hilite shape calculator
-     * @param layout the current {@link HistogramLayout}
      * @return if the hilite keys have changed
      */
     protected boolean removeHilitedKeys(final Set<DataCell> hilited,
-            final HiliteShapeCalculator<Rectangle, Rectangle> calculator,
-            final HistogramLayout layout) {
+            final HistogramHiliteCalculator calculator) {
         boolean changed = false;
         for (final BarDataModel bar : getBars()) {
             changed = bar.removeHilitedKeys(hilited, calculator) || changed;
@@ -178,7 +173,7 @@ public class InteractiveBinDataModel extends BinDataModel {
      * @param layout the current {@link HistogramLayout}
      */
     private void calculateHiliteRectangle(
-            final HiliteShapeCalculator<Rectangle, Rectangle> calculator) {
+            final HistogramHiliteCalculator calculator) {
         final Rectangle binRectangle = getBinRectangle();
         if (isPresentable() || binRectangle == null) {
             m_hiliteRectangle = null;
@@ -192,16 +187,8 @@ public class InteractiveBinDataModel extends BinDataModel {
         if (calculator == null) {
             return;
         }
-        final AggregationMethod aggrMethod;
-        final HistogramLayout layout;
-        if (calculator instanceof HistogramHiliteCalculator) {
-            final HistogramHiliteCalculator histoCalculator =
-                (HistogramHiliteCalculator)calculator;
-            aggrMethod = histoCalculator.getAggrMethod();
-            layout = histoCalculator.getLayout();
-        } else {
-            throw new IllegalArgumentException("HiliteCalculator is invalid");
-        }
+        final AggregationMethod aggrMethod = calculator.getAggrMethod();
+        final HistogramLayout layout = calculator.getLayout();
         final int binY = (int)binRectangle.getY();
         final int binHeight = (int)binRectangle.getHeight();
         final int binWidth = (int)binRectangle.getWidth();

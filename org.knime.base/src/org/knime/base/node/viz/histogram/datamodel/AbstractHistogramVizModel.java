@@ -29,6 +29,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -121,7 +122,7 @@ public abstract class AbstractHistogramVizModel {
     * @author Tobias Koetter, University of Konstanz
     */
    public class HistogramHiliteCalculator implements
-            HiliteShapeCalculator<Rectangle, Rectangle> {
+            HiliteShapeCalculator<Rectangle2D, Rectangle2D> {
 
         /** Constructor for class HistogramHiliteCalculator. */
         protected HistogramHiliteCalculator() {
@@ -145,13 +146,13 @@ public abstract class AbstractHistogramVizModel {
         /**
          * {@inheritDoc}
          */
-        public Rectangle calculateHiliteShape(final AggregationValModel
-                <AggregationValSubModel<Rectangle, Rectangle>,
-                Rectangle, Rectangle> model) {
+        public Rectangle2D calculateHiliteShape(final AggregationValModel
+                <AggregationValSubModel<Rectangle2D, Rectangle2D>,
+                Rectangle2D, Rectangle2D> model) {
             if (isFixed()) {
                 return null;
             }
-            final Rectangle barRectangle = model.getShape();
+            final Rectangle2D barRectangle = model.getShape();
             if (model.isPresentable() || barRectangle == null) {
                 return null;
             }
@@ -192,13 +193,13 @@ public abstract class AbstractHistogramVizModel {
         /**
          * {@inheritDoc}
          */
-        public Rectangle calculateHiliteShape(
-                final AggregationValSubModel<Rectangle, Rectangle> model) {
+        public Rectangle2D calculateHiliteShape(
+                final AggregationValSubModel<Rectangle2D, Rectangle2D> model) {
             if (isFixed()) {
                 return null;
             }
             final int noOfHilitedKeys = model.getHiliteRowCount();
-            final Rectangle elementRect = model.getShape();
+            final Rectangle2D elementRect = model.getShape();
             if (noOfHilitedKeys < 1 || elementRect == null) {
                 // if their are no rows hilited we have no hilite rectangle
                 return null;
@@ -1157,8 +1158,8 @@ public abstract class AbstractHistogramVizModel {
      * @param thickness the  thickness of the surrounding rectangle
      * @return the surrounding rectangle
      */
-    public static Rectangle calculateSurroundingRectangle(
-            final Rectangle rect,
+    public static Rectangle2D calculateSurroundingRectangle(
+            final Rectangle2D rect,
             final int baseLine, final int thickness) {
         if (rect == null) {
             return null;

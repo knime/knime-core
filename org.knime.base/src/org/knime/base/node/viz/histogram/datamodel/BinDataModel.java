@@ -28,6 +28,7 @@ package org.knime.base.node.viz.histogram.datamodel;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -72,7 +73,7 @@ public class BinDataModel implements Serializable {
 
     /**The surrounding rectangle is used to distinguish between the
         different bins.*/
-    private Rectangle m_surroundingRectangle;
+    private Rectangle2D m_surroundingRectangle;
     /**The bin rectangle is the main rectangle which contains the bars.*/
     private Rectangle m_binRectangle;
 
@@ -304,7 +305,7 @@ public class BinDataModel implements Serializable {
      * @return the surroundingRectangle to draw to distinguish between the
      * different bins
      */
-    public Rectangle getSurroundingRectangle() {
+    public Rectangle2D getSurroundingRectangle() {
         return m_surroundingRectangle;
     }
 

@@ -32,6 +32,7 @@ import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.awt.TexturePaint;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
 
@@ -367,7 +368,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 } else {
                     //the elements doen't fit in this bar so we have to
                     //fill the complete bar to show it to the user
-                    final Rectangle barRectangle = bar.getShape();
+                    final Rectangle2D barRectangle = bar.getShape();
                     DrawingUtils.drawBlock(g2, barRectangle,
                             OVERLOADED_ELEMENT_FILLING,
                             OVERLOADED_ELEMENT_ALPHA);
@@ -457,7 +458,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         for (final BarElementDataModel element : elements) {
             final Color elementColor = element.getColor();
             //draw the element itself first
-            final Rectangle elementRect =
+            final Rectangle2D elementRect =
                 element.getElementRectangle();
 //            drawBlock(g2, elementRect, elementColor);
 //          draw the surrounding rectangles after the block
@@ -478,7 +479,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
                 final InteractiveBarElementDataModel interactiveElement =
                     (InteractiveBarElementDataModel)element;
 //              draw the hilite rectangle
-                final Rectangle hiliteRect =
+                final Rectangle2D hiliteRect =
                     interactiveElement.getHiliteShape();
                 drawHiliteRect(g2, hiliteRect);
             }
@@ -492,7 +493,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * is drawn.
      */
     private static void drawHiliteRect(final Graphics2D g2,
-            final Rectangle hiliteRect) {
+            final Rectangle2D hiliteRect) {
         if (hiliteRect != null) {
             DrawingUtils.drawBlock(g2, hiliteRect, HILITE_RECT_BGR_COLOR);
             //always draw the hilite borders to make them visible
@@ -520,7 +521,7 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
      * painted vertical otherwise it is drawn horizontal
      */
     private static void paintLabel(final Graphics2D g2,
-            final Rectangle borderRect, final double aggrVal,
+            final Rectangle2D borderRect, final double aggrVal,
             final AggregationMethod aggrMethod, final Rectangle drawingSpace,
             final boolean showVertical) {
         if (borderRect == null) {

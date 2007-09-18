@@ -27,6 +27,7 @@ package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,7 +51,7 @@ import org.knime.core.node.NodeLogger;
  * @author Tobias Koetter, University of Konstanz
  */
 public class BarDataModel extends AggregationValModel<BarElementDataModel,
-Rectangle, Rectangle>
+Rectangle2D, Rectangle2D>
 implements Serializable {
 
     private static final NodeLogger LOGGER =
@@ -60,7 +61,7 @@ implements Serializable {
 
     /**The surrounding rectangle is used to distinguish between multiple
      * selected aggregation columns.*/
-    private Rectangle m_surroundingRectangle;
+    private Rectangle2D m_surroundingRectangle;
 //    /**The bar rectangle is the main rectangle which contains the elements.*/
 //    private Rectangle m_barRectangle;
 
@@ -144,7 +145,7 @@ implements Serializable {
      * @return the {@link Rectangle} the aggregation color of this bar
      *  should be drawn on the screen
      */
-    public Rectangle getSurroundingRectangle() {
+    public Rectangle2D getSurroundingRectangle() {
         return m_surroundingRectangle;
     }
 
@@ -215,7 +216,7 @@ implements Serializable {
         setElementRectangle(baseLine, barElementColors, calculator);
     }
 
-    private void setRectangle(final Rectangle barRect, final int baseLine,
+    private void setRectangle(final Rectangle2D barRect, final int baseLine,
             final HistogramHiliteCalculator calculator) {
         setShape(barRect, calculator);
         m_surroundingRectangle =
@@ -233,13 +234,13 @@ implements Serializable {
     private void setElementRectangle(final int baseLine,
             final SortedSet<Color> barElementColors,
             final HistogramHiliteCalculator calculator) {
-        final Rectangle barRectangle = getShape();
+        final Rectangle2D barRectangle = getShape();
         if (barRectangle == null) {
             //also reset the element rectangles
             final Collection<BarElementDataModel> elements =
                 getElements();
             for (final BarElementDataModel element : elements) {
-                element.setElementRectangle(null, calculator);
+                element.setRectangle(null, calculator);
             }
             return;
         }
@@ -279,7 +280,7 @@ implements Serializable {
         return;
     }
 
-    private void setSideBySideRectangles(final Rectangle bounds,
+    private void setSideBySideRectangles(final Rectangle2D bounds,
             final SortedSet<Color> barElementColors, final double valRange,
             final AggregationMethod aggrMethod, final int baseLine,
             final HistogramHiliteCalculator calculator) {
@@ -316,7 +317,7 @@ implements Serializable {
                     BarDataModel.calculateBarRectangle(baseLine,
                             barHeight, barY, heightPerVal, aggrVal, xCoord,
                             elementWidth);
-                element.setElementRectangle(elementRect, calculator);
+                element.setRectangle(elementRect, calculator);
             }
             //add the bar width and the space between bars to the current
             //x coordinate
@@ -328,7 +329,7 @@ implements Serializable {
                 + "of class BarDataModel.");
     }
 
-    private void setStackedRectangles(final Rectangle bounds,
+    private void setStackedRectangles(final Rectangle2D bounds,
             final SortedSet<Color> barElementColors, final double valRange,
             final AggregationMethod aggrMethod,
             final HistogramHiliteCalculator calculator) {
@@ -421,7 +422,7 @@ implements Serializable {
 
                 final Rectangle elementRect =
                     new Rectangle(startX, yCoord, barWidth, elementHeight);
-                element.setElementRectangle(elementRect, calculator);
+                element.setRectangle(elementRect, calculator);
                 //add the bar height to the current y coordinate to draw
                 //the next element below the current one
                 yCoord += elementHeight;
@@ -442,7 +443,7 @@ implements Serializable {
     public void updateBarWidth(final int startX, final int newWidth,
             final SortedSet<Color> barElementColors, final int baseLine,
             final HistogramHiliteCalculator calculator) {
-        final Rectangle barRectangle = getShape();
+        final Rectangle2D barRectangle = getShape();
         if (barRectangle == null) {
             return;
         }

@@ -27,6 +27,7 @@ package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
 
 import org.knime.base.node.viz.aggregation.AggregationValSubModel;
@@ -39,8 +40,8 @@ import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.His
  * {@link org.knime.base.node.viz.histogram.datamodel.BarDataModel}.
  * @author Tobias Koetter, University of Konstanz
  */
-public class BarElementDataModel extends AggregationValSubModel <Rectangle,
-Rectangle>
+public class BarElementDataModel extends AggregationValSubModel <Rectangle2D,
+Rectangle2D>
 implements Serializable {
 
     private static final long serialVersionUID = 2537898631338523620L;
@@ -79,30 +80,15 @@ implements Serializable {
      * @return the {@link Rectangle} the element should be drawn on the
      * screen
      */
-    public Rectangle getElementRectangle() {
+    public Rectangle2D getElementRectangle() {
         return getShape();
     }
 
     /**
-     * @param elementRect the {@link Rectangle} the element should be drawn
-     * on the screen
+     * @param rect the {@link Rectangle} to set or <code>null</code>
      * @param calculator the hilite shape calculator
      */
-    protected void setElementRectangle(final Rectangle elementRect,
-            final HistogramHiliteCalculator calculator) {
-        if (elementRect == null) {
-            setRectangle(elementRect, calculator);
-        } else if (getShape() == null
-                || !getShape().equals(elementRect)) {
-            setRectangle(elementRect, calculator);
-        }
-    }
-
-    /**
-     * @param rect
-     * @param calculator the hilite shape calculator
-     */
-    private void setRectangle(final Rectangle rect,
+    protected void setRectangle(final Rectangle2D rect,
             final HistogramHiliteCalculator calculator) {
         setShape(rect, calculator);
     }
@@ -114,7 +100,7 @@ implements Serializable {
      */
     public void updateElementWidth(final int xCoord, final int elementWidth,
             final HistogramHiliteCalculator calculator) {
-        final Rectangle rectangle = getShape();
+        final Rectangle2D rectangle = getShape();
         if (rectangle == null) {
             return;
         }

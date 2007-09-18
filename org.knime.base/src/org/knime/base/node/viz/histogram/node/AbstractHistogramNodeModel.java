@@ -427,10 +427,6 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
         if (maxNoOfRows < 1) {
             setWarningMessage("Empty data table found.");
         }
-        if (maxNoOfRows < 0) {
-            throw new IllegalArgumentException(
-                    "Maximum number of rows must be a positive integer");
-        }
         final String xCol = m_xColName.getStringValue();
         m_xColSpec = m_tableSpec.getColumnSpec(xCol);
         if (m_xColSpec == null) {

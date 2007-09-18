@@ -26,7 +26,6 @@
 package org.knime.base.node.viz.histogram.datamodel;
 
 import java.awt.Color;
-import java.awt.Rectangle;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,7 +35,6 @@ import java.util.Set;
 import java.util.SortedSet;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.aggregation.HiliteShapeCalculator;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.util.BinningUtil;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
@@ -490,16 +488,14 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
             return;
         }
         final long startTime = System.currentTimeMillis();
-        final HistogramLayout layout = getHistogramLayout();
-        final HiliteShapeCalculator<Rectangle, Rectangle> calculator =
-                getHiliteCalculator();
+        final HistogramHiliteCalculator calculator = getHiliteCalculator();
         for (final BinDataModel bin : getBins()) {
             if (hilite) {
                 ((InteractiveBinDataModel)bin).setHilitedKeys(hilited,
-                        calculator, layout);
+                        calculator);
             } else {
                 ((InteractiveBinDataModel)bin).removeHilitedKeys(hilited,
-                        calculator, layout);
+                        calculator);
             }
         }
         final long endTime = System.currentTimeMillis();
