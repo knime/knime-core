@@ -25,6 +25,7 @@
 
 package org.knime.base.node.viz.pie.datamodel.fixed;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -38,6 +39,7 @@ import org.knime.base.node.viz.pie.datamodel.PieDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 
@@ -89,6 +91,28 @@ public class FixedPieDataModel extends PieDataModel {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void addDataRow(final DataRow row, final Color rowColor,
+            final DataCell pieCell, final DataCell aggrCell) {
+        if (pieCell == null) {
+            throw new NullPointerException(
+                    "Pie section value must not be null.");
+        }
+        final PieSectionDataModel section;
+        if (pieCell.isMissing()) {
+            section = getMissingSection();
+        } else {
+            section = getSection(pieCell);
+            if (section == null) {
+                throw new IllegalArgumentException("No section found for: "
+                        + pieCell.toString());
+            }
+        }
+        section.addDataRow(rowColor, row.getKey().getId(), aggrCell);
+    }
 
     /**
      * @param directory the directory to write to
@@ -177,9 +201,10 @@ public class FixedPieDataModel extends PieDataModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @param value the value to get the section for
+     * @return the{@link PieSectionDataModel} which represents the given value
+     * or <code>null</code> if no section is found for the given value
      */
-    @Override
     public PieSectionDataModel getSection(final DataCell value) {
         for (final PieSectionDataModel section : m_sections) {
             if (section.getName().equals(value.toString())) {
@@ -190,17 +215,15 @@ public class FixedPieDataModel extends PieDataModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @return the {@link PieSectionDataModel} list
      */
-    @Override
     public List<PieSectionDataModel> getSections()  {
         return Collections.unmodifiableList(m_sections);
     }
 
     /**
-     * {@inheritDoc}
+     * @return the missing {@link PieSectionDataModel}
      */
-    @Override
     public PieSectionDataModel getMissingSection()  {
         return m_missingSection;
     }

@@ -50,8 +50,8 @@ public class PieNodeView extends NodeView {
      */
     PieNodeView(final NodeModel nodeModel) {
         super(nodeModel);
-        if (!(nodeModel instanceof FixedPieNodeModel)) {
-            throw new IllegalArgumentException(NodeModel.class.getName()
+        if (!(nodeModel instanceof PieNodeModel)) {
+            throw new ClassCastException(NodeModel.class.getName()
                     + " not an instance of "
                     + FixedPieNodeModel.class.getName());
         }

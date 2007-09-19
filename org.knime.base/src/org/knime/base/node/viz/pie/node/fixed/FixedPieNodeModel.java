@@ -34,6 +34,8 @@ import org.knime.base.node.viz.pie.datamodel.fixed.FixedPieVizModel;
 import org.knime.base.node.viz.pie.node.PieNodeModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
@@ -125,7 +127,8 @@ public class FixedPieNodeModel extends PieNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void createModel(final DataColumnSpec pieColSpec) {
+    protected void createModel(final DataColumnSpec pieColSpec,
+            final DataTableSpec spec, final int noOfRows) {
         m_model = new FixedPieDataModel(pieColSpec);
     }
 
@@ -133,9 +136,8 @@ public class FixedPieNodeModel extends PieNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void addDataRow(final DataCell id, final Color rowColor,
-            final DataCell pieCell,
-            final DataCell aggrCell) {
-        m_model.addDataRow(id, rowColor, pieCell, aggrCell);
+    protected void addDataRow(final DataRow row, final Color rowColor,
+            final DataCell pieCell, final DataCell aggrCell) {
+        m_model.addDataRow(row, rowColor, pieCell, aggrCell);
     }
 }

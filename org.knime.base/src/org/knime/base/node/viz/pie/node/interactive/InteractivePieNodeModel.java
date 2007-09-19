@@ -33,6 +33,8 @@ import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieVizModel;
 import org.knime.base.node.viz.pie.node.PieNodeModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.ExecutionMonitor;
 
 
@@ -65,7 +67,8 @@ public class InteractivePieNodeModel extends PieNodeModel {
         if (m_model == null) {
             return null;
         }
-        final PieVizModel vizModel = new InteractivePieVizModel(m_model);
+        final PieVizModel vizModel = new InteractivePieVizModel(m_model,
+                getPieColumnName(), getAggregationColumnName());
         return vizModel;
     }
 
@@ -99,17 +102,17 @@ public class InteractivePieNodeModel extends PieNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void createModel(final DataColumnSpec pieColSpec) {
-        m_model = new InteractivePieDataModel(pieColSpec);
+    protected void createModel(final DataColumnSpec pieColSpec,
+            final DataTableSpec spec, final int noOfRows) {
+        m_model = new InteractivePieDataModel(spec, noOfRows);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void addDataRow(final DataCell id, final Color rowColor,
-            final DataCell pieCell,
-            final DataCell aggrCell) {
-        m_model.addDataRow(id, rowColor, pieCell, aggrCell);
+    protected void addDataRow(final DataRow row, final Color rowColor,
+            final DataCell pieCell, final DataCell aggrCell) {
+        m_model.addDataRow(row, rowColor, pieCell, aggrCell);
     }
 }

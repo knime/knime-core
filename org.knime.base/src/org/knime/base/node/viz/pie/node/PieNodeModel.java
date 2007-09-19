@@ -273,7 +273,7 @@ public abstract class PieNodeModel extends NodeModel {
         } else if (selectedNoOfRows > maxNoOfRows) {
             selectedNoOfRows = maxNoOfRows;
         }
-        createModel(pieCol);
+        createModel(pieCol, dataTable.getDataTableSpec(), selectedNoOfRows);
         final double progressPerRow = 1.0 / selectedNoOfRows;
         double progress = 0.0;
         final RowIterator rowIterator = dataTable.iterator();
@@ -288,7 +288,7 @@ public abstract class PieNodeModel extends NodeModel {
             } else {
                 aggrCell = null;
             }
-            addDataRow(row.getKey().getId(), rowColor, pieCell, aggrCell);
+            addDataRow(row, rowColor, pieCell, aggrCell);
             progress += progressPerRow;
             exec.setProgress(progress, "Adding data rows to pie chart...");
             exec.checkCanceled();
@@ -301,17 +301,20 @@ public abstract class PieNodeModel extends NodeModel {
      * Called prior the {@link #addDataRow(DataCell, Color, DataCell, DataCell)}
      * method to allow the implementing class the specific model creation.
      * @param pieColSpec the {@link DataColumnSpec} of the selected pie column
+     * @param spec the {@link DataTableSpec}
+     * @param noOfRows the expected number of rows
      */
-    protected abstract void createModel(final DataColumnSpec pieColSpec);
+    protected abstract void createModel(final DataColumnSpec pieColSpec,
+            DataTableSpec spec, final int noOfRows);
 
     /**
      * Adds the given row values to the concrete pie implementation.
-     * @param id the row key of this row
+     * @param row the row to add
      * @param rowColor the color of this row
      * @param pieCell the pie value
      * @param aggrCell the optional aggregation value
      */
-    protected abstract void addDataRow(final DataCell id, final Color rowColor,
+    protected abstract void addDataRow(final DataRow row, final Color rowColor,
             final DataCell pieCell, final DataCell aggrCell);
 
     /**
@@ -326,6 +329,20 @@ public abstract class PieNodeModel extends NodeModel {
             AggregationMethod.getMethod4Command(m_aggrMethod.getStringValue());
         vizModel.setAggregationMethod(method);
         return vizModel;
+    }
+
+    /**
+     * @return the selected pie column name
+     */
+    protected String getPieColumnName() {
+        return m_pieColumn.getStringValue();
+    }
+
+    /**
+     * @return the optional selected aggregation column name
+     */
+    protected String getAggregationColumnName() {
+        return m_aggrColumn.getStringValue();
     }
 
     /**

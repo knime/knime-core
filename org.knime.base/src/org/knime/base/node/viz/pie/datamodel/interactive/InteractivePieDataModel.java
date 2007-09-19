@@ -25,12 +25,16 @@
 
 package org.knime.base.node.viz.pie.datamodel.interactive;
 
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.knime.base.node.viz.pie.datamodel.PieDataModel;
-import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
 
 
 /**
@@ -39,45 +43,68 @@ import org.knime.core.data.DataColumnSpec;
  */
 public class InteractivePieDataModel extends PieDataModel {
 
-    private final List<PieSectionDataModel> m_sections;
+    private final DataTableSpec m_spec;
 
-    private final PieSectionDataModel m_missingSection;
+    private final List<DataRow> m_dataRows;
 
     /**Constructor for class InteractivePieDataModel.
-     * @param pieColSpec the column specification of the pie column
+     * @param spec the {@link DataTableSpec}
+     * @param noOfRows the optional number of rows to initialize the row array
      */
-    public InteractivePieDataModel(final DataColumnSpec pieColSpec) {
+    public InteractivePieDataModel(final DataTableSpec spec,
+            final int noOfRows) {
         super(true);
-        m_missingSection = createDefaultMissingSection(false);
-        m_sections = createSections(pieColSpec, false);
+        m_spec = spec;
+        m_dataRows = new ArrayList<DataRow>(noOfRows);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public PieSectionDataModel getMissingSection() {
-        return m_missingSection;
+    public void addDataRow(final DataRow row,  final Color rowColor,
+            final DataCell pieCell, final DataCell aggrCell) {
+        m_dataRows.add(row);
+    }
+
+
+    /**
+     * @return all data rows
+     */
+    public List<DataRow> getDataRows() {
+        return Collections.unmodifiableList(m_dataRows);
+    }
+
+
+    /**
+     * @return the {@link DataTableSpec}
+     */
+    public DataTableSpec getDataTableSpec() {
+        return m_spec;
     }
 
     /**
-     * {@inheritDoc}
+     * @param colName the column name to get the spec for
+     * @return the {@link DataColumnSpec} or <code>null</code> if the name is
+     * not in the spec
      */
-    @Override
-    public PieSectionDataModel getSection(final DataCell value) {
-        for (final PieSectionDataModel section : m_sections) {
-            if (section.getName().equals(value.toString())) {
-                return section;
-            }
-        }
-        return null;
+    public DataColumnSpec getColSpec(final String colName) {
+        return m_spec.getColumnSpec(colName);
     }
 
     /**
-     * {@inheritDoc}
+     * @param colName the column name to get the index for
+     * @return the index of the given column name
      */
-    @Override
-    public List<PieSectionDataModel> getSections() {
-        return m_sections;
+    public int getColIndex(final String colName) {
+        return m_spec.findColumnIndex(colName);
+    }
+
+    /**
+     * @param row the row to get the color for
+     * @return the color of this row
+     */
+    public Color getRowColor(final DataRow row) {
+        return m_spec.getRowColor(row).getColor(false, false);
     }
 }

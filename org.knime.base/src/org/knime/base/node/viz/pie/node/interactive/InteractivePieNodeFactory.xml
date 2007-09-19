@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./interactivePie.png" type="Visualizer">
-	<name>Interactive pie chart</name>	
+	<name>Pie chart (interactive)</name>	
 	<shortDescription>
 		Displays data in an interactive pie chart.
 	</shortDescription>	

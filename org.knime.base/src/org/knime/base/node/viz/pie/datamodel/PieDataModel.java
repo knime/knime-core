@@ -33,6 +33,7 @@ import java.util.Set;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.def.IntCell;
@@ -59,7 +60,7 @@ public abstract class PieDataModel {
      * @return the {@link List} of {@link PieSectionDataModel} for the
      * given column specification
      */
-    protected static List<PieSectionDataModel> createSections(
+    public static List<PieSectionDataModel> createSections(
             final DataColumnSpec pieColSpec, final boolean supportsHiliting) {
         final DataColumnDomain domain = pieColSpec.getDomain();
         if (domain == null) {
@@ -113,7 +114,7 @@ public abstract class PieDataModel {
      * @param supportHiliting <code>true</code> if hiliting is supported
      * @return the default missing section
      */
-    protected static PieSectionDataModel createDefaultMissingSection(
+    public static PieSectionDataModel createDefaultMissingSection(
             final boolean supportHiliting) {
         return new PieSectionDataModel(
                 PieVizModel.MISSING_VAL_SECTION_CAPTION,
@@ -131,14 +132,6 @@ public abstract class PieDataModel {
                 1.0f, 1.0f));
     }
 
-
-    /**
-     * @param value the value to look for
-     * @return the section which represent the given value or <code>null</code>
-     * if none exists
-     */
-    public abstract PieSectionDataModel getSection(final DataCell value);
-
     /**
      * @return <code>true</code> if hiliting is supported
      */
@@ -147,38 +140,12 @@ public abstract class PieDataModel {
     }
 
     /**
-     * @return the sections
-     */
-    public abstract List<PieSectionDataModel> getSections();
-
-    /**
-     * @return the missing section
-     */
-    public abstract PieSectionDataModel getMissingSection();
-
-    /**
      * Adds the given row values to the histogram.
-     * @param id the row key of this row
+     * @param row the data row to add
      * @param rowColor the color of this row
      * @param pieCell the pie value
      * @param aggrCell the optional aggregation value
      */
-    public void addDataRow(final DataCell id, final Color rowColor,
-            final DataCell pieCell, final DataCell aggrCell) {
-        if (pieCell == null) {
-            throw new NullPointerException(
-                    "Pie section value must not be null.");
-        }
-        final PieSectionDataModel section;
-        if (pieCell.isMissing()) {
-            section = getMissingSection();
-        } else {
-            section = getSection(pieCell);
-            if (section == null) {
-                throw new IllegalArgumentException("No section found for: "
-                        + pieCell.toString());
-            }
-        }
-        section.addDataRow(rowColor, id, aggrCell);
-    }
+    public abstract void addDataRow(final DataRow row, final Color rowColor,
+            final DataCell pieCell, final DataCell aggrCell);
 }
