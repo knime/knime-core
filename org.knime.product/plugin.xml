@@ -27,14 +27,9 @@
                name="aboutImage"
                value="icons/knime64.gif"/>
          <property
-               name="startupProgressRect"
-               value="10,10,200,20"/>
-         <property
-               name="startupForegroundColor"
-               value="000000"/>
-         <property
-               name="startupMessageRect"
-               value="0,0,200,20"/>
+               name="appName"
+               value="KNIME">
+         </property>
       </product>
    </extension>
    <extension
