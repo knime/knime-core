@@ -220,16 +220,15 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
                 Class<?> rType = JavaScriptingNodeModel.getReturnType(type);
                 JavaScriptingNodeModel.compile(exp, m_currenteSpec, rType,
                         tempFile);
-                // feature request added on 20.Sep 2007: The temp file should
-                // not be immediately deleted in case of an error to allow
-                // the user to inspect the sources (file name is shown in error
-                // dialog). We do delete it when the compilation succeeds.
-                tempFile.delete();
             } catch (CompilationFailedException cfe) {
                 throw new InvalidSettingsException(cfe.getMessage());
             } catch (IOException ioe) {
                 // do nothing, leave it up to the caller to validate the
                 // settings
+            } finally {
+                if (tempFile != null) {
+                    tempFile.delete();
+                }
             }
         }
     }
