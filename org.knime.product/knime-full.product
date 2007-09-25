@@ -46,9 +46,12 @@ Uses: Java5, GEF, Log4J
       </win>
    </launcher>
 
+
    <vm>
    </vm>
 
+   <plugins>
+   </plugins>
 
    <features>
       <feature id="org.eclipse.rcp" version="3.3.0.v20070607-8y8eE8NEbsN3X_fjWS8HPNG"/>
@@ -64,6 +67,7 @@ Uses: Java5, GEF, Log4J
       <feature id="org.knime.features.ext.r" version="1.2.0"/>
       <feature id="org.knime.features.ext.weka" version="1.2.0"/>
       <feature id="org.knime.features.wizard" version="1.2.0"/>
+      <feature id="org.knime.features.testing" version="1.2.0"/>
    </features>
 
 </product>
