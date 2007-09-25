@@ -49,14 +49,21 @@ Uses: Java5, GEF, Log4J
    <vm>
    </vm>
 
-   <plugins>
-   </plugins>
 
    <features>
+      <feature id="org.eclipse.rcp" version="3.3.0.v20070607-8y8eE8NEbsN3X_fjWS8HPNG"/>
       <feature id="org.eclipse.gef" version="3.3.0.v20070620"/>
       <feature id="org.eclipse.platform" version="3.3.0.v20070612-_19UEkLEzwsdF9jSqQ-G"/>
-      <feature id="org.eclipse.rcp" version="3.3.0.v20070607-8y8eE8NEbsN3X_fjWS8HPNG"/>
       <feature id="org.knime.features.base" version="1.2.0"/>
+      <feature id="org.knime.features.chem.types" version="1.2.0"/>
+      <feature id="org.knime.features.ext.birt" version="1.2.0"/>
+      <feature id="org.knime.features.ext.chem.cdk" version="1.2.0.BETA"/>
+      <feature id="org.knime.features.ext.chem.tools" version="1.2.0"/>
+      <feature id="org.knime.features.ext.jfreechart" version="1.2.0"/>
+      <feature id="org.knime.features.ext.jython" version="1.2.0"/>
+      <feature id="org.knime.features.ext.r" version="1.2.0"/>
+      <feature id="org.knime.features.ext.weka" version="1.2.0"/>
+      <feature id="org.knime.features.wizard" version="1.2.0"/>
    </features>
 
 </product>
