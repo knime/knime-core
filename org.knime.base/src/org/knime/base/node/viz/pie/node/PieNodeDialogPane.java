@@ -28,7 +28,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.pie.node.fixed.FixedPieNodeModel;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
@@ -39,7 +38,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * The dialog of the {@link FixedPieNodeModel} where the user can
+ * The dialog of the {@link PieNodeModel} where the user can
  * define the x column and the number of rows.
  * @author Tobias Koetter, University of Konstanz
  */
