@@ -33,7 +33,7 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
- * The node view which contains the pie chart panel.
+ * The abstract node view which contains the pie chart panel.
  *
  * @author Tobias Koetter, University of Konstanz
  * @param <P> the {@link PieProperties} implementation

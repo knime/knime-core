@@ -47,7 +47,8 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 
 /**
- *
+ * This class provides different methods which are used in multiple aggregation
+ * implementations mainly in the gui creation.
  * @author Tobias Koetter, University of Konstanz
  */
 public final class GUIUtils {

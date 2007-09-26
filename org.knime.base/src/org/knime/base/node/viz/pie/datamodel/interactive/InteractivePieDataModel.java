@@ -38,7 +38,8 @@ import org.knime.core.data.DataTableSpec;
 
 
 /**
- *
+ * This is the interactive implementation of the {@link PieDataModel} which
+ * allows hiliting and column changing.
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractivePieDataModel extends PieDataModel {

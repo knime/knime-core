@@ -40,7 +40,8 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.def.IntCell;
 
 /**
- *
+ * The abstract pie data model which provides method to hold the data which
+ * should be displayed as a pie chart.
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class PieDataModel {

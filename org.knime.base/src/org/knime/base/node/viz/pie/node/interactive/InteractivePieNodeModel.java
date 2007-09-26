@@ -40,8 +40,7 @@ import org.knime.core.node.ExecutionMonitor;
 
 
 /**
- * The NodeModel class of the interactive pie chart implementation.
- *
+ * The interactive implementation of the {@link PieNodeModel} class.
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractivePieNodeModel

@@ -33,7 +33,7 @@ import org.knime.base.node.viz.pie.impl.PieProperties;
 
 
 /**
- *
+ * The fixed implementation of the {@link PieProperties} panel.
  * @author Tobias Koetter, University of Konstanz
  */
 public class FixedPieProperties

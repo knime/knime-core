@@ -29,7 +29,8 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 
 /**
- * Enumerates all possible label display options.
+ * Enumerates all possible label display options and provides some utility
+ * functions.
  *
  * @author Tobias Koetter, University of Konstanz
  */

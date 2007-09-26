@@ -44,7 +44,8 @@ import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeLogger;
 
 /**
- *
+ * The abstract pie visualization model which provides the basic data and
+ * additional viewing option like the show section outline flag.
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class PieVizModel {

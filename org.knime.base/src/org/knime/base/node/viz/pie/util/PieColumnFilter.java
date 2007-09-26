@@ -34,7 +34,8 @@ import org.knime.core.node.util.ColumnFilter;
 
 
 /**
- *
+ * A {@link ColumnFilter} implementation that filters all columns with no
+ * valid domain and more than 250 values.
  * @author Tobias Koetter, University of Konstanz
  */
 public final class PieColumnFilter implements ColumnFilter {

@@ -48,7 +48,8 @@ import org.knime.core.data.property.ColorAttr;
 
 
 /**
- * The drawing pane implementation of the pie chart.
+ * The drawing pane implementation of the pie chart which handles the
+ * real drawing on the screen.
  * @author Tobias Koetter, University of Konstanz
  */
 public class PieDrawingPane extends AbstractDrawingPane {

@@ -43,7 +43,8 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.node.NodeLogger;
 
 /**
- *
+ * This class holds the data of a sub model which represents rows of the
+ * same color.
  * @author Tobias Koetter, University of Konstanz
  * @param <S> the shape of this sub model
  * @param <H> the optional hilite shape

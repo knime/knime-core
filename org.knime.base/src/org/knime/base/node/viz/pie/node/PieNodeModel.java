@@ -57,7 +57,7 @@ import org.knime.core.node.util.ColumnFilter;
 import org.knime.core.node.util.DataValueColumnFilter;
 
 /**
- * The basic pie chart node model class.
+ * The abstract pie chart implementation of the{@link NodeModel} class.
  * @author Tobias Koetter, University of Konstanz
  * @param <D> the {@link PieVizModel} implementation
  */

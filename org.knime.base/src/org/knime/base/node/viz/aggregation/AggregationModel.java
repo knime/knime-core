@@ -29,6 +29,8 @@ import java.awt.Color;
 import java.awt.Shape;
 
 /**
+ * This interface provides methods which are common to the aggregation model
+ * and sub model.
  *
  * @author Tobias Koetter, University of Konstanz
  * @param <S> the basic shape

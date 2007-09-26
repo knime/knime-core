@@ -55,7 +55,8 @@ import org.knime.core.node.NodeLogger;
 
 
 /**
- *
+ * The abstract pie properties panel which allows to change the different
+ * view options.
  * @author Tobias Koetter, University of Konstanz
  * @param <D> the {@link PieVizModel}
  */

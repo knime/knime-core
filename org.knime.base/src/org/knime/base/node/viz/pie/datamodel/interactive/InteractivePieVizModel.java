@@ -38,7 +38,7 @@ import org.knime.core.data.DataTableSpec;
 
 
 /**
- *
+ * This is the interactive implementation of the {@link PieVizModel}.
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractivePieVizModel extends PieVizModel {

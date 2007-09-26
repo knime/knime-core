@@ -35,7 +35,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 
 
 /**
- *
+ * The fixed implementation of the {@link PieNodeView}.
  * @author Tobias Koetter, University of Konstanz
  */
 public class FixedPieNodeView

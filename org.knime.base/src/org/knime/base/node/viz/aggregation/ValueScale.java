@@ -29,7 +29,7 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 
 /**
- *
+ * Enumeration of different value scales.
  * @author Tobias Koetter, University of Konstanz
  */
 public enum ValueScale implements ButtonGroupEnumInterface {

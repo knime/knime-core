@@ -40,7 +40,8 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
- * The interactive pie properties panel.
+ * The interactive implementation of the {@link PieProperties} panel which
+ * allows the changing of the pie and aggregation column.
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractivePieProperties

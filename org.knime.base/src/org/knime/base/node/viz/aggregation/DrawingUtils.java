@@ -41,7 +41,7 @@ import java.awt.geom.Rectangle2D;
 
 
 /**
- *
+ * Utility class that eases the drawing of different shapes.
  * @author Tobias Koetter, University of Konstanz
  */
 public final class DrawingUtils {

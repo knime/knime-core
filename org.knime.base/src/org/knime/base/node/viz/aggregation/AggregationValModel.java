@@ -45,7 +45,8 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.node.NodeLogger;
 
 /**
- *
+ * This abstract class holds the data of a particular aggregation value and its
+ * {@link AggregationValSubModel}s.
  * @author Tobias Koetter, University of Konstanz
  * @param <T> the type of the concrete sub model implementation
  * @param <S> the basic shape
