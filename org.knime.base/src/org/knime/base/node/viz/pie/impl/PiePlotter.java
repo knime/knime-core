@@ -58,7 +58,7 @@ import org.knime.core.node.property.hilite.KeyEvent;
 /**
  * The plotter implementation of the pie chart.
  * @author Tobias Koetter, University of Konstanz
- * @param <P> the {@ink PieProperties} implementation
+ * @param <P> the {@link PieProperties} implementation
  * @param <D> the {@link PieVizModel} implementation
  */
 public abstract class PiePlotter

@@ -107,10 +107,6 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
     private final SettingsModelString m_aggrColumn;
 
     /**Constructor for class PieNodeModel.
-     * @param nrDataIns
-     * @param nrDataOuts
-     * @param nrPredParamsIns
-     * @param nrPredParamsOuts
      */
     public PieNodeModel() {
         super(1, 0);
