@@ -29,7 +29,6 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.pie.node.fixed.FixedPieNodeModel;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
@@ -86,19 +85,25 @@ public class PieNodeDialogPane extends DefaultNodeSettingsPane {
                 PieNodeModel.CFGKEY_PIE_COLNAME, "");
         m_aggrColumn = new SettingsModelString(
                 PieNodeModel.CFGKEY_AGGR_COLNAME, null);
-        m_aggrColumn.setEnabled(!AggregationMethod.COUNT.equals(
-                AggregationMethod.getDefaultMethod()));
         m_aggrMethod = new SettingsModelString(PieNodeModel.CFGKEY_AGGR_METHOD,
                 AggregationMethod.getDefaultMethod().name());
-        m_aggrMethod.addChangeListener(new ChangeListener() {
+        m_aggrMethod.setEnabled(m_aggrColumn.getStringValue() != null);
+        m_aggrColumn.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                final AggregationMethod method =
-                    AggregationMethod.getMethod4Command(
-                            m_aggrMethod.getStringValue());
-                m_aggrColumn.setEnabled(
-                        !AggregationMethod.COUNT.equals(method));
+                m_aggrMethod.setEnabled(m_aggrColumn.getStringValue() != null);
             }
         });
+//      m_aggrColumn.setEnabled(!AggregationMethod.COUNT.equals(
+//      AggregationMethod.getDefaultMethod()));
+//        m_aggrMethod.addChangeListener(new ChangeListener() {
+//            public void stateChanged(final ChangeEvent e) {
+//                final AggregationMethod method =
+//                    AggregationMethod.getMethod4Command(
+//                            m_aggrMethod.getStringValue());
+//                m_aggrColumn.setEnabled(
+//                        !AggregationMethod.COUNT.equals(method));
+//            }
+//        });
 
         final DialogComponentNumber noOfRowsComp =
             new DialogComponentNumber(m_noOfRows,
@@ -112,7 +117,8 @@ public class PieNodeDialogPane extends DefaultNodeSettingsPane {
                                 PieNodeModel.PIE_COLUMN_FILTER);
         final DialogComponentColumnNameSelection aggrCols =
             new DialogComponentColumnNameSelection(m_aggrColumn,
-                    AGGR_COL_SEL_LABEL, 0, false, DoubleValue.class);
+                    AGGR_COL_SEL_LABEL, 0, false,
+                    PieNodeModel.AGGREGATION_COLUMN_FILTER);
 
         final DialogComponentButtonGroup aggrMethod =
             new DialogComponentButtonGroup(m_aggrMethod, "Aggregation method: ",

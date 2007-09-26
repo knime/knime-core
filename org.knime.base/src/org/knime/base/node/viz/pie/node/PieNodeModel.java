@@ -34,12 +34,12 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
-import org.knime.base.node.viz.pie.node.fixed.FixedPieNodeModel;
 import org.knime.base.node.viz.pie.util.PieColumnFilter;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -54,12 +54,14 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.ColumnFilter;
+import org.knime.core.node.util.DataValueColumnFilter;
 
 /**
  * The basic pie chart node model class.
  * @author Tobias Koetter, University of Konstanz
+ * @param <D> the {@link PieVizModel} implementation
  */
-public abstract class PieNodeModel extends NodeModel {
+public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(PieNodeModel.class);
@@ -90,6 +92,10 @@ public abstract class PieNodeModel extends NodeModel {
     public static final ColumnFilter PIE_COLUMN_FILTER =
             PieColumnFilter.getInstance();
 
+    /**This column filter should be used in all x column select boxes.*/
+    public static final ColumnFilter AGGREGATION_COLUMN_FILTER =
+            new DataValueColumnFilter(DoubleValue.class);
+
     private final SettingsModelIntegerBounded m_noOfRows;
 
     private final SettingsModelBoolean m_allRows;
@@ -108,41 +114,37 @@ public abstract class PieNodeModel extends NodeModel {
      */
     public PieNodeModel() {
         super(1, 0);
-        m_noOfRows =
-                new SettingsModelIntegerBounded(
-                        FixedPieNodeModel.CFGKEY_NO_OF_ROWS,
-                        FixedPieNodeModel.DEFAULT_NO_OF_ROWS, 0,
-                        Integer.MAX_VALUE);
-        m_allRows =
-                new SettingsModelBoolean(FixedPieNodeModel.CFGKEY_ALL_ROWS,
-                        false);
+        m_noOfRows = new SettingsModelIntegerBounded(CFGKEY_NO_OF_ROWS,
+                        DEFAULT_NO_OF_ROWS, 0, Integer.MAX_VALUE);
+        m_allRows = new SettingsModelBoolean(CFGKEY_ALL_ROWS, false);
         m_allRows.addChangeListener(new ChangeListener() {
 
             public void stateChanged(final ChangeEvent e) {
                 m_noOfRows.setEnabled(!m_allRows.getBooleanValue());
             }
         });
-        m_pieColumn =
-                new SettingsModelString(FixedPieNodeModel.CFGKEY_PIE_COLNAME,
-                        "");
-        m_aggrColumn =
-                new SettingsModelString(FixedPieNodeModel.CFGKEY_AGGR_COLNAME,
-                        null);
-        m_aggrColumn.setEnabled(!AggregationMethod.COUNT
-                .equals(AggregationMethod.getDefaultMethod()));
-        m_aggrMethod =
-                new SettingsModelString(FixedPieNodeModel.CFGKEY_AGGR_METHOD,
+        m_pieColumn = new SettingsModelString(CFGKEY_PIE_COLNAME, "");
+        m_aggrColumn = new SettingsModelString(CFGKEY_AGGR_COLNAME, null);
+        m_aggrMethod = new SettingsModelString(CFGKEY_AGGR_METHOD,
                         AggregationMethod.getDefaultMethod().name());
-        m_aggrMethod.addChangeListener(new ChangeListener() {
-
+        m_aggrMethod.setEnabled(m_aggrColumn.getStringValue() != null);
+        m_aggrColumn.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                final AggregationMethod method =
-                        AggregationMethod.getMethod4Command(m_aggrMethod
-                                .getStringValue());
-                m_aggrColumn
-                        .setEnabled(!AggregationMethod.COUNT.equals(method));
+                m_aggrMethod.setEnabled(m_aggrColumn.getStringValue() != null);
             }
         });
+//        m_aggrColumn.setEnabled(!AggregationMethod.COUNT
+//                .equals(AggregationMethod.getDefaultMethod()));
+//        m_aggrMethod.addChangeListener(new ChangeListener() {
+//
+//            public void stateChanged(final ChangeEvent e) {
+//                final AggregationMethod method =
+//                        AggregationMethod.getMethod4Command(m_aggrMethod
+//                                .getStringValue());
+//                m_aggrColumn
+//                        .setEnabled(!AggregationMethod.COUNT.equals(method));
+//            }
+//        });
     }
 
     /**
@@ -252,11 +254,19 @@ public abstract class PieNodeModel extends NodeModel {
                 spec.getColumnSpec(m_pieColumn.getStringValue());
         if (pieCol == null) {
             throw new IllegalArgumentException(
-                    "No column spec found for column with name: " + pieCol);
+                    "No column spec found for pie column");
         }
-        final String aggrCol = m_aggrColumn.getStringValue();
-        final int aggrColIdx = spec.findColumnIndex(aggrCol);
         final int pieColIdx = spec.findColumnIndex(pieCol.getName());
+        final String aggrColName = m_aggrColumn.getStringValue();
+        final DataColumnSpec aggrCol;
+        final int aggrColIdx;
+        if (aggrColName == null) {
+            aggrCol = null;
+            aggrColIdx = -1;
+        } else {
+            aggrCol = spec.getColumnSpec(aggrColName);
+            aggrColIdx = spec.findColumnIndex(aggrCol.getName());
+        }
         int selectedNoOfRows;
         if (m_allRows.getBooleanValue()) {
             //set the actual number of rows in the selected number of rows
@@ -273,7 +283,8 @@ public abstract class PieNodeModel extends NodeModel {
         } else if (selectedNoOfRows > maxNoOfRows) {
             selectedNoOfRows = maxNoOfRows;
         }
-        createModel(pieCol, dataTable.getDataTableSpec(), selectedNoOfRows);
+        createModel(pieCol, aggrCol, dataTable.getDataTableSpec(),
+                selectedNoOfRows);
         final double progressPerRow = 1.0 / selectedNoOfRows;
         double progress = 0.0;
         final RowIterator rowIterator = dataTable.iterator();
@@ -301,10 +312,13 @@ public abstract class PieNodeModel extends NodeModel {
      * Called prior the {@link #addDataRow(DataCell, Color, DataCell, DataCell)}
      * method to allow the implementing class the specific model creation.
      * @param pieColSpec the {@link DataColumnSpec} of the selected pie column
+     * @param aggrColSpec the {@link DataColumnSpec} of the selected
+     * aggregation column
      * @param spec the {@link DataTableSpec}
      * @param noOfRows the expected number of rows
      */
     protected abstract void createModel(final DataColumnSpec pieColSpec,
+            final DataColumnSpec aggrColSpec,
             DataTableSpec spec, final int noOfRows);
 
     /**
@@ -320,8 +334,8 @@ public abstract class PieNodeModel extends NodeModel {
     /**
      * @return the {@link PieVizModel}. Could be null.
      */
-    public PieVizModel getVizModel() {
-        final PieVizModel vizModel = getVizModelInternal();
+    public D getVizModel() {
+        final D vizModel = getVizModelInternal();
         if (vizModel == null) {
             return null;
         }
@@ -348,7 +362,7 @@ public abstract class PieNodeModel extends NodeModel {
     /**
      * @return the {@link PieVizModel}. Could be null.
      */
-    protected abstract PieVizModel getVizModelInternal();
+    protected abstract D getVizModelInternal();
 
     /**
      * {@inheritDoc}

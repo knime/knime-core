@@ -27,7 +27,6 @@ package org.knime.base.node.viz.pie.node.interactive;
 import java.awt.Color;
 import java.io.File;
 
-import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieDataModel;
 import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieVizModel;
 import org.knime.base.node.viz.pie.node.PieNodeModel;
@@ -45,7 +44,8 @@ import org.knime.core.node.ExecutionMonitor;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class InteractivePieNodeModel extends PieNodeModel {
+public class InteractivePieNodeModel
+extends PieNodeModel<InteractivePieVizModel> {
 
     private InteractivePieDataModel m_model;
 
@@ -63,12 +63,13 @@ public class InteractivePieNodeModel extends PieNodeModel {
      * {@inheritDoc}
      */
     @Override
-    public PieVizModel getVizModelInternal()  {
+    public InteractivePieVizModel getVizModelInternal()  {
         if (m_model == null) {
             return null;
         }
-        final PieVizModel vizModel = new InteractivePieVizModel(m_model,
-                getPieColumnName(), getAggregationColumnName());
+        final InteractivePieVizModel vizModel =
+            new InteractivePieVizModel(m_model, getPieColumnName(),
+                    getAggregationColumnName());
         return vizModel;
     }
 
@@ -103,7 +104,8 @@ public class InteractivePieNodeModel extends PieNodeModel {
      */
     @Override
     protected void createModel(final DataColumnSpec pieColSpec,
-            final DataTableSpec spec, final int noOfRows) {
+            final DataColumnSpec aggColSpec, final DataTableSpec spec,
+            final int noOfRows) {
         m_model = new InteractivePieDataModel(spec, noOfRows);
     }
 

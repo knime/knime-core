@@ -1,5 +1,5 @@
 /*
- * ------------------------------------------------------------------
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -20,38 +20,41 @@
  * -------------------------------------------------------------------
  *
  * History
- *   11.06.2006 (Tobias Koetter): created
+ *    21.09.2007 (Tobias Koetter): created
  */
+
 package org.knime.base.node.viz.pie.node.fixed;
 
 import org.knime.base.node.viz.pie.datamodel.fixed.FixedPieVizModel;
-import org.knime.base.node.viz.pie.node.PieNodeFactory;
-import org.knime.base.node.viz.pie.node.PieNodeModel;
+import org.knime.base.node.viz.pie.impl.PiePlotter;
+import org.knime.base.node.viz.pie.impl.fixed.FixedPiePlotter;
+import org.knime.base.node.viz.pie.impl.fixed.FixedPieProperties;
+import org.knime.base.node.viz.pie.node.PieNodeView;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 
 
 /**
- * Factory class of the fixed pie chart implementation.
+ *
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedPieNodeFactory extends PieNodeFactory<FixedPieVizModel> {
-    /**
-     * {@inheritDoc}
+public class FixedPieNodeView
+extends PieNodeView<FixedPieProperties, FixedPieVizModel> {
+
+    /**Constructor for class FixedPieNodeView.
+     * @param nodeModel the node model
      */
-    @Override
-    public PieNodeModel<FixedPieVizModel> createNodeModel() {
-        return new FixedPieNodeModel();
+    FixedPieNodeView(final NodeModel nodeModel) {
+        super(nodeModel);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        assert viewIndex == 0;
-        return new FixedPieNodeView(nodeModel);
+    protected PiePlotter<FixedPieProperties, FixedPieVizModel> getPlotter(
+            final FixedPieVizModel vizModel, final HiLiteHandler handler) {
+        final FixedPieProperties properties = new FixedPieProperties(vizModel);
+        return new FixedPiePlotter(properties, handler);
     }
-
 }

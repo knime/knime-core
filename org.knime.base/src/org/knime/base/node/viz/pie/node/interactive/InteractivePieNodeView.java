@@ -1,5 +1,5 @@
 /*
- * ------------------------------------------------------------------
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -20,40 +20,43 @@
  * -------------------------------------------------------------------
  *
  * History
- *   11.06.2006 (Tobias Koetter): created
+ *    21.09.2007 (Tobias Koetter): created
  */
+
 package org.knime.base.node.viz.pie.node.interactive;
 
 import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieVizModel;
-import org.knime.base.node.viz.pie.node.PieNodeFactory;
-import org.knime.base.node.viz.pie.node.PieNodeModel;
+import org.knime.base.node.viz.pie.impl.PiePlotter;
+import org.knime.base.node.viz.pie.impl.interactive.InteractivePiePlotter;
+import org.knime.base.node.viz.pie.impl.interactive.InteractivePieProperties;
+import org.knime.base.node.viz.pie.node.PieNodeView;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 
 
 /**
- * Factory class of the interactive pie chart implementation.
+ *
  * @author Tobias Koetter, University of Konstanz
  */
-public class InteractivePieNodeFactory
-    extends PieNodeFactory<InteractivePieVizModel> {
+public class InteractivePieNodeView
+extends PieNodeView<InteractivePieProperties, InteractivePieVizModel> {
+
+    /**Constructor for class InteractivePieNodeView.
+     * @param nodeModel the node model
+     */
+    protected InteractivePieNodeView(final NodeModel nodeModel) {
+        super(nodeModel);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public PieNodeModel<InteractivePieVizModel> createNodeModel() {
-        return new InteractivePieNodeModel();
+    protected PiePlotter<InteractivePieProperties, InteractivePieVizModel>
+    getPlotter(final InteractivePieVizModel vizModel,
+            final HiLiteHandler handler) {
+        final InteractivePieProperties properties =
+            new InteractivePieProperties(vizModel);
+        return new InteractivePiePlotter(properties, handler);
     }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        assert viewIndex == 0;
-        return new InteractivePieNodeView(nodeModel);
-    }
-
 }

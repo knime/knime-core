@@ -1,5 +1,5 @@
 /*
- * ------------------------------------------------------------------
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -20,38 +20,32 @@
  * -------------------------------------------------------------------
  *
  * History
- *   11.06.2006 (Tobias Koetter): created
+ *    23.09.2007 (Tobias Koetter): created
  */
-package org.knime.base.node.viz.pie.node.fixed;
+
+package org.knime.base.node.viz.pie.impl.fixed;
 
 import org.knime.base.node.viz.pie.datamodel.fixed.FixedPieVizModel;
-import org.knime.base.node.viz.pie.node.PieNodeFactory;
-import org.knime.base.node.viz.pie.node.PieNodeModel;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.base.node.viz.pie.impl.PiePlotter;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 
 
 /**
- * Factory class of the fixed pie chart implementation.
+ * The fixed column implementation of the pie plotter.
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedPieNodeFactory extends PieNodeFactory<FixedPieVizModel> {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PieNodeModel<FixedPieVizModel> createNodeModel() {
-        return new FixedPieNodeModel();
-    }
+public class FixedPiePlotter
+    extends PiePlotter<FixedPieProperties, FixedPieVizModel> {
 
-    /**
-     * {@inheritDoc}
+    private static final long serialVersionUID = 7346765619645092687L;
+
+    /**Constructor for class FixedPiePlotter.
+     * @param properties the properties panel
+     * @param handler the hilite handler
      */
-    @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        assert viewIndex == 0;
-        return new FixedPieNodeView(nodeModel);
+    public FixedPiePlotter(final FixedPieProperties properties,
+            final HiLiteHandler handler) {
+        super(properties, handler);
     }
 
 }

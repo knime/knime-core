@@ -28,7 +28,6 @@ package org.knime.base.node.viz.pie.datamodel;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
-import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,7 +37,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.aggregation.AggregationModel;
+import org.knime.base.node.viz.aggregation.ValueScale;
+import org.knime.base.node.viz.aggregation.util.GUIUtils;
+import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
 import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeLogger;
 
@@ -50,6 +51,7 @@ public abstract class PieVizModel {
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(PieVizModel.class);
+
     /**The number of digits to display for a label.*/
     private static final int NO_OF_LABEL_DIGITS = 2;
     /** The caption of the bar which holds all missing values. */
@@ -60,37 +62,60 @@ public abstract class PieVizModel {
      * (0.9 = 90 percent)*/
     public static final double DEFAULT_PIE_SIZE = 0.99;
     /**The minimum size of the pie drawing space in percent.
-     * (0.3 = 30 percent).
-     */
-    public static final double MINIMUM_PIE_SIZE = 0.3;
+     * (0.3 = 30 percent).*/
+    public static final double MAXIMUM_PIE_SIZE = 1.0;
+    /**The minimum size of the pie drawing space in percent.
+     * (0.3 = 30 percent).*/
+    public static final double MINIMUM_PIE_SIZE = 0.1;
     /**The margin of the label area in percent of the drawing space size.
      * (0.2 = 20 percent).*/
     public static final double LABEL_AREA_MARGIN = 0.3;
     /**The margin of the explode are in percent of the label are rectangle.
      * (0.2 = 20 percent)*/
-    public static final double EXPLODE_AREA_MARGIN = 0.1;
+    public static final double DEFAULT_EXPLODE_AREA_MARGIN = 0.1;
+    /**The minimum size of the explode margin in percent. (0.9 = 90%)*/
+    public static final double MINIMUM_EXPLODE_SIZE = 0.1;
+    /**The maximum size of the explode margin in percent. (0.9 = 90%)*/
+    public static final double MAXIMUM_EXPLODE_SIZE = 0.3;
     /**The default minimum arc angle of a pie section to draw.*/
     public static final double MINIMUM_ARC_ANGLE = 0.0001;
-    private boolean m_showEmptySections = false;
-    private boolean m_showMissingValSection = true;
+
     private Dimension m_drawingSpace;
     private AggregationMethod m_aggrMethod;
-    private boolean m_showDetails = false;
-    private boolean m_drawSectionOutline = true;
-    private boolean m_explodeSelectedSections = false;
-    private boolean m_drawAntialias = true;
-    private double m_pieSize = DEFAULT_PIE_SIZE;
+
     private final PieHiliteCalculator m_calculator =
         new PieHiliteCalculator(this);
+
+    //drawing flags and parameter
+    private boolean m_showMissingValSection = true;
+    private boolean m_showDetails = false;
+    private boolean m_drawSectionOutline = true;
+    private boolean m_explodeSelectedSections = true;
+    private boolean m_drawAntialias = true;
+    private double m_pieSize = DEFAULT_PIE_SIZE;
+    private double m_explodeSize = DEFAULT_EXPLODE_AREA_MARGIN;
+    private LabelDisplayPolicy m_labelDisplayPolicy =
+        LabelDisplayPolicy.ALL;
+    private ValueScale m_valueScale = ValueScale.PERCENT;
 
     private final boolean m_supportsHiliting;
 
     /**Constructor for class PieVizModel.
-     * @param model the data model
-     */
-    public PieVizModel(final PieDataModel model) {
-        m_supportsHiliting = model.supportsHiliting();
+     * @param supportsHiliting <code>true</code> if hiliting
+     * should be supported*/
+    public PieVizModel(final boolean supportsHiliting) {
+        m_supportsHiliting = supportsHiliting;
     }
+
+    /**
+     * @return the name of the pie column
+     */
+    public abstract String getPieColumnName();
+
+    /**
+     * @return the optional name of the aggregation column
+     */
+    public abstract String getAggregationColumnName();
 
     /**
      * @return all data sections
@@ -109,6 +134,96 @@ public abstract class PieVizModel {
         return m_calculator;
     }
 
+
+    /**
+     * @return the value scale to use
+     */
+    public ValueScale getValueScale() {
+        return m_valueScale;
+    }
+
+
+    /**
+     * @param scale the value scale to use
+     */
+    public void setValueScale(final ValueScale scale) {
+        m_valueScale = scale;
+    }
+
+    /**
+     * @param pieSize the pieSize in percent of the drawing space.
+     * (0.9 = 90 percent)
+     * @return <code>true</code> if the size has changed
+     */
+    public boolean setPieSize(final double pieSize) {
+        double size = pieSize;
+        if (size < MINIMUM_PIE_SIZE) {
+            size = MINIMUM_PIE_SIZE;
+        } else if (size > MAXIMUM_PIE_SIZE) {
+            size = MAXIMUM_PIE_SIZE;
+        }
+        if (m_pieSize == size) {
+            return false;
+        }
+        m_pieSize = size;
+        return true;
+    }
+
+    /**
+     * @return the size of the pie in percent of the drawing space
+     * (0.9 = 90 percent)
+     */
+    public double getPieSize() {
+        return m_pieSize;
+    }
+
+    /**
+     * @param expSize the explode size in percent of the drawing space
+     * (0.9 = 90%)
+     * @return <code>true</code> if the size has changed
+     */
+    public boolean setExplodeSize(final double expSize) {
+        double size = expSize;
+        if (size < MINIMUM_EXPLODE_SIZE) {
+            size = MINIMUM_EXPLODE_SIZE;
+        } else if (size > MAXIMUM_EXPLODE_SIZE) {
+            size = MAXIMUM_EXPLODE_SIZE;
+        }
+        if (m_explodeSize == size) {
+            return false;
+        }
+        m_explodeSize = size;
+        return true;
+    }
+
+
+    /**
+     * @return the explode size in percent of the drawing space (0.9 = 90%)
+     */
+    public double getExplodeSize() {
+        return m_explodeSize;
+    }
+
+    /**
+     * @param labelDisplayPolicy the label display policy
+     * @return <code>true</code> if the property has changed
+     */
+    public boolean setLabelDisplayPolicy(
+            final LabelDisplayPolicy labelDisplayPolicy) {
+        if (m_labelDisplayPolicy.equals(labelDisplayPolicy)) {
+            return false;
+        }
+        m_labelDisplayPolicy = labelDisplayPolicy;
+        return true;
+    }
+
+    /**
+     * @return the label display policy to use
+     */
+    public LabelDisplayPolicy getLabelDisplayPolicy() {
+        return m_labelDisplayPolicy;
+    }
+
     /**
      * @return <code>true</code> if a section with the missing values should
      * be displayed
@@ -120,32 +235,28 @@ public abstract class PieVizModel {
     /**
      * @param showMissingValSection <code>true</code> if the missing value
      * section should be displayed if it's available
+     * @return <code>true</code> if the property has changed
      */
-    public void setShowMissingValSection(final boolean showMissingValSection) {
+    public boolean setShowMissingValSection(
+            final boolean showMissingValSection) {
+        if (m_showMissingValSection == showMissingValSection) {
+            return false;
+        }
         m_showMissingValSection = showMissingValSection;
-    }
-
-    /**
-     * @param showEmptySections <code>true</code> if empty sections
-     * should be displayed
-     */
-    public void setShowEmptySections(final boolean showEmptySections) {
-        m_showEmptySections = showEmptySections;
-    }
-
-    /**
-     * @return <code>true</code> if the empty sections should be displayed
-     */
-    public boolean showEmptySections() {
-        return m_showEmptySections;
+        return true;
     }
 
     /**
      * @param showDetails <code>true</code> if also the sub sections should
      * be displayed
+     * @return <code>true</code> if the property has changed
      */
-    public void setShowDetails(final boolean showDetails) {
+    public boolean setShowDetails(final boolean showDetails) {
+        if (m_showDetails == showDetails) {
+            return false;
+        }
         m_showDetails = showDetails;
+        return true;
     }
 
     /**
@@ -159,9 +270,14 @@ public abstract class PieVizModel {
     /**
      * @param drawSectionOutline <code>true</code> if the section outline
      * should be drawn
+     * @return <code>true</code> if the property has changed
      */
-    public void setDrawSectionOutline(final boolean drawSectionOutline) {
+    public boolean setDrawSectionOutline(final boolean drawSectionOutline) {
+        if (m_drawSectionOutline == drawSectionOutline) {
+            return false;
+        }
         m_drawSectionOutline = drawSectionOutline;
+        return true;
     }
 
     /**
@@ -174,9 +290,14 @@ public abstract class PieVizModel {
     /**
      * @param explode <code>true</code> if selected sections should be
      * exploded drawn
+     * @return <code>true</code> if the property has changed
      */
-    public void setExplodeSelectedSections(final boolean explode) {
+    public boolean setExplodeSelectedSections(final boolean explode) {
+        if (m_explodeSelectedSections == explode) {
+            return false;
+        }
         m_explodeSelectedSections = explode;
+        return true;
     }
 
     /**
@@ -189,9 +310,14 @@ public abstract class PieVizModel {
     /**
      * @param drawAntialias <code>true</code> if the shapes should be drawn
      * using antialiasing
+     * @return <code>true</code> if the property has changed
      */
-    public void setDrawAntialias(final boolean drawAntialias) {
+    public boolean setDrawAntialias(final boolean drawAntialias) {
+        if (m_drawAntialias == drawAntialias) {
+            return false;
+        }
         m_drawAntialias = drawAntialias;
+        return true;
     }
 
     /**
@@ -211,9 +337,17 @@ public abstract class PieVizModel {
 
     /**
      * @param aggrMethod the aggrMethod to set
+     * @return <code>true</code> if the method has changed
      */
-    public void setAggregationMethod(final AggregationMethod aggrMethod) {
+    public boolean setAggregationMethod(final AggregationMethod aggrMethod) {
+        if (aggrMethod == null) {
+            throw new NullPointerException("aggrMethod must not be null");
+        }
+        if (aggrMethod.equals(m_aggrMethod)) {
+            return false;
+        }
         m_aggrMethod = aggrMethod;
+        return true;
     }
 
     /**
@@ -226,7 +360,7 @@ public abstract class PieVizModel {
         final List<PieSectionDataModel> resultList =
             new ArrayList<PieSectionDataModel>(allSections.size() + 1);
         for (final PieSectionDataModel section : allSections) {
-            if (!section.isEmpty() || m_showEmptySections) {
+            if (!section.isEmpty()) {
                 resultList.add(section);
             }
         }
@@ -239,26 +373,8 @@ public abstract class PieVizModel {
     /**
      * @return <code>true</code> if this model contains a missing section
      */
-    private boolean hasMissingSection() {
-        return getMissingSection().getRowCount() > 0;
-    }
-
-    /**
-     * @return all sub sections to draw as a unmodifiable {@link List}
-     */
-    public List<? extends AggregationModel<? extends Shape, ? extends Shape>>
-    getDrawSubSections() {
-        final List<PieSectionDataModel> sections = getSections();
-        final List<PieSubSectionDataModel> detailSections =
-            new ArrayList<PieSubSectionDataModel>(sections.size() * 2);
-        for (final PieSectionDataModel section : sections) {
-            final Collection<PieSubSectionDataModel> subSections =
-                section.getElements();
-            for (final PieSubSectionDataModel subSection : subSections) {
-                detailSections.add(subSection);
-            }
-        }
-        return Collections.unmodifiableList(detailSections);
+    public boolean hasMissingSection() {
+        return !getMissingSection().isEmpty();
     }
 
     /**
@@ -304,43 +420,6 @@ public abstract class PieVizModel {
     }
 
     /**
-     * @param pieSize the pieSize in percent of the drawing space.
-     * (0.9 = 90 percent)
-     */
-    public void setPieSize(final double pieSize) {
-        if (pieSize < MINIMUM_PIE_SIZE) {
-            m_pieSize = MINIMUM_PIE_SIZE;
-        } else if (pieSize > 100) {
-            m_pieSize = 100;
-        } else {
-            m_pieSize = pieSize;
-        }
-    }
-
-    /**
-     * @return the size of the pie in percent of the drawing space
-     * (0.9 = 90 percent)
-     */
-    public double getPieSize() {
-        return m_pieSize;
-    }
-
-    /**
-     * @return the center point of the pie
-     */
-    public Point getPieCenter() {
-        final Rectangle2D area = getLabelArea();
-        return new Point((int)area.getCenterX(), (int)area.getCenterY());
-    }
-
-    /**
-     * @return the size of the label links
-     */
-    public double getLabelLinkSize() {
-        return getExplodedArea().getWidth() * EXPLODE_AREA_MARGIN / 2;
-    }
-
-    /**
      * @return the {@link Rectangle2D} that defines the maximum surrounding of
      * the exploded sections which includes the {@link #getPieArea()} rectangle
      */
@@ -354,7 +433,7 @@ public abstract class PieVizModel {
      * by the {@link #getLabelArea()} rectangle.
      */
     public Rectangle2D getPieArea() {
-        return calculateSubRectangle(getExplodedArea(), EXPLODE_AREA_MARGIN);
+        return calculateSubRectangle(getExplodedArea(), m_explodeSize);
     }
 
     /**
@@ -375,6 +454,21 @@ public abstract class PieVizModel {
         final double rectWidth = origWidth - widthMarign;
         final double rectHeight = origHeight - heightMargin;
         return new Rectangle2D.Double(rectX, rectY, rectWidth, rectHeight);
+    }
+
+    /**
+     * @return the center point of the pie
+     */
+    public Point getPieCenter() {
+        final Rectangle2D area = getLabelArea();
+        return new Point((int)area.getCenterX(), (int)area.getCenterY());
+    }
+
+    /**
+     * @return the size of the label links
+     */
+    public double getLabelLinkSize() {
+        return getExplodedArea().getWidth() * DEFAULT_EXPLODE_AREA_MARGIN / 2;
     }
 
     /**
@@ -404,7 +498,7 @@ public abstract class PieVizModel {
         }
         final long startTime = System.currentTimeMillis();
         final PieHiliteCalculator calculator = getCalculator();
-        for (final PieSectionDataModel pieSection : getSections()) {
+        for (final PieSectionDataModel pieSection : getSections2Draw()) {
             if (hilite) {
                 pieSection.setHilitedKeys(keys, calculator);
             } else {
@@ -430,7 +524,7 @@ public abstract class PieVizModel {
      */
     public void unHiliteAll() {
         final long startTime = System.currentTimeMillis();
-        for (final PieSectionDataModel pieSection : getSections()) {
+        for (final PieSectionDataModel pieSection : getSections2Draw()) {
             pieSection.clearHilite();
         }
         if (hasMissingSection()) {
@@ -446,7 +540,7 @@ public abstract class PieVizModel {
      */
     public Set<DataCell> getSelectedKeys() {
         final Set<DataCell> keys = new HashSet<DataCell>();
-        for (final PieSectionDataModel section : getSections()) {
+        for (final PieSectionDataModel section : getSections2Draw()) {
             if (section.isSelected()) {
                 final Collection<PieSubSectionDataModel> subSections =
                     section.getElements();
@@ -464,7 +558,7 @@ public abstract class PieVizModel {
      * Clear all selections.
      */
     public void clearSelection() {
-        for (final PieSectionDataModel section : getSections()) {
+        for (final PieSectionDataModel section : getSections2Draw()) {
             section.setSelected(false);
         }
     }
@@ -476,7 +570,7 @@ public abstract class PieVizModel {
      */
     public boolean selectElement(final Point point) {
         boolean changed = false;
-        for (final PieSectionDataModel section : getSections()) {
+        for (final PieSectionDataModel section : getSections2Draw()) {
             changed = section.selectElement(point, showDetails())
             || changed;
         }
@@ -490,7 +584,7 @@ public abstract class PieVizModel {
      */
     public boolean selectElement(final Rectangle2D rect) {
         boolean changed = false;
-        for (final PieSectionDataModel section : getSections()) {
+        for (final PieSectionDataModel section : getSections2Draw()) {
             changed = section.selectElement(rect, showDetails()) || changed;
         }
         return changed;
@@ -513,13 +607,87 @@ public abstract class PieVizModel {
         }
         final String name = section.getName();
         final AggregationMethod aggrMethod = getAggregationMethod();
+        final double totalValue = getAbsAggregationValue();
         final double value = section.getAggregationValue(aggrMethod);
-        final String valuePart = aggrMethod.createLabel(value,
-                    NO_OF_LABEL_DIGITS);
+        final double scaledValue = m_valueScale.scale(value, totalValue);
+        final String valuePart = GUIUtils.createLabel(scaledValue,
+                    NO_OF_LABEL_DIGITS, aggrMethod, m_valueScale);
+        final StringBuilder buf = new StringBuilder();
         if (name != null) {
-            return name + " " + aggrMethod.getText() + ": " + valuePart;
+            buf.append(name);
+            buf.append(' ');
+            buf.append(aggrMethod.getText());
+            buf.append(' ');
         }
-        return valuePart;
+        buf.append(valuePart);
+        return buf.toString();
     }
 
+    /**
+     * @param section the main section
+     * @param subSection the sub section of interest
+     * @return the label for the sub section including some section information
+     */
+    public String createLabel(final PieSectionDataModel section,
+            final PieSubSectionDataModel subSection) {
+        if (section == null) {
+            throw new NullPointerException("Section must not be null");
+        }
+        if (subSection == null) {
+            throw new NullPointerException("subSection must not be null");
+        }
+        final String name = section.getName();
+        final AggregationMethod aggrMethod = getAggregationMethod();
+        final double value = section.getAggregationValue(aggrMethod);
+        final double totalValue = getAbsAggregationValue();
+        final double scaledValue = m_valueScale.scale(value, totalValue);
+        final String valuePart = GUIUtils.createLabel(scaledValue,
+                    NO_OF_LABEL_DIGITS, aggrMethod, m_valueScale);
+        final double subValue = subSection.getAggregationValue(aggrMethod);
+        final double scaledSubValue = m_valueScale.scale(subValue, totalValue);
+        final String subValuePart = GUIUtils.createLabel(scaledSubValue,
+                NO_OF_LABEL_DIGITS, aggrMethod, m_valueScale);
+        final StringBuilder buf = new StringBuilder();
+        if (name != null) {
+            buf.append(name);
+            buf.append(' ');
+            buf.append(aggrMethod.getText());
+            buf.append(' ');
+        }
+        buf.append(subValuePart);
+        buf.append(" of ");
+        buf.append(valuePart);
+        return buf.toString();
+    }
+
+    /**
+     * @return the HTML {@link String} with the detail information of the
+     * selected section
+     */
+    public String getHTMLDetailData() {
+        final List<PieSectionDataModel> selectedBins =
+                            getSelectedSections();
+        return GUIUtils.createHTMLDetailData(selectedBins);
+    }
+
+    /**
+     * @return a {@link List} of all selected p
+     */
+    public List<PieSectionDataModel> getSelectedSections() {
+        final List<PieSectionDataModel> sections = getSections();
+        final List<PieSectionDataModel> result =
+             new ArrayList<PieSectionDataModel>(sections.size() + 1);
+        for (final PieSectionDataModel section : sections) {
+            if (section.isSelected()) {
+                result.add(section);
+            }
+        }
+        if (hasMissingSection()) {
+            final PieSectionDataModel missingSection = getMissingSection();
+            if (missingSection.isSelected()) {
+                result.add(missingSection);
+            }
+        }
+        return result;
+    }
 }

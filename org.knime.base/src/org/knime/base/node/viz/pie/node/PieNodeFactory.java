@@ -25,6 +25,7 @@
 
 package org.knime.base.node.viz.pie.node;
 
+import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
@@ -33,14 +34,16 @@ import org.knime.core.node.NodeView;
 /**
  * Basic node factory class of all pie charts.
  * @author Tobias Koetter, University of Konstanz
+ * @param <D> the {@link PieVizModel} implementation
  */
-public abstract class PieNodeFactory extends NodeFactory {
+public abstract class PieNodeFactory<D extends PieVizModel>
+extends NodeFactory {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public abstract PieNodeModel createNodeModel();
+    public abstract PieNodeModel<D> createNodeModel();
 
     /**
      * {@inheritDoc}
@@ -54,11 +57,8 @@ public abstract class PieNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        assert viewIndex == 0;
-        return new PieNodeView(nodeModel);
-    }
+    public abstract NodeView createNodeView(final int viewIndex,
+            final NodeModel nodeModel);
 
     /**
      * {@inheritDoc}

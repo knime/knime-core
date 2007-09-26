@@ -28,7 +28,6 @@ import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.base.node.viz.pie.datamodel.fixed.FixedPieDataModel;
 import org.knime.base.node.viz.pie.datamodel.fixed.FixedPieVizModel;
 import org.knime.base.node.viz.pie.node.PieNodeModel;
@@ -48,7 +47,8 @@ import org.knime.core.node.NodeLogger;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class FixedPieNodeModel extends PieNodeModel {
+public class FixedPieNodeModel
+extends PieNodeModel<FixedPieVizModel> {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(FixedPieNodeModel.class);
 
@@ -68,11 +68,14 @@ public class FixedPieNodeModel extends PieNodeModel {
      * {@inheritDoc}
      */
     @Override
-    public PieVizModel getVizModelInternal()  {
+    public FixedPieVizModel getVizModelInternal()  {
         if (m_model == null) {
             return null;
         }
-        final PieVizModel vizModel = new FixedPieVizModel(m_model);
+        final FixedPieVizModel vizModel = new FixedPieVizModel(
+                m_model.getPieColName(), m_model.getAggrColName(),
+                m_model.getClonedSections(), m_model.getClonedMissingSection(),
+                m_model.supportsHiliting());
         return vizModel;
     }
 
@@ -128,8 +131,9 @@ public class FixedPieNodeModel extends PieNodeModel {
      */
     @Override
     protected void createModel(final DataColumnSpec pieColSpec,
+            final DataColumnSpec aggrColSpec,
             final DataTableSpec spec, final int noOfRows) {
-        m_model = new FixedPieDataModel(pieColSpec);
+        m_model = new FixedPieDataModel(pieColSpec, aggrColSpec);
     }
 
     /**

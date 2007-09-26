@@ -39,7 +39,9 @@ import org.knime.base.node.viz.pie.util.GeometryUtil;
  * @author Tobias Koetter, University of Konstanz
  */
 public class PieSectionDataModel
-extends AggregationValModel <PieSubSectionDataModel, Arc2D, Arc2D> {
+    extends AggregationValModel <PieSubSectionDataModel, Arc2D, Arc2D> {
+
+    private static final long serialVersionUID = -7650706027283786854L;
 
     /**Constructor for class PieSectionDataModel.
      * @param name the name of this section

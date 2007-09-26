@@ -25,37 +25,42 @@
 package org.knime.base.node.viz.pie.node;
 
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.base.node.viz.pie.impl.PiePlotter;
+import org.knime.base.node.viz.pie.impl.PieProperties;
 import org.knime.base.node.viz.pie.node.fixed.FixedPieNodeModel;
-import org.knime.base.node.viz.pie.plotter.PiePlotter;
-import org.knime.base.node.viz.pie.plotter.PieProperties;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * The node view which contains the pie chart panel.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @param <P> the {@link PieProperties} implementation
+ * @param <D> the {@link PieVizModel}implementation
  *
  */
-public class PieNodeView extends NodeView {
+public abstract class PieNodeView<P extends PieProperties<D>,
+D extends PieVizModel> extends NodeView {
 
-    private final PieNodeModel m_nodeModel;
+    private final PieNodeModel<D> m_nodeModel;
 
-    private PiePlotter m_plotter;
+    private PiePlotter<P, D> m_plotter;
 
     /**
      * Creates a new view instance for the histogram node.
      *
      * @param nodeModel the corresponding node model
      */
-    PieNodeView(final NodeModel nodeModel) {
+    @SuppressWarnings("unchecked")
+    protected PieNodeView(final NodeModel nodeModel) {
         super(nodeModel);
         if (!(nodeModel instanceof PieNodeModel)) {
             throw new ClassCastException(NodeModel.class.getName()
                     + " not an instance of "
                     + FixedPieNodeModel.class.getName());
         }
-        m_nodeModel = (PieNodeModel)nodeModel;
+        m_nodeModel = (PieNodeModel<D>)nodeModel;
     }
 
     /**
@@ -77,14 +82,13 @@ public class PieNodeView extends NodeView {
         if (m_plotter != null) {
             m_plotter.reset();
         }
-        final PieVizModel vizModel = m_nodeModel.getVizModel();
+        final D vizModel = m_nodeModel.getVizModel();
         if (vizModel == null) {
             setComponent(null);
             return;
         }
         if (m_plotter == null) {
-            m_plotter = new PiePlotter(new PieProperties(),
-                    m_nodeModel.getInHiLiteHandler(0));
+            m_plotter = getPlotter(vizModel, m_nodeModel.getInHiLiteHandler(0));
             if (vizModel.supportsHiliting()) {
                 // add the hilite menu to the menu bar of the node view
                 getJMenuBar().add(m_plotter.getHiLiteMenu());
@@ -98,6 +102,14 @@ public class PieNodeView extends NodeView {
             setComponent(m_plotter);
         }
     }
+
+    /**
+     * @param vizModel the pie visualization model
+     * @param handler the hilite handler
+     * @return the plotter implementation
+     */
+    protected abstract PiePlotter<P, D> getPlotter(final D vizModel,
+            final HiLiteHandler handler);
 
     /**
      * {@inheritDoc}

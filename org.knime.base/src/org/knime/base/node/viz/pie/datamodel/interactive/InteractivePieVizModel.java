@@ -34,6 +34,7 @@ import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
 
 
 /**
@@ -59,7 +60,7 @@ public class InteractivePieVizModel extends PieVizModel {
      */
     public InteractivePieVizModel(final InteractivePieDataModel model,
             final String pieColumn, final String aggrCol) {
-        super(model);
+        super(model.supportsHiliting());
         m_model = model;
         m_aggrColSpec = getColSpec(aggrCol);
         setPieColumn(pieColumn);
@@ -84,6 +85,14 @@ public class InteractivePieVizModel extends PieVizModel {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getPieColumnName() {
+        return m_pieColSpec.getName();
+    }
+
+    /**
      * @param aggrColName the optional name of the aggregation column
      * @return <code>true</code> if the name has changed
      */
@@ -99,6 +108,17 @@ public class InteractivePieVizModel extends PieVizModel {
         createSections();
         addRows2Sections();
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getAggregationColumnName() {
+        if (m_aggrColSpec == null) {
+            return null;
+        }
+        return m_aggrColSpec.getName();
     }
 
     /**
@@ -186,5 +206,12 @@ public class InteractivePieVizModel extends PieVizModel {
     @Override
     protected PieSectionDataModel getMissingSection() {
         return m_missingSection;
+    }
+
+    /**
+     * @return the {@link DataTableSpec} of the input data
+     */
+    public DataTableSpec getTableSpec() {
+        return m_model.getDataTableSpec();
     }
 }

@@ -36,7 +36,9 @@ import org.knime.base.node.viz.aggregation.AggregationValSubModel;
  * @author Tobias Koetter, University of Konstanz
  */
 public class PieSubSectionDataModel
-extends AggregationValSubModel<Arc2D, Arc2D> {
+    extends AggregationValSubModel<Arc2D, Arc2D> {
+
+    private static final long serialVersionUID = -6828514317488193272L;
 
     /**Constructor for class PieSubSectionDataModel.
      * @param color the color of this element

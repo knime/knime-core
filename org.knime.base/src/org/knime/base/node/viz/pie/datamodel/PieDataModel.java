@@ -128,8 +128,13 @@ public abstract class PieDataModel {
      */
     protected static Color generateColor(final int idx, final int size) {
         // use Color, half saturated, half bright for base color
-        return Color.getColor(null, Color.HSBtoRGB((float)idx / (float)size,
-                1.0f, 1.0f));
+        final float hue;
+        if (idx % 2 == 0) {
+            hue = ((float)(idx) / (float)size) % 1.0f;
+        } else {
+            hue = ((float)(idx - 1) / (float)size) + 0.5f % 1.0f;
+        }
+        return Color.getColor(null, Color.HSBtoRGB(hue, 1.0f, 1.0f));
     }
 
     /**

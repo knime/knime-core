@@ -138,17 +138,16 @@ public final class GeometryUtil {
     /**
      * Calculated the mid angle of the given arc.
      * @param arc the {@link Arc2D} to calculate the mid angle for
-     * @param totalValue the total value of the total circle
-     * @param value the value of this arc
      * @return the mid angle of the given arc
      */
-    public static double calculateMidAngle(final Arc2D arc,
-            final double totalValue, final double value) {
+    public static double calculateMidAngle(final Arc2D arc) {
         if (arc == null) {
             throw new NullPointerException("Arc must not be null");
         }
         final double startAngle = arc.getAngleStart();
-        final double mid = startAngle + (value / 2 * 360 / totalValue);
+        final double angle = arc.getAngleExtent();
+//        final double mid = startAngle + (value / 2 * angle / value);
+        final double mid = startAngle + angle / 2.0;
         return mid;
     }
 }

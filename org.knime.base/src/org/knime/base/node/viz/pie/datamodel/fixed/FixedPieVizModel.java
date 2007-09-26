@@ -40,14 +40,49 @@ import org.knime.base.node.viz.pie.datamodel.PieVizModel;
  */
 public class FixedPieVizModel extends PieVizModel {
 
-    private final FixedPieDataModel m_model;
+    private final String m_pieCol;
+
+    private final String m_aggrCol;
+
+    private final List<PieSectionDataModel> m_sections;
+
+    private final PieSectionDataModel m_missingSection;
 
     /**Constructor for class PieVizModel.
-     * @param model the data model
+     * @param pieCol the pie column name
+     * @param aggrCol the optional aggregation column name
+     * @param sections the sections
+     * @param missingSection the optional missing section
+     * @param supportHiliting <code>true</code> if hiliting should be supported
      */
-    public FixedPieVizModel(final FixedPieDataModel model) {
-        super(model);
-        m_model = model;
+    public FixedPieVizModel(final String pieCol, final String aggrCol,
+            final List<PieSectionDataModel> sections,
+            final PieSectionDataModel missingSection,
+            final boolean supportHiliting) {
+        super(supportHiliting);
+        if (sections == null) {
+            throw new NullPointerException("sections must not be null");
+        }
+        m_pieCol = pieCol;
+        m_aggrCol = aggrCol;
+        m_sections = sections;
+        m_missingSection = missingSection;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getPieColumnName() {
+        return m_pieCol;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getAggregationColumnName() {
+        return m_aggrCol;
     }
 
     /**
@@ -55,7 +90,7 @@ public class FixedPieVizModel extends PieVizModel {
      */
     @Override
     protected List<PieSectionDataModel> getSections() {
-        return m_model.getSections();
+        return m_sections;
     }
 
     /**
@@ -63,6 +98,6 @@ public class FixedPieVizModel extends PieVizModel {
      */
     @Override
     protected PieSectionDataModel getMissingSection() {
-        return m_model.getMissingSection();
+        return m_missingSection;
     }
 }
