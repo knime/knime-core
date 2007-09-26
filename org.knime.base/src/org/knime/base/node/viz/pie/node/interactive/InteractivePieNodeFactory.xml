@@ -3,51 +3,51 @@
 <knimeNode icon="./interactivePie.png" type="Visualizer">
 	<name>Pie chart (interactive)</name>	
 	<shortDescription>
-		Displays data in an interactive pie chart.
+		Displays data in an interactive pie chart with hiliting support.
 	</shortDescription>	
 	<fullDescription>
 		<intro>
-		<p>Displays an interactive histogram view with different viewing 
+		<p>Displays an interactive pie chart with different viewing 
 		options.</p>
 		<p>The user can change the following view properties on the fly:
 			<ol>
-			<li>X axis</li>
-			<li>Aggregation column (Y axis)</li>
+			<li>Pie column</li>
+			<li>Aggregation column</li>
 			<li>Aggregation method (count, summary, average)</li>
-			<li>Number of bins for numerical attributes (incl. empty bars, excl. 
-			missing value )</li>
-			<li>Bar size</li>
-			<li>Show empty intervals</li>
-			<li>Show missing value bar</li>
-			<li>Layout</li>			
+			<li>Pie size</li>
+			<li>Show missing value section</li>
 			<li>Zooming</li>
 			<li>...</li>
 			</ol>
-			The bars are colored in proportion to the aggregation value.
+			Each pie column value get its own colored section. 
 			Hiliting is supported.
 		</p>
-		<p>All automatically created bins, with exception to the first one, are
-		left open intervals (a,b] where a is excluded and b is included in 
-		the interval. To cover all values the first interval is a closed 
-		interval [a,b] where a and b are included.</p>
-		<p><b>Please note: This node caches all data in the main memory to 
-		provide interactive functions. In order to work with huge data sets 
-		use the "Histogram" node.</b></p>
-		<p><b>Only columns with a valid domain are available in this view.
-		To set the domain use the DomainCalculator or ColumnFilter node!</b></p>
+		<p>If the show details option is selected the pie displays also sub 
+        sections for the selected sections. A sub section represents the rows
+        colored using the color manager.</p>
+		<p><b>Only columns with a valid domain and not more than 250 distinct 
+		values are available in this view. To set the domain use the 
+		DomainCalculator or ColumnFilter node!</b></p>
 		</intro>
 		<option name="Display all rows">
-		    If selected the histogram view displays all rows of the incoming data.
+		    If selected the pie chart displays all rows of the incoming data.
 	    </option>
 	    <option name="No. of rows to display: ">
-		    Defines the number of rows to be displayed in the histogram.
+		    Defines the number of rows to be displayed in the pie chart.
 		    This option is disabled if the 'Display all rows' option is selected.
 	    </option>
-	    <option name="X column: ">
-	     	This is the column to be shown on the x axis of the histogram view.
-	     	For numerical values the number of bars can be adjusted later 
-	     	in the 'Bar settings' section of view properties.
+	    <option name="Pie column: ">
+	     	The values of this column are represent as colored section in the
+	     	pie chart. Only columns with less than 250 distinct values are 
+	     	supported.
    	    </option>
+   	    <option name="Aggregation method: ">
+            The initial aggregation method to use. Can be changed in
+            the view later on.
+        </option>
+        <option name="Aggregation column">
+            The column to calculate the aggregation values from.
+        </option>
 	</fullDescription>
 	
 	<ports>
