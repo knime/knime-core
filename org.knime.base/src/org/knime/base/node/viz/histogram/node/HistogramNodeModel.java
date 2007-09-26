@@ -28,11 +28,11 @@ import java.awt.Color;
 import java.io.File;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
+import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;

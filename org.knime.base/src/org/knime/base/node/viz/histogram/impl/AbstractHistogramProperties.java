@@ -22,7 +22,7 @@
  * History
  *   18.08.2006 (Tobias Koetter): created
  */
-package org.knime.base.node.viz.histogram;
+package org.knime.base.node.viz.histogram.impl;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -50,12 +50,14 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.aggregation.util.GUIUtils;
+import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
+import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 /**
  * Abstract class which handles the default properties like layouting.
@@ -190,7 +192,8 @@ public abstract class AbstractHistogramProperties extends
         });
         m_noOfBins.setEnabled(false);
 
-        m_aggrMethButtonGrp = createButtonGroup(AggregationMethod.values(),
+        m_aggrMethButtonGrp =
+            GUIUtils.createButtonGroup(AggregationMethod.values(),
                 new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 onSelectAggrMethod(e.getActionCommand());
@@ -225,8 +228,8 @@ public abstract class AbstractHistogramProperties extends
         m_showBarOutline = new JCheckBox(SHOW_BAR_OUTLINE_LABEL, true);
         m_showElementOutline = new JCheckBox(SHOW_ELEMENT_OUTLINE_LABEL, true);
 
-        m_labelDisplayPolicy = AbstractHistogramProperties
-                .createEnumButtonGroup(LabelDisplayPolicy.values());
+        m_labelDisplayPolicy = GUIUtils
+                .createButtonGroup(LabelDisplayPolicy.values(), null);
 
         m_labelOrientation = new ButtonGroup();
         final JRadioButton labelVertical = new JRadioButton(
@@ -239,8 +242,8 @@ public abstract class AbstractHistogramProperties extends
         labelHorizontal.setActionCommand(LABEL_ORIENTATION_HORIZONTAL);
         m_labelOrientation.add(labelHorizontal);
 
-        m_layoutDisplayPolicy = AbstractHistogramProperties
-                .createEnumButtonGroup(HistogramLayout.values());
+        m_layoutDisplayPolicy = GUIUtils
+                .createButtonGroup(HistogramLayout.values(), null);
         // The bin settings tab
         final JPanel binPanel = createBinSettingsPanel();
         addTab(BIN_AGGR_TAB_LABEL, binPanel);
@@ -258,8 +261,7 @@ public abstract class AbstractHistogramProperties extends
         if (tabSize == null) {
             tabSize = new Dimension(1, 1);
         }
-        m_detailsHtmlPane.setText(
-                AbstractHistogramVizModel.NO_ELEMENT_SELECTED_TEXT);
+        m_detailsHtmlPane.setText(GUIUtils.NO_ELEMENT_SELECTED_TEXT);
         m_detailsHtmlPane.setEditable(false);
         m_detailsHtmlPane.setBackground(getBackground());
         m_detailsScrollPane = new JScrollPane(m_detailsHtmlPane);
@@ -267,32 +269,6 @@ public abstract class AbstractHistogramProperties extends
         m_detailsPane = new JPanel();
         m_detailsPane.add(m_detailsScrollPane);
         addTab(DETAILS_TAB_LABEL, m_detailsPane);
-    }
-
-    private ButtonGroup createButtonGroup(final AggregationMethod[] elements,
-            final ActionListener l) {
-        final ButtonGroup group = new ButtonGroup();
-        boolean defaultFound = false;
-        for (final ButtonGroupEnumInterface element : elements) {
-            final JRadioButton button = new JRadioButton(element.getText());
-            button.setActionCommand(element.getActionCommand());
-            if (element.isDefault()) {
-                button.setSelected(true);
-                defaultFound = true;
-            }
-            if (element.getToolTip() != null) {
-                button.setToolTipText(element.getToolTip());
-            }
-            if (l != null) {
-                button.addActionListener(l);
-            }
-            group.add(button);
-        }
-        if (!defaultFound && group.getButtonCount() > 0) {
-            //select the first button if none is by default selected
-            group.getElements().nextElement().setSelected(true);
-        }
-        return group;
     }
 
     private Dimension getTabSize() {
@@ -321,22 +297,8 @@ public abstract class AbstractHistogramProperties extends
      */
     public void updateHTMLDetailsPanel(final String html) {
         m_detailsHtmlPane.setText(html);
-    }
-
-    /**
-     * @param props the properties to generate the buttons for
-     * @return the {@link ButtonGroup} with all properties as button
-     */
-    private static ButtonGroup createEnumButtonGroup(
-            final HistogramProperty[] props) {
-        final ButtonGroup group = new ButtonGroup();
-        for (final HistogramProperty property : props) {
-            final JRadioButton button = new JRadioButton(property.getLabel());
-            button.setActionCommand(property.getID());
-            button.setSelected(property.isDefault());
-            group.add(button);
-        }
-        return group;
+        //scroll to the top of the details pane
+        m_detailsHtmlPane.setCaretPosition(0);
     }
 
     /**
@@ -356,8 +318,8 @@ public abstract class AbstractHistogramProperties extends
         aggrLabelBox.add(Box.createHorizontalStrut(5));
         aggrLabelBox.add(Box.createHorizontalGlue());
         // the aggregation method radio button box
-        final Box aggrButtonBox = AbstractHistogramProperties
-                .createButtonGroupBox(m_aggrMethButtonGrp, true, null);
+        final Box aggrButtonBox = GUIUtils
+                .createButtonGroupBox(m_aggrMethButtonGrp, true, null, false);
         aggrButtonBox.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         final Box aggrLabelButtonBox = Box.createVerticalBox();
@@ -428,19 +390,19 @@ public abstract class AbstractHistogramProperties extends
         labelBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
                 .createEtchedBorder(), "Labels"));
         labelBox.add(Box.createHorizontalGlue());
-        final Box labelDisplayBox = AbstractHistogramProperties
-                .createButtonGroupBox(m_labelDisplayPolicy, true, null);
+        final Box labelDisplayBox = GUIUtils
+                .createButtonGroupBox(m_labelDisplayPolicy, true, null, false);
         labelBox.add(labelDisplayBox);
         labelBox.add(Box.createHorizontalGlue());
-        final Box labelOrientationBox = AbstractHistogramProperties
+        final Box labelOrientationBox = GUIUtils
                 .createButtonGroupBox(m_labelOrientation, true,
-                        LABEL_ORIENTATION_LABEL);
+                        LABEL_ORIENTATION_LABEL, false);
         labelBox.add(labelOrientationBox);
         labelBox.add(Box.createHorizontalGlue());
 
 //bar layout box
-        final Box layoutDisplayBox = AbstractHistogramProperties
-        .createButtonGroupBox(m_layoutDisplayPolicy, false, null);
+        final Box layoutDisplayBox = GUIUtils
+        .createButtonGroupBox(m_layoutDisplayPolicy, false, null, false);
         final Box binWidthBox = Box.createVerticalBox();
         // barWidthBox.setBorder(BorderFactory
         // .createEtchedBorder(EtchedBorder.RAISED));
@@ -561,39 +523,7 @@ public abstract class AbstractHistogramProperties extends
         return binPanel;
     }
 
-  private static Box createButtonGroupBox(final ButtonGroup group,
-            final boolean vertical, final String label) {
-        Box buttonBox = null;
-        if (vertical) {
-            buttonBox = Box.createVerticalBox();
-            buttonBox.add(Box.createVerticalGlue());
-            if (label != null) {
-                buttonBox.add(new JLabel(label));
-                buttonBox.add(Box.createVerticalGlue());
-            }
-        } else {
-            buttonBox = Box.createHorizontalBox();
-            buttonBox.add(Box.createHorizontalGlue());
-            if (label != null) {
-                buttonBox.add(new JLabel(label));
-                buttonBox.add(Box.createHorizontalGlue());
-            }
-        }
-
-        for (final Enumeration<AbstractButton> buttons = group.getElements();
-            buttons.hasMoreElements();) {
-            final AbstractButton button = buttons.nextElement();
-            buttonBox.add(button);
-            if (vertical) {
-                buttonBox.add(Box.createVerticalGlue());
-            } else {
-                buttonBox.add(Box.createHorizontalGlue());
-            }
-        }
-        return buttonBox;
-    }
-
-    /**
+  /**
      * Sets the label of the given slider.
      *
      * @param slider the slider to label
@@ -758,8 +688,8 @@ public abstract class AbstractHistogramProperties extends
         for (final Enumeration<AbstractButton> buttons = m_labelDisplayPolicy
                 .getElements(); buttons.hasMoreElements();) {
             final AbstractButton button = buttons.nextElement();
-            if (button.getActionCommand()
-                    .equals(vizModel.getLabelDisplayPolicy().getID())) {
+            if (button.getActionCommand().equals(
+                    vizModel.getLabelDisplayPolicy().getActionCommand())) {
                 button.setSelected(true);
             }
         }
@@ -787,7 +717,7 @@ public abstract class AbstractHistogramProperties extends
                 .getElements(); buttons.hasMoreElements();) {
             final AbstractButton button = buttons.nextElement();
             if (button.getActionCommand()
-                    .equals(vizModel.getHistogramLayout().getID())) {
+                    .equals(vizModel.getHistogramLayout().getActionCommand())) {
                 button.setSelected(true);
             }
         }

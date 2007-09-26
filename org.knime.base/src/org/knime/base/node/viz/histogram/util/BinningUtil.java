@@ -31,11 +31,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModelComparator;
 import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
+import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;

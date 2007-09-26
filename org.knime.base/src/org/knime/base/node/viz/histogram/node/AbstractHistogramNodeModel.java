@@ -37,8 +37,8 @@ import java.util.List;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
 import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;

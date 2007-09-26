@@ -22,7 +22,7 @@
  * History
  *   18.08.2006 (Tobias Koetter): created
  */
-package org.knime.base.node.viz.histogram;
+package org.knime.base.node.viz.histogram.impl;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -41,6 +41,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;

@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  */
-package org.knime.base.node.viz.histogram;
+package org.knime.base.node.viz.histogram.impl;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -38,6 +38,9 @@ import java.util.Collection;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.aggregation.DrawingUtils;
+import org.knime.base.node.viz.aggregation.util.GUIUtils;
+import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
+import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.BarDataModel;
 import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
@@ -106,18 +109,19 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
 
     /**This stroke is used to draw the rectangle around each element.*/
     private static final BasicStroke ELEMENT_SELECTED_OUTLINE_STROKE =
-        new BasicStroke(3f);
+        new BasicStroke(3f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 1,
+                new float[]{3}, 0);
 
     /**The color of the element outline.*/
     private static final Color ELEMENT_SELECTED_OUTLINE_COLOR =
-        ColorAttr.SELECTED;
+        Color.BLACK;
 
     /**This color is used to fill the hilite rectangle.*/
     private static final Color HILITE_RECT_BGR_COLOR = ColorAttr.HILITE;
 
     /**This stroke is used to draw the rectangle around the hilite rectangle.*/
     private static final BasicStroke HILITE_RECT_OUTLINE_STROKE =
-        new BasicStroke(1f);
+        new BasicStroke(1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND);
 
     /**The color of the hilite rectangle outline.*/
     private static final Color HILITE_RECT_OUTLINE_COLOR = Color.BLACK;
@@ -527,8 +531,8 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         if (borderRect == null) {
             return;
         }
-        final String label =
-            aggrMethod.createLabel(aggrVal, NO_OF_LABEL_DIGITS);
+        final String label = GUIUtils.createLabel(aggrVal, NO_OF_LABEL_DIGITS,
+                aggrMethod);
         // save the original settings
         final AffineTransform origTransform = g2.getTransform();
         final Font origFont = g2.getFont();

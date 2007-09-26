@@ -41,8 +41,9 @@ import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.aggregation.AggregationValModel;
 import org.knime.base.node.viz.aggregation.AggregationValSubModel;
 import org.knime.base.node.viz.aggregation.HiliteShapeCalculator;
+import org.knime.base.node.viz.aggregation.util.GUIUtils;
+import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
 import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.LabelDisplayPolicy;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
@@ -63,11 +64,7 @@ public abstract class AbstractHistogramVizModel {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(AbstractHistogramVizModel.class);
 
-    /**This message is displayed in the details tab if no element is selected.*/
-    public static final String NO_ELEMENT_SELECTED_TEXT =
-        "Select an element for detailed information";
-
-    /** The caption of the bar which holds all missing values. */
+     /** The caption of the bar which holds all missing values. */
     public static final String MISSING_VAL_BAR_CAPTION = "Missing_values";
 
     /** Defines the minimum width of a bin. Should be more than the base line
@@ -976,7 +973,7 @@ public abstract class AbstractHistogramVizModel {
     public String getHTMLDetailData() {
         final List<BinDataModel> selectedBins = getSelectedBins();
         if (selectedBins == null || selectedBins.size() < 1) {
-            return (NO_ELEMENT_SELECTED_TEXT);
+            return (GUIUtils.NO_ELEMENT_SELECTED_TEXT);
         }
         final StringBuilder aggrHeadBuf = new StringBuilder();
         aggrHeadBuf.append("<th>");
@@ -988,7 +985,7 @@ public abstract class AbstractHistogramVizModel {
         aggrHeadBuf.append("<th>");
         aggrHeadBuf.append(AggregationMethod.AVERAGE);
         aggrHeadBuf.append("</th>");
-        final String aggrMethodHead = aggrHeadBuf.toString();
+//        final String aggrMethodHead = aggrHeadBuf.toString();
         final StringBuilder buf = new StringBuilder();
         buf.append("<table border='1'>");
         for (final BinDataModel bin : selectedBins) {
@@ -1004,102 +1001,7 @@ public abstract class AbstractHistogramVizModel {
             if (selectedBars == null || selectedBars.size() < 1) {
                 buf.append("No bars selected");
             } else {
-                //bar table
-                buf.append("<table border='1'>");
-                for (final BarDataModel bar : selectedBars) {
-                    final String barBgColor = "#" + Integer.toHexString(
-                            bar.getColor().getRGB() & 0x00ffffff);
-                    buf.append("<tr>");
-                    buf.append("<td rowspan='2' bgcolor='");
-                    buf.append(barBgColor);
-                    buf.append("'>");
-                    buf.append("&nbsp;");
-                    buf.append("</td>");
-                    buf.append("<td bgcolor='");
-                    buf.append(barBgColor);
-                    buf.append("'>");
-                    buf.append(bar.getName());
-                    buf.append("</td>");
-                    buf.append("</tr>");
-                    buf.append("<tr>");
-                    buf.append("<td>");
-                    final Collection<BarElementDataModel> selectedElements =
-                        bar.getSelectedElements();
-                    if (selectedElements == null
-                            || selectedElements.size() < 1) {
-                        buf.append("No elements selected");
-                    } else {
-                        //element table
-                        buf.append("<table border='1'>");
-                        //display all aggregation values of the
-                        //selected element
-                        buf.append("<tr>");
-                        buf.append("<th>");
-                        buf.append("&nbsp;");
-                        buf.append("</th>");
-                        buf.append(aggrMethodHead);
-                        buf.append("</tr>");
-                        int totalCount = 0;
-                        double totalSum = 0;
-                        for (final BarElementDataModel element
-                                : selectedElements) {
-                            final String bgColor = "#" + Integer.toHexString(
-                                    element.getColor().getRGB() & 0x00ffffff);
-                            buf.append("<tr>");
-                            buf.append("<td bgcolor='");
-                            buf.append(bgColor);
-                            buf.append("'>");
-                            buf.append("&nbsp;");
-                            buf.append("</td>");
-                            final int count = (int) element.getAggregationValue(
-                                    AggregationMethod.COUNT);
-                            totalCount += count;
-                            buf.append("<td>");
-                            buf.append(count);
-                            buf.append("</td>");
-                            final double sum = element.getAggregationValue(
-                                    AggregationMethod.SUM);
-                            totalSum += sum;
-                            buf.append("<td>");
-                            buf.append(sum);
-                            buf.append("</td>");
-                            buf.append("<td>");
-                            if (count != 0) {
-                                buf.append(sum / count);
-                            } else {
-                                buf.append("&nbsp;");
-                            }
-                            buf.append("</td>");
-                            buf.append("</tr>");
-                        }
-                        if (selectedElements.size() > 1) {
-                            //the element summary row
-                            buf.append("<tr>");
-                            buf.append("<td>");
-                            buf.append("Total:");
-                            buf.append("</td>");
-                            buf.append("<td>");
-                            buf.append(totalCount);
-                            buf.append("</td>");
-                            buf.append("<td>");
-                            buf.append(totalSum);
-                            buf.append("</td>");
-                            buf.append("<td>");
-                            if (totalCount != 0) {
-                                buf.append(totalSum / totalCount);
-                            } else {
-                                buf.append("&nbsp;");
-                            }
-                            buf.append("</td>");
-                            buf.append("</tr>");
-                        }
-                        buf.append("</table>");
-                    }
-                    buf.append("</td>");
-                    buf.append("</tr>");
-                }
-                buf.append("</table>");
-                //bar table end
+                buf.append(GUIUtils.createHTMLDetailData(selectedBars));
             }
             buf.append("</td>");
             buf.append("</tr>");

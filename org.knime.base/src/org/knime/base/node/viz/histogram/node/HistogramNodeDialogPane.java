@@ -29,7 +29,7 @@ import java.awt.Dimension;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.viz.histogram.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
 import org.knime.base.node.viz.histogram.util.AggregationColumnDialogComponent;
 import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
 import org.knime.core.data.DataColumnSpec;
