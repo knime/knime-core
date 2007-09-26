@@ -187,6 +187,9 @@ public class InteractivePieProperties
 
     private static void updateColBox(final ColumnSelectionComboxBox box,
             final DataTableSpec spec, final String selection) {
+        if (box == null) {
+            return;
+        }
         try {
             //remove all action listener to avoid unnecessary calls...
             final ActionListener[] listeners = box.getActionListeners();

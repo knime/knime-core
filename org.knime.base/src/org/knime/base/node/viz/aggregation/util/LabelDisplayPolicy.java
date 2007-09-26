@@ -36,20 +36,23 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
 public enum LabelDisplayPolicy implements ButtonGroupEnumInterface {
 
     /**Display none labels at all.*/
-    NONE("none", "None", false),
+    NONE("none", "None", "Display no labels", false),
     /**Display the label of all bars..*/
-    ALL("all", "All bars", false),
+    ALL("all", "All bars", "Display all labels", false),
     /**Display the label of the selected bars.*/
-    SELECTED("selected", "Selected bars", true);
+    SELECTED("selected", "Selected elements",
+            "Display labels only for selected elements", true);
 
     private final String m_id;
     private final String m_label;
+    private final String m_toolTip;
     private final boolean m_default;
 
     private LabelDisplayPolicy(final String id, final String label,
-            final boolean isDefault) {
+            final String toolTip, final boolean isDefault) {
         m_id = id;
         m_label = label;
+        m_toolTip = toolTip;
         m_default = isDefault;
     }
 
@@ -71,7 +74,7 @@ public enum LabelDisplayPolicy implements ButtonGroupEnumInterface {
      * {@inheritDoc}
      */
     public String getToolTip() {
-        return null;
+        return m_toolTip;
     }
 
     /**

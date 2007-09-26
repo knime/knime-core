@@ -84,10 +84,10 @@ extends AbstractPlotterProperties {
     private static final String DETAILS_TAB_LABEL =
         "Details";
 
-    private static final String COLUMNS_BORDER_LABEL = "Columns:";
+    private static final String COLUMNS_BORDER_LABEL = "Columns";
 
     private static final String AGGREGATION_METHOD_LABEL =
-        "Aggregation method:";
+        "Aggregation method";
 
     private static final String AGGREGATION_METHOD_DISABLE_TOOLTIP =
         "Please select a aggregation column first";
@@ -185,17 +185,13 @@ extends AbstractPlotterProperties {
                 onSelectAggrMethod(aggrMethod);
             }
         });
-
-        // select the right radio button
+        // disable the the button group if no aggregation column is available
         final Enumeration<AbstractButton> buttons =
             m_aggrMethButtonGrp.getElements();
+        final boolean enable = vizModel.getAggregationColumnName() != null;
         while (buttons.hasMoreElements()) {
             final AbstractButton button = buttons.nextElement();
-            if (button.getActionCommand().equals(
-                    vizModel.getAggregationMethod().name())) {
-                button.setSelected(true);
-            }
-            button.setEnabled(vizModel.getAggregationColumnName() != null);
+            button.setEnabled(enable);
         }
         m_showMissingValSection = new JCheckBox(
                 SHOW_MISSING_VALUE_SECTION_LABEL,
@@ -420,7 +416,7 @@ extends AbstractPlotterProperties {
                     .equals(vizModel.getAggregationMethod().name())) {
                 button.setSelected(true);
             }
-            button.setEnabled(vizModel.showMissingValSection());
+            button.setEnabled(vizModel.getAggregationColumnName() != null);
         }
         m_explodeSelectedSections.setSelected(
                 vizModel.explodeSelectedSections());

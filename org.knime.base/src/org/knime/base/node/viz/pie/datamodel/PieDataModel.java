@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.knime.base.node.viz.aggregation.util.GUIUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -79,7 +80,8 @@ public abstract class PieDataModel {
             final int noOfVals = values.size();
             int idx = 0;
             for (final DataCell value : values) {
-                final Color color = generateColor(idx++, noOfVals);
+                final Color color =
+                    GUIUtils.generateDistinctColor(idx++, noOfVals);
                 final PieSectionDataModel section =
                     new PieSectionDataModel(value.toString(),
                         color, supportsHiliting);
@@ -97,7 +99,7 @@ public abstract class PieDataModel {
               final int range = upper - lower;
               sections = new ArrayList<PieSectionDataModel>(range);
               for (int i = lower; i <= upper; i++) {
-                  final Color color = generateColor(i, range);
+                  final Color color = GUIUtils.generateDistinctColor(i, range);
                   final PieSectionDataModel section =
                       new PieSectionDataModel(Integer.toString(i),
                           color, supportsHiliting);
@@ -119,22 +121,6 @@ public abstract class PieDataModel {
         return new PieSectionDataModel(
                 PieVizModel.MISSING_VAL_SECTION_CAPTION,
                 PieVizModel.MISSING_VAL_SECTION_COLOR, supportHiliting);
-    }
-
-    /**
-     * @param idx the current index
-     * @param size the total number of elements
-     * @return the color for the current index
-     */
-    protected static Color generateColor(final int idx, final int size) {
-        // use Color, half saturated, half bright for base color
-        final float hue;
-        if (idx % 2 == 0) {
-            hue = ((float)(idx) / (float)size) % 1.0f;
-        } else {
-            hue = ((float)(idx - 1) / (float)size) + 0.5f % 1.0f;
-        }
-        return Color.getColor(null, Color.HSBtoRGB(hue, 1.0f, 1.0f));
     }
 
     /**

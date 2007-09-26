@@ -50,6 +50,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.node.viz.aggregation.util.GUIUtils;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -60,8 +61,8 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
  * Panel is used to select the aggregation columns of a histogram node.
- * 
- * 
+ *
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public class AggregationColumnFilterPanel extends JPanel {
@@ -91,9 +92,9 @@ public class AggregationColumnFilterPanel extends JPanel {
 
     /** Add button. */
     private final JButton m_addButton;
-    
+
     /** List of DataCellColumnSpecss to keep initial ordering of DataCells. */
-    private final LinkedHashSet<DataColumnSpec> m_order = 
+    private final LinkedHashSet<DataColumnSpec> m_order =
         new LinkedHashSet<DataColumnSpec>();
 
     /** Border of the include panel, keep it so we can change the title. */
@@ -108,17 +109,17 @@ public class AggregationColumnFilterPanel extends JPanel {
     private final ColumnFilter m_columnFilter;
 
     private List<ChangeListener>m_listeners;
-    
+
     /**
      * Line border for include columns.
      */
-    private static final Border INCLUDE_BORDER = 
+    private static final Border INCLUDE_BORDER =
         BorderFactory.createLineBorder(new Color(0, 221, 0), 2);
-    
+
     /**
      * Line border for exclude columns.
      */
-    private static final Border EXCLUDE_BORDER = 
+    private static final Border EXCLUDE_BORDER =
         BorderFactory.createLineBorder(new Color(240, 0, 0), 2);
 
     /**
@@ -129,7 +130,7 @@ public class AggregationColumnFilterPanel extends JPanel {
      * @param listDimension the dimension of the list fields
      * @param filter the column filter
      */
-    public AggregationColumnFilterPanel(final String label, 
+    public AggregationColumnFilterPanel(final String label,
             final Dimension listDimension, final ColumnFilter filter) {
         m_columnFilter = filter;
 
@@ -144,12 +145,12 @@ public class AggregationColumnFilterPanel extends JPanel {
         jspExcl.setMaximumSize(listDimension);
         jspExcl.setPreferredSize(listDimension);
 
-        JPanel excludePanel = new JPanel(new BorderLayout());
+        final JPanel excludePanel = new JPanel(new BorderLayout());
         m_excludeBorder = BorderFactory.createTitledBorder(
                 EXCLUDE_BORDER, " Available columns ");
         excludePanel.setBorder(m_excludeBorder);
         excludePanel.add(jspExcl, BorderLayout.CENTER);
-        
+
                // include list
         m_inclMdl = new DefaultListModel();
         m_inclList = new JList(m_inclMdl);
@@ -160,7 +161,7 @@ public class AggregationColumnFilterPanel extends JPanel {
         jspIncl.setMinimumSize(listDimension);
         jspIncl.setMaximumSize(listDimension);
         jspIncl.setPreferredSize(listDimension);
-        JPanel includePanel = new JPanel(new BorderLayout());
+        final JPanel includePanel = new JPanel(new BorderLayout());
         m_includeBorder = BorderFactory.createTitledBorder(
                 INCLUDE_BORDER, " Aggregation columns ");
         includePanel.setBorder(m_includeBorder);
@@ -171,7 +172,7 @@ public class AggregationColumnFilterPanel extends JPanel {
         buttonPan.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 15));
         buttonPan.setLayout(new BoxLayout(buttonPan, BoxLayout.Y_AXIS));
         buttonPan.add(new JPanel());
-        
+
         m_addButton = new JButton("add >>");
         m_addButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(m_addButton);
@@ -195,7 +196,7 @@ public class AggregationColumnFilterPanel extends JPanel {
         buttonPan.add(new JPanel());
 
         buttonPan.add(new JPanel());
-        
+
 //        JPanel buttonPan2 = new JPanel(new GridLayout());
 //        Border border = BorderFactory.createTitledBorder(" Select ");
 //        buttonPan2.setBorder(border);
@@ -204,7 +205,7 @@ public class AggregationColumnFilterPanel extends JPanel {
         // adds include, button, exclude component
         final JPanel center = new JPanel(new BorderLayout());
         if (label != null) {
-            final TitledBorder mainBorder = 
+            final TitledBorder mainBorder =
                 BorderFactory.createTitledBorder(label);
             center.setBorder(mainBorder);
         }
@@ -216,7 +217,7 @@ public class AggregationColumnFilterPanel extends JPanel {
         super.add(center, BorderLayout.CENTER);
 //        super.add(includePanel, BorderLayout.CENTER);
     } // ColumnFilterPanel()
-    
+
     /**
      * {@inheritDoc}
      */
@@ -228,9 +229,9 @@ public class AggregationColumnFilterPanel extends JPanel {
         m_remButton.setEnabled(enabled);
         m_addButton.setEnabled(enabled);
     }
-    
+
     /**
-     * Adds a listener which gets informed whenever the column filtering 
+     * Adds a listener which gets informed whenever the column filtering
      * changes.
      * @param listener the listener
      */
@@ -240,7 +241,7 @@ public class AggregationColumnFilterPanel extends JPanel {
         }
         m_listeners.add(listener);
     }
-    
+
     /**
      * Removes the given listener from this filter column panel.
      * @param listener the listener.
@@ -250,9 +251,9 @@ public class AggregationColumnFilterPanel extends JPanel {
             m_listeners.remove(listener);
         }
     }
-    
+
     /**
-     * Removes all column filter change listener. 
+     * Removes all column filter change listener.
      *
      */
     public void removeAllColumnFilterChangeListener() {
@@ -260,10 +261,10 @@ public class AggregationColumnFilterPanel extends JPanel {
             m_listeners.clear();
         }
     }
-    
+
     private void fireFilteringChangedEvent() {
         if (m_listeners != null) {
-            for (ChangeListener listener : m_listeners) {
+            for (final ChangeListener listener : m_listeners) {
                 listener.stateChanged((new ChangeEvent(this)));
             }
         }
@@ -275,19 +276,20 @@ public class AggregationColumnFilterPanel extends JPanel {
      */
     protected void onRemIt() {
         // add all selected elements from the include to the exclude list
-        Object[] includes = m_inclList.getSelectedValues();
-        HashSet<DataColumnSpec> hash = new HashSet<DataColumnSpec>();
-        for (Object include : includes) {
+        final Object[] includes = m_inclList.getSelectedValues();
+        final HashSet<DataColumnSpec> hash = new HashSet<DataColumnSpec>();
+        for (final Object include : includes) {
             hash.add(((AggregationColumnIcon)include).getColumnSpec());
         }
-        for (Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
+        for (final Enumeration<?> e = m_exclMdl.elements();
+        e.hasMoreElements();) {
             hash.add((DataColumnSpec)e.nextElement());
         }
         for (int i = 0; i < includes.length; i++) {
             m_inclMdl.removeElement(includes[i]);
         }
         m_exclMdl.removeAllElements();
-        for (DataColumnSpec c : m_order) {
+        for (final DataColumnSpec c : m_order) {
             if (hash.contains(c)) {
                 m_exclMdl.addElement(c);
             }
@@ -301,12 +303,13 @@ public class AggregationColumnFilterPanel extends JPanel {
      */
     protected void onAddIt() {
         // add all selected elements from the exclude to the include list
-        Object[] excludes = m_exclList.getSelectedValues();
-        HashSet<DataColumnSpec> hash = new HashSet<DataColumnSpec>();
-        for (Object exlude : excludes) {
+        final Object[] excludes = m_exclList.getSelectedValues();
+        final HashSet<DataColumnSpec> hash = new HashSet<DataColumnSpec>();
+        for (final Object exlude : excludes) {
             hash.add((DataColumnSpec)exlude);
         }
-        for (Enumeration<?> e = m_inclMdl.elements(); e.hasMoreElements();) {
+        for (final Enumeration<?> e = m_inclMdl.elements();
+        e.hasMoreElements();) {
             hash.add(((AggregationColumnIcon)e.nextElement()).getColumnSpec());
         }
         for (int i = 0; i < excludes.length; i++) {
@@ -315,26 +318,27 @@ public class AggregationColumnFilterPanel extends JPanel {
         m_inclMdl.removeAllElements();
         int aggrColIdx = 0;
         final int noOfAggrCols = hash.size();
-        for (DataColumnSpec c : m_order) {
+        for (final DataColumnSpec c : m_order) {
             if (hash.contains(c)) {
-                final Color color = generateColor(aggrColIdx++, noOfAggrCols);
+                final Color color =
+                    GUIUtils.generateDistinctColor(aggrColIdx++, noOfAggrCols);
                 m_inclMdl.addElement(new AggregationColumnIcon(c, color));
             }
         }
         fireFilteringChangedEvent();
     }
+//
+//    private static Color generateColor(final int idx, final int size) {
+//        // use Color, half saturated, half bright for base color
+//        return Color.getColor(null, Color.HSBtoRGB((float)idx / (float)size,
+//                1.0f, 1.0f));
+//    }
 
-    private static Color generateColor(final int idx, final int size) {
-        // use Color, half saturated, half bright for base color
-        return Color.getColor(null, Color.HSBtoRGB((float)idx / (float)size,
-                1.0f, 1.0f));
-    }
-    
     /**
      * Updates this filter panel by removing all current selections from the
      * include and exclude list. The include list will contain all column names
      * from the spec afterwards.
-     * 
+     *
      * @param spec the spec to retrieve the column names from
      * @param cells an array of data cells to either include.
      */
@@ -347,7 +351,7 @@ public class AggregationColumnFilterPanel extends JPanel {
      * Updates this filter panel by removing all current selections from the
      * include and exclude list. The include list will contains all column names
      * from the specification afterwards.
-     * 
+     *
      * @param spec the specification to retrieve the column names from
      * @param incl the list of columns to include
      */
@@ -363,31 +367,31 @@ public class AggregationColumnFilterPanel extends JPanel {
                 SwingUtilities.invokeAndWait(new Runnable() {
                    public void run() {
                        updateInternal(spec, incl);
-                   } 
+                   }
                 });
-            } catch (InterruptedException ie) {
+            } catch (final InterruptedException ie) {
                 NodeLogger.getLogger(getClass()).warn(
                 "Exception while updating AggregationColumnFilterPanel.", ie);
-            } catch (InvocationTargetException ite) {
+            } catch (final InvocationTargetException ite) {
                 NodeLogger.getLogger(getClass()).warn(
                 "Exception while updating AggregationColumnFilterPanel.", ite);
             }
         }
         repaint();
     }
-    
+
     /**
      * @param spec the new <code>DataTableSpec</code>
      * @param incl all columns which should be included
      */
-    protected void updateInternal(final DataTableSpec spec, 
+    protected void updateInternal(final DataTableSpec spec,
             final Collection<? extends ColorColumn> incl) {
         m_order.clear();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
         final Set<String> inclNames = new HashSet<String>();
         if (incl != null && incl.size() > 0) {
-            for (ColorColumn colorCol : incl) {
+            for (final ColorColumn colorCol : incl) {
                 inclNames.add(colorCol.getColumnName());
             }
         }
@@ -402,8 +406,8 @@ public class AggregationColumnFilterPanel extends JPanel {
             final String c = cSpec.getName();
             m_order.add(cSpec);
             if (inclNames.contains(c)) {
-                final Color color = 
-                    generateColor(aggrColIdx++, noOfAggrCols);
+                final Color color =
+                    GUIUtils.generateDistinctColor(aggrColIdx++, noOfAggrCols);
                 m_inclMdl.addElement(
                         new AggregationColumnIcon(cSpec, color));
             } else {
@@ -414,14 +418,14 @@ public class AggregationColumnFilterPanel extends JPanel {
 
     /**
      * Returns all columns from the exclude list.
-     * 
+     *
      * @return a set of all columns from the exclude list
      */
     public Set<String> getExcludedColumnSet() {
         final Set<String> list = new LinkedHashSet<String>();
         for (int i = 0; i < m_exclMdl.getSize(); i++) {
-            Object o = m_exclMdl.getElementAt(i);
-            String cell = ((DataColumnSpec)o).getName();
+            final Object o = m_exclMdl.getElementAt(i);
+            final String cell = ((DataColumnSpec)o).getName();
             list.add(cell);
         }
         return list;
@@ -429,7 +433,7 @@ public class AggregationColumnFilterPanel extends JPanel {
 
     /**
      * Returns all columns from the include list.
-     * 
+     *
      * @return a list of all columns from the include list
      */
     public ColorColumn[] getIncludedColorNameColumns() {
@@ -439,9 +443,9 @@ public class AggregationColumnFilterPanel extends JPanel {
         final int noOfElements = m_inclMdl.getSize();
         final ColorColumn[] list = new ColorColumn[noOfElements];
         for (int i = 0; i < noOfElements; i++) {
-            AggregationColumnIcon o = 
+            final AggregationColumnIcon o =
                 (AggregationColumnIcon) m_inclMdl.getElementAt(i);
-            list[i] = new ColorColumn(o.getColor(), 
+            list[i] = new ColorColumn(o.getColor(),
                     o.getColumnSpec().getName());
         }
         return list;
@@ -451,19 +455,19 @@ public class AggregationColumnFilterPanel extends JPanel {
      * @return the total number of columns available
      */
     public int getNoOfColumns() {
-        return m_exclList.getModel().getSize() 
+        return m_exclList.getModel().getSize()
         + m_inclList.getModel().getSize();
     }
     /**
      * Returns the data type for the given cell retrieving it from the initial
      * {@link DataTableSpec}. If this name could not found, return
      * <code>null</code>.
-     * 
+     *
      * @param name the column name to get the data type for
      * @return the data type or <code>null</code>
      */
     public DataType getType(final String name) {
-        for (DataColumnSpec spec : m_order) {
+        for (final DataColumnSpec spec : m_order) {
             if (spec.getName().equals(name)) {
                 return spec.getType();
             }
@@ -473,7 +477,7 @@ public class AggregationColumnFilterPanel extends JPanel {
 
     /**
      * Sets the title of the include panel.
-     * 
+     *
      * @param title the new title
      */
     public final void setIncludeTitle(final String title) {
@@ -482,7 +486,7 @@ public class AggregationColumnFilterPanel extends JPanel {
 
     /**
      * Sets the title of the exclude panel.
-     * 
+     *
      * @param title the new title
      */
     public final void setExcludeTitle(final String title) {
@@ -491,7 +495,7 @@ public class AggregationColumnFilterPanel extends JPanel {
 
     /**
      * Setter for the original "remove" button.
-     * 
+     *
      * @param text the new button title
      */
     public void setRemoveButtonText(final String text) {
@@ -500,7 +504,7 @@ public class AggregationColumnFilterPanel extends JPanel {
 
     /**
      * Setter for the original "Add" button.
-     * 
+     *
      * @param text the new button title
      */
     public void setAddButtonText(final String text) {

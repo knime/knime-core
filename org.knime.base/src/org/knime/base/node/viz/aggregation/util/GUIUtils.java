@@ -25,6 +25,7 @@
 
 package org.knime.base.node.viz.aggregation.util;
 
+import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
 import java.util.Collection;
@@ -342,5 +343,27 @@ public final class GUIUtils {
         }
         buf.append("</table>");
         return buf.toString();
+    }
+
+    /**
+     * Generates most distinct colors for neighbor indexes.
+     * @param idx the current index
+     * @param size the total number of colors to generate
+     * @return the color for the current index
+     */
+    public static Color generateDistinctColor(final int idx, final int size) {
+        // use Color, half saturated, half bright for base color
+        final float hue;
+        if (1 / (double)size >= 0.25f) {
+            //if the offset is smaller than then the 180° skip the adding of
+            //the 180° which we add to have the sections next to each other
+            //most distinct
+            hue = ((float)(idx) / (float)size) % 1.0f;
+        } else if (idx % 2 == 0) {
+            hue = ((float)(idx) / (float)size) % 1.0f;
+        } else {
+            hue = ((float)(idx - 1) / (float)size) + 0.5f % 1.0f;
+        }
+        return Color.getColor(null, Color.HSBtoRGB(hue, 1.0f, 1.0f));
     }
 }
