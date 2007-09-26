@@ -68,8 +68,7 @@ public interface AggregationModel<S, H extends Shape> {
     public boolean isPresentable();
 
     /**
-     * @return <code>true</code> if one of the sub elements of this
-     * element is selected
+     * @return <code>true</code> if this element is selected
      */
     public boolean isSelected();
 

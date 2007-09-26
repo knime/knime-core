@@ -29,6 +29,10 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
@@ -36,6 +40,7 @@ import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.NodeLogger;
 
 /**
  *
@@ -45,7 +50,8 @@ import org.knime.core.data.DoubleValue;
  */
 public abstract class AggregationValSubModel <S extends Shape, H extends Shape>
 implements Serializable, AggregationModel<S, H> {
-
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(AggregationValSubModel.class);
     private final Color m_color;
     private final boolean m_supportHiliting;
     private double m_aggrSum = 0;
@@ -402,5 +408,38 @@ implements Serializable, AggregationModel<S, H> {
         if (supportsHiliting()) {
             setHiliteShape(calculator.calculateHiliteShape(this));
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected AggregationValSubModel <S, H> clone()
+    throws CloneNotSupportedException {
+        LOGGER.debug("Entering clone() of class AggregationValSubModel.");
+        final long startTime = System.currentTimeMillis();
+        AggregationValSubModel <S, H> clone =
+            null;
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            new ObjectOutputStream(baos).writeObject(this);
+            final ByteArrayInputStream bais =
+                new ByteArrayInputStream(baos.toByteArray());
+            clone = (AggregationValSubModel <S, H>)
+            new ObjectInputStream(bais).readObject();
+        } catch (final Exception e) {
+            final String msg =
+                "Exception while cloning aggregation value sub model: "
+                + e.getMessage();
+              LOGGER.debug(msg);
+              throw new CloneNotSupportedException(msg);
+        }
+
+        final long endTime = System.currentTimeMillis();
+        final long durationTime = endTime - startTime;
+        LOGGER.debug("Time for cloning. " + durationTime + " ms");
+        LOGGER.debug("Exiting clone() of class AggregationValSubModel.");
+        return clone;
     }
 }

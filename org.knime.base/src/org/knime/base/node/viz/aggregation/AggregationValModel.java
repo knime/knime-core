@@ -29,13 +29,20 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.Shape;
 import java.awt.geom.Rectangle2D;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.NodeLogger;
 
 /**
  *
@@ -47,7 +54,8 @@ import org.knime.core.data.DoubleValue;
 public abstract class AggregationValModel
 <T extends AggregationValSubModel<S, H>, S extends Shape, H extends Shape>
 implements Serializable, AggregationModel<S, H> {
-
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(AggregationValModel.class);
     private final String m_name;
 
     private final Color m_color;
@@ -178,6 +186,19 @@ implements Serializable, AggregationModel<S, H> {
     }
 
     /**
+     * @return all selected sub elements of this element
+     */
+    public List<T> getSelectedElements() {
+        final List<T> result = new ArrayList<T>(m_elements.size());
+        for (final T element : m_elements.values()) {
+            if (element.isSelected()) {
+                result.add(element);
+            }
+        }
+        return result;
+    }
+
+    /**
      * @return the number of sub elements
      */
     public int getNoOfElements() {
@@ -237,7 +258,7 @@ implements Serializable, AggregationModel<S, H> {
      */
     public void setShape(final S shape,
             final HiliteShapeCalculator<S, H> calculator) {
-        if (m_shape == null) {
+        if (shape == null) {
             m_presentable = false;
         } else {
             m_presentable = true;
@@ -308,6 +329,8 @@ implements Serializable, AggregationModel<S, H> {
             //elements we have to select all elements
             //of this element
             if (!detailed || !isPresentable()) {
+                //select all sub element if the detail mode is of or
+                //the element wasn't selected yet
                 for (final T element : getElements()) {
                     element.setSelected(true);
                 }
@@ -332,10 +355,12 @@ implements Serializable, AggregationModel<S, H> {
     public boolean selectElement(final Rectangle2D rect,
             final boolean detailed) {
         if (m_shape != null && m_shape.intersects(rect)) {
-            //          if the element is to small to draw the different
+            //if the element is to small to draw the different
             //elements we have to select all elements
             //of this element
             if (!detailed || !isPresentable()) {
+                //select all sub element if the detail mode is of or
+                //the element wasn't selected yet
                 for (final T element : getElements()) {
                     element.setSelected(true);
                 }
@@ -465,5 +490,38 @@ implements Serializable, AggregationModel<S, H> {
             setHiliteShape(calculator.calculateHiliteShape(
                 (AggregationValModel<AggregationValSubModel<S, H>, S, H>)this));
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected AggregationValModel <T, S , H> clone()
+        throws CloneNotSupportedException {
+        LOGGER.debug("Entering clone() of class AggregationValModel.");
+        final long startTime = System.currentTimeMillis();
+        AggregationValModel <T, S , H> clone =
+            null;
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            new ObjectOutputStream(baos).writeObject(this);
+            final ByteArrayInputStream bais =
+                new ByteArrayInputStream(baos.toByteArray());
+            clone = (AggregationValModel <T, S , H>)
+                new ObjectInputStream(bais).readObject();
+        } catch (final Exception e) {
+            final String msg =
+                "Exception while cloning aggregation value model: "
+                + e.getMessage();
+              LOGGER.debug(msg);
+              throw new CloneNotSupportedException(msg);
+        }
+
+        final long endTime = System.currentTimeMillis();
+        final long durationTime = endTime - startTime;
+        LOGGER.debug("Time for cloning. " + durationTime + " ms");
+        LOGGER.debug("Exiting clone() of class AggregationValModel.");
+        return clone;
     }
 }

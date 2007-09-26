@@ -36,6 +36,7 @@ import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.geom.Arc2D;
 import java.awt.geom.Rectangle2D;
 
 
@@ -140,9 +141,9 @@ public final class DrawingUtils {
 
 
     /**
-     * Draws a filled shape without a border.
+     * Draws the outline of the shape.
      * @param g2 the graphic object
-     * @param shape the shape to fill
+     * @param shape the shape to draw
      * @param paint the filling color or TexturePaint
      * @param stroke the {@link Stroke} to use
      */
@@ -157,6 +158,30 @@ public final class DrawingUtils {
         g2.setStroke(stroke);
         g2.setPaint(paint);
         g2.draw(shape);
+        //set the old settings
+        g2.setPaint(origPaint);
+        g2.setStroke(origStroke);
+    }
+
+    /**
+     * Draws the outline of the given arc.
+     * @param g2 the graphic object
+     * @param arc the arc to draw
+     * @param paint the filling color or TexturePaint
+     * @param stroke the {@link Stroke} to use
+     */
+    public static void drawArc(final Graphics2D g2, final Arc2D arc,
+            final Paint paint, final BasicStroke stroke) {
+        if (arc == null) {
+            return;
+        }
+        final Arc2D outlineArc = calculateBorderArc(arc, stroke);
+        // save the original settings
+        final Paint origPaint = g2.getPaint();
+        final Stroke origStroke = g2.getStroke();
+        g2.setStroke(stroke);
+        g2.setPaint(paint);
+        g2.draw(outlineArc);
         //set the old settings
         g2.setPaint(origPaint);
         g2.setStroke(origStroke);
@@ -213,4 +238,29 @@ public final class DrawingUtils {
             new Rectangle(newX, newY, newWidth, newHeight);
         return strokeRect;
     }
+
+    /**
+     * Calculates the size of the arc with the given stroke.
+     * @param arc the original size of the arc
+     * @param stroke the stroke which will be used to draw the arc
+     * @return the {@link Arc2D} to draw
+     */
+    public static Arc2D calculateBorderArc(final Arc2D arc,
+            final BasicStroke stroke) {
+        return arc;
+//        final int width = (int)stroke.getLineWidth();
+//        if (width <= 1) {
+//            return arc;
+//        }
+//        final int halfStrokeWidth = width / 2;
+//        final Rectangle origBounds = arc.getBounds();
+//        final Rectangle bounds = new Rectangle(origBounds.x + halfStrokeWidth,
+//                origBounds.y + halfStrokeWidth, origBounds.width - width,
+//                origBounds.height - width);
+//        final double origStart = arc.getAngleStart();
+//        final double origAngle = arc.getAngleExtent();
+//
+//        return new Arc2D.Double(bounds, origStart, origAngle, Arc2D.PIE);
+    }
+
 }
