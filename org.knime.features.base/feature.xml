@@ -337,12 +337,6 @@ terms of this License.
          version="0.0.0"/>
 
    <plugin
-         id="org.knime.product"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"/>
-
-   <plugin
          id="org.knime.workbench.help"
          download-size="0"
          install-size="0"
