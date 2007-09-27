@@ -87,7 +87,6 @@ public abstract class PieDataModel {
                     new PieSectionDataModel(value.toString(),
                         color, supportsHiliting);
                 sections.add(section);
-
             }
         } else if (pieColSpec.getType().isCompatible(IntValue.class)) {
               if (domain.getLowerBound() == null
