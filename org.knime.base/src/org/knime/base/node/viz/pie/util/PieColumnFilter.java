@@ -42,7 +42,10 @@ public final class PieColumnFilter implements ColumnFilter {
 
     private static PieColumnFilter instance;
 
-    private static final int MAX_NO_OF_SECTIONS = 250;
+    /**
+     * Maximum number of distinct values.
+     */
+    public static final int MAX_NO_OF_SECTIONS = 360;
 
     private PieColumnFilter() {
         //avoid object creation
@@ -75,6 +78,17 @@ public final class PieColumnFilter implements ColumnFilter {
             throw new NullPointerException(
                     "Column specification must not be null");
         }
+        return validDomain(colSpec);
+    }
+
+    /**
+     * @param colSpec the {@link DataColumnSpec} to validate
+     * @return <code>true</code> if the column specification is valid
+     */
+    public static final boolean validDomain(final DataColumnSpec colSpec) {
+        if (colSpec == null) {
+            throw new NullPointerException("colSpec must not be null");
+        }
         final DataColumnDomain domain = colSpec.getDomain();
         if (domain == null) {
             return false;
@@ -96,5 +110,4 @@ public final class PieColumnFilter implements ColumnFilter {
           }
         return false;
     }
-
 }

@@ -217,6 +217,9 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
             throw new InvalidSettingsException(
                     "No column spec found for column with name: " + colName);
         }
+        if (!PieColumnFilter.validDomain(pieCol)) {
+            throw new InvalidSettingsException("No valid pie column selected.");
+        }
         final AggregationMethod method =
                 AggregationMethod.getMethod4Command(m_aggrMethod
                         .getStringValue());

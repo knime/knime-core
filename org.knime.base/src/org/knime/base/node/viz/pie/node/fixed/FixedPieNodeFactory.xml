@@ -34,7 +34,7 @@
         </option>
         <option name="Pie column: ">
             The values of this column are represent as colored section in the
-            pie chart. Only columns with less than 250 distinct values are 
+            pie chart. Only columns with less than 360 distinct values are 
             supported.
         </option>
         <option name="Aggregation method: ">
