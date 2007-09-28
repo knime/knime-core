@@ -84,7 +84,9 @@ pane, and that allow the user to enter values. These values can be
 easily
 retrieved in the <code>NodeModel</code> then. There
 is no way (and no need) to layout these components - they will
-automatically show in the dialog below each other, in the order they
+automatically show in the dialog below each other (or next to each
+other, depending on the currently active orientation, see <a href="#placement">setHorizontalPlacement</a>), in the
+order they
 have been added. You can surround them with a border to make the dialog
 look nicer and you can create new tabs to organize them. But that's all.<br>
 
@@ -656,6 +658,43 @@ finishes.<br>
 
 <br>
 
+<span style="font-weight: bold;">Use static create-methods
+to instantiate SettingsModels</span>: <br>
+
+Because you
+need instances of identical SettingsModels in two places (in the
+NodeModel and the NodeDialog constructor) it is probably a good idea to
+implement static methods that create these instances and to just call
+these methods in both places. For example, add the following method to
+your NodeModel:<br>
+
+<tt>static SettingsModelIntegerBounded createRangeSettingsModel()
+{<br>
+
+&nbsp; &nbsp; return new SettingsModelIntegerBounded("Range",
+4, 1,
+17);<br>
+
+}<br>
+
+</tt>Now, your dialog constructor looks like:<br>
+
+<tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+addDialogComponent(new
+DialogComponentNumber(MyNodeModel.createRangeSettingsModel());<br>
+
+</tt>and the node model:<br>
+
+<tt>&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp; private final
+SettingsModelIntegerBounded m_intBounded = createRangeSettingsModel();</tt><br>
+
+The code is simpler, and more importantly, it is ensured that
+you really use the same SettingsModels with the same parameters and
+same IDs.<br>
+
+<br>
+
 <br>
 
 <span style="font-weight: bold;"><a name="table"></a>Table
@@ -889,7 +928,7 @@ combobox is not editable.</td>
 select box is not editable.</td>
 
     </tr>
-        
+
     <tr>
 
       <td><img style="width: 159px; height: 57px;" alt="ScreenShot DlgComp buttonGroup" src="buttonGroup.png"></td>
@@ -900,8 +939,8 @@ select box is not editable.</td>
 
       <td>String getStringValue()</td>
 
-      <td>The user can choose one option. The action command of the selected
-      RadioButton is stored in the SettingsModelString.</td>
+      <td>The user can choose one option. The action command of
+the selected RadioButton is stored in the SettingsModelString.</td>
 
     </tr>
 
@@ -972,16 +1011,17 @@ be unique. <br>
 
 <br>
 
-<span style="font-weight: bold;"><a name="newtabs"></a>Placement of dialog 
-components</span><br>
+<span style="font-weight: bold;"><a name="placement"></a>Placement
+of dialog components</span><br>
 
 <br>
 
-The placement (horizontal/vertical) of the dialog components can be 
-changed by calling <code>setHorizontalPlacement(boolean)</code>. If set
-to <code>true</code> the next components will be added next to each other. 
-If set to <code>false</code> the next component is place below the previous 
-one.<br>
+The placement (horizontal/vertical) of the dialog components can be
+changed by calling <code>setHorizontalPlacement(boolean)</code>.
+If set
+to <code>true</code> the next components will be added
+next to each other. If set to <code>false</code> the next
+component is place below the previous one.<br>
 
 <br>
 
@@ -993,7 +1033,8 @@ DialogComponents in a custom NodeDialogPane</span><br>
 The provided DefaultNodeSettingsPane is a convenient way to build
 simple dialogs without the need to implement any additional methods or
 arranging components. Its layout is very restricted though, components
-can be&nbsp;arranged only below each other. If you need a more
+can be&nbsp;arranged only below/next to each other. If you need a
+more
 complex dialog with a different layout, you need to create your own
 swing panel (directly derived from <code>NodeDialogPane</code>).
 You can still use
@@ -1001,9 +1042,10 @@ the
 DialogComponents, arrange them in your custom panel and benefit from
 their loading and saving capabilities: Each component provides a <code>getComponentPanel()</code>
 method that returns the panel holding the component. This panel can be
-placed into your dialog pane. In the dialog's loadSettingsFrom and
-saveSettingsTo methods, you need to call the component's
-loadSettingsFrom and saveSettingsTo respectively. The usage of the
+placed into your dialog pane. In the dialog's <tt>loadSettingsFrom</tt> and
+<tt>saveSettingsTo</tt> methods, you need to call the component's
+<tt>loadSettingsFrom</tt> and <tt>saveSettingsTo</tt>
+respectively. The usage of the
 corresponding <code>SettingsModels</code> in the <code>NodeModel</code>
 is the same as if they
 were used in a <code>DefaultNodeSettingsPane</code>.<br>
@@ -1058,10 +1100,13 @@ A</span>: That's how the Nodes in KNIME are designed. The
 know it's dialog, and vice versa. Values are transfered through
 settings objects. You need to implement a mechanism to store and load
 your current settings anyway - we re-use it to transfer the current
-values into the dialog. Also, the <code>NodeModel</code> must be able to reject
-invalid/inconsistent&nbsp;values (in the <code>validateSettings</code> method).
+values into the dialog. Also, the <code>NodeModel</code>
+must be able to reject
+invalid/inconsistent&nbsp;values (in the <code>validateSettings</code>
+method).
 If we would have only one object, the invalid settings would be set to
-let the <code>NodeModel</code> validate them&nbsp;and canceling the dialog then
+let the <code>NodeModel</code> validate them&nbsp;and
+canceling the dialog then
 would leave these&nbsp; invalid or inconsistent values in the
 <code>NodeModel</code>.<br>
 
