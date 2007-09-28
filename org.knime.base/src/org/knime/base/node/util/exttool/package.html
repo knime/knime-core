@@ -1,0 +1,58 @@
+<!--
+====================================================================
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany.
+ * Chair for Bioinformatics and Information Mining
+ * Prof. Dr. Michael R. Berthold
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+====================================================================
+-->
+<body>
+	Provides functionality for nodes that want to launch external programs.<br />
+	The {@link org.knime.base.node.util.exttool.CommandExecution CommandExecution}
+	can be used	to run the external program. It will pick up its output (to 
+	standard out and to standard error out), log it to the log file, and keep 
+	the last 500 lines in two buffers. It will try to destroy the process if the
+	user cancels (through the execution context). And it will return the exit 
+	code from the external program.<br />
+	The two views provided display a text field and react to 
+	{@link org.knime.base.node.util.exttool.ViewUpdateNotice ViewUpdateNotice}
+	events. One is meant to display output to standard error, the other to 
+	standard output.<br />
+	The provided NodeModel is meant to clue it all together, and here is how:
+	Create your own NodeModel by extending  
+	{@link org.knime.base.node.util.exttool.ExtToolOutputNodeModel ExtToolOutputNodeModel}.
+	In the execute method use the 
+	{@link org.knime.base.node.util.exttool.CommandExecution CommandExecution}
+	to execute the external program. Register your NodeModel as Observer with it,
+	to see the output in the views during execution (addObserver). 
+	Provide the execution context you get 
+	in the parameter list. If the execution succeeds (and returns with an OK exit
+	code) save the output through the #setExternalOutput(LinkedList<String>) and
+	#setExternalErrorOutput(LinkedList<String>) methods. You get the output from
+	the CommandExecution object.
+	If the execution throws an Exception, or exists with an error exit code, 
+	save the output with the methods #setFailedExternalOutput(LinkedList<String>) and
+	#setFailedExternalErrorOutput(LinkedList<String>).
+	The NodeModel takes care of saving and loading these buffers when the workflow
+	is saved/loaded (don't forget to call the super implementation if you override
+	the save/load internals methods).<br />
+	To provide views to display the output, in your 
+	{@link org.knime.core.node.NodeFactory NodeFactory} create instances of
+	{@link org.knime.base.node.util.exttool.ExtToolStdoutNodeView ExtToolStdoutNodeView}
+	(for a view of the output to standard out) and/or
+	 {@link org.knime.base.node.util.exttool.ExtToolStderrNodeView ExtToolStderrNodeView}
+	(for a view of the output to standard error).
+</body>
