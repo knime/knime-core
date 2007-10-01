@@ -43,15 +43,20 @@ public final class KNIMEConstants {
     /** KNIME's major release number. */
     public static final int MAJOR = 1;
     /** KNIME's minor release number. */
-    public static final int MINOR = 2;
+    public static final int MINOR = 3;
     /** KNIME's revision number. */
-    public static final int REV = 0; // Please change this on upgrade: 1.2.0 
+    public static final int REV = 0;
+    /** KNIME's build id. */
+    public static final String BUILD = ".ALPHA";
     
     // IMPORTANT: Remember to also update the NodeLogger welcome screen with
     // the current version and the prerequisites
     /** Workflow file version. */
-    public static final String VERSION = MAJOR + "." + MINOR + "." + REV;
+    public static final String VERSION = MAJOR + "." + MINOR + "." + REV + BUILD;
 
+    /** The build date, is set automatically by the build scripts. */
+    public static final String BUILD_DATE = "Unstable build";
+    
     /**
      * The name of the system property whose value is - if set - used as knime
      * home directory. If no (or an invalid) value is set, ~user/knime will be
@@ -70,7 +75,7 @@ public final class KNIMEConstants {
      */
     public static final String WELCOME_MESSAGE =
       "******************************************************************\n"
-    + "***  Welcome to KNIME v1.2.0 - the Konstanz Information Miner  ***\n"
+    + "***  Welcome to KNIME v" + VERSION + " - the Konstanz Information Miner  ***\n"
     + "*** Copyright, 2003-2007, Uni Konstanz and KNIME GmbH, Germany ***\n"
     + "******************************************************************\n";
 
