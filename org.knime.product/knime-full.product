@@ -16,8 +16,8 @@ License. Please see the license file in the installation directory and
 contact us if you cannot locate it. More details can be found at
 http://www.knime.org
 
-Based on Eclipse 3.2, www.eclipse.org 
-Uses: Java5, GEF, Log4J
+Based on Eclipse, www.eclipse.org 
+Uses: Java, GEF, Log4J
       </text>
    </aboutInfo>
 
