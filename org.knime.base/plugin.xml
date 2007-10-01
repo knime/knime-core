@@ -479,7 +479,11 @@
             factory-class="org.knime.base.node.viz.pie.node.interactive.InteractivePieNodeFactory"
             id="org.knime.base.node.viz.pie.node.interactive.InteractivePieNodeFactory">
       </node>
-            
+      <node
+            category-path="/mining/dtree"
+            factory-class="org.knime.base.node.mine.decisiontree2.learner.DecisionTreeLearnerNodeFactory"
+            id="org.knime.base.node.mine.decisiontree2.learner.DecisionTreeLearnerNodeFactory">
+      </node>
    </extension>
    
    
