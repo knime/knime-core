@@ -60,8 +60,8 @@ public class DialogComponentMultiLineString extends DialogComponent {
      * Constructor put label and JTextArea into panel. It will accept empty
      * strings as legal input.
      * 
-     * @param label label for dialog in front of JTextArea
      * @param stringModel the model that stores the value for this component.
+     * @param label label for dialog in front of JTextArea
      */
     public DialogComponentMultiLineString(
             final SettingsModelString stringModel, final String label) {

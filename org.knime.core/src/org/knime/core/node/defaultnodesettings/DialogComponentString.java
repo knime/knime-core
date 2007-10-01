@@ -63,8 +63,8 @@ public final class DialogComponentString extends DialogComponent {
      * Constructor put label and JTextField into panel. It will accept empty
      * strings as legal input.
      * 
-     * @param label label for dialog in front of JTextField
      * @param stringModel the model that stores the value for this component.
+     * @param label label for dialog in front of JTextField
      */
     public DialogComponentString(final SettingsModelString stringModel,
             final String label) {
@@ -75,8 +75,8 @@ public final class DialogComponentString extends DialogComponent {
     /**
      * Constructor put label and JTextField into panel.
      * 
-     * @param label label for dialog in front of JTextField
      * @param stringModel the model that stores the value for this component.
+     * @param label label for dialog in front of JTextField
      * @param disallowEmptyString if set true, the component request a non-empty
      *            string from the user.
      * @param compWidth the width of the edit field (in columns/characters)
