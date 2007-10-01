@@ -1,53 +1,29 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?eclipse version="3.0"?>
+
 <plugin>
 
-   <extension
-         id="KNIME_APPLICATION"
-         point="org.eclipse.core.runtime.applications">
+   <extension id="KNIME_APPLICATION" point="org.eclipse.core.runtime.applications">
       <application>
          <run class="org.knime.product.rcp.KNIMEApplication"/>
       </application>
    </extension>
-   <extension
-         id="KNIME_PRODUCT"
-         name="KNIME Workbench - Standalone Version"
-         point="org.eclipse.core.runtime.products">
-      <product
-            application="org.knime.product.KNIME_APPLICATION"
-            description="An Integrated and Extensible Data Analysis Workbench"
-            name="KNIME">
-         <property
-               name="windowImage"
-               value="icons/knime.png"/>
-         <property
-               name="aboutText"
-               value="Welcome to KNIME v1.2.0 (Build February 5, 2007)&#x0A;the Konstanz Information Miner&#x0A;Copyright, 2003 - 2007&#x0A;email: contact@knime.org&#x0A;&#x0A;This version of KNIME is licensed under the Aladdin Open Source &#x0A;License. Please see the license file in the installation directory and &#x0A;contact us if you cannot locate it. More details can be found at&#x0A;http://www.knime.org&#x0A;&#x0A;Based on Eclipse 3.2, www.eclipse.org &#x0A;Uses: Java5, GEF, Log4J"/>
-         <property
-               name="aboutImage"
-               value="icons/knime64.gif"/>
-         <property
-               name="appName"
-               value="KNIME">
+   <extension id="KNIME_PRODUCT" name="KNIME Workbench - Standalone Version" point="org.eclipse.core.runtime.products">
+      <product application="org.knime.product.KNIME_APPLICATION" description="An Integrated and Extensible Data Analysis Workbench" name="KNIME">
+         <property name="windowImage" value="icons/knime.png"/>
+         <property name="aboutText" value="Welcome to KNIME v1.3.0 (Build February 5, 2007)&#10;the Konstanz Information Miner&#10;Copyright, 2003 - 2007&#10;email: contact@knime.org&#10;&#10;This version of KNIME is licensed under the Aladdin Open Source &#10;License. Please see the license file in the installation directory and &#10;contact us if you cannot locate it. More details can be found at&#10;http://www.knime.org&#10;&#10;Based on Eclipse 3.2, www.eclipse.org &#10;Uses: Java5, GEF, Log4J"/>
+         <property name="aboutImage" value="icons/knime64.gif"/>
+         <property name="appName" value="KNIME">
          </property>
       </product>
    </extension>
-   <extension
-         point="org.eclipse.ui.commands">
-      <keyConfiguration
-            name="org.knime.product.keyConfiguration"
-            description="KNIME Workbench Key Configuration"
-            id="org.knime.product.keyConfiguration">
+   <extension point="org.eclipse.ui.commands">
+      <keyConfiguration description="KNIME Workbench Key Configuration" id="org.knime.product.keyConfiguration" name="org.knime.product.keyConfiguration">
       </keyConfiguration>
-      <command
-            name="New KNIME Project..."
-            description="Creates a new KNIME project"
-            id="open.new.project.wizard">
+      <command description="Creates a new KNIME project" id="open.new.project.wizard" name="New KNIME Project...">
       </command>
    </extension>
-   <extension
-         id="KNIME_BATCH_APPLICATION"
-         point="org.eclipse.core.runtime.applications">
+   <extension id="KNIME_BATCH_APPLICATION" point="org.eclipse.core.runtime.applications">
       <application>
          <run class="org.knime.product.headless.KNIMEBatchApplication"/>
       </application>

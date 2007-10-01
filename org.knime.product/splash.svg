@@ -1,212 +1,46 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
-<svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://web.resource.org/cc/"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="455"
-   height="295"
-   id="svg2"
-   sodipodi:version="0.32"
-   inkscape:version="0.45.1"
-   sodipodi:docbase="/home/thor/workspace/KNIME/org.knime.product"
-   sodipodi:docname="splash.svg"
-   inkscape:export-filename="C:\Dokumente und Einstellungen\gabriel\Desktop\splash.bmp"
-   inkscape:export-xdpi="90"
-   inkscape:export-ydpi="90"
-   inkscape:output_extension="org.inkscape.output.svg.inkscape"
-   version="1.0">
-  <defs
-     id="defs4" />
-  <sodipodi:namedview
-     id="base"
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:pageopacity="0.0"
-     inkscape:pageshadow="2"
-     inkscape:zoom="1"
-     inkscape:cx="418.94052"
-     inkscape:cy="73.523313"
-     inkscape:document-units="px"
-     inkscape:current-layer="g2137"
-     inkscape:window-width="1272"
-     inkscape:window-height="848"
-     inkscape:window-x="224"
-     inkscape:window-y="101"
-     width="455px"
-     height="295px" />
-  <metadata
-     id="metadata7">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://web.resource.org/cc/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:svg="http://www.w3.org/2000/svg" height="295" id="svg2" inkscape:export-filename="C:\Dokumente und Einstellungen\gabriel\Desktop\splash.bmp" inkscape:export-xdpi="90" inkscape:export-ydpi="90" inkscape:output_extension="org.inkscape.output.svg.inkscape" inkscape:version="0.45.1" sodipodi:docbase="/home/thor/workspace/KNIME/org.knime.product" sodipodi:docname="splash.svg" sodipodi:version="0.32" version="1.0" width="455">
+  <defs id="defs4"/>
+  <sodipodi:namedview bordercolor="#666666" borderopacity="1.0" height="295px" id="base" inkscape:current-layer="g2137" inkscape:cx="418.94052" inkscape:cy="73.523313" inkscape:document-units="px" inkscape:pageopacity="0.0" inkscape:pageshadow="2" inkscape:window-height="848" inkscape:window-width="1272" inkscape:window-x="224" inkscape:window-y="101" inkscape:zoom="1" pagecolor="#ffffff" width="455px"/>
+  <metadata id="metadata7">
     <rdf:RDF>
-      <cc:Work
-         rdf:about="">
+      <cc:Work rdf:about="">
         <dc:format>image/svg+xml</dc:format>
-        <dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <g
-     inkscape:label="Ebene 1"
-     inkscape:groupmode="layer"
-     id="layer1">
-    <g
-       id="g1898"
-       inkscape:label="Ebene 1"
-       transform="translate(4.695586,14.28567)">
-      <g
-         transform="translate(1.086609,119.656)"
-         id="g2137">
-        <rect
-           inkscape:export-ydpi="90"
-           inkscape:export-xdpi="90"
-           inkscape:export-filename="/home/wiswedel/eclipse/eclipse_workspace3/org.knime.product/splash.png"
-           style="fill:#ffd700;stroke:#bd9325;stroke-width:3.41936445;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-           id="rect1391"
-           width="451.58066"
-           height="291.58063"
-           x="-4.0725126"
-           y="-132.23198" />
-        <text
-           inkscape:export-ydpi="90"
-           inkscape:export-xdpi="90"
-           inkscape:export-filename="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\splash.png"
-           xml:space="preserve"
-           style="font-size:7.20367289px;font-style:normal;font-weight:normal;line-height:125%;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
-           x="1.0181245"
-           y="88.745972"
-           id="text1365"
-           sodipodi:linespacing="125%"><tspan
-             sodipodi:role="line"
-             id="tspan1367"
-             x="1.0181245"
-             y="88.745972"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold">Copyright, 2003 - 2007</tspan><tspan
-             sodipodi:role="line"
-             x="1.0181245"
-             y="100.75209"
-             id="tspan1369"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold">University of Konstanz, Germany</tspan><tspan
-             sodipodi:role="line"
-             x="1.0181245"
-             y="112.75821"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold"
-             id="tspan1921">(Prof. Dr. Michael R. Berthold)</tspan><tspan
-             sodipodi:role="line"
-             x="1.0181245"
-             y="124.76433"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold"
-             id="tspan1923">KNIME GmbH, Germany</tspan><tspan
-             id="tspan2159"
-             sodipodi:role="line"
-             x="1.0181245"
-             y="136.77045"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold">website: http://www.knime.org</tspan><tspan
-             id="tspan2161"
-             sodipodi:role="line"
-             x="1.0181245"
-             y="148.77658"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold">email: contact@knime.org</tspan></text>
-        <rect
-           style="fill:none;stroke-width:0.35433072;stroke-miterlimit:4;stroke-dasharray:none"
-           id="rect1389"
-           width="729.85242"
-           height="491.77713"
-           x="6.4344668"
-           y="123.96052" />
-        <text
-           inkscape:export-ydpi="90"
-           inkscape:export-xdpi="90"
-           inkscape:export-filename="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\splash.png"
-           sodipodi:linespacing="100%"
-           id="text3571"
-           y="-60.034332"
-           x="115.80687"
-           style="font-size:42.02141953px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Rounded MT Bold"
-           xml:space="preserve"><tspan
-             style="font-size:38.41958618px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold"
-             y="-60.034332"
-             x="115.80687"
-             id="tspan3573"
-             sodipodi:role="line">KNIME</tspan><tspan
-             style="font-size:24.01224136px"
-             y="-33.103153"
-             x="115.80687"
-             id="tspan3577"
-             sodipodi:role="line">Konstanz Information Miner</tspan></text>
-        <text
-           inkscape:export-ydpi="90"
-           inkscape:export-xdpi="90"
-           inkscape:export-filename="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\splash.png"
-           sodipodi:linespacing="125%"
-           id="KNIME-Version"
-           y="-11.653717"
-           x="438.18289"
-           style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
-           xml:space="preserve"
-           inkscape:label="#text2163"><tspan
-             style="font-size:14.40734577px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
-             y="-11.653717"
-             x="438.18289"
-             id="tspan2165"
-             sodipodi:role="line">Version 1.3.0</tspan></text>
-        <g
-           inkscape:export-ydpi="90"
-           inkscape:export-xdpi="90"
-           inkscape:export-filename="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\splash.png"
-           transform="matrix(0.600306,0,0,0.600306,-151.18962,-149.06986)"
-           inkscape:label="Layer 1"
-           id="g1939">
-          <path
-             inkscape:export-ydpi="300.00000"
-             inkscape:export-xdpi="300.00000"
-             inkscape:export-filename="C:\berthold\UKN\PR\Logos\logo2_alone.png"
-             style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#000000;stroke-width:9.7483654;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-             d="M 258.79162,191.62497 L 404.91401,191.61927 L 331.86493,45.575608 L 289.21015,130.77627 L 319.6777,130.77758 L 319.70321,112.6276 L 350.08264,142.99158 L 319.60119,173.38547 L 319.5082,155.02064 L 276.99744,155.0582 L 258.79162,191.62497 z "
-             id="path1293"
-             sodipodi:nodetypes="ccccccccccc" />
+  <g id="layer1" inkscape:groupmode="layer" inkscape:label="Ebene 1">
+    <g id="g1898" inkscape:label="Ebene 1" transform="translate(4.695586,14.28567)">
+      <g id="g2137" transform="translate(1.086609,119.656)">
+        <rect height="291.58063" id="rect1391" inkscape:export-filename="/home/wiswedel/eclipse/eclipse_workspace3/org.knime.product/splash.png" inkscape:export-xdpi="90" inkscape:export-ydpi="90" style="fill:#ffd700;stroke:#bd9325;stroke-width:3.41936445;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" width="451.58066" x="-4.0725126" y="-132.23198"/>
+        <text id="text1365" inkscape:export-filename="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\splash.png" inkscape:export-xdpi="90" inkscape:export-ydpi="90" sodipodi:linespacing="125%" style="font-size:7.20367289px;font-style:normal;font-weight:normal;line-height:125%;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans" x="1.0181245" xml:space="preserve" y="88.745972">
+<tspan id="tspan1367" sodipodi:role="line" style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold" x="1.0181245" y="88.745972">Copyright, 2003 - 2007</tspan>
+<tspan id="tspan1369" sodipodi:role="line" style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold" x="1.0181245" y="100.75209">University of Konstanz, Germany</tspan>
+<tspan id="tspan1921" sodipodi:role="line" style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold" x="1.0181245" y="112.75821">(Prof. Dr. Michael R. Berthold)</tspan>
+<tspan id="tspan1923" sodipodi:role="line" style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold" x="1.0181245" y="124.76433">KNIME GmbH, Germany</tspan>
+<tspan id="tspan2159" sodipodi:role="line" style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold" x="1.0181245" y="136.77045">website: http://www.knime.org</tspan>
+<tspan id="tspan2161" sodipodi:role="line" style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold" x="1.0181245" y="148.77658">email: contact@knime.org</tspan>
+</text>
+        <rect height="491.77713" id="rect1389" style="fill:none;stroke-width:0.35433072;stroke-miterlimit:4;stroke-dasharray:none" width="729.85242" x="6.4344668" y="123.96052"/>
+        <text id="text3571" inkscape:export-filename="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\splash.png" inkscape:export-xdpi="90" inkscape:export-ydpi="90" sodipodi:linespacing="100%" style="font-size:42.02141953px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:100%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Rounded MT Bold" x="115.80687" xml:space="preserve" y="-60.034332">
+<tspan id="tspan3573" sodipodi:role="line" style="font-size:38.41958618px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:100%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Rounded MT Bold" x="115.80687" y="-60.034332">KNIME</tspan>
+<tspan id="tspan3577" sodipodi:role="line" style="font-size:24.01224136px" x="115.80687" y="-33.103153">Konstanz Information Miner</tspan>
+</text>
+        <text id="KNIME-Version" inkscape:export-filename="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\splash.png" inkscape:export-xdpi="90" inkscape:export-ydpi="90" inkscape:label="#text2163" sodipodi:linespacing="125%" style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans" x="438.18289" xml:space="preserve" y="-11.653717">
+<tspan id="tspan2165" sodipodi:role="line" style="font-size:14.40734577px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold" x="438.18289" y="-11.653717">Version 1.3.0.ALPHA</tspan>
+</text>
+        <g id="g1939" inkscape:export-filename="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\splash.png" inkscape:export-xdpi="90" inkscape:export-ydpi="90" inkscape:label="Layer 1" transform="matrix(0.600306,0,0,0.600306,-151.18962,-149.06986)">
+          <path d="M 258.79162,191.62497 L 404.91401,191.61927 L 331.86493,45.575608 L 289.21015,130.77627 L 319.6777,130.77758 L 319.70321,112.6276 L 350.08264,142.99158 L 319.60119,173.38547 L 319.5082,155.02064 L 276.99744,155.0582 L 258.79162,191.62497 z " id="path1293" inkscape:export-filename="C:\berthold\UKN\PR\Logos\logo2_alone.png" inkscape:export-xdpi="300.00000" inkscape:export-ydpi="300.00000" sodipodi:nodetypes="ccccccccccc" style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#000000;stroke-width:9.7483654;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
         </g>
-        <text
-           inkscape:export-ydpi="90"
-           inkscape:export-xdpi="90"
-           inkscape:export-filename="D:\berthold_EclipseWorkspace\org.knime.product\splash.bmp"
-           sodipodi:linespacing="125%"
-           id="text1948"
-           y="136.77985"
-           x="437.39499"
-           style="font-size:8.40428448px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Rounded MT Bold"
-           xml:space="preserve"><tspan
-             id="tspan1952"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
-             y="136.77985"
-             x="437.39499"
-             sodipodi:role="line">Based on Eclipse, www.eclipse.org</tspan><tspan
-             id="tspan1978"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
-             y="148.78597"
-             x="437.39499"
-             sodipodi:role="line">Uses: Java, GEF, Log4J</tspan></text>
-        <text
-           inkscape:export-ydpi="90"
-           inkscape:export-xdpi="90"
-           inkscape:export-filename="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\splash.png"
-           sodipodi:linespacing="125%"
-           id="KNIME-Builddate"
-           y="0.92131042"
-           x="439.30548"
-           style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
-           xml:space="preserve"
-           inkscape:label="#text2179"><tspan
-             id="tspan2183"
-             style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
-             y="0.92131042"
-             x="439.30548"
-             sodipodi:role="line">(Unstable build)</tspan></text>
+        <text id="text1948" inkscape:export-filename="D:\berthold_EclipseWorkspace\org.knime.product\splash.bmp" inkscape:export-xdpi="90" inkscape:export-ydpi="90" sodipodi:linespacing="125%" style="font-size:8.40428448px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Rounded MT Bold" x="437.39499" xml:space="preserve" y="136.77985">
+<tspan id="tspan1952" sodipodi:role="line" style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold" x="437.39499" y="136.77985">Based on Eclipse, www.eclipse.org</tspan>
+<tspan id="tspan1978" sodipodi:role="line" style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold" x="437.39499" y="148.78597">Uses: Java, GEF, Log4J</tspan>
+</text>
+        <text id="KNIME-Builddate" inkscape:export-filename="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\splash.png" inkscape:export-xdpi="90" inkscape:export-ydpi="90" inkscape:label="#text2179" sodipodi:linespacing="125%" style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans" x="439.30548" xml:space="preserve" y="0.92131042">
+<tspan id="tspan2183" sodipodi:role="line" style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold" x="439.30548" y="0.92131042">(Unstable build)</tspan>
+</text>
       </g>
     </g>
   </g>
