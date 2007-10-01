@@ -1738,7 +1738,7 @@ public class WorkflowManager implements WorkflowListener {
             String[] versionStrArray = m_loadedVersion.split("\\.");
             int[] versionIntArray = new int[]{
                     KNIMEConstants.MAJOR, KNIMEConstants.MINOR, KNIMEConstants.REV};
-            if (versionStrArray.length != versionIntArray.length) {
+            if (versionStrArray.length < 3) {
                 throw new WorkflowException("Refuse to load workflow: Unknown"
                         + " workflow version \"" + m_loadedVersion + "\".");
             }
