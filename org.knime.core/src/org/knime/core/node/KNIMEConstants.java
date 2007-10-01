@@ -52,7 +52,8 @@ public final class KNIMEConstants {
     // IMPORTANT: Remember to also update the NodeLogger welcome screen with
     // the current version and the prerequisites
     /** Workflow file version. */
-    public static final String VERSION = MAJOR + "." + MINOR + "." + REV + BUILD;
+    public static final String VERSION = MAJOR + "." + MINOR + "." + REV
+        + BUILD;
 
     /** The build date, is set automatically by the build scripts. */
     public static final String BUILD_DATE = "Unstable build";
@@ -73,12 +74,37 @@ public final class KNIMEConstants {
     /**
      * <i>Welcome to KNIME Konstanz Information Miner</i>.
      */
-    public static final String WELCOME_MESSAGE =
-      "******************************************************************\n"
-    + "***  Welcome to KNIME v" + VERSION + " - the Konstanz Information Miner  ***\n"
-    + "*** Copyright, 2003-2007, Uni Konstanz and KNIME GmbH, Germany ***\n"
-    + "******************************************************************\n";
+    public static final String WELCOME_MESSAGE;
 
+    
+    static {
+        String line1 =
+                "***  Welcome to KNIME v" + VERSION
+                        + " - the Konstanz Information Miner  ***";
+        String line2 =
+                "Copyright, 2003 - 2007, Uni Konstanz and "
+                        + "KNIME GmbH, Germany";
+        line2 =
+                "***"
+                        + "        ".substring(0, (int)Math.floor((line1
+                                .length()
+                                - line2.length() - 6) / 2))
+                        + line2
+                        + "        ".substring(0, (int)Math.ceil((line1
+                                .length()
+                                - line2.length() - 6) / 2)) + "***";
+
+        String stars =
+                "***************************************************"
+                        + "*******************************************";
+
+        String s =
+                stars.substring(0, line1.length()) + "\n" + line1 + "\n"
+                        + line2 + "\n" + stars.substring(0, line1.length())
+                        + "\n";
+        WELCOME_MESSAGE = s;
+    }
+    
     /** Path to the <i>knime.png</i> icon. */
     private static final String KNIME_ICON_PATH =
             KNIMEConstants.class.getPackage().getName().replace('.', '/')

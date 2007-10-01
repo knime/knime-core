@@ -271,8 +271,8 @@ public final class NodeLogger {
                         + KNIMEConstants.BUILD_DATE
                         + ")                        ").substring(0, 62) + " #");
         l.info("# the Konstanz Information Miner                            #");
-        l.info("# Based on Eclipse 3.2, www.eclipse.org                     #");
-        l.info("# Uses: Java5, GEF, Log4J                                   #");
+        l.info("# Based on Eclipse, www.eclipse.org                         #");
+        l.info("# Uses: Java, GEF, Log4J                                    #");
         l.info("#                                                           #");
         l.info("#############################################################");
         l.info("#                                                           #");
@@ -734,6 +734,7 @@ public final class NodeLogger {
      * @param value the isIgnoreConfigureWarning to set
      * @deprecated Obsolete, will be removed when WFM is rewritten.
      */
+    @Deprecated
     public static void setIgnoreConfigureWarning(final boolean value) {
         // FIXME: Remove when WFM is rewritten.
         isIgnoreConfigureWarning = value;
@@ -753,6 +754,7 @@ public final class NodeLogger {
      * @param value If to ignore.
      * @deprecated Obsolete, will be removed when WFM is rewritten.
      */
+    @Deprecated
     public static void setIgnoreLoadDataError(final boolean value) {
         // FIXME: Remove when WFM is rewritten.
         isIgnoreLoadDataWarning = value;
