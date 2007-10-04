@@ -28,7 +28,6 @@ import java.io.InputStreamReader;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -70,16 +69,13 @@ public final class DBReaderConnection implements DataTable {
     /**
      * Create connection to database and read meta info.
      * 
-     * @param url The URL.
-     * @param user The user.
-     * @param pw The password.
-     * @param query The sql query.
-     * @throws SQLException If connection could not established.
+     * @param conn a database connection object
+     * @param query SQL query executed to read data
+     * @throws Exception If connection could not established.
      */
-    DBReaderConnection(final String url, final String user, final String pw,
-            final String query) throws SQLException {
-        DriverManager.setLoginTimeout(5);
-        m_conn = DriverManager.getConnection(url, user, pw);
+    public DBReaderConnection(final DBConnection conn, final String query) 
+            throws Exception {
+        m_conn = conn.createConnection();
         Statement stmt = m_conn.createStatement();
         m_query = query;
         ResultSet result = stmt.executeQuery(m_query);
@@ -94,7 +90,7 @@ public final class DBReaderConnection implements DataTable {
         try {
             m_conn.close();
         } catch (SQLException e) {
-            LOGGER.warn(e);
+            LOGGER.warn("Could not close database connection.", e);
         }
     }
 

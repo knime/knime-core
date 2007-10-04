@@ -58,21 +58,21 @@ final class DBWriterConnection {
     
     /**
      * Create connection to write into database.
-     * @param conn An already opened connection to a database.
-     * @param table The table name to write into.
+     * @param dbConn a database connection object
      * @param data The data to write.
+     * @param table name of table to write
      * @param appendData if checked the data is appended to an existing table
      * @param exec Used the cancel writing.
      * @param sqlTypes A mapping from column name to SQL-type. 
      * @return error string or null, if non
-     * @throws SQLException If connection could not be established.
+     * @throws Exception if connection could not be established
      * @throws CanceledExecutionException If canceled.
      */
-    static final String writeData(final Connection conn,
-            final String table, final BufferedDataTable data,
-            final boolean appendData,
+    static final String writeData(final DBConnection dbConn, final String table,
+            final BufferedDataTable data, final boolean appendData,
             final ExecutionMonitor exec, final Map<String, String> sqlTypes) 
-            throws SQLException, CanceledExecutionException {
+            throws Exception, CanceledExecutionException {
+        Connection conn = dbConn.createConnection();
         DataTableSpec spec = data.getDataTableSpec();
         StringBuilder wildcard = new StringBuilder("(");
         for (int i = 0; i < spec.getNumColumns(); i++) {
@@ -167,7 +167,7 @@ final class DBWriterConnection {
                 + " VALUES " + wildcard.toString());
         conn.setAutoCommit(false);
         
-        // bugfix: problems writing more than 13 columns. the prepare statement 
+        // problems writing more than 13 columns. the prepare statement 
         // ensures that we can set the columns directly row-by-row, the database
         // will handle the commit
         int rowCount = data.getRowCount();
@@ -251,6 +251,5 @@ final class DBWriterConnection {
         buf.append(")");
         return buf.toString();
     }
-        
-    
+
 }

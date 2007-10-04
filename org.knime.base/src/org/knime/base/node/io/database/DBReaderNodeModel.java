@@ -36,23 +36,31 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.util.KnimeEncryption;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBReaderNodeModel extends DBReaderConnectionNodeModel {
+class DBReaderNodeModel extends NodeModel {
     
     private DataTableSpec m_lastSpec = null;
     
+    private String m_query = null;
+    
+    private final DBConnection m_conn;
+    
     /**
-     * Creates a new DB reader.
+     * Creates a new database reader.
+     * @param nrDataIns number of data inputs
+     * @param nrDataOuts number of data outputs
      */
-    protected DBReaderNodeModel() {
-        super(0, 1, 0, 0);
+    DBReaderNodeModel(final int nrDataIns, final int nrDataOuts) {
+        super(nrDataIns, nrDataOuts);
+        m_conn = new DBConnection();
     }
 
     /**
@@ -62,21 +70,13 @@ class DBReaderNodeModel extends DBReaderConnectionNodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
-        exec.setProgress(-1, "Opening database connection...");
-        DBReaderConnection load = null;
-        try {
-            DBDriverLoader.registerDriver(getDriver());
-            String password = KnimeEncryption.decrypt(getPassword());
-            load = new DBReaderConnection(
-                    getDatabaseName(), getUser(), password, getQuery());
-            m_lastSpec = load.getDataTableSpec();
-            return new BufferedDataTable[]{exec.createBufferedDataTable(load,
-                exec)};
-        } finally {
-            if (load != null) {
-                load.close();
-            }
-        }
+        exec.setProgress("Opening database connection...");
+        DBReaderConnection load = new DBReaderConnection(m_conn, m_query);
+        m_lastSpec = load.getDataTableSpec();
+        exec.setProgress("Reading data from database...");
+        BufferedDataTable data = exec.createBufferedDataTable(load, exec);
+        load.close();
+        return new BufferedDataTable[]{data};
     }
 
     /**
@@ -124,14 +124,6 @@ class DBReaderNodeModel extends DBReaderConnectionNodeModel {
         File specFile = new File(nodeInternDir, "spec.xml");
         specSett.saveToXML(new FileOutputStream(specFile));
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void connectionChanged() {
-        m_lastSpec = null;
-    }
  
     /**
      * {@inheritDoc}
@@ -139,21 +131,13 @@ class DBReaderNodeModel extends DBReaderConnectionNodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) 
             throws InvalidSettingsException {
-        if (getDatabaseName() == null || getUser() == null
-                || getPassword() == null) {
-            throw new InvalidSettingsException("No settings available "
-                    + "to create database connection.");
-        }
         if (m_lastSpec != null) {
             return new DataTableSpec[]{m_lastSpec};
         }
-        DBDriverLoader.registerDriver(getDriver());
         try {
-            String password = KnimeEncryption.decrypt(getPassword());
-            DBReaderConnection conn =
-                    new DBReaderConnection(getDatabaseName(), getUser(),
-                            password, getQuery());
+            DBReaderConnection conn = new DBReaderConnection(m_conn, m_query);
             m_lastSpec = conn.getDataTableSpec();
+            conn.close();
         } catch (SQLException e) {
             throw new InvalidSettingsException(e.getMessage());
         } catch (Exception e) {
@@ -168,11 +152,34 @@ class DBReaderNodeModel extends DBReaderConnectionNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        super.validateSettings(settings);
-        String query = settings.getString("statement");
-        if (query.contains("<table>")) {
+        String query = settings.getString(DBConnection.CFG_STATEMENT);
+        if (query != null && query.contains("<table>")) {
             throw new InvalidSettingsException(
-                    "Database table placeholder not replaced.");
+                    "Database table place holder not replaced.");
         }
+        m_conn.validateConnection(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        String query = settings.getString(DBConnection.CFG_STATEMENT);
+        if (m_conn.loadValidatedConnection(settings)
+                || query == null || !query.equals(m_query)) {
+            m_lastSpec = null;
+        }
+        m_query = query;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_conn.saveConnection(settings);
+        settings.addString(DBConnection.CFG_STATEMENT, m_query);
     }
 }

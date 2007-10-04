@@ -25,8 +25,6 @@
 package org.knime.base.node.io.database;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -43,7 +41,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.util.KnimeEncryption;
 
 /**
  * Database writer model which creates a new table and adds the entire table to
@@ -61,16 +58,10 @@ class DBWriterNodeModel extends NodeModel {
     /** Logger for the database writer. */
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DBWriterNodeModel.class);
+    
+    private final DBConnection m_conn;
 
-    private String m_driver;
-
-    private String m_url;
-
-    private String m_user = "<user>";
-
-    private String m_pass = "";
-
-    private String m_table = "<table_name>";
+    private String m_table = null;
     
     private boolean m_append = false;
 
@@ -90,19 +81,11 @@ class DBWriterNodeModel extends NodeModel {
     static final String CFG_SQL_TYPES = "sql_types";
     
     /**
-     * Creates a new model with one data outport.
+     * Creates a new model with one data input.
      */
     DBWriterNodeModel() {
         super(1, 0);
-        // init default driver with the first from the driver list
-        // or use Java JDBC-ODBC as default
-        m_driver = DBDriverLoader.JDBC_ODBC_DRIVER;
-        String[] history = DBReaderDialogPane.DRIVER_ORDER.getHistory();
-        if (history != null && history.length > 0) {
-            m_driver = history[0];
-        }
-        // create database name from driver class
-        m_url = DBDriverLoader.getURLForDriver(m_driver);
+        m_conn = new DBConnection();
     }
 
     /**
@@ -110,10 +93,7 @@ class DBWriterNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        settings.addString("driver", m_driver);
-        settings.addString("database", m_url);
-        settings.addString("user", m_user);
-        settings.addString("password", m_pass);
+        m_conn.saveConnection(settings);
         settings.addString("table", m_table);
         settings.addBoolean("append_data", m_append);
         // save sql type mapping
@@ -130,6 +110,7 @@ class DBWriterNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         loadSettings(settings, false);
+        m_conn.validateConnection(settings);
     }
 
     /**
@@ -139,30 +120,25 @@ class DBWriterNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         loadSettings(settings, true);
+        m_conn.loadValidatedConnection(settings);
     }
 
-    private void loadSettings(final NodeSettingsRO settings, 
-            final boolean write) throws InvalidSettingsException {
-        String driver = settings.getString("driver");
-        String database = settings.getString("database");
-        String user = settings.getString("user");
-        String table = settings.getString("table");
+    private void loadSettings(
+            final NodeSettingsRO settings, final boolean write) 
+            throws InvalidSettingsException {
         boolean append = settings.getBoolean("append_data", false);
-        // password
-        String password = settings.getString("password", "");
-        // loaded driver: need to load settings before 1.2
-        String[] loadedDriver = settings.getStringArray("loaded_driver",
-                new String[0]);
+        String table = settings.getString("table");
         // write settings or skip it
         if (write) {
-            m_driver = driver;
-            DBReaderDialogPane.DRIVER_ORDER.add(m_driver);
-            m_url = database;
-            DBReaderDialogPane.DRIVER_URLS.add(m_url);
-            m_user = user;
-            m_pass = password;
+            if (table != null && table.contains("<table>")) {
+                throw new InvalidSettingsException(
+                    "Database table place holder not replaced.");
+            }
             m_table = table;
             m_append = append;
+            // loaded driver are needed to load settings before 1.2
+            String[] loadedDriver = settings.getStringArray("loaded_driver",
+                    new String[0]);
             for (String fileName : loadedDriver) {
                 try {
                     DBDriverLoader.loadDriver(new File(fileName));
@@ -173,8 +149,8 @@ class DBWriterNodeModel extends NodeModel {
             // load SQL type for each column
             m_types.clear();
             try {
-                NodeSettingsRO typeSett = settings
-                        .getNodeSettings(CFG_SQL_TYPES);
+                NodeSettingsRO typeSett = 
+                    settings.getNodeSettings(CFG_SQL_TYPES);
                 for (String key : typeSett.keySet()) {
                     m_types.put(key, typeSett.getString(key));
                 }
@@ -191,25 +167,12 @@ class DBWriterNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
-        exec.setProgress("Opening database connection...");
-        Connection conn = null;
-        try {
-            DBDriverLoader.registerDriver(m_driver);
-            // decryt password
-            String password = KnimeEncryption.decrypt(m_pass);
-            // create database connection
-            DriverManager.setLoginTimeout(5);
-            conn = DriverManager.getConnection(m_url, m_user, password);
-            // write entire data
-            String error = DBWriterConnection.writeData(
-                    conn, m_table, inData[0], m_append, exec, m_types);
-            if (error != null) {
-                super.setWarningMessage(error);
-            }
-        } finally {
-            if (conn != null) {
-                conn.close();
-            }
+        exec.setProgress("Opening database connection to write data...");
+        // write entire data
+        String error = DBWriterConnection.writeData(
+                m_conn, m_table, inData[0], m_append, exec, m_types);
+        if (error != null) {
+            super.setWarningMessage(error);
         }
         return new BufferedDataTable[0];
     }
@@ -266,34 +229,21 @@ class DBWriterNodeModel extends NodeModel {
         m_types.clear();
         m_types.putAll(map);
         
-        WrappedDriver wDriver = DBDriverLoader.getWrappedDriver(m_driver);
-        try {
-            DriverManager.registerDriver(wDriver);
-            if (!wDriver.acceptsURL(m_url)) {
-                throw new InvalidSettingsException("Driver \"" + wDriver 
-                        + "\" does not accept URL: " + m_url);
-            }
-        } catch (Exception e) {
-            throw new InvalidSettingsException("Could not register database"
-                    + " driver: " + wDriver);
-        }
-        
         // throw exception if no data provided
         if (inSpecs[0].getNumColumns() == 0) {
             throw new InvalidSettingsException("No columns in input data.");
         }
         
-        String passMsg = "";
-        // print warning if password is empty
-        if (m_pass == null || m_pass.length() == 0) {
-            passMsg = "Check if you need to set a password.";
+        if (!m_append && m_table != null) {
+            super.setWarningMessage("Existing table \"" 
+                    + m_table + "\" will be dropped!");
         }
         
-        if (passMsg.length() > 0 || !m_append) {
-            super.setWarningMessage("Existing table will be dropped!\n" 
-                    + passMsg);
+        try {
+            m_conn.createConnection();
+        } catch (Exception e) {
+            throw new InvalidSettingsException(e);
         }
-        
         return new DataTableSpec[0];
     }
 }

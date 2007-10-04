@@ -39,7 +39,7 @@ public class DBReaderNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new DBReaderNodeModel();
+        return new DBReaderNodeModel(0, 1);
     }
 
     /**
