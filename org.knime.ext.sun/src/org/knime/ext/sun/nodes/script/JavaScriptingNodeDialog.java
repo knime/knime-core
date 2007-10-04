@@ -24,6 +24,7 @@ package org.knime.ext.sun.nodes.script;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -37,6 +38,7 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
 import javax.swing.DefaultListModel;
+import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -58,7 +60,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionPanel;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
-
 import org.knime.ext.sun.nodes.script.expression.CompilationFailedException;
 
 /**
@@ -80,9 +81,13 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
     private final ColumnSelectionPanel m_replaceCombo;
 
     private final ButtonGroup m_returnTypeButtonGroup;
+    
+    private final JCheckBox m_compileOnCloseChecker;
 
     private DataTableSpec m_currenteSpec = null;
 
+    /** Inits GUI. */
+    @SuppressWarnings("unchecked")
     public JavaScriptingNodeDialog() {
         super();
         m_colList = new JList(new DefaultListModel());
@@ -96,7 +101,8 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
                         enter = "$$" + selected + "$$";
                     } else {
                         DataColumnSpec colSpec = (DataColumnSpec)selected;
-                        enter = "$" + colSpec.getName().toString() + "$";
+                        String name = colSpec.getName().replace("$", "\\$");
+                        enter = "$" + name + "$";
                     }
                     m_expEdit.replaceSelection(enter);
                     m_colList.clearSelection();
@@ -114,7 +120,8 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         m_replaceRadio.setToolTipText("Replaces the column and changes "
                 + "the column type accordingly");
         // show all columns
-        m_replaceCombo = new ColumnSelectionPanel((Border)null, DataValue.class);
+        m_replaceCombo = 
+            new ColumnSelectionPanel((Border)null, DataValue.class);
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(m_appendRadio);
         buttonGroup.add(m_replaceRadio);
@@ -126,6 +133,10 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         };
         m_appendRadio.addActionListener(actionListener);
         m_replaceRadio.addActionListener(actionListener);
+        
+        m_compileOnCloseChecker = new JCheckBox("Compile on close");
+        m_compileOnCloseChecker.setToolTipText("Compiles the code on close "
+                + "to identify potential syntax problems.");
 
         JRadioButton intReturnRadio = new JRadioButton("Integer");
         intReturnRadio.setActionCommand(Integer.class.getName());
@@ -156,6 +167,8 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
                 JavaScriptingNodeModel.CFG_COLUMN_NAME, defaultColName);
         boolean isReplace = settings.getBoolean(
                 JavaScriptingNodeModel.CFG_IS_REPLACE, false);
+        boolean isTestCompilation = settings.getBoolean(
+                JavaScriptingNodeModel.CFG_TEST_COMPILATION, true);
         m_newColNameField.setText("");
         // will select newColName only if it is in the spec list
         m_replaceCombo.update(specs[0], newColName);
@@ -191,6 +204,7 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             DataColumnSpec colSpec = specs[0].getColumnSpec(i);
             listModel.addElement(colSpec);
         }
+        m_compileOnCloseChecker.setSelected(isTestCompilation);
     }
 
     /**
@@ -212,7 +226,10 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         settings.addString(JavaScriptingNodeModel.CFG_RETURN_TYPE, type);
         String exp = m_expEdit.getText();
         settings.addString(JavaScriptingNodeModel.CFG_EXPRESSION, exp);
-        if (m_currenteSpec != null) {
+        boolean isTestCompilation = m_compileOnCloseChecker.isSelected();
+        settings.addBoolean(
+                JavaScriptingNodeModel.CFG_TEST_COMPILATION, isTestCompilation);
+        if (isTestCompilation && m_currenteSpec != null) {
             File tempFile = null;
             try {
                 tempFile = File.createTempFile("javascripting", ".java");
@@ -250,13 +267,20 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
         replaceOrAppend.add(m_replaceCombo);
         southPanel.add(replaceOrAppend);
 
+        JPanel returnTypeAndCompilation = new JPanel(new BorderLayout());
+        JPanel compilationPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        compilationPanel.add(m_compileOnCloseChecker);
+        returnTypeAndCompilation.add(compilationPanel, BorderLayout.NORTH);
+        
         JPanel returnType = new JPanel(new GridLayout(0, 2));
         returnType.setBorder(BorderFactory.createTitledBorder("Return type"));
         for (Enumeration<?> e = m_returnTypeButtonGroup.getElements(); e
                 .hasMoreElements();) {
             returnType.add((AbstractButton)e.nextElement());
         }
-        southPanel.add(returnType);
+        returnTypeAndCompilation.add(returnType, BorderLayout.CENTER);
+        
+        southPanel.add(returnTypeAndCompilation);
         finalPanel.add(centerPanel, BorderLayout.CENTER);
         finalPanel.add(southPanel, BorderLayout.SOUTH);
         return finalPanel;

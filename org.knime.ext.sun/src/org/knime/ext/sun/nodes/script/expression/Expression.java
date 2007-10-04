@@ -267,7 +267,8 @@ public class Expression implements Serializable {
     }
 
     /** String containing the objectivy method for compilation. */
-    private static final String OBJECTIVER = "  protected final Byte objectify(byte b) {\n"
+    private static final String OBJECTIVER = 
+        "  protected final Byte objectify(byte b) {\n"
             + "    return new Byte(b);\n"
             + "  }\n\n"
             + "  protected final Character objectify(char c) {\n"
@@ -296,8 +297,7 @@ public class Expression implements Serializable {
 
     /**
      * Attempts to delete created class file.
-     * 
-     * @see java.lang.Object#finalize()
+     * {@inheritDoc}
      */
     @Override
     protected void finalize() throws Throwable {

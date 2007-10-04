@@ -24,6 +24,8 @@ package org.knime.ext.sun.nodes.script;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
 import java.util.HashMap;
 
 import org.knime.core.data.DataColumnSpec;
@@ -68,7 +70,12 @@ public class JavaScriptingNodeModel extends NodeModel {
 
     /** NodeSettings key for the return type of the expression. */
     protected static final String CFG_RETURN_TYPE = "return_type";
-
+    
+    /** NodeSettings key whether to check for compilation problems when 
+     * dialog closes (not used in the nodemodel, though). */
+    protected static final String CFG_TEST_COMPILATION = 
+        "test_compilation_on_dialog_close";
+    
     private String m_expression;
 
     private Class<?> m_returnType;
@@ -76,9 +83,14 @@ public class JavaScriptingNodeModel extends NodeModel {
     private String m_colName;
 
     private boolean m_isReplace;
+    
+    /** Only important for dialog: Test the syntax of the snippet code
+     * when the dialog closes, bug fix #1229. */
+    private boolean m_isTestCompilationOnDialogClose = true;
 
     private File m_tempFile;
 
+    /** One input, one output. */
     public JavaScriptingNodeModel() {
         super(1, 1);
     }
@@ -92,6 +104,8 @@ public class JavaScriptingNodeModel extends NodeModel {
         settings.addString(CFG_COLUMN_NAME, m_colName);
         settings.addBoolean(CFG_IS_REPLACE, m_isReplace);
         String rType = m_returnType != null ? m_returnType.getName() : null;
+        settings.addBoolean(
+                CFG_TEST_COMPILATION, m_isTestCompilationOnDialogClose);
         settings.addString(CFG_RETURN_TYPE, rType);
     }
 
@@ -119,6 +133,9 @@ public class JavaScriptingNodeModel extends NodeModel {
         m_isReplace = settings.getBoolean(CFG_IS_REPLACE);
         String returnType = settings.getString(CFG_RETURN_TYPE);
         m_returnType = getReturnType(returnType);
+        // this setting is not available in 1.2.x
+        m_isTestCompilationOnDialogClose = 
+            settings.getBoolean(CFG_TEST_COMPILATION, true);
     }
 
     /**
@@ -261,76 +278,107 @@ public class JavaScriptingNodeModel extends NodeModel {
     static Expression compile(final String expression,
             final DataTableSpec spec, final Class<?> rType, final File tempFile)
             throws CompilationFailedException, InvalidSettingsException {
-        int offset = 0;
         HashMap<String, String> nameValueMap = new HashMap<String, String>();
         StringBuffer correctedExp = new StringBuffer();
-        while (offset < expression.length()) {
-            int start = expression.indexOf('$', offset);
-            if (start < offset) {
-                break;
-            }
-            int end = expression.indexOf('$', start + 1);
-            boolean isOrdinaryColumn = true;
-            if (end == start + 1) { // "$$" - row number or row key
-                isOrdinaryColumn = false;
-                end = expression.indexOf("$$", end + 1);
-            }
-            if (end < start) {
-                throw new InvalidSettingsException("No closing $ for: \""
-                        + expression.substring(start, Math.max(expression
-                                .length(), start + 10)) + "\"");
-            }
-            // either "$" or "$$"
-            int off = isOrdinaryColumn ? "$".length() : "$$".length();
-            String colIdPound = expression.substring(start, end + off);
-            String colId = colIdPound.substring(off, colIdPound.length() - off);
-            correctedExp.append(expression.substring(offset, start));
-            String colFieldName;
-            Class<?> type;
-            if (isOrdinaryColumn) {
-                int colIndex = spec.findColumnIndex(colId);
-                if (colIndex < 0) {
-                    throw new InvalidSettingsException("No such column: "
-                            + colId);
+        StreamTokenizer t = new StreamTokenizer(new StringReader(expression));
+        t.resetSyntax();
+        t.wordChars(0, 0xFF);
+        t.ordinaryChar('/');
+        t.eolIsSignificant(false);
+        t.slashSlashComments(true);
+        t.slashStarComments(true);
+        t.quoteChar('\'');
+        t.quoteChar('"');
+        t.quoteChar('$');
+        int tokType;
+        boolean isNextTokenSpecial = false;
+        try {
+            while ((tokType = t.nextToken()) != StreamTokenizer.TT_EOF) {
+                String colFieldName;
+                Class<?> type;
+                switch (tokType) {
+                case StreamTokenizer.TT_WORD:
+                    String s = t.sval;
+                    if (isNextTokenSpecial) {
+                        if (ColumnCalculator.ROWINDEX.equals(s)) {
+                            colFieldName = ColumnCalculator.ROWINDEX;
+                            type = Integer.class;
+                        } else if (ColumnCalculator.ROWKEY.equals(s)) {
+                            colFieldName = ColumnCalculator.ROWKEY;
+                            type = String.class;
+                        } else {
+                            throw new InvalidSettingsException(
+                                    "Invalid special identifier: " + s
+                                    + " (at line " + t.lineno() + ")");
+                        }
+                        nameValueMap.put(colFieldName, type.getName());
+                        correctedExp.append(colFieldName);
+                    } else {
+                        correctedExp.append(s);
+                    }
+                    break;
+                case '/':
+                    correctedExp.append((char)tokType);
+                    break;
+                case '\'':
+                case '"':
+                    if (isNextTokenSpecial) {
+                        throw new InvalidSettingsException(
+                                "Invalid special identifier: " + t.sval
+                                + " (at line " + t.lineno() + ")");
+                    }
+                    correctedExp.append((char)tokType);
+                    s = t.sval.replace(Character.toString('\\'), "\\\\");
+                    s = s.replace(Character.toString((char)tokType),
+                            "\\" + (char)tokType);
+                    correctedExp.append(s);
+                    correctedExp.append((char)tokType);
+                    break;
+                case '$':
+                    if ("".equals(t.sval)) {
+                        isNextTokenSpecial = !isNextTokenSpecial;   
+                    } else {
+                        s = t.sval;
+                        int colIndex = spec.findColumnIndex(s);
+                        if (colIndex < 0) {
+                            throw new InvalidSettingsException(
+                                    "No such column: "
+                                    + s + " (at line " + t.lineno() + ")");
+                        }
+                        colFieldName = 
+                            ColumnCalculator.createColField(colIndex);
+                        DataType colType = 
+                            spec.getColumnSpec(colIndex).getType();
+                        correctedExp.append(colFieldName);
+                        if (colType.isCompatible(IntValue.class)) {
+                            type = Integer.class;
+                            correctedExp.append(".intValue()");
+                        } else if (colType.isCompatible(DoubleValue.class)) {
+                            type = Double.class;
+                            correctedExp.append(".doubleValue()");
+                        } else {
+                            type = String.class;
+                        }
+                        nameValueMap.put(colFieldName, type.getName());
+                    }
+                    break;
+                default: 
+                    throw new IllegalStateException(
+                            "Unexpected type in tokenizer: "
+                            + tokType + " (at line " + t.lineno() + ")");
                 }
-                colFieldName = ColumnCalculator.createColField(colIndex);
-                DataType colType = spec.getColumnSpec(colIndex).getType();
-                correctedExp.append(colFieldName);
-                if (colType.isCompatible(IntValue.class)) {
-                    type = Integer.class;
-                    correctedExp.append(".intValue()");
-                } else if (colType.isCompatible(DoubleValue.class)) {
-                    type = Double.class;
-                    correctedExp.append(".doubleValue()");
-                } else {
-                    type = String.class;
-                }
-            } else {
-                if (colId.equals(ColumnCalculator.ROWINDEX)) {
-                    colFieldName = ColumnCalculator.ROWINDEX;
-                    type = Integer.class;
-                } else if (colId.equals(ColumnCalculator.ROWKEY)) {
-                    colFieldName = ColumnCalculator.ROWKEY;
-                    type = String.class;
-                } else {
-                    throw new InvalidSettingsException("Invalid name : "
-                            + colId);
-                }
-                correctedExp.append(colFieldName);
             }
-            offset = Math.min(end + off, expression.length());
-            nameValueMap.put(colFieldName, type.getName());
+        } catch (IOException e) {
+            throw new InvalidSettingsException(
+                    "Unable to tokenize expression string", e);
+            
         }
-        correctedExp.append(expression.substring(Math.min(offset, expression
-                .length())));
         return new Expression(correctedExp.toString(), nameValueMap, rType,
                 tempFile);
     }
 
-    /**
-     * Attemtps to delete temp file.
-     * 
-     * @see Object#finalize()
+    /** Attempts to delete temp file.
+     * {@inheritDoc}
      */
     @Override
     protected void finalize() throws Throwable {

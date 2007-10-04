@@ -85,7 +85,8 @@ public class ExpressionInstance {
             Class<?> clas = entry.getValue();
             Object value = property2ValueMap.get(prop);
             if (value == null) {
-                throw new IllegalPropertyException("No value for field " + prop);
+                throw new IllegalPropertyException(
+                        "No value for field " + prop);
             }
             if (!clas.isInstance(value)) {
                 throw new IllegalPropertyException(

@@ -42,7 +42,8 @@ public class IllegalPropertyException extends Exception {
      * @param message the error message to print
      * @param cause the cause
      */
-    public IllegalPropertyException(final String message, final Throwable cause) {
+    public IllegalPropertyException(
+            final String message, final Throwable cause) {
         super(message, cause);
     }
 }

@@ -54,6 +54,16 @@
 		  int-compatible columns as <tt>int</tt> and any other column type as 
 		  <tt>String</tt>.
 		</option>
+		<option name="Compile on close">
+		  If unchecked, the syntax test is skipped when the settings are 
+		  applied to the model, allowing the dialog to close even if there are
+		  syntax errors encountered. This enables the user to temporarily close
+		  the dialog, investigate the input table and then return to the
+		  almost-complete-and-running snippet code in the dialog. The node will
+		  not be executable (it will be red) if the code contains syntax errors.
+		  This option is only for convenience, it does not have any effect on
+		  the output of this node.
+		</option>
 		<option name="Return type">
 		  Specify here the resulting type of your code snippet. Unfortunately
 		  KNIME cannot determine what will be the correct return type - so you 
