@@ -115,6 +115,7 @@ public class BarChartNodeView extends DefaultVisualizationNodeView {
      * @return a hilite menu which forwards the actions to the currently 
      * selected plotter.
      */
+    @Override
     protected JMenu getHiLiteMenu() {
         JMenu menu = new JMenu(HiLiteHandler.HILITE);
         menu.add(new AbstractAction(HiLiteHandler.HILITE_SELECTED) {

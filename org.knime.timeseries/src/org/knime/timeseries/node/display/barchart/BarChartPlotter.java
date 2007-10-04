@@ -209,6 +209,7 @@ public class BarChartPlotter extends TimePlotter {
      * {@link org.knime.base.node.viz.plotter.line.LinePlotterDrawingPane}.
      *
      */
+    @Override
     protected void calculateDots() {
         if (!(getDrawingPane() instanceof BarChartDrawingPane)) {
             return;
@@ -364,6 +365,7 @@ public class BarChartPlotter extends TimePlotter {
     /**
      * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
      */
+    @Override
     public void unHiLiteAll() {
         if (isScatterPlotterDrawingPane()) {
             FinancialDotInfoArray dotArray =

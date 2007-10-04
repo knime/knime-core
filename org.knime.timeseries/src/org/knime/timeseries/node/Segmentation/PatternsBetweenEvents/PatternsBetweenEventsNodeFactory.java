@@ -33,7 +33,7 @@ import org.knime.core.node.NodeView;
  * This factory creates all necessary objects for the String->SLN converter
  * node.
  * 
- * @author Bernd Wiswedel, University of Konstanz
+ * @author M. Berthold, University of Konstanz
  */
 public class PatternsBetweenEventsNodeFactory extends NodeFactory {
 

@@ -310,6 +310,7 @@ public class TimePlotter extends LinePlotter {
      * {@link org.knime.base.node.viz.plotter.line.LinePlotterDrawingPane}.
      *
      */
+    @Override
     protected void calculateDots() {
         if (!(getDrawingPane() instanceof TimePlotterDrawingPane)) {
             return;

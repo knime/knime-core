@@ -232,9 +232,7 @@ public final class FinancialShapeFactory {
     private static class VerticalBar extends Shape {
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, int, int, int, int, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void paintShape(final Graphics g, final int x, 
@@ -291,9 +289,7 @@ public final class FinancialShapeFactory {
     private static class CandlestickBar extends Shape { 
 
         /**
-         * 
-         * @see org.knime.core.data.property.ShapeFactory.Shape#paintShape(
-         * java.awt.Graphics, int, int, int, int, int, boolean, boolean)
+         * {@inheritDoc}
          */
         @Override
         public void paintShape(final Graphics g, final int x, 

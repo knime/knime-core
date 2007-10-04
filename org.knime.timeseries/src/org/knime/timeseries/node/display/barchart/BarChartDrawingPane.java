@@ -79,6 +79,7 @@ public class BarChartDrawingPane extends TimePlotterDrawingPane {
      * 
      * @param dotSize the dot size 
      */
+    @Override
     public void setDotSize(final int dotSize) {
         m_dotSize = dotSize;
     }
@@ -87,6 +88,7 @@ public class BarChartDrawingPane extends TimePlotterDrawingPane {
      * 
      * @return the dot size
      */
+    @Override
     public int getDotSize() {
         return m_dotSize;
     }
@@ -95,6 +97,7 @@ public class BarChartDrawingPane extends TimePlotterDrawingPane {
      * 
      * @param fade true if unhilited dots should be faded.
      */
+    @Override
     public void setFadeUnhilited(final boolean fade) {
         m_fade = fade;
     }
@@ -166,8 +169,9 @@ public class BarChartDrawingPane extends TimePlotterDrawingPane {
     
     /**
      * 
-     * @return row keys of selecte dots.
+     * @return row keys of selected dots.
      */
+    @Override
     public Set<DataCell> getSelectedDots() {
         return m_selDots;
     }
@@ -176,6 +180,7 @@ public class BarChartDrawingPane extends TimePlotterDrawingPane {
      * for extending classes the possibility to set the selected dots.
      * @param selected the rowkey ids of the selected elements.
      */
+    @Override
     protected void setSelectedDots(final Set<DataCell> selected) {
         m_selDots = selected;
     }
@@ -187,6 +192,7 @@ public class BarChartDrawingPane extends TimePlotterDrawingPane {
      * @param x2 right corner x
      * @param y2 right corner y
      */
+    @Override
     public void selectElementsIn(final int x1, final int y1, final int x2, 
             final int y2) {
         List<FinancialDotInfo> selected = m_dots.getDotsContainedIn(
@@ -200,6 +206,7 @@ public class BarChartDrawingPane extends TimePlotterDrawingPane {
      * 
      * clears current selection.
      */
+    @Override
     public void clearSelection() {
         m_selDots.clear();
     }
@@ -208,6 +215,7 @@ public class BarChartDrawingPane extends TimePlotterDrawingPane {
      * 
      * @param p the clicked point
      */
+    @Override
     public void selectClickedElement(final Point p) {
         selectElementsIn(p.x - 1 , p.y - 1, p.x + 1, p.y + 1);
     }

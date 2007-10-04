@@ -50,8 +50,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * This is the model for the node that converts
- * {@link org.knime.core.data.def.StringCell}s into {@link SmilesCell}s.
  * 
  * @author Rosaria Silipo 
  */
