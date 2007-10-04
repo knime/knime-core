@@ -308,7 +308,7 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
     }
 
     /**
-     * Called prior the {@link #addDataRow(DataCell, Color, DataCell, DataCell)}
+     * Called prior the {@link #addDataRow(DataRow, Color, DataCell, DataCell)}
      * method to allow the implementing class the specific model creation.
      * @param pieColSpec the {@link DataColumnSpec} of the selected pie column
      * @param aggrColSpec the {@link DataColumnSpec} of the selected

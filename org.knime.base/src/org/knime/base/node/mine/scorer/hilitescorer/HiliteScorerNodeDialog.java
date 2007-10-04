@@ -103,7 +103,7 @@ public final class HiliteScorerNodeDialog extends NodeDialogPane {
      * table spec. The second and last column will be selected by default unless
      * the settings object contains others.
      * 
-     * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
@@ -142,7 +142,7 @@ public final class HiliteScorerNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * Sets the selected columns inside the {@link ScorerNodeModel}.
+     * Sets the selected columns inside the {@link HiliteScorerNodeModel}.
      * 
      * @param settings the object to write the settings into
      * @throws InvalidSettingsException if the column selection is invalid

@@ -40,8 +40,8 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
  * is public only because some KNIME framework classes access it.</b>
  * <p>This class is used to represent the {@link BufferedDataTable} that is
  * returned by the {@link org.knime.core.node.ExecutionContext}s 
- * {@link org.knime.core.node.ExecutionContext#
- * createJoinedTable(BufferedDataTable, BufferedDataTable, ExecutionMonitor)}
+ * {@link org.knime.core.node.ExecutionContext#createJoinedTable(
+ * BufferedDataTable, BufferedDataTable, ExecutionMonitor)}
  * method.
  * @author Bernd Wiswedel, University of Konstanz
  */
