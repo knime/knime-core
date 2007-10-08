@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Learner" icon="./mds.png">
+	<name>MDS Pivot</name>
+	
+	<shortDescription>
+		Performs a Multi-Dimensional Scaling (MDS) on a number of selected
+		pivot elements while the remaining instances are embedded into the 
+		lower-dimensional space based on the given pivot (landmark) embedding.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			The algorithm uses only a subset of the data (pivot elements) to
+			compute an embedding into lower dimension space. The remaining 
+			instances are mapped respectively to the landmark elements. For
+			details see: 
+			<a href="http://www.inf.uni-konstanz.de/algo/publications/bp-empmdsld-06.pdf">
+    		Eigensolver Methods for Progressive Multidimensional Scaling of Large Data</a>
+		</intro>
+		<option name="Lower Dimension:">
+			Select lower dimensionality to emebbed data into.
+		</option>
+		<option name="Pivot elements:">
+			Select number of pivot elements used as initial landmarks.
+		</option>
+	    <option name="Column Selection:">
+			Select number of column to be embeded into lower dimension.
+		</option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn name="High-dim. data" index="0">High-dimensional data</dataIn>
+		<dataOut name="Lower-dim. data" index="0">Lower-dimensional data</dataOut>
+	</ports>	
+</knimeNode>
