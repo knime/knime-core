@@ -51,21 +51,21 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
     
-    private DialogComponentColumnNameSelection m_bitVectorColumnComp;
+    private final DialogComponentColumnNameSelection m_bitVectorColumnComp;
 
-    private DialogComponentNumber m_minSupportComp;
+    private final DialogComponentNumber m_minSupportComp;
 
-    private DialogComponentStringSelection m_itemSetTypeComp;
+    private final DialogComponentStringSelection m_itemSetTypeComp;
 
-    private DialogComponentNumber m_itemSetLengthComp;
+    private final DialogComponentNumber m_itemSetLengthComp;
 
-    private DialogComponentStringSelection m_sortByComp;
+    private final DialogComponentStringSelection m_sortByComp;
 
-    private DialogComponentStringSelection m_dataStructComp;
+    private final DialogComponentStringSelection m_dataStructComp;
 
-    private DialogComponentBoolean m_associationRules;
+    private final DialogComponentBoolean m_associationRules;
 
-    private DialogComponentNumber m_confidence;
+    private final DialogComponentNumber m_confidence;
 
 
     /**
@@ -82,7 +82,7 @@ public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
         
         m_minSupportComp = new DialogComponentNumber(
                 createMinSupportModel(),
-                "Minimum support (0-1)", 0.0);
+                "Minimum support (0-1)", 0.1);
         
         m_itemSetTypeComp = new DialogComponentStringSelection(
                 createItemSetTypeModel(), "Item Set Type",
@@ -111,7 +111,7 @@ public class SubgroupMinerDialog extends DefaultNodeSettingsPane {
         
         // components 
         m_confidence = new DialogComponentNumber(
-                confidenceModel, "Minimum Confidence:", 0.0);
+                confidenceModel, "Minimum Confidence:", 0.1);
         
 
         m_associationRules = new DialogComponentBoolean(
