@@ -1,0 +1,326 @@
+/* 
+ * -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany.
+ * Chair for Bioinformatics and Information Mining
+ * Prof. Dr. Michael R. Berthold
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *    28.06.2007 (Tobias Koetter): created
+ */
+package org.knime.base.node.groupby;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
+import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
+import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteTranslator;
+
+
+/**
+ * The {@link NodeModel} implementation of the group by node which simply uses
+ * the {@link GroupByTable} class to create the resulting table.
+ * 
+ * @author Tobias Koetter, University of Konstanz
+ */
+public class GroupByNodeModel extends NodeModel {
+    
+    /**Configuration key of the selected group by columns.*/
+    protected static final String CFG_GROUP_BY_COLUMNS = "grouByColumns";
+    
+    /**Configuration key of the selected aggregation method for 
+     * numerical columns.*/
+    protected static final String CFG_NUMERIC_COL_METHOD = 
+        "numericColumnMethod";
+    
+    /**Configuration key of the selected aggregation method for 
+     * none numerical columns.*/
+    protected static final String CFG_NONE_NUMERIC_COL_METHOD = 
+        "noneNumericColumnMethod";
+    
+    /**Configuration key for the maximum none numerical values.*/
+    protected static final String CFG_MAX_UNIQUE_VALUES = 
+        "maxNoneNumericalVals";
+    
+    /**Configuration key for the enable hilite option.*/
+    protected static final String CFG_ENABLE_HILITE = "enableHilite";
+    
+    /**Configuration key for the sort in memory option.*/
+    protected static final String CFG_SORT_IN_MEMORY = "sortInMemory";
+
+    /**Configuration key for the move the group by columns to front option.*/
+    protected static final String CFG_MOVE_GROUP_BY_COLS_2_FRONT = 
+        "moveGroupByCols2Front";
+
+    
+    
+    private final SettingsModelFilterString m_groupByCols = 
+        new SettingsModelFilterString(GroupByNodeModel.CFG_GROUP_BY_COLUMNS);
+    
+    private final SettingsModelString m_numericColMethod = 
+        new SettingsModelString(GroupByNodeModel.CFG_NUMERIC_COL_METHOD, 
+                AggregationMethod.getDefaultNumericMethod().getLabel());
+    
+    private final SettingsModelString m_noneNumericColMethod = 
+        new SettingsModelString(GroupByNodeModel.CFG_NONE_NUMERIC_COL_METHOD, 
+                AggregationMethod.getDefaultNoneNumericMethod().getLabel());
+    
+    private final SettingsModelIntegerBounded m_maxUniqueValues = 
+        new SettingsModelIntegerBounded(CFG_MAX_UNIQUE_VALUES, 10000, 1, 
+                Integer.MAX_VALUE);
+    
+    private final SettingsModelBoolean m_enableHilite =
+        new SettingsModelBoolean(GroupByNodeModel.CFG_ENABLE_HILITE, false);
+    
+    private final SettingsModelBoolean m_sortInMemory =
+        new SettingsModelBoolean(GroupByNodeModel.CFG_SORT_IN_MEMORY, false);
+
+    private final SettingsModelBoolean m_moveGroupCols2Front = 
+        new SettingsModelBoolean(
+                GroupByNodeModel.CFG_MOVE_GROUP_BY_COLS_2_FRONT, false);
+    
+    /**
+     * Node returns a new hilite handler instance.
+     */
+
+    /**
+     * Node returns a new hilite handler instance.
+     */
+    private final HiLiteTranslator m_hilite = new HiLiteTranslator(
+            new DefaultHiLiteHandler());
+    
+    /**
+     * Creates a new group by model with one in- and outport.
+     */
+    public GroupByNodeModel() {
+        super(1, 1);
+        m_noneNumericColMethod.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                m_maxUniqueValues.setEnabled(
+                        GroupByNodeDialogPane.enableUniqueValuesModel(
+                                m_numericColMethod, m_noneNumericColMethod));
+            }
+        });
+        m_numericColMethod.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                m_maxUniqueValues.setEnabled(
+                        GroupByNodeDialogPane.enableUniqueValuesModel(
+                                m_numericColMethod, m_noneNumericColMethod));
+            }
+        });
+        m_maxUniqueValues.setEnabled(
+                GroupByNodeDialogPane.enableUniqueValuesModel(
+                m_numericColMethod, m_noneNumericColMethod));
+    }
+
+    /**
+     * {@inheritDoc}  
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) throws IOException {
+        if (m_enableHilite.getBooleanValue()) {
+            NodeSettingsRO config = NodeSettings.loadFromXML(
+                    new FileInputStream(new File("hilite_mapping.xml.gz")));
+            try {
+                m_hilite.setMapper(DefaultHiLiteMapper.load(config));
+            } catch (InvalidSettingsException ex) {
+                throw new IOException(ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}  
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir, 
+            final ExecutionMonitor exec) throws IOException {
+        if (m_enableHilite.getBooleanValue()) {
+            NodeSettings config = new NodeSettings("hilite_mapping");
+            DefaultHiLiteMapper mapper = 
+                (DefaultHiLiteMapper) m_hilite.getMapper();
+            if (mapper != null) {
+                mapper.save(config);
+            }
+            config.saveToXML(
+                    new FileOutputStream(new File("hilite_mapping.xml.gz")));
+        }
+    }
+
+    /**
+     * {@inheritDoc} 
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_groupByCols.saveSettingsTo(settings);
+        m_numericColMethod.saveSettingsTo(settings);
+        m_noneNumericColMethod.saveSettingsTo(settings);
+        m_maxUniqueValues.saveSettingsTo(settings);
+        m_enableHilite.saveSettingsTo(settings);
+        m_sortInMemory.saveSettingsTo(settings);
+        m_moveGroupCols2Front.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc} 
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        m_groupByCols.validateSettings(settings);
+        final List<String> includeList = 
+            ((SettingsModelFilterString)m_groupByCols.
+                    createCloneWithValidatedValue(settings)).getIncludeList();
+        if (includeList == null || includeList.size() < 1) {
+            throw new InvalidSettingsException("No grouping column included");
+        }
+        m_numericColMethod.validateSettings(settings);
+        m_noneNumericColMethod.validateSettings(settings);
+        m_maxUniqueValues.validateSettings(settings);
+        m_enableHilite.validateSettings(settings);
+        m_sortInMemory.validateSettings(settings);
+        m_moveGroupCols2Front.validateSettings(settings);
+    }
+    
+    /**
+     * {@inheritDoc} 
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+       m_groupByCols.loadSettingsFrom(settings);
+       m_numericColMethod.loadSettingsFrom(settings);
+       m_noneNumericColMethod.loadSettingsFrom(settings);
+       m_maxUniqueValues.loadSettingsFrom(settings);
+       m_enableHilite.loadSettingsFrom(settings);
+       m_sortInMemory.loadSettingsFrom(settings);
+       m_moveGroupCols2Front.loadSettingsFrom(settings);
+    }
+
+    /**
+     * {@inheritDoc} 
+     */
+    @Override
+    protected void reset() {
+        m_hilite.getFromHiLiteHandler().fireClearHiLiteEvent();
+        m_hilite.setMapper(null);
+    }
+    
+    /**
+     * {@inheritDoc} 
+     */
+    @Override
+    protected void setInHiLiteHandler(final int inIndex, 
+            final HiLiteHandler hiLiteHdl) {
+        m_hilite.removeAllToHiliteHandlers();
+        if (hiLiteHdl != null) {
+            m_hilite.addToHiLiteHandler(hiLiteHdl);
+        }
+    }
+    
+    /**
+     * {@inheritDoc} 
+     */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        assert outIndex == 0;
+        return m_hilite.getFromHiLiteHandler();
+    }
+
+    /**
+     * {@inheritDoc} 
+     */
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+            throws InvalidSettingsException {
+        final List<String> inclList = m_groupByCols.getIncludeList();
+        final DataTableSpec origSpec = inSpecs[0];
+        GroupByTable.checkIncludeList(origSpec, inclList);
+        if (inclList.size() == origSpec.getNumColumns()) {
+            setWarningMessage("All columns selected as group by column");
+        }
+        if (origSpec.getNumColumns() < 2) {
+            setWarningMessage(
+                    "Input table should contain at least two columns");
+        }
+        final AggregationMethod numericMethod = 
+            AggregationMethod.getMethod4SettingsModel(m_numericColMethod);
+        final AggregationMethod noneNumericMethod = 
+            AggregationMethod.getMethod4SettingsModel(m_noneNumericColMethod);
+        final DataTableSpec spec = GroupByTable.createGroupByTableSpec(
+                origSpec, inclList, numericMethod, noneNumericMethod,
+                m_moveGroupCols2Front.getBooleanValue());
+        return new DataTableSpec[] {spec};
+    }
+
+    /**
+     * {@inheritDoc} 
+     */
+    @Override
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+            final ExecutionContext exec) throws Exception {
+        final BufferedDataTable table = inData[0];
+        if (table == null || table.getRowCount() < 1) {
+            setWarningMessage("Empty input table found");
+            return inData;
+        }
+        final List<String> includeList = m_groupByCols.getIncludeList();
+        final AggregationMethod numericMethod = 
+            AggregationMethod.getMethod4SettingsModel(m_numericColMethod);
+        final AggregationMethod noneNumericMethod = 
+            AggregationMethod.getMethod4SettingsModel(m_noneNumericColMethod);
+        final int maxUniqueVals = m_maxUniqueValues.getIntValue();
+        final boolean sortInMemory = m_sortInMemory.getBooleanValue();
+        final boolean enableHilite = m_enableHilite.getBooleanValue();
+        final boolean move2Front = m_moveGroupCols2Front.getBooleanValue();
+        final GroupByTable resultTable = new GroupByTable(table, includeList, 
+                numericMethod, noneNumericMethod, maxUniqueVals, sortInMemory, 
+                enableHilite, move2Front, exec);
+        if (m_enableHilite.getBooleanValue()) {
+            m_hilite.setMapper(new DefaultHiLiteMapper(
+                    resultTable.getHiliteMapping()));
+        }
+        //check for skipped columns
+        final String warningMsg = resultTable.getSkippedGroupsMessage(3, 3);
+        if (warningMsg != null) {
+            setWarningMessage(warningMsg);
+        }
+        return new BufferedDataTable[]{resultTable.getBufferedTable()};
+    }
+}

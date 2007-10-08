@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd" >
+<knimeNode icon="groupBy.png" type="Manipulator">
+    <name>GroupBy</name>
+    <shortDescription>
+    	Groups the table by the selected column(s) and aggregates the remaining
+    	columns using the selected aggregation method.
+    </shortDescription>
+    <fullDescription>
+    	<intro>
+    		The node groups the row by the selected column(s). The remaining
+    		rows are aggregated by the defined method. The user can choose an
+    		aggregation method for all none numerical columns and an aggregation
+    		method for all numerical columns. In order to save resources and
+    		allow the handling of large tables the node sorts the input table
+    		by the selected group columns prior calculating the aggregation 
+    		values.
+    		<p>
+    		If the number of unique values per group exeeds the defined number 
+    		of unique values the calculation of this group is skipped, the
+    		aggregation result is a missing value and an appropriate warning 
+    		is displayed after execution.
+    		</p>
+    		<p>
+    		If the 'Sort in memory' option is checked the complete table is 
+    		loaded into the memory to speed up the sorting process.
+    		</p>
+    		<p>
+			 Aggregation methods available for none numerical and numerical 
+			 columns:
+    		<ul>
+    			<li>First: Takes the first value per group.</li>
+    			<li>Last: Takes the last value per group.</li>
+    			<li>Mode: Takes the value with the most occurrences per group. 
+    			If multiple values match this criterion one of these values is 
+    			randomly chosen.</li>
+    			<li>Count: Counts members per group.</li>
+    		</ul>
+			Aggregation methods only available for numerical columns:
+			<ul>
+    			<li>Minimum: Calculates the minimum per group.</li>
+    			<li>Maximum: Calculates the maximum per group.</li>
+    			<li>Mean: Calculates the mean per group.</li>
+    			<li>Sum: Calculates the sum per group.</li>
+    			<li>Variance: Calculates the variance per group.</li>
+    		</ul>
+    		</p>
+    		<p>
+	    		<b>All aggregation methods ignore missing values.</b>
+    		</p>
+    	</intro>    	
+        <option name="None numerical aggregation method">
+        	The aggregation method to use for none numerical columns. The
+        	following methods can be applied: First, Last, Mode, Count
+        </option>
+        <option name="Numerical aggregation method">
+        	The aggregation method to use for numerical columns. The
+        	following methods can be applied: Minimum, Maximum, Mean, Sum, 
+        	Variance, First, Last, Mode, Count
+        </option>
+        <option name="Maximum unique values per group">
+	        Defines the maximum number of unique values per group to avoid 
+	        memory exceptions. This option is only enabled if a memory 
+	        consuming method like Mode is selected. All groups with more unique
+	        values are skipped during calculation and the result is a 
+	        missing value.
+        </option>
+        <option name="Move group column(s) to front">
+			Moves the selected group column(s) to the front of the result table.
+        </option>
+        <option name="Sort in memory">
+			Performs the necessary sorting in the memory. Speeds up the process
+			but consumes much more memory.
+        </option>
+        <option name="Enable hiliting">
+			If enabled the hiliting of a group row will hilite all rows of this
+			group in other views. Builds a map with the group row keys and
+			the related input table row keys.
+        </option>
+        <option name="Group by column(s)">
+	        Select one or more column(s) to perform a grouping on.
+		</option>
+    </fullDescription>
+    <ports>
+        <dataIn index="0" name="Data table">
+	        Input table with at least two columns to perform the grouping.
+        </dataIn>
+        <dataOut index="0" name="Pivoting table">
+        	Result table with a row per unique group column value pair.
+		</dataOut>
+    </ports>
+</knimeNode>
