@@ -26,6 +26,7 @@
 package org.knime.base.node.mine.decisiontree2.model;
 
 import java.awt.Color;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -152,14 +153,14 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
         children[1].setParent(this);
 
         m_threshold = splitThreshold;
-        
+        NumberFormat nf = NumberFormat.getInstance();
         if (super.getChildNodeAt(0) != null) {
             super.getChildNodeAt(0).setPrefix(
-                    getSplitAttr() + " <= " + m_threshold);
+                    getSplitAttr() + " <= " + nf.format(m_threshold));
         }
         if (super.getChildNodeAt(1) != null) {
             super.getChildNodeAt(1).setPrefix(
-                    getSplitAttr() + " > " + m_threshold);
+                    getSplitAttr() + " > " + nf.format(m_threshold));
         }
     }
 
@@ -277,13 +278,14 @@ public class DecisionTreeNodeSplitContinuous extends DecisionTreeNodeSplit {
         if (!super.addNodeToTreeDepthFirst(node, ix)) {
             return false;
         }
+        NumberFormat nf = NumberFormat.getInstance();
         if (super.getChildNodeAt(0) != null) {
             super.getChildNodeAt(0).setPrefix(
-                    getSplitAttr() + " <= " + m_threshold);
+                    getSplitAttr() + " <= " + nf.format(m_threshold));
         }
         if (super.getChildNodeAt(1) != null) {
             super.getChildNodeAt(1).setPrefix(
-                    getSplitAttr() + " > " + m_threshold);
+                    getSplitAttr() + " > " + nf.format(m_threshold));
         }
         return true;
     }

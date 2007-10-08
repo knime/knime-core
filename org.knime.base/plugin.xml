@@ -146,6 +146,16 @@
             level-id="miscClass"
             name="Misc Classifiers"
             path="/mining"/>
+      <category
+            icon="icons/missing.gif"
+            level-id="bayes"
+            name="Bayes"
+            path="/mining"/>
+      <category
+            icon="icons/missing.gif"
+            level-id="mds"
+            name="MDS"
+            path="/mining"/>
             
    </extension>
 
@@ -521,6 +531,10 @@
             category-path="/mining/mds"
             factory-class="org.knime.base.node.mine.mds.MDSPivotNodeFactory"
             id="org.knime.base.node.mine.mds.MDSPivotNodeFactory"/>
+      <node
+            category-path="/mining/modeleval"
+            factory-class="org.knime.base.node.viz.enrich.EnrichmentPlotterFactory"
+            id="org.knime.chem.node.viz.enrich.EnrichmentPlotterFactory"/>
    </extension>
    
    
