@@ -159,14 +159,7 @@ public abstract class NodeFactory {
      * description. Prints log message if that fails.
      */
     private static void instantiateParser() {
-        // temporarily changing the class loder here is to prevent that some
-        // external library is foisting us an incompatible XML library;
-        // using the system class loader should make sure, the the platform
-        // default XML classes are used
-        ClassLoader def = Thread.currentThread().getContextClassLoader();
         try {
-            Thread.currentThread().setContextClassLoader(
-                    ClassLoader.getSystemClassLoader());
             DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 
             // sets validation with DTD file
@@ -211,8 +204,6 @@ public abstract class NodeFactory {
             NodeLogger.getLogger(NodeFactory.class).error(ex.getMessage(), ex);
         } catch (TransformerFactoryConfigurationError ex) {
             NodeLogger.getLogger(NodeFactory.class).error(ex.getMessage(), ex);
-        } finally {
-            Thread.currentThread().setContextClassLoader(def);
         }
     }
 

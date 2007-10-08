@@ -58,22 +58,11 @@ final class XMLConfig {
     private static SAXTransformerFactory transformerFactory;
     
     static {
-        // temporarily changing the class loder here is to prevent that some
-        // external library is foisting us an incompatible XML library;
-        // using the system class loader should make sure, the the platform
-        // default XML classes are used
-        ClassLoader def = Thread.currentThread().getContextClassLoader();
-        try {            
-            Thread.currentThread().setContextClassLoader(
-                    ClassLoader.getSystemClassLoader());
-            parserFactory = SAXParserFactory.newInstance();
-            parserFactory.setValidating(true);
-            
-            transformerFactory =
+        parserFactory = SAXParserFactory.newInstance();
+        parserFactory.setValidating(true);
+
+        transformerFactory =
                 (SAXTransformerFactory)TransformerFactory.newInstance();
-        } finally {        
-            Thread.currentThread().setContextClassLoader(def);
-        }
     }
     
     private XMLConfig() {
