@@ -66,9 +66,9 @@ public class TableRowHeaderModel extends AbstractTableModel {
 
     /**
      * In some, very rare cases we need to set the column name - which,
-     * by default is just "Key".
+     * by default is just "Row ID".
      */
-    private String m_columnName = "Key";
+    private String m_columnName = "Row ID";
 
     
     /** 
