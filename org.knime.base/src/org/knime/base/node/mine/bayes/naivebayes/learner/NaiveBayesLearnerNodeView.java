@@ -1,11 +1,11 @@
-package org.knime.base.node.bayes.naivebayes.learner;
+package org.knime.base.node.mine.bayes.naivebayes.learner;
 
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
-import org.knime.base.node.bayes.naivebayes.datamodel.NaiveBayesModel;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
 
 
 /**

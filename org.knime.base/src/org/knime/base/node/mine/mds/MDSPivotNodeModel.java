@@ -22,7 +22,7 @@
  * History
  *   21.12.2006 (gabriel): created
  */
-package org.knime.base.node.mds;
+package org.knime.base.node.mine.mds;
 
 import java.io.File;
 import java.io.IOException;

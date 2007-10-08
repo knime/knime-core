@@ -22,7 +22,7 @@
  * History
  *   18.02.2007 (wiswedel): created
  */
-package org.knime.base.node.correlation.pmcc;
+package org.knime.base.node.preproc.correlation.pmcc;
 
 import java.util.Arrays;
 import java.util.HashSet;

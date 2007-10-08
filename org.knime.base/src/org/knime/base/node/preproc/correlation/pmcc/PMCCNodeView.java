@@ -21,7 +21,7 @@
  * History
  *   Apr 1, 2007 (wiswedel): created
  */
-package org.knime.base.node.correlation.pmcc;
+package org.knime.base.node.preproc.correlation.pmcc;
 
 import java.awt.Color;
 import java.awt.Component;

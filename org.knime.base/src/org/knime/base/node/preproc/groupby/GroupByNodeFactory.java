@@ -22,7 +22,7 @@
  *  History 
  *      28.06.2007 (Tobias Koetter): created
  */
-package org.knime.base.node.groupby;
+package org.knime.base.node.preproc.groupby;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

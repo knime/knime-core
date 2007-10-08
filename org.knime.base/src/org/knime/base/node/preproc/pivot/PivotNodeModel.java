@@ -22,7 +22,7 @@
  * History
  *   03.05.2007 (gabriel): created
  */
-package org.knime.base.node.pivot;
+package org.knime.base.node.preproc.pivot;
 
 import java.io.File;
 import java.io.FileInputStream;

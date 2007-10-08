@@ -16,7 +16,7 @@
  * History
  *   02.05.2006 (koetter): created
  */
-package org.knime.base.node.bayes.naivebayes.predictor;
+package org.knime.base.node.mine.bayes.naivebayes.predictor;
 
 import java.io.File;
 import java.util.List;
@@ -34,7 +34,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.base.node.bayes.naivebayes.datamodel.NaiveBayesModel;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
 
 /**
  * This is the implementation of the "BayesianClassifier".

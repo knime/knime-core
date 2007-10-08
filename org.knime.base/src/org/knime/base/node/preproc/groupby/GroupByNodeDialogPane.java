@@ -22,7 +22,7 @@
  *  History 
  *      28.06.2007 (Tobias Koetter): created
  */
-package org.knime.base.node.groupby;
+package org.knime.base.node.preproc.groupby;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;

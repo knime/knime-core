@@ -22,7 +22,7 @@
  * History
  *   25.02.2007 (wiswedel): created
  */
-package org.knime.base.node.lowvarfilter;
+package org.knime.base.node.preproc.lowvarfilter;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

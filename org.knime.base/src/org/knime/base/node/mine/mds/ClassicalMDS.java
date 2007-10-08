@@ -1,4 +1,4 @@
-package org.knime.base.node.mds;
+package org.knime.base.node.mine.mds;
 
 public class ClassicalMDS {
 	public static void mds(final double[][] data, final double[][] result, final int k) {

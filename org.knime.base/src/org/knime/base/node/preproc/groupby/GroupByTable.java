@@ -23,7 +23,7 @@
  *    29.06.2007 (Tobias Koetter): created
  */
 
-package org.knime.base.node.groupby;
+package org.knime.base.node.preproc.groupby;
 
 import java.util.ArrayList;
 import java.util.Arrays;

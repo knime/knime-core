@@ -16,7 +16,7 @@
  * History
  *   01.05.2006 (koetter): created
  */
-package org.knime.base.node.bayes.naivebayes.datamodel;
+package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;

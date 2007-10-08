@@ -22,7 +22,7 @@
  * History
  *   15.06.2007 (gabriel): created
  */
-package org.knime.base.node.pivot;
+package org.knime.base.node.preproc.pivot;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

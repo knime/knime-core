@@ -22,7 +22,7 @@
  * History
  *   22.12.2006 (gabriel): created
  */
-package org.knime.base.node.mds;
+package org.knime.base.node.mine.mds;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;

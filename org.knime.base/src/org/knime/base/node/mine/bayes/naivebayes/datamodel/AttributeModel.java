@@ -23,7 +23,7 @@
  *    24.03.2007 (Tobias Koetter): created
  */
 
-package org.knime.base.node.bayes.naivebayes.datamodel;
+package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
 import java.util.ArrayList;
 import java.util.Collection;

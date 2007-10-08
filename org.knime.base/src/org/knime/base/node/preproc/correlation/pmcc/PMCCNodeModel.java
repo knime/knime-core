@@ -22,7 +22,7 @@
  * History
  *   Feb 17, 2007 (wiswedel): created
  */
-package org.knime.base.node.correlation.pmcc;
+package org.knime.base.node.preproc.correlation.pmcc;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

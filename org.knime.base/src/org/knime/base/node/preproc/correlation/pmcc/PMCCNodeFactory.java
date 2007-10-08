@@ -22,7 +22,7 @@
  * History
  *   Feb 17, 2007 (wiswedel): created
  */
-package org.knime.base.node.correlation.pmcc;
+package org.knime.base.node.preproc.correlation.pmcc;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;

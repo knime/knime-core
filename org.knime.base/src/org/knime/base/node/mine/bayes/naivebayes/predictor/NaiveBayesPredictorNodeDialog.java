@@ -16,7 +16,7 @@
  * History
  *   02.05.2006 (koetter): created
  */
-package org.knime.base.node.bayes.naivebayes.predictor;
+package org.knime.base.node.mine.bayes.naivebayes.predictor;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;

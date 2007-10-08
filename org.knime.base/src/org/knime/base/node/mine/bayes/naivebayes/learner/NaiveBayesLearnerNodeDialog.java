@@ -16,7 +16,7 @@
  * History
  *   02.05.2006 (koetter): created
  */
-package org.knime.base.node.bayes.naivebayes.learner;
+package org.knime.base.node.mine.bayes.naivebayes.learner;
 
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;

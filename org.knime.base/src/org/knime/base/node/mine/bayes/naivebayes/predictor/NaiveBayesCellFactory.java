@@ -16,7 +16,7 @@
  * History
  *   02.05.2006 (koetter): created
  */
-package org.knime.base.node.bayes.naivebayes.predictor;
+package org.knime.base.node.mine.bayes.naivebayes.predictor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +33,7 @@ import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.base.node.bayes.naivebayes.datamodel.NaiveBayesModel;
+import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
 
 /**
  * Naive Bayes <code>AppendCellFactory</code> class which uses the given 
