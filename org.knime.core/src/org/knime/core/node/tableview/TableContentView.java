@@ -31,6 +31,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Enumeration;
@@ -38,6 +39,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.swing.Action;
+import javax.swing.ActionMap;
 import javax.swing.ButtonGroup;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -112,6 +115,55 @@ public class TableContentView extends JTable {
         // just initializing the member is not sufficient as the 
         // <init> of super initialized the header as well.
         setShowIconInColumnHeader(true);
+
+        /* ******************************************************************
+         * Workaround for bug 
+         * http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=1219
+         * (Unable to move columns in large TableViews)
+         * This is caused by a bug introduced in java6 
+         * (fixed in update 4, build 2, which is not yet available, 6 Oct 07).
+         * This workaround is stated below.
+         * *****************************************************************/
+        final MouseListener bug6503981WorkaroundListener = 
+            new MouseAdapter() {
+            /** {@inheritDoc} */
+            @Override
+            public void mousePressed(final MouseEvent e) {
+                JTableHeader header = getTableHeader();
+                if (header != null) {
+                    int column = header.getColumnModel().getColumnIndexAtX(
+                            e.getPoint().x);
+                    if (column >= 0) {
+                        setColumnSelectionInterval(column, column);
+                        ActionMap map = getActionMap();
+                        Action a = map != null ? map.get("focusHeader") : null;
+                        if (a != null) {
+                            a.actionPerformed(new ActionEvent(
+                                TableContentView.this, 0, "focusHeader"));
+                        }
+                   }
+                }
+            }  
+        };
+        addPropertyChangeListener("tableHeader", new PropertyChangeListener() {
+            /** {@inheritDoc} */
+            public void propertyChange(final PropertyChangeEvent evt) {
+                if (evt.getOldValue() instanceof JTableHeader) {
+                    JTableHeader oldHead = (JTableHeader)evt.getOldValue();
+                    oldHead.removeMouseListener(bug6503981WorkaroundListener);
+                }
+                if (evt.getNewValue() instanceof JTableHeader) {
+                    JTableHeader newHead = (JTableHeader)evt.getNewValue();
+                    newHead.addMouseListener(bug6503981WorkaroundListener);
+                }
+            }
+        });
+        if (getTableHeader() != null) {
+            getTableHeader().addMouseListener(bug6503981WorkaroundListener);
+        }
+        /* ******************************************************************
+         * Workaround ends here.
+         * *****************************************************************/
     } // TableContentView(TableModel)
 
     /**
