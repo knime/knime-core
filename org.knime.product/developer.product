@@ -25,10 +25,17 @@ Uses: Java, GEF, Log4J
 
    <launcherArgs>
       <programArgs>-clean</programArgs>
-      <vmArgs>-Xmx256M -XX:MaxPermSize=128m -server</vmArgs>
+      <vmArgs>-Xmx256m -XX:MaxPermSize=128m -server</vmArgs>
    </launcherArgs>
 
    <windowImages/>
+
+   <launcher name="eclipse">
+      <solaris/>
+      <win useIco="false">
+         <bmp/>
+      </win>
+   </launcher>
 
    <vm>
    </vm>
