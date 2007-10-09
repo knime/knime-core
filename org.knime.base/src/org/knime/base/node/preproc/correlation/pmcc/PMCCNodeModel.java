@@ -31,8 +31,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +58,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -150,6 +153,8 @@ public class PMCCNodeModel extends NodeModel {
         // What is a contingency table?
         // http://en.wikipedia.org/wiki/Contingency_table
         int[][][] contingencyTables = new int[nomCount][][];
+        // column which only contain one value - no correlation available
+        LinkedHashSet<String> constantColumns = new LinkedHashSet<String>();
         int valIndex = 0;
         for (int i = 0; i < l; i++) {
             for (int j = i + 1; j < l; j++) {
@@ -158,14 +163,44 @@ public class PMCCNodeModel extends NodeModel {
                     int jSize = possibleValues[j].size();
                     contingencyTables[valIndex] = new int[iSize][jSize];
                 }
-                DataType ti = filterTableSpec.getColumnSpec(i).getType();
-                DataType tj = filterTableSpec.getColumnSpec(j).getType();
+                DataColumnSpec colSpecI = filterTableSpec.getColumnSpec(i);
+                DataColumnSpec colSpecJ = filterTableSpec.getColumnSpec(j);
+                DataType ti = colSpecI.getType();
+                DataType tj = colSpecJ.getType();
                 if (ti.isCompatible(DoubleValue.class) 
                         && tj.isCompatible(DoubleValue.class)) {
-                    nominatorMatrix.set(i, j, 0.0);
+                    // one of the two columns contains only one value
+                    if (statTable.getVariance(i) < PMCCModel.ROUND_ERROR_OK) {
+                        constantColumns.add(colSpecI.getName());
+                        nominatorMatrix.set(i, j, Double.NaN);
+                    } else if (statTable.getVariance(j) 
+                            < PMCCModel.ROUND_ERROR_OK) {
+                        constantColumns.add(colSpecJ.getName());
+                        nominatorMatrix.set(i, j, Double.NaN);
+                    } else {
+                        nominatorMatrix.set(i, j, 0.0);
+                    }
                 }
                 valIndex++;
             }
+        }
+        // column containing only one numeric value can't have a correlation
+        // to other column (will be a missing value)
+        if (!constantColumns.isEmpty()) {
+            String[] constantColumnNames = constantColumns.toArray(
+                    new String[constantColumns.size()]);
+            NodeLogger.getLogger(getClass()).info("The following numeric " 
+                    + "columns contain only one distinct value or have " 
+                    + "otherwise a low standard deviation: " 
+                    + Arrays.toString(constantColumnNames));
+            int maxLength = 4;
+            if (constantColumns.size() > maxLength) {
+                constantColumnNames = 
+                    Arrays.copyOf(constantColumnNames, maxLength);
+                constantColumnNames[maxLength - 1] = "...";
+            }
+            setWarningMessage("Some columns contain only one distinct value: "
+                    + Arrays.toString(constantColumnNames));
         }
         
         DataTable att;

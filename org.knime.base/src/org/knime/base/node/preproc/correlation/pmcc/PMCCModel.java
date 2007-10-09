@@ -57,7 +57,9 @@ final class PMCCModel  {
     private final String[] m_colNames;
     private final HalfDoubleMatrix m_correlations;
     
-    private static final double ROUND_ERROR_OK = 1e-8; 
+    /** Values smaller than this are considered to be 0, used to avoid
+     * round-off errors. */
+    static final double ROUND_ERROR_OK = 1e-8; 
     
     PMCCModel(final String[] includes, final HalfDoubleMatrix cors) 
         throws InvalidSettingsException {
