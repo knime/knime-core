@@ -193,7 +193,7 @@ public final class ColorModelRange implements ColorModel {
         int[] min = config.getIntArray(CFG_LOWER_COLOR);
         Color minColor = new Color(min[0], min[1], min[2], min[3]);
         int[] max = config.getIntArray(CFG_UPPER_COLOR);
-        Color maxColor = new Color(max[0], max[1], min[2], min[3]);
+        Color maxColor = new Color(max[0], max[1], max[2], max[3]);
         return new ColorModelRange(lower, minColor, upper, maxColor);
     }
 
