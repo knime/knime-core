@@ -30,7 +30,8 @@ Uses: Java, GEF, Log4J
 
    <windowImages/>
 
-
+   <splash
+      location="org.eclipse.platform" />
    <launcher name="eclipse">
       <solaris/>
       <win useIco="false">
