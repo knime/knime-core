@@ -286,7 +286,6 @@ terms of this License.
       <import plugin="org.eclipse.ui.views"/>
       <import plugin="org.eclipse.ui.workbench"/>
       <import plugin="org.eclipse.ui.console"/>
-      <import plugin="org.apache.xerces"/>
       <import plugin="org.eclipse.help.webapp"/>
       <import plugin="org.eclipse.help.ui"/>
       <import plugin="org.eclipse.help"/>
@@ -366,6 +365,13 @@ terms of this License.
 
    <plugin
          id="org.apache.xerces"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.apache.xml.resolver"
          download-size="0"
          install-size="0"
          version="0.0.0"
