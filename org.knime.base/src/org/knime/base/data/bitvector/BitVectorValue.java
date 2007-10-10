@@ -25,11 +25,9 @@
  */
 package org.knime.base.data.bitvector;
 
-import java.io.File;
 import java.util.BitSet;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 
 import org.knime.base.data.bitvector.BitVectorValueStringRenderer.Type;
 import org.knime.core.data.DataColumnSpec;
@@ -68,23 +66,9 @@ public interface BitVectorValue extends DataValue {
     /** Utility Factory for Bit Vector values. */
     static class BitVectorUtilityFactory extends UtilityFactory {
         
-        private static final Icon ICON;
+        private static final Icon ICON = 
+            loadIcon(BitVectorValue.class, "/bitvectoricon.png");
 
-        /** Loads the bitvector icon. */
-        static {
-            ImageIcon icon;
-            try {
-                ClassLoader loader = BitVectorValue.class.getClassLoader();
-                String path = BitVectorValue.class.getPackage()
-                    .getName().replace('.', File.separatorChar);
-                icon = new ImageIcon(loader.getResource(path
-                        + File.separatorChar + "bitvectoricon.png"));
-            } catch (Exception e) {
-                icon = null;
-            }
-            ICON = icon;
-        }
-        
         /** {@inheritDoc} */
         @Override
         protected DataValueComparator getComparator() {

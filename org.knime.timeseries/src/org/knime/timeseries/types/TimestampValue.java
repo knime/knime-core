@@ -26,7 +26,6 @@ package org.knime.timeseries.types;
 import java.util.Date;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
@@ -51,22 +50,8 @@ public interface TimestampValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     public static class TimestampUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON;
-
-        /** Load icon, use <code>null</code> if not available. */
-        static {
-            ImageIcon icon;
-            try {
-                ClassLoader loader = TimestampValue.class.getClassLoader();
-                String path = 
-                  TimestampValue.class.getPackage().getName().replace('.', '/');
-                icon = new ImageIcon(
-                        loader.getResource(path + "./Timestamp.png"));
-            } catch (Exception e) {
-                icon = null;
-            }
-            ICON = icon;
-        }
+        private static final Icon ICON = 
+            loadIcon(TimestampValue.class, "/Timestamp.png");
 
         private static final TimestampValueComparator COMPARATOR =
             new TimestampValueComparator();
