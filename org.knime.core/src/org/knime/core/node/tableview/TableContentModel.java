@@ -831,7 +831,7 @@ public class TableContentModel extends AbstractTableModel
      * @return the row at a specific position
      * @throws IndexOutOfBoundsException if <code>row</code> violates its range
      */
-    protected DataRow getRow(final int row) {
+    public DataRow getRow(final int row) {
         boundRow(row);
         final int cacheSize = getCacheSize();
         final int oldRowCount = getRowCount();

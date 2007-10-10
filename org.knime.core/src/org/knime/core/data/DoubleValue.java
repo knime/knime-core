@@ -25,7 +25,6 @@
 package org.knime.core.data;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 
 import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
@@ -54,22 +53,8 @@ public interface DoubleValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     public static class DoubleUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON;
-
-        /** Load double icon, use <code>null</code> if not available. */
-        static {
-            ImageIcon icon;
-            try {
-                ClassLoader loader = DoubleValue.class.getClassLoader();
-                String path = 
-                    DoubleValue.class.getPackage().getName().replace('.', '/');
-                icon = new ImageIcon(
-                        loader.getResource(path + "/icon/doubleicon.png"));
-            } catch (Exception e) {
-                icon = null;
-            }
-            ICON = icon;
-        }
+        private static final Icon ICON = 
+            loadIcon(DoubleValue.class, "/icon/doubleicon.png");
 
         private static final DoubleValueComparator COMPARATOR =
             new DoubleValueComparator();

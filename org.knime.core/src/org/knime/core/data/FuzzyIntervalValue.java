@@ -25,7 +25,6 @@
 package org.knime.core.data;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 
 /**
  * Interface supporting fuzzy interval cells holding support and core min and
@@ -69,22 +68,8 @@ public interface FuzzyIntervalValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     public static class FuzzyIntervalUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON;
-
-        /** Load icon, use <code>null</code> if not available. */
-        static {
-            ImageIcon icon;
-            try {
-                ClassLoader loader = FuzzyIntervalValue.class.getClassLoader();
-                String path = FuzzyIntervalValue.class.getPackage().
-                    getName().replace('.', '/');
-                icon = new ImageIcon(loader.getResource(
-                        path + "/icon/fuzzyintervalicon.png"));
-            } catch (Exception e) {
-                icon = null;
-            }
-            ICON = icon;
-        }
+        private static final Icon ICON = 
+            loadIcon(FuzzyIntervalValue.class, "/icon/fuzzyintervalicon.png");
 
         private static final FuzzyIntervalValueComparator COMPARATOR =
             new FuzzyIntervalValueComparator();

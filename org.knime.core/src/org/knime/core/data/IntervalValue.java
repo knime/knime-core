@@ -23,7 +23,6 @@
 package org.knime.core.data;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 
 /**
  * Interface supporting interval cells holding minimum and maximum boundaries.
@@ -94,22 +93,8 @@ public interface IntervalValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     public static class IntervalUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON;
-
-        /** Load icon, use <code>null</code> if not available. */
-        static {
-            ImageIcon icon;
-            try {
-                ClassLoader loader = IntervalValue.class.getClassLoader();
-                String path = IntervalValue.class.getPackage().getName().
-                        replace('.', '/');
-                icon = new ImageIcon(loader.getResource(path
-                        + "/icon/intervalicon.png"));
-            } catch (Exception e) {
-                icon = null;
-            }
-            ICON = icon;
-        }
+        private static final Icon ICON = 
+            loadIcon(IntervalValue.class, "/icon/intervalicon.png");
 
         private static final IntervalValueComparator COMPARATOR =
                 new IntervalValueComparator();

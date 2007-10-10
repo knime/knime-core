@@ -26,6 +26,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import org.knime.core.data.renderer.DataValueRendererFamily;
+import org.knime.core.node.NodeLogger;
 
 /**
  * The interface all value interfaces of {@link org.knime.core.data.DataCell}s 
@@ -70,25 +71,8 @@ public interface DataValue {
          * Icon which is used as "fallback" representative when no specialized
          * icon is found in derivates of this class.
          */
-        private static final Icon ICON;
-
-        /**
-         * Loads the default icon, if it fails the icon remains 
-         * <code>null</code>.
-         */
-        static {
-            ImageIcon icon;
-            try {
-                ClassLoader loader = DataValue.class.getClassLoader();
-                String path = DataValue.class.getPackage().getName().replace(
-                        '.', '/');
-                icon = new ImageIcon(loader.getResource(
-                        path + "/icon/defaulticon.png"));
-            } catch (Exception e) {
-                icon = null;
-            }
-            ICON = icon;
-        }
+        private static final Icon ICON = loadIcon(
+                DataCell.class, "/icon/defaulticon.png");
 
         /**
          * Only subclasses are allowed to instantiate this class. This
@@ -154,6 +138,34 @@ public interface DataValue {
          */
         protected DataValueComparator getComparator() {
             return null;
+        }
+        
+        /** Convenience method to allow subclasses to load their icon. The icon
+         * is supposed to be located relative to the package associated with the
+         * argument class under the path <code>path</code>. This method will 
+         * not throw an exception when the loading fails but instead return a 
+         * <code>null</code> icon.
+         * @param clazz The class object, from which to retrieve the 
+         * {@link Class#getPackage() package}, e.g. <code>FooValue.class</code>.
+         * @param path The icon path relative to package associated with the 
+         * class argument. It typically starts with a '/'.
+         * @return the icon loaded from that path or null if it loading fails
+         */
+        protected static Icon loadIcon(
+                final Class<?> clazz, final String path) {
+            ImageIcon icon;
+            try {
+                ClassLoader loader = clazz.getClassLoader(); 
+                    DataValue.class.getClassLoader();
+                String packagePath = 
+                    clazz.getPackage().getName().replace('.', '/');
+                icon = new ImageIcon(loader.getResource(packagePath + path));
+            } catch (Exception e) {
+                NodeLogger.getLogger(DataValue.class).debug(
+                        "Unable to load icon at path " + path, e);
+                icon = null;
+            }
+            return icon;
         }
     }
 }

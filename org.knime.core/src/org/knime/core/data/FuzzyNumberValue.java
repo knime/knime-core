@@ -25,7 +25,6 @@
 package org.knime.core.data;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 
 /**
  * Interface supporting fuzzy numbers defined by min and max support, and core. 
@@ -58,22 +57,8 @@ public interface FuzzyNumberValue extends DataValue {
     /** Implementations of the meta information of this value class. */
     public static class FuzzyNumberUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON;
-
-        /** Load icon, use <code>null</code> if not available. */
-        static {
-            ImageIcon icon;
-            try {
-                ClassLoader loader = FuzzyNumberValue.class.getClassLoader();
-                String path = FuzzyNumberValue.class.getPackage().
-                    getName().replace('.', '/');
-                icon = new ImageIcon(
-                        loader.getResource(path + "/icon/fuzzyicon.png"));
-            } catch (Exception e) {
-                icon = null;
-            }
-            ICON = icon;
-        }
+        private static final Icon ICON = 
+            loadIcon(FuzzyNumberValue.class, "/icon/fuzzyicon.png");
 
         private static final FuzzyNumberValueComparator COMPARATOR =
             new FuzzyNumberValueComparator();

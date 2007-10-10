@@ -25,7 +25,6 @@
 package org.knime.core.data;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 
 /**
  * Interface supporting generic complex number values.
@@ -53,22 +52,8 @@ public interface ComplexNumberValue extends DataValue {
     /** Meta information to the complex number value. */
     public static class ComplexNumberUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON;
-
-        /** Load icon, use <code>null</code> if not available. */
-        static {
-            ImageIcon icon;
-            try {
-                ClassLoader loader = ComplexNumberValue.class.getClassLoader();
-                String path = ComplexNumberValue.class.getPackage().
-                    getName().replace('.', '/');
-                icon = new ImageIcon(loader.getResource(
-                        path + "/icon/complexnumbericon.png"));
-            } catch (Exception e) {
-                icon = null;
-            }
-            ICON = icon;
-        }
+        private static final Icon ICON = 
+            loadIcon(ComplexNumberValue.class, "/icon/complexnumbericon.png");
 
         private static final ComplexNumberValueComparator COMPARATOR =
             new ComplexNumberValueComparator();
