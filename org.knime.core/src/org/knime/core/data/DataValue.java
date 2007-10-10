@@ -148,7 +148,7 @@ public interface DataValue {
          * @param className The class object, from which to retrieve the 
          * {@link Class#getPackage() package}, e.g. <code>FooValue.class</code>.
          * @param path The icon path relative to package associated with the 
-         * class argument. It typically starts with a '/'.
+         * class argument. 
          * @return the icon loaded from that path or null if it loading fails
          */
         protected static Icon loadIcon(
@@ -159,7 +159,12 @@ public interface DataValue {
                     DataValue.class.getClassLoader();
                 String packagePath = 
                     className.getPackage().getName().replace('.', '/');
-                icon = new ImageIcon(loader.getResource(packagePath + path));
+                String correctedPath = path;
+                if (!path.startsWith("/")) {
+                    correctedPath = "/" + path;
+                }
+                icon = new ImageIcon(
+                        loader.getResource(packagePath + correctedPath));
             } catch (Exception e) {
                 NodeLogger.getLogger(DataValue.class).debug(
                         "Unable to load icon at path " + path, e);
