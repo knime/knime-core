@@ -145,20 +145,20 @@ public interface DataValue {
          * argument class under the path <code>path</code>. This method will 
          * not throw an exception when the loading fails but instead return a 
          * <code>null</code> icon.
-         * @param clazz The class object, from which to retrieve the 
+         * @param className The class object, from which to retrieve the 
          * {@link Class#getPackage() package}, e.g. <code>FooValue.class</code>.
          * @param path The icon path relative to package associated with the 
          * class argument. It typically starts with a '/'.
          * @return the icon loaded from that path or null if it loading fails
          */
         protected static Icon loadIcon(
-                final Class<?> clazz, final String path) {
+                final Class<?> className, final String path) {
             ImageIcon icon;
             try {
-                ClassLoader loader = clazz.getClassLoader(); 
+                ClassLoader loader = className.getClassLoader(); 
                     DataValue.class.getClassLoader();
                 String packagePath = 
-                    clazz.getPackage().getName().replace('.', '/');
+                    className.getPackage().getName().replace('.', '/');
                 icon = new ImageIcon(loader.getResource(packagePath + path));
             } catch (Exception e) {
                 NodeLogger.getLogger(DataValue.class).debug(
