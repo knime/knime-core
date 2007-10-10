@@ -30,11 +30,11 @@ import java.awt.Graphics;
 
 import javax.swing.Icon;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
 
 
 /**
@@ -100,20 +100,18 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
             DoubleValue cell = (DoubleValue)value;
             double val = cell.getDoubleValue();
             DataColumnSpec spec = getColSpec();
-            boolean takeValuesFrom = spec != null;
-            takeValuesFrom &= spec.getDomain().hasLowerBound();
-            takeValuesFrom &= spec.getDomain().hasUpperBound();
-            takeValuesFrom &= DoubleCell.TYPE.isASuperTypeOf(
-                    spec.getType());
-            double min;
-            double max;
-            if (takeValuesFrom) {
-                DataColumnDomain d = spec.getDomain();
-                min = ((DoubleValue)d.getLowerBound()).getDoubleValue();
-                max = ((DoubleValue)d.getUpperBound()).getDoubleValue();
-            } else {
-                min = Double.POSITIVE_INFINITY;
-                max = Double.NEGATIVE_INFINITY;
+            double min = Double.POSITIVE_INFINITY;
+            double max = Double.NEGATIVE_INFINITY;
+            if (spec != null) {
+                DataColumnDomain domain = spec.getDomain();
+                DataCell lower = domain.getLowerBound();
+                DataCell upper = domain.getUpperBound();
+                if (lower instanceof DoubleValue) {
+                    min = ((DoubleValue)lower).getDoubleValue();
+                }
+                if (upper instanceof DoubleValue) {
+                    max = ((DoubleValue)upper).getDoubleValue();
+                }
             }
             if (min >= max) {
                 min = 0.0;

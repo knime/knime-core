@@ -33,11 +33,11 @@ import java.awt.geom.Rectangle2D;
 
 import javax.swing.Icon;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
 
 
 /**
@@ -97,19 +97,18 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
             DoubleValue cell = (DoubleValue)value;
             double val = cell.getDoubleValue();
             DataColumnSpec spec = getColSpec();
-            boolean takeValuesFrom = spec != null;
-            takeValuesFrom &= spec.getDomain().hasLowerBound();
-            takeValuesFrom &= spec.getDomain().hasUpperBound();
-            takeValuesFrom &= DoubleCell.TYPE.isASuperTypeOf(spec.getType());
-            double min;
-            double max;
-            if (takeValuesFrom) {
+            double min = Double.POSITIVE_INFINITY;
+            double max = Double.NEGATIVE_INFINITY;
+            if (spec != null) {
                 DataColumnDomain domain = spec.getDomain();
-                min = ((DoubleValue)domain.getLowerBound()).getDoubleValue();
-                max = ((DoubleValue)domain.getUpperBound()).getDoubleValue();
-            } else {
-                min = Double.POSITIVE_INFINITY;
-                max = Double.NEGATIVE_INFINITY;
+                DataCell lower = domain.getLowerBound();
+                DataCell upper = domain.getUpperBound();
+                if (lower instanceof DoubleValue) {
+                    min = ((DoubleValue)lower).getDoubleValue();
+                }
+                if (upper instanceof DoubleValue) {
+                    max = ((DoubleValue)upper).getDoubleValue();
+                }
             }
             if (min >= max) {
                 min = 0.0;
