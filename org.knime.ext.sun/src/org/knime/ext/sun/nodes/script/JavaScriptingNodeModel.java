@@ -329,6 +329,9 @@ public class JavaScriptingNodeModel extends NodeModel {
                     }
                     correctedExp.append((char)tokType);
                     s = t.sval.replace(Character.toString('\\'), "\\\\");
+                    s = s.replace(Character.toString('\n'), "\\n");
+                    s = s.replace(Character.toString('\r'), "\\r");
+                    // escape quote characters
                     s = s.replace(Character.toString((char)tokType),
                             "\\" + (char)tokType);
                     correctedExp.append(s);
