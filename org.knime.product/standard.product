@@ -44,6 +44,7 @@ Uses: Java, GEF, Log4J
    </vm>
 
    <plugins>
+    <plugin id="org.knime.product" version="0.0.0"/>
    </plugins>
 
    <features>
