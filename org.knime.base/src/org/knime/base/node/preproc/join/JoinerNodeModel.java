@@ -96,8 +96,7 @@ public class JoinerNodeModel extends NodeModel {
      * Sets the In<code>HiLiteHandler</code> and registers them at the
      * <code>HiLiteManager</code>.
      * 
-     * @see org.knime.core.node.NodeModel#setInHiLiteHandler(int,
-     *      org.knime.core.node.property.hilite.HiLiteHandler)
+     * {@inheritDoc}
      */
     @Override
     protected void setInHiLiteHandler(final int inIndex,
@@ -116,8 +115,8 @@ public class JoinerNodeModel extends NodeModel {
     private double m_max;
 
     /**
-     * Hard reference to the first element in the current chunk, used todisallow
-     * garbage collection.
+     * Hard reference to the first element in the current chunk, used to 
+     * disallow garbage collection.
      */
     private Helper m_firstMapHelper;
 
