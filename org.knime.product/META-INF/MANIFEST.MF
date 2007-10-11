@@ -4,7 +4,7 @@ Bundle-SymbolicName: org.knime.product;singleton:=true
 Bundle-Version: 1.3.0.ALPHA
 Bundle-ClassPath: workbench-product.jar
 Bundle-Activator: org.knime.product.ProductPlugin
-Bundle-Vendor: University of Konstanz, Germany
+Bundle-Vendor: Chair for Bioinformatics and Information Mining, Prof. Berthold, University of Konstanz, Germany
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
