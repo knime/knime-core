@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./string_number.png" type="Manipulator">
+	<name>String To Number</name>
+	
+	<shortDescription>
+	    Converts strings in a column to numbers.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			Converts strings in a column (or a set of columns) to numbers.
+			If the node fails to parse a string, it will generate a missing cell and append
+	    	a warning message to the KNIME Console with detailed information.
+		</intro>
+		<option name="Column Selection">Move the columns of interest into the &quot;Include&quot; list</option>
+		
+		
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Input">Arbitrary input data.</dataIn>
+		<dataOut index="0" name="Transformed input">Input data with new DoubleTypes.</dataOut>
+	</ports>	
+</knimeNode>
