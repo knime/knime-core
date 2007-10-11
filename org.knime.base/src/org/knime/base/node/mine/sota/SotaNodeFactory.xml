@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./sota.png" type="Learner">
-	<name>SOTA</name>
+	<name>SOTA Learner</name>
 	
 	<shortDescription>
-	    Clusters numerical data with Sota.
+	    Clusters numerical data with SOTA.
 	</shortDescription>
 	
 	<fullDescription>
@@ -12,21 +12,21 @@
 	<p>Clusters numerical and fuzzy data hierarchically with the self organizing 
 	tree algorithm and visualizes the cluster tree similarly like a dendogram.
 	Additionally it builds a model for class prediction of new data. The model can be
-	load into the Sota predictor node.
+	load into the SOTA Predictor node.
 	</p>	
-	<p>The Sota node has a dialog, in which you can choose the winner, ancestor and
+	<p>The SOTA Learner node has a dialog, in which you can choose the winner, ancestor and
 	sister learning rate, to adjust the cluster representants: with the 
 	minimal resource and variability value to stop the growing of the tree; the
 	minimal error, to end a cycle and the distance metric (cosinus, euclidean).
 	The node will cluster the given data hierarchically by use of the self
 	organizing tree algorithm and will produce a cluster tree, which is
 	visualized by the view afterwards, similar to a dendogram.
-	The data is also displayed and can be hilited, as well as each cluster 
+	The data is also displayed and can be hilit, as well as each cluster 
 	representative.
 	Class information can be trained too by selecting the "Use class column"
-	option for uses of class prediction by the Sota predictor node.
+	option for uses of class prediction by the SOTA Predictor node.
 	</p>
-	<p>For more information about the Sota clustering see:
+	<p>For more information about the SOTA clustering see:
 	Herrero J., Valencia A., Dopazo J.:
 	A hierarchical unsupervised growing neural network for clustering gene 
 	expression patterns.
@@ -34,7 +34,7 @@
 	</intro>
 	<option name="Column filter">
 		Choose only these columns for the clustering process which are 
-		important and interesting. Columns which are not choosen will be
+		important and interesting. Columns which are not chosen will be
 		ignored. Be aware that columns containing fuzzy cells and columns 
 		containing number cells can not be mixed.
 	</option>
@@ -90,13 +90,13 @@
 	</option>
 	<option name="Hierarchical level">
 		If the checkbox on the left is checked, to cluster hierarchical fuzzy
-		rules, the column with the fuzzy rule level must be choosen by 
+		rules, the column with the fuzzy rule level must be chosen by 
 		selecting it in the drop down menu.
 	</option>
 	<option name="Use class column">
 		Check to use the class data specified by the drop down box below.
 		The class data will be trained too for the use of class prediction by the
-		SotaPredictor node.
+		SOTA Predictor node.
 	</option>	
 	<option name="Class column">
 		Specifies the column containing the class data. Only string columns can
@@ -114,8 +114,8 @@
 	</ports>	
 		
 	<views>
-		<view index="0" name="Sota Tree View">
-			Displays the results of the Sota clustering
+		<view index="0" name="SOTA Tree View">
+			Displays the results of the SOTA clustering
 		</view>
 	</views>
 	

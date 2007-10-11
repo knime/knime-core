@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./sota.png" type="Predictor">
-	<name>Sota predictor</name>
+<knimeNode icon="../sota.png" type="Predictor">
+	<name>SOTA Predictor</name>
 	
 	<shortDescription>
-		Predicts classes for rows using the input Sota model.
+		Predicts classes for rows using the input SOTA model.
 	</shortDescription>
 	
 	<fullDescription>
 	<intro>		
-		Predicts a class fo each row of the input data table. The class value
+		Predicts a class for each row of the input data table. The class value
 		is a string and the values to predict the class for have to be double
-		values. The sota predictor can only be used with an input sota model,
+		values. The SOTA Predictor can only be used with an input SOTA model,
 		that used the class column during the training phase.
 	</intro>
 	<option name="Column filter">
 		Choose only these columns for the clustering process which are 
-		important and interesting. Columns which are not choosen will be
+		important and interesting. Columns which are not chosen will be
 		ignored. Be aware that columns containing fuzzy cells and columns 
 		containing number cells can not be mixed.
 	</option>
