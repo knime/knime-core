@@ -535,6 +535,38 @@
             category-path="/mining/modeleval"
             factory-class="org.knime.base.node.viz.enrich.EnrichmentPlotterFactory"
             id="org.knime.chem.node.viz.enrich.EnrichmentPlotterFactory"/>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.colcompare.ColumnComparatorNodeFactory"
+            id="org.knime.base.node.preproc.colcompare.ColumnComparatorNodeFactory"/>
+      <node
+            category-path="/manipulation/row"
+            factory-class="org.knime.base.node.preproc.rowsplit.NumericRowSplitterNodeFactory"
+            id="org.knime.base.node.preproc.rowsplit.NumericRowSplitterNodeFactory"/>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.stringreplacer.StringReplacerNodeFactory"
+            id="org.knime.base.node.preproc.stringreplacer.StringReplacerNodeFactory"/>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.caseconvert.CaseConvertNodeFactory"
+            id="org.knime.base.node.preproc.caseconvert.CaseConvertNodeFactory"/>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.stringreplacer.dict.SearchReplaceDictNodeFactory"
+            id="org.knime.base.node.preproc.stringreplacer.dict.SearchReplaceDictNodeFactory"/>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"
+            id="org.knime.base.node.preproc.cellsplit.CellSplitterNodeFactory"/>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"
+            id="org.knime.base.node.preproc.colconvert.numbertostring.NumberToStringNodeFactory"/>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.colconvert.stringtonumber.StringToNumberNodeFactory"
+            id="org.knime.base.node.preproc.colconvert.stringtonumber.StringToNumberNodeFactory"/>
    </extension>
    
    
