@@ -240,10 +240,6 @@
             id="org.knime.base.node.io.csvwriter.CSVWriterNodeFactory"/>
       <node
             category-path="/manipulation/column"
-            factory-class="org.knime.base.node.preproc.join.JoinerNodeFactory"
-            id="org.knime.base.node.preproc.join.JoinerNodeFactory"/>
-      <node
-            category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.joiner.NewJoinerNodeFactory"
             id="org.knime.base.node.preproc.joiner.NewJoinerNodeFactory"/>
       <node
