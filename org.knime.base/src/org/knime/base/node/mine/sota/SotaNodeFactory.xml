@@ -100,7 +100,7 @@
 	</option>	
 	<option name="Class column">
 		Specifies the column containing the class data. Only string columns can
-		be choosen as class columns.
+		be chosen as class columns.
 	</option>		
 	</fullDescription>
 		
