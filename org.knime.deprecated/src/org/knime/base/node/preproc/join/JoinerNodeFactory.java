@@ -22,6 +22,7 @@
  */
 package org.knime.base.node.preproc.join;
 
+import org.knime.base.node.preproc.joiner.NewJoinerNodeFactory;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
@@ -33,6 +34,7 @@ import org.knime.core.node.NodeView;
  * 
  * @see org.knime.base.data.join.JoinedTable
  * @author Bernd Wiswedel, University of Konstanz
+ * @deprecated @deprecated use {@link NewJoinerNodeFactory}
  */
 public class JoinerNodeFactory extends NodeFactory {
     /**
