@@ -34,7 +34,7 @@ import org.knime.core.node.NodeView;
  * 
  * @see org.knime.base.data.join.JoinedTable
  * @author Bernd Wiswedel, University of Konstanz
- * @deprecated @deprecated use {@link NewJoinerNodeFactory}
+ * @deprecated use {@link NewJoinerNodeFactory}
  */
 public class JoinerNodeFactory extends NodeFactory {
     /**
