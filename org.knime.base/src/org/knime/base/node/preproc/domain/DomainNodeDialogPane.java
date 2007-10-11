@@ -36,8 +36,8 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 
+import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -101,7 +101,7 @@ public class DomainNodeDialogPane extends NodeDialogPane {
                 DomainNodeModel.CFG_POSSVAL_COLS, stringCols);
         
         String[] dblCols = 
-            DomainNodeModel.getAllCols(DoubleValue.class, specs[0]);
+            DomainNodeModel.getAllCols(BoundedValue.class, specs[0]);
         String[] minMaxCols = settings.getStringArray(
                 DomainNodeModel.CFG_MIN_MAX_COLS, dblCols);
         m_possValuesPanel.update(specs[0], false, possCols);

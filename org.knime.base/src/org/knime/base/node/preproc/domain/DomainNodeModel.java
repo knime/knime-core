@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
+import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -40,7 +41,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.node.BufferedDataTable;
@@ -178,7 +178,7 @@ public class DomainNodeModel extends NodeModel {
         if (m_minMaxCols == null) {
             setWarningMessage(
                     "No configuration available, using auto-configuration.");
-            m_minMaxCols = getAllCols(DoubleValue.class, oldSpec);
+            m_minMaxCols = getAllCols(BoundedValue.class, oldSpec);
             m_possValCols = getAllCols(NominalValue.class, oldSpec);
             m_maxPossValues = 60;
         }

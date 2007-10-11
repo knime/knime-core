@@ -58,6 +58,6 @@ package org.knime.core.data;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public interface BoundedDataValue extends DataValue {
+public interface BoundedValue extends DataValue {
 
 }

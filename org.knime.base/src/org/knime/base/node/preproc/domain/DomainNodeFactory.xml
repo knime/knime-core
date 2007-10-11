@@ -20,7 +20,7 @@
 		<option name="Possible Values">
 		<p>
 		Include the columns, for which possible values shall be determined and
-		be put in the table specificiation. The default dialog option selects
+		be put in the table specification. The default dialog option selects
 		all columns, which can represent themselves as String. All columns that
 		are not included here won't have a possible values list.
 		</p>
@@ -33,7 +33,8 @@
 		</option>
 		<option name="Min &amp; Max">
 		Select all columns for which min and max values shall be determined. The
-		default dialog option includes all numeric columns.
+		default dialog option includes all &quot;boundable&quot; columns, for
+		instance numeric ones.
 		</option>
 	</fullDescription>
 	
