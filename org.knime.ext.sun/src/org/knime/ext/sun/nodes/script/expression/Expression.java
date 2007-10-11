@@ -170,11 +170,11 @@ public class Expression implements Serializable {
             StringBuilder addInfo = new StringBuilder("(Class file ");
             addInfo.append(m_classFile.getAbsolutePath());
             if (m_classFile.exists()) {
-                addInfo.append("does exist - ");
+                addInfo.append(" does exist - ");
                 addInfo.append(m_classFile.length());
                 addInfo.append(" bytes");
             } else {
-                addInfo.append("does not exist");
+                addInfo.append(" does not exist");
             }
             addInfo.append(")");
             CompilationFailedException c = new CompilationFailedException(
@@ -295,20 +295,4 @@ public class Expression implements Serializable {
             + "  protected final Boolean objectify(boolean b) {\n"
             + "    return new Boolean(b);\n" + "  }\n\n";
 
-    /**
-     * Attempts to delete created class file.
-     * {@inheritDoc}
-     */
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (m_classFile != null && m_classFile.exists()
-                    && !m_classFile.delete()) {
-                LOGGER.warn("Unable to delete temporary class file: "
-                        + m_classFile.getAbsolutePath());
-            }
-        } finally {
-            super.finalize();
-        }
-    }
 }

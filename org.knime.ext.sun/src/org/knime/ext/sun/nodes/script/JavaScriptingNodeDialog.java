@@ -231,9 +231,11 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
                 JavaScriptingNodeModel.CFG_TEST_COMPILATION, isTestCompilation);
         if (isTestCompilation && m_currenteSpec != null) {
             File tempFile = null;
+            File classFile = null;
             try {
-                tempFile = File.createTempFile("javascripting", ".java");
-                tempFile.deleteOnExit();
+                tempFile = JavaScriptingNodeModel.createTempFile();
+                classFile = 
+                    JavaScriptingNodeModel.getAccompanyingClassFile(tempFile);
                 Class<?> rType = JavaScriptingNodeModel.getReturnType(type);
                 JavaScriptingNodeModel.compile(exp, m_currenteSpec, rType,
                         tempFile);
@@ -245,6 +247,9 @@ public class JavaScriptingNodeDialog extends NodeDialogPane {
             } finally {
                 if (tempFile != null) {
                     tempFile.delete();
+                }
+                if (classFile != null) {
+                    classFile.delete();
                 }
             }
         }

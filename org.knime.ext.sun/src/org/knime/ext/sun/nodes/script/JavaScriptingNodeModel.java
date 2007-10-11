@@ -206,7 +206,9 @@ public class JavaScriptingNodeModel extends NodeModel {
             throws InvalidSettingsException, IOException,
             CompilationFailedException, InstantiationException {
         DataColumnSpec newColSpec = getNewColSpec();
-        checkTempFile();
+        if (m_tempFile == null) {
+            m_tempFile = createTempFile();
+        }
         Expression exp = compile(m_expression, spec, m_returnType, m_tempFile);
         ColumnCalculator cc = new ColumnCalculator(exp, m_returnType, spec,
                 newColSpec);
@@ -219,11 +221,42 @@ public class JavaScriptingNodeModel extends NodeModel {
         return result;
     }
 
-    private void checkTempFile() throws IOException {
-        if (m_tempFile == null) {
-            m_tempFile = File.createTempFile("Expression", ".java");
-            m_tempFile.deleteOnExit();
+    /** Creates an returns a temp java file, for which no .class file exists
+     * yet.
+     * @return The temporary java file to use.
+     * @throws IOException If that fails for whatever reason.
+     */
+    static File createTempFile() throws IOException {
+        // what follows: create a temp file, check if the corresponding
+        // class file exists and if so, generate the next temp file
+        // (we can't use a temp file, for which a class file already exists).
+        while (true) {
+            File tempFile = File.createTempFile("Expression", ".java");
+            File classFile = getAccompanyingClassFile(tempFile);
+            if (classFile.exists()) {
+                tempFile.delete();
+            } else {
+                tempFile.deleteOnExit();
+                return tempFile;
+            }
         }
+    }
+    
+    /** Determine the class file name of the javaFile argument. Needed to
+     * check if temp file is ok and on exit (to delete all traces of this node).
+     * @param javaFile The file name of java file
+     * @return The class file (may not exist (yet)).
+     */
+    static File getAccompanyingClassFile(final File javaFile) {
+        if (javaFile == null || !javaFile.getName().endsWith(".java")) {
+            throw new IllegalArgumentException("Can't determine class file for"
+                    + " non-java file: " + javaFile);
+        }
+        File parent = javaFile.getParentFile();
+        String prefixName = javaFile.getName().substring(
+                0, javaFile.getName().length() - ".java".length());
+        String classFileName = prefixName + ".class";
+        return new File(parent, classFileName);
     }
 
     private DataColumnSpec getNewColSpec() throws InvalidSettingsException {
@@ -380,16 +413,21 @@ public class JavaScriptingNodeModel extends NodeModel {
                 tempFile);
     }
 
-    /** Attempts to delete temp file.
-     * {@inheritDoc}
-     */
+    /** Attempts to delete temp files.
+     * {@inheritDoc} */
     @Override
     protected void finalize() throws Throwable {
         try {
-            if ((m_tempFile != null) && m_tempFile.exists()
-                    && !m_tempFile.delete()) {
-                LOGGER.warn("Unable to delete temp file "
-                        + m_tempFile.getAbsolutePath());
+            if ((m_tempFile != null) && m_tempFile.exists()) {
+                if (!m_tempFile.delete()) {
+                    LOGGER.warn("Unable to delete temp file "
+                            + m_tempFile.getAbsolutePath());
+                }
+                File classFile = getAccompanyingClassFile(m_tempFile);
+                if (classFile.exists() && !classFile.delete()) {
+                    LOGGER.warn("Unable to delete temp class file "
+                            + classFile.getAbsolutePath());
+                }
             }
         } finally {
             super.finalize();
