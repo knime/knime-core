@@ -61,8 +61,9 @@ import java.io.Serializable;
  * at hand needs to be written or read. 
  * 
  * <p>
+ * <a name="preferredvalueclass"/>
  * Since <code>DataCell</code> may implement different {@link DataValue}
- * interfaces but only one is the <i>native</i> value class, 
+ * interfaces but only one is the <i>preferred</i> value class, 
  * implement a static method in your derived class with the following signature:
  * 
  * <pre>
@@ -74,7 +75,7 @@ import java.io.Serializable;
  * 
  * This method is called once when the runtime {@link DataType} of the cell is
  * created using reflection. The associated {@link DataType} provides the
- * renderer, icon, and comparator of this native value. If this method is 
+ * renderer, icon, and comparator of this preferred value. If this method is 
  * not implemented, the order on the value interfaces is undefined.
  * 
  * <p>

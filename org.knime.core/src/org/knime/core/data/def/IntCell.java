@@ -30,6 +30,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.knime.core.data.BoundedDataValue;
 import org.knime.core.data.ComplexNumberValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellSerializer;
@@ -48,7 +49,8 @@ import org.knime.core.data.IntValue;
  * @author Michael Berthold, University of Konstanz
  */
 public class IntCell extends DataCell implements IntValue, DoubleValue,
-        ComplexNumberValue, FuzzyNumberValue, FuzzyIntervalValue {
+        ComplexNumberValue, FuzzyNumberValue, 
+        FuzzyIntervalValue, BoundedDataValue {
 
     /**
      * Convenience access member for

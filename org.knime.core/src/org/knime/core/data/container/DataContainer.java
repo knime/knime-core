@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.knime.core.data.BoundedDataValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -44,7 +45,6 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
@@ -250,9 +250,9 @@ public class DataContainer implements RowAppender {
                             : DataType.getMissingCell();
                     m_maxCells[i] = max != null ? max 
                             : DataType.getMissingCell();
-                } else if (colType.isCompatible(DoubleValue.class)) {
+                } else if (colType.isCompatible(BoundedDataValue.class)) {
                     // if no min/max available, init only if column is
-                    // double compatible
+                    // "boundable"
                     m_minCells[i] = DataType.getMissingCell();
                     m_maxCells[i] = DataType.getMissingCell();
                 } else {
@@ -261,7 +261,7 @@ public class DataContainer implements RowAppender {
                     m_maxCells[i] = null;
                 }
             } else {
-                if (colType.isCompatible(DoubleValue.class)) {
+                if (colType.isCompatible(BoundedDataValue.class)) {
                     m_minCells[i] = DataType.getMissingCell();
                     m_maxCells[i] = DataType.getMissingCell();
                 } else {
