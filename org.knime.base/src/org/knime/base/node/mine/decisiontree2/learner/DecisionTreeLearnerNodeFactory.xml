@@ -36,8 +36,8 @@
 			Pruning reduces tree size and avoids overfitting which increases 
 			the generalization performance, and thus, the prediction quality
 			(for predictions, use the "Decision Tree Predictor" node).
-			Available are the "Minimal Description Length" (MDL) pruning and
-			the "Estimated Error" pruning. Pruning can also be switched off.
+			Available is the "Minimal Description Length" (MDL) pruning or
+			it can also be switched off.
 		</option>
 		<option name="Confidence threshold">
 			This parameter is used by the "Estimated Error" pruning method.
