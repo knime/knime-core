@@ -89,6 +89,11 @@ public class SotaNodeModel extends NodeModel {
      * The configuration key for the size of the original data container.
      */
     public static final String CFG_KEY_ORIGDATA_SIZE = "OrigDataContainerSize";
+
+    /**
+     * The configuration key for the distance to use.
+     */
+    public static final String CFG_KEY_DIST = "Distance";    
     
     /**
      * The configuration key for the internal model of SOTA.
@@ -131,15 +136,33 @@ public class SotaNodeModel extends NodeModel {
     
     /**
      * Constructor of SoteNodeModel. Creates new instance of SotaNodeModel, with
-     * default settings.
+     * default settings and one out port by default.
      */
     public SotaNodeModel() {
-        super(1, 0, 0, 1);
+        this(true);
+    }
+
+    /**
+     * Constructor of SoteNodeModel. Creates new instance of SotaNodeModel, with
+     * default settings. If <code>withOutPort</code> is set true one out port
+     * will be created otherwise no out port will be created.
+     * 
+     * @param withOutPort If set true one out port will be created otherwise
+     * not.
+     */
+    public SotaNodeModel(final boolean withOutPort) {
+        super(1, 0, 0, noOutPorts(withOutPort));
         m_sota = new SotaManager();
         m_includeList = new ArrayList<String>();
         m_excludeList = new ArrayList<String>();
     }
-
+    
+    private static final int noOutPorts(final boolean withOutPort) {
+        if (withOutPort) {
+            return 1;
+        }
+        return 0;
+    }
     
     
     /**
@@ -493,5 +516,7 @@ public class SotaNodeModel extends NodeModel {
                 m_sota.getInDataContainer().size());
         modelContent.addInt(CFG_KEY_ORIGDATA_SIZE,
                 m_sota.getOriginalData().size());
+        
+        modelContent.addString(CFG_KEY_DIST, m_sota.getDistance());
     }    
 }

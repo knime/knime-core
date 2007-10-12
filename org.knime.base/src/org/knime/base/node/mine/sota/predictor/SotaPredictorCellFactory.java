@@ -28,7 +28,7 @@ import java.util.Iterator;
 
 import org.knime.base.data.filter.column.FilterColumnRow;
 import org.knime.base.node.mine.sota.distances.DistanceManager;
-import org.knime.base.node.mine.sota.distances.EuclideanDistanceManager;
+import org.knime.base.node.mine.sota.distances.DistanceManagerFactory;
 import org.knime.base.node.mine.sota.logic.SotaCellFactory;
 import org.knime.base.node.mine.sota.logic.SotaManager;
 import org.knime.base.node.mine.sota.logic.SotaTreeCell;
@@ -56,23 +56,28 @@ public class SotaPredictorCellFactory implements CellFactory {
     
     /**
      * Creates new instance of <code>SotaPredictorCellFactory</code> with given
-     * <code>SotaManager</code> and array of indices of columns to use for
-     * prediction.
+     * <code>SotaManager</code>, array of indices of columns to use for
+     * prediction and the distance metric to use.
      * 
      * @param root The <code>SotaManager</code> to set. 
      * @param indicesOfIncludedColumns The array of indices of columns to use 
-     * for prediction. 
+     * for prediction.
+     * @param distance The distance to use.
      */
     public SotaPredictorCellFactory(final SotaTreeCell root, 
-            final int[] indicesOfIncludedColumns) {
+            final int[] indicesOfIncludedColumns, final String distance) {
         m_includedColsIndices = indicesOfIncludedColumns;
         m_root = root;
         
         boolean fuzzy = false;
-        if (m_root.getCellType().equals(SotaCellFactory.FUZZY_TYPE)) {
-            fuzzy = true;
+        if (m_root != null) {
+            if (m_root.getCellType().equals(SotaCellFactory.FUZZY_TYPE)) {
+                fuzzy = true;
+            }
         }
-        m_distanceManager = new EuclideanDistanceManager(fuzzy);
+        m_distanceManager = 
+            DistanceManagerFactory.createDistanceManager(distance, fuzzy, 1);
+        //m_distanceManager = new EuclideanDistanceManager(fuzzy);
     }
     
     /**

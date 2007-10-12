@@ -33,7 +33,7 @@ import org.knime.core.node.NodeView;
  * 
  * @author Kilian Thiel, University of Konstanz
  */
-public class SotaNodeFactory extends NodeFactory {
+public class SotaLearnerNodeFactory extends NodeFactory {
     /**
      * {@inheritDoc}
      */

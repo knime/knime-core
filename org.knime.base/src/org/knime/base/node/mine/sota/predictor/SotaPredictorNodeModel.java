@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.knime.base.node.mine.sota.SotaNodeModel;
 import org.knime.base.node.mine.sota.logic.SotaTreeCell;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -53,6 +54,8 @@ public class SotaPredictorNodeModel extends NodeModel {
                 SotaPredictorConfigKeys.CFG_KEY_FILTERED_COLS);
     
     private SotaTreeCell m_sotaRoot;
+    
+    private String m_distance;
     
     
     /**
@@ -99,7 +102,7 @@ public class SotaPredictorNodeModel extends NodeModel {
         ColumnRearranger cr = new ColumnRearranger(
                 inData[0].getDataTableSpec());
         cr.append(new SotaPredictorCellFactory(
-                m_sotaRoot, indicesOfIncludedCols));
+                m_sotaRoot, indicesOfIncludedCols, m_distance));
         
         
         return new BufferedDataTable[]{
@@ -144,6 +147,8 @@ public class SotaPredictorNodeModel extends NodeModel {
                 ioe.initCause(e);
                 throw ioe;
             }
+            
+            m_distance = predParams.getString(SotaNodeModel.CFG_KEY_DIST);
         }
     }  
 

@@ -332,8 +332,8 @@
             id="org.knime.base.node.viz.rulevis2d.Rule2DNodeFactory"/>
       <node
             category-path="/mining/clustering"
-            factory-class="org.knime.base.node.mine.sota.SotaNodeFactory"
-            id="org.knime.base.node.mine.sota.SotaNodeFactory"/>
+            factory-class="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"
+            id="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"/>
       <node
             category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.rename.RenameNodeFactory"
