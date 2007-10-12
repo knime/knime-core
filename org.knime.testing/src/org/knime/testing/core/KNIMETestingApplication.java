@@ -71,7 +71,10 @@ public class KNIMETestingApplication implements IApplication {
         // (true means no icons etc will be loaded, if it is false, the
         // loading of the repository manager is likely to print many errors
         // - though it will still function)
-        if (System.getProperty("java.awt.headless") == null) {
+        // Under Linux this must be not be true, otherwise the views will not
+        // open!
+        if (!System.getProperty("os.name").equals("Linux")
+                && System.getProperty("java.awt.headless") == null) {
             System.setProperty("java.awt.headless", "true");
         }
 
