@@ -157,7 +157,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      */
     @Override
     public void modelChanged() {
-        HiliteScorerNodeModel model = (HiliteScorerNodeModel) getNodeModel();
+        HiliteScorerNodeModel model = getNodeModel();
 
         /*
          * get the new scorer table and compute the numbers we display
@@ -170,8 +170,6 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
             m_error.setText(" n/a ");
             m_accuracy.setText(" n/a ");
             // m_precision.setText(" n/a ");
-            // m_recall.setText(" n/a ");
-            model.getInHiLiteHandler(0).removeHiLiteListener(this);
             m_tableView.setModel(new DefaultTableModel());
             return;
         }
@@ -206,9 +204,6 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         // m_precision.setText(" n/a ");
         // m_recall.setText(" n/a ");
         // }
-
-        // register the hilite handler
-        model.getInHiLiteHandler(0).addHiLiteListener(this);
     }
 
     /**
@@ -225,7 +220,9 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      */
     @Override
     protected void onOpen() {
-        // do nothing here
+        // register the hilite handler
+        getNodeModel().getInHiLiteHandler(0).addHiLiteListener(this);
+        updateHilitedCells();
     }
 
     /**
@@ -310,8 +307,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         // get the row keys from the model and put them into the hilite handler
         if (getNodeModel().getInHiLiteHandler(0) != null) {
             getNodeModel().getInHiLiteHandler(0).fireHiLiteEvent(
-                    ((HiliteScorerNodeModel) getNodeModel())
-                            .getSelectedSet(selectedCells));
+                    getNodeModel().getSelectedSet(selectedCells));
         }
 
         // repaint the table
@@ -331,8 +327,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         // get the row keys from the model and put them into the hilite handler
         if (getNodeModel().getInHiLiteHandler(0) != null) {
             getNodeModel().getInHiLiteHandler(0).fireUnHiLiteEvent(
-                    ((HiliteScorerNodeModel) getNodeModel())
-                            .getSelectedSet(selectedCells));
+                    getNodeModel().getSelectedSet(selectedCells));
         }
 
         m_tableView.repaint();
@@ -423,16 +418,26 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
     }
 
     private void updateHilitedCells() {
-        Set<DataCell> hilitedKeys = getNodeModel().getInHiLiteHandler(0)
-                .getHiLitKeys();
-
-        Point[] completeHilitedCells = ((HiliteScorerNodeModel) getNodeModel())
-                .getCompleteHilitedCells(hilitedKeys);
-
-        // hilite all cells given by the points
-        for (Point cell : completeHilitedCells) {
-            m_cellHilited[cell.x][cell.y] = true;
+        if (getNodeModel().getInHiLiteHandler(0) != null) {
+            Set<DataCell> hilitedKeys = getNodeModel().getInHiLiteHandler(0)
+                    .getHiLitKeys();
+        
+            Point[] completeHilitedCells = 
+                getNodeModel().getCompleteHilitedCells(hilitedKeys);
+        
+            // hilite all cells given by the points
+            for (Point cell : completeHilitedCells) {
+                m_cellHilited[cell.x][cell.y] = true;
+            }
         }
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected HiliteScorerNodeModel getNodeModel() {
+        return (HiliteScorerNodeModel) super.getNodeModel();
     }
 
     /**
@@ -440,15 +445,15 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
      * event occurs in a hilit cell the cell is unhilit (principle of
      * correctness!!)
      * 
-     * @see HiLiteListener#unHiLite(KeyEvent)
+     * {@inheritDoc}
      */
     public void unHiLite(final KeyEvent event) {
         
         for (int i = 0; i < m_cellHilited.length; i++) {
             for (int j = 0; j < m_cellHilited[i].length; j++) {
                 if (m_cellHilited[i][j]) {
-                    if (((HiliteScorerNodeModel) getNodeModel())
-                            .containsConfusionMatrixKeys(i, j, event.keys())) {
+                    if (getNodeModel().containsConfusionMatrixKeys(
+                            i, j, event.keys())) {
                         m_cellHilited[i][j] = false;
                     }
                 }
@@ -459,8 +464,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
     }
 
     /**
-     * @see org.knime.core.node.property.hilite.HiLiteListener#unHiLiteAll()
-     * 
+     * {@inheritDoc}
      */
     public void unHiLiteAll() {
         clearHiliteBackgroundColor();

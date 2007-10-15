@@ -64,6 +64,8 @@ public class ConfusionTableModel extends AbstractTableModel {
      *            a 2-D int array representing the confusion matrix.
      * @param headers
      *            the names of the attributes to display in the table
+     * @param rowHeaderDescription row header description
+     * @param columnHeaderDescription column header description
      */
     public ConfusionTableModel(final int[][] scoreCount,
             final String[] headers, final String rowHeaderDescription,
@@ -78,7 +80,7 @@ public class ConfusionTableModel extends AbstractTableModel {
      * Column and row count are equal as this is a square matrix. Note: + 1 for
      * the column header
      * 
-     * @see javax.swing.table.TableModel#getColumnCount()
+     * {@inheritDoc}
      */
     public int getColumnCount() {
 
@@ -89,7 +91,7 @@ public class ConfusionTableModel extends AbstractTableModel {
      * Column and row count are equal as this is a square matrix. Note: + 1 for
      * the row header
      * 
-     * @see javax.swing.table.TableModel#getRowCount()
+     * {@inheritDoc}
      */
     public int getRowCount() {
 
@@ -100,7 +102,7 @@ public class ConfusionTableModel extends AbstractTableModel {
      * Returns the confusion matrix value at the corresponding position. Note:
      * the first column contains like the column names also the attribute names.
      * 
-     * @see javax.swing.table.TableModel#getValueAt(int, int)
+     * {@inheritDoc}
      */
     public Object getValueAt(final int rowIndex, final int columnIndex) {
 
