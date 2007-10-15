@@ -119,6 +119,16 @@ public class PolynomialKernel implements Kernel {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public double getDefaultParameter(final int index) {
+       if (index == 1) {
+           return 1.0;
+       }
+        return 0;
+    }
+
+    /**
      * return the given parameter.
      * @param index first or second?
      * @return value of kernel parameter

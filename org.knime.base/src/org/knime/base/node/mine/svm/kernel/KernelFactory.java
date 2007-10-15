@@ -57,7 +57,7 @@ public final class KernelFactory {
      */
     public static String getDefaultKernelType() {
         assureInstance();
-        return getKernelNames()[0];
+        return getKernelNames()[1];
     }
 
     /**

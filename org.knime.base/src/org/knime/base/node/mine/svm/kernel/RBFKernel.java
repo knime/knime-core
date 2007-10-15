@@ -97,6 +97,16 @@ public class RBFKernel implements Kernel {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public double getDefaultParameter(final int index) {
+        if (index == 0) {
+            return 0.01;
+        }
+        return 0;
+    }
+
+    /**
      * set the given parameter.
      * @param index must be 0
      * @param value which value

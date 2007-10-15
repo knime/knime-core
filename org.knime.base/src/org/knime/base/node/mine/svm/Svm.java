@@ -92,16 +92,16 @@ public class Svm {
          * we should have both a positive and a negative class.
          */
         assert supportVectors.length == alpha.length;
-        boolean foundPositive = false;
-        boolean foundNegative = false;
-        for (int i = 0; i < supportVectors.length; ++i) {
-            if (supportVectors[i].getClassValue().equals(positive)) {
-                foundPositive = true;
-            } else {
-                foundNegative = true;
-            }
-        }
-        assert foundPositive && foundNegative;
+//        boolean foundPositive = false;
+//        boolean foundNegative = false;
+//        for (int i = 0; i < supportVectors.length; ++i) {
+//            if (supportVectors[i].getClassValue().equals(positive)) {
+//                foundPositive = true;
+//            } else {
+//                foundNegative = true;
+//            }
+//        }
+   //     assert foundPositive && foundNegative;
 
         m_supportVectors = supportVectors;
         m_alpha = alpha;
@@ -239,4 +239,13 @@ public class Svm {
     public String getPositive() {
         return m_positive;
     }
+
+    /**
+     * @return the supportVectors
+     */
+    public DoubleVector[] getSupportVectors() {
+        return m_supportVectors;
+    }
+    
+    
 }

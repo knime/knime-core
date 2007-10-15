@@ -156,6 +156,12 @@
             level-id="mds"
             name="MDS"
             path="/mining"/>
+      <category
+            icon="icons/missing.gif"
+            level-id="svm"
+            name="SVM"
+            path="/mining">
+      </category>
             
    </extension>
 
@@ -531,6 +537,16 @@
             category-path="/mining/modeleval"
             factory-class="org.knime.base.node.viz.enrich.EnrichmentPlotterFactory"
             id="org.knime.chem.node.viz.enrich.EnrichmentPlotterFactory"/>
+      <node
+            category-path="/mining/svm"
+            factory-class="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory"
+            id="org.knime.base.node.mine.svm.learner.SVMLearnerNodeFactory">
+      </node>
+      <node
+            category-path="/mining/svm"
+            factory-class="org.knime.base.node.mine.svm.predictor.SVMPredictorNodeFactory"
+            id="org.knime.base.node.mine.svm.predictor.SVMPredictorNodeFactory">
+      </node>
       <node
             category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.colcompare.ColumnComparatorNodeFactory"

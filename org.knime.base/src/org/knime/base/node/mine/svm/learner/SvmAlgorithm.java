@@ -30,7 +30,6 @@ import org.knime.base.node.mine.svm.kernel.Kernel;
 import org.knime.base.node.mine.svm.util.DoubleVector;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeLogger;
 
 /**
  * This class is the implementation of a binary SVM learning algorithm.
@@ -56,12 +55,9 @@ public class SvmAlgorithm {
     /*
      * NodeLogger for this class.
      */
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(SvmAlgorithm.class);
-    
-    /* does just what you'd expect. */
-    private static final boolean ENABLE_ASSERTS = false;
-
+//    private static final NodeLogger LOGGER =
+//            NodeLogger.getLogger(SvmAlgorithm.class);
+//    
     /*
      * the input data.
      */
@@ -112,12 +108,12 @@ public class SvmAlgorithm {
     /*
      * the tolerance level for optimality.
      */
-    private static final double TOLERANCE = 1e-3;
-
+    private static final double TOLERANCE = 1.0e-3;
+    
     /*
      * the difference up to which two doubles are considered equal.
      */
-    private static final double EPSILON = 1e-5;
+    private static final double EPSILON = 1.0e-12;
 
     /**
      * The main constructor.
@@ -189,24 +185,10 @@ public class SvmAlgorithm {
                 double targ = target(i2);
                 double kern =
                         m_kernel.evaluate(m_inputData[i1], m_inputData[i2]);
-                if (ENABLE_ASSERTS) {
-                    assert !Double.isNaN(alpha);
-                    assert !Double.isNaN(targ);
-                    assert !Double.isNaN(kern);
-                }
                 result += alpha * targ * kern;
-                if (ENABLE_ASSERTS) {
-                    assert !Double.isNaN(result);
-                }
             }
         }
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(m_b);
-        }
         result -= m_b;
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(result);
-        }
         return result;
     }
 
@@ -325,91 +307,34 @@ public class SvmAlgorithm {
             return false;
         }
         double alpha1 = m_alpha[i1];
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(alpha1);
-        }
         double alpha2 = m_alpha[i2];
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(alpha2);
-        }
         double y1 = target(i1);
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(y1);
-        }
         double y2 = target(i2);
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(y2);
-        }
         double f1 = m_fcache[i1];
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(f1);
-        }
         double f2 = m_fcache[i2];
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(f2);
-        }
         double s = y1 * y2;
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(s);
-        }
         double low, high; // L, H -- equations (13), (14) from the paper above
-        if (ENABLE_ASSERTS) {
-            assert alpha1 <= m_paramC;
-            assert alpha2 <= m_paramC;
-        }
         if (y1 != y2) {
             low = Math.max(0, alpha2 - alpha1);
             high = Math.min(m_paramC, m_paramC + alpha2 - alpha1);
-            if (ENABLE_ASSERTS) {
-                assert low <= high;
-            }
         } else {
             low = Math.max(0, alpha2 + alpha1 - m_paramC);
             high = Math.min(m_paramC, alpha2 + alpha1);
-            if (ENABLE_ASSERTS) {
-                assert low <= high;
-            }
-        }
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(low);
-            assert !Double.isNaN(high);
-            assert 0 <= low;
-            assert low <= m_paramC;
-            assert 0 <= high;
-            assert high <= m_paramC;
         }
         if (Math.abs(low - high) < EPSILON) {
             return false;
         }
-        if (ENABLE_ASSERTS) {
-            assert low <= high;
-        }
         double k11 = m_kernel.evaluate(m_inputData[i1], m_inputData[i1]);
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(k11);
-        }
         double k12 = m_kernel.evaluate(m_inputData[i1], m_inputData[i2]);
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(k12);
-        }
         double k22 = m_kernel.evaluate(m_inputData[i2], m_inputData[i2]);
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(k22);
-        }
         double eta = k11 + k22 - 2.0 * k12; // value of second derivative
         double a2;
         if (eta > 0) {
             a2 = alpha2 + y2 * (f1 - f2) / eta;
-            if (ENABLE_ASSERTS) {
-                assert !Double.isNaN(a2);
-            }
             if (a2 < low) {
                 a2 = low;
             } else if (a2 > high) {
                 a2 = high;
-            }
-            if (ENABLE_ASSERTS) {
-                assert a2 <= m_paramC;
             }
         } else {
             return false;
@@ -423,11 +348,6 @@ public class SvmAlgorithm {
             return false;
         }
         double a1 = alpha1 + s * (alpha2 - a2);
-        if (ENABLE_ASSERTS) {
-            assert !Double.isNaN(a1);
-            assert a1 >= 0;
-            assert a1 <= m_paramC;
-        }
         m_alpha[i1] = a1;
         m_alpha[i2] = a2;
         updateSets(i1, i2);
@@ -512,37 +432,37 @@ public class SvmAlgorithm {
      * @param i the index of the example to examine
      * @return the amount of the violation
      */
-    private double kktViolation(final int i) {
-        double result = 0;
-        if (zero(m_alpha[i])) {
-            double delta = target(i) * computeSvmOutput(i) - (1.0 - EPSILON);
-            if (delta < 0.0) {
-                result = -delta;
-            }
-        } else if (equal(m_alpha[i], m_paramC)) {
-            double delta = target(i) * computeSvmOutput(i) - (1.0 - EPSILON);
-            if (delta > 0.0) {
-                result = delta;
-            }
-        } else {
-            double delta = target(i) * computeSvmOutput(i) - (1.0 - EPSILON);
-            result = Math.abs(delta);
-        }
-        return result;
-    }
+//    private double kktViolation(final int i) {
+//        double result = 0;
+//        if (zero(m_alpha[i])) {
+//            double delta = target(i) * computeSvmOutput(i) - (1.0 - EPSILON);
+//            if (delta < 0.0) {
+//                result = -delta;
+//            }
+//        } else if (equal(m_alpha[i], m_paramC)) {
+//            double delta = target(i) * computeSvmOutput(i) - (1.0 - EPSILON);
+//            if (delta > 0.0) {
+//                result = delta;
+//            }
+//        } else {
+//            double delta = target(i) * computeSvmOutput(i) - (1.0 - EPSILON);
+//            result = Math.abs(delta);
+//        }
+//        return result;
+//    }
 
     /**
      * check the Karush-Kuhn-Tucker conditions. If these conditions are met, we
      * have reached the optimal solution. Otherwise, we screwed up somewhere in
      * the algorithm (or we are not done yet).
      */
-    private double kktGlobalViolation() {
-        double result = 0.0;
-        for (int i = 0; i < m_alpha.length; ++i) {
-            result = Math.max(result, kktViolation(i));
-        }
-        return result;
-    }
+//    private double kktGlobalViolation() {
+//        double result = 0.0;
+//        for (int i = 0; i < m_alpha.length; ++i) {
+//            result = Math.max(result, kktViolation(i));
+//        }
+//        return result;
+//    }
 
     /**
      * Implements the main algorithm (Sequential minimal optimization). see
@@ -592,23 +512,23 @@ public class SvmAlgorithm {
             }
         }
 
-        double maximalViolation = kktGlobalViolation();
+//        double maximalViolation = kktGlobalViolation();
         int steps = 0;
 
         while (numChanged > 0 || examineAll) {
             steps++;
-            double currentViolation = kktGlobalViolation();
-            if (currentViolation > maximalViolation) {
-                maximalViolation = currentViolation;
-            }
-            double progress = 1.0 - currentViolation / maximalViolation;
-            progress = Math.min(progress, 1.0);
-            progress = Math.max(progress, 0.0);
-            if (steps > 6) {
-                // don't show the progress from the very beginning
-                // wait some steps for everything to stabilize
-                exec.setProgress(progress);
-            }
+//            double currentViolation = kktGlobalViolation();
+//            if (currentViolation > maximalViolation) {
+//                maximalViolation = currentViolation;
+//            }
+//            double progress = 1.0 - currentViolation / maximalViolation;
+//            progress = Math.min(progress, 1.0);
+//            progress = Math.max(progress, 0.0);
+//            if (steps > 2) {
+//                // don't show the progress from the very beginning
+//                // wait some steps for everything to stabilize
+//                exec.setProgress(progress);
+//            }
             exec.checkCanceled();
             numChanged = 0;
             if (examineAll) {
@@ -637,7 +557,7 @@ public class SvmAlgorithm {
             }
         }
         exec.setProgress(1.0);
-        LOGGER.debug("Final KKT Violation: " + kktGlobalViolation());
+//        LOGGER.debug("Final KKT Violation: " + kktGlobalViolation());
         final double half = 0.5;
         m_b = (m_bLow + m_bUp) * half;
     }
@@ -648,9 +568,10 @@ public class SvmAlgorithm {
      * @param exec progress is reported here
      * @return the resulting SVM
      * @throws CanceledExecutionException if the algorithm is canceled.
+     * @throws Exception if the algorithm is not able to find support vectors.
      */
     public Svm run(final ExecutionMonitor exec)
-            throws CanceledExecutionException {
+            throws CanceledExecutionException, Exception {
         for (int i = 0; i < m_alpha.length; ++i) {
             m_alpha[i] = 0.0;
         }
@@ -662,6 +583,11 @@ public class SvmAlgorithm {
             if (!zero(m_alpha[i])) {
                 countSupportVectors++;
             }
+        }
+        if (countSupportVectors == 0) {
+            throw new Exception("No support vectors could be found "
+                    + "for class " + m_positiveClass + ". Consider using a"
+                    + " different kernel.");
         }
         DoubleVector[] supportVectors = new DoubleVector[countSupportVectors];
         double[] supportAlphas = new double[countSupportVectors];

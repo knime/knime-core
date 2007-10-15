@@ -95,7 +95,7 @@ public class HyperTangentKernel implements Kernel {
      * @return validity
      * @see org.knime.base.node.mine.svm.kernel.Kernel#areValid(double[])
      */
-    public boolean areValid(final double [] params) {
+    public boolean areValid(final double[] params) {
         if (params.length == 2) {
             return true;
         }
@@ -114,6 +114,16 @@ public class HyperTangentKernel implements Kernel {
         } else {
             assert false : "Trying to set nonexistant parameter";
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public double getDefaultParameter(final int index) {
+        if (index == 0) {
+            return .1;
+        }
+        return .5; 
     }
 
     /**

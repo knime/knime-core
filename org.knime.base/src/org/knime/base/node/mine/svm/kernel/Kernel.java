@@ -87,4 +87,12 @@ public interface Kernel {
      * @param index the index of the parameter to get
      */
     public abstract double getParameter(final int index);
+    
+    /**
+     * return the default parameter at the given index. index must
+     * be between 0 and getNumberParameters() - 1.
+     * @param index the parameter index.
+     * @return the parameter's default value
+     */
+    public abstract double getDefaultParameter(final int index);
 }
