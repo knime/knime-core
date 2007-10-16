@@ -44,9 +44,9 @@ import org.knime.core.util.MutableInteger;
  * Row iterator for the {@link FileTable}.
  * <p>
  * The iterator provides a method
- * 
+ *
  * @author Peter Ohl, University of Konstanz
- * 
+ *
  * @see org.knime.core.data.RowIterator
  */
 class FileRowIterator extends RowIterator {
@@ -93,7 +93,7 @@ class FileRowIterator extends RowIterator {
     private boolean m_fileWasNotCompletelyRead;
 
     private final boolean[] m_skipColumns;
-    
+
     /* the execution context the progress is reported to */
     private ExecutionContext m_exec;
 
@@ -102,7 +102,7 @@ class FileRowIterator extends RowIterator {
 
     /**
      * The RowIterator for the FileTable.
-     * 
+     *
      * @param frSettings object containing the wheres and hows to read the data
      * @param tableSpec the spec defining the structure of the rows to create
      *            (the result spec after applying the next argument
@@ -134,7 +134,7 @@ class FileRowIterator extends RowIterator {
                     + "include is different from the number of columns in the"
                     + " table spec.");
         }
-        
+
         m_tableSpec = tableSpec;
         m_frSettings = frSettings;
 
@@ -159,7 +159,7 @@ class FileRowIterator extends RowIterator {
         m_fileWasNotCompletelyRead = false; // normally we fully read the file
 
         m_skipColumns = skipColumns;
-        
+
         m_exceptionThrown = false;
 
         // set the row prefix here (so we don't have to go through this for each
@@ -194,7 +194,7 @@ class FileRowIterator extends RowIterator {
 
     } // FileRowIterator(FileTableSpec)
 
-    
+
     /**
      * {@inheritDoc}
      */
@@ -251,9 +251,9 @@ class FileRowIterator extends RowIterator {
     public DataRow next() {
         int rowLength = m_tableSpec.getNumColumns();
         int colsToRead = m_skipColumns.length;
-        
+
         assert rowLength <= colsToRead;
-        
+
         String token = null;
         boolean isMissingCell;
         DataCell rowHeader;
@@ -269,12 +269,12 @@ class FileRowIterator extends RowIterator {
                             + "'.");
         }
 
-        // counts the columns (tokens) read from the file 
+        // counts the columns (tokens) read from the file
         int readCols = 0;
         // counts the number of columns we've created (excl. skipped columns)
         int createdCols = 0;
 
-        // first, create a row header. 
+        // first, create a row header.
         // This will also read it from file, if supposed to.
         try {
             rowHeader = createRowHeader(m_rowNumber);
@@ -321,13 +321,13 @@ class FileRowIterator extends RowIterator {
 
             if (!m_skipColumns[readCols]) {
             DataColumnSpec cSpec = m_tableSpec.getColumnSpec(createdCols);
-                // now get that new cell 
+                // now get that new cell
                 // (it throws an exception at us if it couldn't)
-                row[createdCols] = createNewDataCellOfType(cSpec.getType(), 
+                row[createdCols] = createNewDataCellOfType(cSpec.getType(),
                         token, isMissingCell, rowHeader, row);
                 createdCols++;
             }
-            
+
             readCols++;
 
         } // end of while(readCols < colsToRead)
@@ -353,7 +353,7 @@ class FileRowIterator extends RowIterator {
                                 lineNr, rowHeader, row);
                 if (m_frSettings.getColumnNumDeterminingLineNumber() >= 0) {
                     ex.setDetailsMessage("The number of columns was "
-                            + "determined by line no."
+                            + "determined by the entries above line no."
                             + m_frSettings.getColumnNumDeterminingLineNumber());
                 }
                 throw ex;
@@ -413,7 +413,7 @@ class FileRowIterator extends RowIterator {
      * <code>data</code> argument couldn't be converted to the appropriate
      * type or a {@link IllegalStateException} if the <code> type </code> passed
      * in is not supported.
-     * 
+     *
      * @param type the type of DataCell to be created, supported are Double-,
      *            Int-, and StringTypes
      * @param data the string representation of the value that will be set in
@@ -424,7 +424,7 @@ class FileRowIterator extends RowIterator {
      * @param rowHeader the rowID - for nice error messages only
      * @param row the cells of the row created so far. Used for messages only.
      * @return data cell of the type specified in <code> type </code>
-     * 
+     *
      */
     private DataCell createNewDataCellOfType(final DataType type,
             final String data, final boolean createMissingCell,
@@ -448,7 +448,7 @@ class FileRowIterator extends RowIterator {
                 throw prepareForException("Wrong data format. In line "
                         + m_tokenizer.getLineNumber() + " (" + rowHeader
                         + ") read '" + data + "' for an integer (in column #"
-                        + col + " '" + m_tableSpec.getColumnSpec(col).getName() 
+                        + col + " '" + m_tableSpec.getColumnSpec(col).getName()
                         + "').", m_tokenizer.getLineNumber(), rowHeader,
                         row);
             }
@@ -465,8 +465,8 @@ class FileRowIterator extends RowIterator {
                             + m_tokenizer.getLineNumber() + " (" + rowHeader
                             + ") read '" + data
                             + "' for a floating point (in column #" + col
-                            + " '" + m_tableSpec.getColumnSpec(col).getName() 
-                            + "').", 
+                            + " '" + m_tableSpec.getColumnSpec(col).getName()
+                            + "').",
                             m_tokenizer.getLineNumber(), rowHeader, row);
                 }
                 dblData = data.replace(m_decSeparator, '.');
@@ -482,8 +482,8 @@ class FileRowIterator extends RowIterator {
                 throw prepareForException("Wrong data format. In line "
                         + m_tokenizer.getLineNumber() + " (" + rowHeader
                         + ") read '" + data
-                        + "' for a floating point (in column #" + col 
-                        + " '" + m_tableSpec.getColumnSpec(col).getName() 
+                        + "' for a floating point (in column #" + col
+                        + " '" + m_tableSpec.getColumnSpec(col).getName()
                         + "').",
                         m_tokenizer.getLineNumber(), rowHeader, row);
             }
@@ -505,8 +505,8 @@ class FileRowIterator extends RowIterator {
                 }
                 msg +=
                         " (line: " + m_tokenizer.getLineNumber() + "("
-                                + rowHeader + "), column #" + col 
-                                + " '" 
+                                + rowHeader + "), column #" + col
+                                + " '"
                                 + m_tableSpec.getColumnSpec(col).getName()
                                 + "').";
                 throw prepareForException(msg, m_tokenizer.getLineNumber(),
@@ -533,7 +533,7 @@ class FileRowIterator extends RowIterator {
     private StringCell createRowHeader(final int rowNumber) {
 
         // the constructor sets m_rowHeaderPrefix if the file doesn't have one
-        assert (m_frSettings.getFileHasRowHeaders() 
+        assert (m_frSettings.getFileHasRowHeaders()
                 || (m_rowHeaderPrefix != null));
 
         // if there is a row header in the file we must read it - independend
@@ -663,28 +663,28 @@ class FileRowIterator extends RowIterator {
      * can be used to find out, if the source has more data than actually
      * returned by the iterator. The result is only accurate, after the
      * {@link #hasNext()} method returned <code>false</code>.
-     * 
+     *
      * @return true, if the iterator didn't return all rows of the source (due
-     *         to its settings). Only accurate after the iterator finished 
+     *         to its settings). Only accurate after the iterator finished
      *         ({@link #hasNext()} returned false).
      */
     public boolean iteratorEndedEarly() {
         return m_fileWasNotCompletelyRead;
     }
-    
+
     /**
      * If the source read was a ZIP archive this method tests if there are more
      * than one entry in the archive. If the source was not compressed or a gzip
-     * file, it always returns false. If the EOF has not been read from the 
-     * source, the result is always false.  
-     * 
+     * file, it always returns false. If the EOF has not been read from the
+     * source, the result is always false.
+     *
      * @return true, if the source was read til the end and it is a ZIP archive
      * with more than one entry
      */
     public boolean zippedSourceHasMoreEntries() {
         return m_source.hasMoreZipEntries();
     }
-    
+
     /**
      * @return if the underlying source is a ZIP archive it returns the entry
      *         read. Null if not a ZIP source.
@@ -692,6 +692,6 @@ class FileRowIterator extends RowIterator {
     public String getZipEntryName() {
         return m_source.getZipEntryName();
     }
-    
-    
+
+
 }
