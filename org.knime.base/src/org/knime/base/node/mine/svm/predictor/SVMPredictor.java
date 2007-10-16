@@ -31,6 +31,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
@@ -63,11 +64,14 @@ public class SVMPredictor implements CellFactory {
     public DataCell[] getCells(final DataRow row) {
         ArrayList<Double> values = new ArrayList<Double>();
         for (int i = 0; i < m_colindices.length; i++) {
+            if (row.getCell(m_colindices[i]).isMissing()) {
+                return new DataCell[]{DataType.getMissingCell()};
+            }
             DoubleValue dv = (DoubleValue) row.getCell(m_colindices[i]);
             values.add(dv.getDoubleValue());
         }
         String classvalue = doPredict(values);
-        return new StringCell[]{new StringCell(classvalue)};
+        return new DataCell[]{new StringCell(classvalue)};
     }
 
     /**
