@@ -43,6 +43,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
@@ -183,20 +184,31 @@ public class SVMLearnerNodeModel extends NodeModel {
             if (m_classcol.getStringValue().equals("")) {
                 throw new InvalidSettingsException("Class column not set");
             } else {
+                boolean found = false;
                 for (DataColumnSpec colspec : myspec) {
-                    if (colspec.getType().isCompatible(StringValue.class)) {
-                        if (colspec.getName().equals(
-                                m_classcol.getStringValue())) {
-                            m_classpos =
-                                    myspec.findColumnIndex(m_classcol
-                                            .getStringValue());
-                        } else {
+                    if (colspec.getName().equals(m_classcol.getStringValue())) {
+                        found = true;
+                        if (!colspec.getType().isCompatible(
+                                NominalValue.class)) {
+                            throw new InvalidSettingsException("Target column "
+                                    + colspec.getName() + " must be nominal.");
+                        }
+                        m_classpos =
+                                myspec.findColumnIndex(m_classcol
+                                        .getStringValue());
+                    } else {
+                        if (colspec.getType().isCompatible(StringValue.class)) {
                             throw new InvalidSettingsException(
                                     "Unknown String column "
                                             + colspec.getName()
                                             + " (is not class column)");
                         }
                     }
+                }
+                if (!found) {
+                    throw new InvalidSettingsException("Class column "
+                            + m_classcol.getStringValue() + " not found"
+                            + " in DataTableSpec.");
                 }
             }
         }
@@ -217,6 +229,7 @@ public class SVMLearnerNodeModel extends NodeModel {
         ArrayList<String> categories = new ArrayList<String>();
         StringCell stringcell = null;
         for (DataRow row : inData[0]) {
+            exec.checkCanceled();
             ArrayList<Double> values = new ArrayList<Double>();
             boolean add = true;
             for (int i = 0; i < row.getNumCells(); i++) {
@@ -261,10 +274,6 @@ public class SVMLearnerNodeModel extends NodeModel {
         }
         ThreadPool pool = KNIMEConstants.GLOBAL_THREAD_POOL;
         final Future<?>[] fut = new Future<?>[bst.length];
-        for (int i = 0; i < bst.length; i++) {
-            fut[i] = pool.submit(bst[i]);
-        }
-
         KNIMETimer timer = KNIMETimer.getInstance();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -272,14 +281,21 @@ public class SVMLearnerNodeModel extends NodeModel {
                 try {
                     exec.checkCanceled();
                 } catch (final CanceledExecutionException ce) {
-                    for (int i = 0; i < bst.length; i++) {
-                        fut[i].cancel(true);
+                    for (int i = 0; i < fut.length; i++) {
+                        if (fut[i] != null) {
+                            fut[i].cancel(true);
+                        }
                     }
                     super.cancel();
                 }
 
             }
         }, 0, 3000);
+        for (int i = 0; i < bst.length; i++) {
+            fut[i] = pool.enqueue(bst[i]);
+        }
+
+        
         boolean alldone = false;
         while (!alldone) {
             alldone = true;
