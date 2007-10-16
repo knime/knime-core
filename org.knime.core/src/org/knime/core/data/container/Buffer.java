@@ -846,7 +846,7 @@ class Buffer {
             int size = m_typeShortCuts.size();
             if (size + BYTE_TYPE_START > Byte.MAX_VALUE) {
                 throw new IOException(
-                "Too many different cell implemenations");
+                "Too many different cell implementations");
             }
             Byte identifier = (byte)(size + BYTE_TYPE_START);
             m_typeShortCuts.put(cellClass, identifier);
