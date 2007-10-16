@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimerTask;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -44,6 +45,7 @@ import org.knime.core.node.NodeStatus;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.util.KNIMETimer;
 
 // TODO: check, that the number of correct results corresponds to the number
 // of outports of the node under test
@@ -68,6 +70,12 @@ public class KnimeTestCase extends TestCase {
      * will parse for it).
      */
     public static final String EXCEPT_FAIL_MSG = "Got EXCEPTIONs during run";
+
+    /**
+     * The maximum runtime for a single testcase in seconds. After the timeout
+     * the workflow will be canceled.
+     */
+    public static final int TIMEOUT = 300;
     
     private File m_knimeSettings;
 
@@ -172,8 +180,17 @@ public class KnimeTestCase extends TestCase {
                 nodeCont.showView(i);
             }
         }
+
+        TimerTask timeout = new TimerTask() {
+            @Override
+            public void run() {
+                m_manager.cancelExecution();
+            }
+        };
         try {
+            KNIMETimer.getInstance().schedule(timeout, TIMEOUT * 1000);
             m_manager.executeAll(true);
+            timeout.cancel();
             // evaluate the results
             Collection<NodeContainer> nodes = m_manager.getNodes();
             for (NodeContainer node : nodes) {
@@ -208,6 +225,7 @@ public class KnimeTestCase extends TestCase {
             logger.error("Caught a throwable during workflow loading:"
                     + (msg == null ? "<no details>" : msg));
         } finally {
+            timeout.cancel();
             // always close these views.
             for (NodeContainer nodecont : m_manager.getNodes()) {
                 nodecont.closeAllViews();
@@ -216,7 +234,6 @@ public class KnimeTestCase extends TestCase {
             // we have a method wrapUp instead of tearDown(), because tearDown
             // is not reliably called. We always call wrapUp.
             wrapUp();
-            
         }
     }
 
