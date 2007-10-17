@@ -632,9 +632,10 @@ public abstract class PieVizModel {
         final StringBuilder buf = new StringBuilder();
         if (name != null) {
             buf.append(name);
-            buf.append(' ');
+            buf.append(": ");
             buf.append(aggrMethod.getText());
             buf.append(' ');
+
         }
         buf.append(valuePart);
         return buf.toString();
@@ -667,13 +668,14 @@ public abstract class PieVizModel {
         final StringBuilder buf = new StringBuilder();
         if (name != null) {
             buf.append(name);
-            buf.append(' ');
+            buf.append(": ");
             buf.append(aggrMethod.getText());
             buf.append(' ');
         }
         buf.append(subValuePart);
-        buf.append(" of ");
+        buf.append(" (");
         buf.append(valuePart);
+        buf.append(')');
         return buf.toString();
     }
 
