@@ -49,12 +49,7 @@ import org.knime.core.node.config.ConfigRO;
  */
 public class SVMPredictorNodeModel extends NodeModel {
 
-    /*
-     * The Predictor Parameters from the model inport.
-     */
-    private ModelContentRO m_predParams;
-
-    /*
+     /*
      * DataTableSpec of the training data.
      */
     private DataTableSpec m_trainingSpec;
@@ -82,20 +77,18 @@ public class SVMPredictorNodeModel extends NodeModel {
     }
 
     /*
-     * Extracts the model parameters from m_predParams. 
+     * Extracts the model parameters from m_predParams.
      */
-    private void extractModelParams() throws InvalidSettingsException {
-        Integer count =
-                m_predParams.getInt(SVMLearnerNodeModel.KEY_CATEG_COUNT);
+    private void extractModelParams(final ModelContentRO predParams)
+            throws InvalidSettingsException {
+        Integer count = predParams.getInt(SVMLearnerNodeModel.KEY_CATEG_COUNT);
         m_svms = new Svm[count.intValue()];
         for (int i = 0; i < m_svms.length; ++i) {
-            m_svms[i] =
-                    new Svm(m_predParams, new Integer(i).toString() + "SVM");
+            m_svms[i] = new Svm(predParams, new Integer(i).toString() + "SVM");
         }
-        ConfigRO specconf =
-                m_predParams.getConfig(SVMLearnerNodeModel.KEY_SPEC);
+        ConfigRO specconf = predParams.getConfig(SVMLearnerNodeModel.KEY_SPEC);
         m_trainingSpec = DataTableSpec.load(specconf);
-        m_classcol = m_predParams.getString(SVMLearnerNodeModel.KEY_CLASSCOL);
+        m_classcol = predParams.getString(SVMLearnerNodeModel.KEY_CLASSCOL);
     }
 
     /**
@@ -104,8 +97,7 @@ public class SVMPredictorNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_predParams != null) {
-            extractModelParams();
+        if (m_svms != null && m_trainingSpec != null && m_classcol != null) {
             DataTableSpec testspec = inSpecs[0];
             // try to find all columns (except the class column)
             Vector<Integer> colindices = new Vector<Integer>();
@@ -129,7 +121,7 @@ public class SVMPredictorNodeModel extends NodeModel {
             colre.append(svmpredict);
             return new DataTableSpec[]{colre.createSpec()};
         }
-        return null;
+        throw new InvalidSettingsException("Model content not available.");
     }
 
     /**
@@ -138,7 +130,9 @@ public class SVMPredictorNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        extractModelParams();
+        if (m_svms == null) {
+            throw new Exception("Model content not available!");
+        }
         SVMPredictor svmpredict = new SVMPredictor(m_svms, m_colindices);
         ColumnRearranger colre =
                 new ColumnRearranger(inData[0].getDataTableSpec());
@@ -189,7 +183,15 @@ public class SVMPredictorNodeModel extends NodeModel {
     protected void loadModelContent(final int index,
             final ModelContentRO predParams) throws InvalidSettingsException {
         if (index == 0) {
-            m_predParams = predParams;
+            if (predParams == null) {
+                // reset 
+                m_svms = null;
+                m_classcol = null;
+                m_trainingSpec = null;
+            } else {
+                extractModelParams(predParams);
+            }
+            
         }
     }
 
