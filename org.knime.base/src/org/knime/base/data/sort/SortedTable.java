@@ -1,6 +1,6 @@
-/* @(#)$RCSfile$ 
+/* @(#)$RCSfile$
  * $Revision$ $Date$ $Author$
- * 
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -20,7 +20,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   23.10.2006 (sieb): created
  */
@@ -47,7 +47,7 @@ import org.knime.core.node.NodeLogger;
 /**
  * A data table that sorts a given data table according to the passed sorting
  * parameters.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
@@ -66,7 +66,7 @@ public class SortedTable implements DataTable {
     /**
      * Hold the table spec to be used by the comparator inner class.
      */
-    private DataTableSpec m_spec;
+    private final DataTableSpec m_spec;
 
     /**
      * The included column indices.
@@ -86,7 +86,7 @@ public class SortedTable implements DataTable {
 
     /**
      * Creates a new sorted table. Sorting is done with the given comparator.
-     * 
+     *
      * @param dataTable any data table
      * @param rowComparator the comparator that should be used for sorting
      * @param sortInMemory <code>true</code> if sorting should be done in
@@ -107,40 +107,40 @@ public class SortedTable implements DataTable {
             sortOnDisk(dataTable, exec);
         }
     }
-    
+
     /**
      * Creates a sorted table from the given table and the sorting parameters.
      * The table is sorted in the constructor.
-     * 
+     *
      * @param dataTable the buffered data table to sort
      * @param inclList the list with the columns to sort; the first column name
      *            represents the first sort criteria, the second the second
      *            criteria and so on.
-     * 
+     *
      * @param sortAscending the sort order; each field corresponds to the column
      *            in the list of included columns. true: ascending false:
      *            descending
-     * 
+     *
      * @param exec the execution context used to create the the buffered data
      *            table and indicate the progress
-     * 
-     * @throws Exception if the parameters are not specified correctly
+     * @throws CanceledExecutionException the user has canceled this operation
+     *
      */
     public SortedTable(final BufferedDataTable dataTable,
             final List<String> inclList, final boolean[] sortAscending,
-            final ExecutionContext exec) throws Exception {
+            final ExecutionContext exec) throws CanceledExecutionException {
         this(dataTable, inclList, sortAscending, false, exec);
     }
 
     /**
      * Creates a sorted table from the given table and the sorting parameters.
      * The table is sorted in the constructor.
-     * 
+     *
      * @param dataTable the buffered data table to sort
      * @param inclList the list with the columns to sort; the first column name
      *            represents the first sort criteria, the second the second
      *            criteria and so on.
-     * 
+     *
      * @param sortAscending the sort order; each field corresponds to the column
      *            in the list of included columns. true: ascending false:
      *            descending
@@ -148,22 +148,22 @@ public class SortedTable implements DataTable {
      *            memory, <code>false</code> if it should be sorted in disk.
      *            Sorting in memory is much faster but may fail if the data
      *            table is too big.
-     * 
+     *
      * @param exec the execution context used to create the the buffered data
      *            table and indicate the progress
-     * 
-     * @throws Exception if the parameters are not specified correctly
+     * @throws CanceledExecutionException the user has canceled this operation
      */
     public SortedTable(final BufferedDataTable dataTable,
             final List<String> inclList, final boolean[] sortAscending,
             final boolean sortInMemory, final ExecutionContext exec)
-            throws Exception {
+    throws CanceledExecutionException {
         m_rowComparator = new RowComparator();
         m_spec = dataTable.getDataTableSpec();
         // get the column indices of the columns that will be sorted
         // also make sure that m_inclList and m_sortOrder both exist
         if (inclList == null) {
-            throw new Exception("List of colums to include (incllist) is "
+            throw new IllegalArgumentException(
+                    "List of colums to include (incllist) is "
                     + "not set in the model");
         } else {
             m_indices = new int[inclList.size()];
@@ -171,15 +171,16 @@ public class SortedTable implements DataTable {
 
         m_sortAscending = sortAscending;
         if (m_sortAscending == null) {
-            throw new Exception("Sortorder array is " + "not set in the model");
+            throw new IllegalArgumentException("Sortorder array is "
+                    + "not set in the model");
         }
 
         int pos = -1;
         for (int i = 0; i < inclList.size(); i++) {
-            String dc = inclList.get(i);
+            final String dc = inclList.get(i);
             pos = m_spec.findColumnIndex(dc);
             if (pos == -1) {
-                throw new Exception("Could not find column name:"
+                throw new IllegalArgumentException("Could not find column name:"
                         + dc.toString());
             }
             m_indices[i] = pos;
@@ -194,14 +195,14 @@ public class SortedTable implements DataTable {
 
     private void sortInMemory(final BufferedDataTable dataTable,
             final ExecutionContext exec) throws CanceledExecutionException {
-        DataRow[] rows = new DataRow[dataTable.getRowCount()];
+        final DataRow[] rows = new DataRow[dataTable.getRowCount()];
 
         final double max = 2 * dataTable.getRowCount();
         int progress = 0;
         exec.setMessage("Reading data");
         long time = System.currentTimeMillis();
         int i = 0;
-        for (DataRow r : dataTable) {
+        for (final DataRow r : dataTable) {
             exec.checkCanceled();
             exec.setProgress(progress / max);
             rows[i++] = r;
@@ -216,7 +217,7 @@ public class SortedTable implements DataTable {
 
         exec.setMessage("Creating sorted table");
 
-        BufferedDataContainer dc =
+        final BufferedDataContainer dc =
                 exec.createDataContainer(dataTable.getDataTableSpec());
         time = System.currentTimeMillis();
         for (i = 0; i < rows.length; i++) {
@@ -233,25 +234,25 @@ public class SortedTable implements DataTable {
 
     private void sortOnDisk(final BufferedDataTable dataTable,
             final ExecutionContext exec) throws CanceledExecutionException {
-        ArrayList<BufferedDataContainer> containerVector =
+        final ArrayList<BufferedDataContainer> containerVector =
                 new ArrayList<BufferedDataContainer>();
         // Initialise RowIterator
-        RowIterator rowIt = dataTable.iterator();
-        int nrRows = dataTable.getRowCount();
+        final RowIterator rowIt = dataTable.iterator();
+        final int nrRows = dataTable.getRowCount();
         int currentRowNr = 0;
 
-        int nrContainerRows = CONTAINERSIZE
+        final int nrContainerRows = CONTAINERSIZE
             / Math.max(1, m_spec.getNumColumns());
         // wrap all DataRows in Containers of size containerSize
         // sort each container before it is'stored'.
-        BufferedDataContainer newContainer = 
+        BufferedDataContainer newContainer =
             exec.createDataContainer(m_spec, false);
         int nrRowsinContainer = 0;
         // TODO: can be omitted due to new buffered table with known row size
-        ArrayList<DataRow> containerrowlist = new ArrayList<DataRow>();
-        ExecutionMonitor subexec = exec.createSubProgress(.5);
+        final ArrayList<DataRow> containerrowlist = new ArrayList<DataRow>();
+        final ExecutionMonitor subexec = exec.createSubProgress(.5);
         int chunkCounter = 1;
-        int numChunks = (int)Math.ceil((double)nrRows / nrContainerRows);
+        final int numChunks = (int)Math.ceil((double)nrRows / nrContainerRows);
         while (rowIt.hasNext()) {
             subexec.setProgress((double)currentRowNr / (double)nrRows,
                     "Reading in data-chunk " + chunkCounter + "...");
@@ -260,7 +261,7 @@ public class SortedTable implements DataTable {
                 newContainer = exec.createDataContainer(m_spec, false);
                 nrRowsinContainer = 0;
             }
-            DataRow row = rowIt.next();
+            final DataRow row = rowIt.next();
             currentRowNr++;
             nrRowsinContainer++;
             containerrowlist.add(row);
@@ -271,7 +272,7 @@ public class SortedTable implements DataTable {
                         + numChunks);
                 Collections.sort(containerrowlist, m_rowComparator);
                 // write in container
-                for (DataRow row2 : containerrowlist) {
+                for (final DataRow row2 : containerrowlist) {
                     newContainer.addRowToTable(row2);
                 }
                 newContainer.close();
@@ -287,7 +288,7 @@ public class SortedTable implements DataTable {
                     + numChunks);
             Collections.sort(containerrowlist, m_rowComparator);
             // write in container
-            for (DataRow row2 : containerrowlist) {
+            for (final DataRow row2 : containerrowlist) {
                 newContainer.addRowToTable(row2);
             }
             newContainer.close();
@@ -296,18 +297,18 @@ public class SortedTable implements DataTable {
         }
 
         // merge all sorted containers together
-        BufferedDataContainer mergeContainer =
+        final BufferedDataContainer mergeContainer =
                 exec.createDataContainer(m_spec, false);
 
         // an array of RowIterators gives access to all (sorted) containers
-        RowIterator[] currentRowIterators =
+        final RowIterator[] currentRowIterators =
                 new RowIterator[containerVector.size()];
-        DataRow[] currentRowValues = new DataRow[containerVector.size()];
+        final DataRow[] currentRowValues = new DataRow[containerVector.size()];
 
         // Initialise both arrays
         for (int c = 0; c < containerVector.size(); c++) {
-            BufferedDataContainer tempContainer = containerVector.get(c);
-            DataTable tempTable = tempContainer.getTable();
+            final BufferedDataContainer tempContainer = containerVector.get(c);
+            final DataTable tempTable = tempContainer.getTable();
             currentRowIterators[c] = tempTable.iterator();
         }
         for (int c = 0; c < containerVector.size(); c++) {
@@ -317,7 +318,7 @@ public class SortedTable implements DataTable {
 
         // find the smallest/biggest element of all, put it in
         // mergeContainer
-        ExecutionMonitor subexec2 = exec.createSubProgress(.5);
+        final ExecutionMonitor subexec2 = exec.createSubProgress(.5);
         for (int i = 0; i < currentRowNr; i++) {
             subexec2.setProgress((double)i / (double)currentRowNr, "Merging");
             exec.checkCanceled();
@@ -337,7 +338,7 @@ public class SortedTable implements DataTable {
             assert (currentRowIterators[i] == null);
         }
         mergeContainer.close();
-        BufferedDataTable dt = mergeContainer.getTable();
+        final BufferedDataTable dt = mergeContainer.getTable();
         assert (dt != null);
         m_sortedTable = dt;
     }
@@ -386,7 +387,7 @@ public class SortedTable implements DataTable {
      * considered as equal. A null DataRow is considered as 'less than' an
      * initialized DataRow. On each position, the DataCells of the two DataRows
      * are compared with their compareTo-method.
-     * 
+     *
      * @author Nicolas Cebron, University of Konstanz
      */
     private class RowComparator implements Comparator<DataRow> {
@@ -394,7 +395,7 @@ public class SortedTable implements DataTable {
         /**
          * This method compares two DataRows based on a comparison for each
          * DataCell and the sorting order (m_sortOrder) for each column.
-         * 
+         *
          * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
          * @param dr1 one data row
          * @param dr2 another datarow to be compared with dr1
@@ -417,7 +418,7 @@ public class SortedTable implements DataTable {
             for (int i = 0; i < m_indices.length; i++) {
                 // only if the cell is in the includeList
                 // same column means that they have the same type
-                DataValueComparator comp =
+                final DataValueComparator comp =
                         m_spec.getColumnSpec(m_indices[i]).getType()
                                 .getComparator();
                 int cellComparison =
