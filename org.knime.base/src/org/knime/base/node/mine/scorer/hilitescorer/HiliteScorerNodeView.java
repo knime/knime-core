@@ -222,7 +222,6 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
     protected void onOpen() {
         // register the hilite handler
         getNodeModel().getInHiLiteHandler(0).addHiLiteListener(this);
-        updateHilitedCells();
     }
 
     /**
