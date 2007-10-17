@@ -353,17 +353,20 @@ public final class GUIUtils {
      * @return the color for the current index
      */
     public static Color generateDistinctColor(final int idx, final int size) {
-        // use Color, half saturated, half bright for base color
         final float hue;
-        if (1 / (double)size >= 0.25f) {
-            //if the offset is smaller than then the 180° skip the adding of
-            //the 180° which we add to have the sections next to each other
-            //most distinct
-            hue = ((float)(idx) / (float)size) % 1.0f;
-        } else if (idx % 2 == 0) {
-            hue = ((float)(idx) / (float)size) % 1.0f;
+        if (size == 0) {
+            hue = 0;
         } else {
-            hue = ((float)(idx - 1) / (float)size) + 0.5f % 1.0f;
+            //all even indices are place on the first half of the hue circle
+            //while all uneven indices use the second half of the circle
+            final int index;
+            if (idx % 2 == 0) {
+                index = idx / 2;
+            } else {
+                final int half = (int)Math.ceil(size / 2.0);
+                index = half + (idx / 2);
+            }
+            hue = index / (float)size;
         }
         return Color.getColor(null, Color.HSBtoRGB(hue, 1.0f, 1.0f));
     }
