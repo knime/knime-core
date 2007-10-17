@@ -258,6 +258,8 @@ public abstract class PieVizModel {
             return false;
         }
         m_showMissingValSection = showMissingValSection;
+        //un select the missing value section
+        getMissingSection().setSelected(false);
         return true;
     }
 

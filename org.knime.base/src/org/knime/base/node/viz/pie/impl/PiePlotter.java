@@ -199,6 +199,12 @@ public abstract class PiePlotter
                 }
                 if (vizModel.setShowMissingValSection(
                         e.getStateChange() == ItemEvent.SELECTED)) {
+                    //reset the details view if the missing section was selected
+                    final P properties = getPropertiesPanel();
+                    if (properties != null) {
+                        properties.updateHTMLDetailsPanel(
+                            vizModel.getHTMLDetailData());
+                    }
                     updatePaintModel();
                 }
             }
