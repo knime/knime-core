@@ -49,11 +49,16 @@ public abstract class PieDataModel {
 
     private final boolean m_supportHiliting;
 
+    private final boolean m_detailsAvailable;
+
     /**Constructor for class AbstractPieDataModel.
      * @param supportHiliting if hiliting is supported
+     * @param detailsAvailable <code>true</code> if details are available
      */
-    protected PieDataModel(final boolean supportHiliting) {
+    protected PieDataModel(final boolean supportHiliting,
+            final boolean detailsAvailable) {
         m_supportHiliting = supportHiliting;
+        m_detailsAvailable = detailsAvailable;
     }
 
     /**
@@ -128,6 +133,13 @@ public abstract class PieDataModel {
      */
     public boolean supportsHiliting() {
         return m_supportHiliting;
+    }
+
+    /**
+     * @return <code>true</code> if details are available
+     */
+    public boolean detailsAvailable() {
+        return m_detailsAvailable;
     }
 
     /**

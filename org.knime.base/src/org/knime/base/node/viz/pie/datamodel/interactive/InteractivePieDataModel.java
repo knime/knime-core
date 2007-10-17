@@ -51,10 +51,11 @@ public class InteractivePieDataModel extends PieDataModel {
     /**Constructor for class InteractivePieDataModel.
      * @param spec the {@link DataTableSpec}
      * @param noOfRows the optional number of rows to initialize the row array
+     * @param detailsAvailable <code>true</code> if details are available
      */
     public InteractivePieDataModel(final DataTableSpec spec,
-            final int noOfRows) {
-        super(true);
+            final int noOfRows, final boolean detailsAvailable) {
+        super(true, detailsAvailable);
         m_spec = spec;
         m_dataRows = new ArrayList<DataRow>(noOfRows);
     }

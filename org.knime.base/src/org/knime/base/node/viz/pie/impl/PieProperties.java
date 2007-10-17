@@ -120,6 +120,9 @@ extends AbstractPlotterProperties {
     private static final String SHOW_DETAILS_TOOLTIP =
         "Show details for selected sections";
 
+    private static final String SHOW_DETAILS_TOOLTIP_DISABLED =
+        "No details available";
+
     private static final Dimension HORIZONTAL_SPACER_DIM =
         new Dimension(10, 1);
 
@@ -205,7 +208,7 @@ extends AbstractPlotterProperties {
 
         m_showDetails = new JCheckBox(
                 SHOW_DETAILS, vizModel.showDetails());
-        m_showDetails.setToolTipText(SHOW_DETAILS_TOOLTIP);
+        enableShowDetailsOption(vizModel.detailsAvailable());
         m_showSectionOutline = new JCheckBox(
                 SHOW_SECTION_OUTLINE_LABEL, vizModel.drawSectionOutline());
 //        m_applyAggrSettingsButton = new JButton(
@@ -249,6 +252,19 @@ extends AbstractPlotterProperties {
      */
     protected void enableMissingSectionOption(final boolean enable) {
         m_showMissingValSection.setEnabled(enable);
+    }
+
+    /**
+     * @param enable <code>true</code> if the show details check box
+     * should be enabled or not
+     */
+    protected void enableShowDetailsOption(final boolean enable) {
+        if (enable) {
+            m_showDetails.setToolTipText(SHOW_DETAILS_TOOLTIP);
+        } else {
+            m_showDetails.setToolTipText(SHOW_DETAILS_TOOLTIP_DISABLED);
+        }
+        m_showDetails.setEnabled(enable);
     }
 
     /**
@@ -435,6 +451,7 @@ extends AbstractPlotterProperties {
         m_showDetails.setSelected(vizModel.showDetails());
         m_showMissingValSection.setSelected(vizModel.showMissingValSection());
         enableMissingSectionOption(vizModel.hasMissingSection());
+        enableShowDetailsOption(vizModel.detailsAvailable());
         m_showSectionOutline.setSelected(vizModel.drawSectionOutline());
         updatePanelInternal(vizModel);
     }

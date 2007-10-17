@@ -104,8 +104,9 @@ extends PieNodeModel<InteractivePieVizModel> {
     @Override
     protected void createModel(final DataColumnSpec pieColSpec,
             final DataColumnSpec aggColSpec, final DataTableSpec spec,
-            final int noOfRows) {
-        m_model = new InteractivePieDataModel(spec, noOfRows);
+            final int noOfRows, final boolean containsColorHandler) {
+        m_model = new InteractivePieDataModel(spec, noOfRows,
+                containsColorHandler);
     }
 
     /**

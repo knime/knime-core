@@ -87,6 +87,8 @@ public abstract class PieVizModel {
     private final PieHiliteCalculator m_calculator =
         new PieHiliteCalculator(this);
 
+    private final boolean m_detailsAvailable;
+
     //drawing flags and parameter
     private boolean m_showMissingValSection = true;
     private boolean m_showDetails = false;
@@ -103,9 +105,21 @@ public abstract class PieVizModel {
 
     /**Constructor for class PieVizModel.
      * @param supportsHiliting <code>true</code> if hiliting
-     * should be supported*/
-    public PieVizModel(final boolean supportsHiliting) {
+     * should be supported
+     * @param detailsAvailable <code>true</code> if details are available
+     * */
+    public PieVizModel(final boolean supportsHiliting,
+            final boolean detailsAvailable) {
         m_supportsHiliting = supportsHiliting;
+        m_detailsAvailable = detailsAvailable;
+    }
+
+    /**
+     * @return <code>true</code> if at least one section contains more than
+     * one sub section.
+     */
+    public boolean detailsAvailable() {
+        return m_detailsAvailable;
     }
 
     /**
@@ -124,7 +138,7 @@ public abstract class PieVizModel {
     protected abstract List<PieSectionDataModel> getSections();
 
     /**
-     * @return the missing value data section
+     * @return the missing value data section which could be empty
      */
     protected abstract PieSectionDataModel getMissingSection();
 
@@ -691,4 +705,17 @@ public abstract class PieVizModel {
         }
         return result;
     }
+
+//    protected void calculateContainsSubsections() {
+//        final List<PieSectionDataModel> sections = getSections();
+//        for (final PieSectionDataModel section : sections) {
+//            if (section.getNoOfElements() > 1) {
+//                m_detailsAvailable = true;
+//                return;
+//            }
+//        }
+//        final PieSectionDataModel missingSection = getMissingSection();
+//        m_detailsAvailable = (!missingSection.isEmpty()
+//                && missingSection.getNoOfElements() > 1);
+//    }
 }

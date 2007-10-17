@@ -282,8 +282,9 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
         } else if (selectedNoOfRows > maxNoOfRows) {
             selectedNoOfRows = maxNoOfRows;
         }
-        createModel(pieCol, aggrCol, dataTable.getDataTableSpec(),
-                selectedNoOfRows);
+        final DataTableSpec tableSpec = dataTable.getDataTableSpec();
+        createModel(pieCol, aggrCol, tableSpec,
+                selectedNoOfRows, containsColorHandler(tableSpec));
         final double progressPerRow = 1.0 / selectedNoOfRows;
         double progress = 0.0;
         final RowIterator rowIterator = dataTable.iterator();
@@ -315,10 +316,24 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
      * aggregation column
      * @param spec the {@link DataTableSpec}
      * @param noOfRows the expected number of rows
+     * @param containsColorHandler <code>true</code> if a color handler is set
      */
     protected abstract void createModel(final DataColumnSpec pieColSpec,
             final DataColumnSpec aggrColSpec,
-            DataTableSpec spec, final int noOfRows);
+            DataTableSpec spec, final int noOfRows,
+            final boolean containsColorHandler);
+
+    private static boolean containsColorHandler(final DataTableSpec spec) {
+        if (spec == null) {
+            return false;
+        }
+        for (final DataColumnSpec colSpec : spec) {
+            if (colSpec.getColorHandler() != null) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * Adds the given row values to the concrete pie implementation.

@@ -71,10 +71,12 @@ public class FixedPieDataModel extends PieDataModel {
      * @param pieColSpec the {@link DataColumnSpec} of the pie column
      * @param aggrColSpec the optional {@link DataColumnSpec} of the
      * aggregation column
+     * @param containsColorHandler <code>true</code> if a color handler is set
      */
     public FixedPieDataModel(final DataColumnSpec pieColSpec,
-            final DataColumnSpec aggrColSpec) {
-        super(false);
+            final DataColumnSpec aggrColSpec,
+            final boolean containsColorHandler) {
+        super(false, containsColorHandler);
         if (pieColSpec == null) {
             throw new NullPointerException("pieCol, aggrCol must not be null");
         }
@@ -98,8 +100,8 @@ public class FixedPieDataModel extends PieDataModel {
     protected FixedPieDataModel(final String pieCol, final String aggrCol,
             final List<PieSectionDataModel> sections,
             final PieSectionDataModel missingSection,
-            final boolean supportHiliting) {
-        super(supportHiliting);
+            final boolean supportHiliting, final boolean showDetails) {
+        super(supportHiliting, showDetails);
         if (pieCol == null) {
             throw new NullPointerException("pieCol must not be null");
         }
@@ -173,6 +175,7 @@ public class FixedPieDataModel extends PieDataModel {
             exec.checkCanceled();
         }
         os.writeBoolean(supportsHiliting());
+        os.writeBoolean(detailsAvailable());
         os.flush();
         os.close();
         dataOS.flush();
@@ -237,6 +240,7 @@ public class FixedPieDataModel extends PieDataModel {
             exec.checkCanceled();
         }
         final boolean supportHiliting = os.readBoolean();
+        final boolean detailsAvailable = os.readBoolean();
         if (exec != null) {
             exec.setProgress(1.0, "Pie data mdoel loaded ");
         }
@@ -244,7 +248,7 @@ public class FixedPieDataModel extends PieDataModel {
         os.close();
         dataIS.close();
         return new FixedPieDataModel(pieCol, aggrCol, sections,
-                missingSection, supportHiliting);
+                missingSection, supportHiliting, detailsAvailable);
     }
 
     /**

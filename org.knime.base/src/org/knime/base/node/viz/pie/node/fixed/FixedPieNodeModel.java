@@ -75,7 +75,7 @@ extends PieNodeModel<FixedPieVizModel> {
         final FixedPieVizModel vizModel = new FixedPieVizModel(
                 m_model.getPieColName(), m_model.getAggrColName(),
                 m_model.getClonedSections(), m_model.getClonedMissingSection(),
-                m_model.supportsHiliting());
+                m_model.supportsHiliting(), m_model.detailsAvailable());
         return vizModel;
     }
 
@@ -132,8 +132,10 @@ extends PieNodeModel<FixedPieVizModel> {
     @Override
     protected void createModel(final DataColumnSpec pieColSpec,
             final DataColumnSpec aggrColSpec,
-            final DataTableSpec spec, final int noOfRows) {
-        m_model = new FixedPieDataModel(pieColSpec, aggrColSpec);
+            final DataTableSpec spec, final int noOfRows,
+            final boolean containsColorHandler) {
+        m_model = new FixedPieDataModel(pieColSpec, aggrColSpec,
+                containsColorHandler);
     }
 
     /**

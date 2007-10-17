@@ -54,12 +54,13 @@ public class FixedPieVizModel extends PieVizModel {
      * @param sections the sections
      * @param missingSection the optional missing section
      * @param supportHiliting <code>true</code> if hiliting should be supported
+     * @param containsColorHandler <code>true</code> if a color handler is set
      */
     public FixedPieVizModel(final String pieCol, final String aggrCol,
             final List<PieSectionDataModel> sections,
             final PieSectionDataModel missingSection,
-            final boolean supportHiliting) {
-        super(supportHiliting);
+            final boolean supportHiliting, final boolean containsColorHandler) {
+        super(supportHiliting, containsColorHandler);
         if (sections == null) {
             throw new NullPointerException("sections must not be null");
         }
@@ -67,6 +68,7 @@ public class FixedPieVizModel extends PieVizModel {
         m_aggrCol = aggrCol;
         m_sections = sections;
         m_missingSection = missingSection;
+//        calculateContainsSubsections();
     }
 
     /**

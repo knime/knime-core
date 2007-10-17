@@ -53,6 +53,7 @@ public class InteractivePieVizModel extends PieVizModel {
 
     private PieSectionDataModel m_missingSection;
 
+
     /**Constructor for class InteractivePieVizModel.
      * @param model the data model
      * @param pieColumn the name of the pie column
@@ -60,7 +61,7 @@ public class InteractivePieVizModel extends PieVizModel {
      */
     public InteractivePieVizModel(final InteractivePieDataModel model,
             final String pieColumn, final String aggrCol) {
-        super(model.supportsHiliting());
+        super(model.supportsHiliting(), model.detailsAvailable());
         m_model = model;
         m_aggrColSpec = getColSpec(aggrCol);
         setPieColumn(pieColumn);
@@ -81,6 +82,7 @@ public class InteractivePieVizModel extends PieVizModel {
         m_pieColSpec = getColSpec(pieColName);
         createSections();
         addRows2Sections();
+//        calculateContainsSubsections();
         return true;
     }
 
@@ -107,6 +109,7 @@ public class InteractivePieVizModel extends PieVizModel {
         m_aggrColSpec = getColSpec(aggrColName);
         createSections();
         addRows2Sections();
+//        calculateContainsSubsections();
         return true;
     }
 
