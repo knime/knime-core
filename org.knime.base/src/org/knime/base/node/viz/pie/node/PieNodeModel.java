@@ -126,7 +126,7 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
         m_aggrMethod.setEnabled(m_aggrColumn.getStringValue() != null);
         m_aggrColumn.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                m_aggrMethod.setEnabled(m_aggrColumn.getStringValue() != null);
+              m_aggrMethod.setEnabled(m_aggrColumn.getStringValue() != null);
             }
         });
 //        m_aggrColumn.setEnabled(!AggregationMethod.COUNT

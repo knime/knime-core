@@ -50,7 +50,8 @@ public class PieNodeDialogPane extends DefaultNodeSettingsPane {
 
     private static final String X_COL_SEL_LABEL = "Pie column:";
 
-    private static final String AGGR_COL_SEL_LABEL = "Aggregation column:";
+    private static final String AGGR_COL_SEL_LABEL =
+        "Aggregation column:";
 
     private final SettingsModelIntegerBounded m_noOfRows;
 
@@ -61,6 +62,8 @@ public class PieNodeDialogPane extends DefaultNodeSettingsPane {
     private final SettingsModelString m_aggrMethod;
 
     private final SettingsModelString m_aggrColumn;
+
+    private final DialogComponentButtonGroup m_aggrMethButtonGroup;
 
     /**
      * Constructor for class HistogramNodeDialogPane.
@@ -86,10 +89,13 @@ public class PieNodeDialogPane extends DefaultNodeSettingsPane {
                 PieNodeModel.CFGKEY_AGGR_COLNAME, null);
         m_aggrMethod = new SettingsModelString(PieNodeModel.CFGKEY_AGGR_METHOD,
                 AggregationMethod.getDefaultMethod().name());
+        m_aggrMethButtonGroup =
+            new DialogComponentButtonGroup(m_aggrMethod, null, false,
+                    AggregationMethod.values());
         m_aggrMethod.setEnabled(m_aggrColumn.getStringValue() != null);
         m_aggrColumn.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
-                m_aggrMethod.setEnabled(m_aggrColumn.getStringValue() != null);
+               m_aggrMethod.setEnabled(m_aggrColumn.getStringValue() != null);
             }
         });
 //      m_aggrColumn.setEnabled(!AggregationMethod.COUNT.equals(
@@ -116,12 +122,8 @@ public class PieNodeDialogPane extends DefaultNodeSettingsPane {
                                 PieNodeModel.PIE_COLUMN_FILTER);
         final DialogComponentColumnNameSelection aggrCols =
             new DialogComponentColumnNameSelection(m_aggrColumn,
-                    AGGR_COL_SEL_LABEL, 0, false,
+                    AGGR_COL_SEL_LABEL, 0, false, true,
                     PieNodeModel.AGGREGATION_COLUMN_FILTER);
-
-        final DialogComponentButtonGroup aggrMethod =
-            new DialogComponentButtonGroup(m_aggrMethod, "Aggregation method: ",
-                    false, AggregationMethod.values());
 
         createNewGroup("Rows to display:");
         addDialogComponent(allRowsComp);
@@ -129,7 +131,9 @@ public class PieNodeDialogPane extends DefaultNodeSettingsPane {
 
         createNewGroup("Column selection:");
         addDialogComponent(pieCol);
-        addDialogComponent(aggrMethod);
         addDialogComponent(aggrCols);
+
+        createNewGroup("Aggregation method");
+        addDialogComponent(m_aggrMethButtonGroup);
     }
 }
