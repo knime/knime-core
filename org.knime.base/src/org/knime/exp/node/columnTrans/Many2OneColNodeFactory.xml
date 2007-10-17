@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./many2one.png" type="Manipulator">
+	<name>Many2One</name>
+	
+	<shortDescription>
+		Aggregates several columns into one single column.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+		Aggregates several columns into one single column.
+			Selects a matching column from the selected columns and puts the name 
+			of the matching column into the aggregated column of that row.
+			Dependend on the selected "include method" a column matches the 
+			include pattern for each row. 
+			Then the name of that column is put into the aggregated column, i.e.
+			the aggregated column contains the column names of the selected columns. 
+			If no column matches a missing value is added.
+			If multiple columns match an exception is thrown.
+			Missing values are ignored. If all selected columns of one row consist
+			of missing values a missing value is put in the aggregated column.
+			All include methods except the regular expression require columns 
+			which are double compatible.
+		</intro>
+		<option name="Columns">Select those columns which should be condensed.</option>
+		<option name="Appended column name">Name of the aggreagte column.</option>
+		<option name="Include Method">Choose the method to determine the matching column:
+			<ul>
+				<li>Maximum: The column with the maximum value in each row matches</li>
+				<li>Minimum: The column with the minimum value in each row matches</li>
+				<li>RegExpPattern: The column matching the provided regular expression 
+				pattern matches.</li>
+			</ul>
+		</option>
+		<option name="Include Pattern">Enter the regular expression pattern if  
+		RexExpPattern was chosen as include method</option>
+		<option name="Keep original columns">If checked, the selected columns 
+		are kept in the output table, otherwise they 
+		are deleted.</option>
+	</fullDescription>
+	
+	<ports>
+		<dataIn index="0" name="Data to process">Data</dataIn>
+		<dataOut index="0" name="Processed data">Data with aggregated column</dataOut>
+	</ports>	
+</knimeNode>
