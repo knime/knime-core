@@ -271,12 +271,12 @@ public class PieDrawingPane extends AbstractDrawingPane {
         final double labelX;
         final double labelY;
         final int margin = 30;
-        if (angle > 90 && angle < 270) {
+        if (angle >= 90 && angle <= 270) {
             //this is the left side of the pie
-            if (angle < 90 + margin) {
+            if (angle <= 90 + margin) {
                 //this is the top left section
                 linkY2 = linkY1 - labelMargin;
-            } else if (angle > 270 - margin) {
+            } else if (angle >= 270 - margin) {
                 //this is the bottom left section
                 linkY2 = linkY1 + labelMargin;
             } else {
@@ -287,10 +287,10 @@ public class PieDrawingPane extends AbstractDrawingPane {
             labelY = linkY2 + textHeight / 2.0;
         } else {
             //this is the right side of the pie
-            if (angle > 90 - margin && angle < 90) {
+            if (angle >= 90 - margin && angle <= 90) {
                 //this is the top right section
                 linkY2 = linkY1 - labelMargin;
-            } else if (angle < 270 + margin && angle > 270) {
+            } else if (angle <= 270 + margin && angle >= 270) {
                 //this is the bottom right section
                 linkY2 = linkY1 + labelMargin;
             } else {
