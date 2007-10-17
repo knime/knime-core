@@ -80,25 +80,6 @@ public class PieDrawingPane extends AbstractDrawingPane {
     private static final BasicStroke HILITE_OUTLINE_STROKE =
         new BasicStroke(3f);
 
-//    /**The alpha value of the overloaded element block.*/
-//    private static final float HILITE_FILLING_ALPHA = 1.0f;
-//    /**Defines the filing of the hilite sections.*/
-//    private static final TexturePaint HILITE_FILLING;
-//    static {
-////      draw 2D rounded rectangle with a buffered background
-//        final BufferedImage img =
-//            new BufferedImage(4, 4, BufferedImage.TYPE_INT_RGB);
-//        // obtain Graphics2D from bufferImage and draw on it
-//        final Graphics2D g2 = img.createGraphics();
-//        g2.setColor(ColorAttr.HILITE);
-//        g2.fillRect(0, 0, 4, 4);
-//        g2.setColor(Color.GRAY);
-//        g2.fillRect(0, 0, 1, 1);
-//        g2.fillRect(1, 1, 1, 1);
-//      final Rectangle2D rect = new Rectangle(img.getWidth(), img.getHeight());
-//        HILITE_FILLING = new TexturePaint(img, rect);
-//    }
-
     private PieVizModel m_vizModel;
 
     /**
