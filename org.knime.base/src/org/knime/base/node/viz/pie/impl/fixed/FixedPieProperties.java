@@ -52,7 +52,12 @@ public class FixedPieProperties
     public FixedPieProperties(final FixedPieVizModel vizModel) {
         super(vizModel);
         m_pieCol = new JLabel(vizModel.getPieColumnName());
-        m_aggrCol = new JLabel(vizModel.getAggregationColumnName());
+        final String aggrColName = vizModel.getAggregationColumnName();
+        if (aggrColName == null) {
+            m_aggrCol = new JLabel("none selected");
+        } else {
+            m_aggrCol = new JLabel(aggrColName);
+        }
         super.addColumnTab(m_pieCol, m_aggrCol);
     }
 
@@ -71,6 +76,11 @@ public class FixedPieProperties
     @Override
     protected void updatePanelInternal(final FixedPieVizModel vizModel) {
         m_pieCol.setText(vizModel.getPieColumnName());
-        m_aggrCol.setText(vizModel.getAggregationColumnName());
+        final String aggrColName = vizModel.getAggregationColumnName();
+        if (aggrColName == null) {
+            m_aggrCol.setText("none selected");
+        } else {
+            m_aggrCol.setText(aggrColName);
+        }
     }
 }
