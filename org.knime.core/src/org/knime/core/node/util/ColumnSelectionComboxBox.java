@@ -34,7 +34,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.NotConfigurableException;
 
-
 /**
  * Class extends a JComboxBox to choose a column of a certain type retrieved
  * from the <code>DataTableSpec</code>.
@@ -108,14 +107,13 @@ public class ColumnSelectionComboxBox extends JComboBox {
             final Class<? extends DataValue>... filterValueClasses) {
         this(border, new DataValueColumnFilter(filterValueClasses));
     }
-    
+
     /**
      * Creates new Panel that will filter columns for particular value classes.
      * The panel will have a border as given. If null, no border is set.
      * 
-     * @param columnFilter The combo box will allow to select only columns 
-     *                      which are not filtered by this 
-     *                      {@link ColumnFilter}
+     * @param columnFilter The combo box will allow to select only columns which
+     *            are not filtered by this {@link ColumnFilter}
      * @param border Border for the panel or null to have no border.
      * 
      * @see #update(DataTableSpec, String)
@@ -132,7 +130,7 @@ public class ColumnSelectionComboxBox extends JComboBox {
         setRenderer(new DataColumnSpecListCellRenderer());
         setMinimumSize(new Dimension(100, 25));
     }
-    
+
     /**
      * Updates this filter panel by removing all current items and adding the
      * columns according to the content of the argument <code>spec</code>. If
@@ -142,13 +140,14 @@ public class ColumnSelectionComboxBox extends JComboBox {
      * @param sp To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
      * @throws NotConfigurableException If the spec does not contain any column
-     * compatible to the target value class(es) as given in constructor.       
+     *             compatible to the target value class(es) as given in
+     *             constructor.
      */
-    public final void update(final DataTableSpec sp, final String selColName) 
-        throws NotConfigurableException {
+    public final void update(final DataTableSpec sp, final String selColName)
+            throws NotConfigurableException {
         update(sp, selColName, false);
     }
-    
+
     /**
      * Updates this filter panel by removing all current items and adding the
      * columns according to the content of the argument <code>spec</code>. If
@@ -157,36 +156,60 @@ public class ColumnSelectionComboxBox extends JComboBox {
      * 
      * @param spec To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
-     * @param suppressEvents <code>true</code> if events caused by adding items 
-     *        to the combo box should be suppressed, <code>false</code> 
-     *        otherwise.
+     * @param suppressEvents <code>true</code> if events caused by adding
+     *            items to the combo box should be suppressed,
+     *            <code>false</code> otherwise.
      * @throws NotConfigurableException If the spec does not contain any column
-     * compatible to the target value class(es) as given in constructor.       
+     *             compatible to the target value class(es) as given in
+     *             constructor.
      */
-    public final void update(final DataTableSpec spec, 
-            final String selColName, final boolean suppressEvents) 
-        throws NotConfigurableException {
+    public final void update(final DataTableSpec spec, final String selColName,
+            final boolean suppressEvents) throws NotConfigurableException {
+        update(spec, selColName, suppressEvents, m_columnFilter);
+    }
+
+    /**
+     * Updates this filter panel by removing all current items and adding the
+     * columns according to the content of the argument <code>spec</code>. If
+     * a column name is provided and it is not filtered out the corresponding
+     * item in the combo box will be selected.
+     * 
+     * @param spec To get the column names, types and the current index from.
+     * @param selColName The column name to be set as chosen.
+     * @param suppressEvents <code>true</code> if events caused by adding
+     *            items to the combo box should be suppressed,
+     *            <code>false</code> otherwise.
+     * @param filter a filter that filters the columns that should be shown in
+     *            the combo box; this overrides the value classes given in the
+     *            constructor
+     * @throws NotConfigurableException If the spec does not contain any column
+     *             compatible to the target value class(es) as given in
+     *             constructor.
+     */
+    public final void update(final DataTableSpec spec, final String selColName,
+            final boolean suppressEvents, final ColumnFilter filter)
+            throws NotConfigurableException {
         ItemListener[] itemListeners = null;
         ActionListener[] actionListeners = null;
-        
+
         if (suppressEvents) {
             itemListeners = getListeners(ItemListener.class);
             for (ItemListener il : itemListeners) {
                 removeItemListener(il);
             }
-            
+
             actionListeners = getListeners(ActionListener.class);
             for (ActionListener al : actionListeners) {
                 removeActionListener(al);
             }
         }
-        
+
         removeAllItems();
         DataColumnSpec selectMe = null;
         if (spec != null) {
             for (int c = 0; c < spec.getNumColumns(); c++) {
                 DataColumnSpec current = spec.getColumnSpec(c);
-                if (m_columnFilter.includeColumn(current)) {
+                if (filter.includeColumn(current)) {
                     addItem(current);
                     if (current.getName().equals(selColName)) {
                         selectMe = current;
@@ -200,14 +223,13 @@ public class ColumnSelectionComboxBox extends JComboBox {
             for (ItemListener il : itemListeners) {
                 addItemListener(il);
             }
-            
+
             for (ActionListener al : actionListeners) {
                 addActionListener(al);
             }
         }
 
-    
-        if (selectMe != null) {            
+        if (selectMe != null) {
             setSelectedItem(selectMe);
         } else {
             // select last element
@@ -233,10 +255,11 @@ public class ColumnSelectionComboxBox extends JComboBox {
         }
         return null;
     }
-    
-    /** 
+
+    /**
      * Selects the column with the name provided in the argument. Does nothing
      * if the argument is <code>null</code> or the name is invalid.
+     * 
      * @param name The name of the column.
      */
     public final void setSelectedColumn(final String name) {
