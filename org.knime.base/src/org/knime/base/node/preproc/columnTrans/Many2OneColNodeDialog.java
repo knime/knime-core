@@ -19,11 +19,12 @@
  * ---------------------------------------------------------------------
  * 
  */
-package org.knime.exp.node.columnTrans;
+package org.knime.base.node.preproc.columnTrans;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.node.preproc.columnTrans.Many2OneColNodeModel.IncludeMethod;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
@@ -32,7 +33,6 @@ import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.exp.node.columnTrans.Many2OneColNodeModel.IncludeMethod;
 
 
 /**

@@ -21,7 +21,7 @@
  * History
  *   14.05.2007 (Fabian Dill): created
  */
-package org.knime.exp.node.columnTrans;
+package org.knime.base.node.preproc.columnTrans;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;

@@ -17,9 +17,9 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  */
-package org.knime.exp.node.columnTrans;
+package org.knime.base.node.preproc.columnTrans;
 
 import java.io.File;
 
@@ -44,14 +44,14 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 
 /**
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public class Many2OneColNodeModel extends NodeModel {
-    
+
     /**
      * Possible methods to let a column match.
-     * 
+     *
      * @author Fabian Dill, University of Konstanz
      */
     public enum IncludeMethod {
@@ -64,68 +64,68 @@ public class Many2OneColNodeModel extends NodeModel {
         /** Regualr Expression pattern matches. */
         RegExpPattern
     }
-    
-    
+
+
     // our logger instance
 //    private static final NodeLogger LOGGER = NodeLogger
 //            .getLogger(Many2OneColNodeModel.class);
-    
+
     /**The port were the  model expects the in data.*/
     public static final int DATA_IN_PORT = 0;
-    
+
     /**The port which the model uses to return the data.*/
     public static final int DATA_OUT_PORT = 0;
-    
+
     /**The name of the settings tag which holds the recognition values the user
      *  has entered in the dialog as <code>String</code>.*/
     public static final String RECOGNICTION_REGEX = "many2OneRecoValBox";
-    
-    /**The name of the settings tag which holds the names of the columns the 
+
+    /**The name of the settings tag which holds the names of the columns the
      * user has selected in the dialog as <code>String[]</code>.*/
     public static final String SELECTED_COLS = "many2OneCols2Condense";
-    
+
     /**The name of the settings tag which holds the indices in the select field
-     * of the columns the user has selected in the dialog as 
+     * of the columns the user has selected in the dialog as
      * <code>int[]</code>.*/
     public static final String SELECTED_COLS_IDX = "many2OneCols2CondenseIdx";
-    
+
     /**The name of the settings tag which holds the new name of the condensed
      * column the user has entered in the dialog as <code>String</code>.*/
     public static final String CONDENSED_COL_NAME = "many2OneCondenseColName";
-    
-    /**The name of the settings tag which holds <code>true</code> if the user 
-     * wants have the selected condensing columns removed as 
+
+    /**The name of the settings tag which holds <code>true</code> if the user
+     * wants have the selected condensing columns removed as
      * <code>boolean</code>.*/
     public static final String KEEP_COLS = "many2OneRemoveCols";
-    
-    /**The name of the settings tag which holds <code>true</code> if the user 
+
+    /**The name of the settings tag which holds <code>true</code> if the user
      * wants that the node handles multiple occurrences as
      *  <code>boolean</code>.*/
     public static final String ALLOW_MULTIPLE = "many2OneAllowMultiple";
-    
-    /** 
-     * Config key for the method to determine whether the value of a column is 
+
+    /**
+     * Config key for the method to determine whether the value of a column is
      * selected or not.
      */
     public static final String INCLUDE_METHOD = "includeMethod";
-    
-    
+
+
     private SettingsModelString m_appendedColumnName = new SettingsModelString(
             CONDENSED_COL_NAME, "Condensed Column");
-    
-    private SettingsModelFilterString m_includedColumns 
+
+    private SettingsModelFilterString m_includedColumns
         = new SettingsModelFilterString(SELECTED_COLS);
-    
+
     private SettingsModelString m_includeMethod = new SettingsModelString(
             INCLUDE_METHOD, IncludeMethod.Binary.name());
-    
+
     private SettingsModelString m_pattern = new SettingsModelString(
             RECOGNICTION_REGEX, "[^0]*");
-    
+
     private SettingsModelBoolean m_keepColumns = new SettingsModelBoolean(
             KEEP_COLS, true);
 
-    
+
     /**Constructor for class Many2OneColNodeModel.
      */
     protected Many2OneColNodeModel() {
@@ -164,7 +164,7 @@ public class Many2OneColNodeModel extends NodeModel {
     protected void reset() {
 
     }
-    
+
 
     private ColumnRearranger createRearranger(final DataTableSpec spec) {
         ColumnRearranger rearranger = new ColumnRearranger(spec);
@@ -178,30 +178,30 @@ public class Many2OneColNodeModel extends NodeModel {
             includedColIndices[index++] = spec.findColumnIndex(colName);
         }
         if (method.equals(IncludeMethod.RegExpPattern)) {
-            cellFactory = new RegExpCellFactory(spec, 
-                    m_appendedColumnName.getStringValue(), 
+            cellFactory = new RegExpCellFactory(spec,
+                    m_appendedColumnName.getStringValue(),
                     includedColIndices, m_pattern.getStringValue());
         } else if (method.equals(IncludeMethod.Minimum)) {
-            cellFactory = new MinMaxCellFactory(spec, 
-                    m_appendedColumnName.getStringValue(), 
-                    includedColIndices, false);            
+            cellFactory = new MinMaxCellFactory(spec,
+                    m_appendedColumnName.getStringValue(),
+                    includedColIndices, false);
         } else if (method.equals(IncludeMethod.Binary)) {
-            cellFactory = new BinaryCellFactory(spec, 
-                    m_appendedColumnName.getStringValue(), 
+            cellFactory = new BinaryCellFactory(spec,
+                    m_appendedColumnName.getStringValue(),
                     includedColIndices);
         } else {
-            cellFactory = new MinMaxCellFactory(spec,  
-                    m_appendedColumnName.getStringValue(), 
+            cellFactory = new MinMaxCellFactory(spec,
+                    m_appendedColumnName.getStringValue(),
                     includedColIndices, true);
         }
         if (!m_keepColumns.getBooleanValue()) {
             rearranger.remove(includedColIndices);
-        } 
+        }
         rearranger.append(cellFactory);
         return rearranger;
     }
 
-    
+
     /**
      * {@inheritDoc}
      */
@@ -213,21 +213,21 @@ public class Many2OneColNodeModel extends NodeModel {
         }
         // if it is not a reg exp it must be double compatible
         if (!m_includeMethod.getStringValue().equals(
-                IncludeMethod.RegExpPattern)) {
+                IncludeMethod.RegExpPattern.name())) {
             for (String colName : m_includedColumns.getIncludeList()) {
                 if (!inSpecs[0].getColumnSpec(colName).getType().isCompatible(
                         DoubleValue.class)) {
                     throw new InvalidSettingsException(
-                            "For selected include method " 
+                            "For selected include method '"
                             + m_includeMethod.getStringValue()
-                            + " only double compatible values are allowed."
-                            + " Column " + colName + " is not.");
+                            + "' only double compatible values are allowed."
+                            + " Column '" + colName + "' is not.");
                 }
             }
         }
         return new DataTableSpec[] {createRearranger(inSpecs[0]).createSpec()};
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -265,12 +265,12 @@ public class Many2OneColNodeModel extends NodeModel {
         m_pattern.validateSettings(settings);
         m_keepColumns.validateSettings(settings);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) {
         //nothing to do
     }
@@ -279,9 +279,9 @@ public class Many2OneColNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) {
         //nothing to do
     }
-    
+
 }

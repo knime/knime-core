@@ -4,7 +4,7 @@
 	<name>One2Many</name>
 	
 	<shortDescription>
-		Transformes the values of one column into appended columns.
+		Transforms the values of one column into appended columns.
 	</shortDescription>
 	
 	<fullDescription>
@@ -20,7 +20,11 @@
 		To avoid duplicate column names with identical possible values
 		in different selected columns, the generated column name
 		includes the original column name in this case (i. e.
-		the name looks like possibleValue_originalColumnName).
+		the name looks like possibleValue_originalColumnName).<br />
+		The dialog of the node allows you only to select columns with 
+		nominal values. If no column name appears in the dialog but your 
+		input table contains nominal columns, you could use the DomainCalculator
+		node and connect its output to this node. 
 		</intro>
 			<option name="Columns">
 				Select the nominal columns that should be included in the

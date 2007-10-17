@@ -19,7 +19,7 @@
  * ---------------------------------------------------------------------
  * 
  */
-package org.knime.exp.node.columnTrans;
+package org.knime.base.node.preproc.columnTrans;
 
 
 

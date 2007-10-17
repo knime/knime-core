@@ -19,61 +19,55 @@
  * ---------------------------------------------------------------------
  * 
  * History
- *   14.05.2007 (Fabian Dill): created
+ *   16.05.2007 (Fabian Dill): created
  */
-package org.knime.exp.node.columnTrans;
+package org.knime.base.node.preproc.columnTrans;
 
-import java.util.regex.Pattern;
-
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 
 /**
+ * Cell with value = 1 matches, others don't.
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class RegExpCellFactory extends AbstractMany2OneCellFactory {
+public class BinaryCellFactory extends AbstractMany2OneCellFactory {
     
-    private Pattern m_pattern;
-
     /**
      * 
      * @param inputSpec input spec of the whole table
      * @param appendedColumnName name of the new column
      * @param includedColsIndices indices of columns to condense
-     * @param regExp regular expression to determine matching columns
      */
-    public RegExpCellFactory(final DataTableSpec inputSpec, 
-            final String appendedColumnName, 
-            final int[] includedColsIndices, final String regExp) {
-        super(inputSpec, 
-                appendedColumnName, includedColsIndices);
-        m_pattern = Pattern.compile(regExp);
+    public BinaryCellFactory(final DataTableSpec inputSpec, 
+            final String appendedColumnName, final int[] includedColsIndices) {
+        super(inputSpec, appendedColumnName, includedColsIndices);
     }
 
     /**
+     * 
      * {@inheritDoc}
      */
     @Override
     public int findColumnIndex(final DataRow row) {
-        int columnIndex = -1;
+        int colIndex = -1;
         for (int i : getIncludedColIndices()) {
-            DataCell cell = row.getCell(i);
-            if (cell.isMissing()) {
+            if (row.getCell(i).isMissing()) {
                 continue;
             }
-            if (m_pattern.matcher(
-                    cell.toString().trim()).matches()) {
-                if (columnIndex >= 0) {
+            double currentValue = ((DoubleValue)row.getCell(i))
+                .getDoubleValue();
+            if (currentValue == 1) {
+                if (colIndex >= 0) {
                     throw new IllegalArgumentException(
                             "Multiple columns match in row "
                             + row.getKey().getId());
                 }
-                columnIndex = i;
+                colIndex = i;
             }
         }
-        return columnIndex;
+        return colIndex;
     }
 
 }
