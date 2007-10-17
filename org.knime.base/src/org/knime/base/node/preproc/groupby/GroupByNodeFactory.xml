@@ -85,7 +85,7 @@
         <dataIn index="0" name="Data table">
 	        Input table with at least two columns to perform the grouping.
         </dataIn>
-        <dataOut index="0" name="Pivoting table">
+        <dataOut index="0" name="Group table">
         	Result table with a row per unique group column value pair.
 		</dataOut>
     </ports>
