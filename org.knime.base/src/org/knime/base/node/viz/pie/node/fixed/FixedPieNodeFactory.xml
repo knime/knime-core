@@ -1,26 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./interactivePie.png" type="Visualizer">
+<knimeNode icon="./fixedPie.png" type="Visualizer">
     <name>Pie chart</name>    
     <shortDescription>
         Displays data in a pie chart.
     </shortDescription> 
     <fullDescription>
         <intro>
-        <p>Displays a pie chart with different viewing options.</p>
+        <p>Displays a pie chart with different viewing options. Hiliting and
+        changing of the pie and aggregation column on the fly is only supported 
+        by the interactive pie chart.</p>
         <p>The user can change the following view properties on the fly:
             <ol>
             <li>Aggregation method (count, summary, average)</li>
             <li>Pie size</li>
             <li>Show missing value section</li>
-            <li>Zooming</li>
-            <li>...</li>
+            <li>Show pie section outline</li>
+            <li>Draw selected section exploded</li>
+            <li>Show details for selected sections</li>
+            <li>Set value scale to percentage or original</li>
+            <li>Pie size</li>
+            <li>Explode size</li>
             </ol>
             Each distinct pie column value get its own colored section.
         </p>
-        <p>If the show details option is selected the pie displays also sub 
+        <p><b>Show details option:</b>
+        If the show details option is selected the pie displays also sub 
         sections for the selected sections. A sub section represents the rows
-        colored using the color manager.</p>
+        colored using the color manager. This option is only available if 
+        row colors are set.</p>
         <p><b>Only columns with a valid domain and not more than 250 distinct 
         values are available in this view. To set the domain use the 
         DomainCalculator or ColumnFilter node!</b></p>

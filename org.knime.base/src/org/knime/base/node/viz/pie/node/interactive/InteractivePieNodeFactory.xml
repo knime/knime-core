@@ -8,23 +8,30 @@
 	<fullDescription>
 		<intro>
 		<p>Displays an interactive pie chart with different viewing 
-		options.</p>
+		options. The interactive pie chart supports hiliting and the changing 
+		of the pie and aggregation column on the fly.</p>
 		<p>The user can change the following view properties on the fly:
 			<ol>
 			<li>Pie column</li>
-			<li>Aggregation column</li>
-			<li>Aggregation method (count, summary, average)</li>
-			<li>Pie size</li>
-			<li>Show missing value section</li>
-			<li>Zooming</li>
-			<li>...</li>
-			</ol>
+            <li>Aggregation column</li>
+            <li>Aggregation method (count, summary, average)</li>
+            <li>Pie size</li>
+            <li>Show missing value section</li>
+            <li>Show pie section outline</li>
+            <li>Draw selected section exploded</li>
+            <li>Show details for selected sections</li>
+            <li>Set value scale to percentage or original</li>
+            <li>Pie size</li>
+            <li>Explode size</li>
+            </ol>
 			Each pie column value get its own colored section. 
 			Hiliting is supported.
 		</p>
-		<p>If the show details option is selected the pie displays also sub 
+		<p><b>Show details option:</b>
+		If the show details option is selected the pie displays also sub 
         sections for the selected sections. A sub section represents the rows
-        colored using the color manager.</p>
+        colored using the color manager. This option is only available if 
+        row colors are set.</p>
 		<p><b>Only columns with a valid domain and not more than 250 distinct 
 		values are available in this view. To set the domain use the 
 		DomainCalculator or ColumnFilter node!</b></p>
@@ -39,14 +46,15 @@
 	    <option name="Pie column: ">
 	     	The values of this column are represent as colored section in the
 	     	pie chart. Only columns with less than 360 distinct values are 
-	     	supported.
+	     	supported.Can be changed in the view later on.
    	    </option>
    	    <option name="Aggregation method: ">
             The initial aggregation method to use. Can be changed in
             the view later on.
         </option>
         <option name="Aggregation column">
-            The column to calculate the aggregation values from.
+            The column to calculate the aggregation values from. Can be 
+            changed in the view later on.
         </option>
 	</fullDescription>
 	
