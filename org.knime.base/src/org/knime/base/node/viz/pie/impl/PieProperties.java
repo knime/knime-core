@@ -211,15 +211,6 @@ extends AbstractPlotterProperties {
         enableShowDetailsOption(vizModel.detailsAvailable());
         m_showSectionOutline = new JCheckBox(
                 SHOW_SECTION_OUTLINE_LABEL, vizModel.drawSectionOutline());
-//        m_applyAggrSettingsButton = new JButton(
-//                APPLY_BUTTON_LABEL);
-//        m_applyAggrSettingsButton.setHorizontalAlignment(
-//        SwingConstants.RIGHT);
-//
-//        m_applyBarSettingsButton = new JButton(
-//                APPLY_BUTTON_LABEL);
-//        m_applyBarSettingsButton.setHorizontalAlignment(SwingConstants.RIGHT);
-        // create the visualization option elements
 
         m_labelDisplayPolicy = GUIUtils.createButtonGroup(
                 LabelDisplayPolicy.values(), vizModel.getLabelDisplayPolicy(),
@@ -377,25 +368,6 @@ extends AbstractPlotterProperties {
     protected void addColumnTab(final JComponent pieCol,
             final JComponent aggrCol) {
         //      the column select tab
-        // the aggregation method label box
-//        final Box aggrLabelBox = Box.createHorizontalBox();
-//        final JLabel aggrMethLabel = new JLabel(AGGREGATION_METHOD_LABEL);
-//        aggrMethLabel.setVerticalAlignment(SwingConstants.CENTER);
-//        aggrLabelBox.add(Box.createHorizontalGlue());
-//        aggrLabelBox.add(Box.createHorizontalStrut(5));
-//        aggrLabelBox.add(aggrMethLabel);
-//        aggrLabelBox.add(Box.createHorizontalStrut(5));
-//        aggrLabelBox.add(Box.createHorizontalGlue());
-//        // the aggregation method radio button box
-//        final Box aggrButtonBox = GUIUtils
-//                .createButtonGroupBox(m_aggrMethButtonGrp, true, null, false);
-//
-//        final Box aggrLabelButtonBox = Box.createVerticalBox();
-//        aggrLabelButtonBox.setBorder(BorderFactory
-//                .createEtchedBorder(EtchedBorder.RAISED));
-//        aggrLabelButtonBox.add(aggrLabelBox);
-//        aggrLabelButtonBox.add(aggrButtonBox);
-//        aggrLabelButtonBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         final Box aggrLabelButtonBox = GUIUtils.createButtonGroupBox(
                 m_aggrMethButtonGrp, true, AGGREGATION_METHOD_LABEL, true);
         final Dimension d = new Dimension(130, 100);
