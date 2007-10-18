@@ -230,14 +230,25 @@ public class PMCCNodeView extends NodeView {
         public Component prepareRenderer(final TableCellRenderer renderer, 
                 final int row, final int column) {
             Component result = super.prepareRenderer(renderer, row, column);
+            // overwrite the component's tooltip text
+            // must not call on this as the component tooltip overwrites
+            // our tooltip
+            JComponent jresult = null;
+            if (result instanceof JComponent) {
+                jresult = (JComponent)result;
+            }
             Object val = getValueAt(row, column);
             if (val instanceof DoubleValue) {
                 String rowName = getContentModel().getRowKey(row).toString();
                 String colName = getColumnName(column);
-                setToolTipText(((DoubleValue)val).getDoubleValue() + " (" 
-                        + rowName + " - " + colName + ")");
+                if (jresult != null) {
+                    jresult.setToolTipText(((DoubleValue)val).getDoubleValue()
+                            + " (" + rowName + " - " + colName + ")");
+                }
             } else {
-                setToolTipText(null);
+                if (jresult != null) {
+                    jresult.setToolTipText(null);
+                }
             }
             return result;
         }
