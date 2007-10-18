@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   19.01.2005 (ohl): created
  */
@@ -40,10 +40,10 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Stores the properties for one column.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
-class ColProperty {
+public class ColProperty {
     /* stores most of the parameters */
     private DataColumnSpec m_colSpec;
 
@@ -61,7 +61,7 @@ class ColProperty {
      * integer columns only)
      */
     private boolean m_readPossValsFromFile;
-    
+
     /*
      * if true, the column will not be added to the output table.
      */
@@ -84,13 +84,13 @@ class ColProperty {
     private static final String CFGKEY_UPPERBOUND = "UpperBound";
 
     private static final String CFGKEY_LOWERBOUND = "LowerBound";
-    
+
     private static final String CFGKEY_SKIP = "SkipThisColumn";
 
     /**
      * Creates an empty column properties object.
      */
-    ColProperty() {
+    public ColProperty() {
         m_colSpec = null;
         m_missValuePattern = null;
         m_userSettings = false;
@@ -101,12 +101,13 @@ class ColProperty {
     /**
      * Creates a new column properties object initializing its settings from the
      * passed configuration object.
-     * 
+     *
      * @param cfg a config object to read the internal settings from
      * @throws InvalidSettingsException if the config object did not contain the
      *             expected settings
      */
-    ColProperty(final NodeSettingsRO cfg) throws InvalidSettingsException {
+    public ColProperty(final NodeSettingsRO cfg)
+            throws InvalidSettingsException {
         if (cfg == null) {
             throw new NullPointerException("Can't init column property from"
                     + " a null config.");
@@ -154,7 +155,7 @@ class ColProperty {
         // constructor. In case somebody changes it in the future.
         assert (new DataColumnDomainCreator(null, null) != null);
 
-        DataColumnSpecCreator dcsc = 
+        DataColumnSpecCreator dcsc =
             new DataColumnSpecCreator(colName, colType);
         if ((posValues != null) && (posValues.size() > 0)) {
             dcsc.setDomain(new DataColumnDomainCreator(posValues, lowerBound,
@@ -170,10 +171,10 @@ class ColProperty {
     /**
      * Writes all settings from this object into the passed configuration
      * object.
-     * 
+     *
      * @param cfg the configuration object to write the settings into
      */
-    void saveToConfiguration(final NodeSettingsWO cfg) {
+    public void saveToConfiguration(final NodeSettingsWO cfg) {
 
         if (cfg == null) {
             throw new NullPointerException("Can't save column property into"
@@ -209,28 +210,28 @@ class ColProperty {
     /**
      * @param cSpec the column spec to store in this property object
      */
-    void setColumnSpec(final DataColumnSpec cSpec) {
+    public void setColumnSpec(final DataColumnSpec cSpec) {
         m_colSpec = cSpec;
     }
 
     /**
      * @return the column spec containing most properties of this column
      */
-    DataColumnSpec getColumnSpec() {
+    public DataColumnSpec getColumnSpec() {
         return m_colSpec;
     }
 
     /**
      * @return the pattern that indicates missing data in this column
      */
-    String getMissingValuePattern() {
+    public String getMissingValuePattern() {
         return m_missValuePattern;
     }
 
     /**
      * @param missValue the missing value pattern to store
      */
-    void setMissingValuePattern(final String missValue) {
+    public void setMissingValuePattern(final String missValue) {
         m_missValuePattern = missValue;
     }
 
@@ -239,7 +240,7 @@ class ColProperty {
      *         by the user, <code>false</code> if all settings are
      *         default/guessed values.
      */
-    boolean getUserSettings() {
+    public boolean getUserSettings() {
         return m_userSettings;
     }
 
@@ -248,7 +249,7 @@ class ColProperty {
      *            settings specified by the user - as opposed to default/guessed
      *            settings.
      */
-    void setUserSettings(final boolean setByUser) {
+    public void setUserSettings(final boolean setByUser) {
         m_userSettings = setByUser;
     }
 
@@ -256,44 +257,44 @@ class ColProperty {
      * @return <code>true</code> if the possible values should be read from
      *         file. This is set only for integer columns.
      */
-    boolean getReadPossibleValuesFromFile() {
+    public boolean getReadPossibleValuesFromFile() {
         return m_readPossValsFromFile;
     }
 
     /**
      * Determines if the possible values of this column will be read from file
      * (used only with integer columns).
-     * 
+     *
      * @param readThem the new value of the flag. <code>true</code> if
      *            possible values should be read, <code>false</code>
      *            otherwise.
      */
-    void setReadPossibleValuesFromFile(final boolean readThem) {
+    public void setReadPossibleValuesFromFile(final boolean readThem) {
         m_readPossValsFromFile = readThem;
     }
 
     /**
      * @return true if this column is not included in the reader's table.
      */
-    boolean getSkipThisColumn() {
+    public boolean getSkipThisColumn() {
         return m_skipColumn;
     }
-    
+
     /**
      * @param skipIt specify true, if this column should not be included in
      * the reader's file table. Set to false (the default), if the column should
-     * appear in the file reader's output table. 
+     * appear in the file reader's output table.
      */
-    void setSkipThisColumn(final boolean skipIt) {
+    public void setSkipThisColumn(final boolean skipIt) {
         m_skipColumn = skipIt;
     }
-    
+
     /**
      * Sets a new column name for this column.
-     * 
+     *
      * @param colName the new name
      */
-    void changeColumnName(final String colName) {
+    public void changeColumnName(final String colName) {
         // must replace the column spec
         DataColumnSpecCreator dcsc = new DataColumnSpecCreator(m_colSpec);
         dcsc.setName(colName);
@@ -302,10 +303,10 @@ class ColProperty {
 
     /**
      * Sets a new column type for this column.
-     * 
+     *
      * @param newType the new type
      */
-    void changeColumnType(final DataType newType) {
+    public void changeColumnType(final DataType newType) {
         // must replace the column spec
         DataColumnSpecCreator dcsc = new DataColumnSpecCreator(m_colSpec);
         dcsc.setType(newType);
@@ -314,11 +315,11 @@ class ColProperty {
 
     /**
      * Replaces the list of possible values for this columns.
-     * 
+     *
      * @param newDomain the new domain to set in the column spec of this col
      *            property
      */
-    void changeDomain(final DataColumnDomain newDomain) {
+    public void changeDomain(final DataColumnDomain newDomain) {
         DataColumnSpecCreator dcsc = new DataColumnSpecCreator(m_colSpec);
         dcsc.setDomain(newDomain);
         m_colSpec = dcsc.createSpec();
@@ -343,7 +344,7 @@ class ColProperty {
 
     /**
      * Returns a new ColProperty object containing a deep copy of this one.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

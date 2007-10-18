@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   10.03.2005 (ohl): created
  */
@@ -47,7 +47,7 @@ import org.knime.base.node.io.filetokenizer.Quote;
  * Provides functionality for analyzing an ASCII data file to create default
  * settings. It tries to figure out what kind of delimiters and comments the
  * file contains - honoring fixed presettings passed in.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public final class FileAnalyzer {
@@ -69,7 +69,7 @@ public final class FileAnalyzer {
      * detect comment characters (if the first lines start with '#' or '%'), and
      * then guess the delimiter (',', ';', or space) depending on which cuts a
      * line into (more than one) tokens.
-     * 
+     *
      * @param userSettings containing the URL of the file to examin and settings
      *            that should be used and considered fixed.
      * @return settings that supposably provide more or less useful results. It
@@ -138,7 +138,7 @@ public final class FileAnalyzer {
             result.addWhiteSpaceCharacter("\t");
             result.setWhiteSpaceUserSet(false);
         }
-        
+
         // for now we just take over this flag:
         result.setSupportShortLines(userSettings.getSupportShortLines());
 
@@ -149,7 +149,7 @@ public final class FileAnalyzer {
 
         // the number of column set as of now does not take into account the
         // skipped columns.
-        
+
         if (userSettings.isFileHasRowHeadersUserSet()) {
             result.setFileHasRowHeaders(userSettings.getFileHasRowHeaders());
             result.setFileHasRowHeadersUserSet(true);
@@ -169,6 +169,10 @@ public final class FileAnalyzer {
         if (result.getFileHasRowHeaders()) {
             result.setNumberOfColumns(result.getNumberOfColumns() - 1);
         }
+
+        // set the global missing value pattern before determining the col type
+        result.setGlobalMissingValuePattern(userSettings
+                .getGlobalMissingValuePattern());
 
         // guesses (or copies) column types and names.
         Vector<ColProperty> columnProps = createColumnProperties(userSettings,
@@ -208,7 +212,7 @@ public final class FileAnalyzer {
      * tokens (except the first if we have row headers) start with the same
      * prefix followed by an increasing number, then that looks like column
      * headers to us. Otherwise we say we have no column headers.
-     * 
+     *
      * @param userSettings settings user provided. Must be honored!
      * @param result the settings so far, must contain data url, delimiters,
      *            comments, quotes, colNumber, and rowHeader flag
@@ -263,6 +267,11 @@ public final class FileAnalyzer {
         }
         tokenizer.closeSourceStream();
 
+        String missValuePattern =
+            userSettings.getGlobalMissingValuePattern();
+        if (missValuePattern == null) {
+            missValuePattern = "?";
+        }
         Vector<ColProperty> userColProps = userSettings.getColumnProperties();
         if (userColProps == null) {
             // that saves us quite some checking later
@@ -283,7 +292,8 @@ public final class FileAnalyzer {
                 colNames[0] = rowHeader;
                 System.arraycopy(columnHeaders, 0, colNames, 1,
                         colNames.length - 1);
-                return createColProps(colNames, userColProps, columnTypes);
+                return createColProps(colNames, userColProps, columnTypes,
+                        missValuePattern);
             }
 
             // another indication for a column_headers_must_have is when the
@@ -295,7 +305,7 @@ public final class FileAnalyzer {
                     // the first line ended early - could be anything...
                     continue;
                 }
-                if (columnHeaders[c].equals("?")) {
+                if (columnHeaders[c].equals(missValuePattern)) {
                     continue;
                 }
                 if (columnTypes[c].equals(IntCell.TYPE)) {
@@ -327,21 +337,24 @@ public final class FileAnalyzer {
                 // we didn't hit a 'continue' meaning the parsing failed, so we
                 // must use those headers.
                 result.setFileHasColumnHeaders(true);
-                return createColProps(columnHeaders, userColProps, columnTypes);
+                return createColProps(columnHeaders, userColProps, columnTypes,
+                        missValuePattern);
             }
             // and now, see if the headers to be are nicely formatted - that is
             // all have the same prefix and a growing index.
-            if ((columnHeaders.length > 0) 
+            if ((columnHeaders.length > 0)
                     && consecutiveHeaders(columnHeaders)) {
                 result.setFileHasColumnHeaders(true);
-                return createColProps(columnHeaders, userColProps, columnTypes);
+                return createColProps(columnHeaders, userColProps, columnTypes,
+                        missValuePattern);
             }
             // otherwise we assume the first line doesn't contain headers.
             // pass an array with null strings and it will create headers for us
             result.setFileHasColumnHeaders(false);
             String[] colNames = new String[columnHeaders.length]; // null
             // array
-            return createColProps(colNames, userColProps, columnTypes);
+            return createColProps(colNames, userColProps, columnTypes,
+                    missValuePattern);
         } else {
             // user set fileHasColHeaders - see if it's true or false
             result.setFileHasColumnHeaders(userSettings
@@ -356,15 +369,17 @@ public final class FileAnalyzer {
                     colNames[0] = rowHeader;
                     System.arraycopy(columnHeaders, 0, colNames, 1,
                             colNames.length - 1);
-                    return createColProps(colNames, userColProps, columnTypes);
+                    return createColProps(colNames, userColProps, columnTypes,
+                            missValuePattern);
                 } else {
                     return createColProps(columnHeaders, userColProps,
-                            columnTypes);
+                            columnTypes, missValuePattern);
                 }
             } else {
                 // don't read col headers - create null array to generate names
                 String[] colNames = new String[columnHeaders.length];
-                return createColProps(colNames, userColProps, columnTypes);
+                return createColProps(colNames, userColProps, columnTypes,
+                        missValuePattern);
             }
         }
     }
@@ -373,7 +388,7 @@ public final class FileAnalyzer {
      * Looks at the first token of each line (except the first line) and returns
      * true if they are all prefixed by the same (possibly empty) string
      * followed by a constantly incremented number.
-     * 
+     *
      * @param settings the file to look at with corresponding settings
      * @return true if it's reasonable to assume the file has row headers
      * @throws IOException if an I/O error occurs
@@ -433,7 +448,7 @@ public final class FileAnalyzer {
     /**
      * Returns <code>true</code> if all items in the array are prefixed by the
      * same (possibly empty) string followed by a constantly incremented number.
-     * 
+     *
      * @param headers the headers to look at, an emtpy item is considered end of
      *            list
      * @return <code>true</code> if it's reasonable to assume that these are
@@ -518,7 +533,7 @@ public final class FileAnalyzer {
      * 'useFileHeader' flag to false - if the file has colHeaders. If the
      * specified name is null it will create a name like 'col' + colNumber (also
      * falseing the flag, if the file has col headers).
-     * 
+     *
      * @param colNames the names of the columns. Items can be <code>null</code>.
      * @param userProps ColProperty objects preset by the user. Used, if not
      *            null, instead of a generated col property.
@@ -527,7 +542,8 @@ public final class FileAnalyzer {
      * @return a Vector of ColProperties. colTypes.length in number.
      */
     private static Vector<ColProperty> createColProps(final String[] colNames,
-            final Vector<ColProperty> userProps, final DataType[] colTypes) {
+            final Vector<ColProperty> userProps, final DataType[] colTypes,
+            final String missValuePattern) {
 
         assert colNames.length == colTypes.length;
 
@@ -547,7 +563,6 @@ public final class FileAnalyzer {
         }
 
         Vector<ColProperty> colProps = new Vector<ColProperty>();
-
         for (int c = 0; c < colNames.length; c++) {
             ColProperty colProp;
 
@@ -571,7 +586,7 @@ public final class FileAnalyzer {
                         colTypes[c]);
                 colProp.setColumnSpec(dcsc.createSpec());
                 // set the missing value pattern
-                colProp.setMissingValuePattern("?");
+                colProp.setMissingValuePattern(missValuePattern);
                 // With IntValues we give the user the choice of reading nominal
                 // values (in the domain dialog). Default is: don't
                 if (colTypes[c].equals(IntCell.TYPE)) {
@@ -671,6 +686,10 @@ public final class FileAnalyzer {
         }
         int linesRead = 0;
         int colIdx = -1;
+        String missValuePattern = userSettings.getGlobalMissingValuePattern();
+        if (missValuePattern == null) {
+            missValuePattern = "?";
+        }
         while (true) {
             String token = tokenizer.nextToken();
             if (token == null) {
@@ -688,7 +707,7 @@ public final class FileAnalyzer {
             }
             if (!result.isRowDelimiter(token)) {
                 if ((linesRead < 1)
-                        && (!userSettings.isFileHasColumnHeadersUserSet() 
+                        && (!userSettings.isFileHasColumnHeadersUserSet()
                                 || userSettings.getFileHasColumnHeaders())) {
                     // skip the first line - could be column headers - unless
                     // we know it's not
@@ -700,7 +719,7 @@ public final class FileAnalyzer {
                     continue;
                 }
                 // Allow missing pattern "?" and empty tokens
-                if ((token.length() == 0) || (token.equals("?"))) {
+                if ((token.length() == 0) || (token.equals(missValuePattern))) {
                     continue;
                 }
                 if (userTypes[colIdx] == null) {
@@ -770,9 +789,9 @@ public final class FileAnalyzer {
         for (int t = 0; t < types.length; t++) {
             if (types[t] == null) {
                 types[t] = StringCell.TYPE;
-                if ((userColProps == null) || (userColProps.size() <= t) 
-                    || (userColProps.get(t) == null) 
-                    || (!userColProps.get(t).getSkipThisColumn())) { 
+                if ((userColProps == null) || (userColProps.size() <= t)
+                    || (userColProps.get(t) == null)
+                    || (!userColProps.get(t).getSkipThisColumn())) {
                     cols += "#" + t + ", ";
                 }
             }
@@ -787,8 +806,8 @@ public final class FileAnalyzer {
 
     /**
      * Looks at the first character of the first lines of the file and
-     * determines what kind of single line comment we should support. 
-     * 
+     * determines what kind of single line comment we should support.
+     *
      * @param settings object containing the data file location. The method will
      *            add comment patterns to this object.
      * @throws IOException if an I/O error occurs
@@ -862,7 +881,7 @@ public final class FileAnalyzer {
     /**
      * Adds quotes to the settings object. For now we always add double quotes
      * with an escape character and single quotes without it.
-     * 
+     *
      * @param settings the object to add quote settings to. Must contain file
      *            location and possibly comments - but no delimiters yet!
      * @throws IOException if an I/O error occurs
@@ -1217,7 +1236,7 @@ public final class FileAnalyzer {
                             }
                         } else {
                             if (settings.ignoreEmptyTokensAtEndOfRow()) {
-                                if ((columns - consEmptyTokens) 
+                                if ((columns - consEmptyTokens)
                                         > maxNumOfCols) {
                                     // we read more non-empty columns than we
                                     // could
