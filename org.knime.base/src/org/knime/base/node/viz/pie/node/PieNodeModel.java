@@ -179,7 +179,7 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
                             .getStringValue();
             if (value == null) {
                 throw new InvalidSettingsException(
-                        "No aggregation column selected");
+                        "No aggregation column only valid for method count");
             }
         }
     }
