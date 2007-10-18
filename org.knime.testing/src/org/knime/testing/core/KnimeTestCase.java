@@ -185,6 +185,7 @@ public class KnimeTestCase extends TestCase {
             @Override
             public void run() {
                 m_manager.cancelExecution();
+                logger.error("Workflow canceled after " + TIMEOUT + " seconds");
             }
         };
         try {
