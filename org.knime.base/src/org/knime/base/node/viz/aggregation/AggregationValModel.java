@@ -59,7 +59,7 @@ implements Serializable, AggregationModel<S, H> {
         NodeLogger.getLogger(AggregationValModel.class);
     private final String m_name;
 
-    private final Color m_color;
+    private Color m_color;
 
     private final boolean m_supportHiliting;
 
@@ -161,6 +161,16 @@ implements Serializable, AggregationModel<S, H> {
      */
     public String getName() {
         return m_name;
+    }
+
+    /**
+     * @param color the new color of this aggregation value model
+     */
+    public void setColor(final Color color) {
+        if (color == null) {
+            throw new NullPointerException("color must not be null");
+        }
+        m_color = color;
     }
 
     /**
