@@ -16,7 +16,7 @@
     		by the selected group columns prior calculating the aggregation 
     		values.
     		<p>
-    		If the number of unique values per group exeeds the defined number 
+    		If the number of unique values per group exceeds the defined number 
     		of unique values the calculation of this group is skipped, the
     		aggregation result is a missing value and an appropriate warning 
     		is displayed after execution.
@@ -86,7 +86,7 @@
 	        Input table with at least two columns to perform the grouping.
         </dataIn>
         <dataOut index="0" name="Group table">
-        	Result table with a row per unique group column value pair.
+        	Result table with one row per unique group column value pair.
 		</dataOut>
     </ports>
 </knimeNode>
