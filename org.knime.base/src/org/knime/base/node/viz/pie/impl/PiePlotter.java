@@ -256,12 +256,20 @@ public abstract class PiePlotter
         }
         m_vizModel = vizModel;
         m_vizModel.setDrawingSpace(getDrawingPaneDimension());
+        updatePropertiesPanel(vizModel);
+        updatePaintModel();
+    }
+
+
+    /**
+     * @param vizModel the visualization model with the values to use
+     */
+    protected void updatePropertiesPanel(final D vizModel) {
         final P properties = getPropertiesPanel();
         if (properties == null) {
             throw new NullPointerException("Properties must not be null");
         }
         properties.updatePanel(vizModel);
-        updatePaintModel();
     }
 
 
@@ -341,10 +349,13 @@ public abstract class PiePlotter
             LOGGER.debug("VizModel was null");
             return;
         }
-        setPieSections(vizModel);
         final PieDrawingPane drawingPane = getPieDrawingPane();
         drawingPane.reset();
-        drawingPane.setInfoMsg(getInfoMsg());
+        if (m_infoMsg == null) {
+            setPieSections(vizModel);
+        } else {
+            drawingPane.setInfoMsg(m_infoMsg);
+        }
         drawingPane.setVizModel(vizModel);
     }
 

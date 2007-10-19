@@ -29,7 +29,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.border.Border;
-import javax.swing.event.AncestorListener;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieVizModel;
@@ -193,17 +192,8 @@ public class InteractivePieProperties
             return;
         }
         try {
-            //remove all action listener to avoid unnecessary calls...
-            final AncestorListener[] listeners = box.getAncestorListeners();
-            for (final AncestorListener listener : listeners) {
-                box.removeAncestorListener(listener);
-            }
             //...update the column select box
             box.update(spec, selection);
-            //...and add the removed listeners
-            for (final AncestorListener listener : listeners) {
-                box.addAncestorListener(listener);
-            }
         } catch (final NotConfigurableException e) {
             LOGGER.warn("Exception updating columns in properties panel: "
                     + e.getMessage());

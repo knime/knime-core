@@ -30,6 +30,7 @@ import java.awt.event.ActionListener;
 
 import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieVizModel;
 import org.knime.base.node.viz.pie.impl.PiePlotter;
+import org.knime.base.node.viz.pie.util.TooManySectionsException;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 
@@ -42,6 +43,8 @@ public class InteractivePiePlotter
     extends PiePlotter<InteractivePieProperties, InteractivePieVizModel> {
 
     private static final long serialVersionUID = -7592208071888135451L;
+
+    private boolean m_ignoreChanges = false;
 
     /**Constructor for class InteractivePiePlotter.
      * @param properties the properties panel
@@ -72,9 +75,23 @@ public class InteractivePiePlotter
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void updatePropertiesPanel(
+            final InteractivePieVizModel vizModel) {
+        m_ignoreChanges = true;
+        super.updatePropertiesPanel(vizModel);
+        m_ignoreChanges = false;
+    }
+
+    /**
      * @param colName the name of the new pie column
      */
     protected void setPieColumn(final String colName) {
+        if (m_ignoreChanges) {
+            return;
+        }
         final InteractivePieVizModel vizModel = getVizModel();
         if (vizModel == null) {
             throw new NullPointerException("vizModel must not be null");
@@ -84,15 +101,17 @@ public class InteractivePiePlotter
         if (properties == null) {
             throw new NullPointerException("Properties must not be null");
         }
+        String errMsg = null;
         boolean changed = true;
         try {
             changed = vizModel.setPieColumn(colName);
             resetInfoMsg();
-        } catch (final Exception e) {
-            setInfoMsg(e.getMessage());
+        } catch (final TooManySectionsException e) {
+            errMsg = e.getMessage();
         }
         if (changed) {
-            properties.updatePanel(vizModel);
+            updatePropertiesPanel(vizModel);
+            setInfoMsg(errMsg);
             updatePaintModel();
         }
     }
@@ -101,6 +120,9 @@ public class InteractivePiePlotter
      * @param colName the name of the new aggregation column
      */
     protected void setAggregationColumn(final String colName) {
+        if (m_ignoreChanges) {
+            return;
+        }
         final InteractivePieVizModel vizModel = getVizModel();
         if (vizModel == null) {
             throw new NullPointerException("vizModel must not be null");
@@ -110,15 +132,17 @@ public class InteractivePiePlotter
         if (properties == null) {
             throw new NullPointerException("Properties must not be null");
         }
+        String errMsg = null;
         boolean changed = true;
         try {
             changed = vizModel.setAggrColumn(colName);
             resetInfoMsg();
-        } catch (final Exception e) {
-            setInfoMsg(e.getMessage());
+        } catch (final TooManySectionsException e) {
+            errMsg = e.getMessage();
         }
         if (changed) {
-            properties.updatePanel(vizModel);
+            updatePropertiesPanel(vizModel);
+            setInfoMsg(errMsg);
             updatePaintModel();
         }
     }
