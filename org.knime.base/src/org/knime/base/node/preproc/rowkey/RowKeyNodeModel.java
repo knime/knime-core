@@ -1,5 +1,5 @@
 /*
- * ------------------------------------------------------------------- 
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History 05.11.2006 (Tobias Koetter): created
  */
 package org.knime.base.node.preproc.rowkey;
@@ -54,9 +54,9 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * The node model of the row key manipulation node. The node allows the user
- * to replace the row key with another column and/or to append a new column 
- * with the values of the current row key. 
- * 
+ * to replace the row key with another column and/or to append a new column
+ * with the values of the current row key.
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public class RowKeyNodeModel extends NodeModel {
@@ -85,12 +85,12 @@ public class RowKeyNodeModel extends NodeModel {
      * The name of the settings tag which holds the boolean if the user
      * wants to have the uniqueness ensured.*/
     public static final String ENSURE_UNIQUNESS = "ensureUniqueness";
-    
+
     /**
      * The name of the settings tag which holds the boolean if the user
      * wants to replace missing values.*/
     public static final String HANDLE_MISSING_VALS = "replaceMissingValues";
-    
+
     /**
      * The name of the settings tag which holds the name of the column which
      * values should be used as new row keys for the result table the user has
@@ -111,7 +111,7 @@ public class RowKeyNodeModel extends NodeModel {
      * <code>String</code>. Could be empty if the user only wants to replace
      * the existing rowkey column with another column.
      */
-    public static final String NEW_COL_NAME_4_ROWKEY_VALS = 
+    public static final String NEW_COL_NAME_4_ROWKEY_VALS =
         "newColumnName4RowKeyValues";
 
     /** Holds the <code>DataTableSpec</code> of the input data port. */
@@ -126,7 +126,7 @@ public class RowKeyNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_removeRowKeyCol;
     /**If<code>true</code> the user wants to replace the existing row key
-     * with the values of the selected column.*/    
+     * with the values of the selected column.*/
     private final SettingsModelBoolean m_ensureUniqueness;
     /**If<code>true</code> the user wants to replace the existing row key
      * with the values of the selected column.*/
@@ -136,7 +136,7 @@ public class RowKeyNodeModel extends NodeModel {
     private final SettingsModelBoolean m_appendRowKey;
     /**The name of the new column which should contain the row key values. Could
      * be <code>null</code>.*/
-    private final SettingsModelString m_newColumnName;    
+    private final SettingsModelString m_newColumnName;
 
     /**
      * The output HiLite handler.
@@ -165,13 +165,13 @@ public class RowKeyNodeModel extends NodeModel {
         m_handleMissingVals = new SettingsModelBoolean(
                 RowKeyNodeModel.HANDLE_MISSING_VALS, false);
         m_handleMissingVals.setEnabled(m_replaceKey.getBooleanValue());
-        
+
         m_appendRowKey = new SettingsModelBoolean(
                 RowKeyNodeModel.APPEND_ROWKEY_COLUMN, false);
         m_newColumnName = new SettingsModelString(
                 RowKeyNodeModel.NEW_COL_NAME_4_ROWKEY_VALS, (String)null);
         m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
-        
+
         m_replaceKey.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 final boolean b = m_replaceKey.getBooleanValue();
@@ -212,10 +212,10 @@ public class RowKeyNodeModel extends NodeModel {
                     m_newRowKeyColumn.getStringValue());
             if (colIdx < 0) {
                 throw new InvalidSettingsException("No column with name: "
-                        + m_newColumnName.getStringValue() 
+                        + m_newColumnName.getStringValue()
                         + " exists. Please select a valid column name.");
             }
-            
+
             DataColumnSpec newColSpec = null;
             if (m_appendRowKey.getBooleanValue()) {
                 final String newColName = m_newColumnName.getStringValue();
@@ -229,7 +229,7 @@ public class RowKeyNodeModel extends NodeModel {
                             "Internal exception: The DataType of the new "
                             + "column must not be null.");
                 }
-                final DataColumnSpecCreator colSpecCreater = 
+                final DataColumnSpecCreator colSpecCreater =
                         new DataColumnSpecCreator(newColName, newColType);
                 newColSpec = colSpecCreater.createSpec();
             }
@@ -237,19 +237,19 @@ public class RowKeyNodeModel extends NodeModel {
             outData = util.changeRowKey(data, exec,
                     m_newRowKeyColumn.getStringValue(),
                     m_appendRowKey.getBooleanValue(), newColSpec,
-                    m_ensureUniqueness.getBooleanValue(), 
+                    m_ensureUniqueness.getBooleanValue(),
                     m_handleMissingVals.getBooleanValue(),
                     m_removeRowKeyCol.getBooleanValue());
             final int missingValueCounter = util.getMissingValueCounter();
             final int duplicatesCounter = util.getDuplicatesCounter();
             final StringBuilder warningMsg = new StringBuilder();
             if (duplicatesCounter > 0) {
-                warningMsg.append(duplicatesCounter 
-                        + " duplicate(s) replaced. ");
+                warningMsg.append(duplicatesCounter
+                        + " duplicate(s) now unique. ");
             }
             if (missingValueCounter > 0) {
-                warningMsg.append(missingValueCounter 
-                        + " missing value(s) replaced with " 
+                warningMsg.append(missingValueCounter
+                        + " missing value(s) replaced with "
                         + RowKeyUtil.MISSING_VALUE_REPLACEMENT + ".");
             }
             if (warningMsg.length() > 0) {
@@ -260,14 +260,14 @@ public class RowKeyNodeModel extends NodeModel {
         } else if (m_appendRowKey.getBooleanValue()) {
             LOGGER.debug("The user only wants to append a new column with "
                     + "name " + m_newColumnName);
-            // the user wants only a column with the given name which 
+            // the user wants only a column with the given name which
             //contains the rowkey as value
             final DataTableSpec tableSpec = data.getDataTableSpec();
             final DataType type = getCommonSuperType4RowKey(data);
             final String newColumnName = m_newColumnName.getStringValue();
             final ColumnRearranger c = RowKeyUtil.createColumnRearranger(
                     tableSpec, newColumnName, type);
-            outData = 
+            outData =
                 exec.createColumnRearrangeTable(data, c, exec);
             exec.setMessage("New column created");
             LOGGER.debug("Column appended successfully");
@@ -292,8 +292,8 @@ public class RowKeyNodeModel extends NodeModel {
         if (data == null) {
             return DataType.getType(DataCell.class);
         }
-        Set<DataType> types = new HashSet<DataType>();
-        for (DataRow row : data) {
+        final Set<DataType> types = new HashSet<DataType>();
+        for (final DataRow row : data) {
              types.add(row.getKey().getId().getType());
         }
         if (types.size() < 1) {
@@ -305,7 +305,7 @@ public class RowKeyNodeModel extends NodeModel {
             DataType currentSuperType = dataTypes.next();
             while (dataTypes.hasNext()) {
                 final DataType dataType = dataTypes.next();
-                currentSuperType = 
+                currentSuperType =
                     DataType.getCommonSuperType(currentSuperType, dataType);
             }
             return currentSuperType;
@@ -321,7 +321,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @throws InvalidSettingsException 
+     * @throws InvalidSettingsException
      * @see org.knime.core.node.NodeModel
      *      #configure(org.knime.core.data.DataTableSpec[])
      */
@@ -329,7 +329,7 @@ public class RowKeyNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         // check the input data
-        assert (inSpecs != null && inSpecs.length == 1 
+        assert (inSpecs != null && inSpecs.length == 1
                 && inSpecs[DATA_IN_PORT] != null);
         m_tableSpec = inSpecs[DATA_IN_PORT];
         if (m_tableSpec != null
@@ -340,7 +340,7 @@ public class RowKeyNodeModel extends NodeModel {
         }
         DataTableSpec spec = m_tableSpec;
         if (m_replaceKey.getBooleanValue()) {
-            final String selRowKey = 
+            final String selRowKey =
                 m_newRowKeyColumn.getStringValue();
             if (selRowKey == null || selRowKey.trim().length() < 1) {
                 throw new InvalidSettingsException(
@@ -348,7 +348,7 @@ public class RowKeyNodeModel extends NodeModel {
             }
             if (!m_tableSpec.containsName(selRowKey)) {
                 throw new InvalidSettingsException(
-                "Selected column: '" + selRowKey 
+                "Selected column: '" + selRowKey
                 + "' not found in input table.");
             }
             if (m_removeRowKeyCol.getBooleanValue()) {
@@ -360,12 +360,12 @@ public class RowKeyNodeModel extends NodeModel {
             //I can't set the right type of the row key since I don't know it
             //here so we return no table spec
 //            final DataType type = DataType.getType(DataCell.class);
-//            final DataColumnSpecCreator colSpecCreator = 
-//                new DataColumnSpecCreator(m_newColumnName.getStringValue(), 
+//            final DataColumnSpecCreator colSpecCreator =
+//                new DataColumnSpecCreator(m_newColumnName.getStringValue(),
 //                        type);
 //            final DataColumnSpec colSpec = colSpecCreator.createSpec();
-//            spec = AppendedColumnTable.getTableSpec(inSpecs[DATA_IN_PORT], 
-//                    colSpec);   
+//            spec = AppendedColumnTable.getTableSpec(inSpecs[DATA_IN_PORT],
+//                    colSpec);
         }
         return new DataTableSpec[]{spec};
     }
@@ -404,8 +404,8 @@ public class RowKeyNodeModel extends NodeModel {
         m_replaceKey.loadSettingsFrom(settings);
         m_newRowKeyColumn.loadSettingsFrom(settings);
         try {
-            m_removeRowKeyCol.loadSettingsFrom(settings);        
-        } catch (InvalidSettingsException e) {
+            m_removeRowKeyCol.loadSettingsFrom(settings);
+        } catch (final InvalidSettingsException e) {
             // this is an older workflow set it to the old behaviour
             m_removeRowKeyCol.setBooleanValue(false);
         }
@@ -422,10 +422,10 @@ public class RowKeyNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         assert (settings != null);
-        final SettingsModelBoolean replaceRowKeyModel = 
+        final SettingsModelBoolean replaceRowKeyModel =
             m_replaceKey.createCloneWithValidatedValue(settings);
         final boolean replaceRowKey = replaceRowKeyModel.getBooleanValue();
-        final SettingsModelBoolean appendRowKeyModel = 
+        final SettingsModelBoolean appendRowKeyModel =
             m_appendRowKey.createCloneWithValidatedValue(settings);
         final boolean appendRowKeyCol = appendRowKeyModel.getBooleanValue();
         if (!(replaceRowKey || appendRowKeyCol)) {
@@ -433,9 +433,9 @@ public class RowKeyNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "Please select at least on option.");
         }
-        
+
         if (replaceRowKey) {
-            final SettingsModelString newRowKeyModel = 
+            final SettingsModelString newRowKeyModel =
                 m_newRowKeyColumn.createCloneWithValidatedValue(
                         settings);
             final String newRowKeyCol = newRowKeyModel.getStringValue();
@@ -443,15 +443,15 @@ public class RowKeyNodeModel extends NodeModel {
                 throw new InvalidSettingsException("Please select a column"
                         + " which should be used as new row ID");
             }
-            if (m_tableSpec != null 
+            if (m_tableSpec != null
                     && !m_tableSpec.containsName(newRowKeyCol)) {
                 throw new InvalidSettingsException(
-                "Selected column: '" + newRowKeyCol 
+                "Selected column: '" + newRowKeyCol
                 + "' not found in table specification.");
             }
         }
         if (appendRowKeyCol) {
-            final SettingsModelString newColNameModel = 
+            final SettingsModelString newColNameModel =
                 m_newColumnName.createCloneWithValidatedValue(settings);
             final String newColName = newColNameModel.getStringValue();
             if (newColName == null || newColName.trim().length() < 1) {
