@@ -53,7 +53,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
 
 
 /**
- * The {@link NodeModel} implementation of the group by node which simply uses
+ * The {@link NodeModel} implementation of the group by node which uses
  * the {@link GroupByTable} class to create the resulting table.
  *
  * @author Tobias Koetter, University of Konstanz
@@ -301,9 +301,11 @@ public class GroupByNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         final BufferedDataTable table = inData[0];
-        if (table == null || table.getRowCount() < 1) {
+        if (table == null) {
+            throw new IllegalArgumentException("NO input table found");
+        }
+        if (table.getRowCount() < 1) {
             setWarningMessage("Empty input table found");
-            return inData;
         }
         final List<String> includeList = m_groupByCols.getIncludeList();
         final AggregationMethod numericMethod =
