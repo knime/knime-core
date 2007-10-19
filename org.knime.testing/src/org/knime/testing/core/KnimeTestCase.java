@@ -270,6 +270,7 @@ public class KnimeTestCase extends TestCase {
             if (testFails) {
                 fail("Failing due to errors or exceptions in the log file.");
             }
+            m_manager = null; // throw it away so that the GC can do its work
         } finally {
             m_errorAppender.close();
             logger.info("<End> Test='"
