@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    28.06.2007 (Tobias Koetter): created
  */
@@ -42,12 +42,14 @@ import org.knime.core.util.MutableInteger;
 
 
 /**
- * Enumeration which list all available aggregation methods including helper
- * methods.
- * 
+ * Enumeration which lists all available aggregation methods including their
+ * implementation and helper methods.
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public enum AggregationMethod {
+
+//The numerical methods
     /**Minimum.*/
     MIN("Minimum", true, "Min({1})", DoubleCell.TYPE, false),
     /**Maximum.*/
@@ -58,8 +60,8 @@ public enum AggregationMethod {
     SUM("Sum", true, "Sum({1})", DoubleCell.TYPE, false),
     /**Variance.*/
     VARIANCE("Variance", true, "Variance({1})", DoubleCell.TYPE, false),
-    
-//The none numerical methods    
+
+//The none numerical methods
     /**Takes the first cell per group.*/
     FIRST("First", false, "First({1})", null, false),
     /**Takes the last cell per group.*/
@@ -68,11 +70,13 @@ public enum AggregationMethod {
     MODE("Mode", false, "Mode({1})", null, true),
     /**Counts the number of group members.*/
     COUNT("Count", false, "Count({1})", IntCell.TYPE, false);
-    
-    private static final String PLACE_HOLDER = "{1}";
-    
+
+    /**The column name place holder.*/
+    private static final String COL_NAME_PLACE_HOLDER = "{1}";
+
+
     private final class MinOperator extends AggregationOperator {
-        
+
         private double m_minVal = Double.NaN;
 
         /**Constructor for class MinOperator.
@@ -81,7 +85,7 @@ public enum AggregationMethod {
         public MinOperator(final int maxUniqueValues) {
             super(maxUniqueValues);
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -111,11 +115,11 @@ public enum AggregationMethod {
         @Override
         public void resetInternal() {
             m_minVal = Double.NaN;
-        }   
+        }
     }
-    
+
     private final class MaxOperator extends AggregationOperator {
-        
+
         private double m_maxVal = Double.NaN;
 
         /**Constructor for class MinOperator.
@@ -124,7 +128,7 @@ public enum AggregationMethod {
         public MaxOperator(final int maxUniqueValues) {
             super(maxUniqueValues);
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -156,7 +160,7 @@ public enum AggregationMethod {
             m_maxVal = Double.NaN;
         }
     }
-    
+
     private final class MeanOperator extends AggregationOperator {
 
         private double m_sum = 0;
@@ -168,7 +172,7 @@ public enum AggregationMethod {
         public MeanOperator(final int maxUniqueValues) {
             super(maxUniqueValues);
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -198,9 +202,9 @@ public enum AggregationMethod {
         public void resetInternal() {
             m_sum = 0;
             m_count = 0;
-        }   
+        }
     }
-    
+
     private final class SumOperator extends AggregationOperator {
         private boolean m_valid = false;
         private double m_sum = 0;
@@ -211,7 +215,7 @@ public enum AggregationMethod {
         public SumOperator(final int maxUniqueValues) {
             super(maxUniqueValues);
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -243,7 +247,7 @@ public enum AggregationMethod {
             m_sum = 0;
         }
     }
-    
+
     private final class VarianceOperator extends AggregationOperator {
 
         /**Constructor for class VarianceOperator.
@@ -256,7 +260,7 @@ public enum AggregationMethod {
         private double m_sumSquare = 0;
         private double m_sum = 0;
         private int m_validCount = 0;
-        
+
         /**
          * {@inheritDoc}
          */
@@ -277,11 +281,11 @@ public enum AggregationMethod {
             if (m_validCount <= 1) {
                 return DataType.getMissingCell();
             }
-            double variance = (m_sumSquare - ((m_sum * m_sum) 
+            double variance = (m_sumSquare - ((m_sum * m_sum)
                     / m_validCount)) / (m_validCount - 1);
-            // unreported bug fix: in cases in which a column contains 
-            // almost only one value (for instance 1.0) but one single 
-            // 'outlier' whose value is, for instance 0.9999998, we get 
+            // unreported bug fix: in cases in which a column contains
+            // almost only one value (for instance 1.0) but one single
+            // 'outlier' whose value is, for instance 0.9999998, we get
             // round-off errors resulting in negative variance values
             if (variance < 0.0 && variance > -1.0E8) {
                 variance = 0.0;
@@ -298,11 +302,11 @@ public enum AggregationMethod {
             m_sum = 0;
             m_validCount = 0;
         }
-        
+
     }
-        
+
     private final class FirstOperator extends AggregationOperator {
-        
+
         private DataCell m_firstCell = null;
 
         /**Constructor for class MinOperator.
@@ -311,7 +315,7 @@ public enum AggregationMethod {
         public FirstOperator(final int maxUniqueValues) {
             super(maxUniqueValues);
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -344,7 +348,7 @@ public enum AggregationMethod {
     }
 
     private final class LastOperator extends AggregationOperator {
-        
+
         private DataCell m_lastCell = null;
 
         /**Constructor for class MinOperator.
@@ -353,7 +357,7 @@ public enum AggregationMethod {
         public LastOperator(final int maxUniqueValues) {
             super(maxUniqueValues);
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -384,7 +388,7 @@ public enum AggregationMethod {
     }
 
     private final class ModeOperator extends AggregationOperator {
-        
+
         private final Map<DataCell, MutableInteger> m_valCounter;
 
         /**Constructor for class MinOperator.
@@ -393,14 +397,14 @@ public enum AggregationMethod {
         public ModeOperator(final int maxUniqueValues) {
             super(maxUniqueValues);
             try {
-                m_valCounter = 
+                m_valCounter =
                     new HashMap<DataCell, MutableInteger>(maxUniqueValues);
-            } catch (OutOfMemoryError e) {
+            } catch (final OutOfMemoryError e) {
                 throw new IllegalArgumentException(
                         "Maximum unique values number to big");
             }
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -429,11 +433,11 @@ public enum AggregationMethod {
                 return DataType.getMissingCell();
             }
             //get the cell with the most counts
-            final Set<Entry<DataCell, MutableInteger>> entries = 
+            final Set<Entry<DataCell, MutableInteger>> entries =
                 m_valCounter.entrySet();
             int max = Integer.MIN_VALUE;
             DataCell result = null;
-            for (Entry<DataCell, MutableInteger> entry : entries) {
+            for (final Entry<DataCell, MutableInteger> entry : entries) {
                 if (result == null || entry.getValue().intValue() > max) {
                     max = entry.getValue().intValue();
                     result = entry.getKey();
@@ -452,9 +456,9 @@ public enum AggregationMethod {
             }
         }
     }
-    
+
     private final class CountOperator extends AggregationOperator {
-        
+
         private int m_counter = 0;
 
         /**Constructor for class CountOperator.
@@ -463,7 +467,7 @@ public enum AggregationMethod {
         public CountOperator(final int maxUniqueValues) {
             super(maxUniqueValues);
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -487,21 +491,22 @@ public enum AggregationMethod {
         @Override
         public void resetInternal() {
             m_counter = 0;
-        }   
+        }
     }
-    
+
     private final String m_label;
     private final boolean m_numerical;
     private final String m_columnNamePattern;
     private final DataType m_dataType;
     private final boolean m_usesLimit;
-    
+
     /**Constructor for class AggregationMethod.
      * @param label user readable label
      * @param numerical <code>true</code> if the operator is only suitable
      * for numerical columns
      * @param columnNamePattern the pattern for the result column name
-     * @param type the {@link DataType} of the result column
+     * @param type the {@link DataType} of the result column or
+     * <code>null</code> if the type stays the same
      * @param usesLimit <code>true</code> if the method checks the number of
      * unique values limit.
      */
@@ -515,7 +520,7 @@ public enum AggregationMethod {
         m_usesLimit = usesLimit;
     }
 
-    
+
     /**
      * @return the label
      */
@@ -523,14 +528,14 @@ public enum AggregationMethod {
         return m_label;
     }
 
-    
+
     /**
-     * @return the numerical
+     * @return <code>true</code> if only numerical columns are accepted
      */
     public boolean isNumerical() {
         return m_numerical;
     }
-    
+
     /**
      * @param maxUniqueValues the maximum number of unique values
      * @return the operator of this method
@@ -549,7 +554,7 @@ public enum AggregationMethod {
         }
         throw new IllegalStateException("No operator found");
     }
-    
+
     /**
      * @param origColumnName the original column name
      * @return the new name of the aggregation column
@@ -558,9 +563,10 @@ public enum AggregationMethod {
         if (m_columnNamePattern == null || m_columnNamePattern.length() < 1) {
             return origColumnName;
         }
-        return m_columnNamePattern.replace(PLACE_HOLDER, origColumnName);
+        return m_columnNamePattern.replace(COL_NAME_PLACE_HOLDER,
+                origColumnName);
     }
-    
+
     /**
      * @param origDataType the original {@link DataType}
      * @return the {@link DataType} of the aggregation column
@@ -571,8 +577,8 @@ public enum AggregationMethod {
         }
         return m_dataType;
     }
-    
-    
+
+
     /**
      * @return <code>true</code> if this method checks the maximum unique
      * values limit.
@@ -580,25 +586,25 @@ public enum AggregationMethod {
     public boolean isUsesLimit() {
         return m_usesLimit;
     }
-    
+
     /**
      * @return the default method for numerical columns
      */
     public static AggregationMethod getDefaultNumericMethod() {
         return MIN;
     }
-    
+
     /**
      * @return the default method for none numerical columns
      */
     public static AggregationMethod getDefaultNoneNumericMethod() {
         return FIRST;
     }
-    
+
     /**
      * @param model the {@link SettingsModelString} with the label of the
      * <code>AggregationMethod</code>
-     * @return the <code>AggregationMethod</code>
+     * @return the <code>AggregationMethod</code> for the given label
      */
     public static AggregationMethod getMethod4SettingsModel(
             final SettingsModelString model) {
@@ -607,28 +613,28 @@ public enum AggregationMethod {
         }
         return getMethod4Label(model.getStringValue());
     }
-    
+
     /**
      * @param label the label to get the <code>AggregationMethod</code> for.
      * @return the <code>AggregationMethod</code> with the given label
      * @throws IllegalArgumentException if no <code>AggregationMethod</code>
      * exists for the given label
      */
-    public static AggregationMethod getMethod4Label(final String label) 
+    public static AggregationMethod getMethod4Label(final String label)
     throws IllegalArgumentException {
         if (label == null) {
             throw new NullPointerException("Label must not be null");
         }
         final AggregationMethod[] methods = values();
-        for (AggregationMethod method : methods) {
+        for (final AggregationMethod method : methods) {
             if (method.getLabel().equals(label)) {
                 return method;
             }
         }
-        throw new IllegalArgumentException("No method found for label: " 
+        throw new IllegalArgumentException("No method found for label: "
                 + label);
     }
-    
+
     /**
      * @return a <code>List</code> with the labels of all numerical methods
      */
@@ -640,14 +646,14 @@ public enum AggregationMethod {
         }
         return labels;
     }
-    
+
     /**
      * @return a <code>List</code> with the labels of all none numerical methods
      */
     public static List<String> getNoneNumericalMethodLabels() {
         return getLabels(false);
     }
-    
+
     private static List<String> getLabels(final boolean numeric) {
         final AggregationMethod[] methods = values();
         final List<String> labels = new ArrayList<String>(methods.length);
