@@ -89,11 +89,11 @@ public final class PieColumnFilter implements ColumnFilter {
             throw new NullPointerException("colSpec must not be null");
         }
         final DataColumnDomain domain = colSpec.getDomain();
-        if (domain == null) {
+        if (domain == null || domain.getValues() == null) {
             return true;
         }
         if (colSpec.getType().isCompatible(NominalValue.class)) {
-            if (domain.getValues() == null || domain.getValues().size() < 1
+            if (domain.getValues().size() < 1
                     || domain.getValues().size() > MAX_NO_OF_SECTIONS) {
                 return false;
             }
