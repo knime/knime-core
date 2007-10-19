@@ -30,6 +30,7 @@ import java.io.File;
 import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieDataModel;
 import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieVizModel;
 import org.knime.base.node.viz.pie.node.PieNodeModel;
+import org.knime.base.node.viz.pie.util.TooManySectionsException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -62,7 +63,8 @@ extends PieNodeModel<InteractivePieVizModel> {
      * {@inheritDoc}
      */
     @Override
-    public InteractivePieVizModel getVizModelInternal()  {
+    public InteractivePieVizModel getVizModelInternal()
+    throws TooManySectionsException  {
         if (m_model == null) {
             return null;
         }

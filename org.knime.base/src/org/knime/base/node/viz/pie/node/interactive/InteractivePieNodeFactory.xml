@@ -32,9 +32,7 @@
         sections for the selected sections. A sub section represents the rows
         color using the color manager. This option is only available if 
         row colors are set.</p>
-		<p><b>Only columns with a valid domain and not more than 250 distinct 
-		values are available in this view. To set the domain use the 
-		DomainCalculator node!</b></p>
+        <p><b>The pie chart supports maximum 360 sections!</b></p>
 		</intro>
 		<option name="Display all rows">
 		    If selected the pie chart displays all rows of the incoming data.
@@ -45,8 +43,7 @@
 	    </option>
 	    <option name="Pie column: ">
 	     	The values of this column are represent as colored section in the
-	     	pie chart. Only columns with less than 360 distinct values are 
-	     	supported.Can be changed in the view later on.
+	     	pie chart. Can be changed in the view later on.
    	    </option>
    	    <option name="Aggregation method: ">
             The initial aggregation method to use. Can be changed in

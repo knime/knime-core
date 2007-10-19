@@ -26,15 +26,19 @@
 package org.knime.base.node.viz.pie.datamodel.interactive;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.knime.base.node.viz.pie.datamodel.PieDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.base.node.viz.pie.util.PieColumnFilter;
+import org.knime.base.node.viz.pie.util.TooManySectionsException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 
 
 /**
@@ -49,7 +53,8 @@ public class InteractivePieVizModel extends PieVizModel {
 
     private DataColumnSpec m_aggrColSpec;
 
-    private List<PieSectionDataModel> m_sections;
+    private final List<PieSectionDataModel> m_sections =
+        new ArrayList<PieSectionDataModel>();
 
     private PieSectionDataModel m_missingSection;
 
@@ -58,9 +63,12 @@ public class InteractivePieVizModel extends PieVizModel {
      * @param model the data model
      * @param pieColumn the name of the pie column
      * @param aggrCol the name of the aggregation column
+     * @throws TooManySectionsException if more sections are created than
+     * supported
      */
     public InteractivePieVizModel(final InteractivePieDataModel model,
-            final String pieColumn, final String aggrCol) {
+            final String pieColumn, final String aggrCol)
+    throws TooManySectionsException {
         super(model.supportsHiliting(), model.detailsAvailable());
         m_model = model;
         m_aggrColSpec = getColSpec(aggrCol);
@@ -70,8 +78,11 @@ public class InteractivePieVizModel extends PieVizModel {
     /**
      * @param pieColName the name of the pie column
      * @return <code>true</code> if the name has changed
+     * @throws TooManySectionsException if more sections are created than
+     * supported
      */
-    public boolean setPieColumn(final String pieColName) {
+    public boolean setPieColumn(final String pieColName)
+        throws TooManySectionsException {
         if (pieColName == null) {
             throw new NullPointerException("pieCol must not be null");
         }
@@ -80,9 +91,7 @@ public class InteractivePieVizModel extends PieVizModel {
             return false;
         }
         m_pieColSpec = getColSpec(pieColName);
-        createSections();
-        addRows2Sections();
-//        calculateContainsSubsections();
+        createSectionsWithData();
         return true;
     }
 
@@ -97,8 +106,11 @@ public class InteractivePieVizModel extends PieVizModel {
     /**
      * @param aggrColName the optional name of the aggregation column
      * @return <code>true</code> if the name has changed
+     * @throws TooManySectionsException if more sections are created than
+     * supported
      */
-    public boolean setAggrColumn(final String aggrColName) {
+    public boolean setAggrColumn(final String aggrColName)
+        throws TooManySectionsException {
         if (aggrColName == null && m_aggrColSpec == null) {
             return false;
         }
@@ -107,9 +119,7 @@ public class InteractivePieVizModel extends PieVizModel {
             return false;
         }
         m_aggrColSpec = getColSpec(aggrColName);
-        createSections();
-        addRows2Sections();
-//        calculateContainsSubsections();
+        createSectionsWithData();
         return true;
     }
 
@@ -129,11 +139,7 @@ public class InteractivePieVizModel extends PieVizModel {
      * @return the{@link PieSectionDataModel} which represents the given value
      * or <code>null</code> if no section is found for the given value
      */
-    public PieSectionDataModel getSection(final DataCell value) {
-        if (m_sections == null) {
-            throw new IllegalStateException("No sections available. "
-                    + "Viz model may not have been initialized.");
-        }
+    private PieSectionDataModel getSection(final DataCell value) {
         for (final PieSectionDataModel section : m_sections) {
             if (section.getName().equals(value.toString())) {
                 return section;
@@ -143,19 +149,28 @@ public class InteractivePieVizModel extends PieVizModel {
     }
 
     /**
-     * Creates the sections for the selected pie column.
+     * Creates the sections for the selected pie column and adds all rows to
+     * the appropriate section.
+     * @throws TooManySectionsException if more sections are created than
+     * supported
      */
-    private void createSections() {
-        m_sections = PieDataModel.createSections(m_pieColSpec,
-                m_model.supportsHiliting());
+    private void createSectionsWithData() throws TooManySectionsException {
+        m_sections.clear();
         m_missingSection = PieDataModel.createDefaultMissingSection(
                 m_model.supportsHiliting());
+        addRows2Sections();
+        final boolean numeric =
+            m_pieColSpec.getType().isCompatible(DoubleValue.class);
+        PieDataModel.sortSections(getSections(), numeric, true);
+        PieDataModel.setSectionColor(m_sections);
     }
 
     /**
      * Adds all rows to the available sections.
+     * @throws TooManySectionsException if more sections are created than
+     * supported
      */
-    private void addRows2Sections() {
+    private void addRows2Sections() throws TooManySectionsException {
         final int pieColIdx = m_model.getColIndex(m_pieColSpec.getName());
         final int aggrColIdx;
         if (m_aggrColSpec == null) {
@@ -172,14 +187,24 @@ public class InteractivePieVizModel extends PieVizModel {
                 aggrCell = row.getCell(aggrColIdx);
             }
             final Color rowColor = m_model.getRowColor(row);
-            final PieSectionDataModel section;
+            PieSectionDataModel section;
             if (pieCell.isMissing()) {
                 section = getMissingSection();
             } else {
                 section = getSection(pieCell);
                 if (section == null) {
-                    throw new IllegalArgumentException("No section found for: "
-                            + pieCell.toString());
+                    if (m_sections.size()
+                            >= PieColumnFilter.MAX_NO_OF_SECTIONS) {
+                        throw new TooManySectionsException(
+                                "Selected pie column contains more than "
+                                + PieColumnFilter.MAX_NO_OF_SECTIONS
+                                + " unique values.");
+                    }
+//                  throw new IllegalArgumentException("No section found for: "
+//                            + pieCell.toString());
+                    section = new PieSectionDataModel(pieCell.toString(),
+                                Color.BLACK, m_model.supportsHiliting());
+                    m_sections.add(section);
                 }
             }
             section.addDataRow(rowColor, row.getKey().getId(), aggrCell);

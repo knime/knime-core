@@ -31,6 +31,7 @@ import java.io.IOException;
 import org.knime.base.node.viz.pie.datamodel.fixed.FixedPieDataModel;
 import org.knime.base.node.viz.pie.datamodel.fixed.FixedPieVizModel;
 import org.knime.base.node.viz.pie.node.PieNodeModel;
+import org.knime.base.node.viz.pie.util.TooManySectionsException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -68,7 +69,7 @@ extends PieNodeModel<FixedPieVizModel> {
      * {@inheritDoc}
      */
     @Override
-    public FixedPieVizModel getVizModelInternal()  {
+    protected FixedPieVizModel getVizModelInternal()  {
         if (m_model == null) {
             return null;
         }
@@ -143,7 +144,8 @@ extends PieNodeModel<FixedPieVizModel> {
      */
     @Override
     protected void addDataRow(final DataRow row, final Color rowColor,
-            final DataCell pieCell, final DataCell aggrCell) {
+            final DataCell pieCell, final DataCell aggrCell)
+    throws TooManySectionsException {
         m_model.addDataRow(row, rowColor, pieCell, aggrCell);
     }
 }

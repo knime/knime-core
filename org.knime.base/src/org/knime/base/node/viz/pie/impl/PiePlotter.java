@@ -72,6 +72,8 @@ public abstract class PiePlotter
 
     private final P m_props;
 
+    private String m_infoMsg;
+
     /**Constructor for class PiePlotter.
      * @param properties the properties panel
      * @param handler the optional <code>HiliteHandler</code>
@@ -278,11 +280,37 @@ public abstract class PiePlotter
     }
 
     /**
+     * @return the information message which will be displayed on the screen
+     *         instead of the bars
+     */
+    public String getInfoMsg() {
+        return m_infoMsg;
+    }
+
+    /**
+     * If the information message is set no bars will be drawn. Only this
+     * message will appear in the plotter.
+     *
+     * @param infoMsg the information message to display
+     */
+    public void setInfoMsg(final String infoMsg) {
+        m_infoMsg = infoMsg;
+    }
+
+    /**
+     * Resets the information message.
+     */
+    public void resetInfoMsg() {
+        m_infoMsg = null;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public void reset() {
         resetVizModel();
+        resetInfoMsg();
         super.setHiLiteHandler(null);
         getPieDrawingPane().reset();
     }
@@ -313,8 +341,10 @@ public abstract class PiePlotter
             LOGGER.debug("VizModel was null");
             return;
         }
-        final PieDrawingPane drawingPane = getPieDrawingPane();
         setPieSections(vizModel);
+        final PieDrawingPane drawingPane = getPieDrawingPane();
+        drawingPane.reset();
+        drawingPane.setInfoMsg(getInfoMsg());
         drawingPane.setVizModel(vizModel);
     }
 
@@ -345,7 +375,7 @@ public abstract class PiePlotter
                 arcAngle = 360 - startAngle;
             }
             if (arcAngle < PieVizModel.MINIMUM_ARC_ANGLE) {
-                LOGGER.warn("Pie section: " + vizModel.createLabel(section)
+                LOGGER.debug("Pie section: " + vizModel.createLabel(section)
                         + " angle " + arcAngle + " to small to display."
                         + " Angle updated to set to minimum angle "
                         + PieVizModel.MINIMUM_ARC_ANGLE);

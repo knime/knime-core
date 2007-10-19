@@ -27,6 +27,7 @@ package org.knime.base.node.viz.pie.impl;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -56,6 +57,8 @@ public class PieDrawingPane extends AbstractDrawingPane {
 
     private static final long serialVersionUID = -2626993487320068781L;
 
+    /** Defines the font of the information message which is displayed. */
+    private static final Font INFO_MSG_FONT = new Font("Arial", Font.PLAIN, 16);
     /**The alpha blending value of not selected sections.*/
     private static final float SECTION_ALPHA = 0.6f;
     /**The alpha blending value of not selected sections.*/
@@ -83,6 +86,12 @@ public class PieDrawingPane extends AbstractDrawingPane {
     private PieVizModel m_vizModel;
 
     /**
+     * Information message. If not <code>null</code> no bars will be drawn
+     * only this message will be displayed.
+     */
+    private String m_infoMsg = null;
+
+    /**
      * @param vizModel the visualization model to draw
      */
     public void setVizModel(final PieVizModel vizModel) {
@@ -94,13 +103,47 @@ public class PieDrawingPane extends AbstractDrawingPane {
     }
 
     /**
+     * @return the information message which will be displayed on the screen
+     *         instead of the bars
+     */
+    public String getInfoMsg() {
+        return m_infoMsg;
+    }
+
+    /**
+     * If the information message is set no bars will be drawn. Only this
+     * message will appear in the plotter.
+     *
+     * @param infoMsg the information message to display
+     */
+    public void setInfoMsg(final String infoMsg) {
+        m_infoMsg = infoMsg;
+    }
+
+    /**
+     * Resets the drawing pane.
+     */
+    public void reset() {
+        m_vizModel = null;
+        m_infoMsg = null;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public void paintContent(final Graphics g) {
         final Graphics2D g2 = (Graphics2D)g;
+        String msg = m_infoMsg;
         if (m_vizModel == null) {
-            g2.drawLine(0, 0, 500, 500);
+            //if we have no bins and no info message display a no bars info
+            if (msg == null) {
+                msg = "No pie data available";
+            }
+        }
+        //check if we have to display an information message
+        if (msg != null) {
+            DrawingUtils.drawMessage(g2, INFO_MSG_FONT, msg, getBounds());
             return;
         }
         final RenderingHints origHints = g2.getRenderingHints();
@@ -284,12 +327,4 @@ public class PieDrawingPane extends AbstractDrawingPane {
         g2.drawLine((int)linkX1, (int)linkY1, (int)linkX2, (int)linkY2);
         g2.drawString(label, (float)labelX, (float)labelY);
     }
-
-    /**
-     * Resets the drawing pane.
-     */
-    public void reset() {
-        m_vizModel = null;
-    }
-
 }

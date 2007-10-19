@@ -84,7 +84,14 @@ public class InteractivePiePlotter
         if (properties == null) {
             throw new NullPointerException("Properties must not be null");
         }
-        if (vizModel.setPieColumn(colName)) {
+        boolean changed = true;
+        try {
+            changed = vizModel.setPieColumn(colName);
+            resetInfoMsg();
+        } catch (final Exception e) {
+            setInfoMsg(e.getMessage());
+        }
+        if (changed) {
             properties.updatePanel(vizModel);
             updatePaintModel();
         }
@@ -103,7 +110,14 @@ public class InteractivePiePlotter
         if (properties == null) {
             throw new NullPointerException("Properties must not be null");
         }
-        if (vizModel.setAggrColumn(colName)) {
+        boolean changed = true;
+        try {
+            changed = vizModel.setAggrColumn(colName);
+            resetInfoMsg();
+        } catch (final Exception e) {
+            setInfoMsg(e.getMessage());
+        }
+        if (changed) {
             properties.updatePanel(vizModel);
             updatePaintModel();
         }

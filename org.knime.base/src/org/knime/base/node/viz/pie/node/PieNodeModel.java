@@ -35,6 +35,7 @@ import javax.swing.event.ChangeListener;
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
 import org.knime.base.node.viz.pie.util.PieColumnFilter;
+import org.knime.base.node.viz.pie.util.TooManySectionsException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -221,8 +222,8 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
             throw new InvalidSettingsException("No valid pie column selected.");
         }
         final AggregationMethod method =
-                AggregationMethod.getMethod4Command(m_aggrMethod
-                        .getStringValue());
+                AggregationMethod.getMethod4Command(
+                        m_aggrMethod.getStringValue());
         if (method == null) {
             throw new InvalidSettingsException("No valid aggregation method");
         }
@@ -304,6 +305,15 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
             exec.setProgress(progress, "Adding data rows to pie chart...");
             exec.checkCanceled();
         }
+        exec.setMessage("Vaidating model");
+        final long startTime = System.currentTimeMillis();
+        //validate the data model by trying to get the viz model
+        if (getVizModelInternal() == null) {
+            setWarningMessage("No visualization model available");
+        }
+        final long endTime = System.currentTimeMillis();
+        final long durationTime = endTime - startTime;
+        LOGGER.debug("Time to validate model: " + durationTime + " ms");
         exec.setProgress(1.0, "Pie chart finished...");
         return new BufferedDataTable[0];
     }
@@ -341,15 +351,24 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
      * @param rowColor the color of this row
      * @param pieCell the pie value
      * @param aggrCell the optional aggregation value
+     * @throws TooManySectionsException if more sections are created than
+     * supported
      */
     protected abstract void addDataRow(final DataRow row, final Color rowColor,
-            final DataCell pieCell, final DataCell aggrCell);
+            final DataCell pieCell, final DataCell aggrCell)
+    throws TooManySectionsException;
 
     /**
      * @return the {@link PieVizModel}. Could be null.
      */
     public D getVizModel() {
-        final D vizModel = getVizModelInternal();
+        D vizModel = null;
+        try {
+             vizModel = getVizModelInternal();
+        } catch (final TooManySectionsException e) {
+            setWarningMessage(e.getMessage());
+            LOGGER.error(e.getMessage());
+        }
         if (vizModel == null) {
             return null;
         }
@@ -375,8 +394,10 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
 
     /**
      * @return the {@link PieVizModel}. Could be null.
+     * @throws TooManySectionsException if more sections are created than
+     * supported
      */
-    protected abstract D getVizModelInternal();
+    protected abstract D getVizModelInternal() throws TooManySectionsException;
 
     /**
      * {@inheritDoc}

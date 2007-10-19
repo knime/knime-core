@@ -27,9 +27,7 @@ package org.knime.base.node.viz.pie.util;
 
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.IntValue;
 import org.knime.core.data.NominalValue;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.node.util.ColumnFilter;
 
 
@@ -43,7 +41,8 @@ public final class PieColumnFilter implements ColumnFilter {
     private static PieColumnFilter instance;
 
     /**
-     * Maximum number of distinct values.
+     * Maximum number of supported sections. This boundary is also mentioned
+     * in the node description!!!
      */
     public static final int MAX_NO_OF_SECTIONS = 360;
 
@@ -65,8 +64,8 @@ public final class PieColumnFilter implements ColumnFilter {
      * {@inheritDoc}
      */
     public String allFilteredMsg() {
-        return "No column matches filter criteria. Criteria domain must "
-        + "be available and shouldn't extend " + MAX_NO_OF_SECTIONS
+        return "No column matches filter criteria. Criteria domain "
+        + "shouldn't extend " + MAX_NO_OF_SECTIONS
         + " values.";
     }
 
@@ -91,7 +90,7 @@ public final class PieColumnFilter implements ColumnFilter {
         }
         final DataColumnDomain domain = colSpec.getDomain();
         if (domain == null) {
-            return false;
+            return true;
         }
         if (colSpec.getType().isCompatible(NominalValue.class)) {
             if (domain.getValues() == null || domain.getValues().size() < 1
@@ -99,15 +98,16 @@ public final class PieColumnFilter implements ColumnFilter {
                 return false;
             }
             return true;
-        } else if (colSpec.getType().isCompatible(IntValue.class)) {
-              if (domain.getLowerBound() == null
-                      || domain.getUpperBound() == null) {
-                  return false;
-              }
-              final int lower = ((IntCell)domain.getLowerBound()).getIntValue();
-              final int upper = ((IntCell)domain.getUpperBound()).getIntValue();
-              return (upper - lower < MAX_NO_OF_SECTIONS);
-          }
-        return false;
+        }
+//        else if (colSpec.getType().isCompatible(IntValue.class)) {
+//              if (domain.getLowerBound() == null
+//                      || domain.getUpperBound() == null) {
+//                  return false;
+//              }
+//            final int lower = ((IntCell)domain.getLowerBound()).getIntValue();
+//            final int upper = ((IntCell)domain.getUpperBound()).getIntValue();
+//              return (upper - lower < MAX_NO_OF_SECTIONS);
+//          }
+        return true;
     }
 }

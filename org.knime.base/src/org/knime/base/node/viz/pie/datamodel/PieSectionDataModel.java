@@ -48,7 +48,7 @@ public class PieSectionDataModel
      * @param color the color oft his section
      * @param supportHiliting if hiliting should be supported
      */
-    protected PieSectionDataModel(final String name, final Color color,
+    public PieSectionDataModel(final String name, final Color color,
             final boolean supportHiliting) {
         super(name, color, supportHiliting);
     }

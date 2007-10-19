@@ -34,14 +34,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.knime.base.node.viz.pie.datamodel.PieDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
+import org.knime.base.node.viz.pie.util.PieColumnFilter;
+import org.knime.base.node.viz.pie.util.TooManySectionsException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
@@ -61,11 +64,16 @@ public class FixedPieDataModel extends PieDataModel {
 
     private final String m_pieCol;
 
+    private final boolean m_numericPieCol;
+
     private final String m_aggrCol;
 
     private final List<PieSectionDataModel> m_sections;
 
     private final PieSectionDataModel m_missingSection;
+
+    private boolean m_sectionsInitialized = false;
+
 
     /**Constructor for class PieDataModel.
      * @param pieColSpec the {@link DataColumnSpec} of the pie column
@@ -86,29 +94,31 @@ public class FixedPieDataModel extends PieDataModel {
             m_aggrCol = aggrColSpec.getName();
         }
         m_pieCol = pieColSpec.getName();
+        m_numericPieCol = pieColSpec.getType().isCompatible(DoubleValue.class);
         m_missingSection = createDefaultMissingSection(false);
-        m_sections = createSections(pieColSpec, false);
+        m_sections = new ArrayList<PieSectionDataModel>();
     }
 
     /**Constructor for class PieDataModel.
      * @param pieCol the name of the pie column
+     * @param numericPieCol <code>true</code> if the pie column is numerical
      * @param aggrCol the name of the aggregation column
      * @param sections the sections
      * @param missingSection the missing section
      * @param supportHiliting if hiliting is supported
+     * @param containsColorHandler <code>true</code> if a color handler is set
      */
-    protected FixedPieDataModel(final String pieCol, final String aggrCol,
+    protected FixedPieDataModel(final String pieCol,
+            final boolean numericPieCol, final String aggrCol,
             final List<PieSectionDataModel> sections,
             final PieSectionDataModel missingSection,
-            final boolean supportHiliting, final boolean showDetails) {
-        super(supportHiliting, showDetails);
+            final boolean supportHiliting, final boolean containsColorHandler) {
+        super(supportHiliting, containsColorHandler);
         if (pieCol == null) {
             throw new NullPointerException("pieCol must not be null");
         }
         m_pieCol = pieCol;
-        if (aggrCol == null) {
-            throw new NullPointerException("aggrCol must not be null");
-        }
+        m_numericPieCol = numericPieCol;
         m_aggrCol = aggrCol;
         if (sections == null) {
             throw new NullPointerException("sections must not be null");
@@ -126,20 +136,32 @@ public class FixedPieDataModel extends PieDataModel {
      */
     @Override
     public void addDataRow(final DataRow row, final Color rowColor,
-            final DataCell pieCell, final DataCell aggrCell) {
+            final DataCell pieCell, final DataCell aggrCell)
+    throws TooManySectionsException {
         if (pieCell == null) {
             throw new NullPointerException(
                     "Pie section value must not be null.");
         }
-        final PieSectionDataModel section;
+        PieSectionDataModel section;
         if (pieCell.isMissing()) {
             section = getMissingSection();
         } else {
             section = getSection(pieCell);
             if (section == null) {
-                throw new IllegalArgumentException("No section found for: "
-                        + pieCell.toString());
+                if (m_sections.size()
+                        >= PieColumnFilter.MAX_NO_OF_SECTIONS) {
+                    throw new TooManySectionsException(
+                            "Selected pie column contains more than "
+                            + PieColumnFilter.MAX_NO_OF_SECTIONS
+                            + " unique values.");
+                }
+//                throw new IllegalArgumentException("No section found for: "
+//                        + pieCell.toString());
+                section = new PieSectionDataModel(pieCell.toString(),
+                        Color.BLACK, supportsHiliting());
+                m_sections.add(section);
             }
+            m_sectionsInitialized = false;
         }
         section.addDataRow(rowColor, row.getKey().getId(), aggrCell);
     }
@@ -159,6 +181,7 @@ public class FixedPieDataModel extends PieDataModel {
         final FileOutputStream dataOS = new FileOutputStream(dataFile);
         final ObjectOutputStream os = new ObjectOutputStream(dataOS);
         os.writeObject(m_pieCol);
+        os.writeBoolean(m_numericPieCol);
         os.writeObject(m_aggrCol);
         if (exec != null) {
             exec.setProgress(0.3, "Start saving sections...");
@@ -220,6 +243,7 @@ public class FixedPieDataModel extends PieDataModel {
         final FileInputStream dataIS = new FileInputStream(dataFile);
         final ObjectInputStream os = new ObjectInputStream(dataIS);
         final String pieCol = (String)os.readObject();
+        final boolean numericPieCol = os.readBoolean();
         final String aggrCol = (String)os.readObject();
         if (exec != null) {
             exec.setProgress(0.3, "Loading sections...");
@@ -247,7 +271,7 @@ public class FixedPieDataModel extends PieDataModel {
         //close the streams
         os.close();
         dataIS.close();
-        return new FixedPieDataModel(pieCol, aggrCol, sections,
+        return new FixedPieDataModel(pieCol, numericPieCol, aggrCol, sections,
                 missingSection, supportHiliting, detailsAvailable);
     }
 
@@ -256,7 +280,7 @@ public class FixedPieDataModel extends PieDataModel {
      * @return the{@link PieSectionDataModel} which represents the given value
      * or <code>null</code> if no section is found for the given value
      */
-    public PieSectionDataModel getSection(final DataCell value) {
+    private PieSectionDataModel getSection(final DataCell value) {
         for (final PieSectionDataModel section : m_sections) {
             if (section.getName().equals(value.toString())) {
                 return section;
@@ -268,10 +292,14 @@ public class FixedPieDataModel extends PieDataModel {
     /**
      * @return the {@link PieSectionDataModel} list
      */
-    public List<PieSectionDataModel> getSections()  {
-        return Collections.unmodifiableList(m_sections);
+    private List<PieSectionDataModel> getSections()  {
+        if (!m_sectionsInitialized) {
+            PieDataModel.sortSections(m_sections, m_numericPieCol, true);
+            PieDataModel.setSectionColor(m_sections);
+            m_sectionsInitialized = true;
+        }
+        return m_sections;
     }
-
     /**
      * @return the missing {@link PieSectionDataModel}
      */
@@ -290,7 +318,7 @@ public class FixedPieDataModel extends PieDataModel {
         List<PieSectionDataModel> binClones = null;
         try {
             final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            new ObjectOutputStream(baos).writeObject(m_sections);
+            new ObjectOutputStream(baos).writeObject(getSections());
             final ByteArrayInputStream bais =
                 new ByteArrayInputStream(baos.toByteArray());
             binClones = (List<PieSectionDataModel>)
