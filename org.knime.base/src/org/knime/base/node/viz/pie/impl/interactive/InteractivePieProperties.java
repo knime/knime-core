@@ -29,6 +29,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.border.Border;
+import javax.swing.event.AncestorListener;
 
 import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieVizModel;
@@ -37,7 +38,7 @@ import org.knime.base.node.viz.pie.node.PieNodeModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.ColumnSelectionComboxBox;
+import org.knime.core.node.util.ColumnSelectionPanel;
 
 /**
  * The interactive implementation of the {@link PieProperties} panel which
@@ -58,9 +59,9 @@ public class InteractivePieProperties
 //    private static final String AGGREGATION_COLUMN_ENABLED_TOOLTIP =
 //        "Select the column used for aggregation";
 
-    private final ColumnSelectionComboxBox m_pieCol;
+    private final ColumnSelectionPanel m_pieCol;
 
-    private final ColumnSelectionComboxBox m_aggrCol;
+    private final ColumnSelectionPanel m_aggrCol;
 
     /**Constructor for class FixedPieProperties.
      * @param vizModel the visualization model to initialize all swing
@@ -69,12 +70,12 @@ public class InteractivePieProperties
     public InteractivePieProperties(final InteractivePieVizModel vizModel) {
         super(vizModel);
         // the column select boxes for the X axis
-        m_pieCol = new ColumnSelectionComboxBox((Border)null,
+        m_pieCol = new ColumnSelectionPanel((Border)null,
                 PieNodeModel.PIE_COLUMN_FILTER);
         m_pieCol.setBackground(this.getBackground());
 
-        m_aggrCol = new ColumnSelectionComboxBox((Border)null,
-                PieNodeModel.AGGREGATION_COLUMN_FILTER);
+        m_aggrCol = new ColumnSelectionPanel((Border)null,
+                PieNodeModel.AGGREGATION_COLUMN_FILTER, true);
         m_aggrCol.setBackground(this.getBackground());
         m_aggrCol.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
@@ -186,22 +187,22 @@ public class InteractivePieProperties
         updateColBox(m_aggrCol, tableSpec, vizModel.getAggregationColumnName());
     }
 
-    private static void updateColBox(final ColumnSelectionComboxBox box,
+    private static void updateColBox(final ColumnSelectionPanel box,
             final DataTableSpec spec, final String selection) {
         if (box == null) {
             return;
         }
         try {
             //remove all action listener to avoid unnecessary calls...
-            final ActionListener[] listeners = box.getActionListeners();
-            for (final ActionListener listener : listeners) {
-                box.removeActionListener(listener);
+            final AncestorListener[] listeners = box.getAncestorListeners();
+            for (final AncestorListener listener : listeners) {
+                box.removeAncestorListener(listener);
             }
             //...update the column select box
             box.update(spec, selection);
             //...and add the removed listeners
-            for (final ActionListener listener : listeners) {
-                box.addActionListener(listener);
+            for (final AncestorListener listener : listeners) {
+                box.addAncestorListener(listener);
             }
         } catch (final NotConfigurableException e) {
             LOGGER.warn("Exception updating columns in properties panel: "
