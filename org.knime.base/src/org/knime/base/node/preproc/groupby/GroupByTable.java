@@ -48,6 +48,7 @@ import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.NodeLogger;
 
 
 /**
@@ -63,6 +64,9 @@ import org.knime.core.node.ExecutionContext;
  * @author Tobias Koetter, University of Konstanz
  */
 public class GroupByTable {
+
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(GroupByTable.class);
 
     private static final String ROW_KEY_PREFIX = "Row";
 
@@ -109,6 +113,7 @@ public class GroupByTable {
             final boolean enableHilite, final boolean moveGroupCols2Front,
             final ExecutionContext exec)
     throws CanceledExecutionException {
+        LOGGER.debug("Entering GroupByTable() of class GroupByTable.");
         if (dataTable == null) {
             throw new NullPointerException("DataTable must not be null");
         }
@@ -150,12 +155,15 @@ public class GroupByTable {
         subExec = exec.createSubExecutionContext(0.5);
         m_resultTable = createGroupByTable(subExec, sortedTable);
         exec.setProgress(1.0);
+        LOGGER.debug("Exiting GroupByTable() of class GroupByTable.");
     }
 
     private static SortedTable sortInputTable(final ExecutionContext exec,
             final BufferedDataTable table2sort, final List<String> inclList,
             final boolean sortInMemory)
     throws CanceledExecutionException {
+        LOGGER.debug("Entering sortInputTable(exec, table2sort, inclList, "
+                + "sortInMemory) of class GroupByTable.");
         final boolean[] sortOrder = new boolean[inclList.size()];
         for (int i = 0, length = sortOrder.length; i < length; i++) {
             sortOrder[i] = true;
@@ -163,6 +171,8 @@ public class GroupByTable {
         final SortedTable sortedTabel =
             new SortedTable(table2sort, inclList, sortOrder,
                 sortInMemory, exec);
+        LOGGER.debug("Exiting sortInputTable(exec, table2sort, inclList, "
+                + "sortInMemory) of class GroupByTable.");
         return sortedTabel;
 
     }
@@ -170,6 +180,8 @@ public class GroupByTable {
     private BufferedDataTable createGroupByTable(final ExecutionContext exec,
             final SortedTable table)
     throws CanceledExecutionException {
+        LOGGER.debug("Entering createGroupByTable(exec, table) "
+                + "of class GroupByTable.");
         final DataTableSpec origSpec = table.getDataTableSpec();
         final DataTableSpec resultSpec = createGroupByTableSpec(
                 origSpec, m_inclList, m_numericColMethod,
@@ -177,6 +189,11 @@ public class GroupByTable {
         assert (origSpec.getNumColumns() == resultSpec.getNumColumns())
             : "The number of columns must be the same";
         final BufferedDataContainer dc = exec.createDataContainer(resultSpec);
+        //check for an empty table
+        if (table.getRowCount() < 1) {
+            dc.close();
+            return dc.getTable();
+        }
         final int[] groupColIdx = new int[m_inclList.size()];
         final int[] otherColIdx =
             new int[resultSpec.getNumColumns() - groupColIdx.length];
@@ -185,13 +202,15 @@ public class GroupByTable {
         int groupIdxCounter = 0;
         int otherIdxCounter = 0;
         //get the indices of the group by columns
-        for (int i = 0, length = origSpec.getNumColumns(); i < length; i++) {
+        for (int i = 0, length = origSpec.getNumColumns(); i < length;
+            i++) {
             final DataColumnSpec colSpec = origSpec.getColumnSpec(i);
             if (m_inclList.contains(colSpec.getName())) {
                 groupColIdx[groupIdxCounter++] = i;
             } else {
                 otherColIdx[otherIdxCounter] = i;
-                final AggregationMethod method = getAggregationMethod(colSpec);
+                final AggregationMethod method =
+                    getAggregationMethod(colSpec);
                     ops[otherIdxCounter] =
                         method.getOperator(m_maxUniqueVals);
                     otherIdxCounter++;
@@ -252,6 +271,8 @@ public class GroupByTable {
             m_hiliteMapping.put(newRow.getKey().getId(), rowKeys);
         }
         dc.close();
+        LOGGER.debug("Exiting createGroupByTable(exec, table) "
+                + "of class GroupByTable.");
         return dc.getTable();
     }
 
@@ -259,6 +280,8 @@ public class GroupByTable {
             final int[] groupColIdx, final int[] otherColIdx,
             final AggregationOperator[] ops, final DataCell[] groupVals,
             final int groupCounter) {
+        LOGGER.debug("Entering createTableRow(spec, groupColIdx, otherColIdx, "
+                + "ops, groupVals, groupCounter) of class GroupByTable.");
         //the current row belongs to the next group
         final DataCell rowKey =
             new StringCell(ROW_KEY_PREFIX + groupCounter);
@@ -318,6 +341,8 @@ public class GroupByTable {
             rowVals = result;
         }
         final DataRow newRow = new DefaultRow(rowKey, rowVals);
+        LOGGER.debug("Exiting createTableRow(spec, groupColIdx, otherColIdx, "
+                + "ops, groupVals, groupCounter) of class GroupByTable.");
         return newRow;
     }
 
@@ -332,6 +357,8 @@ public class GroupByTable {
     }
 
     private static String createGroupName(final DataCell[] groupVals) {
+        LOGGER.debug("Entering createGroupName(groupVals) "
+                + "of class GroupByTable.");
         if (groupVals == null || groupVals.length == 0) {
             return "";
         }
@@ -347,6 +374,8 @@ public class GroupByTable {
             buf.append(groupVals[i].toString());
         }
         buf.append("]");
+        LOGGER.debug("Exiting createGroupName(groupVals) "
+                + "of class GroupByTable.");
         return buf.toString();
     }
 
@@ -408,10 +437,12 @@ public class GroupByTable {
      */
     public String getSkippedGroupsMessage(final int maxGroups,
             final int maxCols) {
+        LOGGER.debug("Entering getSkippedGroupsMessage(maxGroups, maxCols) "
+                + "of class GroupByTable.");
         if (m_skippedGroupsByColName != null
-                && m_skippedGroupsByColName.size() > 1) {
+                && m_skippedGroupsByColName.size() > 0) {
             final StringBuilder buf = new StringBuilder();
-            buf.append("Skipped groups by column name: ");
+            buf.append("Skipped group(s) per column by group value(s): ");
             final Set<String> columnNames = m_skippedGroupsByColName.keySet();
             int columnCounter = 0;
             int groupCounter = 0;
@@ -419,7 +450,7 @@ public class GroupByTable {
                 if (columnCounter != 0) {
                     buf.append("; ");
                 }
-                if (columnCounter++ >= maxGroups) {
+                if (columnCounter++ >= maxCols) {
                     buf.append("...");
                     break;
                 }
@@ -432,15 +463,19 @@ public class GroupByTable {
                     if (groupCounter != 0) {
                         buf.append(", ");
                     }
-                    if (groupCounter++ >= maxCols) {
+                    if (groupCounter++ >= maxGroups) {
                         buf.append("...");
                         break;
                     }
                     buf.append(groupName);
                 }
             }
+            LOGGER.debug("Exiting getSkippedGroupsMessage(maxGroups, maxCols) "
+                    + "of class GroupByTable.");
             return buf.toString();
         }
+        LOGGER.debug("Exiting getSkippedGroupsMessage(maxGroups, maxCols) "
+                + "of class GroupByTable.");
         return null;
     }
 
@@ -459,6 +494,8 @@ public class GroupByTable {
             final AggregationMethod numericalColMethod,
             final AggregationMethod noneNumericalColMethod,
             final boolean moveGroupCols2Front) {
+        LOGGER.debug("Entering createGroupByTableSpec() "
+                + "of class GroupByTable.");
         if (spec == null) {
             throw new NullPointerException("DataTableSpec must not be null");
         }
@@ -507,6 +544,7 @@ public class GroupByTable {
             names[idx] = newName;
             types[idx] = newType;
         }
+        LOGGER.debug("Exiting createGroupByTableSpec() of class GroupByTable.");
         return new DataTableSpec(names, types);
     }
 
@@ -518,6 +556,7 @@ public class GroupByTable {
      */
     public static void checkIncludeList(final DataTableSpec spec,
             final List<String> includeList) throws IllegalArgumentException {
+        LOGGER.debug("Entering checkIncludeList() of class GroupByTable.");
         if (includeList == null || includeList.isEmpty()) {
             throw new IllegalArgumentException(
                     "No columns selected to group by");
@@ -536,5 +575,6 @@ public class GroupByTable {
                 }
             }
         }
+        LOGGER.debug("Exiting checkIncludeList() of class GroupByTable.");
     }
 }
