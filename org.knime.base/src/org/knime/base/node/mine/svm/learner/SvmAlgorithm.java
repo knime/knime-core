@@ -533,6 +533,7 @@ public class SvmAlgorithm {
             numChanged = 0;
             if (examineAll) {
                 for (int i = 0; i < m_inputData.length; ++i) {
+                    exec.checkCanceled();
                     if (examineExample(i)) {
                         numChanged++;
                     }
@@ -540,6 +541,7 @@ public class SvmAlgorithm {
             } else {
                 Set<Integer> i0 = new HashSet<Integer>(m_i0);
                 for (int i : i0) {
+                    exec.checkCanceled();
                     if (examineExample(i)) {
                         numChanged++;
                     }
