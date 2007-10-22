@@ -151,6 +151,7 @@ public class GroupByTable {
         ExecutionContext subExec = exec.createSubExecutionContext(0.5);
         final SortedTable sortedTable =
             sortInputTable(subExec, dataTable, m_inclList, sortInMemory);
+        subExec.setProgress(1.0);
         exec.setMessage("Writing group table...");
         subExec = exec.createSubExecutionContext(0.5);
         m_resultTable = createGroupByTable(subExec, sortedTable);
