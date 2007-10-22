@@ -29,6 +29,7 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
@@ -101,7 +102,7 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         m_tableView.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         m_scrollPane = new JScrollPane(m_tableView);
 
-        JPanel summary = new JPanel(new GridLayout(4, 1));
+        JPanel summary = new JPanel(new GridLayout(2, 2));
 
         JPanel labelPanel = new JPanel(new FlowLayout());
         labelPanel.add(new JLabel("Correct classified:"));
@@ -116,18 +117,19 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
         summary.add(labelPanel);
 
         labelPanel = new JPanel(new FlowLayout());
+        labelPanel.add(new JLabel("Accuracy:"));
+        m_accuracy = new JLabel("n/a");
+        labelPanel.add(m_accuracy);
+        labelPanel.add(new JLabel("%"));
+        summary.add(labelPanel);
+
+        labelPanel = new JPanel(new FlowLayout());
         labelPanel.add(new JLabel("Error:"));
         m_error = new JLabel("n/a");
         labelPanel.add(m_error);
         labelPanel.add(new JLabel("%"));
         summary.add(labelPanel);
 
-        labelPanel = new JPanel(new FlowLayout());
-        labelPanel.add(new JLabel("Accuracy:"));
-        m_accuracy = new JLabel("n/a");
-        labelPanel.add(m_accuracy);
-        labelPanel.add(new JLabel("%"));
-        summary.add(labelPanel);
 
         JPanel outerPanel = new JPanel(new BorderLayout());
         outerPanel.add(m_scrollPane, BorderLayout.CENTER);
@@ -168,7 +170,9 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
             m_correct.setText(" n/a ");
             m_wrong.setText(" n/a ");
             m_error.setText(" n/a ");
+            m_error.setToolTipText(null);
             m_accuracy.setText(" n/a ");
+            m_accuracy.setToolTipText(null);
             // m_precision.setText(" n/a ");
             m_tableView.setModel(new DefaultTableModel());
             return;
@@ -188,12 +192,18 @@ final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
                 headerNames, rowHeaderDescription, columnHeaderDescription);
 
         m_tableView.setModel(dataModel);
-
-        m_correct.setText(String.valueOf(model.getCorrectCount()));
-        m_wrong.setText(String.valueOf(model.getFalseCount()));
-        m_error.setText(String.valueOf(model.getError()));
-        m_accuracy.setText(String.valueOf(100.0 * model.getCorrectCount()
-                / (model.getCorrectCount() + model.getFalseCount())));
+        
+        NumberFormat nf = NumberFormat.getInstance();
+        m_correct.setText(String.valueOf(nf.format(model.getCorrectCount())));
+        m_wrong.setText(String.valueOf(nf.format(model.getFalseCount())));
+        m_error.setText(String.valueOf(nf.format(model.getError())));
+        m_error.setToolTipText("Error: " 
+                + String.valueOf(model.getError()) + " %");
+        double accurarcy = 100.0 * model.getCorrectCount()
+            / (model.getCorrectCount() + model.getFalseCount());
+        m_accuracy.setText(String.valueOf(nf.format(accurarcy)));
+        m_accuracy.setToolTipText("Accuracy: " 
+                + String.valueOf(accurarcy) + " %");
 
         // if (scoreCount.length == 2) { // binary classification problem
         // m_precision.setText(String.valueOf(100.0 * scoreCount[0][0]

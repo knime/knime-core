@@ -27,6 +27,7 @@ package org.knime.base.node.mine.decisiontree2.model;
 
 import java.awt.Color;
 import java.io.Serializable;
+import java.text.NumberFormat;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Set;
@@ -376,8 +377,10 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      */
     @Override
     public final String toString() {
+        NumberFormat nf = NumberFormat.getInstance();
         return "[" + m_prefix + "]: " + " class '" + m_class + "' ("
-                + m_ownClassFreq + " of " + m_allClassFreq + ")";
+                + nf.format(m_ownClassFreq) + " of " 
+                + nf.format(m_allClassFreq) + ")";
     }
 
     /**
