@@ -54,10 +54,10 @@ public class BarDataModel extends AggregationValModel<BarElementDataModel,
 Rectangle2D, Rectangle2D>
 implements Serializable {
 
+    private static final long serialVersionUID = 2839475106700548682L;
+
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(BarDataModel.class);
-
-    private static final long serialVersionUID = 2839475106700548682L;
 
     /**The surrounding rectangle is used to distinguish between multiple
      * selected aggregation columns.*/
@@ -296,13 +296,15 @@ implements Serializable {
         final int noOfBars = barElementColors.size();
         final int elementWidth =
             calculateSideBySideElementWidth(barElementColors, barWidth);
-        LOGGER.debug("Bar values (x,height,width, totalNoOf): "
-                + barX + ", "
-                + barHeight + ", "
-                + barWidth
-                + noOfBars);
-        LOGGER.debug("Value range: " + valRange
-                + " height per value:" + heightPerVal);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Bar values (x,height,width, totalNoOf): "
+                    + barX + ", "
+                    + barHeight + ", "
+                    + barWidth
+                    + noOfBars);
+            LOGGER.debug("Value range: " + valRange
+                    + " height per value:" + heightPerVal);
+        }
         //the user wants the elements next to each other
         //so we have to change the x coordinate
         int xCoord = barX;
@@ -342,35 +344,43 @@ implements Serializable {
             final int barHeight = (int)bounds.getHeight();
             final int barWidth = (int)bounds.getWidth();
             final double barAggrVal = getAggregationValue(aggrMethod);
-            LOGGER.debug("Bar values (x,y,height,width,aggrVal): "
-                    + startX + ", "
-                    + startY + ", "
-                    + barHeight + ", "
-                    + barWidth + ", "
-                    + barAggrVal);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Bar values (x,y,height,width,aggrVal): "
+                        + startX + ", "
+                        + startY + ", "
+                        + barHeight + ", "
+                        + barWidth + ", "
+                        + barAggrVal);
+            }
             //we have to be care full with the value range in stacked layout
             //because of the mixture of positive and negatives
             double stackedValRange = valRange;
             if ((AggregationMethod.AVERAGE.equals(aggrMethod)
                     || AggregationMethod.SUM.equals(aggrMethod))) {
                 stackedValRange = 0;
-                LOGGER.debug("Calculating stacked value range.Starting with: "
-                        + stackedValRange);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Calculating stacked value range.Starting with: "
+                            + stackedValRange);
+                }
                 for (final BarElementDataModel element : getElements()) {
                     stackedValRange +=
                         Math.abs(element.getAggregationValue(aggrMethod));
                 }
-                LOGGER.debug("Calculating stacked bin height "
-                        + "using stackedValRange: " + stackedValRange);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Calculating stacked bin height "
+                            + "using stackedValRange: " + stackedValRange);
+                }
             }
             final double heightPerAbsVal = bounds.getHeight() / stackedValRange;
             int yCoord = startY;
             double elementHeightSum = 0;
             int elementCounter = 0;
             final int noOfElements = getNoOfElements();
-            LOGGER.debug("Stacked valRange: " + stackedValRange
-                    + " height per absVal: " + heightPerAbsVal
-                    + " noOfElements: " + noOfElements);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Stacked valRange: " + stackedValRange
+                        + " height per absVal: " + heightPerAbsVal
+                        + " noOfElements: " + noOfElements);
+            }
             for (final Color elementColor : barElementColors) {
                 final BarElementDataModel element =
                     getElement(elementColor);
@@ -396,13 +406,15 @@ implements Serializable {
                         final double diff = barHeight - elementHeightSum;
                         elementHeight =
                             (int)Math.round(elementHeight + diff);
-                        LOGGER.debug(
-                                "++++++++Height diff. for bar " + barAggrVal
-                                + " in last element: " + diff
-                                + ". Bar height: " + barHeight
-                                + " Height sum without adjustment: "
-                                + elementHeightSum
-                                + " No of elements: " + getNoOfElements());
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug(
+                                    "++++++++Height diff. for bar " + barAggrVal
+                                    + " in last element: " + diff
+                                    + ". Bar height: " + barHeight
+                                    + " Height sum without adjustment: "
+                                    + elementHeightSum
+                                    + " No of elements: " + getNoOfElements());
+                        }
                         if (elementHeight < 1) {
                             LOGGER.warn(
                                     "******Unable to correct height diff. for "
@@ -412,13 +424,15 @@ implements Serializable {
                         }
                     }
                 }
-                LOGGER.debug("Element aggrVal: " + aggrVal
-                        + " element absVal: " + elementAbsVal
-                        + " xCoord: " + startX
-                        + " yCoord: " + yCoord
-                        + " elementWidth: " + barWidth
-                        + " rawElementHeight: " + rawElementHeight
-                        + " adjusted elementHeight: " + elementHeight);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Element aggrVal: " + aggrVal
+                            + " element absVal: " + elementAbsVal
+                            + " xCoord: " + startX
+                            + " yCoord: " + yCoord
+                            + " elementWidth: " + barWidth
+                            + " rawElementHeight: " + rawElementHeight
+                            + " adjusted elementHeight: " + elementHeight);
+                }
 
                 final Rectangle elementRect =
                     new Rectangle(startX, yCoord, barWidth, elementHeight);
@@ -503,8 +517,9 @@ implements Serializable {
     }
 
     /**
-     * @return all selected elements
+     * {@inheritDoc}
      */
+    @Override
     public List<BarElementDataModel> getSelectedElements() {
         final Collection<BarElementDataModel> elements = getElements();
         final List<BarElementDataModel> selectedElements =
