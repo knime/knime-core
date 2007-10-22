@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./joiner.png" type="Manipulator">
+<knimeNode icon="./joiner_neu.png" type="Manipulator">
     <name>Joiner</name>
     <shortDescription>Joins two tables</shortDescription>
     <fullDescription>
