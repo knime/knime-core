@@ -51,8 +51,12 @@ import org.knime.core.node.NodeLogger;
  */
 public abstract class AggregationValSubModel <S extends Shape, H extends Shape>
 implements Serializable, AggregationModel<S, H> {
+
+    private static final long serialVersionUID = -1627330636768050680L;
+
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(AggregationValSubModel.class);
+
     private final Color m_color;
     private final boolean m_supportHiliting;
     private double m_aggrSum = 0;
