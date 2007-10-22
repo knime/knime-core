@@ -384,18 +384,18 @@ public class GroupByTable {
      * @param colSpec the {@link DataColumnSpec} to check
      * @param numericColMethod the {@link AggregationMethod} for
      * numerical columns
-     * @param noneNumericColMethod the {@link AggregationMethod} for none
+     * @param nominalColMethod the {@link AggregationMethod} for none
      * numerical columns
      * @return the {@link AggregationMethod} to use
      */
     private static AggregationMethod getAggregationMethod(
             final DataColumnSpec colSpec,
             final AggregationMethod numericColMethod,
-            final AggregationMethod noneNumericColMethod) {
+            final AggregationMethod nominalColMethod) {
         if (colSpec.getType().isCompatible(DoubleValue.class)) {
             return numericColMethod;
         }
-        return noneNumericColMethod;
+        return nominalColMethod;
     }
 
     /**
@@ -484,7 +484,7 @@ public class GroupByTable {
      * @param spec the original {@link DataTableSpec}
      * @param inclList the name of all columns to group by
      * @param numericalColMethod the numerical column aggregation method
-     * @param noneNumericalColMethod the none numerical column aggregation
+     * @param nominalColMethod the none numerical column aggregation
      * method
      * @param moveGroupCols2Front <code>true</code> if the group by columns
      * should be moved to the front of the result table
@@ -493,7 +493,7 @@ public class GroupByTable {
     public static DataTableSpec createGroupByTableSpec(
             final DataTableSpec spec, final List<String> inclList,
             final AggregationMethod numericalColMethod,
-            final AggregationMethod noneNumericalColMethod,
+            final AggregationMethod nominalColMethod,
             final boolean moveGroupCols2Front) {
         LOGGER.debug("Entering createGroupByTableSpec() "
                 + "of class GroupByTable.");
@@ -504,11 +504,11 @@ public class GroupByTable {
             throw new NullPointerException(
                     "Numerical aggregation method must not be null");
         }
-        if (noneNumericalColMethod == null) {
+        if (nominalColMethod == null) {
             throw new NullPointerException(
                     "None numerical aggregation method must not be null");
         }
-        if (noneNumericalColMethod.isNumerical()) {
+        if (nominalColMethod.isNumerical()) {
             throw new IllegalArgumentException(
                     "Invalid none numerical aggregation method");
         }
@@ -533,7 +533,7 @@ public class GroupByTable {
                 }
             } else {
                 final AggregationMethod method = getAggregationMethod(colSpec,
-                        numericalColMethod, noneNumericalColMethod);
+                        numericalColMethod, nominalColMethod);
                 newName = method.getColumnName(origName);
                 newType = method.getColumnType(origType);
                 if (moveGroupCols2Front) {

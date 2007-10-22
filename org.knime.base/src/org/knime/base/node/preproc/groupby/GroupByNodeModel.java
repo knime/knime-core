@@ -70,8 +70,8 @@ public class GroupByNodeModel extends NodeModel {
 
     /**Configuration key of the selected aggregation method for
      * none numerical columns.*/
-    protected static final String CFG_NONE_NUMERIC_COL_METHOD =
-        "noneNumericColumnMethod";
+    protected static final String CFG_NOMINAL_COL_METHOD =
+        "nominalColumnMethod";
 
     /**Configuration key for the maximum none numerical values.*/
     protected static final String CFG_MAX_UNIQUE_VALUES =
@@ -96,9 +96,9 @@ public class GroupByNodeModel extends NodeModel {
         new SettingsModelString(GroupByNodeModel.CFG_NUMERIC_COL_METHOD,
                 AggregationMethod.getDefaultNumericMethod().getLabel());
 
-    private final SettingsModelString m_noneNumericColMethod =
-        new SettingsModelString(GroupByNodeModel.CFG_NONE_NUMERIC_COL_METHOD,
-                AggregationMethod.getDefaultNoneNumericMethod().getLabel());
+    private final SettingsModelString m_nominalColMethod =
+        new SettingsModelString(GroupByNodeModel.CFG_NOMINAL_COL_METHOD,
+                AggregationMethod.getDefaultNominalMethod().getLabel());
 
     private final SettingsModelIntegerBounded m_maxUniqueValues =
         new SettingsModelIntegerBounded(CFG_MAX_UNIQUE_VALUES, 10000, 1,
@@ -129,23 +129,23 @@ public class GroupByNodeModel extends NodeModel {
      */
     public GroupByNodeModel() {
         super(1, 1);
-        m_noneNumericColMethod.addChangeListener(new ChangeListener() {
+        m_nominalColMethod.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 m_maxUniqueValues.setEnabled(
                         GroupByNodeDialogPane.enableUniqueValuesModel(
-                                m_numericColMethod, m_noneNumericColMethod));
+                                m_numericColMethod, m_nominalColMethod));
             }
         });
         m_numericColMethod.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 m_maxUniqueValues.setEnabled(
                         GroupByNodeDialogPane.enableUniqueValuesModel(
-                                m_numericColMethod, m_noneNumericColMethod));
+                                m_numericColMethod, m_nominalColMethod));
             }
         });
         m_maxUniqueValues.setEnabled(
                 GroupByNodeDialogPane.enableUniqueValuesModel(
-                m_numericColMethod, m_noneNumericColMethod));
+                m_numericColMethod, m_nominalColMethod));
     }
 
     /**
@@ -190,7 +190,7 @@ public class GroupByNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_groupByCols.saveSettingsTo(settings);
         m_numericColMethod.saveSettingsTo(settings);
-        m_noneNumericColMethod.saveSettingsTo(settings);
+        m_nominalColMethod.saveSettingsTo(settings);
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
         m_sortInMemory.saveSettingsTo(settings);
@@ -211,7 +211,7 @@ public class GroupByNodeModel extends NodeModel {
             throw new InvalidSettingsException("No grouping column included");
         }
         m_numericColMethod.validateSettings(settings);
-        m_noneNumericColMethod.validateSettings(settings);
+        m_nominalColMethod.validateSettings(settings);
         m_maxUniqueValues.validateSettings(settings);
         m_enableHilite.validateSettings(settings);
         m_sortInMemory.validateSettings(settings);
@@ -226,7 +226,7 @@ public class GroupByNodeModel extends NodeModel {
             throws InvalidSettingsException {
        m_groupByCols.loadSettingsFrom(settings);
        m_numericColMethod.loadSettingsFrom(settings);
-       m_noneNumericColMethod.loadSettingsFrom(settings);
+       m_nominalColMethod.loadSettingsFrom(settings);
        m_maxUniqueValues.loadSettingsFrom(settings);
        m_enableHilite.loadSettingsFrom(settings);
        m_sortInMemory.loadSettingsFrom(settings);
@@ -286,10 +286,10 @@ public class GroupByNodeModel extends NodeModel {
         }
         final AggregationMethod numericMethod =
             AggregationMethod.getMethod4SettingsModel(m_numericColMethod);
-        final AggregationMethod noneNumericMethod =
-            AggregationMethod.getMethod4SettingsModel(m_noneNumericColMethod);
+        final AggregationMethod nominalMethod =
+            AggregationMethod.getMethod4SettingsModel(m_nominalColMethod);
         final DataTableSpec spec = GroupByTable.createGroupByTableSpec(
-                origSpec, inclList, numericMethod, noneNumericMethod,
+                origSpec, inclList, numericMethod, nominalMethod,
                 m_moveGroupCols2Front.getBooleanValue());
         return new DataTableSpec[] {spec};
     }
@@ -311,7 +311,7 @@ public class GroupByNodeModel extends NodeModel {
         final AggregationMethod numericMethod =
             AggregationMethod.getMethod4SettingsModel(m_numericColMethod);
         final AggregationMethod noneNumericMethod =
-            AggregationMethod.getMethod4SettingsModel(m_noneNumericColMethod);
+            AggregationMethod.getMethod4SettingsModel(m_nominalColMethod);
         final int maxUniqueVals = m_maxUniqueValues.getIntValue();
         final boolean sortInMemory = m_sortInMemory.getBooleanValue();
         final boolean enableHilite = m_enableHilite.getBooleanValue();
