@@ -333,13 +333,16 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
         final long end = System.currentTimeMillis();
         //add the created bins to the super implementation
         setBins(bins, missingValBin);
-
-        LOGGER.debug(" Total time to create " + bins.size() + " bins: "
-                + (end - startBinTimer) + " in ms.\n"
-                + "Time to create bins: " + (startAddRowTimer - startBinTimer)
-                + " in ms.\n"
-                + "Time to add rows: " + (end - startAddRowTimer) + " in ms.");
-        LOGGER.debug("Exiting createBins() of class HistogramVizModel.");
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug(" Total time to create " + bins.size() + " bins: "
+                    + (end - startBinTimer) + " in ms.\n"
+                    + "Time to create bins: "
+                    + (startAddRowTimer - startBinTimer)
+                    + " in ms.\n"
+                    + "Time to add rows: "
+                    + (end - startAddRowTimer) + " in ms.");
+            LOGGER.debug("Exiting createBins() of class HistogramVizModel.");
+        }
     }
 
     /**
