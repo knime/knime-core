@@ -26,7 +26,7 @@
 package org.knime.base.node.preproc.groupby;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -398,7 +398,8 @@ public enum AggregationMethod {
             super(maxUniqueValues);
             try {
                 m_valCounter =
-                    new HashMap<DataCell, MutableInteger>(maxUniqueValues);
+                    new LinkedHashMap<DataCell, MutableInteger>(
+                            maxUniqueValues);
             } catch (final OutOfMemoryError e) {
                 throw new IllegalArgumentException(
                         "Maximum unique values number to big");
@@ -597,7 +598,7 @@ public enum AggregationMethod {
     /**
      * @return the default method for none numerical columns
      */
-    public static AggregationMethod getDefaultNoneNumericMethod() {
+    public static AggregationMethod getDefaultNominalMethod() {
         return FIRST;
     }
 
