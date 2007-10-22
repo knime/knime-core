@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,8 +18,8 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- *  
- *  History 
+ *
+ *  History
  *      28.06.2007 (Tobias Koetter): created
  */
 package org.knime.base.node.preproc.groupby;
@@ -40,70 +40,70 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * The dialog class of the group by node.
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public class GroupByNodeDialogPane extends DefaultNodeSettingsPane {
-    
-    private final SettingsModelFilterString m_groupByCols = 
-        new SettingsModelFilterString(GroupByNodeModel.CFG_GROUP_BY_COLUMNS);
-    
-    private final SettingsModelString m_numericColMethod = 
-        new SettingsModelString(GroupByNodeModel.CFG_NUMERIC_COL_METHOD, 
-                AggregationMethod.getDefaultNumericMethod().getLabel());
-    
-    private final SettingsModelString m_noneNumericColMethod = 
-        new SettingsModelString(GroupByNodeModel.CFG_NONE_NUMERIC_COL_METHOD, 
-                AggregationMethod.getDefaultNoneNumericMethod().getLabel());
 
-    private final SettingsModelIntegerBounded m_maxUniqueValues = 
+    private final SettingsModelFilterString m_groupByCols =
+        new SettingsModelFilterString(GroupByNodeModel.CFG_GROUP_BY_COLUMNS);
+
+    private final SettingsModelString m_numericColMethod =
+        new SettingsModelString(GroupByNodeModel.CFG_NUMERIC_COL_METHOD,
+                AggregationMethod.getDefaultNumericMethod().getLabel());
+
+    private final SettingsModelString m_nominalColMethod =
+        new SettingsModelString(GroupByNodeModel.CFG_NOMINAL_COL_METHOD,
+                AggregationMethod.getDefaultNominalMethod().getLabel());
+
+    private final SettingsModelIntegerBounded m_maxUniqueValues =
         new SettingsModelIntegerBounded(
-                GroupByNodeModel.CFG_MAX_UNIQUE_VALUES, 10000, 1, 
+                GroupByNodeModel.CFG_MAX_UNIQUE_VALUES, 10000, 1,
                 Integer.MAX_VALUE);
-    
-    private final SettingsModelBoolean m_moveGroupCols2Front = 
+
+    private final SettingsModelBoolean m_moveGroupCols2Front =
         new SettingsModelBoolean(
                 GroupByNodeModel.CFG_MOVE_GROUP_BY_COLS_2_FRONT, false);
-    
+
     private final SettingsModelBoolean m_enableHilite =
         new SettingsModelBoolean(GroupByNodeModel.CFG_ENABLE_HILITE, false);
-    
+
     private final SettingsModelBoolean m_sortInMemory =
         new SettingsModelBoolean(GroupByNodeModel.CFG_SORT_IN_MEMORY, false);
-    
+
     /**Constructor for class GroupByNodeDialogPane.
      */
     GroupByNodeDialogPane() {
-        m_noneNumericColMethod.addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent e) {
+        m_nominalColMethod.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent e) {
                 m_maxUniqueValues.setEnabled(enableUniqueValuesModel(
-                        m_numericColMethod, m_noneNumericColMethod));
+                        m_numericColMethod, m_nominalColMethod));
             }
         });
         m_numericColMethod.addChangeListener(new ChangeListener() {
-            public void stateChanged(ChangeEvent e) {
+            public void stateChanged(final ChangeEvent e) {
                 m_maxUniqueValues.setEnabled(enableUniqueValuesModel(
-                        m_numericColMethod, m_noneNumericColMethod));
+                        m_numericColMethod, m_nominalColMethod));
             }
         });
         m_maxUniqueValues.setEnabled(enableUniqueValuesModel(
-                m_numericColMethod, m_noneNumericColMethod));
-        final DialogComponent groupByCols = 
+                m_numericColMethod, m_nominalColMethod));
+        final DialogComponent groupByCols =
             new DialogComponentColumnFilter(m_groupByCols, 0);
-        final DialogComponent numericColMethod = 
-            new DialogComponentStringSelection(m_numericColMethod, 
-                    "Numerical aggregation method", 
+        final DialogComponent numericColMethod =
+            new DialogComponentStringSelection(m_numericColMethod,
+                    "Numerical aggregation method",
                     AggregationMethod.getNumericalMethodLabels());
         numericColMethod.setToolTipText(
             "This method will be used for all numerical columns");
-        final DialogComponent noneNumericColMethod = 
-            new DialogComponentStringSelection(m_noneNumericColMethod, 
-                    "None numerical aggregation method", 
+        final DialogComponent nominalColMethod =
+            new DialogComponentStringSelection(m_nominalColMethod,
+                    "Nominal aggregation method",
                     AggregationMethod.getNoneNumericalMethodLabels());
-        noneNumericColMethod.setToolTipText(
-                "This method will be used for all none numerical columns");
-        final DialogComponent maxNoneNumericVals = 
-            new DialogComponentNumber(m_maxUniqueValues, 
+        nominalColMethod.setToolTipText(
+                "This method will be used for all non-numerical columns");
+        final DialogComponent maxNoneNumericVals =
+            new DialogComponentNumber(m_maxUniqueValues,
                     "Maximum unique values per group", 1);
         maxNoneNumericVals.setToolTipText("All groups with more unique values "
                 + "will be skipped and replaced by a missing value");
@@ -113,10 +113,10 @@ public class GroupByNodeDialogPane extends DefaultNodeSettingsPane {
                 m_sortInMemory, "Sort in memory");
         final DialogComponent moveGroupCols2Front = new DialogComponentBoolean(
                 m_moveGroupCols2Front, "Move group column(s) to front");
-        
+
         createNewGroup("Aggregation methods");
         setHorizontalPlacement(true);
-        addDialogComponent(noneNumericColMethod);
+        addDialogComponent(nominalColMethod);
         addDialogComponent(numericColMethod);
         setHorizontalPlacement(false);
         addDialogComponent(maxNoneNumericVals);
@@ -140,9 +140,9 @@ public class GroupByNodeDialogPane extends DefaultNodeSettingsPane {
     protected static boolean enableUniqueValuesModel(
             final SettingsModelString numericMethod,
             final SettingsModelString noneNumericMethod) {
-        final AggregationMethod numMeth = 
+        final AggregationMethod numMeth =
             AggregationMethod.getMethod4SettingsModel(numericMethod);
-        final AggregationMethod noneNumMeth = 
+        final AggregationMethod noneNumMeth =
             AggregationMethod.getMethod4SettingsModel(noneNumericMethod);
         return numMeth.isUsesLimit() || noneNumMeth.isUsesLimit();
     }
