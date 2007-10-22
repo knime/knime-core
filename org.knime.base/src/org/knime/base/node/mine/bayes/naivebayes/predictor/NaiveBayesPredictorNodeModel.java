@@ -1,18 +1,18 @@
 /* -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
- * 
+ *
  * Copyright, 2003 - 2007
  * Universitaet Konstanz, Germany.
  * Lehrstuhl fuer Angewandte Informatik
  * Prof. Dr. Michael R. Berthold
- * 
+ *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
  * any way exploit any of the content, in whole or in part, except as
  * otherwise expressly permitted in writing by the copyright owner.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.05.2006 (koetter): created
  */
@@ -43,26 +43,24 @@ import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
  * @author Tobias Koetter
  */
 public class NaiveBayesPredictorNodeModel extends NodeModel {
-    
+
     // our logger instance
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NaiveBayesPredictorNodeModel.class);
-    
+
     private static final int DATA_IN_PORT = 0;
-    
+
     private static final int MODEL_IN_PORT = 0;
 
     /**The settings key for the include probability values boolean.*/
     protected static final String CFG_INCL_PROBABILITYVALS_KEY = "inclProbVals";
-    
-    private final SettingsModelBoolean m_inclProbVals = 
+
+    private final SettingsModelBoolean m_inclProbVals =
         new SettingsModelBoolean(CFG_INCL_PROBABILITYVALS_KEY, false);
-    
+
     private NaiveBayesModel m_model;
-    
-    /**
-     * 
-     * 
+
+    /**Constructor for class NaiveBayesPredictorNodeModel.
      */
     protected NaiveBayesPredictorNodeModel() {
 //      we have one data in and out port and one model in port
@@ -76,10 +74,10 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
-        LOGGER.debug("Entering execute(inData, exec) of class " 
+        LOGGER.debug("Entering execute(inData, exec) of class "
                 + "NaiveBayesPredictorNodeModel.");
 //      check input data
-        assert (inData != null && inData.length == 1 
+        assert (inData != null && inData.length == 1
                 && inData[DATA_IN_PORT] != null);
         final BufferedDataTable data = inData[DATA_IN_PORT];
         exec.setMessage("Classifying rows...");
@@ -87,21 +85,21 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
             throw new Exception("Node not properly configured. "
                     + "No Naive Bayes Model available.");
         }
-        
-        final NaiveBayesCellFactory appender = 
+
+        final NaiveBayesCellFactory appender =
             new NaiveBayesCellFactory(m_model, data.getDataTableSpec(),
                     m_inclProbVals.getBooleanValue());
-        final ColumnRearranger rearranger = 
+        final ColumnRearranger rearranger =
             new ColumnRearranger(data.getDataTableSpec());
         rearranger.append(appender);
-        BufferedDataTable returnVal = 
+        final BufferedDataTable returnVal =
             exec.createColumnRearrangeTable(data, rearranger, exec);
 //        final DataColumnSpec[] colSpecs = appender.getResultColumnsSpec();
-//        final AppendedColumnTable appTable = 
+//        final AppendedColumnTable appTable =
 //            new AppendedColumnTable(data, appender, colSpecs);
-//        final BufferedDataTable returnVal = 
+//        final BufferedDataTable returnVal =
 //            exec.createBufferedDataTable(appTable, exec);
-        LOGGER.debug("Exiting execute(inData, exec) of class " 
+        LOGGER.debug("Exiting execute(inData, exec) of class "
                 + "NaiveBayesPredictorNodeModel.");
         return new BufferedDataTable[] {returnVal};
     }
@@ -114,7 +112,7 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
         m_model = null;
     }
 
-    
+
     /**
      * {@inheritDoc}
      */
@@ -122,7 +120,7 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         //check the input data
-        assert (inSpecs != null && inSpecs.length == 1 
+        assert (inSpecs != null && inSpecs.length == 1
                 && inSpecs[DATA_IN_PORT] != null);
         if (m_model == null) {
             throw new InvalidSettingsException("No model available");
@@ -137,7 +135,7 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
             setWarningMessage("No known attribute columns found use "
             + "class prior probability to predict the class membership");
         } else if (unknownCols.size() == 1) {
-            setWarningMessage("Input column " + unknownCols.get(0) 
+            setWarningMessage("Input column " + unknownCols.get(0)
                     + " is unknown and will be skipped.");
         } else if (unknownCols.size() > 1) {
             final StringBuilder buf = new StringBuilder();
@@ -157,10 +155,10 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
         }
         //check if the learned model contains columns which are not in the
         //input data
-        final List<String> missingInputCols = 
+        final List<String> missingInputCols =
             m_model.check4MissingCols(spec);
         if (missingInputCols.size() == 1) {
-            setWarningMessage("Attribute " + missingInputCols.get(0) 
+            setWarningMessage("Attribute " + missingInputCols.get(0)
                     + " is missing in the input data");
         } else if (missingInputCols.size() > 1) {
             final StringBuilder buf = new StringBuilder();
@@ -180,13 +178,13 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
         }
 
         return new DataTableSpec[] {
-            AppendedColumnTable.getTableSpec(inSpecs[DATA_IN_PORT], 
-                    NaiveBayesCellFactory.createResultColSpecs(m_model, 
-                            inSpecs[DATA_IN_PORT], 
+            AppendedColumnTable.getTableSpec(inSpecs[DATA_IN_PORT],
+                    NaiveBayesCellFactory.createResultColSpecs(m_model,
+                            inSpecs[DATA_IN_PORT],
                             m_inclProbVals.getBooleanValue()))
         };
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -199,7 +197,7 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) 
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         m_inclProbVals.loadSettingsFrom(settings);
     }
@@ -211,13 +209,13 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings) {
         //no settings to check
     }
-    
+
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) {
         //nothing to do
     }
@@ -226,12 +224,12 @@ public class NaiveBayesPredictorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) {
         //nothing to do
     }
 
-    
+
     /**
      * {@inheritDoc}
      */
