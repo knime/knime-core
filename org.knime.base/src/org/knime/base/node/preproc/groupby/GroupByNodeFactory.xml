@@ -9,26 +9,28 @@
     <fullDescription>
     	<intro>
     	   <p>
-    		Groups the rows of a table by the value pairs in the selected columns.
-            The output table contains one row per value combination of the 
-            selected columns. The values in the other (not selected) columns 
-            of that row depend on the selected aggregation method:
+    	   Groups the rows of a table by the unique values in the selected columns.
+    	    A row is created for each unique value group of the selected column(s). 
+    	    The remaining rows are aggregated by the defined method.
+            The output table therefore contains one row for each existing value 
+            combination of the selected columns. The values in the other 
+            (non-selected) columns in this row depend on the selected 
+            aggregation method:
     		<ul>
-    			<li>First: Sets the value of the first row per value 
+    			<li>First: Takes the first row per value 
     			combination.</li>
-    			<li>Last: Sets the value of the last row per value 
+    			<li>Last: Takes the last row per value 
     			combination.</li>
-    			<li>Mode: Sets the value with the most occurrences per
-    			 value combination. 
-    			If multiple values match this criterion one of these values is 
-    			randomly chosen.</li>
+    			<li>Mode: Takes the value with the most occurrences per
+    			 value combination. If multiple values match this criterion 
+    			 the first occurrence is written to the output table.</li>
     			<li>Count: Counts members per group.</li>
     		</ul>
-			additional aggregation methods only available for numerical columns:
+			Additional aggregation methods only available for numerical columns:
 			<ul>
-    			<li>Minimum: Calculates the minimum per group.</li>
-    			<li>Maximum: Calculates the maximum per group.</li>
-    			<li>Mean: Calculates the mean per group.</li>
+    			<li>Minimum: Calculates the minimum value per group.</li>
+    			<li>Maximum: Calculates the maximum value per group.</li>
+    			<li>Mean: Calculates the mean value per group.</li>
     			<li>Sum: Calculates the sum per group.</li>
     			<li>Variance: Calculates the variance per group.</li>
     		</ul>
@@ -38,8 +40,8 @@
     		</p>
     		<p>
             If the aggregation method 'Mode' is selected, a maximum number 
-            of different values can be defined, as all these values are kept 
-            in memory. If the actual number of values exceeds this limit, 
+            of different values can be defined to be stored in memory. 
+            If the actual number of values exceeds this limit, 
             the calculation for this group is skipped, a missing value is set 
             in the corresponding column, and a warning is displayed. 
             </p>
@@ -48,43 +50,46 @@
             loaded into the memory to speed up the sorting process.
             </p>
     	</intro>	
-        <option name="None numerical aggregation method">
-        	The aggregation method to use for all none selected none numerical 
-        	columns.
+        <option name="Nominal aggregation method">
+        	The aggregation method to use for all non-selected columns
+        	that do not contain numerical values.
         </option>
         <option name="Numerical aggregation method">
-        	The aggregation method to use for all none selected numerical 
+        	The aggregation method to use for all non-selected numerical 
         	columns.
         </option>
         <option name="Maximum unique values per group">
 	        Defines the maximum number of unique values per group to avoid 
-	        memory exceptions. This option is only enabled if a memory 
-	        consuming method like Mode is selected. All groups with more unique
-	        values are skipped during calculation and the result is a 
-	        missing value.
+	        problems with memory overloading. This option is only enabled if a 
+	        memory-consuming method like Mode is selected. All groups with more unique
+	        values are skipped during the calculation and a missing value is set 
+            in the corresponding column.
         </option>
         <option name="Move group column(s) to front">
 			Moves the selected group column(s) to the front of the result table.
         </option>
         <option name="Sort in memory">
-			Performs the necessary sorting in the memory. Speeds up the process
+			Performs necessary sorting in the memory. Speeds up the process
 			but consumes much more memory.
         </option>
         <option name="Enable hiliting">
-			If enabled the hiliting of a group row will hilite all rows of this
-			group in other views. Builds a map with the group row keys and
-			the related input table row keys.
+			If enabled, the hiliting of a group row will hilite all rows of this
+			group in other views. Depending of the number of rows, enabling this 
+			feature might consume a lot of memory.
         </option>
         <option name="Group by column(s)">
-	        Select one or more column(s) to perform a grouping on.
+	        Select one or more column(s) according to which the group(s) 
+	        is/are created.
 		</option>
     </fullDescription>
     <ports>
         <dataIn index="0" name="Data table">
-	        Input table with at least two columns to perform the grouping.
+	        The input table, which must contain at least two columns 
+	        to be processed by this node.
         </dataIn>
         <dataOut index="0" name="Group table">
-        	Result table with one row per unique group column value pair.
+        	Result table with one row for each existing value combination of 
+        	the selected columns.
 		</dataOut>
     </ports>
 </knimeNode>
