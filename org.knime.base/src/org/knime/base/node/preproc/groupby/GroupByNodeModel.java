@@ -277,12 +277,13 @@ public class GroupByNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "Please define the group by column(s)");
         }
-        if (inclList.size() == origSpec.getNumColumns()) {
+        if (origSpec.getNumColumns() > 1
+                && inclList.size() == origSpec.getNumColumns()) {
             setWarningMessage("All columns selected as group by column");
         }
-        if (origSpec.getNumColumns() < 2) {
+        if (origSpec.getNumColumns() < 1) {
             setWarningMessage(
-                    "Input table should contain at least two columns");
+                    "Input table should contain at least one column");
         }
         final AggregationMethod numericMethod =
             AggregationMethod.getMethod4SettingsModel(m_numericColMethod);

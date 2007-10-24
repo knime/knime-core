@@ -15,14 +15,15 @@
             The output table therefore contains one row for each existing value 
             combination of the selected columns. The values in the other 
             (non-selected) columns in this row depend on the selected 
-            aggregation method:
+            aggregation method.
+           </p>
+           <p>
+            Available aggregation methods:
     		<ul>
-    			<li>First: Takes the first row per value 
-    			combination.</li>
-    			<li>Last: Takes the last row per value 
-    			combination.</li>
+    			<li>First: Takes the first value per group.</li>
+    			<li>Last: Takes the last value per group.</li>
     			<li>Mode: Takes the value with the most occurrences per
-    			 value combination. If multiple values match this criterion 
+    			 group. If multiple values match this criterion 
     			 the first occurrence is written to the output table.</li>
     			<li>Count: Counts members per group.</li>
     		</ul>
@@ -54,7 +55,7 @@
         	The aggregation method to use for all non-selected columns
         	that do not contain numerical values.
         </option>
-        <option name="Numerical aggregation method">
+        <option name="Numeric aggregation method">
         	The aggregation method to use for all non-selected numerical 
         	columns.
         </option>
@@ -84,8 +85,7 @@
     </fullDescription>
     <ports>
         <dataIn index="0" name="Data table">
-	        The input table, which must contain at least two columns 
-	        to be processed by this node.
+	        The input table to group.
         </dataIn>
         <dataOut index="0" name="Group table">
         	Result table with one row for each existing value combination of 

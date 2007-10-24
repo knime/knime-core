@@ -27,6 +27,9 @@ package org.knime.base.node.preproc.groupby;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -80,54 +83,67 @@ public class GroupByNodeDialogPane extends DefaultNodeSettingsPane {
                         m_numericColMethod, m_nominalColMethod));
             }
         });
+
         m_numericColMethod.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 m_maxUniqueValues.setEnabled(enableUniqueValuesModel(
                         m_numericColMethod, m_nominalColMethod));
             }
         });
+
         m_maxUniqueValues.setEnabled(enableUniqueValuesModel(
                 m_numericColMethod, m_nominalColMethod));
-        final DialogComponent groupByCols =
+
+        final DialogComponentColumnFilter groupByCols =
             new DialogComponentColumnFilter(m_groupByCols, 0);
+        groupByCols.setIncludeTitle(" Group column(s) ");
+        groupByCols.setExcludeTitle(" Aggregation column(s) ");
+
         final DialogComponent numericColMethod =
             new DialogComponentStringSelection(m_numericColMethod,
-                    "Numerical aggregation method",
+                    "Numeric aggregation method",
                     AggregationMethod.getNumericalMethodLabels());
         numericColMethod.setToolTipText(
             "This method will be used for all numerical columns");
+
         final DialogComponent nominalColMethod =
             new DialogComponentStringSelection(m_nominalColMethod,
                     "Nominal aggregation method",
                     AggregationMethod.getNoneNumericalMethodLabels());
         nominalColMethod.setToolTipText(
                 "This method will be used for all non-numerical columns");
+
         final DialogComponent maxNoneNumericVals =
             new DialogComponentNumber(m_maxUniqueValues,
                     "Maximum unique values per group", 1);
         maxNoneNumericVals.setToolTipText("All groups with more unique values "
                 + "will be skipped and replaced by a missing value");
+
         final DialogComponent enableHilite = new DialogComponentBoolean(
                 m_enableHilite, "Enable hiliting");
+        enableHilite.setToolTipText("Consumes more memory");
+
         final DialogComponent sortInMemory = new DialogComponentBoolean(
                 m_sortInMemory, "Sort in memory");
+        sortInMemory.setToolTipText("Consumes more memory");
+
         final DialogComponent moveGroupCols2Front = new DialogComponentBoolean(
                 m_moveGroupCols2Front, "Move group column(s) to front");
 
-        createNewGroup("Aggregation methods");
+        createNewGroup(" Aggregation methods ");
         setHorizontalPlacement(true);
         addDialogComponent(nominalColMethod);
         addDialogComponent(numericColMethod);
         setHorizontalPlacement(false);
         addDialogComponent(maxNoneNumericVals);
-        createNewGroup("Advanced options");
+        createNewGroup(" Advanced options ");
         setHorizontalPlacement(true);
         addDialogComponent(moveGroupCols2Front);
         addDialogComponent(sortInMemory);
         addDialogComponent(enableHilite);
         setHorizontalPlacement(false);
         closeCurrentGroup();
-        createNewGroup("Group by column(s)");
+        createNewGroup(" Column settings ");
         addDialogComponent(groupByCols);
         closeCurrentGroup();
     }
@@ -145,5 +161,16 @@ public class GroupByNodeDialogPane extends DefaultNodeSettingsPane {
         final AggregationMethod noneNumMeth =
             AggregationMethod.getMethod4SettingsModel(noneNumericMethod);
         return numMeth.isUsesLimit() || noneNumMeth.isUsesLimit();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) throws NotConfigurableException {
+        if (specs[0] == null || specs[0].getNumColumns() < 1) {
+            throw new NotConfigurableException("No columns available");
+        }
     }
 }
