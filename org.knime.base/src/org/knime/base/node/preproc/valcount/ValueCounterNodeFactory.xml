@@ -7,7 +7,7 @@
         <intro>This node counts the number of occurrences of all values in a selected column.</intro>
         <option name="Column">The column whose values should be counted</option>
         <option name="Enable hiliting">
-            If want to enable hiliting betweem the distinct values in the output table and the corresponding rows in the
+            If want to enable hiliting between the distinct values in the output table and the corresponding rows in the
             input table, check this box. But be aware that this may require a lot of memory if the table is huge.
         </option>
     </fullDescription>
