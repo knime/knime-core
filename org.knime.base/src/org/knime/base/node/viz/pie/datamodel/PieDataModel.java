@@ -56,65 +56,6 @@ public abstract class PieDataModel {
         m_detailsAvailable = detailsAvailable;
     }
 
-//    /**
-//     * @param pieColSpec the column specification of the pie column
-//     * @param supportsHiliting <code>true</code> if hiliting is supported
-//     * @return the {@link List} of {@link PieSectionDataModel} for the
-//     * given column specification where each section has the same color
-//     */
-//    public static List<PieSectionDataModel> createSections(
-//            final DataColumnSpec pieColSpec, final boolean supportsHiliting) {
-//        final DataColumnDomain domain = pieColSpec.getDomain();
-//        if (domain == null) {
-//            throw new IllegalArgumentException(
-//                    "Pie column domain must not be null");
-//        }
-//        final ArrayList<PieSectionDataModel> sections;
-//        if (pieColSpec.getType().isCompatible(NominalValue.class)) {
-//            final Set<DataCell> values = domain.getValues();
-//            if (values == null || values.size() < 1) {
-//                throw new IllegalArgumentException(
-//                        "Pie column domain containes no values");
-//            }
-//
-//            sections = new ArrayList<PieSectionDataModel>(values.size());
-////            final int noOfVals = values.size();
-////            final int idx = 0;
-//            for (final DataCell value : values) {
-////                final Color color =
-////                    GUIUtils.generateDistinctColor(idx++, noOfVals);
-//                final Color color = Color.BLACK;
-//                final PieSectionDataModel section =
-//                    new PieSectionDataModel(value.toString(),
-//                        color, supportsHiliting);
-//                sections.add(section);
-//            }
-//        } else if (pieColSpec.getType().isCompatible(IntValue.class)) {
-//              if (domain.getLowerBound() == null
-//                      || domain.getUpperBound() == null) {
-//                  throw new IllegalArgumentException(
-//                          "Pie column domain contains no bounds");
-//              }
-//            final int lower = ((IntCell)domain.getLowerBound()).getIntValue();
-//            final int upper = ((IntCell)domain.getUpperBound()).getIntValue();
-//              final int range = upper - lower;
-//              sections = new ArrayList<PieSectionDataModel>(range);
-////              int idx = 0;
-//              for (int i = lower; i <= upper; i++) {
-////                  final Color color = GUIUtils.generateDistinctColor(idx++,
-////                          range);
-//                  final Color color = Color.BLACK;
-//                  final PieSectionDataModel section =
-//                      new PieSectionDataModel(Integer.toString(i),
-//                          color, supportsHiliting);
-//                  sections.add(section);
-//              }
-//          } else {
-//              throw new IllegalArgumentException("Invalid pie column");
-//          }
-//        return sections;
-//    }
-
     /**
      * Creates the default missing section.
      * @param supportHiliting <code>true</code> if hiliting is supported
