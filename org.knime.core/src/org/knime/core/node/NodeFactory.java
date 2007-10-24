@@ -426,7 +426,7 @@ public abstract class NodeFactory {
     
     /**
      * The XML description can be used with the 
-     * org.knime.workbench.helpview.view.NodeFactoryHTMLCreator in order to get
+     * <code>NodeFactoryHTMLCreator</code> in order to get
      * a converted HTML description of it, which fits the overall KNIME HTML 
      * style.
      * @return XML description of this node 
@@ -835,8 +835,7 @@ public abstract class NodeFactory {
     protected abstract NodeDialogPane createNodeDialogPane();
 
     /**
-     * @deprecated Use the 
-     *  {@link org.knime.workbench.helpview.view.NodeFactoryHTMLCreator}
+     * @deprecated Use the <code>NodeFactoryHTMLCreator</code>
      *  in connection with the @link {@link #getXMLDescription()} method.
      *  
      * @return A short description (like 50 characters) of the functionality the
@@ -862,8 +861,7 @@ public abstract class NodeFactory {
      * description. The xml content is processed with a stylesheet that layouts
      * all available information.
      * 
-     * @deprecated Use the 
-     *  {@link org.knime.workbench.helpview.view.NodeFactoryHTMLCreator} 
+     * @deprecated Use the <code>NodeFactoryHTMLCreator</code> 
      *  in connection with the {@link #getXMLDescription()}.
      * @return An html string containing a full description of the node's
      *         functionality, all parameters, inport data, output of the node,

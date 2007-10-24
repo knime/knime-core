@@ -580,9 +580,8 @@ public final class Node {
     /**
      * A detailed description of this node as html.
      * 
-     * @deprecated Use 
-     *  {@link org.knime.workbench.helpview.view.NodeFactoryHTMLCreator} in 
-     *  connection with the {@link #getXMLDescription()}. 
+     * @deprecated Use the <code>NodeFactoryHTMLCreator</code> in
+     *      connection with the {@link #getXMLDescription()}. 
      * @return A html page containing the node's detailed description.
      * @see org.knime.core.node.NodeFactory#getXMLDescription
      */
@@ -594,9 +593,8 @@ public final class Node {
     /**
      * A short description of this node.
      * 
-     * @deprecated Use
-     *             {@link org.knime.workbench.helpview.view.NodeFactoryHTMLCreator}
-     *             in connection with the {@link #getXMLDescription()}.
+     * @deprecated Use the <code>NodeFactoryHTMLCreator</code> in
+     *      connection with the {@link #getXMLDescription()}.
      * @return A single line containing a brief node description.
      * @see org.knime.core.node.NodeFactory#getXMLDescription
      */
@@ -607,7 +605,7 @@ public final class Node {
     
     /**
      * The XML description can be used with the 
-     * org.knime.workbench.helpview.view.NodeFactoryHTMLCreator in order to get
+     * <code>NodeFactoryHTMLCreator</code> in order to get
      * a converted HTML description of it, which fits the overall KNIME HTML 
      * style.
      * 

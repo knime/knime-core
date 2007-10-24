@@ -50,7 +50,13 @@ public interface NodeExtraInfo extends ExtraInfo {
     public void changePosition(final int[] moveDist);
 
     /**
-     * {@inheritDoc}
+     * Creates and returns a copy of this object.
+     * @return a copy of this object
+     * @throws  CloneNotSupportedException  if the object's class does not
+     *               support the <code>Cloneable</code> interface. Subclasses
+     *               that override the <code>clone</code> method can also
+     *               throw this exception to indicate that an instance cannot
+     *               be cloned.
      */
     public Object clone() throws CloneNotSupportedException;
 }

@@ -644,9 +644,8 @@ public class NodeContainer implements NodeStateListener {
     }
 
     /**
-     * @deprecated Use 
-     *  {@link org.knime.workbench.helpview.view.NodeFactoryHTMLCreator} in 
-     *  connection with the {@link #getXMLDescription()}. 
+     * @deprecated Use the <code>NodeFactoryHTMLCreator</code> in
+     *      connection with the {@link #getXMLDescription()}. 
      * @see Node#getXMLDescription()
      */
     @Deprecated
@@ -655,9 +654,8 @@ public class NodeContainer implements NodeStateListener {
     }
     
     /**
-     * @deprecated Use 
-     *  {@link org.knime.workbench.helpview.view.NodeFactoryHTMLCreator} in 
-     *  connection with the {@link #getXMLDescription()}.
+     * @deprecated Use the <code>NodeFactoryHTMLCreator</code> in
+     *      connection with the {@link #getXMLDescription()}.
      * @see org.knime.core.node.Node#getXMLDescription()
      */
     @Deprecated
