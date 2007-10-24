@@ -347,16 +347,18 @@ public class FixedHistogramDataModel {
         if (exec != null) {
             exec.setProgress(0.0, "Start reading data from file");
         }
-        final File settingsFile = new File(directory, CFG_DATA_FILE);
-        final FileInputStream is = new FileInputStream(settingsFile);
-        final GZIPInputStream inData = new GZIPInputStream(is);
         final ConfigRO config;
+        final FileInputStream is;
+        final GZIPInputStream inData;
         try {
+            final File settingsFile = new File(directory, CFG_DATA_FILE);
+            is = new FileInputStream(settingsFile);
+            inData = new GZIPInputStream(is);
             config = NodeSettings.loadFromXML(inData);
         } catch (final IOException e) {
-            throw new IOException(
-                    "Unable to load internal data from previous version. "
-                    + "Please reexecute the histogram node.");
+            LOGGER.error("Unable to load histogram data: " + e.getMessage());
+            throw new IOException("Please reexecute the histogram node. "
+                    + "(For details see log file)");
         }
         final Config xConfig = config.getConfig(CFG_X_COL_SPEC);
         final DataColumnSpec xColSpec = DataColumnSpec.load(xConfig);
