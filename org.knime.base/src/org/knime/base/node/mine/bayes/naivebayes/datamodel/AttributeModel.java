@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    24.03.2007 (Tobias Koetter): created
  */
@@ -38,7 +38,8 @@ import org.knime.core.node.config.Config;
 
 
 /**
- * 
+ * This abstract class needs to be implemented by all attribute models and
+ * provides missing value handling and some common methods.
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AttributeModel implements Comparable<AttributeModel> {
@@ -49,24 +50,27 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
     private static final String NO_OF_MISSING_VALUES = "numberOfMissingValues";
     private static final String INVALID_CAUSE = "invalidCause";
     private static final String MODEL_DATA_SECTION = "data";
-    
+
     /**
      * Invalid cause if the model contains no records at all.
      */
-    static final String MODEL_CONTAINS_NO_RECORDS = 
+    static final String MODEL_CONTAINS_NO_RECORDS =
         "No records";
     /**
      * Invalid cause if the model contains no class values.
      */
-    static final String MODEL_CONTAINS_NO_CLASS_VALUES = 
+    static final String MODEL_CONTAINS_NO_CLASS_VALUES =
         "No class values";
-    
+
+    /**Column header of the missing value column.*/
+    private static final String MISSING_VALUE_NAME = "MissingValue";
+
     private final String m_attributeName;
-    
+
     private final boolean m_skipMissingVals;
-    
+
     private int m_noOfMissingVals;
-    
+
     private String m_invalidCause = null;
 
 
@@ -85,13 +89,13 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         m_noOfMissingVals = noOfMissingVals;
         m_skipMissingVals = skipMissingVals;
     }
-    
+
     /**
      * @param config the <code>Config</code> object to read from
      * @return the attribute model for the given <code>Config</code> object
      * @throws InvalidSettingsException if the settings are invalid
      */
-    static AttributeModel loadModel(final Config config) 
+    static AttributeModel loadModel(final Config config)
     throws InvalidSettingsException {
         final String attrName = config.getString(ATTRIBUTE_NAME);
         final String modelType = config.getString(MODEL_TYPE);
@@ -104,19 +108,19 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             model = new NominalAttributeModel(attrName, noOfMissingVals,
                     skipMissing, modelConfig);
         } else if (NumericalAttributeModel.MODEL_TYPE.equals(modelType)) {
-            model = new NumericalAttributeModel(attrName, skipMissing, 
+            model = new NumericalAttributeModel(attrName, skipMissing,
                     noOfMissingVals, modelConfig);
         } else if (ClassAttributeModel.MODEL_TYPE.equals(modelType)) {
-            model = new ClassAttributeModel(attrName, noOfMissingVals, 
+            model = new ClassAttributeModel(attrName, noOfMissingVals,
                     skipMissing, modelConfig);
         } else {
-            throw new InvalidSettingsException("Invalid model type: " 
+            throw new InvalidSettingsException("Invalid model type: "
                     + modelType);
         }
         model.setInvalidCause(invalidCause);
         return model;
     }
-    
+
     /**
      * @param config the <code>Config</code> object to write to
      */
@@ -129,30 +133,30 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         final Config internalConfig = config.addConfig(MODEL_DATA_SECTION);
         saveModelInternal(internalConfig);
     }
-    
+
     /**
      * @param config the config object to save to
      */
     abstract void saveModelInternal(final Config config);
-    
+
     /**
      * @return the unique type of the model
      */
     abstract String getType();
-    
+
     /**
      * @return the attribute name
      */
     public String getAttributeName() {
         return m_attributeName;
     }
-    
+
     /**
-     * @return the <code>DataValue</code> class to check if the rows 
+     * @return the <code>DataValue</code> class to check if the rows
      * are compatible
      */
     abstract Class<? extends DataValue> getCompatibleType();
-    
+
     /**
      * Adds the given value to this attribute model.
      * @param classValue the class value
@@ -160,7 +164,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @throws TooManyValuesException if the column contains more unique
      * values than supported by this attribute model
      */
-    void addValue(final String classValue, 
+    void addValue(final String classValue,
             final DataCell attrValue) throws TooManyValuesException {
         if (classValue == null) {
             throw new NullPointerException("ClassValue must not be null");
@@ -179,25 +183,42 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         }
         addValueInternal(classValue, attrValue);
     }
-    
+
     /**
-     * Adds the given value to the concrete implementation. Should handle 
+     * Adds the given value to the concrete implementation. Should handle
      * missing values as well.
      * @param classValue the class value
      * @param attrValue the attribute value. Could be a missing value.
      * @throws TooManyValuesException if the column contains more unique
      * values than supported by this attribute model
      */
-    abstract void addValueInternal(final String classValue, 
+    abstract void addValueInternal(final String classValue,
             final DataCell attrValue) throws TooManyValuesException;
-    
+
     /**
      * @return the noOfMissingVals
      */
     int getNoOfMissingVals() {
         return m_noOfMissingVals;
     }
-    
+
+    /**
+     * @param colNames all column names of the table to check for uniquness
+     * @return the missing value header or <code>null</code> if this model
+     * contains no missing attribute values
+     */
+    String getMissingValueHeader(final Collection<String>colNames) {
+        if (!m_skipMissingVals && getNoOfMissingVals() > 0) {
+            String missingHeading = MISSING_VALUE_NAME;
+            int i = 1;
+            while (colNames.contains(missingHeading)) {
+                missingHeading = missingHeading + "(" + i++ + ")";
+            }
+            return missingHeading;
+        }
+        return null;
+    }
+
     /**
      * @return all class values
      */
@@ -213,12 +234,12 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
 
     /**
      * @param classValue the class value to calculate the probability for
-     * @param attributeValue the attribute value to calculate the 
+     * @param attributeValue the attribute value to calculate the
      * probability for. Could be a missing value.
      * @return the calculated probability or null if the cell was a missing
      * one and missing values should be skipped
      */
-    Double getProbability(final String classValue, 
+    Double getProbability(final String classValue,
             final DataCell attributeValue) {
         if (!attributeValue.getType().isCompatible(getCompatibleType())) {
             throw new IllegalArgumentException(
@@ -227,13 +248,13 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         if (attributeValue.isMissing() && m_skipMissingVals) {
             return null;
         }
-        return getProbabilityInternal(classValue, attributeValue);
+        return new Double(getProbabilityInternal(classValue, attributeValue));
     }
-    
+
     /**
      * This should also handle missing values.
      * @param classValue the class value to calculate the probability for
-     * @param attributeValue the attribute value to calculate the 
+     * @param attributeValue the attribute value to calculate the
      * probability for. Could be a missing value.
      * @return the calculated probability
      */
@@ -241,10 +262,11 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             final DataCell attributeValue);
 
     /**
+     * @param totalNoOfRecs the total number of records in the training data
      * @return the HTML view of this attribute model
      */
-    abstract String getHTMLView();
-    
+    abstract String getHTMLView(final int totalNoOfRecs);
+
     /**
      * @param vals the <code>Collection</code> to sort
      * @return the given <code>Collection</code> in her natural order
@@ -253,9 +275,9 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         if (vals == null) {
             return null;
         }
-        final List<String> sortedValues = 
+        final List<String> sortedValues =
             new ArrayList<String>(vals.size());
-        for (String classVal : vals) {
+        for (final String classVal : vals) {
             sortedValues.add(classVal);
         }
         Collections.sort(sortedValues);
@@ -267,7 +289,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @throws InvalidSettingsException if the model isn't valid
      */
     abstract void validate() throws InvalidSettingsException;
-    
+
     /**
      * @param cause the cause why this model is invalid
      */
@@ -289,12 +311,12 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
     public int compareTo(final AttributeModel o) {
         return m_attributeName.compareTo(o.getAttributeName());
     }
-    
+
     /**
      * @return the headline of this model to use in the HTML view
      */
     abstract String getHTMLViewHeadLine();
-    
+
     /**
      * @param tableHeading the optional table headline
      * @param keyHeading the optional headline for the key row
@@ -304,8 +326,8 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
      * @param addLineBreak if each sub table should be displayed on a new line
      * @return a html table with the keys and values of the given map
      */
-    static String createHTMLTable(final String tableHeading, 
-            final String keyHeading, final String valueHeading, 
+    static String createHTMLTable(final String tableHeading,
+            final String keyHeading, final String valueHeading,
             final int noOfRows, final Map<String, ? extends Object> map,
             final boolean addLineBreak) {
         //create the partial maps
@@ -324,7 +346,7 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             keys.add(classVal);
             vals.add(map.get(classVal));
             if (i % noOfRows == noOfRows - 1 || i == noOfVals - 1) {
-                buf.append(createPartialHTMLTable(tableHeading, keyHeading, 
+                buf.append(createPartialHTMLTable(tableHeading, keyHeading,
                         valueHeading, keys, vals));
                 if (addLineBreak) {
                     buf.append("<br>");
@@ -333,12 +355,12 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
         }
         return buf.toString();
     }
-    
-    private static String createPartialHTMLTable(final String tableHeading, 
-            final String keyHeading, final String valueHeading, 
+
+    private static String createPartialHTMLTable(final String tableHeading,
+            final String keyHeading, final String valueHeading,
             final List<String> keys, final List<Object> vals) {
         final boolean rowHeading = (keyHeading != null || valueHeading != null);
-        final int noOfVals = keys.size();
+        final int noOfVals = vals.size();
         final int tableHeadColspan;
         if (rowHeading) {
             tableHeadColspan = noOfVals + 1;
@@ -354,22 +376,26 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             buf.append("</th>");
             buf.append("</tr>");
         }
-        buf.append("<tr>");
-        if (rowHeading) {
-            buf.append("<th>");
-            if (keyHeading != null) {
-                buf.append(keyHeading);
-            } else {
-                buf.append("&nbsp;");
+        if (rowHeading || keys != null) {
+            buf.append("<tr>");
+            if (rowHeading) {
+                buf.append("<th>");
+                if (keyHeading != null) {
+                    buf.append(keyHeading);
+                } else {
+                    buf.append("&nbsp;");
+                }
+                buf.append("</th>");
             }
-            buf.append("</th>");
+            if (keys != null) {
+                for (final String classVal : keys) {
+                    buf.append("<th>");
+                    buf.append(classVal);
+                    buf.append("</th>");
+                }
+            }
+            buf.append("</tr>");
         }
-        for (String classVal : keys) {
-            buf.append("<th>");
-            buf.append(classVal);
-            buf.append("</th>");
-        }
-        buf.append("</tr>");
         buf.append("<tr>");
         if (rowHeading) {
             buf.append("<th>");
@@ -380,13 +406,43 @@ public abstract class AttributeModel implements Comparable<AttributeModel> {
             }
             buf.append("</th>");
         }
-        for (Object classVal : vals) {
+        for (final Object classVal : vals) {
             buf.append("<td align='center'>");
             buf.append(classVal.toString());
-            buf.append("</td>");   
+            buf.append("</td>");
         }
         buf.append("</tr>");
         buf.append("</table>");
+        return buf.toString();
+    }
+
+    /**
+     * @param firstHeading the optional first heading
+     * @param headings the head lines
+     * @param lastHeading the optional last heading
+     * @return the string with a html table head line row
+     */
+    protected static String createTableHeader(final String firstHeading,
+            final List<String> headings, final String lastHeading) {
+        final StringBuilder buf = new StringBuilder();
+        buf.append("<tr>");
+        if (firstHeading != null) {
+            buf.append("<th>");
+            buf.append(firstHeading);
+            buf.append("</th>");
+        }
+        //create the header
+        for (final String attrVal : headings) {
+            buf.append("<th>");
+            buf.append(attrVal);
+            buf.append("</th>");
+        }
+        if (lastHeading != null) {
+            buf.append("<th>");
+            buf.append(lastHeading);
+            buf.append("</th>");
+        }
+        buf.append("</tr>");
         return buf.toString();
     }
 }

@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    29.03.2007 (Tobias Koetter): created
  */
@@ -27,7 +27,7 @@ package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
 
 /**
- * 
+ * Exception if the maximum number of different values is exceeded.
  * @author Tobias Koetter, University of Konstanz
  */
 public class TooManyValuesException extends Exception {
@@ -35,7 +35,7 @@ public class TooManyValuesException extends Exception {
     private static final long serialVersionUID = -2908267177526816082L;
 
     /**Constructor for class TooManyValuesException.
-     * 
+     *
      */
     public TooManyValuesException() {
         //nothing to do

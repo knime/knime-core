@@ -37,8 +37,8 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
 
 /**
- * This is the implementation of the "BayesianClassifier".
- * This is the description of the Bayesian classifier
+ * This is the <code>NodeModel</code> implementation of the
+ * "Naive Bayes Predictor" node.
  *
  * @author Tobias Koetter
  */

@@ -9,8 +9,7 @@ import org.knime.base.node.mine.bayes.naivebayes.datamodel.NaiveBayesModel;
 
 
 /**
- * <code>NodeView</code> for the "BayesianClassifier" Node.
- * This is the description of the Bayesian classifier
+ * <code>NodeView</code> for the "Naive Bayes Learner" Node.
  *
  * @author Tobias Koetter
  */
@@ -22,12 +21,12 @@ public class NaiveBayesLearnerNodeView extends NodeView {
 
     /**
      * Creates a new view.
-     * 
+     *
      * @param nodeModel The model (
      * class: <code>NaiveBayesPredictorNodeModel</code>)
      * @param title The title
      */
-    protected NaiveBayesLearnerNodeView(final NodeModel nodeModel, 
+    protected NaiveBayesLearnerNodeView(final NodeModel nodeModel,
             final String title) {
         super(nodeModel);
         setViewTitle(title);
@@ -37,8 +36,8 @@ public class NaiveBayesLearnerNodeView extends NodeView {
         m_htmlPane = new JEditorPane("text/html", "");
 //        m_htmlPane.setText(m_model.getHTMLTable());
         m_htmlPane.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(m_htmlPane);
-/*  
+        final JScrollPane scrollPane = new JScrollPane(m_htmlPane);
+/*
         //The output as a JTABLE
         final String[] captions = m_model.getDataTableCaptions();
         final String[][] dataTable = m_model.getDataTable();
@@ -54,7 +53,7 @@ public class NaiveBayesLearnerNodeView extends NodeView {
      */
     @Override
     protected void modelChanged() {
-        NodeModel nodeModel = getNodeModel();
+        final NodeModel nodeModel = getNodeModel();
         assert (nodeModel instanceof NaiveBayesLearnerNodeModel);
         m_model = ((NaiveBayesLearnerNodeModel)nodeModel).getNaiveBayesModel();
         if (m_model != null) {
