@@ -42,7 +42,13 @@ import java.util.Map;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * This abstract class holds the data of a particular aggregation value and its
@@ -60,6 +66,14 @@ implements Serializable, AggregationModel<S, H> {
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(AggregationValModel.class);
+
+    private static final String CFG_BAR_NAME = "name";
+    private static final String CFG_COLOR_RGB = "color";
+    private static final String CFG_ROW_COUNTER = "rowCount";
+    private static final String CFG_VALUE_COUNTER = "valueCount";
+    private static final String CFG_AGGR_SUM = "aggrSum";
+    private static final String CFG_HILITING = "hiliting";
+    private static final String CFG_SUBMODELS = "subElements";
 
     private final String m_name;
 
@@ -122,6 +136,39 @@ implements Serializable, AggregationModel<S, H> {
         m_aggrSum = aggrSum;
         m_supportHiliting = supportHiliting;
     }
+
+    /**Constructor for class AggregationValModel.
+     * @param config the config object to use
+     * @param exec the {@link ExecutionMonitor} to provide progress information
+     * @throws InvalidSettingsException if the config object is invalid
+     * @throws CanceledExecutionException if the operation is canceled
+     */
+    protected AggregationValModel(final ConfigRO config,
+            final ExecutionMonitor exec)
+        throws InvalidSettingsException, CanceledExecutionException {
+        m_name = config.getString(CFG_BAR_NAME);
+        m_color = new Color(config.getInt(CFG_COLOR_RGB));
+        m_rowCounter = config.getInt(CFG_ROW_COUNTER);
+        m_valueCount = config.getInt(CFG_VALUE_COUNTER);
+        m_aggrSum = config.getDouble(CFG_AGGR_SUM);
+        m_supportHiliting = config.getBoolean(CFG_HILITING);
+        final Config subConfig = config.getConfig(CFG_SUBMODELS);
+        final Collection<T> elements = loadElements(subConfig, exec);
+        for (final T element : elements) {
+            m_elements.put(element.getColor(), element);
+        }
+    }
+
+    /**
+     * @param config the config object to use
+     * @param exec the {@link ExecutionMonitor} to provide progress information
+     * @return the elements
+     * @throws CanceledExecutionException if the operation is canceled
+     * @throws InvalidSettingsException if the config object is invalid
+     */
+    protected abstract Collection<T> loadElements(final ConfigRO config,
+            final ExecutionMonitor exec) throws CanceledExecutionException,
+            InvalidSettingsException;
 
     /**
      * Adds a new row to this element.
@@ -539,4 +586,31 @@ implements Serializable, AggregationModel<S, H> {
         LOGGER.debug("Exiting clone() of class AggregationValModel.");
         return clone;
     }
+
+    /**
+     * @param config the config object to use
+     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @throws CanceledExecutionException if the operation is canceled
+     */
+    public void save2File(final ConfigWO config,
+            final ExecutionMonitor exec) throws CanceledExecutionException {
+        config.addString(CFG_BAR_NAME, getName());
+        config.addInt(CFG_COLOR_RGB, getColor().getRGB());
+        config.addInt(CFG_ROW_COUNTER, getRowCount());
+        config.addInt(CFG_VALUE_COUNTER, getValueCount());
+        config.addDouble(CFG_AGGR_SUM, getAggregationSum());
+        config.addBoolean(CFG_HILITING, supportsHiliting());
+        final Config subConfig = config.addConfig(CFG_SUBMODELS);
+        saveElements(getElements(), subConfig, exec);
+    }
+
+    /**
+     * @param elements the elements to save
+     * @param config the config object to use
+     * @param exec the {@link ExecutionMonitor} to provide progress information
+     * @throws CanceledExecutionException if the operation is canceled
+     */
+    protected abstract void saveElements(final Collection<T> elements,
+            final ConfigWO config, final ExecutionMonitor exec)
+    throws CanceledExecutionException;
 }

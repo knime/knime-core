@@ -32,6 +32,11 @@ import java.io.Serializable;
 
 import org.knime.base.node.viz.aggregation.AggregationValSubModel;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
 
 /**
  * This class represents the smallest element of a histogram and corresponds
@@ -67,13 +72,16 @@ implements Serializable {
      * @param aggrSum
      * @param valueCounter
      * @param rowCounter
-     * @param selected
      */
     private BarElementDataModel(final Color color, final boolean enableHiliting,
-            final double aggrSum, final int valueCounter, final int rowCounter,
-            final boolean selected) {
-        super(color, enableHiliting, aggrSum, valueCounter, rowCounter,
-                selected);
+            final double aggrSum, final int valueCounter,
+            final int rowCounter) {
+        super(color, enableHiliting, aggrSum, valueCounter, rowCounter);
+    }
+
+    private BarElementDataModel(final ConfigRO config)
+    throws InvalidSettingsException {
+        super(config);
     }
 
     /**
@@ -120,7 +128,21 @@ implements Serializable {
     protected BarElementDataModel clone() {
         final BarElementDataModel clone = new BarElementDataModel(getColor(),
                 supportsHiliting(), getAggregationSum(), getValueCount(),
-                getRowCount(), isSelected());
+                getRowCount());
         return clone;
+    }
+
+    /**
+     * @param config the config object to use
+     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @return the loaded {@link BarElementDataModel}
+     * @throws CanceledExecutionException if the operation is canceled
+     * @throws InvalidSettingsException if the config object is invalid
+     */
+    public static BarElementDataModel loadFromFile(final Config config,
+            final ExecutionMonitor exec) throws CanceledExecutionException,
+            InvalidSettingsException {
+        exec.checkCanceled();
+        return new BarElementDataModel(config);
     }
 }

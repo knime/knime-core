@@ -40,6 +40,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.node.viz.histogram.util.BinningUtil;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
@@ -47,11 +49,14 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * This is the fixed data model implementation of the histogram which
@@ -63,25 +68,28 @@ public class FixedHistogramDataModel {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(FixedHistogramDataModel.class);
 
-    /**The name of the xml file which contains the x column specification.*/
-    private static final String CFG_SETTINGS_FILE = "settingsFile";
-
-    /**The name of the root tag of the x column specification.*/
-    private static final String CFG_SETTINGS_NAME = "histoSettings";
-
     /**The name of the data file which contains all data in serialized form.*/
-    private static final String CFG_DATA_FILE = "dataFile";
+    private static final String CFG_DATA_FILE = "dataFile.xml.gz";
+    private static final String CFG_DATA = "fixedHistogramDataModel";
+    private static final String CFG_X_COL_SPEC = "xColSpec";
+    private static final String CFG_NOMINAL = "binNominal";
+    private static final String CFG_AGGR_COLS = "aggregationColumns";
+    private static final String CFG_AGGR_COL_COUNTER = "aggrColCounter";
+    private static final String CFG_COLOR_COL = "aggrCol_";
+    private static final String CFG_BINS = "bins";
+    private static final String CFG_BIN_COUNTER = "binCounter";
+    private static final String CFG_BIN = "bin_";
+    private static final String CFG_MISSING_BIN = "missingBin";
+    private static final String CFG_COLOR_COLS = "rowColors";
+    private static final String CFG_ROW_COLOR_COUNTER = "rowColorCounter";
+    private static final String CFG_ROW_COLOR = "rowColor_";
+
 
     private final DataColumnSpec m_xColSpec;
-
     private final Collection<ColorColumn> m_aggrColumns;
-
     private final SortedSet<Color> m_rowColors;
-
     private boolean m_binNominal;
-
     private final List<BinDataModel> m_bins;
-
     private final BinDataModel m_missingValueBin;
 
     /**Constructor for class HistogramDataModel.
@@ -263,39 +271,61 @@ public class FixedHistogramDataModel {
      * @param directory the directory to write to
      * @param exec the {@link ExecutionMonitor} to provide progress messages
      * @throws IOException if a file exception occurs
+     * @throws CanceledExecutionException if the operation is canceled
      */
     public void save2File(final File directory,
-            final ExecutionMonitor exec) throws IOException {
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
         if (exec != null) {
             exec.setProgress(0.0, "Start saving histogram data model to file");
         }
-        final File settingsFile = new File(directory, CFG_SETTINGS_FILE);
-        final FileOutputStream settingsOS = new FileOutputStream(settingsFile);
-        final NodeSettings settings = new NodeSettings(CFG_SETTINGS_NAME);
-        m_xColSpec.save(settings);
-        settings.saveToXML(settingsOS);
+        final File dataFile = new File(directory, CFG_DATA_FILE);
+        final FileOutputStream os = new FileOutputStream(dataFile);
+        final GZIPOutputStream dataOS = new GZIPOutputStream(os);
+        final Config config = new NodeSettings(CFG_DATA);
+        final ConfigWO xConf = config.addConfig(CFG_X_COL_SPEC);
+        m_xColSpec.save(xConf);
         if (exec != null) {
             exec.setProgress(0.1, "Binning column specification saved");
             exec.setMessage("Start saving aggregation columns...");
         }
-        final File dataFile = new File(directory, CFG_DATA_FILE);
-        final FileOutputStream dataOS = new FileOutputStream(dataFile);
-        final ObjectOutputStream os = new ObjectOutputStream(dataOS);
-        os.writeObject(m_aggrColumns);
+        config.addBoolean(CFG_NOMINAL, m_binNominal);
+
+        final Config aggrConf = config.addConfig(CFG_AGGR_COLS);
+        aggrConf.addInt(CFG_AGGR_COL_COUNTER, m_aggrColumns.size());
+        int idx = 0;
+        for (final ColorColumn col : m_aggrColumns) {
+            final ConfigWO aggrColConf =
+                aggrConf.addConfig(CFG_COLOR_COL + idx++);
+            col.save2File(aggrColConf, exec);
+        }
         if (exec != null) {
             exec.setProgress(0.3, "Start saving bins...");
         }
-        os.writeBoolean(m_binNominal);
-        os.writeObject(m_bins);
-        os.writeObject(m_missingValueBin);
+        final ConfigWO binsConf = config.addConfig(CFG_BINS);
+        binsConf.addInt(CFG_BIN_COUNTER , m_bins.size());
+        idx = 0;
+        for (final BinDataModel bin : m_bins) {
+            final ConfigWO binConf = binsConf.addConfig(CFG_BIN + idx++);
+            bin.save2File(binConf, exec);
+        }
+        final ConfigWO missingBin = binsConf.addConfig(CFG_MISSING_BIN);
+        m_missingValueBin.save2File(missingBin, exec);
         if (exec != null) {
             exec.setProgress(0.8, "Start saving element colors...");
         }
-        os.writeObject(m_rowColors);
-        os.flush();
-        os.close();
+        final SortedSet<Color> rowColors = getRowColors();
+        final ConfigWO colorColsConf = config.addConfig(CFG_COLOR_COLS);
+        colorColsConf.addInt(CFG_ROW_COLOR_COUNTER, rowColors.size());
+        idx = 0;
+        for (final Color color : rowColors) {
+            colorColsConf.addInt(CFG_ROW_COLOR + idx++, color.getRGB());
+        }
+        config.saveToXML(dataOS);
         dataOS.flush();
         dataOS.close();
+        os.flush();
+        os.close();
         if (exec != null) {
             exec.setProgress(1.0, "Histogram data model saved");
         }
@@ -308,60 +338,71 @@ public class FixedHistogramDataModel {
      * @throws InvalidSettingsException if the x column specification
      * wasn't valid
      * @throws IOException if a file exception occurs
-     * @throws ClassNotFoundException if a class couldn't be deserialized
+     * @throws CanceledExecutionException if the operation is canceled
      */
     @SuppressWarnings("unchecked")
     public static FixedHistogramDataModel loadFromFile(final File directory,
             final ExecutionMonitor exec) throws InvalidSettingsException,
-            IOException, ClassNotFoundException {
+            IOException, CanceledExecutionException {
         if (exec != null) {
             exec.setProgress(0.0, "Start reading data from file");
         }
-        final File settingsFile = new File(directory, CFG_SETTINGS_FILE);
-        final FileInputStream in = new FileInputStream(settingsFile);
-        final ConfigRO settings = NodeSettings.loadFromXML(in);
-        final DataColumnSpec xColSpec = DataColumnSpec.load(settings);
+        final File settingsFile = new File(directory, CFG_DATA_FILE);
+        final FileInputStream is = new FileInputStream(settingsFile);
+        final GZIPInputStream inData = new GZIPInputStream(is);
+        final ConfigRO config;
+        try {
+            config = NodeSettings.loadFromXML(inData);
+        } catch (final IOException e) {
+            throw new IOException(
+                    "Unable to load internal data from previous version. "
+                    + "Please reexecute the histogram node.");
+        }
+        final Config xConfig = config.getConfig(CFG_X_COL_SPEC);
+        final DataColumnSpec xColSpec = DataColumnSpec.load(xConfig);
+        final boolean binNominal = config.getBoolean(CFG_NOMINAL);
         if (exec != null) {
             exec.setProgress(0.1, "Binning column specification loaded");
             exec.setProgress("Loading aggregation columns...");
         }
-        final File dataFile = new File(directory, CFG_DATA_FILE);
-        final FileInputStream dataIS = new FileInputStream(dataFile);
-        final ObjectInputStream os = new ObjectInputStream(dataIS);
-        final Collection<ColorColumn> aggrColumns =
-            (Collection<ColorColumn>)os.readObject();
+        final Config aggrConf = config.getConfig(CFG_AGGR_COLS);
+        final int aggrColCounter = aggrConf.getInt(CFG_AGGR_COL_COUNTER);
+        final ArrayList<ColorColumn> aggrCols =
+            new ArrayList<ColorColumn>(aggrColCounter);
+        for (int i = 0; i < aggrColCounter; i++) {
+            final Config aggrColConf = aggrConf.getConfig(CFG_COLOR_COL + i);
+            aggrCols.add(ColorColumn.loadFromFile(aggrColConf, exec));
+        }
         if (exec != null) {
             exec.setProgress(0.3, "Loading bins...");
         }
-        final boolean binNominal = os.readBoolean();
-        final List<BinDataModel> bins = (List<BinDataModel>)os.readObject();
-        //test if the workflow was saved before the aggregation model carve out
-        try {
-            if (!bins.isEmpty()) {
-                final Collection<BarDataModel> bars = bins.get(0).getBars();
-                if (!bars.isEmpty()) {
-                    bars.iterator().next().getElements();
-                }
-            }
-        } catch (final Exception e) {
-            final String msg =
-                "Unable to load internal data from previous version. "
-                + "Please reexecute the histogram node.";
-            LOGGER.warn(msg);
-            throw new InvalidSettingsException(msg);
+        final ConfigRO binsConf = config.getConfig(CFG_BINS);
+        final int binCounter = binsConf.getInt(CFG_BIN_COUNTER);
+        final List<BinDataModel> bins = new ArrayList<BinDataModel>(binCounter);
+        for (int i = 0; i < binCounter; i++) {
+            final Config binConf = binsConf.getConfig(CFG_BIN + i);
+            bins.add(BinDataModel.loadFromFile(binConf, exec));
         }
-        final BinDataModel missingBin = (BinDataModel)os.readObject();
+        final Config missingConfig = binsConf.getConfig(CFG_MISSING_BIN);
+        final BinDataModel missingBin =
+            BinDataModel.loadFromFile(missingConfig, exec);
         if (exec != null) {
-            exec.setProgress(0.8, "Loading element colors...");
+            exec.setProgress(0.9, "Loading element colors...");
         }
-        final SortedSet<Color> rowColors = (SortedSet<Color>)os.readObject();
+        final ConfigRO colorColsConf = config.getConfig(CFG_COLOR_COLS);
+        final int counter = colorColsConf.getInt(CFG_ROW_COLOR_COUNTER);
+        final SortedSet<Color> rowColors =
+            new TreeSet<Color>(HSBColorComparator.getInstance());
+        for (int i = 0; i < counter; i++) {
+            rowColors.add(new Color(colorColsConf.getInt(CFG_ROW_COLOR + i)));
+        }
         if (exec != null) {
-            exec.setProgress(1.0, "Histogram data mdoel loaded ");
+            exec.setProgress(1.0, "Histogram data model loaded ");
         }
-        //close the streams
-        os.close();
-        dataIS.close();
-        return new FixedHistogramDataModel(xColSpec, aggrColumns, binNominal,
+        //close the stream
+        inData.close();
+        is.close();
+        return new FixedHistogramDataModel(xColSpec, aggrCols, binNominal,
                 bins, missingBin, rowColors);
     }
 }

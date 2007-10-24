@@ -29,6 +29,11 @@ import java.awt.Color;
 import java.awt.geom.Arc2D;
 
 import org.knime.base.node.viz.aggregation.AggregationValSubModel;
+import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.Config;
 
 
 /**
@@ -49,6 +54,15 @@ public class PieSubSectionDataModel
         super(color, supportHiliting);
     }
 
+    /**Constructor for class PieSubSectionDataModel.
+     * @param config the config object to use
+     * @throws InvalidSettingsException if the config object is invalid
+     */
+    private PieSubSectionDataModel(final Config config)
+    throws InvalidSettingsException {
+        super(config);
+    }
+
     /**
      * @param arc the arc of this sub section
      * @param calculator the hilite calculator
@@ -56,5 +70,19 @@ public class PieSubSectionDataModel
     public void setSubSection(final Arc2D arc,
             final PieHiliteCalculator calculator) {
         setShape(arc, calculator);
+    }
+
+    /**
+     * @param config the config object to use
+     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @return the loaded {@link BarElementDataModel}
+     * @throws CanceledExecutionException if the operation is canceled
+     * @throws InvalidSettingsException if the config object is invalid
+     */
+    public static PieSubSectionDataModel loadFromFile(final Config config,
+            final ExecutionMonitor exec) throws CanceledExecutionException,
+            InvalidSettingsException {
+        exec.checkCanceled();
+        return new PieSubSectionDataModel(config);
     }
 }

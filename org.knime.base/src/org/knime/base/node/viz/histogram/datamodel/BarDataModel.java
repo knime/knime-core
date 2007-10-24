@@ -40,7 +40,13 @@ import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.aggregation.AggregationValModel;
 import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * This class represents one bar in the histogram. A bar corresponds to one
@@ -58,6 +64,10 @@ implements Serializable {
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(BarDataModel.class);
+
+    private static final String CFG_ELEMENT_COUNT = "elementCount";
+
+    private static final String CFG_BAR_ELEMENT = "barElement_";
 
     /**The surrounding rectangle is used to distinguish between multiple
      * selected aggregation columns.*/
@@ -97,6 +107,12 @@ implements Serializable {
             final double aggrSum, final boolean supportHiliting) {
         super(barName, color, elements, rowCounter, valueCounter, aggrSum,
                 supportHiliting);
+    }
+
+    private BarDataModel(final ConfigRO config,
+            final ExecutionMonitor exec)
+    throws InvalidSettingsException, CanceledExecutionException {
+        super(config, exec);
     }
 
     /**
@@ -359,7 +375,8 @@ implements Serializable {
                     || AggregationMethod.SUM.equals(aggrMethod))) {
                 stackedValRange = 0;
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Calculating stacked value range.Starting with: "
+                    LOGGER.debug(
+                            "Calculating stacked value range.Starting with: "
                             + stackedValRange);
                 }
                 for (final BarElementDataModel element : getElements()) {
@@ -605,5 +622,53 @@ implements Serializable {
                 elementClones, getRowCount(), getValueCount(),
                 getAggregationSum(), supportsHiliting());
         return clone;
+    }
+
+    /**
+     * @param config the config object to use
+     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @return the {@link BarDataModel}
+     * @throws CanceledExecutionException if the operation is canceled
+     * @throws InvalidSettingsException if the config object is invalid
+     */
+    public static BarDataModel loadFromFile(final Config config,
+            final ExecutionMonitor exec) throws CanceledExecutionException,
+            InvalidSettingsException {
+        return new BarDataModel(config, exec);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveElements(final Collection<BarElementDataModel> elements,
+            final ConfigWO config, final ExecutionMonitor exec)
+            throws CanceledExecutionException {
+        config.addInt(CFG_ELEMENT_COUNT, elements.size());
+        int idx = 0;
+        for (final BarElementDataModel element : elements) {
+            final ConfigWO elementConfig =
+                config.addConfig(CFG_BAR_ELEMENT + idx++);
+            element.save2File(elementConfig, exec);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Collection<BarElementDataModel> loadElements(
+            final ConfigRO config,
+            final ExecutionMonitor exec) throws CanceledExecutionException,
+            InvalidSettingsException {
+        final int counter = config.getInt(CFG_ELEMENT_COUNT);
+        final Collection<BarElementDataModel> elements =
+            new ArrayList<BarElementDataModel>(counter);
+        for (int i = 0; i < counter; i++) {
+            final Config binConf = config.getConfig(CFG_BAR_ELEMENT + i);
+                elements.add(BarElementDataModel.loadFromFile(binConf, exec));
+        }
+        exec.checkCanceled();
+        return elements;
     }
 }

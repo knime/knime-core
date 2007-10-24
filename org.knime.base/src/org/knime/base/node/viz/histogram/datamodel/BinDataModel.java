@@ -44,6 +44,12 @@ import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * This class represents one bin in the histogram. A bin represents a value of
@@ -59,12 +65,20 @@ public class BinDataModel implements Serializable {
     /**The color of the bar if no aggregation column is selected.*/
     private static final Color NO_AGGR_COL_COLOR = Color.GRAY;
 
+    private static final String CFG_X_CAPTION = "xCaption";
+    private static final String CFG_BARS = "bars";
+    private static final String CFG_BAR = "bar_";
+    private static final String CFG_LOWER_BOUND = "lowerBound";
+    private static final String CFG_UPPER_BOUND = "upperBound";
+    private static final String CFG_BAR_COUNTER = "barCounter";
+    private static final String CFG_HAS_BOUNDARIES = "hasBoundaries";
+
+
     private final String m_xAxisCaption;
     private final DataCell m_xAxisCaptionCell;
     private final Double m_lowerBound;
     private final Double m_upperBound;
-    private final Map<Color, BarDataModel> m_bars =
-        new HashMap<Color, BarDataModel>();
+    private final Map<Color, BarDataModel> m_bars;
     private int m_rowCounter = 0;
 
     //visual variables
@@ -84,13 +98,26 @@ public class BinDataModel implements Serializable {
      */
     public BinDataModel(final String xAxisCaption, final double lowerBound,
             final double upperBound) {
+        this(xAxisCaption, new Double(lowerBound), new Double(upperBound),
+                new HashMap<Color, BarDataModel>());
+    }
+
+    /**Constructor for class BinDataModel.
+     * @param xAxisCaption the caption of this bin on the x axis
+     * @param lowerBound the lower bound of the bin interval
+     * @param upperBound the higher bound of the bin interval
+     * @param bars the bar data models of this bin
+     */
+    private BinDataModel(final String xAxisCaption, final Double lowerBound,
+            final Double upperBound, final Map<Color, BarDataModel> bars) {
         if (xAxisCaption == null) {
             throw new IllegalArgumentException("Caption must not be null");
         }
         m_xAxisCaption = xAxisCaption;
         m_xAxisCaptionCell = new StringCell(xAxisCaption);
-        m_lowerBound = new Double(lowerBound);
-        m_upperBound = new Double(upperBound);
+        m_lowerBound = lowerBound;
+        m_upperBound = upperBound;
+        m_bars = bars;
     }
 
     /**
@@ -612,5 +639,64 @@ public class BinDataModel implements Serializable {
             clone.m_bars.put(barClone.getColor(), barClone);
         }
         return clone;
+    }
+
+    /**
+     * @param config the config object to use
+     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @throws CanceledExecutionException if the operation is canceled
+     */
+    public void save2File(final ConfigWO config,
+            final ExecutionMonitor exec) throws CanceledExecutionException {
+        config.addString(CFG_X_CAPTION, getXAxisCaption());
+        if (getLowerBound() == null || getUpperBound() == null) {
+            config.addBoolean(CFG_HAS_BOUNDARIES, false);
+        } else {
+            config.addBoolean(CFG_HAS_BOUNDARIES, true);
+            config.addDouble(CFG_LOWER_BOUND, getLowerBound().doubleValue());
+            config.addDouble(CFG_UPPER_BOUND, getUpperBound().doubleValue());
+        }
+        final ConfigWO barsConf = config.addConfig(CFG_BARS);
+        final Collection<BarDataModel> bars = getBars();
+        barsConf.addInt(CFG_BAR_COUNTER, bars.size());
+        int idx = 0;
+        for (final BarDataModel bar : bars) {
+            final ConfigWO barConfig = barsConf.addConfig(CFG_BAR + idx++);
+            bar.save2File(barConfig, exec);
+        }
+        exec.checkCanceled();
+    }
+
+    /**
+     * @param config the config object to use
+     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @return the {@link ColorColumn}
+     * @throws CanceledExecutionException if the operation is canceled
+     * @throws InvalidSettingsException if the config object is invalid
+     */
+    public static BinDataModel loadFromFile(final ConfigRO config,
+            final ExecutionMonitor exec) throws CanceledExecutionException,
+            InvalidSettingsException {
+        final String caption = config.getString(CFG_X_CAPTION);
+        final Double lowerBound;
+        final Double upperBound;
+        if (config.getBoolean(CFG_HAS_BOUNDARIES)) {
+            lowerBound = new Double(config.getDouble(CFG_LOWER_BOUND));
+            upperBound = new Double(config.getDouble(CFG_UPPER_BOUND));
+        } else {
+            lowerBound = null;
+            upperBound = null;
+        }
+        final ConfigRO barsConf = config.getConfig(CFG_BARS);
+        final int barCounter = barsConf.getInt(CFG_BAR_COUNTER);
+        final Map<Color, BarDataModel> bars =
+            new HashMap<Color, BarDataModel>(barCounter);
+        for (int i = 0; i < barCounter; i++) {
+            final Config binConf = barsConf.getConfig(CFG_BAR + i);
+            final BarDataModel bar = BarDataModel.loadFromFile(binConf, exec);
+            bars.put(bar.getColor(), bar);
+        }
+        exec.checkCanceled();
+        return new BinDataModel(caption, lowerBound, upperBound, bars);
     }
 }

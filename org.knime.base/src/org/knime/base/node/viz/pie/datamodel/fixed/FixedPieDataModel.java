@@ -36,6 +36,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.node.viz.pie.datamodel.PieDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
@@ -47,7 +49,12 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 
 
@@ -60,7 +67,18 @@ public class FixedPieDataModel extends PieDataModel {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(FixedPieDataModel.class);
     /**The name of the data file which contains all data in serialized form.*/
-    private static final String CFG_DATA_FILE = "dataFile";
+    private static final String CFG_DATA_FILE = "dataFile.xml.gz";
+    private static final String CFG_DATA = "fixedPieDataModel";
+    private static final String CFG_PIE_COL = "pieColumn";
+    private static final String CFG_NUMERIC_PIE_COL = "isNumericPieCol";
+    private static final String CFG_AGGR_COL = "aggrColumn";
+    private static final String CFG_SECTIONS = "sections";
+    private static final String CFG_SECTION_COUNT = "sectionCount";
+    private static final String CFG_SECTION = "section_";
+    private static final String CFG_MISSING_SECTION = "missingSection";
+    private static final String CFG_HILITING = "hiliting";
+    private static final String CFG_DETAILS = "details";
+
 
     private final String m_pieCol;
 
@@ -167,48 +185,6 @@ public class FixedPieDataModel extends PieDataModel {
     }
 
     /**
-     * @param directory the directory to write to
-     * @param exec the {@link ExecutionMonitor} to provide progress messages
-     * @throws IOException if a file exception occurs
-     * @throws CanceledExecutionException if the operation was canceled
-     */
-    public void save2File(final File directory, final ExecutionMonitor exec)
-    throws IOException, CanceledExecutionException {
-        if (exec != null) {
-            exec.setProgress(0.0, "Start saving histogram data model to file");
-        }
-        final File dataFile = new File(directory, CFG_DATA_FILE);
-        final FileOutputStream dataOS = new FileOutputStream(dataFile);
-        final ObjectOutputStream os = new ObjectOutputStream(dataOS);
-        os.writeObject(m_pieCol);
-        os.writeBoolean(m_numericPieCol);
-        os.writeObject(m_aggrCol);
-        if (exec != null) {
-            exec.setProgress(0.3, "Start saving sections...");
-            exec.checkCanceled();
-        }
-        os.writeObject(getSections());
-        if (exec != null) {
-            exec.setProgress(0.8, "Start saving missing section...");
-            exec.checkCanceled();
-        }
-        os.writeObject(getMissingSection());
-        if (exec != null) {
-            exec.setProgress(0.9, "Start saving hiliting flag...");
-            exec.checkCanceled();
-        }
-        os.writeBoolean(supportsHiliting());
-        os.writeBoolean(detailsAvailable());
-        os.flush();
-        os.close();
-        dataOS.flush();
-        dataOS.close();
-        if (exec != null) {
-            exec.setProgress(1.0, "Pie data model saved");
-        }
-    }
-
-    /**
      * @return the name of the pie column
      */
     public String getPieColName() {
@@ -220,59 +196,6 @@ public class FixedPieDataModel extends PieDataModel {
      */
     public String getAggrColName() {
         return m_aggrCol;
-    }
-
-    /**
-     * @param directory the directory to write to
-     * @param exec the {@link ExecutionMonitor} to provide progress messages
-     * @return the data model
-     * wasn't valid
-     * @throws IOException if a file exception occurs
-     * @throws ClassNotFoundException if a class couldn't be deserialized
-     * @throws CanceledExecutionException if the operation was canceled
-     */
-    @SuppressWarnings("unchecked")
-    public static FixedPieDataModel loadFromFile(final File directory,
-            final ExecutionMonitor exec)
-            throws IOException, ClassNotFoundException,
-            CanceledExecutionException {
-        if (exec != null) {
-            exec.setProgress(0.0, "Start reading data from file");
-        }
-        final File dataFile = new File(directory, CFG_DATA_FILE);
-        final FileInputStream dataIS = new FileInputStream(dataFile);
-        final ObjectInputStream os = new ObjectInputStream(dataIS);
-        final String pieCol = (String)os.readObject();
-        final boolean numericPieCol = os.readBoolean();
-        final String aggrCol = (String)os.readObject();
-        if (exec != null) {
-            exec.setProgress(0.3, "Loading sections...");
-            exec.checkCanceled();
-        }
-        final List<PieSectionDataModel> sections =
-            (List<PieSectionDataModel>)os.readObject();
-
-        if (exec != null) {
-            exec.setProgress(0.8, "Loading missing section...");
-            exec.checkCanceled();
-        }
-        final PieSectionDataModel missingSection = (
-                PieSectionDataModel)os.readObject();
-
-        if (exec != null) {
-            exec.setProgress(0.0, "Loading hiliting flag...");
-            exec.checkCanceled();
-        }
-        final boolean supportHiliting = os.readBoolean();
-        final boolean detailsAvailable = os.readBoolean();
-        if (exec != null) {
-            exec.setProgress(1.0, "Pie data mdoel loaded ");
-        }
-        //close the streams
-        os.close();
-        dataIS.close();
-        return new FixedPieDataModel(pieCol, numericPieCol, aggrCol, sections,
-                missingSection, supportHiliting, detailsAvailable);
     }
 
     /**
@@ -366,5 +289,111 @@ public class FixedPieDataModel extends PieDataModel {
         LOGGER.debug("Exiting getClonedMissingSection() of class "
                 + "FixedPieDataModel.");
         return missingClone;
+    }
+
+    /**
+     * @param directory the directory to write to
+     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @throws IOException if a file exception occurs
+     * @throws CanceledExecutionException if the operation was canceled
+     */
+    public void save2File(final File directory, final ExecutionMonitor exec)
+    throws IOException, CanceledExecutionException {
+        if (exec != null) {
+            exec.setProgress(0.0, "Start saving histogram data model to file");
+        }
+        final File dataFile = new File(directory, CFG_DATA_FILE);
+        final FileOutputStream os = new FileOutputStream(dataFile);
+        final GZIPOutputStream dataOS = new GZIPOutputStream(os);
+        final Config config = new NodeSettings(CFG_DATA);
+        config.addString(CFG_PIE_COL, m_pieCol);
+        config.addBoolean(CFG_NUMERIC_PIE_COL, m_numericPieCol);
+        config.addString(CFG_AGGR_COL, m_aggrCol);
+        config.addBoolean(CFG_HILITING, supportsHiliting());
+        config.addBoolean(CFG_DETAILS, detailsAvailable());
+        if (exec != null) {
+            exec.setProgress(0.3, "Start saving sections...");
+            exec.checkCanceled();
+        }
+        final Config sectionsConf = config.addConfig(CFG_SECTIONS);
+        sectionsConf.addInt(CFG_SECTION_COUNT , m_sections.size());
+        int idx = 0;
+        for (final PieSectionDataModel section : m_sections) {
+            final ConfigWO sectionConf =
+                sectionsConf.addConfig(CFG_SECTION + idx++);
+            section.save2File(sectionConf, exec);
+        }
+        if (exec != null) {
+            exec.setProgress(0.8, "Start saving missing section...");
+            exec.checkCanceled();
+        }
+        final ConfigWO missingSection =
+            sectionsConf.addConfig(CFG_MISSING_SECTION);
+        m_missingSection.save2File(missingSection, exec);
+        config.saveToXML(dataOS);
+        dataOS.flush();
+        dataOS.close();
+        os.flush();
+        os.close();
+        if (exec != null) {
+            exec.setProgress(1.0, "Pie data model saved");
+        }
+    }
+
+    /**
+     * @param directory the directory to write to
+     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @return the data model
+     * wasn't valid
+     * @throws IOException if a file exception occurs
+     * @throws CanceledExecutionException if the operation was canceled
+     * @throws InvalidSettingsException if the file is invalid
+     */
+    @SuppressWarnings("unchecked")
+    public static FixedPieDataModel loadFromFile(final File directory,
+            final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException,
+            InvalidSettingsException {
+        if (exec != null) {
+            exec.setProgress(0.0, "Start reading data from file");
+        }
+        final File settingsFile = new File(directory, CFG_DATA_FILE);
+        final FileInputStream is = new FileInputStream(settingsFile);
+        final GZIPInputStream inData = new GZIPInputStream(is);
+        final ConfigRO config = NodeSettings.loadFromXML(inData);
+        final String pieCol = config.getString(CFG_PIE_COL);
+        final boolean numericPieCol = config.getBoolean(CFG_NUMERIC_PIE_COL);
+        final String aggrCol = config.getString(CFG_AGGR_COL);
+        final boolean supportHiliting = config.getBoolean(CFG_HILITING);
+        final boolean detailsAvailable = config.getBoolean(CFG_DETAILS);
+        if (exec != null) {
+            exec.setProgress(0.3, "Loading sections...");
+            exec.checkCanceled();
+        }
+        final Config sectionsConf = config.getConfig(CFG_SECTIONS);
+        final int counter = sectionsConf.getInt(CFG_SECTION_COUNT);
+        final List<PieSectionDataModel> sections =
+            new ArrayList<PieSectionDataModel>(counter);
+        for (int i = 0; i < counter; i++) {
+            final Config sectionConf = sectionsConf.getConfig(CFG_SECTION + i);
+            sections.add(PieSectionDataModel.loadFromFile(sectionConf, exec));
+        }
+
+        if (exec != null) {
+            exec.setProgress(0.9, "Loading missing section...");
+            exec.checkCanceled();
+        }
+        final Config missingConf = sectionsConf.getConfig(CFG_MISSING_SECTION);
+        final PieSectionDataModel missingSection =
+            PieSectionDataModel.loadFromFile(missingConf, exec);
+
+        if (exec != null) {
+            exec.setProgress(1.0, "Pie data model loaded ");
+        }
+        //close the stream
+        inData.close();
+        is.close();
+        return new FixedPieDataModel(pieCol, numericPieCol, aggrCol, sections,
+                missingSection, supportHiliting, detailsAvailable);
     }
 }

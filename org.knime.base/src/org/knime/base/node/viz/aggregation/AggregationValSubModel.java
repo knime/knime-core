@@ -40,7 +40,12 @@ import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * This class holds the data of a sub model which represents rows of the
@@ -56,6 +61,12 @@ implements Serializable, AggregationModel<S, H> {
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(AggregationValSubModel.class);
+
+    private static final String CFG_COLOR_RGB = "colorRGB";
+    private static final String CFG_HILITING = "hiliting";
+    private static final String CFG_AGGR_SUM = "aggrSum";
+    private static final String CFG_ROW_COUNTER = "rowCount";
+    private static final String CFG_VALUE_COUNTER = "valueCount";
 
     private final Color m_color;
     private final boolean m_supportHiliting;
@@ -101,17 +112,14 @@ implements Serializable, AggregationModel<S, H> {
      * @param aggrSum the sum of the aggregation values
      * @param valueCounter the number of aggregation values
      * @param rowCounter the number of rows incl. missing values
-     * @param selected <code>true</code> if this element is selected
      */
     protected AggregationValSubModel(final Color color,
             final boolean supportHiliting, final double aggrSum,
-            final int valueCounter, final int rowCounter,
-            final boolean selected) {
+            final int valueCounter, final int rowCounter) {
         m_color = color;
         m_aggrSum = aggrSum;
         m_valueCounter = valueCounter;
         m_rowCounter = rowCounter;
-        m_isSelected = selected;
         m_supportHiliting = supportHiliting;
         if (m_supportHiliting) {
             m_rowKeys  = new HashSet<DataCell>();
@@ -120,6 +128,19 @@ implements Serializable, AggregationModel<S, H> {
             m_rowKeys = null;
             m_hilitedRowKeys = null;
         }
+    }
+
+    /**Constructor for class AggregationValSubModel.
+     * @param config the config object to use
+     * @throws InvalidSettingsException if the config object is invalid
+     */
+    protected AggregationValSubModel(final ConfigRO config)
+    throws InvalidSettingsException {
+        this(new Color(config.getInt(CFG_COLOR_RGB)),
+        config.getBoolean(CFG_HILITING),
+        config.getDouble(CFG_AGGR_SUM),
+        config.getInt(CFG_ROW_COUNTER),
+        config.getInt(CFG_VALUE_COUNTER));
     }
 
     /**
@@ -446,5 +467,20 @@ implements Serializable, AggregationModel<S, H> {
         LOGGER.debug("Time for cloning. " + durationTime + " ms");
         LOGGER.debug("Exiting clone() of class AggregationValSubModel.");
         return clone;
+    }
+
+    /**
+     * @param config the config object to use
+     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @throws CanceledExecutionException if the operation is canceled
+     */
+    public void save2File(final ConfigWO config,
+            final ExecutionMonitor exec) throws CanceledExecutionException {
+        config.addInt(CFG_COLOR_RGB, getColor().getRGB());
+        config.addBoolean(CFG_HILITING, supportsHiliting());
+        config.addDouble(CFG_AGGR_SUM, getAggregationSum());
+        config.addInt(CFG_ROW_COUNTER, getRowCount());
+        config.addInt(CFG_VALUE_COUNTER, getValueCount());
+        exec.checkCanceled();
     }
 }
