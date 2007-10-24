@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.11.2005 (mb): created
  *   2006-05-26 (tm): reviewed
@@ -43,7 +43,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
  * Provides a component for column filtering. This component for the default
  * dialog allows to enter a list of columns to include from the set of available
  * columns.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class DialogComponentColumnFilter extends DialogComponent {
@@ -51,7 +51,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
     /* the index of the port to take the table (spec) from. */
     private final int m_inPortIndex;
 
-    private ColumnFilterPanel m_columnFilter;
+    private final ColumnFilterPanel m_columnFilter;
 
     // the table spec that was sent last into the filter component
     private DataTableSpec m_specInFilter;
@@ -61,10 +61,10 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * include list, button panel to shift elements between the two lists, and
      * the exclude list. The settings model will hold the names of the columns
      * to be in- or excluded.
-     * 
+     *
      * @param model a string array model that stores the value
      * @param inPortIndex the index of the port whose table is filtered.
-     * 
+     *
      */
     @SuppressWarnings("unchecked")
     public DialogComponentColumnFilter(final SettingsModelFilterString model,
@@ -78,7 +78,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * the exclude list. The include list then will contain all values to
      * filter. The allowed types filters out every column which is not
      * compatible with the allowed type.
-     * 
+     *
      * @param model a string array model that stores the value
      * @param inPortIndex the index of the port whose table is filtered.
      * @param allowedTypes filter for the columns all column not compatible with
@@ -116,12 +116,12 @@ public class DialogComponentColumnFilter extends DialogComponent {
     @Override
     protected void updateComponent() {
         // update component only if content is out of sync
-        SettingsModelFilterString filterModel =
+        final SettingsModelFilterString filterModel =
                 (SettingsModelFilterString)getModel();
-        Set<String> compIncl = m_columnFilter.getIncludedColumnSet();
-        Set<String> compExcl = m_columnFilter.getExcludedColumnSet();
-        List<String> modelIncl = filterModel.getIncludeList();
-        List<String> modelExcl = filterModel.getExcludeList();
+        final Set<String> compIncl = m_columnFilter.getIncludedColumnSet();
+        final Set<String> compExcl = m_columnFilter.getExcludedColumnSet();
+        final List<String> modelIncl = filterModel.getIncludeList();
+        final List<String> modelExcl = filterModel.getExcludeList();
 
         boolean update =
                 (compIncl.size() != modelIncl.size())
@@ -130,7 +130,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
         if (!update) {
             // update if the current spec and the spec we last updated with
             // are different
-            DataTableSpec currSpec = getLastTableSpec(m_inPortIndex);
+            final DataTableSpec currSpec = getLastTableSpec(m_inPortIndex);
             if (currSpec == null) {
                 update = (m_specInFilter != null);
             } else {
@@ -138,7 +138,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
             }
         }
         if (!update) {
-            for (String s : compIncl) {
+            for (final String s : compIncl) {
                 if (!modelIncl.contains(s)) {
                     update = true;
                     break;
@@ -146,7 +146,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
             }
         }
         if (!update) {
-            for (String s : compExcl) {
+            for (final String s : compExcl) {
                 if (!modelExcl.contains(s)) {
                     update = true;
                     break;
@@ -168,10 +168,10 @@ public class DialogComponentColumnFilter extends DialogComponent {
      * transfers the settings from the component into the settings model.
      */
     private void updateModel() {
-        Set<String> inclList = m_columnFilter.getIncludedColumnSet();
-        Set<String> exclList = m_columnFilter.getExcludedColumnSet();
+        final Set<String> inclList = m_columnFilter.getIncludedColumnSet();
+        final Set<String> exclList = m_columnFilter.getExcludedColumnSet();
 
-        SettingsModelFilterString filterModel =
+        final SettingsModelFilterString filterModel =
                 (SettingsModelFilterString)getModel();
         filterModel.setIncludeList(inclList);
         filterModel.setExcludeList(exclList);
@@ -179,7 +179,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
 
     /**
      * We store the values from the panel in the model now.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -209,13 +209,31 @@ public class DialogComponentColumnFilter extends DialogComponent {
 
     private void recSetEnabledContainer(final Container cont, final boolean b) {
         cont.setEnabled(b);
-        for (Component c : cont.getComponents()) {
+        for (final Component c : cont.getComponents()) {
             if (c instanceof Container) {
                 recSetEnabledContainer((Container)c, b);
             } else {
                 c.setEnabled(b);
             }
         }
+    }
+
+    /**
+     * Sets the title of the include panel.
+     *
+     * @param title the new title
+     */
+    public void setIncludeTitle(final String title) {
+        m_columnFilter.setIncludeTitle(title);
+    }
+
+    /**
+     * Sets the title of the exclude panel.
+     *
+     * @param title the new title
+     */
+    public void setExcludeTitle(final String title) {
+        m_columnFilter.setExcludeTitle(title);
     }
 
     /**
