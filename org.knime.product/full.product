@@ -56,9 +56,9 @@ Uses: Java, GEF, Log4J
       <feature id="org.eclipse.rcp" version="0.0.0"/>
       <feature id="org.eclipse.gef" version="0.0.0"/>
       <feature id="org.eclipse.platform" version="0.0.0"/>
+      <feature id="org.eclipse.birt" version="2.2.0.v20070529-7M7M-3aOvPNTlqymXkU13JtNYSIx"/>
       <feature id="org.knime.features.base" version="0.0.0"/>
       <feature id="org.knime.features.chem.types" version="0.0.0"/>
-      <feature id="org.knime.features.ext.birt" version="0.0.0"/>
       <feature id="org.knime.features.ext.chem.cdk" version="0.0.0"/>
       <feature id="org.knime.features.ext.chem.tools" version="0.0.0"/>
       <feature id="org.knime.features.ext.chem.plants" version="1.3.0.ALPHA"/>
@@ -70,6 +70,7 @@ Uses: Java, GEF, Log4J
       <feature id="org.knime.features.testing" version="0.0.0"/>
       <feature id="org.knime.features.product" version="0.0.0"/>
       <feature id="org.knime.features.ext.jep" version="1.3.0.ALPHA"/>
+      <feature id="org.knime.features.ext.birt" version="0.0.0"/>
    </features>
 
 </product>
