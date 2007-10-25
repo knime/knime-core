@@ -130,14 +130,16 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
     throws CanceledExecutionException {
         LOGGER.debug("Entering createHistogramModel(exec, table) "
                 + "of class FixedColumnHistogramNodeModel.");
-        if (noOfRows == 0) {
-            m_model = null;
-            return;
-        }
         final Collection<ColorColumn> aggrColumns = getAggrColumns();
         final int noOfBins = m_noOfBins.getIntValue();
         m_model =
             new FixedHistogramDataModel(getXColSpec(), aggrColumns, noOfBins);
+        if (noOfRows < 1) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("No rows available");
+            }
+            return;
+        }
         exec.setMessage("Adding data rows to histogram...");
         final double progressPerRow = 1.0 / noOfRows;
         double progress = 0.0;
