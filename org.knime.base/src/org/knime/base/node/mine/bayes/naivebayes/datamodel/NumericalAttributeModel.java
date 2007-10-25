@@ -40,8 +40,7 @@ import org.knime.core.util.MutableInteger;
 
 /**
  *This {@link AttributeModel} implementation calculates the probability for
- *numerical attributes by assuming a Gaussian distribution of the data. Each
- *class value is represented by a {@link NumericalClassValue} object.
+ *numerical attributes by assuming a Gaussian distribution of the data.
  * @author Tobias Koetter, University of Konstanz
  */
 class NumericalAttributeModel extends AttributeModel {

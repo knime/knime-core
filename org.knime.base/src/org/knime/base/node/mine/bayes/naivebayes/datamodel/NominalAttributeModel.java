@@ -42,8 +42,7 @@ import org.knime.core.util.MutableInteger;
 
 /**
  * This {@link AttributeModel} implementation calculates the probability for
- * all nominal attributes. Each class value is represented by a
- * {@link NominalClassValue} object.
+ * all nominal attributes.
  * @author Tobias Koetter, University of Konstanz
  */
 class NominalAttributeModel extends AttributeModel {
