@@ -497,10 +497,8 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         if (columnName == null) {
             return -1;
         }
-        if (m_colIndexMap.get(columnName) == null) {
-            return -1;
-        }
-        return m_colIndexMap.get(columnName);
+        Integer result = m_colIndexMap.get(columnName);
+        return result == null ? -1 : result;
     }
 
     /**
@@ -603,7 +601,7 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         return m_columnSpecs[m_sizeHandlerColIndex].getSizeHandler().getSize(
                 row.getCell(m_sizeHandlerColIndex));
     }
-
+    
     /**
      * {@inheritDoc}
      */
@@ -762,6 +760,38 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
             mergedcolspecs[i] = mergedColSpecCreators[i].createSpec();
         }
         return new DataTableSpec(mergedcolspecs);
+    }
+    
+    /**
+     * Returns a column name, which is not contained in specified
+     * <code>DataTableSpec</code>. This method is used when the argument spec
+     * serves as basis for a new <code>DataTableSpec</code>, which is
+     * extended by additional columns. In order to ensure uniqueness of column
+     * names, one can use this method to check if the argument string is
+     * contained in the argument spec. If this is the case, this method will
+     * &quot;uniquify&quot; the argument string and append a 
+     * &quot;<i>(# i)</i>&quot; where <i>i</i> is a running index.
+     * 
+     * @param spec The argument spec to check.
+     * @param columnName The desired column name
+     * @return <code>columnName</code> if it is not contained in the argument
+     *         spec or <code>columnName</code> amended by some index
+     *         otherwise.
+     * @throws NullPointerException 
+     *         If one of the arguments is <code>null</code>.
+     */
+    public static String getUniqueColumnName(final DataTableSpec spec,
+            final String columnName) {
+        if (columnName == null) {
+            throw new NullPointerException("Column name must not be null.");
+        }
+        int uniquifier = 1;
+        String result = columnName;
+        while (spec.containsName(result)) {
+            result = columnName + " (#" + uniquifier + ")";
+            uniquifier++;
+        }
+        return result;
     }
 
     /**
