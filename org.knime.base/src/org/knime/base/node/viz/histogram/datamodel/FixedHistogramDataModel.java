@@ -30,6 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -355,6 +356,8 @@ public class FixedHistogramDataModel {
             is = new FileInputStream(settingsFile);
             inData = new GZIPInputStream(is);
             config = NodeSettings.loadFromXML(inData);
+        } catch (final FileNotFoundException e) {
+            throw e;
         } catch (final IOException e) {
             LOGGER.error("Unable to load histogram data: " + e.getMessage());
             throw new IOException("Please reexecute the histogram node. "
