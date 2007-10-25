@@ -28,7 +28,8 @@ package org.knime.base.node.viz.plotter.dendrogram;
 /**
  * A generic tree with a content, a reference to the parent node and with a left
  * child and a right child. Everything might be <code>null</code> except of the
- * content, i.e. the children and the parent might be added later but only once. 
+ * content, i.e. the children and the parent might be added later but only 
+ * once. 
  * 
  * Nodes without children are considered ot be leaf nodes, i.e. 
  * {@link org.knime.base.node.viz.plotter.dendrogram.BinaryTreeNode#isLeaf()} 

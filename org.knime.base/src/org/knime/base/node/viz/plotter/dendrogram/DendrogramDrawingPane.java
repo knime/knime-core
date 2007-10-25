@@ -129,8 +129,7 @@ public class DendrogramDrawingPane extends AbstractDrawingPane {
      * selected clusteres are visualized through color and emphasized line 
      * thickness.
      * 
-     * @see org.knime.base.node.viz.plotter.AbstractDrawingPane
-     * #paintContent(java.awt.Graphics)
+     * {@inheritDoc}
      */
     @Override
     public void paintContent(final Graphics g) {
@@ -202,7 +201,7 @@ public class DendrogramDrawingPane extends AbstractDrawingPane {
      * The original (not mapped) distance of the clustering between the two
      * subnodes. 
      * 
-     * @see javax.swing.JComponent#getToolTipText(java.awt.event.MouseEvent)
+     * {@inheritDoc}
      */
     @Override
     public String getToolTipText(final MouseEvent event) {

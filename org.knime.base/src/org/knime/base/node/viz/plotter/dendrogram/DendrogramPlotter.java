@@ -231,7 +231,8 @@ public class DendrogramPlotter extends ScatterPlotter {
         
     }
     
-    private void getRowKeys(final DendrogramNode node, final Set<DataCell> ids) {
+    private void getRowKeys(final DendrogramNode node, 
+            final Set<DataCell> ids) {
         if (node == null) {
             return;
         }
