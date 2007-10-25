@@ -121,11 +121,9 @@ public class GroupByNodeDialogPane extends DefaultNodeSettingsPane {
 
         final DialogComponent enableHilite = new DialogComponentBoolean(
                 m_enableHilite, "Enable hiliting");
-        enableHilite.setToolTipText("Consumes more memory");
 
         final DialogComponent sortInMemory = new DialogComponentBoolean(
                 m_sortInMemory, "Sort in memory");
-        sortInMemory.setToolTipText("Consumes more memory");
 
         final DialogComponent moveGroupCols2Front = new DialogComponentBoolean(
                 m_moveGroupCols2Front, "Move group column(s) to front");

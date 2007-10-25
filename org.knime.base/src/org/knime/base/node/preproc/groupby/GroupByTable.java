@@ -534,7 +534,8 @@ public class GroupByTable {
             } else {
                 final AggregationMethod method = getAggregationMethod(colSpec,
                         numericalColMethod, nominalColMethod);
-                newName = method.getColumnName(origName);
+                final String aggrColName = method.getColumnName(origName);
+                newName = DataTableSpec.getUniqueColumnName(spec, aggrColName);
                 newType = method.getColumnType(origType);
                 if (moveGroupCols2Front) {
                     idx = inclList.size() + otherIdx++;
