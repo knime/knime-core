@@ -29,6 +29,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.knime.base.node.viz.aggregation.AggregationMethod;
 import org.knime.base.node.viz.pie.datamodel.PieDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieSectionDataModel;
 import org.knime.base.node.viz.pie.datamodel.PieVizModel;
@@ -118,7 +119,12 @@ public class InteractivePieVizModel extends PieVizModel {
                 && m_aggrColSpec.getName().equals(aggrColName)) {
             return false;
         }
-        m_aggrColSpec = getColSpec(aggrColName);
+        if (aggrColName == null) {
+            m_aggrColSpec = null;
+            setAggregationMethod(AggregationMethod.COUNT);
+        } else {
+            m_aggrColSpec = getColSpec(aggrColName);
+        }
         createSectionsWithData();
         return true;
     }
