@@ -321,9 +321,7 @@ public class RowKeyNodeModel extends NodeModel {
     }
 
     /**
-     * @throws InvalidSettingsException
-     * @see org.knime.core.node.NodeModel
-     *      #configure(org.knime.core.data.DataTableSpec[])
+     * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
