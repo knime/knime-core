@@ -257,6 +257,10 @@ public abstract class PiePlotter
         m_vizModel = vizModel;
         m_vizModel.setDrawingSpace(getDrawingPaneDimension());
         updatePropertiesPanel(vizModel);
+        if (vizModel.supportsHiliting()) {
+            //set the hilite information
+            vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
+        }
         updatePaintModel();
     }
 
