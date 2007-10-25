@@ -32,6 +32,8 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.JSpinner.DefaultEditor;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -49,45 +51,107 @@ import org.knime.core.node.NotConfigurableException;
  */
 public class DialogComponentDoubleRange extends DialogComponent {
 
-    private JLabel m_label;
+    private final JLabel m_label;
 
-    private JLabel m_labelMin;
+    private final JLabel m_labelMin;
 
-    private JLabel m_labelMax;
+    private final JLabel m_labelMax;
 
-    private JSpinner m_spinnerMin;
+    private final JSpinner m_spinnerMin;
 
-    private JSpinner m_spinnerMax;
+    private final JSpinner m_spinnerMax;
 
     /**
-     * Constructor.
+     * Constructor assumes the range between 0 and 10.
      * 
      * @param model stores the double numbers entered.
      * @param label the text showing next to the components.
+     * @deprecated use {@link #DialogComponentDoubleRange(
+     * SettingsModelDoubleRange, double, double, double, String)} or this
+     * {@link #DialogComponentDoubleRange(SettingsModelDoubleRange, 
+     * double, double, double, double, double, double, String)} constructor 
+     * instead.
      */
+    @Deprecated
     public DialogComponentDoubleRange(final SettingsModelDoubleRange model,
             final String label) {
+        // old behavior
+        this(model, 0.0, 10.0, 0.01, 0.0, 10.0, 0.1, label);
+    }
+    
+    /**
+     * Creates two spinner to enter the lower and upper value of the range.
+     * @param model stores the double numbers entered
+     * @param lowerMin minimum value to be entered
+     * @param upperMax maximum value to be entered
+     * @param stepSize step size for the spinners
+     * @param label label for this component
+     */
+    public DialogComponentDoubleRange(final SettingsModelDoubleRange model,
+            final double lowerMin, final double upperMax, 
+            final double stepSize, final String label) {
+        this(model, lowerMin, upperMax, stepSize, 
+                lowerMin, upperMax, stepSize, label);
+    }
+    
+    /**
+     * Finegrain constructor to specify minimum and maximum values for the 
+     * lower and upper bound and different step sizes for each spinner.
+     * 
+     * @param model stores the double numbers entered
+     * @param lowerMin minimum value for the lower bound spinner
+     * @param lowerMax maximum value for the lower bound spinner
+     * @param lowerStepSize step size for the lower bound spinner
+     * @param upperMin minimum value for the upper bound spinner
+     * @param upperMax maximum value for the upper bound spinner
+     * @param upperStepSize step size for the upper bound spinner
+     * @param label label for this component
+     */
+    public DialogComponentDoubleRange(final SettingsModelDoubleRange model,
+            final double lowerMin, final double lowerMax, 
+            final double lowerStepSize,
+            final double upperMin, final double upperMax, 
+            final double upperStepSize, final String label) {
         super(model);
+        
+        model.prependChangeListener(new ChangeListener() {
+           public void stateChanged(final ChangeEvent e) {
+               updateComponent();
+           } 
+        });
+        
         JPanel myPanel = getComponentPanel();
         m_label = new JLabel(label);
         m_labelMin = new JLabel("min=");
         m_labelMax = new JLabel("max=");
         m_spinnerMin =
-                new JSpinner(new SpinnerNumberModel(0.0, 0.0, 10.0, 0.01));
+                new JSpinner(new SpinnerNumberModel(model.getMinRange(), 
+                        lowerMin, lowerMax, lowerStepSize));
+        m_spinnerMin.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent arg0) {
+                    updateMinModel();
+            }
+        });
         JSpinner.DefaultEditor editor =
                 (JSpinner.DefaultEditor)m_spinnerMin.getEditor();
-        editor.getTextField().setColumns(10);
+        editor.getTextField().setColumns(new String("" + lowerMax).length());
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
         m_spinnerMax =
-                new JSpinner(new SpinnerNumberModel(0.0, 0.0, 10.0, 0.01));
+                new JSpinner(new SpinnerNumberModel(model.getMaxRange(), 
+                        upperMin, upperMax, upperStepSize));
+        m_spinnerMax.addChangeListener(new ChangeListener() {
+            public void stateChanged(final ChangeEvent arg0) {
+                    updateMaxModel();
+            }
+        });
         editor = (JSpinner.DefaultEditor)m_spinnerMax.getEditor();
-        editor.getTextField().setColumns(10);
+        editor.getTextField().setColumns(new String("" + upperMax).length());
         editor.getTextField().setFocusLostBehavior(JFormattedTextField.COMMIT);
         myPanel.add(m_label);
         myPanel.add(m_labelMin);
         myPanel.add(m_spinnerMin);
         myPanel.add(m_labelMax);
-        myPanel.add(m_spinnerMax);
+        myPanel.add(m_spinnerMax);        
     }
 
     /**
@@ -115,6 +179,47 @@ public class DialogComponentDoubleRange extends DialogComponent {
     public void setToolTipText(final String text) {
         m_spinnerMin.setToolTipText(text);
         m_spinnerMax.setToolTipText(text);
+    }
+    
+    
+    /**
+     * Transfers the value from the spinner into the model. Colors the spinner
+     * red, if the number is not accepted by the settings model. And throws an
+     * exception then.
+     * 
+     */
+    private void updateMinModel() {
+        try {
+            m_spinnerMin.commitEdit();
+            if (getModel() instanceof SettingsModelDoubleRange) {
+                SettingsModelDoubleRange model 
+                    = (SettingsModelDoubleRange)getModel();
+                model.setMinRange(((Double)m_spinnerMin.getValue())
+                        .doubleValue());
+            } 
+        } catch (ParseException e) {
+            JComponent editorMin = m_spinnerMin.getEditor();
+            if (editorMin instanceof DefaultEditor) {
+                showError(((DefaultEditor)editorMin).getTextField());
+            }
+        }
+    }
+    
+    private void updateMaxModel() {
+        try {
+            m_spinnerMax.commitEdit();
+            if (getModel() instanceof SettingsModelDoubleRange) {
+                SettingsModelDoubleRange model 
+                    = (SettingsModelDoubleRange)getModel();
+                model.setMaxRange(((Double)m_spinnerMax.getValue())
+                        .doubleValue());
+            } 
+        } catch (ParseException e) {
+            JComponent editorMax = m_spinnerMax.getEditor();
+            if (editorMax instanceof DefaultEditor) {
+                showError(((DefaultEditor)editorMax).getTextField());
+            }
+        }        
     }
 
     /**
