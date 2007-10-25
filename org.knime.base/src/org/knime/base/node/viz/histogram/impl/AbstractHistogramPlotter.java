@@ -720,7 +720,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         // case set one value which indicates this
         if (binCaptions.size() < 1) {
             binCaptions.add(new StringCell(
-                    "Only missing or too many values"));
+                    "No bins available"));
             final DataColumnSpec colSpec = createColumnSpec(colName,
                     StringCell.TYPE, Double.NaN, Double.NaN, binCaptions);
             return colSpec;
@@ -950,10 +950,14 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         super.setHiLiteHandler(null);
         m_tableSpec = null;
         resetHistogramVizModel();
-        getXAxis().setCoordinate(null);
-        getXAxis().setToolTipText("");
-        getYAxis().setCoordinate(null);
-        getYAxis().setToolTipText("");
+        if (getXAxis() != null) {
+            getXAxis().setCoordinate(null);
+            getXAxis().setToolTipText("");
+        }
+        if (getYAxis() != null) {
+            getYAxis().setCoordinate(null);
+            getYAxis().setToolTipText("");
+        }
         getHistogramDrawingPane().reset();
     }
 
