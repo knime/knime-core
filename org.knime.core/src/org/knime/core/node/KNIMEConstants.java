@@ -43,7 +43,7 @@ public final class KNIMEConstants {
     /** KNIME's major release number. */
     public static final int MAJOR = 1;
     /** KNIME's minor release number. */
-    public static final int MINOR = 3;
+    public static final int MINOR = 4;
     /** KNIME's revision number. */
     public static final int REV = 0;
     /** KNIME's build id. */
