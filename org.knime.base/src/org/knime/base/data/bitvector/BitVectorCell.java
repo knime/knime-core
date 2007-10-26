@@ -30,7 +30,6 @@ import java.util.BitSet;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.IntValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 
@@ -40,8 +39,7 @@ import org.knime.core.node.config.Config;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public class BitVectorCell extends DataCell implements BitVectorValue, 
-    IntValue {
+public class BitVectorCell extends DataCell implements BitVectorValue {
 
     /**
      * Convenience access member for
