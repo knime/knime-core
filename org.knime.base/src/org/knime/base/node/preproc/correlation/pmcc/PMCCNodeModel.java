@@ -195,8 +195,9 @@ public class PMCCNodeModel extends NodeModel {
                     + Arrays.toString(constantColumnNames));
             int maxLength = 4;
             if (constantColumns.size() > maxLength) {
-                constantColumnNames = 
-                    Arrays.copyOf(constantColumnNames, maxLength);
+                String[] temp = new String[maxLength];
+                System.arraycopy(constantColumnNames, 0, temp, 0, maxLength);
+                constantColumnNames = temp;
                 constantColumnNames[maxLength - 1] = "...";
             }
             setWarningMessage("Some columns contain only one distinct value: "

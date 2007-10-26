@@ -23,7 +23,6 @@
  */
 package org.knime.base.node.mine.decisiontree2.learner;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -339,9 +338,9 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     }
 
     /**
-     * Returns the frequency of the majoriy class.
+     * Returns the frequency of the majority class.
      * 
-     * @return the frequency of the majoriy class.
+     * @return the frequency of the majority class.
      */
     public double getMajorityClassCount() {
         double maxFrequency = 0.0;
@@ -385,7 +384,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      * Determines if the data distribution (class value distribution) is pure
      * enough. The table is pure enough, if there are only rows of one class
      * value, or if the number of rows (sum of weights) is below twice the
-     * threashold specified in the constructor.
+     * threshold specified in the constructor.
      * 
      * @return true, if the table is pure enough, false otherwise
      */
@@ -411,14 +410,13 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     /**
      * Returns a copy of the class frequency array representing the class
      * distribution of this table. This is important if the returned array is
-     * inteded to be manipulated!
+     * intended to be manipulated!
      * 
      * @return a copy of the class frequency array representing the class
      *         distribution of this table
      */
     public double[] getCopyOfClassFrequencyArray() {
-        return Arrays.copyOf(m_classFrequencyArray,
-                m_classFrequencyArray.length);
+        return m_classFrequencyArray.clone();
     }
 
     /**
@@ -489,7 +487,9 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
                 newCapacity = minCapacity;
             }
             // minCapacity is usually close to size, so this is a win:
-            m_rows = Arrays.copyOf(m_rows, newCapacity);
+            DataRowWeighted[] temp = new DataRowWeighted[newCapacity];
+            System.arraycopy(m_rows, 0, temp, 0, m_rows.length);
+            m_rows = temp;
         }
     }
 
@@ -500,7 +500,9 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
     public void pack() {
         int oldCapacity = m_rows.length;
         if (m_size < oldCapacity) {
-            m_rows = Arrays.copyOf(m_rows, m_size);
+            DataRowWeighted[] temp = new DataRowWeighted[m_size];
+            System.arraycopy(m_rows, 0, temp, 0, m_size);
+            m_rows = temp;
         }
     }
 
