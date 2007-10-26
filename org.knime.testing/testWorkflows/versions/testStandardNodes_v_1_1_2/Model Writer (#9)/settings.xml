@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="Model Writer"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="model">
+<entry key="filename" type="xstring" value="C:\Dokumente und Einstellungen\R2D2\Desktop\KNIME\color"/>
+</config>
+<config key="spec_files"/>
+<config key="model_files"/>
+</config>

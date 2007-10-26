@@ -53,7 +53,7 @@ public class DisturberNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.core.node.NodeModel#configure(org.knime.core.data.DataTableSpec[])
      */
     @Override
     protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
@@ -62,7 +62,8 @@ public class DisturberNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.core.node.NodeModel#execute(org.knime.core.node.BufferedDataTable[],
+     *      org.knime.core.node.ExecutionContext)
      */
     @Override
     protected BufferedDataTable[] execute(BufferedDataTable[] inData,
@@ -96,7 +97,8 @@ public class DisturberNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.core.node.NodeModel#loadInternals(java.io.File,
+     *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void loadInternals(File nodeInternDir, ExecutionMonitor exec)
@@ -105,7 +107,7 @@ public class DisturberNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.core.node.NodeModel#loadValidatedSettingsFrom(org.knime.core.node.NodeSettingsRO)
      */
     @Override
     protected void loadValidatedSettingsFrom(NodeSettingsRO settings)
@@ -114,7 +116,7 @@ public class DisturberNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.core.node.NodeModel#reset()
      */
     @Override
     protected void reset() {
@@ -122,7 +124,8 @@ public class DisturberNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.core.node.NodeModel#saveInternals(java.io.File,
+     *      org.knime.core.node.ExecutionMonitor)
      */
     @Override
     protected void saveInternals(File nodeInternDir, ExecutionMonitor exec)
@@ -131,7 +134,7 @@ public class DisturberNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.core.node.NodeModel#saveSettingsTo(org.knime.core.node.NodeSettingsWO)
      */
     @Override
     protected void saveSettingsTo(NodeSettingsWO settings) {
@@ -139,7 +142,7 @@ public class DisturberNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc}
+     * @see org.knime.core.node.NodeModel#validateSettings(org.knime.core.node.NodeSettingsRO)
      */
     @Override
     protected void validateSettings(NodeSettingsRO settings)

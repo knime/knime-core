@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="Java Snippet"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<entry key="expression" type="xstring" value="int num = 0;&#13;&#10;/* these numbers are the meas calculated by the statistics node */&#13;&#10;if ($sepal length$ &gt; 5.843333333333335) {&#13;&#10;&#9;num++;&#13;&#10;}&#13;&#10;if ($sepal width$ &gt; 3.057333333333334) {&#13;&#10;&#9;num++;&#13;&#10;}&#13;&#10;if ($petal length$ &gt; 3.7580000000000027) {&#13;&#10;&#9;num++;&#13;&#10;}&#13;&#10;if ($petal width$ &gt; 1.199333333333334) {&#13;&#10;&#9;num++;&#13;&#10;}&#13;&#10;;num"/>
+<entry key="replaced_column" type="xstring" value="numOfOnes"/>
+<entry key="append_column" type="xboolean" value="false"/>
+<entry key="return_type" type="xstring" value="java.lang.Integer"/>
+</config>
+<config key="data_meta_file">
+<entry key="data_files_directory" type="xstring" value="data"/>
+<config key="output_0">
+<entry key="data_files_directory" type="xstring" value="data_0"/>
+<entry key="has_output_spec" type="xboolean" value="true"/>
+</config>
+</config>
+<config key="model_files"/>
+</config>

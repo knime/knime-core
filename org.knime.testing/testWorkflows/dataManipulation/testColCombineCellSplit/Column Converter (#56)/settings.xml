@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="Column Converter"/>
+<entry key="isConfigured" type="xboolean" value="false"/>
+<entry key="isExecuted" type="xboolean" value="false"/>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<config key="model">
+<config key="include">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xstring" value="combined string_Arr[0]"/>
+<entry key="1" type="xstring" value="combined string_Arr[1]"/>
+<entry key="2" type="xstring" value="combined string_Arr[2]"/>
+<entry key="3" type="xstring" value="combined string_Arr[3]"/>
+</config>
+<entry key="stringtodouble" type="xboolean" value="true"/>
+</config>
+<config key="model_files"/>
+</config>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "de/unikn/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+  <entry key="name" type="xstring" value="Diff"/>
+  <entry key="isConfigured" type="xboolean" value="true"/>
+  <entry key="isExecuted" type="xboolean" value="false"/>
+  <config key="inports">
+    <entry key="0" type="xstring" value="Port [0]"/>
+    <entry key="1" type="xstring" value="Port [1]"/>
+  </config>
+  <config key="outports"/>
+  <config key="model">
+    <entry key="TESTEVALUATOR" type="xstring" value="TableDiffer"/>
+  </config>
+  <config key="spec_files"/>
+</config>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="workflow.knime">
+<entry key="version" type="xstring" value="1.1.2"/>
+<entry key="runningNodeID" type="xint" value="169"/>
+<entry key="runningConnectionID" type="xint" value="501"/>
+<config key="nodes">
+<config key="node_62">
+<entry key="node_settings_file" type="xstring" value="Meta Data Input Node (#62)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.core.node.meta.DataInputNodeFactory"/>
+<entry key="id" type="xint" value="62"/>
+<entry key="customName" type="xstring" value="External data input 0"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="false"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="0"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="40"/>
+<entry key="3" type="xint" value="40"/>
+</config>
+<entry key="name" type="xstring" value="Meta Data Input Node"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="model"/>
+</config>
+<config key="node_63">
+<entry key="node_settings_file" type="xstring" value="Meta Data Output Node (#63)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.core.node.meta.DataOutputNodeFactory"/>
+<entry key="id" type="xint" value="63"/>
+<entry key="customName" type="xstring" value="Data collector 0"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="false"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="360"/>
+<entry key="1" type="xint" value="0"/>
+<entry key="2" type="xint" value="40"/>
+<entry key="3" type="xint" value="40"/>
+</config>
+<entry key="name" type="xstring" value="Meta Data Output Node"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="model"/>
+</config>
+<config key="node_64">
+<entry key="node_settings_file" type="xstring" value="Meta Data Output Node (#64)/settings.xml"/>
+<entry key="factory" type="xstring" value="org.knime.core.node.meta.DataOutputNodeFactory"/>
+<entry key="id" type="xint" value="64"/>
+<entry key="customName" type="xstring" value="Data collector 1"/>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="isDeletable" type="xboolean" value="false"/>
+<entry key="extraInfoClassName" type="xstring" value="org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo"/>
+<config key="extrainfo.node.bounds">
+<entry key="array-size" type="xint" value="4"/>
+<entry key="0" type="xint" value="360"/>
+<entry key="1" type="xint" value="150"/>
+<entry key="2" type="xint" value="40"/>
+<entry key="3" type="xint" value="40"/>
+</config>
+<entry key="name" type="xstring" value="Meta Data Output Node"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="model"/>
+</config>
+</config>
+<config key="connections">
+<config key="connection_496">
+<entry key="ID" type="xint" value="496"/>
+<entry key="sourceID" type="xint" value="62"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="64"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+<config key="connection_495">
+<entry key="ID" type="xint" value="495"/>
+<entry key="sourceID" type="xint" value="62"/>
+<entry key="sourcePort" type="xint" value="0"/>
+<entry key="targetID" type="xint" value="63"/>
+<entry key="targetPort" type="xint" value="0"/>
+</config>
+</config>
+</config>

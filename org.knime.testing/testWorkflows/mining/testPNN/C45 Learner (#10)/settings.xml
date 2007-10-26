@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "de/unikn/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+  <entry key="name" type="xstring" value="C45 Learner"/>
+  <entry key="isConfigured" type="xboolean" value="true"/>
+  <entry key="isExecuted" type="xboolean" value="false"/>
+  <config key="model">
+    <entry key="ClassColumnName" type="xstring" value="Col18"/>
+    <entry key="PruningConfidenceLevel" type="xint" value="25"/>
+    <entry key="BuildPureTrees" type="xboolean" value="false"/>
+    <entry key="MaxTreeDepth" type="xint" value="999"/>
+    <entry key="UseGini" type="xboolean" value="false"/>
+    <entry key="UseGainRatio" type="xboolean" value="false"/>
+    <config key="ExcludedColumns">
+      <entry key="array-size" type="xint" value="1"/>
+      <entry key="0" type="xstring" value="Col18"/>
+    </config>
+  </config>
+  <config key="spec_files"/>
+</config>

@@ -54,8 +54,8 @@ public class ThreadPoolTest extends TestCase {
             m_pool = pool;
         }
         
-        /**
-         * {@inheritDoc}
+        /** 
+         * @see java.lang.Runnable#run()
          */
         public void run() {
             m_running.incrementAndGet();

@@ -23,10 +23,6 @@
             category-path="/testing"
             factory-class="org.knime.testing.node.disturber.DisturberNodeFactory"
             id="org.knime.testing.node.disturber.DisturberNodeFactory"/>
-      <node
-            category-path="/testing"
-            factory-class="org.knime.testing.node.differModelContent.DiffModelContentFactory"
-            id="org.knime.testing.node.differModelContent.DiffModelContentFactory"/>
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">
@@ -35,13 +31,6 @@
             level-id="testing"
             name="testing"
             path="/"/>
-   </extension>
-   <extension
-	     id="KNIME_TESTING_APPLICATION"
-         point="org.eclipse.core.runtime.applications">
-      <application>
-         <run class="org.knime.testing.core.KNIMETestingApplication"/>
-      </application>
    </extension>
    
 

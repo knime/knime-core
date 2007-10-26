@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+<entry key="name" type="xstring" value="Sorter"/>
+<entry key="isConfigured" type="xboolean" value="true"/>
+<entry key="isExecuted" type="xboolean" value="true"/>
+<config key="model">
+<config key="incllist">
+<entry key="array-size" type="xint" value="3"/>
+<entry key="0" type="xstring" value="sepal length_duplicate"/>
+<entry key="1" type="xstring" value="petal length"/>
+<entry key="2" type="xstring" value="petal width"/>
+</config>
+<config key="sortOrder">
+<entry key="array-size" type="xint" value="3"/>
+<entry key="0" type="xboolean" value="true"/>
+<entry key="1" type="xboolean" value="true"/>
+<entry key="2" type="xboolean" value="true"/>
+</config>
+</config>
+<config key="spec_files">
+<entry key="output_0" type="xstring" value="spec_0.xml"/>
+</config>
+<entry key="data_meta_file" type="xstring" value="data.xml"/>
+<config key="model_files"/>
+</config>

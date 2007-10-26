@@ -49,10 +49,49 @@ public class DataTableDiffer implements TestEvaluator {
     private DataTable m_DiffTable;
 
     /**
+     * Constructor. Creates a new DataTableDiffer with two DataTables.
+     * 
+     * @param table1 - 1st Table
+     * @param table2 - 2nd Table
+     */
+    public DataTableDiffer(final DataTable table1, final DataTable table2) {
+        super();
+        this.m_dataTable1 = table1;
+        this.m_dataTable2 = table2;
+    }
+
+    /**
      * default Constructor.
      */
     public DataTableDiffer() {
         super();
+    }
+
+    /**
+     * Checks each cell for equality.
+     * 
+     * @return true if each cell in the datatables equals, false otherwise
+     */
+    public boolean compare() {
+        if (!m_dataTable1.getDataTableSpec().equalStructure(
+                m_dataTable2.getDataTableSpec())) {
+            return false;
+        }
+        Iterator<DataRow> rowIt1 = m_dataTable1.iterator();
+        Iterator<DataRow> rowIt2 = m_dataTable2.iterator();
+        while (rowIt1.hasNext() && rowIt2.hasNext()) {
+            Iterator<DataCell> cellIt1 = rowIt1.next().iterator();
+            Iterator<DataCell> cellIt2 = rowIt2.next().iterator();
+            while (cellIt1.hasNext() && cellIt2.hasNext()) {
+                if (!cellIt1.next().equals(cellIt2.next())) {
+                    return false;
+                }
+            }
+        }
+        if (rowIt1.hasNext() || rowIt2.hasNext()) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -66,8 +105,7 @@ public class DataTableDiffer implements TestEvaluator {
 
         // Compare the table specs
 
-        if (!table1.getDataTableSpec()
-                .equalStructure(table2.getDataTableSpec())) {
+        if (!table1.getDataTableSpec().equalStructure(table2.getDataTableSpec())) {
             // generate a helpful error message
             DataTableSpec spec1 = table1.getDataTableSpec();
             DataTableSpec spec2 = table2.getDataTableSpec();
@@ -80,8 +118,7 @@ public class DataTableDiffer implements TestEvaluator {
                     "The following columns differ in "
                             + "name, type, and/or domain:\n";
             for (int c = 0; c < spec1.getNumColumns(); c++) {
-                if (!spec1.getColumnSpec(c).equalStructure(
-                        spec2.getColumnSpec(c))) {
+                if (!spec1.getColumnSpec(c).equalStructure(spec2.getColumnSpec(c))) {
                     colsDiff = true;
                     msg += " Col#" + c;
                 }

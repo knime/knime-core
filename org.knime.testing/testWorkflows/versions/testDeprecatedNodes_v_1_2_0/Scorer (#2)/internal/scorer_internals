@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "org/knime/core/node/config/XMLConfig.dtd">
+<config key="ignored">
+<entry key="correct_count" type="xint" value="0"/>
+<entry key="false_count" type="xint" value="150"/>
+<entry key="number_rows" type="xint" value="150"/>
+</config>

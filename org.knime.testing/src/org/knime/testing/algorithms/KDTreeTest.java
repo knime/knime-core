@@ -74,7 +74,7 @@ public class KDTreeTest extends TestCase {
         }
 
         /**
-         * {@inheritDoc}
+         * @see java.lang.Comparable#compareTo(java.lang.Object)
          */
         public int compareTo(Helper o) {
             return (int)Math.signum(this.m_dist - o.m_dist);

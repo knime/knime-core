@@ -52,7 +52,7 @@ public final class NodeSettingsTest extends TestCase {
     private static final NodeSettings SETT = new NodeSettings("test-settings");
 
     /**
-     * {@inheritDoc}
+     * @see junit.framework.TestCase#tearDown()
      */
     @Override
     public void tearDown() {
@@ -62,39 +62,6 @@ public final class NodeSettingsTest extends TestCase {
         testFile();
         testXML();
     }
-    
-//    /**
-//     * Tests special chars.
-//     * @throws Exception
-//     */
-//    public void testSpecialChars() throws Exception {
-//        NodeSettings s = new NodeSettings("Special Chars");
-//        char[] cs = new char[2 * 127];
-//        for (int i = 0; i < cs.length; i += 2) {
-//            cs[i] = (char)(i / 2);
-//            cs[i + 1] = ' ';
-//        }
-//        String csString = new String(cs);
-//        System.out.println(csString);
-//        csString = new String(new BASE64Encoder().encodeBuffer(csString.getBytes()));
-//        s.addString("key", csString);
-//        ByteArrayOutputStream out = new ByteArrayOutputStream();
-//        s.saveToXML(out);
-//        out.close();
-//        byte[] outBytes = out.toByteArray();
-//        ByteArrayInputStream in = new ByteArrayInputStream(outBytes);
-//        NodeSettingsRO r = NodeSettings.loadFromXML(in);
-//        csString = new String(new BASE64Decoder().decodeBuffer(r.getString("key")));
-//        for (int i = 0; i < csString.length(); i += 2) {
-//            char c = csString.charAt(i);
-//            char space = csString.charAt(i + 1);
-//            assert c == (char)(i / 2);
-//            assert space == ' ';
-//            System.out.print(c);
-//            System.out.print(space);
-//        }
-//        System.out.println();
-//    }
 
     /**
      * Test write/read of ints.
@@ -165,41 +132,6 @@ public final class NodeSettingsTest extends TestCase {
         SETT.addDoubleArray(key, null);
         assertTrue(SETT.containsKey(key));
         assertTrue(SETT.getDoubleArray(key) == null);
-    }
-    
-    /**
-     * Test write/read of floats.
-     * 
-     * @throws Exception Should not happen.
-     */
-    public void testFloat() throws Exception {
-        try {
-            SETT.addFloat(null, 11.11f);
-            fail();
-        } catch (IllegalArgumentException iae) {
-            assertTrue(true);
-        }
-        String key = "kfloat";
-        SETT.addFloat(key, 5.5f);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(5.5 == SETT.getFloat(key));
-        assertTrue(5.5 == SETT.getFloat(key, -1.0f));
-        key += "array";
-        SETT.addFloatArray(key, new float[]{42.42f, 13.13f});
-        assertTrue(SETT.containsKey(key));
-        float[] a = SETT.getFloatArray(key);
-        assertTrue(a[0] == 42.42f && a[1] == 13.13f);
-        a = SETT.getFloatArray(key, new float[0]);
-        assertTrue(a[0] == 42.42f && a[1] == 13.13f);
-        key = "kfloat_array_0";
-        SETT.addFloatArray(key, new float[0]);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getFloatArray(key).length == 0);
-        assertTrue(SETT.getFloatArray(key, new float[1]).length == 0);
-        key = "kfloat-";
-        SETT.addFloatArray(key, null);
-        assertTrue(SETT.containsKey(key));
-        assertTrue(SETT.getFloatArray(key) == null);
     }
 
     /**

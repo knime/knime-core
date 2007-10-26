@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE config SYSTEM "de/unikn/knime/core/node/config/XMLConfig.dtd">
+<config key="settings.xml">
+  <entry key="name" type="xstring" value="Table Writer"/>
+  <entry key="isConfigured" type="xboolean" value="false"/>
+  <entry key="isExecuted" type="xboolean" value="false"/>
+  <config key="model">
+    <entry key="filename" type="xstring" value="/local_tmp/ritmeier/runtime-workspace/testFuzzyRules/golden.score"/>
+  </config>
+</config>
