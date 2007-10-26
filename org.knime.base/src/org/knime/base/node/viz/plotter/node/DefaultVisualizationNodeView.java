@@ -74,6 +74,7 @@ public class DefaultVisualizationNodeView extends NodeView {
         m_plotters = new ArrayList<AbstractPlotter>();
         m_plotters.add(plotter);
         plotter.setDataProvider((DataProvider)model);
+        
         plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
         if (plotter.getHiLiteMenu() != null) {
             getJMenuBar().add(getHiLiteMenu());
@@ -146,7 +147,7 @@ public class DefaultVisualizationNodeView extends NodeView {
         if (!(model instanceof DataProvider)) {
             throw new IllegalArgumentException(
                     "Model must implement the DataProvider " 
-            		+ "interface!");
+                    + "interface!");
         }
         DataProvider provider = (DataProvider)model;
         HiLiteHandler hiliteHandler = model.getInHiLiteHandler(0);
@@ -178,20 +179,20 @@ public class DefaultVisualizationNodeView extends NodeView {
         JMenu menu = new JMenu(HiLiteHandler.HILITE);
         menu.add(new AbstractAction(HiLiteHandler.HILITE_SELECTED) {
 
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 getActivePlotter().getHiliteAction().actionPerformed(e);
             }
             
         });
         menu.add(new AbstractAction(HiLiteHandler.UNHILITE_SELECTED) {
 
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 getActivePlotter().getUnhiliteAction().actionPerformed(e);
             }
         });
         menu.add(new AbstractAction(HiLiteHandler.CLEAR_HILITE) {
 
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(final ActionEvent e) {
                 getActivePlotter().getClearHiliteAction().actionPerformed(e);
             }
         });

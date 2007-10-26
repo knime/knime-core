@@ -37,6 +37,7 @@ import java.awt.event.ComponentListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.AbstractAction;
@@ -381,6 +382,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
     /**
      * Resizes the axes and calls {@link #updateSize()}, the drawing pane is 
      * adapted to the new space only if the size is increased. 
+     * @param e the resize event
      * 
      * {@inheritDoc}
      */
@@ -687,7 +689,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      *
      */
     public void delegateUnHiLiteAll() {
-        m_hiliteHandler.fireClearHiLiteEvent();
+        if (m_hiliteHandler != null) {
+            m_hiliteHandler.fireClearHiLiteEvent();
+        }
     }
     
 
@@ -699,10 +703,10 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         if (m_hiliteHandler != null && handler != m_hiliteHandler) {
             m_hiliteHandler.removeHiLiteListener(this);
         }
-        m_hiliteHandler = handler;
-        if (m_hiliteHandler != null) {
-            m_hiliteHandler.addHiLiteListener(this);
+        if (handler != null && handler != m_hiliteHandler) {
+            handler.addHiLiteListener(this);
         }
+        m_hiliteHandler = handler;
     }
   
     
@@ -711,7 +715,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * @param listener the listener
      */
     public void delegateAddHiLiteListener(final HiLiteListener listener) {
-        m_hiliteHandler.addHiLiteListener(listener);
+        if (m_hiliteHandler != null) {
+            m_hiliteHandler.addHiLiteListener(listener);
+        }
     }
 
     /**
@@ -721,7 +727,10 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * @see org.knime.core.node.property.hilite.HiLiteHandler#getHiLitKeys()
      */
     public Set<DataCell> delegateGetHiLitKeys() {
-        return m_hiliteHandler.getHiLitKeys();
+        if (m_hiliteHandler != null) {
+            return m_hiliteHandler.getHiLitKeys();
+        }
+        return new HashSet<DataCell>();
     }
 
     /**
@@ -732,7 +741,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * org.knime.core.data.DataCell[])
      */
     public void delegateHiLite(final DataCell... ids) {
-        m_hiliteHandler.fireHiLiteEvent(ids);
+        if (m_hiliteHandler != null) {
+            m_hiliteHandler.fireHiLiteEvent(ids);
+        }
     }
 
     /**
@@ -743,7 +754,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * java.util.Set)
      */
     public void delegateHiLite(final Set<DataCell> ids) {
-        m_hiliteHandler.fireHiLiteEvent(ids);
+        if (m_hiliteHandler != null) {
+            m_hiliteHandler.fireHiLiteEvent(ids);
+        }
     }
 
     /**
@@ -755,7 +768,10 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * org.knime.core.data.DataCell[])
      */
     public boolean delegateIsHiLit(final DataCell... ids) {
-        return m_hiliteHandler.isHiLit(ids);
+        if (m_hiliteHandler != null) {
+            return m_hiliteHandler.isHiLit(ids);
+        } 
+        return false;
     }
     
     /**
@@ -772,7 +788,7 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
         for (DataCell cell : ids) {
             cells[i++] = cell;
         }
-        return m_hiliteHandler.isHiLit(cells);
+        return delegateIsHiLit(cells);
     }
 
     /**
@@ -782,7 +798,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * #removeAllHiLiteListeners()
      */
     public void delegateRemoveAllHiLiteListeners() {
-        m_hiliteHandler.removeAllHiLiteListeners();
+        if (m_hiliteHandler != null) {
+            m_hiliteHandler.removeAllHiLiteListeners();
+        }
     }
 
     /**
@@ -791,7 +809,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * #removeHiLiteListener(org.knime.core.node.property.hilite.HiLiteListener)
      */
     public void delegateRemoveHiLiteListener(final HiLiteListener listener) {
-        m_hiliteHandler.removeHiLiteListener(listener);
+        if (m_hiliteHandler != null) {            
+            m_hiliteHandler.removeHiLiteListener(listener);
+        }
     }
 
     /**
@@ -802,7 +822,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * #fireUnHiLiteEvent(org.knime.core.data.DataCell[])
      */
     public void delegateUnHiLite(final DataCell... ids) {
-        m_hiliteHandler.fireUnHiLiteEvent(ids);
+        if (m_hiliteHandler != null) {
+            m_hiliteHandler.fireUnHiLiteEvent(ids);
+        }
     }
 
     /**
@@ -813,7 +835,9 @@ public abstract class AbstractPlotter extends JPanel implements HiLiteListener,
      * java.util.Set)
      */
     public void delegateUnHiLite(final Set<DataCell> ids) {
-        m_hiliteHandler.fireUnHiLiteEvent(ids);
+        if (m_hiliteHandler != null) {
+            m_hiliteHandler.fireUnHiLiteEvent(ids);
+        }
     }
     
     /* ------------- abstract methods ------------ */
