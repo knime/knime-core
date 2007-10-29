@@ -165,8 +165,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             = new LinkedHashMap<String, Map<Double, RowKey>>();
         int colIdx = 0;
         List<DataColumnSpec> outputColSpecs = new ArrayList<DataColumnSpec>();
-        double subProgress = 1.0 / (double)table.getDataTableSpec()
-            .getNumColumns();
+        double subProgress = 1.0 / table.getDataTableSpec().getNumColumns();
         int currColumn = 0;
         for (DataColumnSpec colSpec : table.getDataTableSpec()) {
             exec.checkCanceled();
