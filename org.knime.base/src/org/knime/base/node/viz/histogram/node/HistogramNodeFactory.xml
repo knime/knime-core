@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./interactiveHistogram.gif" type="Visualizer">
-	<name>Interactive Histogram</name>	
+	<name>Histogram (interactive)</name>	
 	<shortDescription>
-		Displays data in an interactive histogram view.
+		Displays data in an interactive histogram view with hiliting support.
 	</shortDescription>	
 	<fullDescription>
 		<intro>
 		<p>Displays an interactive histogram view with different viewing 
-		options.</p>
+		options.The interactive histogram supports hiliting and the changing 
+        of the x axis and aggregation column on the fly.</p>
 		<p>The user can change the following view properties on the fly:
 			<ol>
 			<li>X axis</li>
@@ -31,8 +32,9 @@
 		the interval. To cover all values the first interval is a closed 
 		interval [a,b] where a and b are included.</p>
 		<p><b>Please note: This node caches all data in the main memory to 
-		provide interactive functions. In order to work with huge data sets 
-		use the "Histogram" node.</b></p>
+		provide interactive functions. If you plan to visualize extremely large 
+		datasets the non interactive "Histogram" node may be better suited.</b>
+		</p>
 		<p><b>Only columns with a valid domain are available in this view.
 		To set the domain use the DomainCalculator or ColumnFilter node!</b></p>
 		</intro>

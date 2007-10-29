@@ -32,6 +32,9 @@
         sections for the selected sections. A sub section represents the rows
         color using the color manager. This option is only available if 
         row colors are set.</p>
+        <p><b>Please note: This node caches all data in the main memory to 
+        provide interactive functions. If you plan to visualize extremely large 
+        datasets the non interactive "Pie chart" node may be better suited.</b></p>
         <p><b>The pie chart supports maximum 360 sections!</b></p>
 		</intro>
 		<option name="Display all rows">

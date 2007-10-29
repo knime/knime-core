@@ -3,7 +3,7 @@
 <knimeNode icon="./fixedPie.png" type="Visualizer">
     <name>Pie chart</name>    
     <shortDescription>
-        Displays data in a pie chart.
+        Displays data in a pie chart. Hiliting is not supported.
     </shortDescription> 
     <fullDescription>
         <intro>
@@ -29,6 +29,9 @@
         sections for the selected sections. A sub section represents the rows
         color using the color manager. This option is only available if 
         row colors are set.</p>
+        <p>This view is particularly well suited for extremely large datasets.
+        For more interaction and hiliting support use the 
+        "Pie chart (interactive)" node.</p>
         <p><b>The pie chart supports maximum 360 sections!</b></p>
         </intro>
         <option name="Display all rows">

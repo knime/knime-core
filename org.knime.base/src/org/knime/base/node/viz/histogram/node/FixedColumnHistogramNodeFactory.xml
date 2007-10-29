@@ -3,7 +3,7 @@
 <knimeNode icon="./fixedColumnHistogram.gif" type="Visualizer">
 	<name>Histogram</name>	
 	<shortDescription>
-		Displays data in a histogram view.
+		Displays data in a histogram view. Hiliting is not supported.
 	</shortDescription>	
 	<fullDescription>
 		<intro>
@@ -25,9 +25,7 @@
 		left open intervals (a,b] where a is excluded and b is included in 
 		the interval. To cover all values the first interval is a closed 
 		interval [a,b] where a and b are included.</p>
-		<p>In order to work with huge data sets the user has to specify the 
-		desired x and aggregation column and the number of bins before 
-		opening the view and hiliting is not supported.
+		<p>This view is particularly well suited for extremely large datasets.
 		For more interaction and hiliting support use the 
 		"Interactive Histogram" node.</p>
 		<p><b>Only columns with a valid domain are available in this view.
