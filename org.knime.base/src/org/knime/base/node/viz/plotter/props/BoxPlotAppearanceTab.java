@@ -43,7 +43,8 @@ public class BoxPlotAppearanceTab extends PropertiesTab {
      *
      */
     public BoxPlotAppearanceTab() {
-        m_normalize = new JCheckBox("Normalize", false);
+        m_normalize = new JCheckBox("Normalize " 
+                + "(with respect to min/max values of the domain)", false);
         javax.swing.Box appBox = javax.swing.Box.createHorizontalBox();
         appBox.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
         appBox.add(javax.swing.Box.createHorizontalStrut(SMALL_SPACE));
