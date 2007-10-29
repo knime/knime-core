@@ -96,23 +96,15 @@ public class InteractivePiePlotter
         if (vizModel == null) {
             throw new NullPointerException("vizModel must not be null");
         }
-        //update the properties panel as well
-        final InteractivePieProperties properties = getPropertiesPanel();
-        if (properties == null) {
-            throw new NullPointerException("Properties must not be null");
-        }
-        String errMsg = null;
         boolean changed = true;
         try {
             changed = vizModel.setPieColumn(colName);
             resetInfoMsg();
         } catch (final TooManySectionsException e) {
-            errMsg = e.getMessage();
+            setInfoMsg(e.getMessage());
         }
         if (changed) {
-            updatePropertiesPanel(vizModel);
-            setInfoMsg(errMsg);
-            updatePaintModel();
+            modelChanged();
         }
     }
 
@@ -132,18 +124,15 @@ public class InteractivePiePlotter
         if (properties == null) {
             throw new NullPointerException("Properties must not be null");
         }
-        String errMsg = null;
         boolean changed = true;
         try {
             changed = vizModel.setAggrColumn(colName);
             resetInfoMsg();
         } catch (final TooManySectionsException e) {
-            errMsg = e.getMessage();
+            setInfoMsg(e.getMessage());
         }
         if (changed) {
-            updatePropertiesPanel(vizModel);
-            setInfoMsg(errMsg);
-            updatePaintModel();
+          modelChanged();
         }
     }
 }
