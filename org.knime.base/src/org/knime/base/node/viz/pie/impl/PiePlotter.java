@@ -256,14 +256,31 @@ public abstract class PiePlotter
         }
         m_vizModel = vizModel;
         m_vizModel.setDrawingSpace(getDrawingPaneDimension());
-        updatePropertiesPanel(vizModel);
+        modelChanged();
+    }
+
+    /**
+     * Updates all views and objects which depend on the {@link PieVizModel}.
+     */
+    protected void modelChanged() {
+        final D vizModel = getVizModel();
+        if (vizModel == null) {
+            throw new NullPointerException("vizModel must not be null");
+        }
+        //update the properties panel as well
+        final P properties = getPropertiesPanel();
+        if (properties == null) {
+            throw new NullPointerException("Properties must not be null");
+        }
         if (vizModel.supportsHiliting()) {
             //set the hilite information
             vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
         }
+        properties.updateHTMLDetailsPanel(
+                vizModel.getHTMLDetailData());
+        updatePropertiesPanel(vizModel);
         updatePaintModel();
     }
-
 
     /**
      * @param vizModel the visualization model with the values to use
