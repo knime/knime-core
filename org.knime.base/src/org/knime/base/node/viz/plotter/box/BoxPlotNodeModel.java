@@ -59,6 +59,8 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * The input data is sorted for each numeric column and the necessary 
@@ -110,6 +112,8 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     
     private DataArray m_array;
     
+    private final HiLiteHandler m_hiliteHandler = new DefaultHiLiteHandler();
+    
     
     /**
      * One input for the data one output for the parameters (median, 
@@ -131,15 +135,15 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
         List<DataColumnSpec>numericCols = new ArrayList<DataColumnSpec>();
         for (DataColumnSpec colSpec : inSpecs[0]) {
             if (colSpec.getType().isCompatible(DoubleValue.class)) {
-            	if (colSpec.getDomain().hasBounds()){
-            		numericCols.add(colSpec);
-            	}
+                if (colSpec.getDomain().hasBounds()) {
+                    numericCols.add(colSpec);
+                }
             }
         }
         if (numericCols.size() == 0) {
             throw new InvalidSettingsException(
-            		"Only numeric columns can be displayed! " 
-        			+"Found no numeric column or only some without bounds.");
+                    "Only numeric columns can be displayed! " 
+                    + "Found no numeric column or only some without bounds.");
         } 
         return new DataTableSpec[]{createOutputSpec(numericCols)};
     }
@@ -160,10 +164,6 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
         m_extremeOutliers 
             = new LinkedHashMap<String, Map<Double, RowKey>>();
         int colIdx = 0;
-        int rowNr = table.getRowCount();
-        float medianPos = rowNr / 2;
-        float lowerQuartilePos = rowNr * 0.25f;
-        float upperQuartilePos = rowNr * 0.75f;
         List<DataColumnSpec> outputColSpecs = new ArrayList<DataColumnSpec>();
         double subProgress = 1.0 / (double)table.getDataTableSpec()
             .getNumColumns();
@@ -172,10 +172,6 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             exec.checkCanceled();
             if (colSpec.getType().isCompatible(DoubleValue.class)) {
                 double[] statistic = new double[SIZE];
-                statistic[MIN] = ((DoubleValue)colSpec.getDomain()
-                        .getLowerBound()).getDoubleValue();
-                statistic[MAX] = ((DoubleValue)colSpec.getDomain()
-                        .getUpperBound()).getDoubleValue();
                 outputColSpecs.add(colSpec);
                 double progress = currColumn++ * subProgress;
                 
@@ -188,13 +184,40 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                 SortedTable sorted = new SortedTable(table, 
                         col, new boolean[]{true}, 
                         exec2);
-                int currRow = 0;
+                int currRowAbsolute = 0;
+                int currCountingRow = 0;
                 double lastValue = 1;
+                int nrOfRows = table.getRowCount();
+                boolean first = true;
                 for (DataRow row : sorted) {
                     if (row.getCell(colIdx).isMissing()) {
+                        // asserts that the missing values are sorted at 
+                        // the top of the table
+                        currRowAbsolute++;
+                        nrOfRows--;
                         continue;
                     }
-                    if (currRow == Math.ceil(lowerQuartilePos)) {
+                    // get the first value = actually observed minimum
+                    if (first) {
+                        statistic[MIN] = ((DoubleValue)row
+                                .getCell(colIdx)).getDoubleValue();
+                        // initialize the statistics with first value
+                        // if the table is large enough it will be overriden
+                        // this is just for the case of tables with < 5 rows
+                        statistic[MEDIAN] = statistic[MIN];
+                        statistic[LOWER_QUARTILE] = statistic[MIN];
+                        statistic[UPPER_QUARTILE] = statistic[MIN];
+                        first = false;
+                    }
+                    // get the last value = actually observed maximum
+                    if (currRowAbsolute == table.getRowCount() - 1) {
+                        statistic[MAX] = ((DoubleValue)row
+                                .getCell(colIdx)).getDoubleValue();
+                    }                    
+                    float medianPos = nrOfRows / 2;
+                    float lowerQuartilePos = nrOfRows * 0.25f;
+                    float upperQuartilePos = nrOfRows * 0.75f;
+                    if (currCountingRow == Math.ceil(lowerQuartilePos)) {
                         if (lowerQuartilePos % 1 == 0) {
                             // get the row's value
                             statistic[LOWER_QUARTILE] = ((DoubleValue)row
@@ -207,7 +230,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                             statistic[LOWER_QUARTILE] = (value + lastValue) / 2;
                         }
                     }
-                    if (currRow == Math.ceil(medianPos)) {
+                    if (currCountingRow == Math.ceil(medianPos)) {
                         if (medianPos % 1 == 0) {
                             // get the row's value
                             statistic[MEDIAN] = ((DoubleValue)row
@@ -220,7 +243,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                             statistic[MEDIAN] = (value + lastValue) / 2;
                         }                            
                     }
-                    if (currRow == Math.ceil(upperQuartilePos)) {
+                    if (currCountingRow == Math.ceil(upperQuartilePos)) {
                         if (upperQuartilePos % 1 == 0) {
                             // get the row's value
                             statistic[UPPER_QUARTILE] = ((DoubleValue)row
@@ -235,9 +258,10 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                     }
                     lastValue = ((DoubleValue)row.getCell(colIdx))
                         .getDoubleValue();
-                    currRow++;
+                    currRowAbsolute++;
+                    currCountingRow++;
                 }
-                double irq = statistic[UPPER_QUARTILE] 
+                double iqr = statistic[UPPER_QUARTILE] 
                                        - statistic[LOWER_QUARTILE];
                 Map<Double, RowKey> mild = new LinkedHashMap<Double, RowKey>();
                 Map<Double, RowKey>extreme 
@@ -248,9 +272,9 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                         statistic[MAX]
                 };
                 if (statistic[MIN] < (statistic[LOWER_QUARTILE] 
-                    - (1.5 * irq)) || statistic[MAX] 
-                    > statistic[UPPER_QUARTILE] + (1.5 * irq)) {
-                        detectOutliers(sorted, irq, 
+                    - (1.5 * iqr)) || statistic[MAX] 
+                    > statistic[UPPER_QUARTILE] + (1.5 * iqr)) {
+                        detectOutliers(sorted, iqr, 
                                 new double[]{statistic[LOWER_QUARTILE], 
                                 statistic[UPPER_QUARTILE]},
                                 mild, extreme, whiskers, colIdx);
@@ -385,6 +409,15 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
         return m_array;
     }
 
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+            return m_hiliteHandler;
+    }
+    
     /**
      * {@inheritDoc}
      */
