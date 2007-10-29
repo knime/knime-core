@@ -56,7 +56,7 @@ public class EclipseClassCreator implements ClassCreator {
      * manually.
      */
     private final static String[] DEPRECATED_PLUGINS =
-            {"org.knime.deprecated", "org.knime.ext.weka.deprecated"};
+            {"org.knime.deprecated"};
 
     static {
         try {
