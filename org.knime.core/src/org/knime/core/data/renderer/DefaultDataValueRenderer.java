@@ -32,10 +32,16 @@ import org.knime.core.data.DataColumnSpec;
 
 
 /**
- * Default renderer to be used as to render a <code>DataCell</code>. It will 
- * simply use the <code>DataCell</code>'s <code>toString()</code> method and 
- * display this String. 
- *  
+ * Default implementation for a renderer for 
+ * {@link org.knime.core.data.DataValue} objects. This class should be used
+ * (better: derived from) when the rendering is only a string representation
+ * of the <code>DataValue</code> object. It's recommended to derive this class
+ * and overwrite the {@link DefaultTableCellRenderer#setValue(Object)} and
+ * the {@link #getDescription()} methods. A correct implementation of 
+ * <code>setValue(Object)</code> will test if the argument object is of the 
+ * expected <code>DataValue</code> class and call 
+ * <code>super.setValue(Object)</code> with the desired string representation.
+ *   
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class DefaultDataValueRenderer 
@@ -110,7 +116,7 @@ public class DefaultDataValueRenderer
 
     /**
      * Returns always <code>true</code>.
-     * @see DataValueRenderer#accepts(DataColumnSpec)
+     * {@inheritDoc}
      */
     public boolean accepts(final DataColumnSpec spec) {
         return true;
