@@ -173,6 +173,15 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
         return "Gray Scale";
     }
     
+    /** Returns <code>true</code> if the spec contains domain information 
+     * and <code>false</code> otherwise. 
+     * {@inheritDoc} */
+    @Override
+    public boolean accepts(final DataColumnSpec spec) {
+        DataColumnDomain domain = spec.getDomain();
+        return domain.hasLowerBound() && domain.hasUpperBound();
+    }
+    
     /** @return the width of the icon, defaults to <code>getWidth()</code>. */
     protected int getIconWidth() {
         return getWidth();

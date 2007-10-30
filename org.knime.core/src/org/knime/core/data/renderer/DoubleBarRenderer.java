@@ -137,6 +137,15 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
     public String getDescription() {
         return "Bars";
     }
+    
+    /** Returns <code>true</code> if the spec contains domain information 
+     * and <code>false</code> otherwise. 
+     * {@inheritDoc} */
+    @Override
+    public boolean accepts(final DataColumnSpec spec) {
+        DataColumnDomain domain = spec.getDomain();
+        return domain.hasLowerBound() && domain.hasUpperBound();
+    }
 
     /** Private icon that is shown instead of any string. 
      * The code is mainly copied from javax.swing.plaf.basic.BasicIconFactory 
