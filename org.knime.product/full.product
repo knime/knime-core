@@ -50,7 +50,6 @@ Uses: Java, GEF, Log4J
    </plugins>
 
    <features>
-      <feature id="com.lowagie.itext" version="0.0.0"/>
       <feature id="org.apache.commons.codec" version="0.0.0"/>
       <feature id="org.apache.derby.core" version="0.0.0"/>
       <feature id="org.eclipse.birt" version="0.0.0"/>
