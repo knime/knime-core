@@ -38,10 +38,9 @@ import junit.framework.TestFailure;
 import junit.framework.TestResult;
 
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IPlatformRunnable;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.equinox.app.IApplication;
-import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.core.KNIMECorePlugin;
@@ -50,7 +49,7 @@ import org.knime.workbench.repository.RepositoryManager;
 /**
  * 
  */
-public class KNIMETestingApplication implements IApplication {
+public class KNIMETestingApplication implements IPlatformRunnable {
 
     private boolean m_analyzeLogFile = false;
 
@@ -66,7 +65,7 @@ public class KNIMETestingApplication implements IApplication {
     /**
      * {@inheritDoc}
      */
-    public Object start(IApplicationContext context) throws Exception {
+    public Object run(final Object args) throws Exception {
         // unless the user specified this property, we set it to true here
         // (true means no icons etc will be loaded, if it is false, the
         // loading of the repository manager is likely to print many errors
@@ -80,12 +79,6 @@ public class KNIMETestingApplication implements IApplication {
 
         // this is just to load the repository plug-in
         RepositoryManager.INSTANCE.toString();
-
-        context.applicationRunning();
-
-        Object args =
-                context.getArguments()
-                        .get(IApplicationContext.APPLICATION_ARGS);
 
         boolean correct = extractCommandLineArgs(args);
         if (!correct) {
