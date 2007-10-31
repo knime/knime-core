@@ -155,7 +155,7 @@ public class FrequentItemSetModel {
         for (Integer itemId : set.getItems()) {
             // for every item look at the referring column name
             String itemName;
-            if (m_nameMapping != null) {
+            if (m_nameMapping != null && m_nameMapping.size() > itemId) {
                 itemName = m_nameMapping.get(itemId);
             } else {
                 itemName = "item" + itemId;
