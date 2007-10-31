@@ -531,6 +531,10 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
                     + Linkage.COMPLETE);
         }
 
+        if (m_selectedColumns.getIncludeList().size() <= 0) {
+            throw new InvalidSettingsException("No column for clustering included");
+        }
+
         return new DataTableSpec[]{generateOutSpec(inSpecs[0])};
     }
 
