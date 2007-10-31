@@ -134,7 +134,8 @@ public class AssociationRuleModel {
             ruleModel.addDouble(SUPPORT, rule.getSupport());
             ruleModel.addDouble(CONFIDENCE, rule.getConfidence());
             String name;
-            if (m_nameMapping != null) {
+            if (m_nameMapping != null 
+                    && m_nameMapping.size() > rule.getConsequent()) {
                 name = m_nameMapping.get(rule.getConsequent());
             } else {
                 name = "item" + rule.getConsequent();
@@ -146,7 +147,7 @@ public class AssociationRuleModel {
             antecedentModel.addInt(ANTECEDENT_SIZE, antecedentSize);
             int itemCounter = 0;
             for (Integer item : rule.getAntecedent()) {
-                if (m_nameMapping != null) {
+                if (m_nameMapping != null && m_nameMapping.size() > item) {
                     name = m_nameMapping.get(item);
                 } else {
                     name = "item" + item;

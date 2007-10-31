@@ -357,7 +357,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
                 Integer item = set.getItems().get(i);
                 // for every item look at the referring column name
                 String itemName;
-                if (m_nameMapping != null) {
+                if (m_nameMapping != null && m_nameMapping.size() > item) {
                     itemName = m_nameMapping.get(item);
                 } else {
                     itemName = "item" + item;
@@ -432,7 +432,7 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
                 = new DataCell[m_maxItemSetLength.getIntValue() + 4];
             allCells[0] = new DoubleCell(support);
             allCells[1] = new DoubleCell(confidence);
-            if (m_nameMapping != null) {
+            if (m_nameMapping != null && m_nameMapping.size() > consequent) {
                 allCells[2] = new StringCell(m_nameMapping.get(consequent));
             } else {
                 allCells[2] = new StringCell("Item" + consequent);
@@ -440,7 +440,8 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
             allCells[3] = new StringCell("<---");
             for (int i = 0; i < antecedent.size() 
                 && i < m_maxItemSetLength.getIntValue() + 4; i++) {
-                if (m_nameMapping != null) {
+                if (m_nameMapping != null 
+                        && m_nameMapping.size() > antecedent.get(i)) {
                     allCells[i + 4] = new StringCell(m_nameMapping
                             .get(antecedent.get(i)));
                 } else {
