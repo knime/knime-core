@@ -1,5 +1,5 @@
 
-KNIME 1.3.0.BETA Developer version
+KNIME 1.3.0.RC1 Developer version
 ============================================================
 
 Quickstart guide:
