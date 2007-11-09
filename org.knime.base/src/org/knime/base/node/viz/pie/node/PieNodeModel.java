@@ -481,8 +481,8 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
             throw e;
         } catch (final Exception e) {
             LOGGER.warn("Error while saving saving internals: "
-                    + e.getMessage());
-            throw new IOException(e);
+                    + e.getMessage(), e);
+            throw new IOException(e.getMessage());
         }
     }
 
