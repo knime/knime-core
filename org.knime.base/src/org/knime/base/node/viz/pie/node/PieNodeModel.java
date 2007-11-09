@@ -221,7 +221,8 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
         final DataColumnSpec pieCol = spec.getColumnSpec(colName);
         if (pieCol == null) {
             throw new InvalidSettingsException(
-                    "No column spec found for column with name: " + colName);
+                    "Specified column name '" + colName
+                    + "' not found in input table");
         }
         if (!PieColumnFilter.validDomain(pieCol)) {
             throw new InvalidSettingsException("No valid pie column selected.");
@@ -384,10 +385,31 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
     }
 
     /**
+     * @param name the name of the pie column
+     */
+    protected void setPieColumnName(final String name) {
+        if (name == null) {
+            throw new NullPointerException("Pie column name must not be null");
+        }
+        m_pieColumn.setStringValue(name);
+    }
+
+    /**
      * @return the selected pie column name
      */
     protected String getPieColumnName() {
         return m_pieColumn.getStringValue();
+    }
+
+    /**
+     * @param name the name of the aggregation column
+     */
+    protected void setAggregationColumnName(final String name) {
+        if (name == null) {
+            throw new NullPointerException(
+                    "Aggregation column name must not be null");
+        }
+        m_aggrColumn.setStringValue(name);
     }
 
     /**
@@ -459,8 +481,8 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
             throw e;
         } catch (final Exception e) {
             LOGGER.warn("Error while saving saving internals: "
-                    + e.getMessage(), e);
-            throw new IOException(e.getMessage());
+                    + e.getMessage());
+            throw new IOException(e);
         }
     }
 
