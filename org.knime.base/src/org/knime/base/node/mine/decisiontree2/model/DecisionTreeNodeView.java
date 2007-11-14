@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -19,7 +19,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   30.10.2005 (mb): created
  */
@@ -35,9 +35,11 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.knime.core.data.property.ColorAttr;
+
 /**
  * Provides view on internals of a DecisionTreeNode.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
 public class DecisionTreeNodeView extends JPanel {
@@ -45,7 +47,7 @@ public class DecisionTreeNodeView extends JPanel {
 
     /**
      * Constructor. Build view for a node of decision tree
-     * 
+     *
      * @param node decision tree node
      */
     public DecisionTreeNodeView(final DecisionTreeNode node) {
@@ -96,13 +98,35 @@ public class DecisionTreeNodeView extends JPanel {
                 // c4.5 puts the stats (counts!) of the parent node into this
                 // node as well.
             } else if (colorCounts.size() == 1) {
-                // only one color: pure leaf
-                double totalCount = m_node.getEntireClassCount();
-                double ownCount = m_node.getOwnClassCount();
-                int angle = (int)(ownCount * 360 / totalCount);
+                // only one color: pure leaf or no colors available!
                 Color c = colorCounts.keySet().iterator().next();
-                g.setColor(c);
-                g.fillArc(0, 2, sqLen - 4, sqLen - 4, 0, angle);
+                if (c.equals(ColorAttr.DEFAULT.getColor())) {
+                    // default color: guess no color handler was available
+                    // draw an (empty) pie segment for the majority class
+                    g.setColor(this.getParent().getBackground());
+                    g.fillRect(0, 0, sqLen - 1, sqLen - 1);
+                    double totalCount = m_node.getEntireClassCount();
+                    double ownCount = m_node.getOwnClassCount();
+                    int angle = (int)(ownCount * 360 / totalCount);
+                    double radAngle = 2 * Math.PI * ownCount / totalCount;
+                    g.setColor(Color.BLACK);
+                    g.drawArc(0, 2, sqLen - 4, sqLen - 4, 0, angle);
+                    int orgX = 0 + (sqLen - 4) / 2;  // X origin of pie
+                    int orgY = 2 + (sqLen - 4) / 2;  // Y origin of pie
+                    double length = (sqLen - 4) / 2;    // radius if pie
+                    g.drawLine(orgX, orgY, orgX + (int)length, orgY);
+                    int endX = orgX + (int)(Math.cos(radAngle) * length);
+                    int endY = orgY - (int)(Math.sin(radAngle) * length);
+                    g.drawLine(orgX, orgY, endX, endY);
+                } else {
+                    // make sure we leave rest gray if not all of the counts
+                    // for the only color were "used".
+                    double totalCount = m_node.getEntireClassCount();
+                    double ownCount = colorCounts.get(c);
+                    int angle = (int)(ownCount * 360 / totalCount);
+                    g.setColor(c);
+                    g.fillArc(0, 2, sqLen - 4, sqLen - 4, 0, angle);
+                }
             } else {
                 double totalSum = 0.0;
                 for (Color c : colorCounts.keySet()) {
@@ -111,7 +135,8 @@ public class DecisionTreeNodeView extends JPanel {
                 int orgAngle = 0;
                 for (Color c : colorCounts.keySet()) {
                     double thisCount = colorCounts.get(c).doubleValue();
-                    int deltaAngle = (int)Math.round(thisCount * 360.0 / totalSum);
+                    int deltaAngle = (int)Math.round(
+                            thisCount * 360.0 / totalSum);
                     if (deltaAngle > 0) {
                         // only paint if it's worth it... (bugfix #892)
                         g.setColor(c);
@@ -163,7 +188,7 @@ public class DecisionTreeNodeView extends JPanel {
                 int fillHeight = (int)(ownCount * barHeight / parentCount);
                 g.drawRect(0, 1, width - 4, barHeight + 1);
                 g.setColor(Color.ORANGE);
-                g.fillRect(1, 2 + barHeight - fillHeight, 
+                g.fillRect(1, 2 + barHeight - fillHeight,
                             width - 5, fillHeight);
           //  }
         }
