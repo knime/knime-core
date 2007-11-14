@@ -5,16 +5,16 @@
          point="org.knime.workbench.repository.categories">
       <category
             after="meta"
-            description="Scripting nodes"
+            description="miscellaneous nodes"
             icon="icons/missing.gif"
-            level-id="scripting"
-            name="Scripting"
+            level-id="misc"
+            name="Misc"
             path="/"/>
    </extension>
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            category-path="/scripting"
+            category-path="/misc"
             factory-class="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"
             id="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"/>
    </extension>
