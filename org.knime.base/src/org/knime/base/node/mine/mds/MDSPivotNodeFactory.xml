@@ -4,9 +4,9 @@
 	<name>MDS Pivot</name>
 	
 	<shortDescription>
-		Performs a Multi-Dimensional Scaling (MDS) on a number of selected
-		pivot elements while the remaining instances are embedded into the 
-		lower-dimensional space based on the given pivot (landmark) embedding.
+		Performs a Multi-Dimensional Scaling (MDS) on the first number of rows
+		(pivot elements) while the remaining instances are embedded into the 
+		lower-dimensional space based on the computed embedding (landmarks).
 	</shortDescription>
 	
 	<fullDescription>
@@ -14,18 +14,19 @@
 			The algorithm uses only a subset of the data (pivot elements) to
 			compute an embedding into lower dimension space. The remaining 
 			instances are mapped respectively to the landmark elements. For
-			details see: 
+			details see 
 			<a href="http://www.inf.uni-konstanz.de/algo/publications/bp-empmdsld-06.pdf">
     		Eigensolver Methods for Progressive Multidimensional Scaling of Large Data</a>
+    		published by Brandes and Pich.
 		</intro>
 		<option name="Lower Dimension:">
-			Select lower dimensionality to emebbed data into.
+			Select lower dimensionality to embed data into.
 		</option>
 		<option name="Pivot elements:">
 			Select number of pivot elements used as initial landmarks.
 		</option>
 	    <option name="Column Selection:">
-			Select number of column to be embeded into lower dimension.
+			Select number of column to be embedded into lower dimension.
 		</option>
 	</fullDescription>
 	
