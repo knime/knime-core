@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -38,7 +38,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * This progress monitor uses a static timer task looking every 250 milliseconds
  * if progress information has changed. The <code>ProgressEvent</code> is
  * fired if either the value or message has changed only.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
@@ -119,7 +119,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     /**
      * Creates a new progress monitor with an empty set of listeners.
-     * 
+     *
      * @see #DefaultNodeProgressMonitor(NodeProgressListener)
      */
     public DefaultNodeProgressMonitor() {
@@ -134,7 +134,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /**
      * Creates a new node progress monitor, with the cancel requested false, and
      * no progress.
-     * 
+     *
      * @param l Initial node progress listener.
      */
     public DefaultNodeProgressMonitor(final NodeProgressListener l) {
@@ -153,9 +153,9 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /**
      * Checks if the execution was canceled. If yes, it throws an
      * <code>CanceledExecutionExeption</code>.
-     * 
+     *
      * @see #isCanceled
-     * 
+     *
      * @throws CanceledExecutionException If the execution has been canceled.
      */
     public void checkCanceled() throws CanceledExecutionException {
@@ -174,7 +174,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     /**
      * Updates the progress value and message if different from the current one.
-     * 
+     *
      * @see #setProgress(double)
      * @param progress The (new) progress value.
      * @param message The text message shown in the progress monitor.
@@ -189,7 +189,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     /**
      * Sets a new progress value. If the value is not in range, it will be set
      * to <code>null</code>.
-     * 
+     *
      * @param progress The value between 0 and 1.
      */
     public synchronized void setProgress(final double progress) {
@@ -207,7 +207,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     /**
      * Sets a new message according to the argument.
-     * 
+     *
      * @param message The text message shown in the progress monitor.
      */
     public void setProgress(final String message) {
@@ -345,7 +345,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Creates new sub progress monitor.
-         * 
+         *
          * @param parent The parent of this monitor, i.e. where to report
          *            progress to and get the canceled status from.
          * @param max The maximum progress (w.r.t parent) that this monitor
@@ -360,7 +360,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Must not be called. Throws IllegalStateException.
-         * 
+         *
          * @see NodeProgressMonitor#addProgressListener(NodeProgressListener)
          */
         public void addProgressListener(final NodeProgressListener l) {
@@ -369,7 +369,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Delegates to parent.
-         * 
+         *
          * @see NodeProgressMonitor#checkCanceled()
          */
         public void checkCanceled() throws CanceledExecutionException {
@@ -389,7 +389,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Get the subprogress, the value scaled to [0, 1].
-         * 
+         *
          * @see NodeProgressMonitor#getProgress()
          */
         public Double getProgress() {
@@ -398,7 +398,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Must not be called. Throws IllegalStateException.
-         * 
+         *
          * @see NodeProgressMonitor#removeAllProgressListener()
          */
         public void removeAllProgressListener() {
@@ -407,7 +407,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Must not be called. Throws IllegalStateException.
-         * 
+         *
          * @see NodeProgressMonitor#removeProgressListener(NodeProgressListener)
          */
         public void removeProgressListener(final NodeProgressListener l) {
@@ -416,7 +416,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Must not be called. Throws IllegalStateException.
-         * 
+         *
          * @see NodeProgressMonitor#setExecuteCanceled()
          */
         public void setExecuteCanceled() {
@@ -432,7 +432,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Delegates to parent.
-         * 
+         *
          * @see NodeProgressMonitor#setProgress(String)
          */
         public void setProgress(final String message) {
@@ -476,30 +476,44 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
          * {@inheritDoc}
          */
         public void setProgress(final double progress) {
+            // synchronization is imported here: multiple sub progresses may
+            // report to the parent. "getOldProgress" and "setNewProgress" must
+            // be an atomic operation
             synchronized (m_parent) {
-                double subProgress = calcSubProgress(progress);
-                m_parent.setProgress(subProgress);
-            }
-        }
-
-        private double calcSubProgress(final double progress) {
-            Double progressOfParent = m_parent.getProgress();
-            double boundedProgress = Math.min(progress, 1.0);
-            // diff to the last progress update
-            double diff = boundedProgress - m_lastProg;
-            if (diff < 0.001) {
+                Double progressOfParent = m_parent.getProgress();
+                double boundedProgress = Math.max(0.0, Math.min(progress, 1.0));
+                // diff to the last progress update
+                double diff = Math.max(0.0, boundedProgress - m_lastProg);
+                double subProgress = Math.min(m_maxProg, diff * m_maxProg);
                 if (progressOfParent != null) {
-                    return progressOfParent;
-                } else {
-                    return 0;
+                    subProgress += progressOfParent;
                 }
-            }
-            m_lastProg = boundedProgress;
-            if (progressOfParent == null) {
-                return Math.min(m_maxProg, diff * m_maxProg);
-            } else {
-                // scaled to our sub range
-                return progressOfParent + Math.min(m_maxProg, diff * m_maxProg);
+                // we silently swallow small progress updates here as a sequence
+                // of updates (and all of which are scaled using m_maxProg) may
+                // lead to a high accumulated rounding error
+                if (diff < 0.001 && progressOfParent != null) {
+                    // if the parent has no progress so far, we still set
+                    // that small progress, for the parent to show 0%
+                    return;
+                }
+                // the following is sort of a workaround: we know our parent's
+                // old progress value, then try(!) to set an updated new value
+                // and if the parent's new progress has indeed changed (this
+                // object is the only one, which can set the parent's progress),
+                // we can also update our internal progress. If
+                // m_parent.setProgress did not result in a change of the
+                // parent's progress, this object's update was too little to get
+                // propagated, that means we stick with the previous propagated
+                // progress
+                m_parent.setProgress(subProgress);
+                Double newProgressOfParent = m_parent.getProgress();
+                if (newProgressOfParent != null) {
+                    if (progressOfParent == null 
+                            || progressOfParent.doubleValue() 
+                                != newProgressOfParent.doubleValue()) {
+                        m_lastProg = boundedProgress;
+                    }
+                }
             }
         }
     }
