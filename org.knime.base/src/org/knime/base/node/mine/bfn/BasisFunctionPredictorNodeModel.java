@@ -37,7 +37,6 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -198,32 +197,7 @@ public abstract class BasisFunctionPredictorNodeModel extends NodeModel {
     }
     
     private ColumnRearranger createSpec(final DataTableSpec oSpec) {
-        String newColumn = m_applyColumn;
-        int idx = 0;
-        final String dupString = "_duplicate";
-        while (true) {
-            // if apply column exist, "_duplicate<id>" is appended 
-            if (oSpec.containsName(newColumn)) {
-                newColumn = m_applyColumn + dupString;
-                if (idx > 0) {
-                    newColumn += idx;
-                }
-                idx++;
-            } else {
-                if (!m_applyColumn.equals(newColumn)) {
-                    String msg = 
-                        "The apply column name \"" + m_applyColumn 
-                        + "\" has changed to \"" + newColumn
-                        + "\" to avoid duplicate column names.";
-                    setWarningMessage(msg);
-                    NodeLogger.getLogger(
-                            BasisFunctionPredictorNodeModel.class).warn(msg);
-                    // set new column name
-                    m_applyColumn = newColumn;
-                }     
-                break;
-            }
-        }
+        m_applyColumn = DataTableSpec.getUniqueColumnName(oSpec, m_applyColumn);
         ColumnRearranger colreg = new ColumnRearranger(oSpec);
         colreg.append(new BasisFunctionPredictorCellFactory(
                 m_modelSpec, m_applyColumn));
