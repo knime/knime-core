@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <?pde version="3.1"?>
 
 <product application="org.knime.product.KNIME_APPLICATION" id="org.knime.product.KNIME_PRODUCT" name="KNIME" useFeatures="true">
@@ -6,7 +6,7 @@
    <aboutInfo>
       <image path="/org.knime.product/icons/knime64.gif"/>
       <text>
-         Welcome to KNIME v1.3.0.RC2
+         Welcome to KNIME v1.3.0.RC3
 the Konstanz Information Miner
 Copyright, 2003 - 2007
 email: contact@knime.org
