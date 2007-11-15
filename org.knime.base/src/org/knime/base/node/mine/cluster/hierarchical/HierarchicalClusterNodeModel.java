@@ -42,6 +42,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
@@ -533,6 +534,18 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
 
         if (m_selectedColumns.getIncludeList().size() <= 0) {
             throw new InvalidSettingsException("No column for clustering included");
+        }
+        
+        for (String col : m_selectedColumns.getIncludeList()) {
+            DataColumnSpec colSpec = inSpecs[0].getColumnSpec(col);
+            if (colSpec == null) {
+                throw new InvalidSettingsException("Column '" + col + "' does "
+                        + "not exist in input table");
+            }
+            if (!colSpec.getType().isCompatible(DoubleValue.class)) {
+                throw new InvalidSettingsException("Column '" + col
+                        + "' is not a numeric column");
+            }
         }
 
         return new DataTableSpec[]{generateOutSpec(inSpecs[0])};
