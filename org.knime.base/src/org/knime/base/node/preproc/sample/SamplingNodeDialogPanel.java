@@ -87,7 +87,7 @@ public class SamplingNodeDialogPanel extends JPanel {
                 new JSpinner(new SpinnerNumberModel(100, 1, Integer.MAX_VALUE,
                         50));
         m_relativeSpinner =
-                new JSpinner(new SpinnerNumberModel(10.0, 0.0, 100.0, 0.1));
+                new JSpinner(new SpinnerNumberModel(10.0, 0.0, 100.0, 2.0));
         final int width = 8;
         JSpinner.DefaultEditor editor =
                 (JSpinner.DefaultEditor)m_absoluteSpinner.getEditor();
