@@ -59,6 +59,7 @@ public class TimestampCell extends DataCell implements TimestampValue {
      */
     private Date m_date;
     private boolean m_intraDay = false;
+    private String m_dateString = null;
     
     /**
      * Creates a new Timestamp Cell based on the given value.
@@ -93,6 +94,7 @@ public class TimestampCell extends DataCell implements TimestampValue {
         // parse string
         m_date = df.parse(s);
     }
+    
 
     /** Getter methods for internals.
      * 
@@ -107,18 +109,16 @@ public class TimestampCell extends DataCell implements TimestampValue {
      */
     @Override
     public String toString() {
-      SimpleDateFormat formatter;
-      
-      if (m_intraDay) {
-                formatter = new SimpleDateFormat("hh:mm:ss");          
-        } else {
-        formatter = 
-            new SimpleDateFormat("yyyy.MMM.dd");
+        if (m_dateString == null ) {
+          SimpleDateFormat formatter;
+          if (m_intraDay) {
+              formatter = new SimpleDateFormat("hh:mm:ss");          
+            } else {
+                formatter = new SimpleDateFormat("yyyy.MMM.dd");
+            }
+            m_dateString = formatter.format(m_date);
         }
-      
-        String dateString = formatter.format(m_date);
- //       return m_date.toString();
-        return dateString;
+        return m_dateString;
     }
 
     /**
