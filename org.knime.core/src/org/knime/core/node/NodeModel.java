@@ -472,25 +472,26 @@ public abstract class NodeModel {
         // - only if the execute didn't issue a warning already 
         if ((getWarningMessage() == null) 
                 || (getWarningMessage().length() == 0)) { 
-            boolean warn = false;
+            boolean hasData = (outData.length == 0);
             for (int i = 0; i < outData.length; i++) {
                 if (outData[i].getDataTableSpec().getNumColumns() < 1) {
                     m_logger.info("The result table at port " + i 
                             + " has no columns");
-                    warn = true;
                 }
                 if (outData[i].getRowCount() < 1) {
                     m_logger.info("The result table at port " + i 
                             + " contains no rows");
-                    warn = true;
+                }
+                if (outData[i].getDataTableSpec().getNumColumns() > 0
+                        && outData[i].getRowCount() > 0) {
+                    hasData = true;
                 }
             }
-            if (warn) {
+            if (!hasData) {
                 setWarningMessage(
-                        "Node created empty data table(s) at the output");   
+                        "Node created empty data tables on all out-ports.");   
             }
         }
-        
             
         setExecuted(true);
         return outData;
