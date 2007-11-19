@@ -58,7 +58,7 @@ public class String2DateDialog extends DefaultNodeSettingsPane {
 
         DialogComponent columnChooser =
                 new DialogComponentColumnNameSelection(columnName,
-                        "Columns containing strings: ", 0, StringValue.class);
+                        "Column containing strings to be converted: ", 0, StringValue.class);
         addDialogComponent(columnChooser);
         
 /*        LinkedList ll = new LinkedList();
