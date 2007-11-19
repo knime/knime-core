@@ -263,6 +263,10 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
         ExecutionMonitor exec2 = exec.createSubProgress(0.5);
         List<BitSet> transactions = preprocess(input, exec1);
 
+        m_nameMapping = input.getDataTableSpec().getColumnSpec(
+                m_bitVectorColumn.getStringValue()).getElementNames();
+        
+        
         m_apriori = AprioriAlgorithmFactory.getAprioriAlgorithm(
                 AprioriAlgorithmFactory.AlgorithmDataStructure.valueOf(
                         m_underlyingStruct.getStringValue()), 
@@ -495,9 +499,6 @@ public class SubgroupMinerModel extends NodeModel implements HiLiteMapper {
             throw new InvalidSettingsException(
                     "Set the column with the bit vectors");
         }
-        m_nameMapping = inSpecs[0].getColumnSpec(
-                m_bitVectorColumn.getStringValue())
-            .getElementNames();
         DataTableSpec outputSpec;
         if (m_associationRules.getBooleanValue()) {
             outputSpec = createAssociationRulesSpec();
