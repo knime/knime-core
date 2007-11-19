@@ -1,28 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./kmeans.ico" type = "Learner">
-	<name>Fuzzy c-Means</name>
+	<name>Fuzzy c-Pearson-Means</name>
 	<shortDescription>
-	    Performs fuzzy c-means clustering.
+	    Performs fuzzy c-means clustering using Pearson Coefficient.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
 		<p>
-			The fuzzy c-means algorithm is a well-known unsupervised learning 
-			technique that can be used to reveal the underlying structure of the data.
-			Fuzzy clustering allows each data point to belong to several clusters, with
-			a degree of membership to each one.<br />
-			<b>Make sure that the input data is normalized to obtain better clustering
-			results.</b><br/>
-			The list of attributes to use can be set in the second tab of the
-			dialog.<br/>
-			The first output datatable provides the original datatable with the 
-			cluster memberships to each cluster. The second datatable provides 
-			the values of the cluster prototypes.<br />
-			Additionally, it is possible to induce a noise cluster, to detect noise
-			in the dataset, based on the approach from R. N. Dave: 'Characterization
-			and detection of noise in clustering'.
+		under construction...
 		</p>
 	</intro>
 	<option name="Number of clusters">

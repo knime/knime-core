@@ -33,7 +33,7 @@ import org.knime.core.node.NodeView;
  * @author Michael Berthold, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
-public class FuzzyClusterNodeFactory extends NodeFactory {
+public class FuzzyPearsonClusterNodeFactory extends NodeFactory {
     /**
      * {@inheritDoc}
      */
