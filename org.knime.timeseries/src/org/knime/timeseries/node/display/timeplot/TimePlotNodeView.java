@@ -74,6 +74,22 @@ public class TimePlotNodeView extends DefaultVisualizationNodeView {
     }
     
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void modelChanged() {
+        for (AbstractPlotter plotterle : m_plotters) {
+            if (plotterle instanceof TimePlotter) {
+                ((TimePlotter)plotterle)
+                       .setXColumnIndex(((TimePlotNodeModel)getNodeModel())
+                       .getColXIndex());
+            }
+        }
+        // TODO Auto-generated method stub
+        super.modelChanged();
+    }
+    
+    /**
      * A generic {@link org.knime.core.node.NodeView} which sets the model and 
      * calls the right methods of the plotters the title is the title of the 
      * according tab.
