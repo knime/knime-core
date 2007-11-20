@@ -218,7 +218,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
     /*
      * The underlying fuzzy c-means algorithm.
      */
-    private FCMAlgorithm m_fcmAlgo;
+    private FCCAlgorithm m_fcmAlgo;
     
     /*
      * Object to calculate cluster quality measures 
@@ -271,7 +271,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
                     m_fcmAlgo = new FCMAlgorithmMemory(m_nrClusters,
                             m_fuzzifier, m_calculateDelta, m_lambda);
                 } else {
-                    m_fcmAlgo = new FCMAlgorithm(m_nrClusters, m_fuzzifier,
+                    m_fcmAlgo = new FCCAlgorithm(m_nrClusters, m_fuzzifier,
                             m_calculateDelta, m_lambda);
                 }
             } else {
@@ -279,7 +279,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
                     m_fcmAlgo = new FCMAlgorithmMemory(m_nrClusters,
                             m_fuzzifier, m_calculateDelta, m_delta);
                 } else {
-                    m_fcmAlgo = new FCMAlgorithm(m_nrClusters, m_fuzzifier,
+                    m_fcmAlgo = new FCCAlgorithm(m_nrClusters, m_fuzzifier,
                             m_calculateDelta, m_delta);
                 }
             }
@@ -287,7 +287,7 @@ public class FuzzyClusterNodeModel extends NodeModel {
             if (m_memory) {
                 m_fcmAlgo = new FCMAlgorithmMemory(m_nrClusters, m_fuzzifier);
             } else {
-                m_fcmAlgo = new FCMAlgorithm(m_nrClusters, m_fuzzifier);
+                m_fcmAlgo = new FCCAlgorithm(m_nrClusters, m_fuzzifier);
             }
         }
 

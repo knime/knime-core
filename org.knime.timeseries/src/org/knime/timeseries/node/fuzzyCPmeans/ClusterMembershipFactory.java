@@ -55,7 +55,7 @@ public class ClusterMembershipFactory implements CellFactory {
      * 
      * @param algo the trained FCM-model
      */
-    public ClusterMembershipFactory(final FCMAlgorithm algo) {
+    public ClusterMembershipFactory(final FCCAlgorithm algo) {
         m_nrClusters = algo.getClusterCentres().length;
         m_weights = algo.getweightMatrix();
         m_noise = algo.noiseClustering();

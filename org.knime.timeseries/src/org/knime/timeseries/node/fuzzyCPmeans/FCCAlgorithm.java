@@ -26,6 +26,7 @@ package org.knime.timeseries.node.fuzzyCPmeans;
 
 import java.util.Iterator;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import org.knime.base.node.mine.bfn.Distance;
 import org.knime.core.data.DataCell;
@@ -41,7 +42,7 @@ import org.knime.core.node.ExecutionContext;
  * 
  * @author Nicolas Cebron, University of Konstanz
  */
-public class FCMAlgorithm {
+public class FCCAlgorithm {
     
     // dimension of input space
     private int m_dimension;
@@ -105,7 +106,7 @@ public class FCMAlgorithm {
      * @param nrClusters the number of cluster prototypes to use
      * @param fuzzifier allows the clusters to overlap
      */
-    public FCMAlgorithm(final int nrClusters, final double fuzzifier) {
+    public FCCAlgorithm(final int nrClusters, final double fuzzifier) {
         m_nrClusters = nrClusters;
         m_fuzzifier = fuzzifier;
         m_noise = false;
@@ -128,7 +129,7 @@ public class FCMAlgorithm {
      * @param deltalambda the delta value, if the previous parameter is
      *            <code>false</code>, the lambda value otherwise
      */
-    public FCMAlgorithm(final int nrClusters, final double fuzzifier,
+    public FCCAlgorithm(final int nrClusters, final double fuzzifier,
             final boolean calculateDelta, final double deltalambda) {
         this(nrClusters + 1, fuzzifier);
         m_calculateDelta = calculateDelta;
@@ -291,12 +292,11 @@ public class FCMAlgorithm {
         for (int i = 0; i < vector1.length; i++) {
             double diff = 0;
             if (!vector2.getCell(i).isMissing()) {
-                diff = vector1[i]
-                        - ((DoubleValue)vector2.getCell(i)).getDoubleValue();
+                diff = vector1[i]*((DoubleValue)vector2.getCell(i)).getDoubleValue();
             }
-            distance += diff * diff;
+            distance += diff;
         }
-        return distance;
+        return 1.0-distance;
     }
 
     /*
@@ -330,20 +330,25 @@ public class FCMAlgorithm {
                     if (!(dRow.getCell(j).isMissing())) {
                         DataCell dc = dRow.getCell(j);
                         if (dc instanceof DoubleValue) {
-                            sumNumerator[j] += Math.pow(m_weightMatrix[i][c],
+                        	sumNumerator[j] = Math.pow(m_weightMatrix[i][c],
                                     m_fuzzifier)
                                     * ((DoubleValue)dc).getDoubleValue();
                         }
                     }
                 }
-                sumDenominator += Math.pow(m_weightMatrix[i][c], m_fuzzifier);
                 i++;
                 if (m_noise && m_calculateDelta) {
                     sumupdate += m_distance.compute(m_clusters[c], dRow);
                 }
             } // end while for all datarows sum up
+            
+            
+            double norm  =0;
             for (int j = 0; j < m_dimension; j++) {
-                double newValue = sumNumerator[j] / sumDenominator;
+            	norm += sumNumerator[j];
+            }
+            for (int j = 0; j < m_dimension; j++) {
+                double newValue = sumNumerator[j] / norm;
                 m_totalChange += Math.abs(m_clusters[c][j] - newValue);
                 m_clusters[c][j] = newValue;
             }

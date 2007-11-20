@@ -36,7 +36,7 @@ import org.knime.core.node.ExecutionContext;
  * 
  * @author Nicolas Cebron, University of Konstanz
  */
-public class FCMAlgorithmMemory extends FCMAlgorithm {
+public class FCMAlgorithmMemory extends FCCAlgorithm {
   
     /*
      * Data to be clustered
@@ -316,11 +316,30 @@ public class FCMAlgorithmMemory extends FCMAlgorithm {
                     sumupdate += getDistance(clusters[c], row);
                 }
             } // end while for all datarows sum up
-            for (int j = 0; j < dimension; j++) {
-                double newValue = sumNumerator[j] / sumDenominator;
-                addTotalChange(Math.abs(clusters[c][j] - newValue));
-                setClusterValue(c, j, newValue);
-            }
+
+           double xnorm  =0;
+         for (int j = 0; j < dimension; j++) {
+        	 double newValue = sumNumerator[j] / sumDenominator;
+         	//addTotalChange(Math.abs(clusters[c][j] - newValue));
+         	//setClusterValue(c, j, newValue);
+         	xnorm += newValue*newValue;
+         }
+         xnorm = Math.sqrt(xnorm);
+           
+           double norm  =0;
+           double xnorm2=0;
+           for (int j = 0; j < dimension; j++) {
+           	norm += sumNumerator[j]*sumNumerator[j];
+           }
+           norm = Math.sqrt(norm);
+           for (int j = 0; j < dimension; j++) {
+             double newValue = sumNumerator[j] / norm;
+             addTotalChange(Math.abs(clusters[c][j] - newValue));
+             setClusterValue(c, j, newValue);
+          	xnorm2 += newValue*newValue;
+           }
+           xnorm2 = Math.sqrt(xnorm2);
+           System.out.println(xnorm2);
         }
 
         /*
