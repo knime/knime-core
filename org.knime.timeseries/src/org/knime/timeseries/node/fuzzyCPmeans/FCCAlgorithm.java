@@ -26,7 +26,6 @@ package org.knime.timeseries.node.fuzzyCPmeans;
 
 import java.util.Iterator;
 import java.util.Random;
-import java.util.logging.Logger;
 
 import org.knime.base.node.mine.bfn.Distance;
 import org.knime.core.data.DataCell;
@@ -305,7 +304,6 @@ public class FCCAlgorithm {
     private void updateClusterCenters(final DataTable inData,
             final ExecutionContext exec) throws CanceledExecutionException {
         double[] sumNumerator = new double[m_dimension];
-        double sumDenominator = 0;
         double sumupdate = 0;
         // for each cluster center
         for (int c = 0; c < m_nrClusters; c++) {
@@ -318,7 +316,6 @@ public class FCCAlgorithm {
             for (int j = 0; j < m_dimension; j++) {
                 sumNumerator[j] = 0;
             }
-            sumDenominator = 0;
 
             RowIterator ri = inData.iterator();
             int i = 0;
