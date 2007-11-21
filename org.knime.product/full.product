@@ -86,6 +86,7 @@ Uses: Java, GEF, Log4J
       <feature id="org.knime.features.ext.jep" version="1.4.0"/>
       <feature id="org.knime.features.ext.birt" version="1.4.0"/>
       <feature id="org.knime.features.base.exttool" version="1.4.0"/>
+      <feature id="org.knime.features.ext.poi" version="1.4.0"/>
    </features>
 
 </product>
