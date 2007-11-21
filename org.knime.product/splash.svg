@@ -13,12 +13,12 @@
    inkscape:export-ydpi="90"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    inkscape:version="0.45.1"
-   sodipodi:docbase="/var/tmp/kdecache-thor/krun"
-   sodipodi:docname="20211.0.splash.svg"
+   sodipodi:docbase="/home/thor/workspace/KNIME-branches/org.knime.product"
+   sodipodi:docname="splash.svg"
    sodipodi:version="0.32"
    version="1.0"
    width="455"
-   inkscape:export-filename="/var/tmp/kdecache-thor/krun/splash.png">
+   inkscape:export-filename="/home/thor/workspace/KNIME-branches/org.knime.product/splash.png">
   <svg:defs
      id="defs4">
     <font
@@ -2534,14 +2534,12 @@
            style="font-size:7.20367289px;font-style:normal;font-weight:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
            x="439.30548"
            xml:space="preserve"
-           y="0.92131042">
-<svg:tspan
+           y="0.92131042"> <svg:tspan
    id="tspan2183"
    sodipodi:role="line"
    style="font-size:9.60489655px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;font-family:Arial Rounded MT Bold"
    x="441.59884"
-   y="0.92131042">(Build November 15, 2007)</svg:tspan>
-</svg:text>
+   y="0.92131042">(Build November 21, 2007)</svg:tspan> </svg:text>
       </svg:g>
     </svg:g>
   </svg:g>
