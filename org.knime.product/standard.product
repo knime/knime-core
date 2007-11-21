@@ -6,7 +6,7 @@
    <aboutInfo>
       <image path="/org.knime.product/icons/knime64.gif"/>
       <text>
-         Welcome to KNIME v1.3.0.RC3
+         Welcome to KNIME v1.3.1
 the Konstanz Information Miner
 Copyright, 2003 - 2007
 email: contact@knime.org
@@ -50,8 +50,8 @@ Uses: Java, GEF, Log4J
       <feature id="org.eclipse.gef" version="0.0.0"/>
       <feature id="org.eclipse.platform" version="0.0.0"/>
       <feature id="org.eclipse.rcp" version="0.0.0"/>
-      <feature id="org.knime.features.base" version="1.3.0"/>
-      <feature id="org.knime.features.product" version="1.3.0"/>
+      <feature id="org.knime.features.base" version="1.3.1"/>
+      <feature id="org.knime.features.product" version="1.3.1"/>
    </features>
 
 </product>
