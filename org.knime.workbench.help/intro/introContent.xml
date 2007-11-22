@@ -25,14 +25,14 @@
         	<link label="Get additional nodes" url="http://org.eclipse.ui.intro/runAction?pluginId=org.knime.workbench.help&amp;class=org.knime.workbench.help.intro.InvokeInstallSiteAction" 
 				id="Update" style-id="left">
 				<img id="newProject_img" style-id="content-img" src="css/graphics/icons/update.png" alt="Update"/>
-          		<text>Launches install wizard to get additional KNIME features (Weka, R, Chemistry...). </text>
+          		<text>Launches the install wizard to get additional KNIME features (Weka, R, Chemistry...). </text>
           		<!--(Weka, R-integration, Chemistry-extension (CDK), ...)</text>-->
         	</link>
       	
         	<link label="Go to KNIME" url="http://org.eclipse.ui.intro/switchToLaunchBar" 
         		id="Launch" style-id="left">
 				<img id="newProject_img" style-id="content-img" src="css/graphics/icons/launch.png" alt="Launch"/>
-          		<text>Closes this intro page and go to KNIME workbench.</text>
+          		<text>Closes this intro page and starts the KNIME workbench.</text>
         	</link>
 			
 			<!--link label="Create a new project..." 
