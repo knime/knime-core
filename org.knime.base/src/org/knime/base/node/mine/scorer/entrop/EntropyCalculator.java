@@ -440,13 +440,13 @@ public final class EntropyCalculator {
      */
     public static double getQuality(final Map<DataCell, DataCell> reference,
             final Map<DataCell, Set<DataCell>> clusterMap) {
-        // get the number of different clusters in the reference set
-        HashSet<DataCell> differentClusters = new HashSet<DataCell>();
-        for (DataCell c : reference.values()) {
-            differentClusters.add(c);
+        // optimistic guess (we don't have counterexamples!)
+        if (clusterMap.isEmpty()) {
+            return 1.0;
         }
-        int refClusterCount = differentClusters.size();
-        differentClusters = null; // garbage
+        // get the number of different clusters in the reference set
+        int refClusterCount = 
+            new HashSet<DataCell>(reference.values()).size();
         // normalizing value (such that the maximum value for the entropy is 1
         double normalizer = Math.log(refClusterCount) / Math.log(2.0);
         double quality = 0.0;
@@ -465,7 +465,7 @@ public final class EntropyCalculator {
             quality += size * (1.0 - normalizedEntropy);
         }
         // normalizing over the number of objects in the reference set
-        return quality / reference.size();
+        return quality / patCount;
     }
 
     /**
@@ -479,12 +479,20 @@ public final class EntropyCalculator {
      */
     public static double getEntropy(final Map<DataCell, DataCell> reference,
             final Map<DataCell, Set<DataCell>> clusterMap) {
-        double entropy = 0.0;
-        for (Set<DataCell> pats : clusterMap.values()) {
-            double e = entropy(reference, pats);
-            entropy += e;
+        // optimistic guess (we don't have counterexamples!)
+        if (clusterMap.isEmpty()) {
+            return 0.0;
         }
-        return entropy;
+        double entropy = 0.0;
+        int patCount = 0;
+        for (Set<DataCell> pats : clusterMap.values()) {
+            int size = pats.size();
+            patCount += size;
+            double e = entropy(reference, pats);
+            entropy += size * e;
+        }
+        // normalizing over the number of objects in the reference set
+        return entropy / patCount;
     }
 
     /**
