@@ -26,7 +26,6 @@ package org.knime.core.node.property.hilite;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -111,11 +110,15 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
         if (ids == null) {
             throw new NullPointerException("Array of hilit keys is null.");
         }
-        List<DataCell> list = Arrays.asList(ids);
-        if (list.contains(null)) {
-            throw new NullPointerException("Hilit key is null.");
+        for (DataCell c : ids) {
+            if (c == null) {
+                throw new NullPointerException("Hilit key is null.");
+            }
+            if (!m_hiLitKeys.contains(c)) {
+                return false;
+            }
         }
-        return m_hiLitKeys.containsAll(list);
+        return true;
     } 
 
     /**
@@ -126,6 +129,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * @param ids the row IDs to set hilited.
      * @deprecated Use {@link #fireHiLiteEvent(DataCell...)} instead
      */
+    @Deprecated
     public synchronized void hiLite(final DataCell... ids) {
         fireHiLiteEvent(ids);
     }
@@ -149,6 +153,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * @param ids the row IDs to set unhilited
      * @deprecated Use {@link #fireUnHiLiteEvent(DataCell...)} instead
      */    
+    @Deprecated
     public synchronized void unHiLite(final DataCell... ids) {
         fireUnHiLiteEvent(ids);
     }
@@ -174,6 +179,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      *      <code>null</code>
      * @deprecated Use {@link #fireHiLiteEvent(Set)} instead
      */
+    @Deprecated
     public synchronized void hiLite(final Set<DataCell> ids) {
         fireHiLiteEvent(ids);
     }
@@ -236,6 +242,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      *      <code>null</code>
      * @deprecated Use {@link #fireUnHiLiteEvent(Set)} instead
      */
+    @Deprecated
     public synchronized void unHiLite(final Set<DataCell> ids) {
         fireUnHiLiteEvent(ids);
     }
@@ -286,6 +293,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * by this call.
      * @deprecated Use {@link #fireClearHiLiteEvent()} instead
      */
+    @Deprecated
     public synchronized void unHiLiteAll() {
         fireClearHiLiteEvent();
     }
