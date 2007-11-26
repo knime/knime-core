@@ -228,7 +228,11 @@ public final class ShapeFactory {
             } else {
                 g.setColor(color);
             }
-            paintShape(g, x, y, size, selected, hilited);
+            if (size == 1) {
+                g.fillRect(x - 1, y - 1, 1, 1);
+            } else {
+                paintShape(g, x, y, size, selected, hilited);
+            }
             if (hilited && !faded || selected) {
                 paintBorder(g, x, y, size, hilited, selected);
             }
