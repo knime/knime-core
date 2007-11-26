@@ -107,6 +107,11 @@ public class NewJoinerNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        if ((m_settings.secondTableColumn() == null)
+                || (m_settings.secondTableColumn().length() < 1)) {
+            throw new InvalidSettingsException(
+                    "No column from the second table selected");
+        }
         if (!NewJoinerSettings.ROW_KEY_IDENTIFIER.equals(
                 m_settings.secondTableColumn()) 
                 && inSpecs[1].findColumnIndex(m_settings.secondTableColumn()) 
