@@ -54,7 +54,7 @@ public class ScatterPlotterAppearanceTab extends PropertiesTab {
     
     private final JSlider m_jitterSlider;
     
-    private static final int MIN_DOT_SIZE = 2;
+    private static final int MIN_DOT_SIZE = 1;
     private static final int MAX_DOT_SIZE = 150;
     
     
