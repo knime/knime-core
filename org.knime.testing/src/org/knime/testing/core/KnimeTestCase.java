@@ -475,7 +475,6 @@ public class KnimeTestCase extends TestCase {
             result.append(m_name);
             result.append(" = ");
             result.append(m_value);
-            result.append("\n");
             return result.toString();
         }
     }
