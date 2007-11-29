@@ -26,8 +26,10 @@ package org.knime.testing.core;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,10 +39,15 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.apache.log4j.Level;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeStatus;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowException;
@@ -48,13 +55,23 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.KNIMETimer;
 
 // TODO: check, that the number of correct results corresponds to the number
-// of outports of the node under test
+// of out-ports of the node under test
 // Solve the question about model and data in/out
 
 /**
  * 
  */
 public class KnimeTestCase extends TestCase {
+
+    private static final String OPTIONS_FILE = "workflow_options";
+
+    /*
+     * if this pattern occurs in a value of an option, it's replaced with the
+     * directory of the options file
+     */
+    private static final String LOCATION = "$$location$$";
+    
+    private static final String LOCATIONURL = "$$locationURL$$";
 
     private static final NodeLogger logger =
             NodeLogger.getLogger(KnimeTestCase.class);
@@ -64,10 +81,10 @@ public class KnimeTestCase extends TestCase {
      * will parse for it).
      */
     public static final String ERR_FAIL_MSG = "Got ERRORs during run";
-    
+
     /**
-     * The message inserted if the test fails due to excpetions (analyzers
-     * will parse for it).
+     * The message inserted if the test fails due to excpetions (analyzers will
+     * parse for it).
      */
     public static final String EXCEPT_FAIL_MSG = "Got EXCEPTIONs during run";
 
@@ -76,16 +93,16 @@ public class KnimeTestCase extends TestCase {
      * the workflow will be canceled.
      */
     public static final int TIMEOUT = 300;
-    
+
     private File m_knimeSettings;
 
     private WorkflowManager m_manager;
 
     private List<String> m_owners;
-    
+
     // stores error messages seen during the run
     private TestingAppender m_errorAppender;
-    
+
     /**
      * 
      * @param workflowFile
@@ -115,14 +132,14 @@ public class KnimeTestCase extends TestCase {
 
         // construct the list of owners
         File ownerFile =
-                new File(m_knimeSettings.getParentFile(), 
+                new File(m_knimeSettings.getParentFile(),
                         KnimeTestRegistry.OWNER_FILE);
         if (ownerFile.exists()) {
             FileReader fileR = new FileReader(ownerFile);
             BufferedReader r = new BufferedReader(fileR);
             String line = null;
             while ((line = r.readLine()) != null) {
-                if (line.trim().length() > 0) { 
+                if (line.trim().length() > 0) {
                     m_owners.add(line.trim());
                 }
             }
@@ -151,20 +168,33 @@ public class KnimeTestCase extends TestCase {
             m_manager =
                     new WorkflowManager(m_knimeSettings,
                             new DefaultNodeProgressMonitor());
+
+            // construct a list of options (i.e. settings to change in the flow)
+            File optionsFile =
+                    new File(m_knimeSettings.getParentFile(), OPTIONS_FILE);
+            if (optionsFile.exists()) {
+                applyChanges(optionsFile, m_manager);
+            }
+
         } catch (WorkflowException ex) {
             String msg = ex.getMessage();
             logger.error("Error during workflow loading:"
                     + (msg == null ? "<no details>" : msg));
-            wrapUp();  
+            wrapUp();
             fail();
-            
+        } catch (InvalidSettingsException ise) {
+            String msg = ise.getMessage();
+            logger.error("Invalid settings in options file:"
+                    + (msg == null ? "<no details>" : msg));
+            wrapUp();
+            fail();
         } catch (Throwable t) {
             String msg = t.getMessage();
             logger.error("Caught a throwable during workflow loading:"
                     + (msg == null ? "<no details>" : msg));
             wrapUp();
             fail();
-        } 
+        }
     }
 
     /**
@@ -206,7 +236,7 @@ public class KnimeTestCase extends TestCase {
                     if (status != null) {
                         msg += status.getMessage();
                     }
-                    // make sure to log the reason for failure. 
+                    // make sure to log the reason for failure.
                     logger.error(msg);
                     Assert.fail(msg);
                 } else {
@@ -215,7 +245,7 @@ public class KnimeTestCase extends TestCase {
                                 "\nNode " + node.getName()
                                         + " executed with errors: \n ";
                         msg += status.getMessage();
-                        // make sure to log the reason for failure. 
+                        // make sure to log the reason for failure.
                         logger.error(msg);
                         Assert.fail(msg);
                     }
@@ -231,7 +261,7 @@ public class KnimeTestCase extends TestCase {
             for (NodeContainer nodecont : m_manager.getNodes()) {
                 nodecont.closeAllViews();
             }
-            
+
             // we have a method wrapUp instead of tearDown(), because tearDown
             // is not reliably called. We always call wrapUp.
             wrapUp();
@@ -246,9 +276,9 @@ public class KnimeTestCase extends TestCase {
         try {
             // disconnect the appender to not catch ny message anymore
             m_errorAppender.disconnect();
-            
+
             boolean testFails = false;
-            
+
             if (m_errorAppender.getMessageCount() > 0) {
                 String[] errMsgs = m_errorAppender.getReceivedMessages();
                 for (String msg : errMsgs) {
@@ -262,7 +292,7 @@ public class KnimeTestCase extends TestCase {
                 String[] excMsgs = m_errorAppender.getExceptions();
                 for (String e : excMsgs) {
                     logger.error("Got exception: " + e);
-                }                          
+                }
                 logger.error(EXCEPT_FAIL_MSG + " -> FAILING! "
                         + "Check the log file.");
                 testFails = true;
@@ -276,7 +306,176 @@ public class KnimeTestCase extends TestCase {
             logger.info("<End> Test='"
                     + m_knimeSettings.getParentFile().getName()
                     + "' ----------------------------------------------------");
-            
+
+        }
+    }
+
+    /**
+     * reads in each line of the options file, parses it, replaces $$location$$
+     * in each value with the location of the options file and applies the
+     * changes to the workflow settings.
+     */
+    private void applyChanges(final File optionsFile, final WorkflowManager wfm)
+            throws FileNotFoundException, InvalidSettingsException, IOException {
+
+        BufferedReader optfile =
+                new BufferedReader(new FileReader(optionsFile));
+
+        String location = optionsFile.getParent();
+        if (location == null) {
+            throw new FileNotFoundException(
+                    "Couldn't determine location of options file.");
+        }
+        location = location.replace('\\', '/');
+        String locURL = new File(location).toURI().toString();
+        if (locURL.endsWith("/")) {
+            locURL = locURL.substring(0, locURL.length() - 1);
+        }
+        List<Option> options = new LinkedList<Option>();
+
+        String line;
+        while ((line = optfile.readLine()) != null) {
+            try {
+                String[] parts = line.split("\\,");
+                String[] nodeIDPath = parts[0].split("/");
+                int[] nodeIDs = new int[nodeIDPath.length];
+                for (int i = 0; i < nodeIDs.length; i++) {
+                    nodeIDs[i] = Integer.parseInt(nodeIDPath[i]);
+                }
+                String optionName = parts[1];
+                String value = parts[2];
+                String type = parts[3];
+
+                // locationURL is part of location! Make sure to test it first!
+                if (value.contains(LOCATIONURL)) {
+                    value = value.replace(LOCATIONURL, locURL);
+                } else if (value.contains(LOCATION)) {
+                    value = value.replace(LOCATION, location);
+                }
+                options.add(new Option(nodeIDs, optionName, value, type));
+            } catch (ArrayIndexOutOfBoundsException aobe) {
+                throw new InvalidSettingsException("Invalid options line, "
+                        + "in File '" + optionsFile + "', line: " + line);
+            }
+        }
+        if (options.size() <= 0) {
+            throw new InvalidSettingsException(
+                    "Options file with no settings to change. "
+                            + "Please delete the file or edit it (in the "
+                            + "workflow dir file '" + OPTIONS_FILE + "').");
+        }
+
+        applySettingsModifications(options, wfm);
+
+    }
+
+    private void applySettingsModifications(final List<Option> options,
+            final WorkflowManager wfm) throws InvalidSettingsException {
+
+        for (Option o : options) {
+            int[] idPath = o.m_nodeIDs;
+            NodeContainer cont = wfm.getNodeContainerById(idPath[0]);
+            for (int i = 1; i < idPath.length; i++) {
+                cont =
+                        cont.getEmbeddedWorkflowManager().getNodeContainerById(
+                                idPath[i]);
+            }
+            if (cont == null) {
+                logger.error("Can't modify settings: No node with id "
+                        + Arrays.toString(idPath) + " found.");
+            } else {
+                NodeSettings settings = new NodeSettings("something");
+                cont.saveSettings(settings);
+                NodeSettings model = settings.getNodeSettings(Node.CFG_MODEL);
+                String[] splitName = o.m_name.split("/");
+                String name = splitName[splitName.length - 1];
+                String[] pathElements = new String[splitName.length - 1];
+                System.arraycopy(splitName, 0, pathElements, 0,
+                        pathElements.length);
+                for (String s : pathElements) {
+                    model = model.getNodeSettings(s);
+                }
+
+                if ("int".equals(o.m_type)) {
+                    model.addInt(name, Integer.parseInt(o.m_value));
+                } else if ("short".equals(o.m_type)) {
+                    model.addShort(name, Short.parseShort(o.m_value));
+                } else if ("byte".equals(o.m_type)) {
+                    model.addByte(name, Byte.parseByte(o.m_value));
+                } else if ("boolean".equals(o.m_type)) {
+                    model.addBoolean(name, Boolean.parseBoolean(o.m_value));
+                } else if ("char".equals(o.m_type)) {
+                    model.addChar(name, o.m_value.charAt(0));
+                } else if ("float".equals(o.m_type)
+                        || ("double".equals(o.m_type))) {
+                    model.addDouble(name, Double.parseDouble(o.m_value));
+                } else if ("String".equals(o.m_type)) {
+                    model.addString(name, o.m_value);
+                } else if ("StringCell".equals(o.m_type)) {
+                    model.addDataCell(name, new StringCell(o.m_value));
+                } else if ("DoubleCell".equals(o.m_type)) {
+                    double d = Double.parseDouble(o.m_value);
+                    model.addDataCell(name, new DoubleCell(d));
+                } else if ("IntCell".equals(o.m_type)) {
+                    int i = Integer.parseInt(o.m_value);
+                    model.addDataCell(name, new IntCell(i));
+                } else {
+                    throw new IllegalArgumentException("Unknown option type '"
+                            + o.m_type + "'");
+                }
+                cont.loadSettings(settings);
+
+                logger.info("Applied settings change: " + o);
+            }
+        }
+
+    }
+
+    private static class Option {
+        private final int[] m_nodeIDs;
+
+        private final String m_name;
+
+        private final String m_value;
+
+        private final String m_type;
+
+        /**
+         * Create new <code>Option</code>.
+         * 
+         * @param nodeIDs node IDs, mostly one element, more for nested flows
+         * @param name name
+         * @param value value
+         * @param type type
+         */
+        Option(final int[] nodeIDs, final String name, final String value,
+                final String type) {
+            m_nodeIDs = nodeIDs;
+            m_name = name;
+            m_value = value;
+            m_type = type;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            StringBuilder result = new StringBuilder();
+            result.append("Node#");
+            boolean first = true;
+            for (int id : m_nodeIDs) {
+                if (!first) {
+                    result.append(".");
+                }
+                result.append(id);
+                first = false;
+            }
+            result.append(": ");
+            result.append(m_name);
+            result.append(" = ");
+            result.append(m_value);
+            return result.toString();
         }
     }
 
