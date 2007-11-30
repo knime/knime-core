@@ -250,11 +250,13 @@ public abstract class NodeDialogPane {
      * 
      * @param settings The settings to load into the dialog. Could be an empty
      *            object or contain invalid settings. But will never be null.
-     * @param specs The input data table specs. Items of the array could be null
-     *            if no spec is available from the corresponding input port.
+     * @param specs The input data table specs. The array is not null and has as
+     *            many elements as the node has input ports. The elements are
+     *            not null, but can contain no columns.
      * @throws NotConfigurableException if the dialog cannot be opened because
-     * of real invalid settings or if any preconditions are not fulfilled, e.g.
-     * no predecessor node, no nominal column in input table, etc.
+     *             of real invalid settings or if any preconditions are not
+     *             fulfilled, e.g. no predecessor node, no nominal column in
+     *             input table, etc.
      * @see NodeModel#loadSettingsFrom(NodeSettingsRO)
      */
     protected abstract void loadSettingsFrom(final NodeSettingsRO settings,
