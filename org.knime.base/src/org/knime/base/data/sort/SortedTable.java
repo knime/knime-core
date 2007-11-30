@@ -212,7 +212,7 @@ public class SortedTable implements DataTable {
 
         exec.setMessage("Sorting");
         time = System.currentTimeMillis();
-        Arrays.sort(rows, new RowComparator());
+        Arrays.sort(rows, m_rowComparator);
         LOGGER.debug("Sort time: " + (System.currentTimeMillis() - time));
 
         exec.setMessage("Creating sorted table");
