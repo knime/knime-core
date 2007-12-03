@@ -114,15 +114,13 @@ public class KnimeTestRegistry {
         if (workflowFile.exists()) {
             String name = dir.getName();
             if (name.matches(m_pattern)) {
+                KnimeTestCase testCase = new KnimeTestCase(workflowFile);
+                testCase.setName(name);
+                m_registry.add(testCase);
                 File ownerFile = new File(dir, OWNER_FILE);
-                if (ownerFile.exists()) {
-                    // add only tests with owner file!
-                    KnimeTestCase testCase = new KnimeTestCase(workflowFile);
-                    testCase.setName(name);
-                    m_registry.add(testCase);
-                } else {
-                    m_logger.error("Skipping test '" + name
-                            + "' due to missing"
+                if (!ownerFile.exists()) {
+                    m_logger.error("Test '" + name
+                            + "' is going to fail due to missing"
                             + " owner file (add a file called '" + OWNER_FILE
                             + "' with the email address of the test owner in "
                             + "the dir of the workflow file)!!");

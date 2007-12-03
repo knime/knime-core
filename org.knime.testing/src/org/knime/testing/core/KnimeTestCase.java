@@ -144,6 +144,11 @@ public class KnimeTestCase extends TestCase {
                 }
             }
         }
+
+        logger.info("<Start> Test='"
+                + m_knimeSettings.getParentFile().getName()
+                + "' --------------------------------------------------------");
+        
         String owner = "";
         if (m_owners.size() > 0) {
             StringBuilder owns = new StringBuilder();
@@ -156,12 +161,17 @@ public class KnimeTestCase extends TestCase {
                 sep = true;
             }
             owner = owns.toString();
+            logger.info("TestOwners=" + owner);
+        } else {
+            // Tests with no owner set are failing now!
+            logger.error("No owner set in test '"
+                    + m_knimeSettings.getParentFile().getName()
+                    + "'. Please create an owner file in the test directory.");
+            wrapUp();
+            fail();
+
         }
 
-        logger.info("<Start> Test='"
-                + m_knimeSettings.getParentFile().getName()
-                + "' --------------------------------------------------------");
-        logger.info("TestOwners=" + owner);
 
         // start here the workflow
         try {
