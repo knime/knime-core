@@ -65,6 +65,12 @@ public class KnimeTestCase extends TestCase {
 
     private static final String OPTIONS_FILE = "workflow_options";
 
+    /**
+     * These guys own all tests without owner file. They will be notified about
+     * their failure due to missing owners.
+     */
+    private final static String REGRESSIONS_OWNER = "peter.ohl@uni-konstanz.de";
+
     /*
      * if this pattern occurs in a value of an option, it's replaced with the
      * directory of the options file
@@ -149,6 +155,7 @@ public class KnimeTestCase extends TestCase {
                 + m_knimeSettings.getParentFile().getName()
                 + "' --------------------------------------------------------");
         
+        // be sure to always add an owner to the log file
         String owner = "";
         if (m_owners.size() > 0) {
             StringBuilder owns = new StringBuilder();
@@ -163,6 +170,7 @@ public class KnimeTestCase extends TestCase {
             owner = owns.toString();
             logger.info("TestOwners=" + owner);
         } else {
+            logger.info("TestOwners=" + REGRESSIONS_OWNER);
             // Tests with no owner set are failing now!
             logger.error("No owner set in test '"
                     + m_knimeSettings.getParentFile().getName()

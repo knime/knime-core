@@ -60,19 +60,11 @@ public class AnalyzeLogFile {
         ERREXCEPT
     };
 
-    /**
-     * This guy(s) get a summary email and some more general regression
-     * notifications.
-     */
-    private final static String REGRESSIONS_OWNER = "peter.ohl@uni-konstanz.de";
-
     private final static String CRLF = "\r\n";
 
     private int m_numOfTestsRun = 0;
 
     private int m_numOfFailingTests = 0;
-
-    private int m_numOfOwnerlessTests = 0;
 
     // directory all temporary files go in.
     private File m_tmpDir;
@@ -157,8 +149,6 @@ public class AnalyzeLogFile {
                 new File(m_tmpDir, "SummarySucceedingTests_" + m_startTime
                         + ".txt");
         m_summarySucceedingTests = new FileWriter(goodTests);
-
-        extractOwnerlessTests(logCopy);
 
         extractFailingTests(logCopy);
 
@@ -256,11 +246,13 @@ public class AnalyzeLogFile {
             String ownerLine = getLineContaining(ownerKey, logReader);
             String ownerAddress = null;
             if (ownerLine != null) {
+                // All tests MUST have an owner line (even ownerless ones - they
+                // must be owned by the regression master)
                 ownerAddress =
                         ownerLine.substring(ownerLine.indexOf(ownerKey)
                                 + ownerKey.length());
                 testFileWriter.write(ownerAddress + CRLF);
-            }
+            } 
 
             // also add the first line
             testFileWriter.write(startLine + CRLF);
@@ -391,36 +383,6 @@ public class AnalyzeLogFile {
         logReader.close();
 
         return result;
-    }
-
-    private void extractOwnerlessTests(final File logFile) throws IOException {
-
-        BufferedReader logReader = new BufferedReader(new FileReader(logFile));
-
-        File ownerlessFile =
-                new File(m_tmpDir, "_OwnerlessTests" + m_startTime + ".txt");
-
-        FileWriter olfWriter = new FileWriter(ownerlessFile);
-
-        String key = "ERROR main KnimeTestRegistry : Skipping test '";
-
-        String line = null;
-
-        while ((line = getLineContaining(key, logReader)) != null) {
-            if (m_numOfOwnerlessTests == 0) {
-                // first line in the file should be email of receiver
-                olfWriter.write(REGRESSIONS_OWNER + CRLF);
-            }
-            olfWriter.write(line + CRLF);
-            m_numOfOwnerlessTests++;
-        }
-        olfWriter.close();
-        logReader.close();
-
-        if (m_numOfOwnerlessTests == 0) {
-            ownerlessFile.delete();
-        }
-
     }
 
     private String getLineContaining(final String key,
