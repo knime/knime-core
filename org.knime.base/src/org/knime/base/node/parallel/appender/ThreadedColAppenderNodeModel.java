@@ -298,11 +298,11 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                     if (oldPos != insertIndex) {
                         crea.move(oldPos, insertIndex);
 
-                        for (int m = insertIndex; m < k + leftColCount; m++) {
-                            newPositions[m]++;
-                        }
-                        for (int m = k + leftColCount; m < newPositions.length; m++) {
-                            newPositions[m]--;
+                        for (int m = 0; m < newPositions.length; m++) {
+                            if ((newPositions[m] >= insertIndex)
+                                    && (newPositions[m] < oldPos)) {
+                                newPositions[m]++;
+                            }
                         }
                         newPositions[k + leftColCount] = insertIndex;
                     }
@@ -315,8 +315,11 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                     int oldPos = newPositions[k + leftColCount];
                     int insertIndex = ((InsertColumn)dests[k]).getIndex();
                     crea.move(oldPos, insertIndex);
-                    for (int m = insertIndex + 1; m < k + leftColCount; m++) {
-                        newPositions[m]++;
+                    for (int m = 0; m < newPositions.length; m++) {
+                        if ((newPositions[m] >= insertIndex)
+                                && (newPositions[m] < oldPos)) {
+                            newPositions[m]++;
+                        }
                     }
                     newPositions[k + leftColCount] = insertIndex;
                 }
