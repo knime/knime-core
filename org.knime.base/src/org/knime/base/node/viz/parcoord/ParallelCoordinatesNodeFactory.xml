@@ -2,7 +2,7 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./parallel.ico" type="Visualizer" deprecated="true">
 
-	<name>Parallel Coordinates</name>
+	<name>Parallel Coordinates (deprecated)</name>
 	
 	<shortDescription>
         This node is obsolete! Please use the new Parallel Coordinates located 
