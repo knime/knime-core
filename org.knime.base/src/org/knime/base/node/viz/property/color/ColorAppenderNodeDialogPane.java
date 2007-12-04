@@ -61,7 +61,7 @@ public class ColorAppenderNodeDialogPane extends NodeDialogPane {
         m_columns.setPreferredSize(new Dimension(150, 20));
         m_columns.setRenderer(new DataColumnSpecListCellRenderer());
         JPanel p = new JPanel(new FlowLayout());
-        p.setBorder(BorderFactory.createTitledBorder(" Append Colors "));
+        p.setBorder(BorderFactory.createTitledBorder(" Append colors to "));
         p.add(m_columns, BorderLayout.CENTER);
         super.addTab("Column Selection", p);
     }

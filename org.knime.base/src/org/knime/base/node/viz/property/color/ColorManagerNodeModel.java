@@ -78,7 +78,6 @@ class ColorManagerNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
-        assert (data != null && data.length == 1 && data[0] != null);
         return m_colorModel.execute(data, exec);
     }
 
@@ -90,8 +89,6 @@ class ColorManagerNodeModel extends NodeModel {
     @Override
     protected void saveModelContent(final int index,
             final ModelContentWO predParams) throws InvalidSettingsException {
-        assert (index == 0) : "index=" + index;
-        assert predParams != null;
         m_colorModel.saveSettingsTo(predParams);
     }
 
@@ -136,7 +133,6 @@ class ColorManagerNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        assert (inSpecs.length == 1);
         return m_colorModel.configure(inSpecs);
     }
 

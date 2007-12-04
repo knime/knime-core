@@ -87,7 +87,7 @@ class ColorNodeModel {
     /** Type of color setting. */
     static final String IS_NOMINAL = "is_nominal";
 
-    /** true if color ranges, false for descret colors. */
+    /** true if color ranges, false for discrete colors. */
     private boolean m_isNominal;
 
     private static final DataCell MIN_VALUE = new StringCell("min_value");
@@ -196,7 +196,7 @@ class ColorNodeModel {
         // get domain
         DataColumnDomain domain = inSpecs[INPORT].getColumnSpec(m_column)
                 .getDomain();
-        // either set colors by ranges or descret values
+        // either set colors by ranges or discrete values
         if (m_isNominal) {
             // check if all values set are in the domain of the column spec
             Set<DataCell> list = domain.getValues();
@@ -205,7 +205,7 @@ class ColorNodeModel {
                         + " has no nominal values set:\n"
                         + "execute predecessor or add Binner.");
             }
-            // check if the mapping's values and the poss values match
+            // check if the mapping's values and the possible values match
             if (!m_map.keySet().containsAll(list)) {
                 throw new InvalidSettingsException("Mapping does not match "
                         + "possible values in spec.");

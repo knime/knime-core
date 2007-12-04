@@ -26,7 +26,7 @@
 	    are two different datasets with the same class column. 
 	    </p>
 		</intro>
-	    <option name="Append Colors: ">
+	    <option name="Append colors to: ">
 		    Select the column to apply color settings to. It might be the same column, 
 		    a different numeric column for which the color settings should be reused, 
 		    or a nominal column if the color model was defined for nominal values. 
