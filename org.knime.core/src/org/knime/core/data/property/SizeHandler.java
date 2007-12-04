@@ -24,11 +24,8 @@
  */
 package org.knime.core.data.property;
 
-import java.util.Arrays;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
@@ -75,7 +72,7 @@ public final class SizeHandler implements PropertyHandler {
     }
     
     private static final String CFG_SIZE_MODEL_CLASS = "size_model_class";
-    private static final String CFG_SIZE_MODEL        = "size_model";
+    private static final String CFG_SIZE_MODEL       = "size_model";
     
     /**
      * Save the <code>SizeModel</code> class and settings to the given 
@@ -83,9 +80,7 @@ public final class SizeHandler implements PropertyHandler {
      * @param config To write size settings into.
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
-    public void save(final Config config) {
-        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
-            +  Arrays.toString(config.keySet().toArray());
+    public void save(final ConfigWO config) {
         config.addString(CFG_SIZE_MODEL_CLASS, m_model.getClass().getName());
         m_model.save(config.addConfig(CFG_SIZE_MODEL));
     }

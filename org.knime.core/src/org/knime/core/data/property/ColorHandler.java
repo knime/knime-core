@@ -24,11 +24,8 @@
  */
 package org.knime.core.data.property;
 
-import java.util.Arrays;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
@@ -94,9 +91,7 @@ public final class ColorHandler implements PropertyHandler {
      * @param config color settings are saved to
      * @throws NullPointerException if the <i>config</i> is <code>null</code>
      */
-    public void save(final Config config) {
-        assert config.keySet().isEmpty() : "Subconfig must be empty: " 
-            +  Arrays.toString(config.keySet().toArray());
+    public void save(final ConfigWO config) {
         config.addString(CFG_COLOR_MODEL_CLASS, m_model.getClass().getName());
         m_model.save(config.addConfig(CFG_COLOR_MODEL));
     }
