@@ -135,19 +135,27 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
         List<DataColumnSpec>numericCols = new ArrayList<DataColumnSpec>();
         for (DataColumnSpec colSpec : inSpecs[0]) {
             if (colSpec.getType().isCompatible(DoubleValue.class)) {
-                if (colSpec.getDomain().hasBounds()) {
                     numericCols.add(colSpec);
-                }
             }
         }
         if (numericCols.size() == 0) {
             throw new InvalidSettingsException(
                     "Only numeric columns can be displayed! " 
-                    + "Found no numeric column or only some without bounds.");
+                    + "Found no numeric column.");
         } 
         return new DataTableSpec[]{createOutputSpec(numericCols)};
     }
 
+    private int getNumNumericColumns(final DataTableSpec spec) {
+        int nr = 0;
+        for (DataColumnSpec colSpec : spec) {
+            if (colSpec.getType().isCompatible(DoubleValue.class)) {
+                nr++;
+            }
+        }
+        return nr;
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -165,30 +173,37 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             = new LinkedHashMap<String, Map<Double, RowKey>>();
         int colIdx = 0;
         List<DataColumnSpec> outputColSpecs = new ArrayList<DataColumnSpec>();
-        double subProgress = 1.0 / table.getDataTableSpec().getNumColumns();
-        int currColumn = 0;
+        double subProgress = 1.0 / getNumNumericColumns(
+                table.getDataTableSpec());
         for (DataColumnSpec colSpec : table.getDataTableSpec()) {
+            ExecutionContext colExec = exec.createSubExecutionContext(
+                    subProgress);
             exec.checkCanceled();
             if (colSpec.getType().isCompatible(DoubleValue.class)) {
                 double[] statistic = new double[SIZE];
                 outputColSpecs.add(colSpec);
-                double progress = currColumn++ * subProgress;
-                
-                exec.setProgress(progress, "sorting: " + table
-                        .getDataTableSpec().getColumnSpec(colIdx).getName());
                 List<String> col = new ArrayList<String>();
                 col.add(colSpec.getName());
-                ExecutionContext exec2 = exec.createSubExecutionContext(
-                        subProgress);
+                ExecutionContext sortExec = colExec.createSubExecutionContext(
+                        0.75);
+                ExecutionContext findExec = colExec.createSubExecutionContext(
+                        0.25);
                 SortedTable sorted = new SortedTable(table, 
                         col, new boolean[]{true}, 
-                        exec2);
+                        sortExec);
                 int currRowAbsolute = 0;
-                int currCountingRow = 0;
+                int currCountingRow = 1;
                 double lastValue = 1;
                 int nrOfRows = table.getRowCount();
                 boolean first = true;
                 for (DataRow row : sorted) {
+                    exec.checkCanceled();
+                    double rowProgress = (double)currRowAbsolute 
+                    / (double)table.getRowCount(); 
+                    findExec.setProgress(rowProgress, 
+                            "determining statistics for: " 
+                            + table.getDataTableSpec().getColumnSpec(colIdx)
+                            .getName());
                     if (row.getCell(colIdx).isMissing()) {
                         // asserts that the missing values are sorted at 
                         // the top of the table
@@ -213,7 +228,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                         statistic[MAX] = ((DoubleValue)row
                                 .getCell(colIdx)).getDoubleValue();
                     }                    
-                    float medianPos = nrOfRows / 2;
+                    float medianPos = nrOfRows * 0.5f;
                     float lowerQuartilePos = nrOfRows * 0.25f;
                     float upperQuartilePos = nrOfRows * 0.75f;
                     if (currCountingRow == Math.ceil(lowerQuartilePos)) {
@@ -270,9 +285,9 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                         statistic[MIN],
                         statistic[MAX]
                 };
-                if (statistic[MIN] < (statistic[LOWER_QUARTILE] 
-                    - (1.5 * iqr)) || statistic[MAX] 
-                    > statistic[UPPER_QUARTILE] + (1.5 * iqr)) {
+                if (statistic[MIN] < (statistic[LOWER_QUARTILE] - (1.5 * iqr)) 
+                    || 
+                    statistic[MAX] > statistic[UPPER_QUARTILE] + (1.5 * iqr)) {
                         detectOutliers(sorted, iqr, 
                                 new double[]{statistic[LOWER_QUARTILE], 
                                 statistic[UPPER_QUARTILE]},
@@ -286,6 +301,18 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             }
             colIdx++;
         }
+        DataContainer container = createOutputTable(exec, outputColSpecs);
+        // return a data array with just one row but with the data table spec 
+        // for the column selection panel
+        m_array = new DefaultDataArray(table, 1, 2);
+        return new BufferedDataTable[]{exec.createBufferedDataTable(
+                container.getTable(), exec)};
+    }
+
+
+
+    private DataContainer createOutputTable(final ExecutionContext exec,
+            final List<DataColumnSpec> outputColSpecs) {
         DataTableSpec outSpec = createOutputSpec(outputColSpecs);
         DataContainer container = exec.createDataContainer(outSpec);
         DataCell[] rowKeys = new DataCell[SIZE];
@@ -306,11 +333,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             container.addRowToTable(row);
         }
         container.close();
-        // return a data array with just one row but with the data table spec 
-        // for the column selection panel
-        m_array = new DefaultDataArray(table, 1, 2);
-        return new BufferedDataTable[]{exec.createBufferedDataTable(
-                container.getTable(), exec)};
+        return container;
     }
     
     private DataTableSpec createOutputSpec(
@@ -432,6 +455,8 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     @Override
     protected void reset() {
         m_statistics = null;
+        m_mildOutliers = null;
+        m_extremeOutliers = null;
         m_array = null;
     }
     
