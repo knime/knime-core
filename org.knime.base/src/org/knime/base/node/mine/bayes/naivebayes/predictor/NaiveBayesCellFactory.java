@@ -66,10 +66,16 @@ CellFactory {
      * @param inclClassProbVals if the probability per class instance should
      * be appended as columns
      */
-    protected NaiveBayesCellFactory(final NaiveBayesModel model, 
+    public NaiveBayesCellFactory(final NaiveBayesModel model, 
             final DataTableSpec tableSpec, final boolean inclClassProbVals) {
+        if (model == null) {
+           throw new NullPointerException("Model must not be null.");
+        }
         m_model = model;
         m_sortedClassVals = model.getSortedClassValues();
+        if (tableSpec == null) {
+            throw new NullPointerException("TableSpec must not be null.");
+         }
         m_tableSpec = tableSpec;
         m_inclClassProbVals = inclClassProbVals;
         m_attributeNames = new String[tableSpec.getNumColumns()];
