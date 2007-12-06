@@ -193,6 +193,9 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
         
         // create the registry if needed
         if (m_imageRegistry == null) {
+            // if the imageRegistry is not created within the UI thread 
+            // then the UI thread has to be invoked with Display.getDefault();
+            // this has to be done when KNIME is started without the eclipse GUI 
             if (Display.getCurrent() == null) {
                 Display.getDefault();
                 assert Display.getCurrent() != null;
