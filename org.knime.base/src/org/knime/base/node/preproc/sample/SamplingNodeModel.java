@@ -77,7 +77,18 @@ public class SamplingNodeModel extends AbstractSamplingNodeModel {
         } finally {
             container.close();
         }
-        return new BufferedDataTable[]{container.getTable()};
+        BufferedDataTable out = container.getTable();
+        if (filter instanceof StratifiedSamplingRowFilter) {
+            int classCount =
+                    ((StratifiedSamplingRowFilter)filter).getClassCount();
+            if (classCount > out.getRowCount()) {
+                setWarningMessage("Class column contains more classes ("
+                        + classCount + ") than sampled rows ("
+                        + out.getRowCount() + ")");
+            }
+        }
+        
+        return new BufferedDataTable[]{out};
     }
 
     /**
