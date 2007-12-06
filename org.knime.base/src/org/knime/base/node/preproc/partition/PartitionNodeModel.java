@@ -26,6 +26,7 @@ import org.knime.base.node.preproc.filter.row.RowFilterIterator;
 import org.knime.base.node.preproc.filter.row.rowfilter.NegRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.base.node.preproc.sample.AbstractSamplingNodeModel;
+import org.knime.base.node.preproc.sample.StratifiedSamplingRowFilter;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -96,6 +97,16 @@ public class PartitionNodeModel extends AbstractSamplingNodeModel {
             }
             subExec.setProgress(1.0);
             outs[i] = container.getTable();
+            if (filters[i] instanceof StratifiedSamplingRowFilter) {
+                int classCount =
+                        ((StratifiedSamplingRowFilter)filters[i])
+                                .getClassCount();
+                if (classCount > outs[i].getRowCount()) {
+                    setWarningMessage("Class column contains more classes ("
+                            + classCount + ") than sampled rows ("
+                            + outs[i].getRowCount() + ")");
+                }
+            }
         }
         return outs;
     }

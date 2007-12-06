@@ -55,6 +55,8 @@ import org.knime.core.node.NodeSettingsWO;
 public class StratifiedSamplingRowFilter extends RowFilter {
     private final BitSet m_includedRows;
 
+    private final int m_classes;
+    
     private boolean m_includeAll;
 
     private static HashMap<DataCell, List<Integer>> countValues(
@@ -115,6 +117,7 @@ public class StratifiedSamplingRowFilter extends RowFilter {
             throws CanceledExecutionException {
         HashMap<DataCell, List<Integer>> valueCounts =
                 countValues(table, exec, classColumn);
+        m_classes = valueCounts.size();
         int rowCount = 0;
         for (List<Integer> l : valueCounts.values()) {
             rowCount += l.size();
@@ -157,6 +160,7 @@ public class StratifiedSamplingRowFilter extends RowFilter {
             throws CanceledExecutionException {
         HashMap<DataCell, List<Integer>> valueCounts =
                 countValues(table, exec, classColumn);
+        m_classes = valueCounts.size();
         m_includedRows = new BitSet(includeCount);
         computeSampling(valueCounts, random, includeCount);
     }
@@ -189,7 +193,7 @@ public class StratifiedSamplingRowFilter extends RowFilter {
         }
 
         Iterator<List<Integer>> it = null;
-        while (m_includedRows.size() < includeCount) {
+        while (m_includedRows.cardinality() < includeCount) {
             if ((it == null) || !it.hasNext()) {
                 it = valueCounts.values().iterator();
             }
@@ -236,5 +240,15 @@ public class StratifiedSamplingRowFilter extends RowFilter {
     @Override
     protected void saveSettings(final NodeSettingsWO cfg) {
         // nothing to do
+    }
+    
+    /**
+     * Returns the number of distinct values (classes) in the class column
+     * that is used for the stratified sampling.
+     * 
+     * @return the number of classes
+     */
+    public int getClassCount() {
+        return m_classes;
     }
 }
