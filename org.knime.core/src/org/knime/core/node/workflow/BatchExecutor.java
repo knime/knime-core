@@ -97,9 +97,10 @@ public final class BatchExecutor {
             + "                  If the node is part of a meta node, provide also the node\n"
             + "                  ids of the parent node(s), e.g. 90/56.\n"
             + "\n"
-            + "Some KNIME settings can also be adjusted by Java properties:\n"
-            + " -Dorg.knime.core.maxThreads=n => sets the maximum number of\n"
-            + "                  threads used by KNIME\n");
+            + "Some KNIME settings can also be adjusted by Java properties;\n"
+            + "they need to be provided as last option in the command line:\n"
+            + " -vmargs -Dorg.knime.core.maxThreads=n => sets the maximum\n"
+            + "                  number of threads used by KNIME\n");
     }
 
     /**
