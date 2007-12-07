@@ -82,7 +82,10 @@ public class SimpleFileFilter extends FileFilter {
     public String getDescription() {
         String descr = "";
         for (String ext : m_validExtensions) {
-            descr = descr + " " + ext.toString();
+            descr = descr + " ; *." + ext.toString();
+        }
+        if (descr.length() > 3) {
+            return descr.substring(3);
         }
         return descr;
     }

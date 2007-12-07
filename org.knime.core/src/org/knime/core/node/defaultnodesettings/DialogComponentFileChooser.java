@@ -84,7 +84,10 @@ public class DialogComponentFileChooser extends DialogComponent {
      * 
      * @param stringModel the model holding the value
      * @param historyID to identify the file history
-     * @param validExtensions only show files with those extensions
+     * @param validExtensions only show files with those extensions. An entry
+     * in this array may contain the <code>|</code> character between two
+     * file extensions that will be shown in one item of the file type
+     * combo box. This means that one item allows for more than one file type.
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final String... validExtensions) {
@@ -119,7 +122,10 @@ public class DialogComponentFileChooser extends DialogComponent {
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
      *            {@link JFileChooser#CUSTOM_DIALOG}
-     * @param validExtensions only show files with those extensions
+     * @param validExtensions only show files with those extensions. An entry
+     * in this array may contain the <code>|</code> character between two
+     * file extensions that will be shown in one item of the file type
+     * combo box. This means that one item allows for more than one file type.
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final int dialogType,
@@ -139,7 +145,10 @@ public class DialogComponentFileChooser extends DialogComponent {
      *            {@link JFileChooser#CUSTOM_DIALOG}
      * @param directoryOnly <code>true</code> if only directories should be
      *            selectable, otherwise only files can be selected
-     * @param validExtensions only show files with those extensions
+     * @param validExtensions only show files with those extensions. An entry
+     * in this array may contain the <code>|</code> character between two
+     * file extensions that will be shown in one item of the file type
+     * combo box. This means that one item allows for more than one file type.
      */
     public DialogComponentFileChooser(final SettingsModelString stringModel,
             final String historyID, final int dialogType,
@@ -173,7 +182,12 @@ public class DialogComponentFileChooser extends DialogComponent {
             m_fileFilter = 
                 new ArrayList<SimpleFileFilter>(validExtensions.length);
             for (String extension : validExtensions) {
-                m_fileFilter.add(new SimpleFileFilter(extension));
+                if (extension.indexOf('|') > 0) {
+                    m_fileFilter.add(new SimpleFileFilter(
+                            extension.split("\\|")));
+                } else {
+                    m_fileFilter.add(new SimpleFileFilter(extension));
+                }
             }
         } else {
             m_fileFilter = new ArrayList<SimpleFileFilter>(0);
