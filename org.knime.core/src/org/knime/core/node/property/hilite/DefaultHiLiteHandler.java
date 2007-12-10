@@ -23,6 +23,7 @@
  */
 package org.knime.core.node.property.hilite;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -208,28 +209,24 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
          * care about the current thread (e.g. EDT) to queue this event, since
          * the event must be queued in both cases to avoid nested events to be 
          * waiting on each other. 
-         */ 
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                // create list of row keys from input key array
-                final HashSet<DataCell> changedIDs = new HashSet<DataCell>();
-                // iterates over all keys and adds them to the changed set
-                for (DataCell id : ids) {
-                    if (id == null) {
-                        throw new NullPointerException("Hilit key is null.");
-                    }
-                    // if the key is already hilit, do not add it
-                    if (m_hiLitKeys.add(id)) {
-                        changedIDs.add(id);
-                    }
-                }
-                // if at least on key changed
-                if (changedIDs.size() > 0) {
-                    // throw hilite event
-                    fireHiLiteEventInternal(new KeyEvent(this, changedIDs));
-                }
+         */
+        // create list of row keys from input key array
+        final HashSet<DataCell> changedIDs = new HashSet<DataCell>();
+        // iterates over all keys and adds them to the changed set
+        for (DataCell id : ids) {
+            if (id == null) {
+                throw new NullPointerException("Hilit key is null.");
             }
-        });
+            // if the key is already hilit, do not add it
+            if (m_hiLitKeys.add(id)) {
+                changedIDs.add(id);
+            }
+        }
+        // if at least on key changed
+        if (changedIDs.size() > 0) {
+            // throw hilite event
+            fireHiLiteEventInternal(new KeyEvent(this, changedIDs));
+        }
     }
 
     /**
@@ -264,26 +261,22 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
          * Do not change this implementation, see #fireHiLiteEvent for
          * more details.
          */
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                // create list of row keys from input key array
-                final HashSet<DataCell> changedIDs = new HashSet<DataCell>();
-                // iterate over all keys and removes all not hilit ones
-                for (DataCell id : ids) {
-                    if (id == null) {
-                        throw new NullPointerException("Unhilit key is null.");
-                    }
-                    if (m_hiLitKeys.remove(id)) {
-                        changedIDs.add(id);
-                    }
-                }
-                // if at least on key changed
-                if (changedIDs.size() > 0) {
-                    // throw unhilite event
-                    fireUnHiLiteEventInternal(new KeyEvent(this, changedIDs));
-                }
+        // create list of row keys from input key array
+        final HashSet<DataCell> changedIDs = new HashSet<DataCell>();
+        // iterate over all keys and removes all not hilit ones
+        for (DataCell id : ids) {
+            if (id == null) {
+                throw new NullPointerException("Unhilit key is null.");
             }
-        });
+            if (m_hiLitKeys.remove(id)) {
+                changedIDs.add(id);
+            }
+        }
+        // if at least on key changed
+        if (changedIDs.size() > 0) {
+            // throw unhilite event
+            fireUnHiLiteEventInternal(new KeyEvent(this, changedIDs));
+        }
     }
         
     /**
@@ -310,12 +303,8 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
              * Do not change this implementation, see #fireHiLiteEvent for
              * more details.
              */
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
-                    m_hiLitKeys.clear();
-                    fireClearHiLiteEventInternal();
-                }
-            });
+            m_hiLitKeys.clear();
+            fireClearHiLiteEventInternal();
         }
     } 
     
@@ -325,30 +314,61 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param event Contains all rows keys to hilite.
      */
-    protected void fireHiLiteEventInternal(final KeyEvent event) {
+    protected synchronized void fireHiLiteEventInternal(final KeyEvent event) {
         assert (event != null);
-        for (HiLiteListener l : m_listenerList) {
+        final Runnable r = new Runnable() {
+            public void run() {
+                for (HiLiteListener l : m_listenerList) {
+                    try {
+                        l.hiLite(event);
+                    } catch (Throwable t) {
+                        LOGGER.coding("Exception while notifying listeners", t);
+                    }
+                }
+            }
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            r.run();
+        } else {
             try {
-                 l.hiLite(event);
-            } catch (Throwable t) {
-                LOGGER.coding("Exception while notifying listeners", t);
+                SwingUtilities.invokeAndWait(r);
+            } catch (InvocationTargetException ite) {
+                LOGGER.error("Exception while notifying listeners", ite);
+            } catch (InterruptedException ie) {
+                LOGGER.error("Exception while notifying listeners", ie);
             }
         }
     }
 
-    /** 
+    /**
      * Informs all registered hilite listener to unhilite the row keys contained
      * in the key event.
      * 
      * @param event Contains all rows keys to unhilite.
      */
-    protected void fireUnHiLiteEventInternal(final KeyEvent event) {
+    protected synchronized void fireUnHiLiteEventInternal(
+            final KeyEvent event) {
         assert (event != null);
-        for (HiLiteListener l : m_listenerList) {
+        final Runnable r = new Runnable() {
+            public void run() {
+                for (HiLiteListener l : m_listenerList) {
+                    try {
+                        l.unHiLite(event);
+                    } catch (Throwable t) {
+                        LOGGER.coding("Exception while notifying listeners", t);
+                    }
+                }
+            }
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            r.run();
+        } else {
             try {
-                l.unHiLite(event);
-            } catch (Throwable t) {
-                LOGGER.coding("Exception while notifying listeners", t);
+                SwingUtilities.invokeAndWait(r);
+            } catch (InvocationTargetException ite) {
+                LOGGER.error("Exception while notifying listeners", ite);
+            } catch (InterruptedException ie) {
+                LOGGER.error("Exception while notifying listeners", ie);
             }
         }
     }
@@ -356,12 +376,27 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
     /**
      * Informs all registered hilite listener to reset all hilit rows.
      */
-    protected void fireClearHiLiteEventInternal() {
-        for (HiLiteListener l : m_listenerList) {
+    protected synchronized void fireClearHiLiteEventInternal() {
+        final Runnable r = new Runnable() {
+            public void run() {
+                for (HiLiteListener l : m_listenerList) {
+                    try {
+                        l.unHiLiteAll();
+                    } catch (Throwable t) {
+                        LOGGER.coding("Exception while notifying listeners", t);
+                    }
+                }
+            }
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            r.run();
+        } else {
             try {
-                l.unHiLiteAll();
-            } catch (Throwable t) {
-                LOGGER.coding("Exception while notifying listeners", t);
+                SwingUtilities.invokeAndWait(r);
+            } catch (InvocationTargetException ite) {
+                LOGGER.error("Exception while notifying listeners", ite);
+            } catch (InterruptedException ie) {
+                LOGGER.error("Exception while notifying listeners", ie);
             }
         }
     }
