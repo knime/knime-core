@@ -329,7 +329,7 @@ public class AnalyzeLogFile {
             if (nextLine.indexOf(" ERROR ") == 23) {
                 // if there is an exception in the test, the TestCase appends
                 // a certain message at the end of the test to the logfile
-                if (nextLine.contains(KnimeTestCase.EXCEPT_FAIL_MSG)) {
+                if (nextLine.contains(TestingConfig.EXCEPT_FAIL_MSG)) {
                     if (result == ErrorCode.ERROR) {
                         result = ErrorCode.ERREXCEPT;
                     } else {

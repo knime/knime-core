@@ -42,13 +42,6 @@ import org.knime.core.node.workflow.WorkflowManager;
  */
 public class KnimeTestRegistry {
 
-    /**
-     * name of the file containing the testowner's email address.
-     */
-    public static final String OWNER_FILE = "owner";
-
-    /* ---------- end of static stuff ---------------------- */
-
     private static NodeLogger m_logger =
             NodeLogger.getLogger(KnimeTestRegistry.class);
 
@@ -117,14 +110,6 @@ public class KnimeTestRegistry {
                 KnimeTestCase testCase = new KnimeTestCase(workflowFile);
                 testCase.setName(name);
                 m_registry.add(testCase);
-                File ownerFile = new File(dir, OWNER_FILE);
-                if (!ownerFile.exists()) {
-                    m_logger.error("Test '" + name
-                            + "' is going to fail due to missing"
-                            + " owner file (add a file called '" + OWNER_FILE
-                            + "' with the email address of the test owner in "
-                            + "the dir of the workflow file)!!");
-                }
             } else {
                 m_logger.info("Skipping testcase '" + name + "' (doesn't match"
                         + "pattern '" + m_pattern + "').");
