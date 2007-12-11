@@ -34,13 +34,13 @@ import org.knime.core.node.NodeView;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ColorAppenderNodeFactory extends NodeFactory {
+public class ColorAppender2NodeFactory extends NodeFactory {
     /**
      * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
-        return new ColorAppenderNodeModel(1, 1, 1, 0);
+        return new ColorAppender2NodeModel(1, 1, 1, 0);
     }
 
     /**
@@ -73,6 +73,6 @@ public class ColorAppenderNodeFactory extends NodeFactory {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new ColorAppenderNodeDialogPane();
+        return new ColorAppender2NodeDialogPane();
     }
 }

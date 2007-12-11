@@ -22,6 +22,8 @@
 package org.knime.base.node.viz.property.color;
 
 import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -41,22 +43,26 @@ import org.knime.core.data.property.ColorModelRange;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.config.ConfigRO;
-import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Internal color model used to load, save, validate color settings and 
- * configure, execute  {@link ColorManagerNodeModel} and 
- * {@link ColorAppenderNodeModel} nodes.
+ * Model used to set colors either based on the nominal values or ranges
+ * (bounds) retrieved from the {@link org.knime.core.data.DataColumnSpec}.
+ * The created {@link org.knime.core.data.property.ColorHandler} is then
+ * set in the column spec.
  * 
- * @see ColorHandler
+ * @see ColorManager2NodeDialogPane
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class ColorNodeModel {
-    
+class ColorManager2NodeModel extends NodeModel {
+        
     /** Logger for this package. */
     static final NodeLogger LOGGER = NodeLogger.getLogger("Color Manager");
 
@@ -93,14 +99,8 @@ class ColorNodeModel {
     private static final DataCell MIN_VALUE = new StringCell("min_value");
 
     private static final DataCell MAX_VALUE = new StringCell("max_value");
-
-    /**
-     * Creates a new model for mapping colors. The model has one input and no
-     * output.
-     */
-    ColorNodeModel() {
-        m_map = new LinkedHashMap<DataCell, ColorAttr>();
-    }
+    
+    private ColorHandler m_colorHandler = null;
 
     /**
      * Is invoked during the node's execution to make the color settings.
@@ -111,7 +111,8 @@ class ColorNodeModel {
      *         now
      * @throws CanceledExecutionException if user canceled execution
      */
-    BufferedDataTable[] execute(final BufferedDataTable[] data,
+    @Override
+    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
         assert (data != null && data.length == 1 && data[INPORT] != null);
         // find selected column index
@@ -119,10 +120,8 @@ class ColorNodeModel {
         int columnIndex = inSpec.findColumnIndex(m_column);
         // create new column spec based on color settings
         DataColumnSpec cspec = inSpec.getColumnSpec(m_column);
-        // will be set in final table
-        ColorHandler colorHdl;
         if (m_isNominal) {
-            colorHdl = createNominalColorHandler(m_map);
+            m_colorHandler = createNominalColorHandler(m_map);
         } else {
             DataColumnDomain dom = cspec.getDomain();
             DataCell lower, upper;
@@ -134,45 +133,40 @@ class ColorNodeModel {
                 lower = stat.getMin(columnIndex);
                 upper = stat.getMax(columnIndex);
             }
-            colorHdl = createRangeColorHandler(lower, upper, m_map);
+            m_colorHandler = createRangeColorHandler(lower, upper, m_map);
         }
         BufferedDataTable changedSpecTable = exec.createSpecReplacerTable(
-                data[INPORT], createNewSpec(inSpec, columnIndex, colorHdl));
+                data[INPORT], 
+                appendColorManager(inSpec, m_column, m_colorHandler));
         // return original table with ColorHandler
         return new BufferedDataTable[]{changedSpecTable};
     }
     
-    private DataTableSpec createNewSpec(final DataTableSpec inSpec,
-            final int columnIndex, final ColorHandler colorHdl) {
-        DataColumnSpec[] newColSpecs = 
-            new DataColumnSpec[inSpec.getNumColumns()];
-        for (int i = 0; i < newColSpecs.length; i++) {
-            DataColumnSpecCreator dtsCont = 
-                new DataColumnSpecCreator(inSpec.getColumnSpec(i));
-            if (i == columnIndex) {
-                dtsCont.setColorHandler(colorHdl);
+    /**
+     * Appends the given <code>ColorHandler</code> to the given 
+     * <code>DataTableSpec</code> for the given column. If the spec
+     * already contains a ColorHandler, it will be removed and replaced by
+     * the new one.
+     * @param spec to which the ColorHandler is appended
+     * @param columnName for this column
+     * @param colorHdl ColorHandler
+     * @return a new spec with ColorHandler
+     */
+    static final DataTableSpec appendColorManager(final DataTableSpec spec,
+            final String columnName, final ColorHandler colorHdl) {
+        DataColumnSpec[] cspecs = new DataColumnSpec[spec.getNumColumns()];
+        for (int i = 0; i < cspecs.length; i++) {
+            DataColumnSpec cspec = spec.getColumnSpec(i);
+            DataColumnSpecCreator cr = new DataColumnSpecCreator(cspec);
+            if (cspec.getName().equals(columnName)) {
+                cr.setColorHandler(colorHdl);
             } else {
-                dtsCont.setColorHandler(null);
+                // delete other ColorHandler
+                cr.setColorHandler(null);
             }
-            newColSpecs[i] = dtsCont.createSpec();
+            cspecs[i] = cr.createSpec();
         }
-        return new DataTableSpec(newColSpecs);
-    }
-    
-    /**
-     * @return the selected column or <code>null</code> if none
-     */
-    String getSelectedColumn() {
-        return m_column;
-    }
-    
-    /**
-     * Sets a (new) selected column name to which the color settings
-     * are applied. 
-     * @param column The column name or null.
-     */
-    void setSelectedColumn(final String column) {
-        m_column = column;
+        return new DataTableSpec(cspecs);
     }
 
     /**
@@ -181,7 +175,8 @@ class ColorNodeModel {
      * 
      * @throws InvalidSettingsException if a column is not available
      */
-    DataTableSpec[] configure(final DataTableSpec[] inSpecs) 
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) 
             throws InvalidSettingsException {
         assert (inSpecs.length == 1);
         // check null column
@@ -205,7 +200,7 @@ class ColorNodeModel {
                         + " has no nominal values set:\n"
                         + "execute predecessor or add Binner.");
             }
-            // check if the mapping's values and the possible values match
+            // check if the mapping's values and the poss values match
             if (!m_map.keySet().containsAll(list)) {
                 throw new InvalidSettingsException("Mapping does not match "
                         + "possible values in spec.");
@@ -224,13 +219,10 @@ class ColorNodeModel {
                         "Color settings not yet available.");
             }   
         }
-        int columnIndex = inSpecs[INPORT].findColumnIndex(m_column);
         // create new column spec based on color settings
         DataColumnSpec cspec = inSpecs[INPORT].getColumnSpec(m_column);
-        // will be set in final table
-        ColorHandler colorHdl;
         if (m_isNominal) {
-            colorHdl = createNominalColorHandler(m_map);
+            m_colorHandler = createNominalColorHandler(m_map);
         } else {
             DataColumnDomain dom = cspec.getDomain();
             DataCell lower = null;
@@ -239,10 +231,10 @@ class ColorNodeModel {
                 lower = dom.getLowerBound();
                 upper = dom.getUpperBound();
             }
-            colorHdl = createRangeColorHandler(lower, upper, m_map);
+            m_colorHandler = createRangeColorHandler(lower, upper, m_map);
         }
         return new DataTableSpec[]{
-                createNewSpec(inSpecs[INPORT], columnIndex, colorHdl)};
+                appendColorManager(inSpecs[INPORT], m_column, m_colorHandler)};
     }
 
     /**
@@ -251,11 +243,12 @@ class ColorNodeModel {
      * @throws InvalidSettingsException If a color property with the settings
      *         is invalid.
      */
-    void loadValidatedSettingsFrom(final ConfigRO settings)
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         assert (settings != null);
         // remove all color mappings
-        resetColorMapping();
+        m_map.clear();
         // read settings and write into the map
         m_column = settings.getString(SELECTED_COLUMN, null);
         if (m_column != null) {
@@ -286,7 +279,8 @@ class ColorNodeModel {
      * Save color settings. 
      * @param settings Used to write color settings into.
      */
-    void saveSettingsTo(final ConfigWO settings) {
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addString(SELECTED_COLUMN, m_column);
         if (m_column != null) {
             settings.addBoolean(IS_NOMINAL, m_isNominal);
@@ -319,7 +313,8 @@ class ColorNodeModel {
      * @throws InvalidSettingsException If a color property read from the
      *         settings is invalid.
      */
-    void validateSettings(final ConfigRO settings) 
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings) 
             throws InvalidSettingsException {
         String column = settings.getString(SELECTED_COLUMN, null);
         if (column != null) {
@@ -335,13 +330,6 @@ class ColorNodeModel {
                 new Color(settings.getInt(MAX_COLOR));
             }
         }
-    }
-    
-    /**
-     * Resets the color mapping.
-     */
-    void resetColorMapping() {
-        m_map.clear();
     }
     
     private static final ColorHandler createNominalColorHandler(
@@ -367,4 +355,60 @@ class ColorNodeModel {
         }
         return new ColorHandler(new ColorModelRange(d0, c0, d1, c1));
     }
+
+    /**
+     * Creates a new model for mapping colors. The model has one input and no
+     * output.
+     * 
+     * @param dataIns number of data ins
+     * @param dataOuts number of data outs
+     * @param modelIns number of model ins
+     * @param modelOuts number of model outs
+     */
+    public ColorManager2NodeModel(final int dataIns, final int dataOuts,
+            final int modelIns, final int modelOuts) {
+        super(dataIns, dataOuts, modelIns, modelOuts);
+        m_map = new LinkedHashMap<DataCell, ColorAttr>();
+    }
+
+    /**
+     * Resets all color' settings inside this model and the color handler which
+     * will then inform the registered views about the changes.
+     * 
+     * @see NodeModel#reset()
+     */
+    @Override
+    protected void reset() {
+        m_colorHandler = null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveModelContent(final int index, 
+            final ModelContentWO predParams) throws InvalidSettingsException {
+        m_colorHandler.save(predParams);
+    }
+    
 }

@@ -17,9 +17,12 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- *
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   02.02.2006 (mb): created
  */
-package org.knime.base.node.viz.property.shape;
+package org.knime.base.node.viz.property.size;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -27,21 +30,15 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * The shape manager factory which creates a
- * {@link org.knime.base.node.viz.property.shape.ShapeManagerNodeDialogPane}.
- * 
- * @see ShapeManagerNodeModel
- * @see ShapeManagerNodeDialogPane
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ShapeManagerNodeFactory extends NodeFactory {
-    
+public class SizeManager2NodeFactory extends NodeFactory {
     /**
      * Empty default constructor.
      */
-    public ShapeManagerNodeFactory() {
-
+    public SizeManager2NodeFactory() {
+        // empty
     }
 
     /**
@@ -49,7 +46,7 @@ public class ShapeManagerNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new ShapeManagerNodeModel(1, 1, 0, 1);
+        return new SizeManager2NodeModel();
     }
 
     /**
@@ -65,7 +62,7 @@ public class ShapeManagerNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new ShapeManagerNodeDialogPane();
+        return new SizeManager2NodeDialogPane();
     }
 
     /**

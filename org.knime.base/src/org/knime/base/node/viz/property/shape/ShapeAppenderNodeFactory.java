@@ -1,5 +1,5 @@
-/*
- * ------------------------------------------------------------------
+/* 
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -20,67 +20,34 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   02.02.2006 (mb): created
+ *   23.05.2006 (gabriel): created
  */
-package org.knime.base.node.viz.property.size;
+package org.knime.base.node.viz.property.shape;
 
-import org.knime.core.data.DoubleValue;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
-import org.knime.core.node.defaultnodedialog.DialogComponentColumnSelection;
 
 /**
+ * Factory to create <i>Shape Appender</i> node.
  * 
- * @author Michael Berthold, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
  */
-public class SizeManagerNodeFactory extends NodeFactory {
-    /**
-     * Empty default constructor.
-     */
-    public SizeManagerNodeFactory() {
-        // empty
-    }
-
+public class ShapeAppenderNodeFactory extends NodeFactory {
     /**
      * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
-        return new SizeManagerNodeModel();
+        return new ShapeAppenderNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DefaultNodeDialogPane() {
-            {
-                this.addDialogComponent(new DialogComponentColumnSelection(
-                /* config-name: */SizeManagerNodeModel.SELECTED_COLUMN,
-                /* label: */"Column to use for size settings ",
-                /* specIndex: */0,
-                /* classes... */DoubleValue.class));
-            }
-        };
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
+    protected int getNrNodeViews() {
         return 0;
     }
 
@@ -88,7 +55,24 @@ public class SizeManagerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int index, final NodeModel nodeModel) {
-        throw new IllegalStateException();
+    public NodeView createNodeView(final int viewIndex, final NodeModel nm) {
+        assert false;
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new ShapeAppenderNodeDialogPane();
     }
 }

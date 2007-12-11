@@ -23,7 +23,7 @@ package org.knime.base.node.viz.parcoord;
 
 import org.knime.base.node.io.filereader.FileReaderNodeFactory;
 import org.knime.base.node.mine.bfn.fuzzy.FuzzyBasisFunctionLearnerNodeFactory;
-import org.knime.base.node.viz.property.color.ColorManagerNodeFactory;
+import org.knime.base.node.viz.property.color.ColorManager2NodeFactory;
 import org.knime.base.node.viz.table.TableNodeFactory;
 import org.knime.core.node.Node;
 
@@ -45,7 +45,7 @@ public final class ParallelCoordinates {
         fileNode.execute();    
         
         // create: color manager node
-        Node colorNode = new Node(new ColorManagerNodeFactory());
+        Node colorNode = new Node(new ColorManager2NodeFactory());
         colorNode.getInPort(0).connectPort(fileNode.getOutPort(0));
         colorNode.showDialog();
         colorNode.execute();

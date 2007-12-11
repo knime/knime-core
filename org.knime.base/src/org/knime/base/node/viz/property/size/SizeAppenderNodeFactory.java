@@ -1,5 +1,5 @@
-/*
- * ------------------------------------------------------------------
+/* 
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -17,9 +17,12 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- *
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   23.05.2006 (gabriel): created
  */
-package org.knime.base.node.viz.property.shape;
+package org.knime.base.node.viz.property.size;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -27,52 +30,24 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * The shape manager factory which creates a
- * {@link org.knime.base.node.viz.property.shape.ShapeManagerNodeDialogPane}.
- * 
- * @see ShapeManagerNodeModel
- * @see ShapeManagerNodeDialogPane
+ * Factory to create <i>Size Appender</i> node.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ShapeManagerNodeFactory extends NodeFactory {
-    
-    /**
-     * Empty default constructor.
-     */
-    public ShapeManagerNodeFactory() {
-
-    }
-
+public class SizeAppenderNodeFactory extends NodeFactory {
     /**
      * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
-        return new ShapeManagerNodeModel(1, 1, 0, 1);
+        return new SizeAppenderNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new ShapeManagerNodeDialogPane();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
+    protected int getNrNodeViews() {
         return 0;
     }
 
@@ -80,7 +55,24 @@ public class ShapeManagerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int index, final NodeModel nodeModel) {
-        throw new IllegalStateException();
+    public NodeView createNodeView(final int viewIndex, final NodeModel nm) {
+        assert false;
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new SizeAppenderNodeDialogPane();
     }
 }

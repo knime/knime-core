@@ -178,20 +178,37 @@
       </node>
       <node
             category-path="/view/property"
-            factory-class="org.knime.base.node.viz.property.color.ColorManagerNodeFactory"
-            id="org.knime.base.node.viz.property.color.ColorManagerNodeFactory">
+            factory-class="org.knime.base.node.viz.property.color.ColorManager2NodeFactory"
+            id="org.knime.base.node.viz.property.color.ColorManager2NodeFactory">
       </node>
       <node
-	        after="org.knime.base.node.viz.property.size.SizeManagerNodeFactory"
+            after="org.knime.base.node.viz.property.color.ColorManager2NodeFactory"
+            category-path="/view/property"
+            factory-class="org.knime.base.node.viz.property.size.SizeManager2NodeFactory"
+            id="org.knime.base.node.viz.property.size.SizeManager2NodeFactory"/>
+      <node
+	        after="org.knime.base.node.viz.property.size.SizeManager2NodeFactory"
             category-path="/view/property"
             factory-class="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory"
             id="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory">
       </node>
       <node
-                  after="org.knime.base.node.viz.property.size.ShapeManagerNodeFactory"
-                  category-path="/view/property"
-                  factory-class="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory"
-                  id="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory">
+            after="org.knime.base.node.viz.property.shape.ShapeManagerNodeFactory"
+            category-path="/view/property"
+            factory-class="org.knime.base.node.viz.property.color.ColorAppender2NodeFactory"
+            id="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.viz.property.color.ColorAppenderNodeFactory"
+            category-path="/view/property"
+            factory-class="org.knime.base.node.viz.property.size.SizeAppenderNodeFactory"
+            id="org.knime.base.node.viz.property.size.SizeAppenderNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.viz.property.size.SizeAppenderNodeFactory"
+            category-path="/view/property"
+            factory-class="org.knime.base.node.viz.property.shape.ShapeAppenderNodeFactory"
+            id="org.knime.base.node.viz.property.shape.ShapeAppenderNodeFactory">
       </node>
       <node
             category-path="/view"
@@ -344,11 +361,6 @@
             category-path="/manipulation/column"
             factory-class="org.knime.base.node.preproc.rename.RenameNodeFactory"
             id="org.knime.base.node.preproc.rename.RenameNodeFactory"/>
-      <node
-            after="org.knime.base.node.viz.property.color.ColorManagerNodeFactory"
-            category-path="/view/property"
-            factory-class="org.knime.base.node.viz.property.size.SizeManagerNodeFactory"
-            id="org.knime.base.node.viz.property.size.SizeManagerNodeFactory"/>
       <node
             category-path="/mining/subgroup"
             factory-class="org.knime.base.node.mine.subgroupminer.BitVectorGeneratorNodeFactory"

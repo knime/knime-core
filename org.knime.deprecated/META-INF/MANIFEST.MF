@@ -12,8 +12,12 @@ Require-Bundle: org.knime.workbench.repository,
 Export-Package: org.knime.base.node.mine.decisiontree.predictor,
  org.knime.base.node.mine.decisiontree.predictor.decisiontree,
  org.knime.base.node.mine.scorer,
+ org.knime.base.node.mine.sota,
+ org.knime.base.node.preproc.join,
  org.knime.base.node.preproc.nominal,
- org.knime.base.node.preproc.normalize
+ org.knime.base.node.preproc.normalize,
+ org.knime.base.node.viz.property.color,
+ org.knime.base.node.viz.property.size
 Eclipse-LazyStart: false
 Bundle-Activator: org.knime.deprecated.DeprecatedPlugin
 Bundle-ClassPath: knime-deprecated.jar

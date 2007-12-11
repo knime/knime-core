@@ -32,7 +32,7 @@ import org.knime.base.node.preproc.binner.BinnerNodeFactory;
 import org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory;
 import org.knime.base.node.util.cache.CacheNodeFactory;
 import org.knime.base.node.viz.parcoord.ParallelCoordinatesNodeFactory;
-import org.knime.base.node.viz.property.color.ColorManagerNodeFactory;
+import org.knime.base.node.viz.property.color.ColorManager2NodeFactory;
 import org.knime.base.node.viz.table.TableNodeFactory;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
@@ -82,7 +82,7 @@ public final class RadialBasisFunctionFlow {
         // create: binner
         int binner = flow.addNewNode(new BinnerNodeFactory()).getID();
         // create: color manager
-        int color = flow.addNewNode(new ColorManagerNodeFactory()).getID();
+        int color = flow.addNewNode(new ColorManager2NodeFactory()).getID();
         // create: column filter
         int column = flow.addNewNode(new FilterColumnNodeFactory()).getID();
         // create: cache node training data

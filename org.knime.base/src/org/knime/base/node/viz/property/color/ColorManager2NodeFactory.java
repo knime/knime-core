@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  */
-package org.knime.base.node.viz.property.shape;
+package org.knime.base.node.viz.property.color;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -27,29 +27,22 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * The shape manager factory which creates a
- * {@link org.knime.base.node.viz.property.shape.ShapeManagerNodeDialogPane}.
+ * The color manager factory which creates a
+ * {@link org.knime.base.node.viz.property.color.ColorManager2NodeDialogPane}.
  * 
- * @see ShapeManagerNodeModel
- * @see ShapeManagerNodeDialogPane
+ * @see ColorManager2NodeModel
+ * @see ColorManager2NodeDialogPane
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ShapeManagerNodeFactory extends NodeFactory {
+public class ColorManager2NodeFactory extends NodeFactory {
     
-    /**
-     * Empty default constructor.
-     */
-    public ShapeManagerNodeFactory() {
-
-    }
-
     /**
      * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
-        return new ShapeManagerNodeModel(1, 1, 0, 1);
+        return new ColorManager2NodeModel(1, 1, 0, 1);
     }
 
     /**
@@ -65,7 +58,7 @@ public class ShapeManagerNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new ShapeManagerNodeDialogPane();
+        return new ColorManager2NodeDialogPane();
     }
 
     /**

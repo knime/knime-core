@@ -1,5 +1,5 @@
-/*
- * ------------------------------------------------------------------
+/* 
+ * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -17,7 +17,10 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- *
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   23.05.2006 (gabriel): created
  */
 package org.knime.base.node.viz.property.color;
 
@@ -27,51 +30,25 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * The color manager factory which creates a
- * {@link org.knime.base.node.viz.property.color.ColorManagerNodeDialogPane}.
- * 
- * @see ColorManagerNodeModel
- * @see ColorManagerNodeDialogPane
+ * Factory to create <i>Color Appender</i> node.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ColorManagerNodeFactory extends NodeFactory {
-    /**
-     * Empty default constructor.
-     */
-    public ColorManagerNodeFactory() {
-        // empty
-    }
-
+@Deprecated
+public class ColorAppenderNodeFactory extends NodeFactory {
     /**
      * {@inheritDoc}
      */
     @Override
     public NodeModel createNodeModel() {
-        return new ColorManagerNodeModel(1, 1, 0, 1);
+        return new ColorAppender2NodeModel(1, 1, 1, 0);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new ColorManagerNodeDialogPane();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
+    protected int getNrNodeViews() {
         return 0;
     }
 
@@ -79,7 +56,24 @@ public class ColorManagerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int index, final NodeModel nodeModel) {
-        throw new IllegalStateException();
+    public NodeView createNodeView(final int viewIndex, final NodeModel nm) {
+        assert false;
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new ColorAppender2NodeDialogPane();
     }
 }

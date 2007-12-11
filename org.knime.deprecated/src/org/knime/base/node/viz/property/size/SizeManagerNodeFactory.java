@@ -17,31 +17,32 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * --------------------------------------------------------------------- *
+ * -------------------------------------------------------------------
+ * 
+ * History
+ *   02.02.2006 (mb): created
  */
-package org.knime.base.node.viz.property.shape;
+package org.knime.base.node.viz.property.size;
 
+import org.knime.core.data.DoubleValue;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
+import org.knime.core.node.defaultnodedialog.DefaultNodeDialogPane;
+import org.knime.core.node.defaultnodedialog.DialogComponentColumnSelection;
 
 /**
- * The shape manager factory which creates a
- * {@link org.knime.base.node.viz.property.shape.ShapeManagerNodeDialogPane}.
  * 
- * @see ShapeManagerNodeModel
- * @see ShapeManagerNodeDialogPane
- * 
- * @author Thomas Gabriel, University of Konstanz
+ * @author Michael Berthold, University of Konstanz
  */
-public class ShapeManagerNodeFactory extends NodeFactory {
-    
+@Deprecated
+public class SizeManagerNodeFactory extends NodeFactory {
     /**
      * Empty default constructor.
      */
-    public ShapeManagerNodeFactory() {
-
+    public SizeManagerNodeFactory() {
+        // empty
     }
 
     /**
@@ -49,7 +50,7 @@ public class ShapeManagerNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new ShapeManagerNodeModel(1, 1, 0, 1);
+        return new SizeManagerNodeModel();
     }
 
     /**
@@ -65,7 +66,15 @@ public class ShapeManagerNodeFactory extends NodeFactory {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new ShapeManagerNodeDialogPane();
+        return new DefaultNodeDialogPane() {
+            {
+                this.addDialogComponent(new DialogComponentColumnSelection(
+                /* config-name: */SizeManagerNodeModel.SELECTED_COLUMN,
+                /* label: */"Column to use for size settings ",
+                /* specIndex: */0,
+                /* classes... */DoubleValue.class));
+            }
+        };
     }
 
     /**
