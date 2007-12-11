@@ -225,6 +225,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      */
     public void setProgress(final int curRowNr, final int rowCount, 
             final RowKey lastKey, final ExecutionMonitor exec) {
-        exec.setProgress((double) curRowNr / rowCount);
+        exec.setProgress((double) curRowNr / rowCount,
+                "Predicting row \"" + lastKey.getId() + "\"");
     }
 }
