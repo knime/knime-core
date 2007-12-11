@@ -59,7 +59,7 @@ public class KnimeTestCase extends TestCase {
      * These guys own all tests without owner file. They will be notified about
      * their failure due to missing owners.
      */
-    private final static String REGRESSIONS_OWNER = "peter.ohl@uni-konstanz.de";
+    public final static String REGRESSIONS_OWNER = "peter.ohl@uni-konstanz.de";
 
     private static final NodeLogger logger =
             NodeLogger.getLogger(KnimeTestCase.class);

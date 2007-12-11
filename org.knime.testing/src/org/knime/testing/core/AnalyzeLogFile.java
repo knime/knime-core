@@ -60,6 +60,12 @@ public class AnalyzeLogFile {
         ERREXCEPT
     };
 
+    // this pattern in the log file indicates a starting test log
+    private final static String TEST_START_CODE = "<Start> Test='";
+
+    // this pattern in the log file indicates the end of a test log
+    private final static String TEST_END_CODE = "<End> Test='";
+
     private final static String CRLF = "\r\n";
 
     private int m_numOfTestsRun = 0;
@@ -150,6 +156,8 @@ public class AnalyzeLogFile {
                         + ".txt");
         m_summarySucceedingTests = new FileWriter(goodTests);
 
+        checkWorkbenchInit(logCopy);
+        
         extractFailingTests(logCopy);
 
         // close them for the createSummary method.
@@ -179,8 +187,7 @@ public class AnalyzeLogFile {
                         + ".txt"));
 
         int posTests = m_numOfTestsRun - m_numOfFailingTests;
-        int posRate =
-                (int)Math.round((posTests * 100.0) / m_numOfTestsRun);
+        int posRate = (int)Math.round((posTests * 100.0) / m_numOfTestsRun);
 
         summary.write("Regression run on " + m_startTime + CRLF);
         summary.write("Tests run: " + m_numOfTestsRun + ", failing: "
@@ -224,11 +231,79 @@ public class AnalyzeLogFile {
         summary.close();
     }
 
+    /**
+     * Analyzes the part of the log file that belongs to no test (but the
+     * workbench initialization). It adds a pseudo failing test to the summary
+     * file if it detects an exception in the log file, and keeps the header of
+     * the log file as partial log.
+     * 
+     * @param logFile the log file to analyze.
+     * @throws IOException if the log file is not accessible
+     */
+    private void checkWorkbenchInit(final File logFile) throws IOException {
+
+        BufferedReader logReader = new BufferedReader(new FileReader(logFile));
+        String testName = "_workbenchInitializing";
+        String ownerAddress = KnimeTestCase.REGRESSIONS_OWNER;
+
+        File testFile =
+                new File(m_tmpDir, testName + "_" + m_startTime + ".txt");
+        FileWriter testFileWriter = new FileWriter(testFile);
+        testFileWriter.write("TestOwners=" + ownerAddress);
+
+        String line = null;
+        boolean workbenchInitFailed = false;
+
+        boolean exceptionStartLine = false;
+        while ((line = logReader.readLine()) != null) {
+
+            if (line.contains(TEST_START_CODE)) {
+                // regression tests start here. Workbench initialization done.
+                break;
+            }
+
+            testFileWriter.write(line + CRLF);
+
+            if (line.indexOf("Exception: ") > 0) {
+                exceptionStartLine = true;
+            } else if (line.indexOf(" ERROR ") == 23) {
+                // an error during workbench init is not good.
+                workbenchInitFailed = true;
+            } else {
+                if (exceptionStartLine) {
+                    // if the previous line started an exception dump
+                    // this should be the first line of the stacktrace
+                    if (line.matches("^\\tat .*\\(.*\\)$")) {
+                        workbenchInitFailed = true;
+                        // continue here, we want to copy the entire
+                        // log file header in the testlog file
+                    }
+                    exceptionStartLine = false;
+                }
+            } 
+
+        }
+
+        testFileWriter.close();
+        logReader.close();
+        
+        if (workbenchInitFailed) {
+            m_summaryFailingTests.write("Test '" + testName
+                    + "' failed with ERRORs.");
+            m_summaryFailingTests
+                    .write("(Owner: " + ownerAddress + ")." + CRLF);
+        } else {
+            // delete the file of the succeeding init part.
+            testFile.delete();
+        }
+
+    }
+
     private void extractFailingTests(final File logFile) throws IOException {
 
         BufferedReader logReader = new BufferedReader(new FileReader(logFile));
 
-        String startKey = "<Start> Test='";
+        String startKey = TEST_START_CODE;
         String startLine;
 
         while ((startLine = getLineContaining(startKey, logReader)) != null) {
@@ -252,7 +327,7 @@ public class AnalyzeLogFile {
                         ownerLine.substring(ownerLine.indexOf(ownerKey)
                                 + ownerKey.length());
                 testFileWriter.write(ownerAddress + CRLF);
-            } 
+            }
 
             // also add the first line
             testFileWriter.write(startLine + CRLF);
@@ -268,10 +343,11 @@ public class AnalyzeLogFile {
                         + "' succeeded ");
                 m_summarySucceedingTests.write("(Owner: " + ownerAddress + ")."
                         + CRLF);
-                // delete the file of succeeeding tests
+                // delete the file of succeeding tests
                 testFile.delete();
                 break;
             case ERROR:
+                // this text is parsed by the nightly test scripts!
                 m_numOfFailingTests++;
                 m_summaryFailingTests.write("Test '" + testName
                         + "' failed with ERRORs.");
@@ -279,6 +355,7 @@ public class AnalyzeLogFile {
                         + CRLF);
                 break;
             case EXCEPTION:
+                // this text is parsed by the nightly test scripts!
                 m_numOfFailingTests++;
                 m_summaryFailingTests.write("Test '" + testName
                         + "' failed with Exceptions.");
@@ -286,6 +363,7 @@ public class AnalyzeLogFile {
                         + CRLF);
                 break;
             case ERREXCEPT:
+                // this text is parsed by the nightly test scripts!
                 m_numOfFailingTests++;
                 m_summaryFailingTests.write("Test '" + testName
                         + "' failed with ERRORs and Exceptions.");
@@ -310,7 +388,7 @@ public class AnalyzeLogFile {
         // a test fails if an error or exception in the log file occurs.s
         ErrorCode result = ErrorCode.OK;
 
-        String endKey = "<End> Test='";
+        String endKey = TEST_END_CODE;
         String nextLine;
 
         while ((nextLine = logReader.readLine()) != null) {
