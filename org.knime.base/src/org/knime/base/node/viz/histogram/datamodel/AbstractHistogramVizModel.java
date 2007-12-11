@@ -396,7 +396,7 @@ public abstract class AbstractHistogramVizModel {
 
     /**
      * @return all available element colors. This is the color the user has
-     * set for one attribute in the ColorManager node.
+     * set for one attribute in the Color Manager node.
      */
     public SortedSet<Color> getRowColors() {
         return m_rowColors;

@@ -213,7 +213,7 @@ public class FixedHistogramDataModel {
 
     /**
      * @return all available element colors. This is the color the user has
-     * set for one attribute in the ColorManager node.
+     * set for one attribute in the Color Manager node.
      * THIS IS AN UNMODIFIABLE {@link SortedSet}!
      */
     public SortedSet<Color> getRowColors() {
