@@ -1253,7 +1253,7 @@ public class NodeContainer implements NodeStateListener {
      */
     @Override
     public String toString() {
-        return m_node.getName() + "(#" + m_id + ")";
+        return m_node.getName() + " (#" + m_id + ")";
     }
 
     /**
