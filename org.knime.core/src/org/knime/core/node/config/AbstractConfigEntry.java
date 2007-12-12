@@ -48,7 +48,7 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
      * Creates a new Config entry by the given key and type.
      * @param type enum type within the <code>ConfigEntries</code>
      * @param key The key under which this value is added.
-     * @throws IllegalArgumentException If the type is null.
+     * @throws IllegalArgumentException if the type or key is null
      */
     AbstractConfigEntry(final ConfigEntries type, final String key) {
         if (type == null) {
@@ -60,13 +60,13 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
     }
     
     /**
-     * Check key on null and if empty.
+     * Check key for null value.
      * @param key The key to check.
      * @return The original key.
      */
     private static final String checkKey(final String key) {
-        if (key == null || key.trim().length() == 0) {
-            throw new IllegalArgumentException("Key must not be empty: " + key);
+        if (key == null) {
+            throw new IllegalArgumentException("Key must not be null!");
         }
         return key;
     }
