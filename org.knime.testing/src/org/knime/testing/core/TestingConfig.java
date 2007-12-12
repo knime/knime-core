@@ -31,9 +31,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -80,7 +81,7 @@ public class TestingConfig extends AppenderSkeleton {
     public static final String ERR_FAIL_MSG = "Got ERRORs during run";
 
     /**
-     * The message inserted if the test fails due to excpetions (analyzers will
+     * The message inserted if the test fails due to exceptions (analyzers will
      * parse for it).
      */
     public static final String EXCEPT_FAIL_MSG = "Got EXCEPTIONs during run";
@@ -96,6 +97,10 @@ public class TestingConfig extends AppenderSkeleton {
     private Collection<String> m_requiredDebugs;
 
     private Collection<Integer> m_requiredUnexecutedNodes;
+
+    private Map<Integer, String> m_warningStatus;
+
+    private Map<Integer, String> m_errorStatus;
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(TestingConfig.class);
@@ -113,11 +118,13 @@ public class TestingConfig extends AppenderSkeleton {
      */
     public TestingConfig(final int maxLines) {
 
-        m_requiredErrors = null;
-        m_requiredWarnings = null;
-        m_requiredInfos = null;
-        m_requiredDebugs = null;
-        m_requiredUnexecutedNodes = null;
+        m_requiredErrors = new LinkedList<String>();
+        m_requiredWarnings = new LinkedList<String>();
+        m_requiredInfos = new LinkedList<String>();
+        m_requiredDebugs = new LinkedList<String>();
+        m_requiredUnexecutedNodes = new LinkedList<Integer>();
+        m_errorStatus = new HashMap<Integer, String>();
+        m_warningStatus = new HashMap<Integer, String>();
         m_owners = null;
 
         m_maxlines = maxLines;
@@ -180,100 +187,6 @@ public class TestingConfig extends AppenderSkeleton {
     }
 
     /**
-     * Set a list of error messages all incoming error messages are compared
-     * against. You can always get the count of still "missing" error messages.
-     * 
-     * @param errMsgs the error messages that should appear.
-     */
-    public void setRequiredErrorMessages(final Collection<String> errMsgs) {
-        m_requiredErrors = new LinkedList<String>(errMsgs);
-    }
-
-    /**
-     * Returns the list of error messages that have not occurred so far.
-     * 
-     * @return the list of error messages that have not occurred so far.
-     */
-    public Collection<String> getMissingErrorMessages() {
-        if (m_requiredErrors != null) {
-            return Collections.unmodifiableCollection(m_requiredErrors);
-        } else {
-            return new LinkedList<String>();
-        }
-    }
-
-    /**
-     * Set a list of warning messages all incoming warnings messages are
-     * compared against. You can always get the count of still "missing" warning
-     * messages.
-     * 
-     * @param warnMsgs the warning messages you want to appear.
-     */
-    public void setRequiredWarningMessages(final Collection<String> warnMsgs) {
-        m_requiredWarnings = new LinkedList<String>(warnMsgs);
-    }
-
-    /**
-     * Returns the list of warning messages that have not been seen so far.
-     * 
-     * @return the list of warning messages that have not been seen so far.
-     */
-    public Collection<String> getMissingWarningMessages() {
-        if (m_requiredWarnings != null) {
-            return Collections.unmodifiableCollection(m_requiredWarnings);
-        } else {
-            return new LinkedList<String>();
-        }
-    }
-
-    /**
-     * Set a list of info messages all incoming info messages are compared
-     * against. You can always get the count of still "missing" info messages.
-     * 
-     * @param infoMsgs the info messages that should appear.
-     */
-    public void setRequiredInfoMessages(final Collection<String> infoMsgs) {
-        m_requiredInfos = new LinkedList<String>(infoMsgs);
-    }
-
-    /**
-     * Returns the list of info messages that have not occurred so far.
-     * 
-     * @return the list of info messages that have not occurred so far.
-     */
-    public Collection<String> getMissingInfoMessages() {
-        if (m_requiredInfos != null) {
-            return Collections.unmodifiableCollection(m_requiredInfos);
-        } else {
-            return new LinkedList<String>();
-        }
-
-    }
-
-    /**
-     * Set a list of debug messages all incoming debug messages are compared
-     * against. You can always get the count of still "missing" debug messages.
-     * 
-     * @param debugMsgs the debug messages that should appear.
-     */
-    public void setRequiredDebugMessages(final Collection<String> debugMsgs) {
-        m_requiredDebugs = new LinkedList<String>(debugMsgs);
-    }
-
-    /**
-     * Returns the list of debug messages that have not occurred so far.
-     * 
-     * @return the list of debug messages that have not occurred so far.
-     */
-    public Collection<String> getMissingDebugMessages() {
-        if (m_requiredDebugs != null) {
-            return Collections.unmodifiableCollection(m_requiredDebugs);
-        } else {
-            return new LinkedList<String>();
-        }
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -282,7 +195,7 @@ public class TestingConfig extends AppenderSkeleton {
         String msg = aEvent.getRenderedMessage();
         Level msgLevel = aEvent.getLevel();
 
-        // try recognizing Stacktraces in warning messages.
+        // try recognizing stacktraces in warning messages.
         if ((msgLevel == Level.ERROR) || (msgLevel == Level.WARN)
                 || (msgLevel == Level.FATAL)) {
             if (msg != null) {
@@ -291,7 +204,7 @@ public class TestingConfig extends AppenderSkeleton {
 
                 /*
                  * An Exception starts with a line containing "....Exception:
-                 * ..." followed by a line starting with "TABat ...blah...:<linenumber>)"
+                 * ..." followed by a line starting with "<TAB>at ...blah...:<linenumber>)"
                  */
                 for (String line : lines) {
                     if (line.indexOf("Exception: ") > 0) {
@@ -315,31 +228,9 @@ public class TestingConfig extends AppenderSkeleton {
         }
 
         // first check if it is a required error/warning/info/debug message
-        boolean expected = false;
-        Collection<String> msgList = null;
-        if (msg != null) {
-            if ((msgLevel == Level.ERROR) && (m_requiredErrors != null)) {
-                msgList = m_requiredErrors;
-            } else if ((msgLevel == Level.WARN) && (m_requiredWarnings != null)) {
-                msgList = m_requiredWarnings;
-            } else if ((msgLevel == Level.INFO) && (m_requiredInfos != null)) {
-                msgList = m_requiredInfos;
-            } else if ((msgLevel == Level.DEBUG) && (m_requiredDebugs != null)) {
-                msgList = m_requiredDebugs;
-            }
-        }
-        // no check if its contained the corresponding list
-        if (msgList != null) {
-            for (String required : msgList) {
-                if (msg.equals(required)) {
-                    msgList.remove(required);
-                    expected = true;
-                    break;
-                }
-            }
-        }
+        boolean isRequired = registerRequiredMessage(msg, msgLevel);
 
-        if (!expected) {
+        if (!isRequired) {
             // an unintended error: add it to the list of unexpected errors
             if ((msgLevel == Level.ERROR) || (msgLevel == Level.FATAL)) {
 
@@ -359,36 +250,6 @@ public class TestingConfig extends AppenderSkeleton {
     public void disconnect() {
         Category.getRoot().removeAppender(this);
 
-    }
-
-    /**
-     * @return the error messages received so far.
-     */
-    public String[] getReceivedMessages() {
-        return m_unexpectedErrors
-                .toArray(new String[m_unexpectedErrors.size()]);
-    }
-
-    /**
-     * @return the number of error messages received so far.
-     */
-    public int getMessageCount() {
-        return m_unexpectedErrors.size();
-    }
-
-    /**
-     * @return the first lines of the stacktraces recieved.
-     */
-    public String[] getExceptions() {
-        return m_exceptions.toArray(new String[m_exceptions.size()]);
-    }
-
-    /**
-     * @return the number or stacktraces in error or warning messages received
-     *         so far.
-     */
-    public int getExceptionsCount() {
-        return m_exceptions.size();
     }
 
     /**
@@ -425,7 +286,7 @@ public class TestingConfig extends AppenderSkeleton {
      *             happens.
      * @throws IOException if an I/O Error occurs
      */
-    public void applyChanges(final File optionsFile, final WorkflowManager wfm)
+    public void applySettings(final File optionsFile, final WorkflowManager wfm)
             throws FileNotFoundException, InvalidSettingsException, IOException {
 
         if (!optionsFile.exists()) {
@@ -595,6 +456,202 @@ public class TestingConfig extends AppenderSkeleton {
     }
 
     /**
+     * Reads in the file that contains the nodes that should show a certain
+     * status after execution.
+     * 
+     * @param statusFile the file containing the lines defining the node status
+     *            after execution. If it doesn't exist, the method returns
+     *            without error or without doing anything.
+     * @param wfm manager holding the flow whose nodes are specified in the file
+     * @throws FileNotFoundException if the file opening fails
+     * @throws IOException if the file reading fails
+     * @throws InvalidSettingsException if the settings in the file are
+     *             incorrect
+     */
+    public void readNodeStatusFile(final File statusFile,
+            final WorkflowManager wfm) throws FileNotFoundException,
+            IOException, InvalidSettingsException {
+
+        if (!statusFile.exists()) {
+            return;
+        }
+
+        BufferedReader statusReader =
+                new BufferedReader(new FileReader(statusFile));
+
+        String line;
+        while ((line = statusReader.readLine()) != null) {
+
+            if ((line.toUpperCase().startsWith("ERROR"))
+                    || (line.toUpperCase().startsWith("WARNING"))
+                    || (line.toUpperCase().startsWith("INFO"))
+                    || (line.toUpperCase().startsWith("DEBUG"))) {
+                parseMessageLine(line);
+            } else {
+                parseNodeStatusLine(line, wfm);
+            }
+
+        }
+
+        statusReader.close();
+
+    }
+
+    /**
+     * Parses one line from the status file assuming it specifies a required
+     * error/warning/info or debug message.
+     * 
+     * @param line the line to be parsed
+     */
+    private void parseMessageLine(final String line)
+            throws InvalidSettingsException {
+
+        Collection<String> msgList = null;
+        if (line.toUpperCase().startsWith("ERROR")) {
+            msgList = m_requiredErrors;
+        } else if (line.toUpperCase().startsWith("WARNING")) {
+            msgList = m_requiredWarnings;
+        } else if (line.toUpperCase().startsWith("INFO")) {
+            msgList = m_requiredInfos;
+        } else if (line.toUpperCase().startsWith("DEBUG")) {
+            msgList = m_requiredDebugs;
+        } else {
+            // call this method only in one of these four cases
+            assert false;
+        }
+
+        String msg = extractMessagePart(line);
+        if (msg == null) {
+            throw new InvalidSettingsException("Invalid line in status file "
+                    + "(Missing ':'):" + line);
+        }
+
+        msgList.add(msg);
+
+    }
+
+    /**
+     * From a line of the node status file or a log file it extract the part
+     * that is the interesting message. That is the part behind the first colon,
+     * dismissing the date, time, level, and class info. It is important to
+     * extract the message that was sent to the logger from the line.
+     * 
+     * @param line to extract the message from
+     * @return the interesting message part of the specified line, or null, if
+     *         the line has an unexpected format.
+     */
+    private String extractMessagePart(final String line) {
+
+        String[] splits = line.split(" : ", 2);
+        if (splits.length != 2) {
+            return null;
+        }
+        return splits[1];
+    }
+
+    /**
+     * Tests if the passed msg from the logger is a required message, i.e. was
+     * specified in the node status file. It also remembers that this message
+     * appeared (for the checkMessages method at the end).
+     * 
+     * @param msg the message passed to the logger
+     * @param msgLevel msg level
+     * @return true, if the msg is a required message
+     */
+    private boolean registerRequiredMessage(final String msg,
+            final Level msgLevel) {
+        Collection<String> msgList = null;
+        if (msg != null) {
+            if (msgLevel == Level.ERROR) {
+                msgList = m_requiredErrors;
+            } else if (msgLevel == Level.WARN) {
+                msgList = m_requiredWarnings;
+            } else if (msgLevel == Level.INFO) {
+                msgList = m_requiredInfos;
+            } else if (msgLevel == Level.DEBUG) {
+                msgList = m_requiredDebugs;
+            }
+        }
+
+        // now check if its contained the corresponding list
+        boolean expected = false;
+        if (msgList != null) {
+            if (msgList.contains(msg)) {
+                // remove the expected msg - at the end we test, if
+                // required messages did not appear (are still in this list)
+                // and fail if so.
+                msgList.remove(msg);
+                expected = true;
+            }
+        }
+        return expected;
+    }
+
+    /**
+     * Parses and applies one line from the status file that contains the
+     * post-execute status of a node.
+     * 
+     * @param line the line specifying the status of the node.
+     * @param wfm the flow the line refers to. NodeID are checked against this.
+     * @throws InvalidSettingsException if the line is invalid
+     */
+    private void parseNodeStatusLine(final String line,
+            final WorkflowManager wfm) throws InvalidSettingsException {
+
+        String[] splits = line.split(",", 3);
+        // make sure we have at least a node id and exec status (0/1)
+        if (splits.length < 2) {
+            throw new InvalidSettingsException("Invalid line in status file "
+                    + "(specify exec status {0|1}):" + line);
+        }
+        if (!"1".equals(splits[1]) && !"0".equals(splits[1])) {
+            throw new InvalidSettingsException("Invalid line in status file "
+                    + "(invalid exec status {0|1}):" + line);
+        }
+
+        // try parsing the node id
+        Integer nodeID = null;
+        try {
+            nodeID = Integer.parseInt(splits[0]);
+        } catch (NumberFormatException nfe) {
+            throw new InvalidSettingsException(
+                    "Invalid line in status file (invalid node ID): " + line);
+        }
+        if (wfm.getNodeContainerById(nodeID) == null) {
+            throw new InvalidSettingsException(
+                    "Invalid line in status file (not existing node ID): "
+                            + line);
+        }
+
+        boolean mustExec = splits[1].equals("1");
+        if (!mustExec) {
+            // remember the nodes that must not execute
+            m_requiredUnexecutedNodes.add(nodeID);
+        }
+
+        // see if we got a required error/warning status
+        if (splits.length == 3) {
+            String[] stats = splits[2].split(":", 2);
+            if (stats.length != 2) {
+                throw new InvalidSettingsException(
+                        "Invalid line in status file "
+                                + "(invalid err/warn status): " + line);
+            }
+
+            if (stats[0].toUpperCase().startsWith("ERR")) {
+                m_errorStatus.put(nodeID, stats[1]);
+            } else if (stats[0].toUpperCase().startsWith("WARN")) {
+                m_warningStatus.put(nodeID, stats[1]);
+            } else {
+                throw new InvalidSettingsException(
+                        "Invalid line in status file "
+                                + "(invalid err/warn status): " + line);
+            }
+        }
+
+    }
+
+    /**
      * Checks if all nodes are executed - or if a config file existed, that
      * defines nodes that are not supposed to execute, it makes sure these are
      * not executed. If the check fails, it logs an error message and tells the
@@ -604,33 +661,151 @@ public class TestingConfig extends AppenderSkeleton {
      */
     public void checkNodeExecution(final WorkflowManager manager) {
         Collection<NodeContainer> nodes = manager.getNodes();
+
         for (NodeContainer node : nodes) {
-            LOGGER
-                    .debug(node.getName() + " isExecuted == "
-                            + node.isExecuted());
 
             NodeStatus status = node.getStatus();
 
             if (!node.isExecuted()
                     && !m_requiredUnexecutedNodes.contains(node.getID())) {
-                String msg = "\nNode " + node.getName() + " is not executed\n ";
+
+                // not executed but supposed to be
+
+                String msg = "Node " + node.getName() + " is not executed.";
                 if (status != null) {
-                    msg += status.getMessage();
+                    msg += " (status message: " + status.getMessage() + ")";
                 }
-                // make sure to log the reason for failure.
+                // make sure to log an error - during wrapUp the test fails then
                 LOGGER.error(msg);
-                Assert.fail(msg);
+            } else if (node.isExecuted()
+                    && m_requiredUnexecutedNodes.contains(node.getID())) {
+
+                // executed but shouldn't be
+
+                String msg =
+                        "Node " + node.getName()
+                                + " is executed eventhough it shouldn't. "
+                                + "(as specified in the node status file)";
+                // make sure to log an error - during wrapUp the test fails then
+                LOGGER.error(msg);
             } else {
-                if (status != null && (status instanceof NodeStatus.Error)) {
-                    String msg =
-                            "\nNode " + node.getName()
-                                    + " executed with errors: \n ";
-                    msg += status.getMessage();
-                    // make sure to log the reason for failure.
-                    LOGGER.error(msg);
-                    Assert.fail(msg);
-                }
+
+                // executed state as expected
+
+                LOGGER.debug("Node '" + node.getName() + "' is"
+                        + (node.isExecuted() ? " " : " not ")
+                        + "executed - which is good.");
             }
+
+        }
+    }
+
+    /**
+     * makes sure all nodes have a node status corresponding to the node status
+     * file. If a node has an unexpected status or not the expected one, an
+     * error is logged and the test fails.
+     * 
+     * @param wfm the manager holding the flow to check.
+     */
+    public void checkNodeStatus(final WorkflowManager wfm) {
+        Collection<NodeContainer> nodes = wfm.getNodes();
+
+        for (NodeContainer node : nodes) {
+
+            NodeStatus status = node.getStatus();
+
+            if (status instanceof NodeStatus.Error) {
+
+                String expMsg = m_errorStatus.get(node.getID());
+                if (expMsg == null) {
+                    // node was not expected to finish with an error status
+                    String msg =
+                            "Node '" + node.getName() + "' has an "
+                                    + "unexpected error status (message: "
+                                    + status.getMessage() + ")";
+                    // make sure to log an error
+                    // during wrapUp the test fails then
+                    LOGGER.error(msg);
+                } else {
+                    // make sure the error message is as expected.
+                    if (!expMsg.equals(status.getMessage())) {
+                        String msg =
+                                "Node '"
+                                        + node.getName()
+                                        + "' has the"
+                                        + " expected status - but the message is not the "
+                                        + "expected one (node status msg: "
+                                        + status.getMessage() + ")";
+                        // make sure to log an error
+                        // during wrapUp the test fails then
+                        LOGGER.error(msg);
+                    } else {
+                        LOGGER.debug("Node '" + node.getName() + "' finished"
+                                + " with an error status - which is good.");
+                    }
+                }
+
+            } else if (status instanceof NodeStatus.Warning) {
+
+                String expMsg = m_warningStatus.get(node.getID());
+                if (expMsg == null) {
+                    // node was not expected to finish with a warning status
+                    String msg =
+                            "Node '" + node.getName() + "' has an "
+                                    + "unexpected warning status (message: "
+                                    + status.getMessage() + ")";
+                    // make sure to log an error
+                    // during wrapUp the test fails then
+                    LOGGER.error(msg);
+                } else {
+                    // make sure the warning message is as expected.
+                    if (!expMsg.equals(status.getMessage())) {
+                        String msg =
+                                "Node '"
+                                        + node.getName()
+                                        + "' has the"
+                                        + " expected status - but the message is not the "
+                                        + "expected one (node status msg: "
+                                        + status.getMessage() + ")";
+                        // make sure to log an error
+                        // during wrapUp the test fails then
+                        LOGGER.error(msg);
+                    } else {
+                        LOGGER.debug("Node '" + node.getName() + "' finished"
+                                + " with a warning status - which is good.");
+                    }
+                }
+
+            } else {
+                // no or unknown status
+
+                String expMsg = m_warningStatus.get(node.getID());
+                if (expMsg != null) {
+                    String msg =
+                            "Node '"
+                                    + node.getName()
+                                    + "' is supposed to have a warning status, "
+                                    + "but it has not. (Expected warning msg: "
+                                    + expMsg + ")";
+                    // make sure to log an error
+                    // during wrapUp the test fails then
+                    LOGGER.error(msg);
+                }
+
+                expMsg = m_errorStatus.get(node.getID());
+                if (expMsg != null) {
+                    String msg =
+                            "Node '" + node.getName()
+                                    + "' is supposed to have an error status, "
+                                    + "but it has not. (Expected error msg: "
+                                    + expMsg + ")";
+                    // make sure to log an error
+                    // during wrapUp the test fails then
+                    LOGGER.error(msg);
+                }
+
+            }
+
         }
 
     }
@@ -641,27 +816,73 @@ public class TestingConfig extends AppenderSkeleton {
      */
     public void checkMessages() {
 
-        boolean testFails = false;
+        boolean unexpectedErrors = false;
 
-        if (getMessageCount() > 0) {
-            String[] errMsgs = getReceivedMessages();
+        if (m_unexpectedErrors.size() > 0) {
+            Collection<String> errMsgs = m_unexpectedErrors;
             for (String msg : errMsgs) {
                 LOGGER.error("Got error: " + msg);
             }
             LOGGER.error(ERR_FAIL_MSG + " -> FAILING! Check the log file.");
-            testFails = true;
+            unexpectedErrors = true;
         }
-        if (getExceptionsCount() > 0) {
-            String[] excMsgs = getExceptions();
+        if (m_exceptions.size() > 0) {
+            Collection<String> excMsgs = m_exceptions;
             for (String e : excMsgs) {
                 LOGGER.error("Got exception: " + e);
             }
             LOGGER.error(EXCEPT_FAIL_MSG + " -> FAILING! "
                     + "Check the log file.");
-            testFails = true;
+            unexpectedErrors = true;
         }
-        if (testFails) {
-            Assert.fail("Failing due to errors or exceptions in the log file.");
+
+        boolean missingMessages = false;
+
+        if (m_requiredDebugs.size() > 0) {
+            missingMessages = true;
+            LOGGER.error("Missing required DEBUG messages!");
+            LOGGER.info("Check node status file in workflow directory");
+            for (String msg : m_requiredDebugs) {
+                LOGGER.info("Missing DEBUG msg: " + msg);
+            }
+        }
+        if (m_requiredInfos.size() > 0) {
+            missingMessages = true;
+            LOGGER.error("Missing required INFO messages!");
+            LOGGER.info("Check node status file in workflow directory");
+            for (String msg : m_requiredInfos) {
+                LOGGER.info("Missing INFO msg: " + msg);
+            }
+        }
+        if (m_requiredWarnings.size() > 0) {
+            missingMessages = true;
+            LOGGER.error("Missing required WARNING messages!");
+            LOGGER.info("Check node status file in workflow directory");
+            for (String msg : m_requiredWarnings) {
+                LOGGER.info("Missing WARNING msg: " + msg);
+            }
+        }
+        if (m_requiredErrors.size() > 0) {
+            missingMessages = true;
+            LOGGER.error("Missing required ERROR messages!");
+            LOGGER.info("Check node status file in workflow directory");
+            for (String msg : m_requiredErrors) {
+                LOGGER.info("Missing ERROR msg: " + msg);
+            }
+        }
+
+        // this method must cause the test to fail, as previous checks just
+        // log error messages if something was fishy
+        if (unexpectedErrors && missingMessages) {
+            Assert.fail("Failing due to unexpected errors "
+                    + "and missing messages in the log file.");
+        }
+        if (unexpectedErrors) {
+            Assert.fail("Failing due to unexpected errors "
+                    + "in the log file.");
+        }
+        if (missingMessages) {
+            Assert.fail("Failing due to missing messages in the log file.");
         }
 
     }

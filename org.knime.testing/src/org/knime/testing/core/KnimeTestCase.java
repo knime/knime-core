@@ -50,6 +50,8 @@ public class KnimeTestCase extends TestCase {
 
     private static final String OPTIONS_FILE = "workflow_options";
 
+    private static final String STATUS_FILE = "node_status";
+    
     /**
      * name of the file containing the testowner's email address.
      */
@@ -136,7 +138,12 @@ public class KnimeTestCase extends TestCase {
             // construct a list of options (i.e. settings to change in the flow)
             File optionsFile =
                     new File(m_knimeSettings.getParentFile(), OPTIONS_FILE);
-            m_testConfig.applyChanges(optionsFile, m_manager);
+            m_testConfig.applySettings(optionsFile, m_manager);
+            
+            // read in the node status file
+            File statusFile = 
+                new File(m_knimeSettings.getParentFile(), STATUS_FILE);
+            m_testConfig.readNodeStatusFile(statusFile, m_manager);
 
         } catch (WorkflowException ex) {
             String msg = ex.getMessage();
@@ -187,13 +194,25 @@ public class KnimeTestCase extends TestCase {
 
             // evaluate the results
 
-            // 1) make sure all nodes are executed (or nodes not supposed to
-            // execute are not executed).
+            /*
+             * 1) make sure all nodes are executed (or nodes not supposed to
+             * execute are not executed).
+             */
             m_testConfig.checkNodeExecution(m_manager);
 
-            // 2) make sure all expected/required messages appeared and no
-            // unexpected error message showed up. (We do that always - thus
-            // we let it fall through finally.)
+            /*
+             * 2) check the status (warning and/or error) of the nodes.
+             */
+            m_testConfig.checkNodeStatus(m_manager);
+            
+            /*
+             * the above checks only write errors into the log file - thus
+             * the next step decides whether the test fails or succeeds:
+             * 
+             * 3) make sure all expected/required messages appeared and no
+             * unexpected error message showed up. (We do that always - thus
+             * we let it fall through finally.)
+             */
 
         } catch (Throwable t) {
             String msg = t.getMessage();
