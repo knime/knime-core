@@ -1070,7 +1070,7 @@ public class WorkflowManager implements WorkflowListener {
     // }
 
     /**
-     * Cancels execution of the given node and all its sucessor nodes.
+     * Cancels execution of the given node and all its successor nodes.
      * 
      * @param node a node
      */
@@ -1118,7 +1118,7 @@ public class WorkflowManager implements WorkflowListener {
 
     /**
      * Configures the passed node but does not reset it. The caller has to
-     * ensure that the node is resetted and not executed beforehand.
+     * ensure that the node is reseted and not executed beforehand.
      * 
      * @param nodeID the node that should be configured
      */
@@ -1628,8 +1628,8 @@ public class WorkflowManager implements WorkflowListener {
     }
     
     /**
-     * Returns the connection container that is handled by the manager for the given
-     * id.
+     * Returns the connection container that is handled by the manager for the
+     * given id.
      * 
      * @param id The id of the connection whose
      *            <code>ConnectionContainer</code> should be returned
@@ -1725,7 +1725,7 @@ public class WorkflowManager implements WorkflowListener {
                 m_loadedVersion = settings.getString(CFG_VERSION);
                 if (m_loadedVersion == null) {
                     throw new WorkflowException(
-                        "Refuse to load workflow: Workflow version not available.");
+                    "Refuse to load workflow: Workflow version not available.");
                 }
                 // first version was only labeled with 1.0 instead of 1.0.0 
                 if (m_loadedVersion.equals("1.0")) {
