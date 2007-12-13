@@ -191,7 +191,7 @@ public class DialogComponentFileChooser extends DialogComponent {
                     try {
                         newFile = chooser.getSelectedFile().getAbsoluteFile()
                                 .toString();
-                        // if ile selection and only on extension available
+                        // if file selection and only on extension available
                         if (!directoryOnly && validExtensions.length == 1) {
                             // and the file names has no this extension
                             if (!newFile.endsWith(validExtensions[0])) {
