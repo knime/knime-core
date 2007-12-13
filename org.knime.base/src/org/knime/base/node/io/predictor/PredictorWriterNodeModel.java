@@ -80,7 +80,9 @@ public class PredictorWriterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_fileName.validateSettings(settings);
+        SettingsModelString fileName = 
+            m_fileName.createCloneWithValidatedValue(settings);
+        checkFileAccess(fileName.getStringValue());
     }
 
     /**
@@ -127,10 +129,10 @@ public class PredictorWriterNodeModel extends NodeModel {
             }
             // open stream
             os = new BufferedOutputStream(new FileOutputStream(tempFile));
-            if (m_fileName.getStringValue().endsWith(".gz")) {
+            if (m_fileName.getStringValue().toLowerCase().endsWith(".gz")) {
                 os = new GZIPOutputStream(os);
             }
-            exec.setProgress(-1, "Writing to file: " 
+            exec.setMessage("Writing model to file: " 
                     + m_fileName.getStringValue());
             // and write ModelContent object as XML
             m_predParams.saveToXML(os);
@@ -160,7 +162,8 @@ public class PredictorWriterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        checkFileAccess(m_fileName.getStringValue());
+        String newFileName = checkFileAccess(m_fileName.getStringValue());
+        m_fileName.setStringValue(newFileName);
         return new DataTableSpec[0];
     }
 
@@ -176,8 +179,11 @@ public class PredictorWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("No output file specified.");
         }
         String newFileName = fileName;
-        if (!fileName.endsWith(".pmml") && !fileName.endsWith(".pmml.gz")) {
+        if (!fileName.toLowerCase().endsWith(".pmml") 
+                && !fileName.toLowerCase().endsWith(".pmml.gz")) {
             newFileName += ".pmml.gz";
+            super.setWarningMessage("File \"" + fileName + "\" is renamed"
+                    + " to \"" + newFileName + "\".");
         }
         File file = new File(newFileName);
         if (file.isDirectory()) {
