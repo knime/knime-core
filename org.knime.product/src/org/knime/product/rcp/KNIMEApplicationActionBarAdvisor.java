@@ -77,6 +77,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
     private IWorkbenchAction m_redoAction;
 
     private IWorkbenchAction m_deleteAction;
+    
+    private IWorkbenchAction m_selectAllAction;
 
     private IWorkbenchAction m_newWizardDropdownAction;
 
@@ -157,6 +159,8 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         register(m_redoAction);
         m_deleteAction = ActionFactory.DELETE.create(window);
         register(m_deleteAction);
+        m_selectAllAction = ActionFactory.SELECT_ALL.create(window);
+        register(m_selectAllAction);
 
         // View Actions
         // m_openOutlineViewAction = new OpenOutlineViewAction();
@@ -239,6 +243,7 @@ public class KNIMEApplicationActionBarAdvisor extends ActionBarAdvisor {
         editMenu.add(m_pasteAction);
         editMenu.add(new Separator());
         editMenu.add(m_deleteAction);
+        editMenu.add(m_selectAllAction);
         editMenu.add(new Separator());
         editMenu.add(m_undoAction);
         editMenu.add(m_redoAction);
