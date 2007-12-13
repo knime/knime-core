@@ -92,16 +92,13 @@ public class PredictorReaderNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString filename =
-            m_fileName.createCloneWithValidatedValue(settings);
-        checkFileAccess(filename.getStringValue());
-        m_fileName.setStringValue(filename.getStringValue());
+        m_fileName.loadSettingsFrom(settings);
     }
 
     /**
      * Save model into ModelContent for a specific output port.
      * 
-     * @param index of the ModelContent's ouput port.
+     * @param index of the ModelContent's output port.
      * @param predParam The object to write the model into.
      * @throws InvalidSettingsException If the model could not be written to
      *             file.
@@ -119,20 +116,32 @@ public class PredictorReaderNodeModel extends NodeModel {
      * Execute does nothing - the reading of the file and writing to the
      * NodeSettings object has already happened during savePredictorParams.
      * 
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException,
             IOException {
         m_predParams = null;
-        InputStream is =
-                new BufferedInputStream(new FileInputStream(
+        InputStream is = new BufferedInputStream(new FileInputStream(
                         new File(m_fileName.getStringValue())));
-        if (m_fileName.getStringValue().endsWith(".gz")) {
+        // if file ending is ".gz"
+        if (m_fileName.getStringValue().toLowerCase().endsWith(".gz")) {
             is = new GZIPInputStream(is);
+        } else if (
+            !m_fileName.getStringValue().toLowerCase().endsWith(".pmml")) {
+            // file does not end with ".gz" and ".pmml"
+            try {
+                // try to open temp zip stream
+                GZIPInputStream zip = new GZIPInputStream(
+                    new FileInputStream(new File(m_fileName.getStringValue())));
+                zip.close();
+                is = new GZIPInputStream(is);
+            } catch (IOException ioe) {
+                // ignored, seems to be zip archive
+            }
         }
-        exec.setProgress(-1, "Reading from file: " 
+        exec.setMessage("Reading model from file: " 
                 + m_fileName.getStringValue());
         m_predParams = ModelContent.loadFromXML(is);
         return new BufferedDataTable[0];
@@ -157,22 +166,18 @@ public class PredictorReaderNodeModel extends NodeModel {
         return new DataTableSpec[0];
     }
 
-    /*
+    /**
      * Helper that checks some properties for the file argument.
      * 
      * @param fileName The file to check @throws InvalidSettingsException If
      * that fails.
      */
-    private String checkFileAccess(final String fileName)
+    private void checkFileAccess(final String fileName)
             throws InvalidSettingsException {
         if (fileName == null) {
             throw new InvalidSettingsException("No file set.");
         }
-        String newFileName = fileName;
-        if (!fileName.endsWith(".pmml") && !fileName.endsWith(".pmml.gz")) {
-            newFileName += ".pmml.gz";
-        }
-        File file = new File(newFileName);
+        File file = new File(fileName);
         if (file.isDirectory()) {
             throw new InvalidSettingsException("\"" + file.getAbsolutePath()
                     + "\" is a directory.");
@@ -181,13 +186,12 @@ public class PredictorReaderNodeModel extends NodeModel {
             // dunno how to check the write access to the directory. If we can't
             // create the file the execute of the node will fail. Well, too bad.
             throw new InvalidSettingsException("File does not exist: "
-                    + newFileName);
+                    + fileName);
         }
         if (!file.canRead()) {
             throw new InvalidSettingsException("Cannot write to file \""
                     + file.getAbsolutePath() + "\".");
         }
-        return newFileName;
     }
 
     /**
