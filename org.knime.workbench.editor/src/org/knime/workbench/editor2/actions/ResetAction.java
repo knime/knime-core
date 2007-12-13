@@ -24,16 +24,20 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowInExecutionException;
-
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * Action to reset a node.
@@ -108,12 +112,25 @@ public class ResetAction extends AbstractNodeAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
-                SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
-        mb.setText("Confirm reset...");
-        mb.setMessage("Do you really want to reset the selected node(s) ?");
-        if (mb.open() != SWT.YES) {
-            return;
+        // the following code has mainly been copied from
+        // IDEWorkbenchWindowAdvisor#preWindowShellClose
+        IPreferenceStore store = 
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        if (!store.contains(PreferenceConstants.P_CONFIRM_RESET)
+                || store.getBoolean(PreferenceConstants.P_CONFIRM_RESET)) {
+            MessageDialogWithToggle dialog = 
+                MessageDialogWithToggle.openOkCancelConfirm(
+                    Display.getDefault().getActiveShell(), 
+                    "Confirm reset...", 
+                    "Do you really want to reset the selected node(s) ?", 
+                    "Do not ask again", false, null, null);
+            if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
+                return;
+            }
+            if (dialog.getToggleState()) {
+                store.setValue(PreferenceConstants.P_CONFIRM_RESET, false);
+                KNIMEUIPlugin.getDefault().savePluginPreferences();
+            }
         }
         
         LOGGER.debug("Resetting " + nodeParts.length + " node(s)");
@@ -123,7 +140,7 @@ public class ResetAction extends AbstractNodeAction {
                 if (nodeParts[i].isLocked()) {
                     LOGGER.debug("Node #"
                             + nodeParts[i].getNodeContainer().getID()
-                            + " is locked and can't be resetted now");
+                            + " is locked and can't be reset now");
                     continue;
                 }
     
@@ -131,7 +148,7 @@ public class ResetAction extends AbstractNodeAction {
                         nodeParts[i].getNodeContainer().getID());
             }
         } catch (WorkflowInExecutionException ex) {
-            mb = new MessageBox(Display.getDefault().getActiveShell(),
+            MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
                     SWT.ICON_INFORMATION | SWT.OK);
             mb.setText("Reset not allowed");
             mb.setMessage("You cannot reset a node while the workflow is in"
