@@ -95,8 +95,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     /**
      * Load ModelContent from input port.
      * 
-     * @see org.knime.core.node.NodeModel#loadModelContent(int,
-     *      ModelContentRO)
+     * {@inheritDoc}
      */
     @Override
     protected void loadModelContent(final int index,
@@ -108,7 +107,7 @@ public class PredictorWriterNodeModel extends NodeModel {
     /**
      * Writes model as ModelContent to file.
      * 
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,

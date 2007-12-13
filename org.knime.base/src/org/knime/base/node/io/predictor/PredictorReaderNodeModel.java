@@ -119,7 +119,7 @@ public class PredictorReaderNodeModel extends NodeModel {
      * Execute does nothing - the reading of the file and writing to the
      * NodeSettings object has already happened during savePredictorParams.
      * 
-     * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
+     * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
