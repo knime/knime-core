@@ -23,7 +23,6 @@
  */
 package org.knime.core.node.property.hilite;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -314,7 +313,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param event Contains all rows keys to hilite.
      */
-    protected synchronized void fireHiLiteEventInternal(final KeyEvent event) {
+    protected void fireHiLiteEventInternal(final KeyEvent event) {
         assert (event != null);
         final Runnable r = new Runnable() {
             public void run() {
@@ -330,12 +329,10 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
         if (SwingUtilities.isEventDispatchThread()) {
             r.run();
         } else {
-            try {
-                SwingUtilities.invokeAndWait(r);
-            } catch (InvocationTargetException ite) {
-                LOGGER.error("Exception while notifying listeners", ite);
-            } catch (InterruptedException ie) {
-                LOGGER.error("Exception while notifying listeners", ie);
+            if (SwingUtilities.isEventDispatchThread()) {
+                r.run();
+            } else {
+                SwingUtilities.invokeLater(r);
             }
         }
     }
@@ -346,7 +343,7 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
      * 
      * @param event Contains all rows keys to unhilite.
      */
-    protected synchronized void fireUnHiLiteEventInternal(
+    protected void fireUnHiLiteEventInternal(
             final KeyEvent event) {
         assert (event != null);
         final Runnable r = new Runnable() {
@@ -363,20 +360,14 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
         if (SwingUtilities.isEventDispatchThread()) {
             r.run();
         } else {
-            try {
-                SwingUtilities.invokeAndWait(r);
-            } catch (InvocationTargetException ite) {
-                LOGGER.error("Exception while notifying listeners", ite);
-            } catch (InterruptedException ie) {
-                LOGGER.error("Exception while notifying listeners", ie);
-            }
+            SwingUtilities.invokeLater(r);
         }
     }
     
     /**
      * Informs all registered hilite listener to reset all hilit rows.
      */
-    protected synchronized void fireClearHiLiteEventInternal() {
+    protected void fireClearHiLiteEventInternal() {
         final Runnable r = new Runnable() {
             public void run() {
                 for (HiLiteListener l : m_listenerList) {
@@ -391,12 +382,10 @@ public class DefaultHiLiteHandler implements HiLiteHandler {
         if (SwingUtilities.isEventDispatchThread()) {
             r.run();
         } else {
-            try {
-                SwingUtilities.invokeAndWait(r);
-            } catch (InvocationTargetException ite) {
-                LOGGER.error("Exception while notifying listeners", ite);
-            } catch (InterruptedException ie) {
-                LOGGER.error("Exception while notifying listeners", ie);
+            if (SwingUtilities.isEventDispatchThread()) {
+                r.run();
+            } else {
+                SwingUtilities.invokeLater(r);
             }
         }
     }
