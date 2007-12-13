@@ -33,6 +33,8 @@ import javax.swing.JPanel;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -57,6 +59,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowInExecutionException;
 
 import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * JFace implementation of a dialog containing the wrapped Panel from the
@@ -307,7 +310,7 @@ public class WrappedNodeDialog extends Dialog {
      */
     protected boolean confirmApply() {
 
-        // no confirm dialog neccessary, if the node was not executed before
+        // no confirm dialog necessary, if the node was not executed before
         if (!m_nodeContainer.isExecuted()) {
             return true;
         }
@@ -318,13 +321,28 @@ public class WrappedNodeDialog extends Dialog {
             return true;
         }
 
-        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
-                SWT.ICON_WARNING | SWT.YES | SWT.NO | SWT.CANCEL);
-        mb.setText("Confirm reset...");
-        mb.setMessage("Warning, reset node(s)!\n"
-                + "New settings will be applied to this\n"
-                + "and all connected nodes. Continue?");
-        return (mb.open() == SWT.YES);
+        // the following code has mainly been copied from
+        // IDEWorkbenchWindowAdvisor#preWindowShellClose
+        IPreferenceStore store = 
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        if (!store.contains(PreferenceConstants.P_CONFIRM_RESET)
+                || store.getBoolean(PreferenceConstants.P_CONFIRM_RESET)) {
+            MessageDialogWithToggle dialog = 
+                MessageDialogWithToggle.openOkCancelConfirm(
+                    Display.getDefault().getActiveShell(), 
+                    "Confirm reset...", 
+                    "Warning, reset node(s)!\n"
+                    + "New settings will be applied after resetting this "
+                    + "and all connected nodes. Continue?", 
+                    "Do not ask again", false, null, null);
+            boolean isOK = dialog.getReturnCode() == IDialogConstants.OK_ID;
+            if (isOK && dialog.getToggleState()) {
+                store.setValue(PreferenceConstants.P_CONFIRM_RESET, false);
+                KNIMEUIPlugin.getDefault().savePluginPreferences();
+            }
+            return isOK;
+        }
+        return true;
     }
 
     /**
@@ -333,7 +351,7 @@ public class WrappedNodeDialog extends Dialog {
      */
     protected void informNothingChanged() {
 
-        // no dialog neccessary, if the node was not executed before
+        // no dialog necessary, if the node was not executed before
         if (!m_nodeContainer.isExecuted()) {
             return;
         }

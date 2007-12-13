@@ -24,6 +24,7 @@
  */
 package org.knime.workbench.ui.preferences;
 
+import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.DirectoryFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -205,6 +206,12 @@ public class MainPreferencePage extends FieldEditorPreferencePage implements
         tempDirEditor.setEmptyStringAllowed(false);
         
         addField(tempDirEditor);
+
+        addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RESET, 
+                "Confirm Node Reset", parent));
+
+        addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_DELETE, 
+                "Confirm Node/Connection Deletion", parent));
     }
 
     /**

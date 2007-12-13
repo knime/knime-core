@@ -29,12 +29,14 @@ package org.knime.workbench.editor2.commands;
 import java.util.List;
 
 import org.eclipse.gef.commands.CompoundCommand;
-import org.eclipse.swt.SWT;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
-
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * Overrides the default <code>CompoundCommand</code> to add a verification
@@ -88,23 +90,29 @@ public class VerifyingCompoundCommand extends CompoundCommand {
             nodePart.mark();
         }
         
-        
-        // first create the verification dialog for confirmation of the
-        // compound command
-        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
-                SWT.ICON_QUESTION | SWT.YES | SWT.NO | SWT.CANCEL);
-        mb.setText("Confirm ...");
-        mb.setMessage(m_dialogDisplayText);
-        if (mb.open() != SWT.YES) {
-            
-            // in case the node are not supposed to delete unmark the nodes
-            for (NodeContainerEditPart nodePart : m_nodeParts) {
-                
-                nodePart.unmark();
+        // the following code has mainly been copied from
+        // IDEWorkbenchWindowAdvisor#preWindowShellClose
+        IPreferenceStore store = 
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        if (!store.contains(PreferenceConstants.P_CONFIRM_DELETE)
+                || store.getBoolean(PreferenceConstants.P_CONFIRM_DELETE)) {
+            MessageDialogWithToggle dialog = 
+                MessageDialogWithToggle.openOkCancelConfirm(
+                    Display.getDefault().getActiveShell(), 
+                    "Confirm ...", m_dialogDisplayText, 
+                    "Do not ask again", false, null, null);
+            if (dialog.getReturnCode() != IDialogConstants.OK_ID) {
+                for (NodeContainerEditPart nodePart : m_nodeParts) {
+                    nodePart.unmark();
+                }
+                return;
             }
-            return;
+            if (dialog.getToggleState()) {
+                store.setValue(PreferenceConstants.P_CONFIRM_DELETE, false);
+                KNIMEUIPlugin.getDefault().savePluginPreferences();
+            }
         }
-
+        
         // in all other cases execute the commands
         LOGGER.debug("Executing <" + size() + "> commands.");
         super.execute();

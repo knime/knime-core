@@ -59,5 +59,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         store.setDefault(PreferenceConstants.P_TEMP_DIR, System
                 .getProperty("java.io.tmpdir"));
+        
+        store.setDefault(PreferenceConstants.P_CONFIRM_RESET, true);
+        
+        store.setDefault(PreferenceConstants.P_CONFIRM_DELETE, true);
     }
 }
