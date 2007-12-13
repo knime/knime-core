@@ -60,7 +60,7 @@ public class SimpleFileFilter extends FileFilter {
             }
             String fileName = f.getName();
             for (String ext : m_validExtensions) {
-                if (fileName.endsWith(ext)) {
+                if (fileName.toLowerCase().endsWith(ext)) {
                     return true;
                 }
             }
