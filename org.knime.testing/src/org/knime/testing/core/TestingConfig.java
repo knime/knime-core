@@ -671,7 +671,8 @@ public class TestingConfig extends AppenderSkeleton {
 
                 // not executed but supposed to be
 
-                String msg = "Node " + node.getName() + " is not executed.";
+                String msg =
+                        "Node " + node.getNameWithID() + " is not executed.";
                 if (status != null) {
                     msg += " (status message: " + status.getMessage() + ")";
                 }
@@ -683,7 +684,7 @@ public class TestingConfig extends AppenderSkeleton {
                 // executed but shouldn't be
 
                 String msg =
-                        "Node " + node.getName()
+                        "Node " + node.getNameWithID()
                                 + " is executed eventhough it shouldn't. "
                                 + "(as specified in the node status file)";
                 // make sure to log an error - during wrapUp the test fails then
@@ -692,7 +693,7 @@ public class TestingConfig extends AppenderSkeleton {
 
                 // executed state as expected
 
-                LOGGER.debug("Node '" + node.getName() + "' is"
+                LOGGER.debug("Node '" + node.getNameWithID() + "' is"
                         + (node.isExecuted() ? " " : " not ")
                         + "executed - which is good.");
             }
@@ -720,7 +721,7 @@ public class TestingConfig extends AppenderSkeleton {
                 if (expMsg == null) {
                     // node was not expected to finish with an error status
                     String msg =
-                            "Node '" + node.getName() + "' has an "
+                            "Node '" + node.getNameWithID() + "' has an "
                                     + "unexpected error status (message: "
                                     + status.getMessage() + ")";
                     // make sure to log an error
@@ -731,7 +732,7 @@ public class TestingConfig extends AppenderSkeleton {
                     if (!expMsg.equals(status.getMessage())) {
                         String msg =
                                 "Node '"
-                                        + node.getName()
+                                        + node.getNameWithID()
                                         + "' has the"
                                         + " expected status - but the message is not the "
                                         + "expected one (node status msg: "
@@ -740,7 +741,7 @@ public class TestingConfig extends AppenderSkeleton {
                         // during wrapUp the test fails then
                         LOGGER.error(msg);
                     } else {
-                        LOGGER.debug("Node '" + node.getName() + "' finished"
+                        LOGGER.debug("Node '" + node.getNameWithID() + "' finished"
                                 + " with an error status - which is good.");
                     }
                 }
@@ -751,7 +752,7 @@ public class TestingConfig extends AppenderSkeleton {
                 if (expMsg == null) {
                     // node was not expected to finish with a warning status
                     String msg =
-                            "Node '" + node.getName() + "' has an "
+                            "Node '" + node.getNameWithID() + "' has an "
                                     + "unexpected warning status (message: "
                                     + status.getMessage() + ")";
                     // make sure to log an error
@@ -762,7 +763,7 @@ public class TestingConfig extends AppenderSkeleton {
                     if (!expMsg.equals(status.getMessage())) {
                         String msg =
                                 "Node '"
-                                        + node.getName()
+                                        + node.getNameWithID()
                                         + "' has the"
                                         + " expected status - but the message is not the "
                                         + "expected one (node status msg: "
@@ -771,7 +772,7 @@ public class TestingConfig extends AppenderSkeleton {
                         // during wrapUp the test fails then
                         LOGGER.error(msg);
                     } else {
-                        LOGGER.debug("Node '" + node.getName() + "' finished"
+                        LOGGER.debug("Node '" + node.getNameWithID() + "' finished"
                                 + " with a warning status - which is good.");
                     }
                 }
@@ -783,7 +784,7 @@ public class TestingConfig extends AppenderSkeleton {
                 if (expMsg != null) {
                     String msg =
                             "Node '"
-                                    + node.getName()
+                                    + node.getNameWithID()
                                     + "' is supposed to have a warning status, "
                                     + "but it has not. (Expected warning msg: "
                                     + expMsg + ")";
@@ -795,7 +796,7 @@ public class TestingConfig extends AppenderSkeleton {
                 expMsg = m_errorStatus.get(node.getID());
                 if (expMsg != null) {
                     String msg =
-                            "Node '" + node.getName()
+                            "Node '" + node.getNameWithID()
                                     + "' is supposed to have an error status, "
                                     + "but it has not. (Expected error msg: "
                                     + expMsg + ")";
@@ -821,17 +822,17 @@ public class TestingConfig extends AppenderSkeleton {
         if (m_unexpectedErrors.size() > 0) {
             Collection<String> errMsgs = m_unexpectedErrors;
             for (String msg : errMsgs) {
-                LOGGER.error("Got error: " + msg);
+                LOGGER.info("Got error: " + msg);
             }
-            LOGGER.error(ERR_FAIL_MSG + " -> FAILING! Check the log file.");
+            LOGGER.fatal(ERR_FAIL_MSG + " -> FAILING! Check the log file.");
             unexpectedErrors = true;
         }
         if (m_exceptions.size() > 0) {
             Collection<String> excMsgs = m_exceptions;
             for (String e : excMsgs) {
-                LOGGER.error("Got exception: " + e);
+                LOGGER.info("Got exception: " + e);
             }
-            LOGGER.error(EXCEPT_FAIL_MSG + " -> FAILING! "
+            LOGGER.fatal(EXCEPT_FAIL_MSG + " -> FAILING! "
                     + "Check the log file.");
             unexpectedErrors = true;
         }
@@ -840,35 +841,35 @@ public class TestingConfig extends AppenderSkeleton {
 
         if (m_requiredDebugs.size() > 0) {
             missingMessages = true;
-            LOGGER.error("Missing required DEBUG messages!");
             LOGGER.info("Check node status file in workflow directory");
             for (String msg : m_requiredDebugs) {
                 LOGGER.info("Missing DEBUG msg: " + msg);
             }
+            LOGGER.fatal("Missing required DEBUG messages -> FAILING!");
         }
         if (m_requiredInfos.size() > 0) {
             missingMessages = true;
-            LOGGER.error("Missing required INFO messages!");
             LOGGER.info("Check node status file in workflow directory");
             for (String msg : m_requiredInfos) {
                 LOGGER.info("Missing INFO msg: " + msg);
             }
+            LOGGER.fatal("Missing required INFO messages -> FAILING!");
         }
         if (m_requiredWarnings.size() > 0) {
             missingMessages = true;
-            LOGGER.error("Missing required WARNING messages!");
             LOGGER.info("Check node status file in workflow directory");
             for (String msg : m_requiredWarnings) {
                 LOGGER.info("Missing WARNING msg: " + msg);
             }
+            LOGGER.fatal("Missing required WARNING messages -> FAILING!");
         }
         if (m_requiredErrors.size() > 0) {
             missingMessages = true;
-            LOGGER.error("Missing required ERROR messages!");
             LOGGER.info("Check node status file in workflow directory");
             for (String msg : m_requiredErrors) {
                 LOGGER.info("Missing ERROR msg: " + msg);
             }
+            LOGGER.fatal("Missing required ERROR messages -> FAILING!");
         }
 
         // this method must cause the test to fail, as previous checks just

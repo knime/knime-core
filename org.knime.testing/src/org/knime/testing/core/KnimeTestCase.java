@@ -193,7 +193,7 @@ public class KnimeTestCase extends TestCase {
             timeout.cancel();
 
             // evaluate the results
-
+            logger.info("Analyzing executed workflow ----------------------");
             /*
              * 1) make sure all nodes are executed (or nodes not supposed to
              * execute are not executed).
@@ -239,7 +239,11 @@ public class KnimeTestCase extends TestCase {
             // disconnect the appender to not catch any message anymore
             m_testConfig.disconnect();
 
+            logger.info("Result ---------------------------------------");
+            
             m_testConfig.checkMessages();
+            
+            logger.info("Test succeeded.");
             
         } finally {
             m_testConfig.close();

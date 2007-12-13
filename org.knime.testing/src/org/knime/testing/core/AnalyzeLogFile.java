@@ -157,7 +157,7 @@ public class AnalyzeLogFile {
         m_summarySucceedingTests = new FileWriter(goodTests);
 
         checkWorkbenchInit(logCopy);
-        
+
         extractFailingTests(logCopy);
 
         // close them for the createSummary method.
@@ -266,7 +266,8 @@ public class AnalyzeLogFile {
 
             if (line.indexOf("Exception: ") > 0) {
                 exceptionStartLine = true;
-            } else if (line.indexOf(" ERROR ") == 23) {
+            } else if ((line.indexOf(" ERROR ") == 23)
+                    || (line.indexOf(" FATAL ") == 23)) {
                 // an error during workbench init is not good.
                 workbenchInitFailed = true;
             } else {
@@ -280,13 +281,13 @@ public class AnalyzeLogFile {
                     }
                     exceptionStartLine = false;
                 }
-            } 
+            }
 
         }
 
         testFileWriter.close();
         logReader.close();
-        
+
         if (workbenchInitFailed) {
             m_summaryFailingTests.write("Test '" + testName
                     + "' failed with ERRORs.");
@@ -404,7 +405,8 @@ public class AnalyzeLogFile {
              * An ERROR line starts like this: 2007-01-16 15:55:38,546 ERROR
              * That is 23 characters before the " ERROR ".
              */
-            if (nextLine.indexOf(" ERROR ") == 23) {
+            if ((nextLine.indexOf(" ERROR ") == 23)
+                    || (nextLine.indexOf(" FATAL ") == 23)) {
                 // if there is an exception in the test, the TestCase appends
                 // a certain message at the end of the test to the logfile
                 if (nextLine.contains(TestingConfig.EXCEPT_FAIL_MSG)) {
