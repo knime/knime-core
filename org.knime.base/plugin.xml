@@ -601,6 +601,11 @@
             factory-class="org.knime.base.node.preproc.columnTrans.Many2OneColNodeFactory"
             id="org.knime.base.node.preproc.columnTrans.Many2OneColNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory"
+            id="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory">
+      </node>
    </extension>
    
    
