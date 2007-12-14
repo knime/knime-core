@@ -154,6 +154,11 @@ public final class BatchExecutor {
             } else if ("-reset".equals(parts[0])) {
                 reset = true;
             } else if ("-workflowFile".equals(parts[0])) {
+                if (parts.length != 2) {
+                    System.err.println(
+                            "Couldn't parse -workflowFile argument: " + s);
+                    return 1;
+                }
                 input = new File(parts[1]);
                 if (!input.isFile()) {
                     System.err.println("Workflow file '" + parts[1]
@@ -161,6 +166,11 @@ public final class BatchExecutor {
                     return 1;
                 }
             } else if ("-workflowDir".equals(parts[0])) {
+                if (parts.length != 2) {
+                    System.err.println(
+                            "Couldn't parse -workflowDir argument: " + s);
+                    return 1;
+                }
                 input = new File(parts[1]);
                 if (!input.isDirectory()) {
                     System.err.println("Workflow directory '" + parts[1]
@@ -168,8 +178,18 @@ public final class BatchExecutor {
                     return 1;
                 }
             } else if ("-destFile".equals(parts[0])) {
+                if (parts.length != 2) {
+                    System.err.println(
+                            "Couldn't parse -destFile argument: " + s);
+                    return 1;
+                }
                 output = new File(parts[1]);
             } else if ("-option".equals(parts[0])) {
+                if (parts.length != 4) {
+                    System.err.println(
+                            "Couldn't parse -option argument: " + s);
+                    return 1;
+                }
                 String[] parts2 = parts[1].split("\\,");
                 String[] nodeIDPath = parts2[0].split("/");
                 int[] nodeIDs = new int[nodeIDPath.length];
