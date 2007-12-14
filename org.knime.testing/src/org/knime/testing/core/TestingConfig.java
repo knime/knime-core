@@ -32,9 +32,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -75,16 +77,14 @@ public class TestingConfig extends AppenderSkeleton {
     private static final String LOCATIONURL = "$$locationURL$$";
 
     /**
-     * The message inserted if the test fails due to error messages (analyzers
-     * will parse for it).
+     * The message inserted if the test fails (analyzers parse for it).
      */
-    public static final String ERR_FAIL_MSG = "Got ERRORs during run";
+    public static final String FAIL_MSG = " -> failing test!";
 
     /**
-     * The message inserted if the test fails due to exceptions (analyzers will
-     * parse for it).
+     * The message inserted if the test succeeded (analyzers parse for it).
      */
-    public static final String EXCEPT_FAIL_MSG = "Got EXCEPTIONs during run";
+    public static final String SUCCESS_MSG = "Test succeeded.";
 
     private List<String> m_owners;
 
@@ -96,7 +96,7 @@ public class TestingConfig extends AppenderSkeleton {
 
     private Collection<String> m_requiredDebugs;
 
-    private Collection<Integer> m_requiredUnexecutedNodes;
+    private Set<Integer> m_requiredUnexecutedNodes;
 
     private Map<Integer, String> m_warningStatus;
 
@@ -122,7 +122,7 @@ public class TestingConfig extends AppenderSkeleton {
         m_requiredWarnings = new LinkedList<String>();
         m_requiredInfos = new LinkedList<String>();
         m_requiredDebugs = new LinkedList<String>();
-        m_requiredUnexecutedNodes = new LinkedList<Integer>();
+        m_requiredUnexecutedNodes = new HashSet<Integer>();
         m_errorStatus = new HashMap<Integer, String>();
         m_warningStatus = new HashMap<Integer, String>();
         m_owners = null;
@@ -241,6 +241,9 @@ public class TestingConfig extends AppenderSkeleton {
                     m_unexpectedErrors.removeFirst();
                 }
             }
+        } else {
+            String dbgmsg = "Required msg. ('" + msg + "')";
+            LOGGER.debug(dbgmsg);
         }
     }
 
@@ -483,7 +486,7 @@ public class TestingConfig extends AppenderSkeleton {
         while ((line = statusReader.readLine()) != null) {
 
             if ((line.toUpperCase().startsWith("ERROR"))
-                    || (line.toUpperCase().startsWith("WARNING"))
+                    || (line.toUpperCase().startsWith("WARN"))
                     || (line.toUpperCase().startsWith("INFO"))
                     || (line.toUpperCase().startsWith("DEBUG"))) {
                 parseMessageLine(line);
@@ -507,14 +510,19 @@ public class TestingConfig extends AppenderSkeleton {
             throws InvalidSettingsException {
 
         Collection<String> msgList = null;
+        String infoMsg = "<unknownType>";
         if (line.toUpperCase().startsWith("ERROR")) {
             msgList = m_requiredErrors;
-        } else if (line.toUpperCase().startsWith("WARNING")) {
+            infoMsg = "ERROR";
+        } else if (line.toUpperCase().startsWith("WARN")) {
             msgList = m_requiredWarnings;
+            infoMsg = "WARNING";
         } else if (line.toUpperCase().startsWith("INFO")) {
             msgList = m_requiredInfos;
+            infoMsg = "INFO";
         } else if (line.toUpperCase().startsWith("DEBUG")) {
             msgList = m_requiredDebugs;
+            infoMsg = "DEBUG";
         } else {
             // call this method only in one of these four cases
             assert false;
@@ -523,18 +531,19 @@ public class TestingConfig extends AppenderSkeleton {
         String msg = extractMessagePart(line);
         if (msg == null) {
             throw new InvalidSettingsException("Invalid line in status file "
-                    + "(Missing ':'):" + line);
+                    + "(missing ':'): " + line);
         }
 
         msgList.add(msg);
+        LOGGER.debug("Expecting " + infoMsg + " message during test: " + msg);
 
     }
 
     /**
-     * From a line of the node status file or a log file it extract the part
-     * that is the interesting message. That is the part behind the first colon,
-     * dismissing the date, time, level, and class info. It is important to
-     * extract the message that was sent to the logger from the line.
+     * From a line of the log file it extract the part that is the interesting
+     * message. That is the part behind the first colon, dismissing the date,
+     * time, level, and class info. It is important to extract the message that
+     * was sent to the logger from the line.
      * 
      * @param line to extract the message from
      * @return the interesting message part of the specified line, or null, if
@@ -598,15 +607,10 @@ public class TestingConfig extends AppenderSkeleton {
     private void parseNodeStatusLine(final String line,
             final WorkflowManager wfm) throws InvalidSettingsException {
 
-        String[] splits = line.split(",", 3);
-        // make sure we have at least a node id and exec status (0/1)
+        String[] splits = line.split(",", 2);
         if (splits.length < 2) {
             throw new InvalidSettingsException("Invalid line in status file "
-                    + "(specify exec status {0|1}):" + line);
-        }
-        if (!"1".equals(splits[1]) && !"0".equals(splits[1])) {
-            throw new InvalidSettingsException("Invalid line in status file "
-                    + "(invalid exec status {0|1}):" + line);
+                    + "(specify node id and status):" + line);
         }
 
         // try parsing the node id
@@ -617,21 +621,18 @@ public class TestingConfig extends AppenderSkeleton {
             throw new InvalidSettingsException(
                     "Invalid line in status file (invalid node ID): " + line);
         }
-        if (wfm.getNodeContainerById(nodeID) == null) {
+        NodeContainer nc = wfm.getNodeContainerById(nodeID);
+        if (nc == null) {
             throw new InvalidSettingsException(
                     "Invalid line in status file (not existing node ID): "
                             + line);
         }
 
-        boolean mustExec = splits[1].equals("1");
-        if (!mustExec) {
-            // remember the nodes that must not execute
-            m_requiredUnexecutedNodes.add(nodeID);
-        }
+        String msg = null;
 
         // see if we got a required error/warning status
-        if (splits.length == 3) {
-            String[] stats = splits[2].split(":", 2);
+        if (splits.length == 2) {
+            String[] stats = splits[1].split(" ", 2);
             if (stats.length != 2) {
                 throw new InvalidSettingsException(
                         "Invalid line in status file "
@@ -639,9 +640,65 @@ public class TestingConfig extends AppenderSkeleton {
             }
 
             if (stats[0].toUpperCase().startsWith("ERR")) {
-                m_errorStatus.put(nodeID, stats[1]);
+                String errStatMsg = extractMessagePart(stats[1]);
+                if (errStatMsg == null) {
+                    throw new InvalidSettingsException(
+                            "Invalid line in status file "
+                                    + "(invalid err status msg): " + line);
+                }
+
+                /* if a node is supposed to have an error status then it is 
+                 * supposed to fail during execution. Add the failure messages
+                 * to the required messages, add the node id to the not-executed
+                 * ids.
+                 */
+                // remember the nodes that must not execute
+                if (m_requiredUnexecutedNodes.add(nodeID)) {
+                    msg = "Node " + nc.getNameWithID() + " must not be executed";
+                    // add the "Execute failed" message that is logged by the
+                    // WFM to the required list.
+                    m_requiredErrors.add("Execute failed");
+                }
+
+                // now store the expected status message
+                m_errorStatus.put(nodeID, errStatMsg);
+                if (msg == null) {
+                    msg = "Node " + nc.getNameWithID();
+                }
+                msg += " should have an error status '" + errStatMsg + "'";
+
+                /*
+                 * an error status also creates an error message in the log file
+                 * which would cause the test to fail then.
+                 */
+                // add message of the error status to the list of expected msgs
+                m_requiredErrors.add(errStatMsg);
+
             } else if (stats[0].toUpperCase().startsWith("WARN")) {
-                m_warningStatus.put(nodeID, stats[1]);
+
+                /**
+                 * The message in the node status is supposed to be copied from
+                 * the log file: <br />
+                 * <timestamp> WARN <thread> <classname> : Model warning
+                 * message: <ModelMsg> <br />
+                 * We must extract the pure model message first.
+                 */
+                String modelMsg = stats[1].split(": ", 3)[2];
+
+                m_warningStatus.put(nodeID, modelMsg);
+                if (msg == null) {
+                    msg = "Node " + nc.getNameWithID();
+                }
+                msg += " should have a warning status '" + modelMsg + "'";
+
+                /*
+                 * a warning status also creates a warn message in the log file
+                 * lets make this required.
+                 */
+                // add message of the warn status to the list of expected msgs
+                String statMsg = "Model warning message: " + modelMsg;
+                m_requiredWarnings.add(statMsg);
+
             } else {
                 throw new InvalidSettingsException(
                         "Invalid line in status file "
@@ -649,6 +706,7 @@ public class TestingConfig extends AppenderSkeleton {
             }
         }
 
+        LOGGER.debug(msg);
     }
 
     /**
@@ -729,6 +787,7 @@ public class TestingConfig extends AppenderSkeleton {
                     LOGGER.error(msg);
                 } else {
                     // make sure the error message is as expected.
+                    expMsg = "Execute failed: " + expMsg;
                     if (!expMsg.equals(status.getMessage())) {
                         String msg =
                                 "Node '"
@@ -741,7 +800,8 @@ public class TestingConfig extends AppenderSkeleton {
                         // during wrapUp the test fails then
                         LOGGER.error(msg);
                     } else {
-                        LOGGER.debug("Node '" + node.getNameWithID() + "' finished"
+                        LOGGER.debug("Node '" + node.getNameWithID()
+                                + "' finished"
                                 + " with an error status - which is good.");
                     }
                 }
@@ -760,6 +820,7 @@ public class TestingConfig extends AppenderSkeleton {
                     LOGGER.error(msg);
                 } else {
                     // make sure the warning message is as expected.
+                    expMsg = "Warning: " + expMsg;
                     if (!expMsg.equals(status.getMessage())) {
                         String msg =
                                 "Node '"
@@ -772,7 +833,8 @@ public class TestingConfig extends AppenderSkeleton {
                         // during wrapUp the test fails then
                         LOGGER.error(msg);
                     } else {
-                        LOGGER.debug("Node '" + node.getNameWithID() + "' finished"
+                        LOGGER.debug("Node '" + node.getNameWithID()
+                                + "' finished"
                                 + " with a warning status - which is good.");
                     }
                 }
@@ -824,7 +886,7 @@ public class TestingConfig extends AppenderSkeleton {
             for (String msg : errMsgs) {
                 LOGGER.info("Got error: " + msg);
             }
-            LOGGER.fatal(ERR_FAIL_MSG + " -> FAILING! Check the log file.");
+            LOGGER.error("Unexpected error messages during test run.");
             unexpectedErrors = true;
         }
         if (m_exceptions.size() > 0) {
@@ -832,8 +894,7 @@ public class TestingConfig extends AppenderSkeleton {
             for (String e : excMsgs) {
                 LOGGER.info("Got exception: " + e);
             }
-            LOGGER.fatal(EXCEPT_FAIL_MSG + " -> FAILING! "
-                    + "Check the log file.");
+            LOGGER.error("Exceptions during test run.");
             unexpectedErrors = true;
         }
 
@@ -841,50 +902,53 @@ public class TestingConfig extends AppenderSkeleton {
 
         if (m_requiredDebugs.size() > 0) {
             missingMessages = true;
-            LOGGER.info("Check node status file in workflow directory");
             for (String msg : m_requiredDebugs) {
-                LOGGER.info("Missing DEBUG msg: " + msg);
+                LOGGER.info("Missing DEBUG msg: \"" + msg + "\"");
             }
-            LOGGER.fatal("Missing required DEBUG messages -> FAILING!");
+            LOGGER.error("Missing required DEBUG messages in the test output");
         }
         if (m_requiredInfos.size() > 0) {
             missingMessages = true;
-            LOGGER.info("Check node status file in workflow directory");
             for (String msg : m_requiredInfos) {
-                LOGGER.info("Missing INFO msg: " + msg);
+                LOGGER.info("Missing INFO msg: \"" + msg + "\"");
             }
-            LOGGER.fatal("Missing required INFO messages -> FAILING!");
+            LOGGER.error("Missing required INFO messages in the test output");
         }
         if (m_requiredWarnings.size() > 0) {
             missingMessages = true;
-            LOGGER.info("Check node status file in workflow directory");
             for (String msg : m_requiredWarnings) {
-                LOGGER.info("Missing WARNING msg: " + msg);
+                LOGGER.info("Missing WARNING msg: \"" + msg + "\"");
             }
-            LOGGER.fatal("Missing required WARNING messages -> FAILING!");
+            LOGGER.error("Missing required WARNING messages in the "
+                    + "test output");
         }
         if (m_requiredErrors.size() > 0) {
             missingMessages = true;
-            LOGGER.info("Check node status file in workflow directory");
             for (String msg : m_requiredErrors) {
-                LOGGER.info("Missing ERROR msg: " + msg);
+                LOGGER.info("Missing ERROR msg: \"" + msg + "\"");
             }
-            LOGGER.fatal("Missing required ERROR messages -> FAILING!");
+            LOGGER.error("Missing required ERROR messages in the test output");
         }
 
         // this method must cause the test to fail, as previous checks just
         // log error messages if something was fishy
         if (unexpectedErrors && missingMessages) {
+            // that's the message log file analyzers pick up
+            LOGGER.fatal("Unexpected and missing messages" + FAIL_MSG);
             Assert.fail("Failing due to unexpected errors "
                     + "and missing messages in the log file.");
         }
         if (unexpectedErrors) {
+            LOGGER.fatal("Unexpected error messages" + FAIL_MSG);
             Assert.fail("Failing due to unexpected errors "
                     + "in the log file.");
         }
         if (missingMessages) {
+            LOGGER.fatal("Missing required messages" + FAIL_MSG);
             Assert.fail("Failing due to missing messages in the log file.");
         }
+
+        LOGGER.info(SUCCESS_MSG);
 
     }
 }

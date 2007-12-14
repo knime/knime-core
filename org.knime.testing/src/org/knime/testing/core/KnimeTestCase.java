@@ -51,7 +51,7 @@ public class KnimeTestCase extends TestCase {
     private static final String OPTIONS_FILE = "workflow_options";
 
     private static final String STATUS_FILE = "node_status";
-    
+
     /**
      * name of the file containing the testowner's email address.
      */
@@ -139,10 +139,10 @@ public class KnimeTestCase extends TestCase {
             File optionsFile =
                     new File(m_knimeSettings.getParentFile(), OPTIONS_FILE);
             m_testConfig.applySettings(optionsFile, m_manager);
-            
+
             // read in the node status file
-            File statusFile = 
-                new File(m_knimeSettings.getParentFile(), STATUS_FILE);
+            File statusFile =
+                    new File(m_knimeSettings.getParentFile(), STATUS_FILE);
             m_testConfig.readNodeStatusFile(statusFile, m_manager);
 
         } catch (WorkflowException ex) {
@@ -153,13 +153,14 @@ public class KnimeTestCase extends TestCase {
             fail();
         } catch (InvalidSettingsException ise) {
             String msg = ise.getMessage();
-            logger.error("Invalid settings in options file:"
+            logger.error("Invalid settings: "
                     + (msg == null ? "<no details>" : msg));
             wrapUp();
             fail();
         } catch (Throwable t) {
             String msg = t.getMessage();
-            logger.error("Caught a throwable during workflow loading:"
+            logger.error("Caught a throwable during test setup: "
+                    + t.getClass().getSimpleName() + ", msg: "
                     + (msg == null ? "<no details>" : msg));
             wrapUp();
             fail();
@@ -204,14 +205,14 @@ public class KnimeTestCase extends TestCase {
              * 2) check the status (warning and/or error) of the nodes.
              */
             m_testConfig.checkNodeStatus(m_manager);
-            
+
             /*
-             * the above checks only write errors into the log file - thus
-             * the next step decides whether the test fails or succeeds:
+             * the above checks only write errors into the log file - thus the
+             * next step decides whether the test fails or succeeds:
              * 
              * 3) make sure all expected/required messages appeared and no
-             * unexpected error message showed up. (We do that always - thus
-             * we let it fall through finally.)
+             * unexpected error message showed up. (We do that always - thus we
+             * let it fall through finally.)
              */
 
         } catch (Throwable t) {
@@ -240,11 +241,9 @@ public class KnimeTestCase extends TestCase {
             m_testConfig.disconnect();
 
             logger.info("Result ---------------------------------------");
-            
+
             m_testConfig.checkMessages();
-            
-            logger.info("Test succeeded.");
-            
+
         } finally {
             m_testConfig.close();
 

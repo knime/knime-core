@@ -208,8 +208,13 @@ public class AnalyzeLogFile {
 
         // copy the failing tests summary
         String line;
+        int cnt = 0;
         while ((line = failTests.readLine()) != null) {
             summary.write(line + CRLF);
+            cnt++;
+        }
+        if (cnt == 0) {
+            summary.write("Hooray, no failures today!");
         }
 
         summary.write(CRLF);
@@ -224,8 +229,13 @@ public class AnalyzeLogFile {
         summary.write("--------------------------------------" + CRLF);
 
         // copy the good tests summary
+        cnt = 0;
         while ((line = goodTests.readLine()) != null) {
             summary.write(line + CRLF);
+            cnt++;
+        }
+        if (cnt == 0) {
+            summary.write("Ooops. Who broke the system?!?");
         }
 
         summary.close();
@@ -309,8 +319,6 @@ public class AnalyzeLogFile {
 
         while ((startLine = getLineContaining(startKey, logReader)) != null) {
 
-            ErrorCode testResult = ErrorCode.OK;
-
             String testName =
                     startLine.substring(startLine.indexOf('\'') + 1, startLine
                             .lastIndexOf('\''));
@@ -334,43 +342,24 @@ public class AnalyzeLogFile {
             testFileWriter.write(startLine + CRLF);
 
             // copy all lines into the testfile and analyze them
-            testResult = writeOneTest(testFileWriter, logReader);
+            boolean testSucceeded =
+                    writeOneTest(testFileWriter, logReader, testName);
             testFileWriter.close();
 
             m_numOfTestsRun++;
-            switch (testResult) {
-            case OK:
+            if (testSucceeded) {
                 m_summarySucceedingTests.write("Test '" + testName
                         + "' succeeded ");
                 m_summarySucceedingTests.write("(Owner: " + ownerAddress + ")."
                         + CRLF);
                 // delete the file of succeeding tests
                 testFile.delete();
-                break;
-            case ERROR:
+            } else {
                 // this text is parsed by the nightly test scripts!
                 m_numOfFailingTests++;
-                m_summaryFailingTests.write("Test '" + testName
-                        + "' failed with ERRORs.");
+                m_summaryFailingTests.write("Test '" + testName + "' failed.");
                 m_summaryFailingTests.write("(Owner: " + ownerAddress + ")."
                         + CRLF);
-                break;
-            case EXCEPTION:
-                // this text is parsed by the nightly test scripts!
-                m_numOfFailingTests++;
-                m_summaryFailingTests.write("Test '" + testName
-                        + "' failed with Exceptions.");
-                m_summaryFailingTests.write("(Owner: " + ownerAddress + ")."
-                        + CRLF);
-                break;
-            case ERREXCEPT:
-                // this text is parsed by the nightly test scripts!
-                m_numOfFailingTests++;
-                m_summaryFailingTests.write("Test '" + testName
-                        + "' failed with ERRORs and Exceptions.");
-                m_summaryFailingTests.write("(Owner: " + ownerAddress + ")."
-                        + CRLF);
-                break;
             }
         }
 
@@ -380,14 +369,16 @@ public class AnalyzeLogFile {
 
     /*
      * copies all lines from the buffer into the outfile until it sees the end
-     * test line. Analyzes each file and returns a code indicating whether it
-     * saw an error or exception in the logfile.
+     * test line. Searches for the FAIL or SUCCESS pattern in each line and
+     * returns true, if it sound the success pattern, or false, if it found the
+     * fail pattern.
      */
-    private ErrorCode writeOneTest(final FileWriter testFile,
-            final BufferedReader logReader) throws IOException {
+    private boolean writeOneTest(final FileWriter testFile,
+            final BufferedReader logReader, final String testName)
+            throws IOException {
 
-        // a test fails if an error or exception in the log file occurs.s
-        ErrorCode result = ErrorCode.OK;
+        boolean succeeded = false;
+        boolean failed = false;
 
         String endKey = TEST_END_CODE;
         String nextLine;
@@ -401,33 +392,22 @@ public class AnalyzeLogFile {
                 break;
             }
 
-            /*
-             * An ERROR line starts like this: 2007-01-16 15:55:38,546 ERROR
-             * That is 23 characters before the " ERROR ".
-             */
-            if ((nextLine.indexOf(" ERROR ") == 23)
-                    || (nextLine.indexOf(" FATAL ") == 23)) {
-                // if there is an exception in the test, the TestCase appends
-                // a certain message at the end of the test to the logfile
-                if (nextLine.contains(TestingConfig.EXCEPT_FAIL_MSG)) {
-                    if (result == ErrorCode.ERROR) {
-                        result = ErrorCode.ERREXCEPT;
-                    } else {
-                        result = ErrorCode.EXCEPTION;
-                    }
-                } else {
-                    // it's a "simple" error
-                    if (result == ErrorCode.EXCEPTION) {
-                        result = ErrorCode.ERREXCEPT;
-                    } else {
-                        result = ErrorCode.ERROR;
-                    }
-                }
+            if (nextLine.endsWith(TestingConfig.FAIL_MSG)) {
+                failed = true;
+            }
+            if (nextLine.endsWith(TestingConfig.SUCCESS_MSG)) {
+                succeeded = true;
             }
 
         }
 
-        return result;
+        if (!(failed ^ succeeded)) {
+            System.err.println("Log file isn't clear about result of test '"
+                    + testName + "'!! Failing it!");
+            return false;
+        } else {
+            return succeeded;
+        }
 
     }
 
