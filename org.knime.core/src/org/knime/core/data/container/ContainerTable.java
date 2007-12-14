@@ -26,6 +26,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.zip.ZipOutputStream;
 
@@ -151,7 +152,11 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
      */
     public void putIntoTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
-        rep.put(getBufferID(), this);
+        if (rep.put(getBufferID(), this) != null) {
+            assert false : "container table with ID " + getBufferID() 
+                + " already present: " 
+                + Arrays.toString(rep.keySet().toArray());
+        }
     }
     
     /**

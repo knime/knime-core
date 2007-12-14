@@ -985,7 +985,13 @@ public class NodeContainer implements NodeStateListener {
                 // not used globally
                 localTables.add(t.getValue());
             } else {
-                assert fromGlob == t.getValue();
+                assert fromGlob == t.getValue() : "global table: " 
+                    + fromGlob.getBufferID() + " size: (" 
+                    + fromGlob.getDataTableSpec().getNumColumns() + ", " 
+                    + fromGlob.getRowCount() + ") vs. local table: " 
+                    + t.getValue().getBufferID() + " size: (" 
+                    + t.getValue().getDataTableSpec().getNumColumns() + ", " 
+                    + t.getValue().getRowCount() + ")";
             }
         }
         m_node.addToTemporaryTables(localTables);

@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -65,7 +66,7 @@ public final class BufferedDataTable implements DataTable {
         NodeLogger.getLogger(BufferedDataTable.class);
   
     /** internal ID for any generated table. */
-    private static int lastID = 0;
+    private static final AtomicInteger lastID = new AtomicInteger(0);
 
     /** Contains the repository of DataTables that are available whilst some
      * workflow is being loaded. Most of the times, this map is empty!
@@ -126,7 +127,7 @@ public final class BufferedDataTable implements DataTable {
         }
         // update the lastID counter!
         assert result.m_tableID == tableID;
-        lastID = Math.max(tableID, lastID);
+        lastID.set(Math.max(tableID, lastID.get()));
         return result;
     }
     
@@ -151,7 +152,7 @@ public final class BufferedDataTable implements DataTable {
      * @return Table identifier.
      */
     static int generateNewID() {
-        return ++lastID;
+        return lastID.incrementAndGet();
     }
     
     private final KnowsRowCountTable m_delegate;
@@ -202,7 +203,7 @@ public final class BufferedDataTable implements DataTable {
     
     private BufferedDataTable(final KnowsRowCountTable table, final int id) {
         m_delegate = table;
-        assert id <= lastID : "Table identifiers not unique";
+        assert id <= lastID.get() : "Table identifiers not unique";
         m_tableID = id;
     }
     
@@ -413,7 +414,7 @@ public final class BufferedDataTable implements DataTable {
             isVersion11x = true;
         }
         int id = s.getInt(CFG_TABLE_ID);
-        lastID = Math.max(lastID, id + 1);
+        lastID.set(Math.max(lastID.get(), id + 1));
         String fileName = s.getString(CFG_TABLE_FILE_NAME);
         File file;
         if (fileName != null) {
