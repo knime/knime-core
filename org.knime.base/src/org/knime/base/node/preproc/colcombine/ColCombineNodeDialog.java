@@ -190,7 +190,7 @@ public class ColCombineNodeDialog extends NodeDialogPane {
         }
         String newColBase = "combined string";
         String newColName = newColBase;
-        for (int i = 1; in.containsName(newColBase); i++) {
+        for (int i = 1; in.containsName(newColName); i++) {
             newColName = newColBase + " #" + i;
         }
         newColName = settings.getString(
