@@ -87,8 +87,11 @@ public class SizeManager2NodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
         final DataTableSpec inSpec = data[INPORT].getDataTableSpec();
+        final String columnName = m_column.getStringValue();
+        final DataColumnSpec cspec = inSpec.getColumnSpec(columnName);
+        m_sizeHandler = createSizeHandler(cspec);
         final DataTableSpec newSpec = appendSizeHandler(inSpec, 
-                m_column.getStringValue(), m_sizeHandler);
+                columnName, m_sizeHandler);
         BufferedDataTable changedSpecTable = exec.createSpecReplacerTable(
                 data[INPORT], newSpec);
         // return original table with SizeHandler
@@ -149,15 +152,25 @@ public class SizeManager2NodeModel extends NodeModel {
             throw new InvalidSettingsException("No bounds defined for column: "
                     + column);
         }
-        // get the domain range for the double size handler
-        double minimum = ((DoubleValue)cspec.getDomain().getLowerBound())
-                .getDoubleValue();
-        double maximum = ((DoubleValue)cspec.getDomain().getUpperBound())
-                .getDoubleValue();
-        m_sizeHandler = new SizeHandler(new SizeModelDouble(minimum, maximum));
+        m_sizeHandler = createSizeHandler(cspec);
         DataTableSpec outSpec = appendSizeHandler(inSpecs[0], 
                 m_column.getStringValue(), m_sizeHandler);
+        // return original spec with SizeHandler
         return new DataTableSpec[]{outSpec};
+    }
+    
+    /*
+     * Create SizeHandler based on given DataColumnSpec. 
+     * @param cspec spec with minimum and maximum bound
+     * @return SizeHandler
+     */
+    private SizeHandler createSizeHandler(final DataColumnSpec cspec) {
+        // get the domain range for the double size handler
+        double minimum = ((DoubleValue) cspec.getDomain().getLowerBound())
+                .getDoubleValue();
+        double maximum = ((DoubleValue) cspec.getDomain().getUpperBound())
+                .getDoubleValue();
+        return new SizeHandler(new SizeModelDouble(minimum, maximum));
     }
     
     /**

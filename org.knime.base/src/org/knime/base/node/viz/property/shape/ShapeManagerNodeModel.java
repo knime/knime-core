@@ -108,6 +108,7 @@ class ShapeManagerNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
         final DataTableSpec inSpec = data[INPORT].getDataTableSpec();
+        m_shapeHandler = new ShapeHandler(new ShapeModelNominal(m_map));
         final DataTableSpec newSpec = appendShapeHandler(inSpec, m_column, 
                 m_shapeHandler);
         BufferedDataTable changedSpecTable = exec.createSpecReplacerTable(
