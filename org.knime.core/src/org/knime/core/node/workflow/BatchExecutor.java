@@ -185,12 +185,17 @@ public final class BatchExecutor {
                 }
                 output = new File(parts[1]);
             } else if ("-option".equals(parts[0])) {
-                if (parts.length != 4) {
+                if (parts.length != 2) {
                     System.err.println(
                             "Couldn't parse -option argument: " + s);
                     return 1;
                 }
                 String[] parts2 = parts[1].split("\\,");
+                if (parts2.length != 4) {
+                    System.err.println(
+                            "Couldn't parse -option argument: " + s);
+                    return 1;
+                }
                 String[] nodeIDPath = parts2[0].split("/");
                 int[] nodeIDs = new int[nodeIDPath.length];
                 for (int i = 0; i < nodeIDs.length; i++) {
