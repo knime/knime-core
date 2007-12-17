@@ -128,7 +128,8 @@ public class KnimeTestCase extends TestCase {
 
         }
 
-        logger.debug("Workflow location: " + m_knimeWorkFlow);
+        logger.debug("Workflow location: " + m_knimeWorkFlow 
+                + " -------------------------");
 
         // start here the workflow
         try {
@@ -138,10 +139,14 @@ public class KnimeTestCase extends TestCase {
                 new File(m_knimeWorkFlow.getParentFile(), STATUS_FILE);
             m_testConfig.readNodeStatusFile(statusFile, m_manager);
             
+            logger.debug("Loading workflow ----------------------------"
+                    + "--------------");
             m_manager =
                     new WorkflowManager(m_knimeWorkFlow,
                             new DefaultNodeProgressMonitor());
-
+            logger.debug("Workflow loaded ----------------------------"
+                    + "--------------");
+            
             // construct a list of options (i.e. settings to change in the flow)
             File optionsFile =
                     new File(m_knimeWorkFlow.getParentFile(), OPTIONS_FILE);
