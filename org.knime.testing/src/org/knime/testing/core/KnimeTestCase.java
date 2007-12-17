@@ -128,7 +128,7 @@ public class KnimeTestCase extends TestCase {
 
         }
 
-        logger.debug("Workflow location: " + m_knimeWorkFlow 
+        logger.debug("Workflow location: " + m_knimeWorkFlow.getParent() 
                 + " -------------------------");
 
         // start here the workflow
