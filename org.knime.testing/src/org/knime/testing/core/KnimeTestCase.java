@@ -113,7 +113,6 @@ public class KnimeTestCase extends TestCase {
         logger.info("<Start> Test='"
                 + m_knimeWorkFlow.getParentFile().getName()
                 + "' --------------------------------------------------------");
-        logger.debug("Workflow location: " + m_knimeWorkFlow);
         // be sure to always add an owner to the log file
         String owners = m_testConfig.getOwners();
         if ((owners != null) && (owners.length() > 0)) {
@@ -128,6 +127,8 @@ public class KnimeTestCase extends TestCase {
             fail();
 
         }
+
+        logger.debug("Workflow location: " + m_knimeWorkFlow);
 
         // start here the workflow
         try {
