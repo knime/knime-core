@@ -299,6 +299,9 @@ public class TestingConfig extends AppenderSkeleton {
         BufferedReader optfile =
                 new BufferedReader(new FileReader(optionsFile));
 
+        LOGGER.debug("Applying new settings to workflow ----------------"
+                + "------------------");
+        
         String location = optionsFile.getParent();
         if (location == null) {
             throw new FileNotFoundException(
