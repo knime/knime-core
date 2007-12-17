@@ -131,6 +131,12 @@ public class KnimeTestCase extends TestCase {
 
         // start here the workflow
         try {
+            // read in the node status file before loading the workflow.
+            // this way autoexecuted nodes are captured, too.
+            File statusFile =
+                new File(m_knimeSettings.getParentFile(), STATUS_FILE);
+            m_testConfig.readNodeStatusFile(statusFile, m_manager);
+            
             m_manager =
                     new WorkflowManager(m_knimeSettings,
                             new DefaultNodeProgressMonitor());
@@ -139,11 +145,6 @@ public class KnimeTestCase extends TestCase {
             File optionsFile =
                     new File(m_knimeSettings.getParentFile(), OPTIONS_FILE);
             m_testConfig.applySettings(optionsFile, m_manager);
-
-            // read in the node status file
-            File statusFile =
-                    new File(m_knimeSettings.getParentFile(), STATUS_FILE);
-            m_testConfig.readNodeStatusFile(statusFile, m_manager);
 
         } catch (WorkflowException ex) {
             String msg = ex.getMessage();

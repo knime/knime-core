@@ -482,6 +482,7 @@ public class TestingConfig extends AppenderSkeleton {
         BufferedReader statusReader =
                 new BufferedReader(new FileReader(statusFile));
 
+        LOGGER.debug("Reading configuration file for node status / messages");
         String line;
         while ((line = statusReader.readLine()) != null) {
 
@@ -621,12 +622,6 @@ public class TestingConfig extends AppenderSkeleton {
             throw new InvalidSettingsException(
                     "Invalid line in status file (invalid node ID): " + line);
         }
-        NodeContainer nc = wfm.getNodeContainerById(nodeID);
-        if (nc == null) {
-            throw new InvalidSettingsException(
-                    "Invalid line in status file (not existing node ID): "
-                            + line);
-        }
 
         String msg = null;
 
@@ -654,7 +649,7 @@ public class TestingConfig extends AppenderSkeleton {
                  */
                 // remember the nodes that must not execute
                 if (m_requiredUnexecutedNodes.add(nodeID)) {
-                    msg = "Node " + nc.getNameWithID() + " must not be executed";
+                    msg = "Node #" + nodeID + " must not be executed";
                     // add the "Execute failed" message that is logged by the
                     // WFM to the required list.
                     m_requiredErrors.add("Execute failed");
@@ -663,7 +658,7 @@ public class TestingConfig extends AppenderSkeleton {
                 // now store the expected status message
                 m_errorStatus.put(nodeID, errStatMsg);
                 if (msg == null) {
-                    msg = "Node " + nc.getNameWithID();
+                    msg = "Node #" + nodeID;
                 }
                 msg += " should have an error status '" + errStatMsg + "'";
 
@@ -687,7 +682,7 @@ public class TestingConfig extends AppenderSkeleton {
 
                 m_warningStatus.put(nodeID, modelMsg);
                 if (msg == null) {
-                    msg = "Node " + nc.getNameWithID();
+                    msg = "Node #" + nodeID;
                 }
                 msg += " should have a warning status '" + modelMsg + "'";
 
