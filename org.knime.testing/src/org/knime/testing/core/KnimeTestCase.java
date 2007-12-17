@@ -72,7 +72,7 @@ public class KnimeTestCase extends TestCase {
      */
     public static final int TIMEOUT = 300;
 
-    private File m_knimeSettings;
+    private File m_knimeWorkFlow;
 
     private WorkflowManager m_manager;
 
@@ -85,7 +85,7 @@ public class KnimeTestCase extends TestCase {
      * @param workflowFile
      */
     public KnimeTestCase(File workflowFile) {
-        m_knimeSettings = workflowFile;
+        m_knimeWorkFlow = workflowFile;
         this.setName(workflowFile.getParent());
     }
 
@@ -107,13 +107,13 @@ public class KnimeTestCase extends TestCase {
         m_testConfig = new TestingConfig(100);
 
         // read in the owners of the test case
-        File ownerFile = new File(m_knimeSettings.getParentFile(), OWNER_FILE);
+        File ownerFile = new File(m_knimeWorkFlow.getParentFile(), OWNER_FILE);
         m_testConfig.setOwners(ownerFile);
 
         logger.info("<Start> Test='"
-                + m_knimeSettings.getParentFile().getName()
+                + m_knimeWorkFlow.getParentFile().getName()
                 + "' --------------------------------------------------------");
-
+        logger.debug("Workflow location: " + m_knimeWorkFlow);
         // be sure to always add an owner to the log file
         String owners = m_testConfig.getOwners();
         if ((owners != null) && (owners.length() > 0)) {
@@ -122,7 +122,7 @@ public class KnimeTestCase extends TestCase {
             logger.info("TestOwners=" + REGRESSIONS_OWNER);
             // Fail if no owner is set!
             logger.error("No owner set in test '"
-                    + m_knimeSettings.getParentFile().getName()
+                    + m_knimeWorkFlow.getParentFile().getName()
                     + "'. Please create an owner file in the test directory.");
             wrapUp();
             fail();
@@ -134,16 +134,16 @@ public class KnimeTestCase extends TestCase {
             // read in the node status file before loading the workflow.
             // this way autoexecuted nodes are captured, too.
             File statusFile =
-                new File(m_knimeSettings.getParentFile(), STATUS_FILE);
+                new File(m_knimeWorkFlow.getParentFile(), STATUS_FILE);
             m_testConfig.readNodeStatusFile(statusFile, m_manager);
             
             m_manager =
-                    new WorkflowManager(m_knimeSettings,
+                    new WorkflowManager(m_knimeWorkFlow,
                             new DefaultNodeProgressMonitor());
 
             // construct a list of options (i.e. settings to change in the flow)
             File optionsFile =
-                    new File(m_knimeSettings.getParentFile(), OPTIONS_FILE);
+                    new File(m_knimeWorkFlow.getParentFile(), OPTIONS_FILE);
             m_testConfig.applySettings(optionsFile, m_manager);
 
         } catch (WorkflowException ex) {
@@ -252,7 +252,7 @@ public class KnimeTestCase extends TestCase {
             m_manager = null;
 
             logger.info("<End> Test='"
-                    + m_knimeSettings.getParentFile().getName()
+                    + m_knimeWorkFlow.getParentFile().getName()
                     + "' ----------------------------------------------------");
         }
     }
