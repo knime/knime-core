@@ -44,6 +44,8 @@ public class Category extends AbstractContainerObject {
     private Image m_icon;
 
     private ImageDescriptor m_iconDescriptor;
+    
+    private String m_pluginID;
 
     /**
      * Creates a new repository category with the given level-id.
@@ -66,6 +68,22 @@ public class Category extends AbstractContainerObject {
      */
     public void setDescription(final String description) {
         m_description = description;
+    }
+    
+    /**
+     * 
+     * @param pluginID the id of the declaring plug-in.
+     */
+    public void setPluginID(final String pluginID) {
+        m_pluginID = pluginID;
+    }
+    
+    /**
+     * 
+     * @return the id of the declaring plugin
+     */
+    public String getPluginID() {
+        return m_pluginID;
     }
 
     /**
@@ -99,6 +117,7 @@ public class Category extends AbstractContainerObject {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object getAdapter(final Class adapter) {
         if (adapter == IPropertySource.class) {
             return new CategoryPropertySource(this);

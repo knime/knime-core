@@ -81,13 +81,15 @@ public final class RepositoryFactory {
         node.setType(
                 str(element.getAttribute("type"), NodeTemplate.TYPE_OTHER));
 
-        String pluginID = element.getDeclaringExtension().getNamespace();
+        String pluginID = element.getDeclaringExtension()
+            .getNamespaceIdentifier();
         node.setPluginID(pluginID);
 
         if (!Boolean.valueOf(
                 System.getProperty("java.awt.headless", "false"))) {
             // Load images from declaring plugin
-            Image icon = ImageRepository.getScaledImage(factory.getIcon(), 16, 16);
+            Image icon = ImageRepository.getScaledImage(
+                    factory.getIcon(), 16, 16);
             // get default image if null
             if (icon == null) {
                 icon = ImageRepository.getScaledImage(
@@ -116,9 +118,11 @@ public final class RepositoryFactory {
         String id = element.getAttribute("level-id");
 
         // get the id of the contributing plugin
-        String pluginID = element.getDeclaringExtension().getNamespace();
+        String pluginID = element.getDeclaringExtension()
+            .getNamespaceIdentifier();
 
         Category cat = new Category(id);
+        cat.setPluginID(pluginID);
         cat.setDescription(str(element.getAttribute("description"), ""));
         cat.setName(str(element.getAttribute("name"), "!name is missing!"));
         cat.setAfterID(str(element.getAttribute("after"), ""));

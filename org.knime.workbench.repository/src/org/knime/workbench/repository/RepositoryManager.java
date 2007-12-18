@@ -129,9 +129,11 @@ public final class RepositoryManager {
                     // notice any difference (except possibly the picture))
                     if (!nameI.equals(nameJ)) {
                         String pluginI = allElements.get(i)
-                                .getDeclaringExtension().getNamespace();
+                                .getDeclaringExtension()
+                                .getNamespaceIdentifier();
                         String pluginJ = allElements.get(j)
-                                .getDeclaringExtension().getNamespace();
+                                .getDeclaringExtension()
+                                .getNamespaceIdentifier();
 
                         String message = "Category '" + pathOuter + "/"
                                 + levelIdOuter
@@ -168,7 +170,8 @@ public final class RepositoryManager {
         //
         // First, process the contributed categories
         //
-        ArrayList<IConfigurationElement> allElements = new ArrayList<IConfigurationElement>();
+        ArrayList<IConfigurationElement> allElements 
+            = new ArrayList<IConfigurationElement>();
 
         for (int i = 0; i < categoryExtensions.length; i++) {
 
@@ -216,7 +219,7 @@ public final class RepositoryManager {
 
         for (int j = 0; j < categoryElements.length; j++) {
             IConfigurationElement e = categoryElements[j];
-
+            
             try {
                 Category category = RepositoryFactory.createCategory(m_root, e);
                 LOGGER.debug("Found category extension '" + category.getID()
@@ -226,7 +229,7 @@ public final class RepositoryManager {
             } catch (Exception ex) {
                 String message = "Category '" + e.getAttribute("level-id")
                         + "' from plugin '"
-                        + e.getDeclaringExtension().getNamespace()
+                        + e.getDeclaringExtension().getNamespaceIdentifier()
                         + "' could not be created in parent path '"
                         + e.getAttribute("path") + "'.";
                 LOGGER.error(message, ex);
@@ -281,9 +284,8 @@ public final class RepositoryManager {
                 } catch (Throwable t) {
 
                     String message = "Node " + e.getAttribute("id")
-                            + "' from plugin '" + ext.getNamespace()
+                            + "' from plugin '" + ext.getNamespaceIdentifier()
                             + "' could not be created.";
-                    
                     Plugin plugin = Platform.getPlugin(ext
                             .getNamespaceIdentifier());
 
