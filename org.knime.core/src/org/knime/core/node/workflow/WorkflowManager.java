@@ -156,10 +156,10 @@ public class WorkflowManager implements WorkflowListener {
         /**
          * This variable is set to the current time in case the are 
          * no running nodes so far and one or more nodes are started.
-         * This variable is used to meassure the time untill all currently
+         * This variable is used to measure the time until all currently
          * running nodes have been executed. In case there are further
          * nodes started (other nodes are already running), the time is not
-         * reseted.
+         * reset.
          */
         private long m_executionTime;
         
@@ -319,7 +319,7 @@ public class WorkflowManager implements WorkflowListener {
                 if (wr.get() != null) {
                     if (executionInProgress(wr.get())) {
                         // this may happen if (parts of) a metaworkflow is/are
-                        // excuted by the user without actually executing the
+                        // executed by the user without actually executing the
                         // meta node itself
                         return true;
                     }
@@ -543,7 +543,7 @@ public class WorkflowManager implements WorkflowListener {
                     if (interesting) {
                         try {
                             // in order to prevent deadlocks due to possible
-                            // programming errors, re-check every 5 secons
+                            // programming errors, re-check every 5 seconds
                             m_finishLock.wait(5000);
                         } catch (InterruptedException ex) {
                             break;
@@ -721,7 +721,7 @@ public class WorkflowManager implements WorkflowListener {
 
     /**
      * Create new WorkflowManager by a given <code>WORKFLOW_FILE</code>. All
-     * nodes and connection are initialzied, and - if available -
+     * nodes and connection are initialized, and - if available -
      * <code>NodeSettings</code>, <code>DataTableSpec</code>,
      * <code>DataTable</code>, and <code>ModelContent</code> are loaded
      * into each node.<br />
@@ -1118,7 +1118,7 @@ public class WorkflowManager implements WorkflowListener {
 
     /**
      * Configures the passed node but does not reset it. The caller has to
-     * ensure that the node is reseted and not executed beforehand.
+     * ensure that the node is reset and not executed beforehand.
      * 
      * @param nodeID the node that should be configured
      */
@@ -1180,8 +1180,8 @@ public class WorkflowManager implements WorkflowListener {
             // get set username
             String currentUserNodeName = newNode.getCustomName();
 
-            // create temprarily the init user name of the copied node
-            // to check wether the current name was changed
+            // create temporarily the init user name of the copied node
+            // to check whether the current name was changed
             String oldInitName = "Node " + nc.getID();
             if (oldInitName.equals(currentUserNodeName)) {
                 newNode.setCustomName("Node " + newId);
@@ -1290,7 +1290,7 @@ public class WorkflowManager implements WorkflowListener {
                 newNode.resetAndConfigure();
 
                 // change the id, as this id is already in use (it was copied)
-                // first remeber the old id "map(oldId, newId)"
+                // first remember the old id "map(oldId, newId)"
 
                 idMap.put(oldId, newId);
                 // remember the new id for the return value
@@ -1540,7 +1540,7 @@ public class WorkflowManager implements WorkflowListener {
                 }
             }
 
-            // check for auto-excutable nodes
+            // check for auto-executable nodes
             LinkedList<NodeContainer> succ = new LinkedList<NodeContainer>();
             succ.add(nodeCont);
 
@@ -1575,7 +1575,7 @@ public class WorkflowManager implements WorkflowListener {
     }
 
     /*
-     * Notifes all registered listeners of the event.
+     * Notifies all registered listeners of the event.
      */
     private void fireWorkflowEvent(final WorkflowEvent event) {
         for (WorkflowListener l : m_eventListeners) {
@@ -2012,7 +2012,7 @@ public class WorkflowManager implements WorkflowListener {
     }
 
     /**
-     * Removes a listener from the worklflow, has no effekt if the listener was
+     * Removes a listener from the workflow, has no effect if the listener was
      * not registered before.
      * 
      * @param listener The listener to remove
@@ -2102,7 +2102,7 @@ public class WorkflowManager implements WorkflowListener {
     }
 
     /**
-     * Resets and configures the passed node and all its sucessors.
+     * Resets and configures the passed node and all its successors.
      * 
      * @param nodeID the node id
      * @throws WorkflowInExecutionException if the workflow is currently
@@ -2124,7 +2124,7 @@ public class WorkflowManager implements WorkflowListener {
 
     /**
      * Saves this workflow manager settings including nodes and connections into
-     * the given file. In additon, all nodes' internal structures are stored -
+     * the given file. In addition, all nodes' internal structures are stored -
      * if available, depending on the current node state, reset, configured, or
      * executed. For each node a directory is created (at the workflow file's
      * parent path) to save the node internals.
@@ -2235,7 +2235,7 @@ public class WorkflowManager implements WorkflowListener {
         }
     }
 
-    /* Topological sorting of all nodes inthe workflow */
+    /* Topological sorting of all nodes in the workflow */
     private List<NodeContainer> topSortNodes() {
         Collection<NodeContainer> termList = new ArrayList<NodeContainer>();
         for (Integer nodeKey : m_nodesByID.keySet()) {
@@ -2289,7 +2289,7 @@ public class WorkflowManager implements WorkflowListener {
 
     /**
      * Loads the settings from the passed node container's dialog into its
-     * model, resets and configures this node and all its sucessors.
+     * model, resets and configures this node and all its successors.
      * 
      * @param nodeCont a node container
      * @throws WorkflowInExecutionException if the settings cannot be applied
@@ -2370,11 +2370,11 @@ public class WorkflowManager implements WorkflowListener {
     
     /**
      * Sets if auto-executable should really be auto-executed or not.
-     * Please note that changing this behaviout affects <b>all</b> parent and
+     * Please note that changing this behaviour affects <b>all</b> parent and
      * child workflow managers and not only this one!
      * 
      * @param b <code>true</code> if auto-executable nodes should be
-     *  autoexecuted, <code>false</code> otherwise
+     *  auto-executed, <code>false</code> otherwise
      */
     public void setCheckAutoexecNodes(final boolean b) {
         m_executor.setCheckAutoexecNodes(b);

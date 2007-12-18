@@ -144,7 +144,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
      * are processed here. Basically these events are "run", "break" and
      * "finish".
      * 
-     * @see java.awt.event.ActionListener#actionPerformed(ActionEvent)
+     * {@inheritDoc}
      */
     public void actionPerformed(final ActionEvent e) {
         if (e.getActionCommand().equals(InterruptControlPanel.RUN)) {
@@ -251,7 +251,7 @@ public abstract class InterruptibleNodeView extends NodeView implements
      * visualization of the NodeModel. Therefore this method simply invokes the
      * <code>NodeView.modelChanged()</code> method.
      * 
-     * @see org.knime.core.node.NodeView#updateModel(java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public void updateModel(final Object model) {
