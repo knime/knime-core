@@ -34,6 +34,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
@@ -264,17 +265,22 @@ public class NumberToStringNodeModel extends NodeModel {
             m_error = new StringBuilder();
         }
 
+        /**
+         * {@inheritDoc}
+         */
         public DataCell[] getCells(final DataRow row) {
             DataCell[] newcells = new DataCell[m_colindices.length];
             for (int i = 0; i < newcells.length; i++) {
                 DataCell dc = row.getCell(m_colindices[i]);
-                // should be a DoubleCell, otherwise copy original cell.
-                if (dc.getType().isCompatible(DoubleValue.class)
-                        && !dc.isMissing()) {
+                // handle integers separately to avoid decimal places
+                if (dc instanceof IntValue) {
+                    int iVal = ((IntValue)dc).getIntValue();
+                    newcells[i] = new StringCell(Integer.toString(iVal));
+                } else if (dc instanceof DoubleValue) {
                     double d = ((DoubleValue)dc).getDoubleValue();
                     newcells[i] = new StringCell("" + d);
                 } else {
-                    newcells[i] = dc;
+                    newcells[i] = DataType.getMissingCell();
                 }
             }
             return newcells;
