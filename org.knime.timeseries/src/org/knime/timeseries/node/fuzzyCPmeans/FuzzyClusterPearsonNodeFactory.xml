@@ -29,7 +29,7 @@
     </option>
     <option name="Set delta automatically, specify lambda">
     Delta is updated in each iteration, based on the average interpoint 
-    distances. However, a lambda paramater has to be set, according to the
+    distances. However, a lambda parameter has to be set, according to the
     shape of the clusters.
     </option>
     <option name="Perform the clustering in memory">
