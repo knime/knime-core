@@ -1,4 +1,4 @@
- /* This source code, its documentation and all appendant files
+/* This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
  * Copyright, 2003 - 2007
@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
+import java.util.regex.Pattern;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -49,13 +50,12 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 
 /**
- * The NodeModel for the String to Number Node that converts strings 
- * to numbers.
+ * The NodeModel for the String to Number Node that converts strings to numbers.
  * 
  * @author cebron, University of Konstanz
  */
 public class StringToNumberNodeModel extends NodeModel {
-  
+
     /* Node Logger of this class. */
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(StringToNumberNodeModel.class);
@@ -64,12 +64,12 @@ public class StringToNumberNodeModel extends NodeModel {
      * Key for the included columns in the NodeSettings.
      */
     public static final String CFG_INCLUDED_COLUMNS = "include";
-    
+
     /**
      * Key for the decimal separator in the NodeSettings.
      */
     public static final String CFG_DECIMALSEP = "decimal_separator";
-    
+
     /**
      * Key for the thousands separator in the NodeSettings.
      */
@@ -79,13 +79,12 @@ public class StringToNumberNodeModel extends NodeModel {
      * The default decimal separator.
      */
     public static final String DEFAULT_DECIMAL_SEPARATOR = ".";
-    
+
     /**
      * The default thousands separator.
      */
     public static final String DEFAULT_THOUSANDS_SEPARATOR = "";
-    
-    
+
     /*
      * The included columns.
      */
@@ -96,14 +95,14 @@ public class StringToNumberNodeModel extends NodeModel {
      * The decimal separator
      */
     private String m_decimalSep = DEFAULT_DECIMAL_SEPARATOR;
-    
+
     /*
      * The thousands separator
      */
     private String m_thousandsSep = DEFAULT_THOUSANDS_SEPARATOR;
-    
+
     /**
-     * Constructor with one inport and one outport. 
+     * Constructor with one inport and one outport.
      */
     public StringToNumberNodeModel() {
         super(1, 1);
@@ -122,7 +121,7 @@ public class StringToNumberNodeModel extends NodeModel {
         }
         // find indices to work on.
         Vector<Integer> indicesvec = new Vector<Integer>();
-        
+
         for (int i = 0; i < inclcols.size(); i++) {
             int colIndex = inSpecs[0].findColumnIndex(inclcols.get(i));
             if (colIndex >= 0) {
@@ -178,7 +177,8 @@ public class StringToNumberNodeModel extends NodeModel {
                 if (type.isCompatible(StringValue.class)) {
                     indicesvec.add(colIndex);
                 } else {
-                    warnings.append("Ignoring column \'"
+                    warnings
+                            .append("Ignoring column \'"
                                     + inspec.getColumnSpec(colIndex).getName()
                                     + "\'\n");
                 }
@@ -224,10 +224,11 @@ public class StringToNumberNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_inclCols.loadSettingsFrom(settings);
-        m_decimalSep = settings.getString(
-                CFG_DECIMALSEP, DEFAULT_DECIMAL_SEPARATOR);
-        m_thousandsSep = settings.getString(
-                CFG_THOUSANDSSEP, DEFAULT_THOUSANDS_SEPARATOR);
+        m_decimalSep =
+                settings.getString(CFG_DECIMALSEP, DEFAULT_DECIMAL_SEPARATOR);
+        m_thousandsSep =
+                settings.getString(CFG_THOUSANDSSEP,
+                        DEFAULT_THOUSANDS_SEPARATOR);
     }
 
     /**
@@ -247,19 +248,19 @@ public class StringToNumberNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_inclCols.validateSettings(settings);
-        String decimalsep = settings.getString(
-                CFG_DECIMALSEP, DEFAULT_DECIMAL_SEPARATOR);
-        String thousandssep = settings.getString(
-                CFG_THOUSANDSSEP, DEFAULT_THOUSANDS_SEPARATOR);
+        String decimalsep =
+                settings.getString(CFG_DECIMALSEP, DEFAULT_DECIMAL_SEPARATOR);
+        String thousandssep =
+                settings.getString(CFG_THOUSANDSSEP,
+                        DEFAULT_THOUSANDS_SEPARATOR);
         if (decimalsep == null || thousandssep == null) {
-            throw new InvalidSettingsException(
-                "Separators must not be null");
+            throw new InvalidSettingsException("Separators must not be null");
         }
         if (decimalsep.length() > 1 || thousandssep.length() > 1) {
             throw new InvalidSettingsException(
                     "Illegal separator length, expected a single character");
         }
-            
+
         if (decimalsep.equals(thousandssep)) {
             throw new InvalidSettingsException(
                     "Decimal and thousands separator must not be the same.");
@@ -305,7 +306,7 @@ public class StringToNumberNodeModel extends NodeModel {
          * Error messages.
          */
         private String m_error;
-        
+
         /** Number of parsing errors. */
         private int m_parseErrorCount;
 
@@ -319,7 +320,7 @@ public class StringToNumberNodeModel extends NodeModel {
             m_spec = spec;
             m_parseErrorCount = 0;
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -330,28 +331,33 @@ public class StringToNumberNodeModel extends NodeModel {
                 // should be a DoubleCell, otherwise copy original cell.
                 if (!dc.isMissing()) {
                     final String s = ((StringValue)dc).getStringValue();
-                    if (s.length() == 0) {
+                    if (s.trim().length() == 0) {
                         newcells[i] = DataType.getMissingCell();
                         continue;
                     }
                     try {
                         // remove thousands separator
-                        String corrected = s.replaceAll(m_thousandsSep, "");
+                        String corrected =
+                                s.replaceAll(Pattern.quote(m_thousandsSep), "");
                         if (!".".equals(m_decimalSep)) {
                             if (corrected.contains(".")) {
                                 throw new NumberFormatException(
                                         "Invalid floating point number");
                             }
                             // replace custom separator with standard
-                            corrected = corrected.replaceAll(m_decimalSep, ".");
+                            corrected =
+                                    corrected.replaceAll(Pattern
+                                            .quote(m_decimalSep), ".");
                         }
                         double d = Double.parseDouble(corrected);
                         newcells[i] = new DoubleCell(d);
                     } catch (NumberFormatException e) {
                         if (m_parseErrorCount == 0) {
-                            m_error = "'" + s + "' (RowKey: "
-                                    + row.getKey().toString() + ", Position: "
-                                    + m_colindices[i] + ")";
+                            m_error =
+                                    "'" + s + "' (RowKey: "
+                                            + row.getKey().toString()
+                                            + ", Position: " + m_colindices[i]
+                                            + ")";
                             LOGGER.debug(e.getMessage());
                         }
                         m_parseErrorCount++;
@@ -375,8 +381,8 @@ public class StringToNumberNodeModel extends NodeModel {
                 DataColumnSpecCreator colspeccreator = null;
                 // change DataType to DoubleCell
                 colspeccreator =
-                    new DataColumnSpecCreator(colspec.getName(),
-                            DoubleCell.TYPE);
+                        new DataColumnSpecCreator(colspec.getName(),
+                                DoubleCell.TYPE);
                 newcolspecs[i] = colspeccreator.createSpec();
             }
             return newcolspecs;
@@ -398,12 +404,13 @@ public class StringToNumberNodeModel extends NodeModel {
          */
         public String getErrorMessage() {
             switch (m_parseErrorCount) {
-            case 0: 
+            case 0:
                 return "";
-            case 1: 
+            case 1:
                 return "Could not parse cell with value " + m_error;
-            default: return "Values in " + m_parseErrorCount 
-                + " cells could not be parsed, first error: " + m_error;
+            default:
+                return "Values in " + m_parseErrorCount
+                        + " cells could not be parsed, first error: " + m_error;
             }
         }
 
