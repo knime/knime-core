@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
+import java.util.regex.Pattern;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -330,20 +331,22 @@ public class StringToNumberNodeModel extends NodeModel {
                 // should be a DoubleCell, otherwise copy original cell.
                 if (!dc.isMissing()) {
                     final String s = ((StringValue)dc).getStringValue();
-                    if (s.length() == 0) {
+                    if (s.trim().length() == 0) {
                         newcells[i] = DataType.getMissingCell();
                         continue;
                     }
                     try {
                         // remove thousands separator
-                        String corrected = s.replaceAll(m_thousandsSep, "");
+                        String corrected = s.replaceAll(
+                                Pattern.quote(m_thousandsSep), "");
                         if (!".".equals(m_decimalSep)) {
                             if (corrected.contains(".")) {
                                 throw new NumberFormatException(
                                         "Invalid floating point number");
                             }
                             // replace custom separator with standard
-                            corrected = corrected.replaceAll(m_decimalSep, ".");
+                            corrected = corrected.replaceAll(
+                                    Pattern.quote(m_decimalSep), ".");
                         }
                         double d = Double.parseDouble(corrected);
                         newcells[i] = new DoubleCell(d);
