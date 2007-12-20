@@ -1481,19 +1481,10 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      */
     protected String popupFileChooser(final String startingPath,
             final boolean readXml) {
-        // before opening the dialog, try to figure out a nice starting dir
-        String tryThis = startingPath;
-        if ((tryThis == null) || (tryThis.length() == 0)) {
-            // if we didn't get anything, use the first path in the
-            // file history (if we got any) - should be better than nothing
-            String[] hist = FileReaderNodeModel.getFileHistory();
-            if ((hist != null) && (hist.length > 0)) {
-                tryThis = hist[0];
-            }
-        }
+
         String startingDir = "";
         try {
-            URL newURL = textToURL(tryThis);
+            URL newURL = textToURL(startingPath);
             if (newURL.getProtocol().equals("file")) {
                 File tmpFile = new File(newURL.toURI().getPath());
                 startingDir = tmpFile.getAbsolutePath();
