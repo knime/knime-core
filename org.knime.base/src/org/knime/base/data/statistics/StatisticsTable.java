@@ -291,7 +291,9 @@ public class StatisticsTable implements DataTable {
                     m_varianceValues[j] = 0.0;
                 }
                 assert m_varianceValues[j] >= 0.0 
-                    : "Variance can not be negative: " + m_varianceValues[j];
+                    : "Variance can not be negative (column \"" 
+                        + origSpec.getColumnSpec(j).getName() + "\": " 
+                        + m_varianceValues[j];
             }
         }
 
