@@ -330,6 +330,10 @@ public class StringToNumberNodeModel extends NodeModel {
                 // should be a DoubleCell, otherwise copy original cell.
                 if (!dc.isMissing()) {
                     final String s = ((StringValue)dc).getStringValue();
+                    if (s.length() == 0) {
+                        newcells[i] = DataType.getMissingCell();
+                        continue;
+                    }
                     try {
                         // remove thousands separator
                         String corrected = s.replaceAll(m_thousandsSep, "");
