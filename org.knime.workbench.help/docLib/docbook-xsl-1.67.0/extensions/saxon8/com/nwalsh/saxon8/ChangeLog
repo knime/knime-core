@@ -1,9 +1,0 @@
-2004-10-29  Norman Walsh <nwalsh@users.sourceforge.net>
-
-	* Text.java, TextFactory.java, Verbatim.java: Support the textinsert extension; update all extensions to the Saxon 8.1.1 API
-
-2004-10-24  Norman Walsh <nwalsh@users.sourceforge.net>
-
-	* Callout.java, ImageIntrinsics.java, Verbatim.java, package.html: 
-	New file.
-
