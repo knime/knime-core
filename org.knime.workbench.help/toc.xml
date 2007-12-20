@@ -1,5 +1,8 @@
-<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<toc label="The Konstanz Information Miner - KNIME" topic="index.html">
-   <topic label="KNIME online documentation" href="onlinedocu.html"/>
-   <topic label="KNIME local documentation" href="localdocu.html"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<?NLS TYPE="org.eclipse.help.toc"?>
+<toc label="KNIME Usage" topic="html/toc.html">
+	  <topic label="Node Descriptions">
+		  	<anchor id="node-descriptions" />
+	  </topic>
+	  <topic label="Quickstart Guide" href="html/quickstartguide.html" />
 </toc>
