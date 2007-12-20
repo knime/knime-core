@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
-import org.knime.base.node.preproc.colconvert.ColConvertNodeModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -59,19 +58,50 @@ public class StringToNumberNodeModel extends NodeModel {
   
     /* Node Logger of this class. */
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(ColConvertNodeModel.class);
+            NodeLogger.getLogger(StringToNumberNodeModel.class);
 
     /**
      * Key for the included columns in the NodeSettings.
      */
     public static final String CFG_INCLUDED_COLUMNS = "include";
+    
+    /**
+     * Key for the decimal separator in the NodeSettings.
+     */
+    public static final String CFG_DECIMALSEP = "decimal_separator";
+    
+    /**
+     * Key for the thousands separator in the NodeSettings.
+     */
+    public static final String CFG_THOUSANDSSEP = "thousands_separator";
 
+    /**
+     * The default decimal separator.
+     */
+    public static final String DEFAULT_DECIMAL_SEPARATOR = ".";
+    
+    /**
+     * The default thousands separator.
+     */
+    public static final String DEFAULT_THOUSANDS_SEPARATOR = "";
+    
+    
     /*
      * The included columns.
      */
     private SettingsModelFilterString m_inclCols =
             new SettingsModelFilterString(CFG_INCLUDED_COLUMNS);
 
+    /*
+     * The decimal separator
+     */
+    private String m_decimalSep = DEFAULT_DECIMAL_SEPARATOR;
+    
+    /*
+     * The thousands separator
+     */
+    private String m_thousandsSep = DEFAULT_THOUSANDS_SEPARATOR;
+    
     /**
      * Constructor with one inport and one outport. 
      */
@@ -194,6 +224,10 @@ public class StringToNumberNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_inclCols.loadSettingsFrom(settings);
+        m_decimalSep = settings.getString(
+                CFG_DECIMALSEP, DEFAULT_DECIMAL_SEPARATOR);
+        m_thousandsSep = settings.getString(
+                CFG_THOUSANDSSEP, DEFAULT_THOUSANDS_SEPARATOR);
     }
 
     /**
@@ -202,6 +236,8 @@ public class StringToNumberNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_inclCols.saveSettingsTo(settings);
+        settings.addString(CFG_DECIMALSEP, m_decimalSep);
+        settings.addString(CFG_THOUSANDSSEP, m_thousandsSep);
     }
 
     /**
@@ -211,6 +247,23 @@ public class StringToNumberNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_inclCols.validateSettings(settings);
+        String decimalsep = settings.getString(
+                CFG_DECIMALSEP, DEFAULT_DECIMAL_SEPARATOR);
+        String thousandssep = settings.getString(
+                CFG_THOUSANDSSEP, DEFAULT_THOUSANDS_SEPARATOR);
+        if (decimalsep == null || thousandssep == null) {
+            throw new InvalidSettingsException(
+                "Separators must not be null");
+        }
+        if (decimalsep.length() > 1 || thousandssep.length() > 1) {
+            throw new InvalidSettingsException(
+                    "Illegal separator length, expected a single character");
+        }
+            
+        if (decimalsep.equals(thousandssep)) {
+            throw new InvalidSettingsException(
+                    "Decimal and thousands separator must not be the same.");
+        }
     }
 
     /**
@@ -266,30 +319,42 @@ public class StringToNumberNodeModel extends NodeModel {
             m_spec = spec;
             m_parseErrorCount = 0;
         }
-
+        
+        /**
+         * {@inheritDoc}
+         */
         public DataCell[] getCells(final DataRow row) {
             DataCell[] newcells = new DataCell[m_colindices.length];
             for (int i = 0; i < newcells.length; i++) {
                 DataCell dc = row.getCell(m_colindices[i]);
                 // should be a DoubleCell, otherwise copy original cell.
-                if (dc.getType().isCompatible(StringValue.class)
-                        && !dc.isMissing()) {
-                    String s = ((StringValue)dc).getStringValue();
-                    double d = Double.NaN;
+                if (!dc.isMissing()) {
+                    final String s = ((StringValue)dc).getStringValue();
                     try {
-                        d = Double.parseDouble(s);
+                        // remove thousands separator
+                        String corrected = s.replaceAll(m_thousandsSep, "");
+                        if (!".".equals(m_decimalSep)) {
+                            if (corrected.contains(".")) {
+                                throw new NumberFormatException(
+                                        "Invalid floating point number");
+                            }
+                            // replace custom separator with standard
+                            corrected = corrected.replaceAll(m_decimalSep, ".");
+                        }
+                        double d = Double.parseDouble(corrected);
                         newcells[i] = new DoubleCell(d);
                     } catch (NumberFormatException e) {
                         if (m_parseErrorCount == 0) {
-                            m_error = "\'" + s + "\' (RowKey: "
+                            m_error = "'" + s + "' (RowKey: "
                                     + row.getKey().toString() + ", Position: "
                                     + m_colindices[i] + ")";
+                            LOGGER.debug(e.getMessage());
                         }
                         m_parseErrorCount++;
                         newcells[i] = DataType.getMissingCell();
                     }
                 } else {
-                    newcells[i] = dc;
+                    newcells[i] = DataType.getMissingCell();
                 }
             }
             return newcells;
