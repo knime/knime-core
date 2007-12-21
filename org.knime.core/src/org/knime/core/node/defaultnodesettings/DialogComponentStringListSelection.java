@@ -148,37 +148,34 @@ public final class DialogComponentStringListSelection extends DialogComponent {
                 required, visibleRowCount);
     }
     /**
-     * Constructor that puts label and select box into panel.
-     * When the settings are applied, the model
-     * stores all selected strings of the provided list.
+     * Constructor that puts label and select box into panel. When the settings
+     * are applied, the model stores all selected strings of the provided list.
      * The following <code>selectionMode</code> values are allowed:
      * <ul>
-     * <li> <code>ListSelectionModel.SINGLE_SELECTION</code>
-     *   Only one list index can be selected at a time.  In this
-     *   mode the <code>setSelectionInterval</code> and
-     *   <code>addSelectionInterval</code>
-     *   methods are equivalent, and only the second index
-     *   argument is used.
-     * <li> <code>ListSelectionModel.SINGLE_INTERVAL_SELECTION</code>
-     *   One contiguous index interval can be selected at a time.
-     *   In this mode <code>setSelectionInterval</code> and
-     *   <code>addSelectionInterval</code>
-     *   are equivalent.
-     * <li> <code>ListSelectionModel.MULTIPLE_INTERVAL_SELECTION</code>
-     *   In this mode, there's no restriction on what can be selected.
-     *   This is the default.
+     * <li> <code>ListSelectionModel.SINGLE_SELECTION</code> Only one list
+     * index can be selected at a time. In this mode the
+     * <code>setSelectionInterval</code> and <code>addSelectionInterval</code>
+     * methods are equivalent, and only the second index argument is used.
+     * <li> <code>ListSelectionModel.SINGLE_INTERVAL_SELECTION</code> One
+     * contiguous index interval can be selected at a time. In this mode
+     * <code>setSelectionInterval</code> and <code>addSelectionInterval</code>
+     * are equivalent.
+     * <li> <code>ListSelectionModel.MULTIPLE_INTERVAL_SELECTION</code> In
+     * this mode, there's no restriction on what can be selected. This is the
+     * default.
      * </ul>
-     *
+     * 
      * @param stringModel the model that stores all selected strings.
-     * @param label the optional label of the select box.
-     * Set to <code>null</code> for none label. Set an empty
-     * <code>String</code> for a border.
-     * @param list list (not empty) of StringIconOptions (not null) for the select box.
-     * @param selectionMode an integer specifying the type of selections
-     *                         that are permissible
+     * @param label the optional label of the select box. Set to
+     *            <code>null</code> for none label. Set an empty
+     *            <code>String</code> for a border.
+     * @param list list (not empty) of StringIconOptions (not null) for the
+     *            select box.
+     * @param selectionMode an integer specifying the type of selections that
+     *            are permissible
      * @param required if at least one item must be selected
      * @param visibleRowCount the number of visible rows
-     *
+     * 
      * @throws NullPointerException if one of the strings in the list is null
      * @throws IllegalArgumentException if the list is empty or null.
      */
@@ -188,11 +185,16 @@ public final class DialogComponentStringListSelection extends DialogComponent {
             final boolean required, final int visibleRowCount) {
         super(stringModel);
 
-        if ((list == null) || (list.length == 0)) {
+        if (list == null) {
             throw new IllegalArgumentException("Selection list of strings "
-                    + "shouldn't be null or empty.");
+                    + "shouldn't be null.");
         }
         m_required = required;
+        if (m_required && list.length < 1) {
+            throw new IllegalArgumentException("Selection list of strings "
+                    + "shouldn't be empty.");
+        }
+
         if (label != null) {
             getComponentPanel().add(new JLabel(label));
         }
@@ -210,7 +212,16 @@ public final class DialogComponentStringListSelection extends DialogComponent {
         m_selectBox = new JList(m_listModel);
         m_selectBox.setCellRenderer(new StringIconListCellRenderer());
         m_selectBox.setSelectionMode(selectionMode);
-        m_selectBox.setVisibleRowCount(visibleRowCount);
+        final int rowCount;
+        if (visibleRowCount < 0) {
+            //get the default visible row count or the number of available items
+            //if they are less than the default row count
+            rowCount = Math.max(3,
+                    Math.min(m_selectBox.getVisibleRowCount(), list.length));
+        } else {
+            rowCount = visibleRowCount;
+        }
+        m_selectBox.setVisibleRowCount(rowCount);
         final JScrollPane scrollPane = new JScrollPane(m_selectBox);
         getComponentPanel().add(scrollPane);
 
@@ -277,7 +288,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
     private boolean deepEquals(final String[] a1,
             final Object[] a2) {
         if (a1 == null && a2 == null) {
-        	return true;
+            return true;
         }
         if (a1 == null || a2 == null) {
             return false;
