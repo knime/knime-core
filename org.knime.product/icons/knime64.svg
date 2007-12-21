@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="210mm"
+   height="297mm"
+   id="svg1890"
+   sodipodi:version="0.32"
+   inkscape:version="0.44"
+   sodipodi:docbase="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\icons"
+   sodipodi:docname="knime64.svg">
+  <defs
+     id="defs1892" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.9014808"
+     inkscape:cx="239.42367"
+     inkscape:cy="495.89589"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     inkscape:window-width="1024"
+     inkscape:window-height="721"
+     inkscape:window-x="-4"
+     inkscape:window-y="-4" />
+  <metadata
+     id="metadata1895">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       id="rect1871"
+       width="64"
+       height="64"
+       x="200"
+       y="488.36218"
+       style="fill:white"
+       inkscape:export-filename="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\icons\knime64.png"
+       inkscape:export-xdpi="89.999832"
+       inkscape:export-ydpi="89.999832" />
+    <g
+       id="g1939"
+       inkscape:label="Layer 1"
+       transform="matrix(0.41059,0,0,0.410796,95.74454,471.6416)"
+       inkscape:export-filename="D:\UniKN\hades\workspace\de.unikn.knime.workbench.product\icons\knime64.png"
+       inkscape:export-xdpi="89.999832"
+       inkscape:export-ydpi="89.999832">
+      <path
+         sodipodi:nodetypes="ccccccccccc"
+         id="path1293"
+         d="M 258.79162,191.62497 L 404.91401,191.61927 L 331.86493,45.575608 L 289.21015,130.77627 L 319.6777,130.77758 L 319.70321,112.6276 L 350.08264,142.99158 L 319.60119,173.38547 L 319.5082,155.02064 L 276.99744,155.0582 L 258.79162,191.62497 z "
+         style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:black;stroke-width:9.7483654;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         inkscape:export-filename="C:\berthold\UKN\PR\Logos\logo2_alone.png"
+         inkscape:export-xdpi="300.00000"
+         inkscape:export-ydpi="300.00000" />
+    </g>
+  </g>
+</svg>
