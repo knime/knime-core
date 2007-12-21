@@ -1,0 +1,33 @@
+<!--
+====================================================================
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+====================================================================
+-->
+<body>
+Contains all classes necessary to visualize a hierachical clustering result 
+represented by a {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramNode}.
+The {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramPlotter} 
+converts the {@link org.knime.base.node.viz.plotter.dendrogram.DendrogramNode} in a
+{@link org.knime.base.node.viz.plotter.dendrogram.BinaryTree} of 
+{@link org.knime.base.node.viz.plotter.dendrogram.DendrogramPoint}s, which 
+represent the visual model of the hierarchical clustering result. The 
+{@link org.knime.base.node.viz.plotter.dendrogram.DendrogramDrawingPane} 
+inteprets this tree into a dendrogram by adding the horizontal and vertical 
+lines between the node and it's subnodes.
+</body>

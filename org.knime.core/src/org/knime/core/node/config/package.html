@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<!--
+====================================================================
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+====================================================================
+-->
+</head>
+<body>
+Contains a utility class {@link org.knime.core.node.config.Config} to store 
+a general state (i.e. the user settings of all nodes, workflows, prediction 
+models, etc.) in form of key-value pairs. The key is always a string, the value 
+can be of type DataCell, DataType, and almost all generic types, and also another 
+<code>Config</code> object in order to build hierarchical state structures.<br>
+All entries extend {@link org.knime.core.node.config.AbstractConfigEntry},
+which provides a string representation of the value that can be serialized and 
+written out as XML stream to file. 
+</body>
+</html>

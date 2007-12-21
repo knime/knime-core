@@ -1,0 +1,229 @@
+/* ------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+ * ---------------------------------------------------------------------
+ * 
+ * History
+ *   18.06.2007 (thor): created
+ */
+package org.knime.base.node.preproc.stringreplacer;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.knime.base.util.WildcardMatcher;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.StringValue;
+import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+
+/**
+ * This is the model for the string replacer node that does the work.
+ * 
+ * @author Thorsten Meinl, University of Konstanz
+ */
+public class StringReplacerNodeModel extends NodeModel {
+    private final StringReplacerSettings m_settings =
+            new StringReplacerSettings();
+
+    /**
+     * Creates a new StringReplacerNodeModel.
+     */
+    public StringReplacerNodeModel() {
+        super(1, 1);
+    }
+
+    /**
+     * Creates the column rearranger that computes the new cells.
+     * 
+     * @param spec the spec of the input table
+     * @param p the pattern that should be used for finding matches
+     * @return a column rearranger
+     */
+    private ColumnRearranger createRearranger(final DataTableSpec spec,
+            final Pattern p) {
+        DataColumnSpec colSpec;
+        if (m_settings.createNewColumn()) {
+            colSpec =
+                    new DataColumnSpecCreator(m_settings.newColumnName(),
+                            StringCell.TYPE).createSpec();
+        } else {
+            colSpec = spec.getColumnSpec(m_settings.columnName());
+        }
+
+        final int index = spec.findColumnIndex(m_settings.columnName());
+        SingleCellFactory cf = new SingleCellFactory(colSpec) {
+            @Override
+            public DataCell getCell(final DataRow row) {
+                DataCell cell = row.getCell(index);
+                if (cell.isMissing()) {
+                    return cell;
+                }
+
+                Matcher m = p.matcher(((StringValue)cell).getStringValue());
+                if (m_settings.replaceAllOccurrences()) {
+                    return new StringCell(m
+                            .replaceAll(m_settings.replacement()));
+                } else if (m.matches()) {
+                    return new StringCell(m_settings.replacement());
+                } else {
+                    return row.getCell(index);
+                }
+            }
+        };
+
+        ColumnRearranger crea = new ColumnRearranger(spec);
+        if (m_settings.createNewColumn()) {
+            crea.append(cf);
+        } else {
+            crea.replace(cf, m_settings.columnName());
+        }
+
+        return crea;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+            throws InvalidSettingsException {
+        if (inSpecs[0].findColumnIndex(m_settings.columnName()) == -1) {
+            throw new InvalidSettingsException("Selected column '"
+                    + m_settings.columnName()
+                    + "' does not exist in input table");
+        }
+
+        ColumnRearranger crea = createRearranger(inSpecs[0], null);
+        return new DataTableSpec[]{crea.createSpec()};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+            final ExecutionContext exec) throws Exception {
+        exec.setMessage("Replacing");
+        String regex = WildcardMatcher.wildcardToRegex(m_settings.pattern());
+        Pattern p;
+        if (!m_settings.caseSensitive()) {
+            p = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+        } else {
+            p = Pattern.compile(regex);
+        }
+
+        ColumnRearranger crea =
+                createRearranger(inData[0].getDataTableSpec(), p);
+
+        return new BufferedDataTable[]{exec.createColumnRearrangeTable(
+                inData[0], crea, exec)};
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // nothing to do
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        m_settings.loadSettings(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void reset() {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
+        // nothing to do
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_settings.saveSettings(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        StringReplacerSettings s = new StringReplacerSettings();
+        s.loadSettings(settings);
+
+        if (s.createNewColumn() && (s.newColumnName() == null
+                || s.newColumnName().trim().length() == 0)) {
+            throw new InvalidSettingsException(
+                    "No name for the new column given");
+        }
+        if (s.columnName() == null) {
+            throw new InvalidSettingsException("No column selected");
+        }
+        if (s.pattern() == null || s.pattern().length() == 0) {
+            throw new InvalidSettingsException("No pattern given");
+        }
+        if (s.replacement() == null) {
+            throw new InvalidSettingsException("No replacement string given");
+        }
+        
+        if (s.replaceAllOccurrences() && s.pattern().contains("*")) {
+            throw new InvalidSettingsException(
+                    "'*' is not allowed when all occurrences of the "
+                            + "pattern should be replaced");
+        }
+    }
+}

@@ -1,0 +1,32 @@
+<!--
+===============================================================================
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+===============================================================================
+-->
+<body>
+Contains the implementation of a node which writes the content of a data table 
+into an ARFF file. ARFF files are ASCII data files. They consist of a header, 
+specifying the structure and format of the data, and a data section which 
+contains the actual data vectors. The writer creates standard ARFF files, sparse
+ARFF format is not supported yet. There is code in there for sparse file 
+support, but as the reader as of now cannot read sparse files, we don't create
+them either.<br>
+See the <code>org.knime.base.node.io.arffreader</code> package for a 
+detailed ARFF format description.
+</body>

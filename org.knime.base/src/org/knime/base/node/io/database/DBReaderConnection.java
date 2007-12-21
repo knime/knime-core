@@ -1,0 +1,308 @@
+/*
+ * ----------------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+ * ----------------------------------------------------------------------------
+ */
+package org.knime.base.node.io.database;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.RowIterator;
+import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.NodeLogger;
+
+/**
+ * Creates a connection to read from database.
+ * 
+ * @author Thomas Gabriel, University of Konstanz
+ */
+public final class DBReaderConnection implements DataTable {
+
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(DBReaderConnection.class);
+
+    private final DataTableSpec m_spec;
+
+    private final Connection m_conn;
+
+    private final String m_query;
+
+    /**
+     * Create connection to database and read meta info.
+     * 
+     * @param conn a database connection object
+     * @param query SQL query executed to read data
+     * @throws Exception If connection could not established.
+     */
+    public DBReaderConnection(final DBConnection conn, final String query) 
+            throws Exception {
+        m_conn = conn.createConnection();
+        Statement stmt = m_conn.createStatement();
+        m_query = query;
+        ResultSet result = stmt.executeQuery(m_query);
+        m_spec = createTableSpec(result.getMetaData());
+        stmt.close();
+    }
+
+    /**
+     * Closes connection.
+     */
+    public void close() {
+        try {
+            m_conn.close();
+        } catch (SQLException e) {
+            LOGGER.warn("Could not close database connection.", e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public DataTableSpec getDataTableSpec() {
+        return m_spec;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public RowIterator iterator() {
+        try {
+            Statement stmt = m_conn.createStatement();
+            ResultSet result = stmt.executeQuery(m_query);
+            // stmt.close();
+            return new DBRowIterator(m_spec, result);
+        } catch (SQLException e) {
+            LOGGER.error(e);
+            return new DBRowIterator(m_spec, null);
+        }
+    }
+
+    private DataTableSpec createTableSpec(final ResultSetMetaData meta)
+            throws SQLException {
+        int cols = meta.getColumnCount();
+        DataColumnSpec[] cspecs = new DataColumnSpec[cols];
+        for (int i = 0; i < cols; i++) {
+            int dbIdx = i + 1;
+            String name = meta.getColumnName(dbIdx);
+            int type = meta.getColumnType(dbIdx);
+            DataType newType;
+            switch (type) {
+            case Types.INTEGER:
+            case Types.BIT:
+            case Types.BINARY:
+            case Types.BOOLEAN:
+            case Types.VARBINARY:
+            case Types.SMALLINT:
+            case Types.TINYINT:
+            case Types.BIGINT:
+                newType = IntCell.TYPE;
+                break;
+            case Types.FLOAT:
+            case Types.DOUBLE:
+            case Types.NUMERIC:
+            case Types.DECIMAL:
+            case Types.REAL:
+                newType = DoubleCell.TYPE;
+                break;
+            default:
+                newType = StringCell.TYPE;
+            }
+            cspecs[i] = new DataColumnSpecCreator(name, newType).createSpec();
+        }
+        return new DataTableSpec(cspecs);
+    }
+}
+
+/**
+ * RowIterator via a database ResultSet.
+ */
+final class DBRowIterator extends RowIterator {
+
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(DBReaderConnection.class);
+
+    private boolean m_end;
+
+    private final DataTableSpec m_spec;
+
+    private final ResultSet m_result;
+
+    /**
+     * Creates new iterator.
+     * 
+     * @param spec With the given spec.
+     * @param result Underlying ResultSet.
+     */
+    DBRowIterator(final DataTableSpec spec, final ResultSet result) {
+        m_spec = spec;
+        m_result = result;
+        m_end = end();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasNext() {
+        return !m_end;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DataRow next() {
+        DataCell[] cells = new DataCell[m_spec.getNumColumns()];
+        for (int i = 0; i < cells.length; i++) {
+            DataType type = m_spec.getColumnSpec(i).getType();
+            if (type.isCompatible(IntValue.class)) {
+                try {
+                    int integer = m_result.getInt(i + 1);
+                    if (wasNull()) {
+                        cells[i] = DataType.getMissingCell();
+                    } else {
+                        cells[i] = new IntCell(integer);
+                    }
+                } catch (SQLException sqle) {
+                    LOGGER.error("SQL Exception reading Int:", sqle);
+                    cells[i] = DataType.getMissingCell();
+                }
+            } else if (type.isCompatible(DoubleValue.class)) {
+                try {
+                    double dbl = m_result.getDouble(i + 1);
+                    if (wasNull()) {
+                        cells[i] = DataType.getMissingCell();
+                    } else {
+                        cells[i] = new DoubleCell(dbl);
+                    }
+                } catch (SQLException sqle) {
+                    LOGGER.error("SQL Exception reading Double:", sqle);
+                    cells[i] = DataType.getMissingCell();
+                }
+            } else {
+                String s = null;
+                try {
+                    int dbType = m_result.getMetaData().getColumnType(i + 1);
+                    if (dbType == Types.CLOB) {
+                        Clob clob = m_result.getClob(i + 1);
+                        if (wasNull() || clob == null) {
+                            s = null;
+                        } else {
+                            BufferedReader buf =
+                                    new BufferedReader(clob
+                                            .getCharacterStream());
+                            StringBuilder sb = new StringBuilder();
+                            String line;
+                            while ((line = buf.readLine()) != null) {
+                                if (sb.length() > 0) {
+                                    sb.append("\n");
+                                }
+                                sb.append(line);
+                            }
+                            s = sb.toString();
+                        }
+                    } else if (dbType == Types.BLOB) {
+                        Blob blob = m_result.getBlob(i + 1);
+                        if (wasNull() || blob == null) {
+                            s = null;
+                        } else {
+                            InputStream is = blob.getBinaryStream();
+                            BufferedReader buf =
+                                    new BufferedReader(
+                                            new InputStreamReader(is));
+                            StringBuilder sb = new StringBuilder();
+                            String line;
+                            while ((line = buf.readLine()) != null) {
+                                if (sb.length() > 0) {
+                                    sb.append("\n");
+                                }
+                                sb.append(line);
+                            }
+                            s = sb.toString();
+                        }
+                    } else {
+                        s = m_result.getString(i + 1);
+                        if (wasNull()) {
+                            s = null;
+                        }
+                    }
+                } catch (SQLException sqle) {
+                    LOGGER.error("SQL Exception reading String:", sqle);
+                } catch (IOException ioe) {
+                    LOGGER.error("I/O Exception reading String:", ioe);
+                }
+                if (s == null) {
+                    cells[i] = DataType.getMissingCell();
+                } else {
+                    cells[i] = new StringCell(s);
+                }
+            }
+        }
+        int rowId = cells.hashCode();
+        try {
+            rowId = m_result.getRow();
+        } catch (SQLException sqle) {
+            LOGGER.error("SQL Exception:", sqle);
+        }
+        m_end = end();
+        return new DefaultRow(new StringCell("Row_" + rowId), cells);
+    }
+
+    private boolean end() {
+        try {
+            return !m_result.next();
+        } catch (SQLException sqle) {
+            LOGGER.error("SQL Exception:", sqle);
+            return true;
+        }
+    }
+
+    private boolean wasNull() {
+        try {
+            return m_result.wasNull();
+        } catch (SQLException sqle) {
+            LOGGER.error("SQL Exception:", sqle);
+            return true;
+        }
+    }
+
+}

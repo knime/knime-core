@@ -1,0 +1,49 @@
+/*  
+ * -------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+ * -------------------------------------------------------------------
+ * 
+ */
+package org.knime.ext.sun.nodes.script.expression;
+
+/**
+ * Exception that is thrown when the user tries to set fields that are
+ * incompatibel or do not exist.
+ * 
+ * @author Bernd Wiswedel, University of Konstanz
+ */
+public class IllegalPropertyException extends Exception {
+    /**
+     * Creates new exception with given error.
+     * 
+     * @param message the error message
+     */
+    public IllegalPropertyException(final String message) {
+        super(message);
+    }
+
+    /**
+     * @param message the error message to print
+     * @param cause the cause
+     */
+    public IllegalPropertyException(
+            final String message, final Throwable cause) {
+        super(message, cause);
+    }
+}

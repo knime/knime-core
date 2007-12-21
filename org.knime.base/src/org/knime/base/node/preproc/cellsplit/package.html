@@ -1,0 +1,37 @@
+<!--
+ * ------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+ * -------------------------------------------------------------------
+-->
+<body>
+	Contains the implementation of a node that splits (and replaces) a values in a column 
+	into multiple new ones. It splits the content of a selected column depending
+	on a specified delimiter and puts the resulting parts into new columns.<br>
+	The actual work of splitting the value and creating the new data cells is
+	done in the {@link org.knime.base.node.preproc.cellsplit.CellSplitterCellFactory},
+	that is used by the column rearranger table, created during the NodeModel's execute
+	({@link org.knime.base.node.preproc.cellsplit.CellSplitterNodeModel}).<br>
+	The implementation uses a settings object 
+	{@link org.knime.base.node.preproc.cellsplit.CellSplitterUserSettings} to
+	store the user settings and to transfer them between the different 
+	objects (this object takes care of saving and loading them into KNIME's
+	NodeSettings object). This object is extended to
+	{@link org.knime.base.node.preproc.cellsplit.CellSplitterSettings} to
+	hold (and transfer) settings like guessed number of columns and column types.
+</body>

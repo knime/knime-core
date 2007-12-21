@@ -1,0 +1,49 @@
+<!--
+====================================================================
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+====================================================================
+-->
+<body>
+	<p>
+		Implementation of a <code>DataContainer</code>. 
+	</p>
+	<p>
+		A <code>DataContainer</code> is a buffer that you can use to fill a
+		data table. Use this class when you create much (and also just little)
+		data and you don't want to bother about a data structure that keeps the
+		calculated data. A <code>DataContainer</code> will take care of it, 
+		it will memorize the rows that you've added and also buffer it to the 
+		disk when the data gets large so that memory gets a bottleneck. 
+		Typically, you write code like this:
+	</p>
+	<pre>
+  DataContainer container = new DataContainer();
+  container.open(aDataTableSpec);
+  for (...) {
+    DataRow newRow = calculateRow();
+    container.add(newRow)
+  }
+  container.close();
+  DataTable result = container.getTable();
+	</pre>
+	<p>This package contains also implementations for easy storage of 
+	datatables whose columns have changed. For further details on how to use
+	them, refer to the description of <a href="../../node/NodeModel.html">
+	NodeModel</a> and its execute method.
+</body>

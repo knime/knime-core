@@ -1,0 +1,32 @@
+<!--
+ * ------------------------------------------------------------------
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2007
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+ * -------------------------------------------------------------------
+-->
+<body>
+<p>
+	Node that replaces the content of a selected column by dictionary entries. 
+	The dictionary is a plain text file whereby lines in the file correspond to 
+	dictionary entries. Each row is of the form:
+</p>
+<pre>  value, key1, key2, ...</pre>
+<p>The first element <i>value<i> is the replacement string, the following <i>key</i>
+entries are the keys against which the content of the cell is matched. Only 
+perfect matches count, non matching cells will be left untouched.
+</body>

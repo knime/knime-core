@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+   <extension
+         point="org.knime.workbench.repository.nodes">
+         <node
+            category-path="/timeseries"
+            factory-class="org.knime.timeseries.node.display.barchart.BarChartNodeFactory"
+            id="org.knime.dev.nodes.timeseries.display.barchart.BarChartNodeFactory"/>
+         <node
+            category-path="/timeseries"
+            factory-class="org.knime.timeseries.node.display.timeplot.TimePlotterNodeFactory"
+            id="org.knime.dev.nodes.timeseries.display.timeplot.TimePlotterNodeFactory"/>
+        <node
+            category-path="/timeseries"
+            factory-class="org.knime.timeseries.node.Segmentation.PatternsBetweenEvents.PatternsBetweenEventsNodeFactory"
+            id="org.knime.dev.nodes.timeseries.Segmentation.PatternsBetweenEvents.PatternsBetweenEventsNodeFactory"/>
+        <node
+            category-path="/timeseries"
+            factory-class="org.knime.timeseries.node.Segmentation.TSBetweenEvents.TSBetweenEventsNodeFactory"
+            id="org.knime.dev.nodes.timeseries.Segmentation.TSBetweenEvents.TSBetweenEventsNodeFactory"/>
+       <node
+            category-path="/timeseries"
+            factory-class="org.knime.timeseries.node.Segmentation.OneSampleperDay.OneSampleperDayNodeFactory"
+            id="org.knime.dev.nodes.timeseries.Segmentation.ExtractOneSampleperDay.ExtractOneSampleperDayNodeFactory"/>
+       <node
+            category-path="/timeseries"
+            factory-class="org.knime.timeseries.node.Segmentation.ExtractFromTo.ExtractFromToNodeFactory"
+            id="org.knime.dev.nodes.timeseries.Segmentation.ExtractFromTo.ExtractFromToNodeFactory"/>
+      <node
+            category-path="/timeseries"
+            factory-class="org.knime.timeseries.node.MA.MovingAverageNodeFactory"
+            id="org.knime.dev.nodes.timeseries.MovingAverageNodeFactory"/>
+      <node
+            category-path="/timeseries"
+            factory-class="org.knime.timeseries.node.String2TimeStamp.String2DateNodeFactory"
+            id="org.knime.dev.nodes.timeseries.String2DateNodeFactory"/>
+   </extension>
+
+   <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            after="meta"
+            description="Time Series Utilities"
+            icon="icons/category_time.png"
+            level-id="timeseries"
+            name="Time Series"
+            path="/"/>
+   </extension>
+   
+</plugin>
