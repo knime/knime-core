@@ -27,10 +27,10 @@ import java.util.ResourceBundle;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.osgi.framework.BundleContext;
-
 import org.knime.workbench.core.WorkbenchErrorLogger;
+import org.osgi.framework.BundleContext;
 
 /**
  * Repository Plugin.
@@ -193,6 +193,13 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
         
         // create the registry if needed
         if (m_imageRegistry == null) {
+            // if the imageRegistry is not created within the UI thread 
+            // then the UI thread has to be invoked with Display.getDefault();
+            // this has to be done when KNIME is started without the eclipse GUI 
+            if (Display.getCurrent() == null) {
+                Display.getDefault();
+                assert Display.getCurrent() != null;
+            }
             m_imageRegistry = new ImageRegistry();
         }
         // try to lookup previously cached image
