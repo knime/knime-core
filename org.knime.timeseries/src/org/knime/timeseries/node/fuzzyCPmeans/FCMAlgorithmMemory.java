@@ -1,27 +1,5 @@
-/* 
- * -------------------------------------------------------------------
- * This source code, its documentation and all appendant files
- * are protected by copyright law. All rights reserved.
- *
- * Copyright, 2003 - 2007
- * University of Konstanz, Germany
- * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
- * and KNIME GmbH, Konstanz, Germany
- *
- * You may not modify, publish, transmit, transfer or sell, reproduce,
- * create derivative works from, distribute, perform, display, or in
- * any way exploit any of the content, in whole or in part, except as
- * otherwise expressly permitted in writing by the copyright owner or
- * as specified in the license file distributed with this product.
- *
- * If you have any questions please contact the copyright holder:
- * website: www.knime.org
- * email: contact@knime.org
- * -------------------------------------------------------------------
- * 
- * History
- *   17.07.2006 (cebron): created
- */
+
+
 package org.knime.timeseries.node.fuzzyCPmeans;
 
 import org.knime.core.data.DataRow;
@@ -31,11 +9,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 
-/**
- * The Fuzzy c-means algorithm.
- * 
- * @author Nicolas Cebron, University of Konstanz
- */
+
 public class FCMAlgorithmMemory extends FCCAlgorithm {
   
     /*
@@ -263,8 +237,9 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
      * Helper method for the quadratic distance between two double-arrays.
      * 
      */
-    private double getDistance(final double[] vector1, final double[] vector2,int i,int j) {
+    private double getDistance(final double[] vector1, final double[] vector2,int j,int i) {
     	DFFT.calcDistance(vector1, vector2);
+    	System.out.println("i="+i+" j="+j+" o="+DFFT.getOffset()+" d="+DFFT.getDistValue());
     	m_offsets[i][j] = DFFT.getOffset();
         return DFFT.getDistValue();
     }
@@ -280,8 +255,8 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
         double[][] weightMatrix = getweightMatrix();
         double fuzzifier = getFuzzifier();
         boolean noise = isNoise();
-        double[] sumNumerator = new double[dimension];
-        double[] sumDenominator = new double[dimension];
+        double[] sumNumerator = new double[3*dimension];
+        double[] sumDenominator = new double[3*dimension];
         double sumupdate = 0;
         // for each cluster center
         for (int c = 0; c < nrClusters; c++) {
@@ -291,69 +266,42 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
                     break;
                 }
             }
-            for (int j = 0; j < dimension; j++) {
+            for (int j = 0; j < sumNumerator.length; j++) {
                 sumNumerator[j] = 0;
                 sumDenominator[j] = 0;
             }
 
-            int i = 0;
-           for (int currentRow = 0; currentRow < nrRows; currentRow++) {
+            for (int currentRow = 0; currentRow < nrRows; currentRow++) {
                 double[] row = data[currentRow];
+				final int o = m_offsets[currentRow][c];
+				
                 // for all attributes in X
-				final int o = m_offsets[c][i];
-				if (o>=0) { // offset >= 0
-					// Mittelwert  +-------------+
-					// Offset      +------+
-					// Zeitreihe 2        +-----------+
-					for (int j=0;j<dimension-o;++j) {
-						sumNumerator[o+j] += Math.pow(weightMatrix[i][c],  fuzzifier)
-                        * row[j];
-						sumDenominator[o+j] += Math.pow(weightMatrix[i][c], fuzzifier);
-						//datasum.inc(o+i,j, weightdata.get(i,j));
-						//weightsum.inc(o+i,j, weight.get(i,j));
-					}
-				} else { // offset < 0
-					// Mittelwert        +-------------+
-					// Offset         +--+
-					// Zeitreihe 2    +-----------+
-					for (int j=0;j<dimension+o;++j) {
-						sumNumerator[j] += Math.pow(weightMatrix[i][c],  fuzzifier)
-                        * row[j-o];
-						sumDenominator[j] += Math.pow(weightMatrix[i][c], fuzzifier);
-						//datasum.inc(i,j, weightdata.get(i-o,j));
-						//weightsum.inc(i,j, weight.get(i-o,j));
-					}				
-				}
+				for (int i=0;i<dimension;++i) {
+					sumNumerator[dimension+i+o] += Math.pow(weightMatrix[currentRow][c],fuzzifier)*row[i];
+					sumDenominator[dimension+i+o] += Math.pow(weightMatrix[currentRow][c], fuzzifier);
+				}				
 
-                i++;
                 if (noise && isCalculateDelta()) {
                     sumupdate += getDistance(clusters[c], row, c, currentRow);
                 }
             } // end while for all datarows sum up
 
-           double xnorm  =0;
-         for (int j = 0; j < dimension; j++) {
-        	 double newValue = sumNumerator[j] / sumDenominator[j];
-         	//addTotalChange(Math.abs(clusters[c][j] - newValue));
-         	//setClusterValue(c, j, newValue);
-         	xnorm += newValue*newValue;
-         }
-         xnorm = Math.sqrt(xnorm);
-           
-           double norm  =0;
-           double xnorm2=0;
+			// finde die beste Position fuer die Übernahme als Prototyp
+			double wsum = 0;
+			for (int i=0;i<dimension;++i) wsum+=sumDenominator[i];
+			double maxsum = wsum;
+			int maxpos = 0;
+			for (int i=1;i<dimension*2;++i) {
+				wsum += sumDenominator[dimension+i-1]-sumDenominator[i-1];
+				if (wsum>maxsum) { maxsum = wsum; maxpos = i; }
+			}
+			
+			// Übernahme           
            for (int j = 0; j < dimension; j++) {
-           	norm += sumNumerator[j]*sumNumerator[j];
-           }
-           norm = Math.sqrt(norm);
-           for (int j = 0; j < dimension; j++) {
-             double newValue = sumNumerator[j] / norm;
+             double newValue = sumNumerator[maxpos+j]/sumDenominator[maxpos+j];
              addTotalChange(Math.abs(clusters[c][j] - newValue));
              setClusterValue(c, j, newValue);
-          	xnorm2 += newValue*newValue;
            }
-           xnorm2 = Math.sqrt(xnorm2);
-           System.out.println(xnorm2);
         }
 
         /*
