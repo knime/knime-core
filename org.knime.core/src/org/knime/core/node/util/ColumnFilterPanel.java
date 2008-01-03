@@ -266,7 +266,7 @@ public class ColumnFilterPanel extends JPanel {
                 15));
         inclSearchPanel.add(m_searchFieldIncl, BorderLayout.CENTER);
         inclSearchPanel.add(m_searchButtonIncl, BorderLayout.EAST);
-        m_markAllHitsIncl = new JCheckBox("Select all sarch hits");
+        m_markAllHitsIncl = new JCheckBox("Select all search hits");
         ActionListener actionListenerAllIncl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_inclList.clearSelection();
@@ -308,7 +308,7 @@ public class ColumnFilterPanel extends JPanel {
         exclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
         exclSearchPanel.add(m_searchFieldExcl, BorderLayout.CENTER);
         exclSearchPanel.add(m_searchButtonExcl, BorderLayout.EAST);
-        m_markAllHitsExcl = new JCheckBox("Highlight all search hits");
+        m_markAllHitsExcl = new JCheckBox("Select all search hits");
         ActionListener actionListenerAllExcl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_exclList.clearSelection();
