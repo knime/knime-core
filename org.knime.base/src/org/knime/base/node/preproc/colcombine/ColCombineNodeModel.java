@@ -128,8 +128,7 @@ public class ColCombineNodeModel extends NodeModel {
         // ", " -> "," 
         // "  " -> "  " (do not let the resulting string be empty)
         // " bla bla " -> "bla bla"
-        final String delimTrim = m_delimString.trim().length() == 0 
-            ? m_delimString : m_delimString.trim();
+        final String delimTrim = trimDelimString(m_delimString);
         result.append(new SingleCellFactory(append) {
            @Override
             public DataCell getCell(final DataRow row) {
@@ -154,39 +153,42 @@ public class ColCombineNodeModel extends NodeModel {
      */
     private String handleContent(final String[] cellContents,
             final String delimTrim) {
+        
         StringBuilder b = new StringBuilder();
+        
         for (int i = 0; i < cellContents.length; i++) {
+        
             b.append(i > 0 ? delimTrim : "");
             String s = cellContents[i];
-            boolean isNeedingHandling = m_isQuotingAlways
-                    || s.contains(delimTrim)
-                    || s.contains(Character.toString(m_quoteChar));
-            if (s.contains(Character.toString(m_quoteChar)) 
-                    || (isNeedingHandling 
-                            && s.contains(Character.toString('\\')))) {
-                StringBuilder temp = new StringBuilder(s.length() + 20);
-                for (int j = 0; j < s.length(); j++) {
-                    char tempChar = s.charAt(j);
-                    if (tempChar == m_quoteChar 
-                            || (isNeedingHandling && tempChar == '\\')) {
-                        temp.append('\\');
-                    }
-                    temp.append(tempChar);
-                }
-                s = temp.toString();
+            
+            if (m_isQuoting) {
+                if (m_isQuotingAlways
+                        || (delimTrim.length() > 0 && s.contains(delimTrim))
+                        || s.contains(Character.toString(m_quoteChar))) {
+                    // quote the cell content
+                    b.append(m_quoteChar);
 
+                    for (int j = 0; j < s.length(); j++) {
+                        char tempChar = s.charAt(j);
+                        if (tempChar == m_quoteChar || tempChar == '\\') {
+                            b.append('\\');
+                        }
+                        b.append(tempChar);
+                    }
+
+                    b.append(m_quoteChar);
+                } else {
+                    b.append(s);
+                }
+            } else {
+                // replace occurrences of the delimiter
+                if (delimTrim.length() > 0) {
+                    b.append(s.replace(delimTrim, m_replaceDelimString));
+                } else {
+                    b.append(s);
+                }
             }
-            if (isNeedingHandling && !m_isQuoting) {
-                s = s.replace(m_delimString, m_replaceDelimString);
-                isNeedingHandling = false;
-            }
-            if (isNeedingHandling) {
-                b.append(m_quoteChar);
-            }
-            b.append(s);
-            if (isNeedingHandling) {
-                b.append(m_quoteChar);
-            }
+
         }
         return b.toString();
     }
@@ -239,6 +241,11 @@ public class ColCombineNodeModel extends NodeModel {
                     "Name of new column must not be empty");
         }
         String delim = settings.getString(CFG_DELIMITER_STRING);
+        if (delim == null) {
+            throw new InvalidSettingsException("Delimiter must not be null");
+        }
+        delim = trimDelimString(delim);
+        
         boolean isQuote = settings.getBoolean(CFG_IS_QUOTING);
         if (isQuote) {
             char quote = settings.getChar(CFG_QUOTE_CHAR);
@@ -254,7 +261,7 @@ public class ColCombineNodeModel extends NodeModel {
             settings.getBoolean(CFG_IS_QUOTING_ALWAYS);
         } else {
             String replace = settings.getString(CFG_REPLACE_DELIMITER_STRING);
-            if (replace.contains(delim)) {
+            if ((delim.length() > 0) && (replace.contains(delim))) {
                 throw new InvalidSettingsException("Replacement string \""
                         + replace + "\" must not contain delimiter string \""
                         + delim + "\"");
@@ -276,4 +283,18 @@ public class ColCombineNodeModel extends NodeModel {
             CanceledExecutionException {
     }
 
+
+    /**
+     * ', ' gets ','. 
+     * ' ' gets ' ' (do not let the resulting string be empty)
+     * ' blah blah ' gets 'blah blah'
+     * 
+     * @param delimString string to trim
+     * @return the trimmed string
+     */
+    static String trimDelimString(final String delimString) {
+        return delimString.trim().length() == 0 ? delimString : delimString
+                .trim();
+
+    }
 }
