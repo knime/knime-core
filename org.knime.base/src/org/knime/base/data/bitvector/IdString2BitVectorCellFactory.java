@@ -61,6 +61,13 @@ public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
     
     private boolean m_wasSuccessful = false;
 
+    /**
+     * 
+     * @param maxPos the actual length of the bit set - the max position
+     */
+    public void setMaxPos(final int maxPos) {
+        m_maxPos = maxPos;
+    }
 
     /**
      * {@inheritDoc}
@@ -87,7 +94,6 @@ public class IdString2BitVectorCellFactory extends BitVectorColumnCellFactory {
             String[] numbers = toParse.split("\\s");
             for (int i = 0; i < numbers.length; i++) {
                 int pos = Integer.parseInt(numbers[i].trim());
-                m_maxPos = Math.max(m_maxPos, pos);
                 if (pos < 0) {
                     return DataType.getMissingCell(); 
                 }

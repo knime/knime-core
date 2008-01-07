@@ -46,6 +46,8 @@ public class BitString2BitVectorCellFactory extends BitVectorColumnCellFactory {
 
     private int m_nrOfNotSetBits = 0;
 
+    private boolean m_hasPrintedWarning = false;
+    
     private boolean m_wasSuccessful = false;
 
     /**
@@ -65,7 +67,8 @@ public class BitString2BitVectorCellFactory extends BitVectorColumnCellFactory {
     @Override
     public DataCell getCell(final DataRow row) {
         incrementNrOfRows();
-        BitSet bitSet = new BitSet();
+        BitSet bitSet;
+        String bitString;
         DataCell cell = row.getCell(getColumnIndex());
         if (!cell.getType().isCompatible(StringValue.class)) {
             LOGGER.warn(cell + " is not a String! "
@@ -74,7 +77,7 @@ public class BitString2BitVectorCellFactory extends BitVectorColumnCellFactory {
         } else if (cell.isMissing()) {
             return DataType.getMissingCell();
         } else {
-            String bitString = ((StringValue)cell).getStringValue();
+            bitString = ((StringValue)cell).getStringValue();
             bitSet = new BitSet(bitString.length());
             int pos = 0;
             int numberOf0s = 0;
@@ -88,8 +91,15 @@ public class BitString2BitVectorCellFactory extends BitVectorColumnCellFactory {
                     bitSet.set(pos++);
                     numberOf1s++;
                 } else {
-                    LOGGER.warn("Found invalid character: " + c
-                            + ". Returning missing cell!");
+                    if (m_hasPrintedWarning) {
+                        LOGGER.debug("Found invalid character: " + c
+                                + ". Returning missing cell!");
+                    } else {
+                        m_hasPrintedWarning = true;
+                        LOGGER.warn("Found invalid character: " + c
+                                + ". Returning missing cell!"
+                                + " (Suppress further warnings!)");
+                    }
                     return DataType.getMissingCell();
 
                 }
@@ -98,7 +108,7 @@ public class BitString2BitVectorCellFactory extends BitVectorColumnCellFactory {
             m_nrOfSetBits += numberOf1s;
         }
         m_wasSuccessful = true;
-        return new BitVectorCell(bitSet, bitSet.size());
+        return new BitVectorCell(bitSet, bitString.length());
     }
 
     /**

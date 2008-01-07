@@ -43,6 +43,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataContainer;
@@ -331,8 +332,52 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
             throws CanceledExecutionException, InvalidSettingsException {
         ColumnRearranger c = createColumnRearranger(data.getDataTableSpec(),
                 stringColIndex);
-        BufferedDataTable out = exec.createColumnRearrangeTable(data, c, exec);
+        ExecutionMonitor creationExec = exec;
+        if (m_type.equals(STRING_TYPES.ID)) {
+            ExecutionMonitor scanExec = exec.createSubProgress(0.5);
+            creationExec = exec.createSubProgress(0.5);
+            exec.setMessage("preparing");
+            int maxPos = scanMaxPos(data, scanExec);
+            ((IdString2BitVectorCellFactory)m_factory).setMaxPos(maxPos);
+        }
+        exec.setMessage("creating output");
+        BufferedDataTable out = exec.createColumnRearrangeTable(data, c, 
+                creationExec);
         return new BufferedDataTable[]{out};
+    }
+    
+    private int scanMaxPos(final BufferedDataTable data, 
+            final ExecutionMonitor exec) {
+        int maxPos = Integer.MIN_VALUE;
+        int cellIdx = data.getDataTableSpec().findColumnIndex(m_stringColumn);
+        int nrRows = data.getRowCount();
+        int currRow = 0;
+        for (DataRow row : data) {
+            currRow++;
+            exec.setProgress((double)currRow / (double)nrRows, 
+                    "scanning row " + currRow);
+            DataCell cell = row.getCell(cellIdx);
+            if (cell.isMissing()) {
+                continue;
+            }
+            if (!cell.getType().isCompatible(StringValue.class)) {
+                throw new RuntimeException("Found incompatible type in row " 
+                + row.getKey().getId());
+            }
+            String toParse = ((StringValue)cell).getStringValue();
+            String[] numbers = toParse.split("\\s");
+            for (int i = 0; i < numbers.length; i++) {
+                int pos = -1;
+                try {
+                    pos = Integer.parseInt(numbers[i].trim());
+                    maxPos = Math.max(maxPos, pos);            
+                } catch (NumberFormatException nfe) { 
+                    // nothing to do here
+                    // same exception will be logged from cell factory
+                }
+            }
+        }
+        return maxPos + 1;
     }
     
     private ColumnRearranger createColumnRearranger(final DataTableSpec spec, 
@@ -407,9 +452,11 @@ public class BitVectorGeneratorNodeModel extends NodeModel {
                 throw new InvalidSettingsException("No numeric column found");
             }
         } else {
-            if (!spec.containsName(m_stringColumn)) {
-                throw new InvalidSettingsException("Selected column "
-                        + m_stringColumn + " not in the input specs");
+            if (!spec.containsName(m_stringColumn) 
+                    || !(spec.getColumnSpec(m_stringColumn).getType()
+                    .isCompatible(StringValue.class))) {
+                throw new InvalidSettingsException("Selected string column "
+                        + m_stringColumn + " not in the input spec");
             }
         }
         if (m_fromString) {
