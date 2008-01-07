@@ -25,6 +25,7 @@
 package org.knime.core.util;
 
 import java.io.File;
+import java.util.Arrays;
 
 import javax.swing.filechooser.FileFilter;
 
@@ -41,10 +42,16 @@ public class SimpleFileFilter extends FileFilter {
      * matching the given extensions.
      * 
      * @param exts allowed extensions
+     * @throws NullPointerException if the extensions array or one of its 
+     *          elements is null
      */
     public SimpleFileFilter(final String... exts) {
         if (exts == null) {
             throw new NullPointerException("Extensions must not be null");
+        }
+        if (Arrays.asList(exts).contains(null)) {
+            throw new NullPointerException("Extensions must not contain null"
+                + " elements: " + Arrays.toString(exts));
         }
         m_validExtensions = exts;
     }
@@ -60,7 +67,7 @@ public class SimpleFileFilter extends FileFilter {
             }
             String fileName = f.getName();
             for (String ext : m_validExtensions) {
-                if (fileName.toLowerCase().endsWith(ext)) {
+                if (fileName.toLowerCase().endsWith(ext.toLowerCase())) {
                     return true;
                 }
             }
