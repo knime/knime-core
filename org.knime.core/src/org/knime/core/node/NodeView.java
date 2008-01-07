@@ -31,7 +31,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
@@ -40,8 +39,9 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
+
+import org.knime.core.node.util.ViewUtils;
 
 /**
  * Node view base class which implements the basic and common window properties.
@@ -123,13 +123,14 @@ public abstract class NodeView {
     private boolean m_alwaysOnTop = false;
 
     /**
-     * This class sends property events when the status changes. 
-     */ 
+     * This class sends property events when the status changes.
+     */
     public static final String PROP_CHANGE_CLOSE = "nodeview_close";
-    /* TODO
-     * So far, the very only possible listener is the EmbeddedNodeView that is 
-     * informed when the view finally closes (e.g. because the node was 
-     * deleted). Once the member m_frame is deleted from this class, the frame 
+
+    /*
+     * TODO So far, the very only possible listener is the EmbeddedNodeView that
+     * is informed when the view finally closes (e.g. because the node was
+     * deleted). Once the member m_frame is deleted from this class, the frame
      * will also be a potential listener.
      */
 
@@ -161,15 +162,18 @@ public abstract class NodeView {
             m_frame.setIconImage(KNIMEConstants.KNIME16X16.getImage());
         }
         m_frame.setBackground(COLOR_BACKGROUND);
-        m_frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+        // DO_NOTHING sends a windowClosing to window listeners
+        m_frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         m_frame.addWindowListener(new WindowAdapter() {
+            /**
+             * {@inheritDoc}
+             */
             @Override
-            public void windowClosed(final WindowEvent e) {
-                onClose();
-                m_nodeModel.unregisterView(NodeView.this);
+            public void windowClosing(final WindowEvent e) {
+                // triggered when user clicks [x] to close window
+                closeView();
             }
         });
-
         // creates menu item to close this view
         JMenuBar menuBar = new JMenuBar();
         JMenu menu = new JMenu("File");
@@ -181,8 +185,8 @@ public abstract class NodeView {
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent event) {
 
-                boolean selected = ((JCheckBoxMenuItem)event.getSource())
-                        .isSelected();
+                boolean selected =
+                        ((JCheckBoxMenuItem)event.getSource()).isSelected();
                 m_alwaysOnTop = selected;
                 m_frame.setAlwaysOnTop(m_alwaysOnTop);
             }
@@ -197,7 +201,7 @@ public abstract class NodeView {
         item.setMnemonic('C');
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent event) {
-                m_frame.dispose();
+                closeView();
             }
         });
         menu.add(item);
@@ -212,11 +216,7 @@ public abstract class NodeView {
         // set a dummy component to get the default size
         setShowNODATALabel(true);
         setComponent(m_noDataComp);
-
-        // after view has been created: register the view with the model
-        m_nodeModel.registerView(this);
-
-    } // NodeView(NodeModel,String)
+    }
 
     /**
      * Get reference to underlying <code>NodeModel</code>. Access this if
@@ -258,39 +258,22 @@ public abstract class NodeView {
      */
     final void callModelChanged() {
         synchronized (m_nodeModel) {
-            final Runnable run = new Runnable() {
-                public void run() {
-                    // set new component into derived view
-                    setComponent(m_comp);
-                }
-            };
-            // if event dispatch thread, run directly
-            if (SwingUtilities.isEventDispatchThread()) {
-                run.run();
-            } else {
-                try {
-                    // otherwise queue into event dispatch thread
-                    SwingUtilities.invokeAndWait(run);
-                } catch (InvocationTargetException ite) {
-                    m_logger.error("Exception during view update", ite);
-                } catch (InterruptedException ie) {
-                    m_logger.error(Thread.currentThread() 
-                            + " was interrupted", ie);
-                }
-            }
+
+            setComponent(m_comp);
+            
             try {
                 // CALL abstract model changed
-                modelChanged();   
+                modelChanged();
             } catch (NullPointerException npe) {
                 m_logger.coding("NodeView.modelChanged() causes "
-                       + "NullPointerException during notification of a "
-                       + "changed model, reason: " + npe.getMessage(), npe);
+                        + "NullPointerException during notification of a "
+                        + "changed model, reason: " + npe.getMessage(), npe);
             } catch (Exception e) {
                 m_logger.error("NodeView.modelChanged() causes "
-                       + "Exception during notification of a changed "
-                       + "model, reason: " + e.getMessage(), e);
+                        + "Exception during notification of a changed "
+                        + "model, reason: " + e.getMessage(), e);
             } finally {
-                // repaint and pack if the view has not been opened yet or 
+                // repaint and pack if the view has not been opened yet or
                 // the underlying view component was added
                 // ensured to happen in the EDT thread
                 relayoutFrame(!m_wasOpened || m_componentSet);
@@ -300,8 +283,9 @@ public abstract class NodeView {
 
     /**
      * Method is invoked when the underlying <code>NodeModel</code> has
-     * changed. Also the HiLightHandler may be changed, as well as the
-     * <code>NodeModel</code> content may be not available.
+     * changed. Also the HiLightHandler may have changed. Note, the
+     * <code>NodeModel</code> content may be not available. Be sure to modify
+     * GUI components only in the EventDispatchThread.
      */
     protected abstract void modelChanged();
 
@@ -319,13 +303,18 @@ public abstract class NodeView {
     }
 
     /**
-     * Invoked when the window has been closed. Unregister
-     * <code>HiLiteListeners</code>. Dispose internal members.
+     * Invoked when the window is about to be closed. Unregister
+     * <code>HiLiteListeners</code>. Dispose internal members. <br />
+     * This method is the first to be called on a close request (right after the
+     * view is unregistered from the {@link NodeModel}).
      */
     protected abstract void onClose();
 
     /**
      * Invoked when the window has been opened. Register property listeners.
+     * <br />
+     * This method is called last on view construction - right before the
+     * components are made visible. It is not called on re-opening.
      */
     protected abstract void onOpen();
 
@@ -341,7 +330,8 @@ public abstract class NodeView {
     /**
      * Initializes the view before opening.
      */
-    private void preOpenView() {
+    private void callOpenView() {
+        onOpen();
         m_nodeModel.registerView(this);
         callModelChanged();
         if (!m_wasOpened) { // if the view was already visible
@@ -365,9 +355,7 @@ public abstract class NodeView {
      */
     public final Component openViewComponent() {
         // init
-        preOpenView();
-        // since the frame is not opened, we must call this by hand
-        onOpen();
+        callOpenView();
         // return content pane
         return m_frame.getContentPane();
     }
@@ -379,24 +367,17 @@ public abstract class NodeView {
      */
     final void openView() {
         // init
-        preOpenView();
-        // inform derived class
-        onOpen();
+        callOpenView();
         // show frame, make sure to do this in EDT (GUI related task)
         Runnable runner = new Runnable() {
             public void run() {
-                m_frame.setVisible(true); // triggers WindowEvent 'Opened' which
-                // brings the frame to front
+                m_frame.setVisible(true);
                 m_frame.toFront();
             }
         };
-        if (SwingUtilities.isEventDispatchThread()) {
-            runner.run();
-        } else {
-            // do not use invokeAndWait here: caused deadlocks (apparently)
-            // in native code under windows
-            SwingUtilities.invokeLater(runner);
-        }
+        // do not use invokeAndWait here: caused deadlocks (apparently)
+        // in native code under windows
+        ViewUtils.runOrInvokeLaterInEDT(runner);
     }
 
     /**
@@ -409,16 +390,16 @@ public abstract class NodeView {
      * (if available, i.e. when views are embedded in eclipse).
      */
     public final void closeView() {
-        onClose();
         m_nodeModel.unregisterView(this);
-        if (m_frame != null) {
-            m_frame.getContentPane()
-                    .firePropertyChange(PROP_CHANGE_CLOSE, 0, 1);
-            // this will trigger a windowClosed event
-            // (listener see above) and call closeViewComponent()
-            m_frame.setVisible(false);
-            m_frame.dispose();
-        }
+        onClose();
+        m_frame.getContentPane().firePropertyChange(PROP_CHANGE_CLOSE, 0, 1);
+        Runnable runner = new Runnable() {
+            public void run() {
+                m_frame.setVisible(false);
+                m_frame.dispose();
+            }
+        };
+        ViewUtils.invokeAndWaitInEDT(runner);
     }
 
     /**
@@ -426,52 +407,66 @@ public abstract class NodeView {
      * size.
      */
     private void setLocation() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension size = m_frame.getSize();
-        m_frame.setBounds(Math.max(0, (screenSize.width - size.width) / 2),
-                Math.max(0, (screenSize.height - size.height) / 2), Math.min(
+        Runnable runner = new Runnable() {
+            public void run() {
+                Dimension screenSize =
+                        Toolkit.getDefaultToolkit().getScreenSize();
+                Dimension size = m_frame.getSize();
+                m_frame.setBounds(Math.max(0,
+                        (screenSize.width - size.width) / 2), Math.max(0,
+                        (screenSize.height - size.height) / 2), Math.min(
                         screenSize.width, size.width), Math.min(
                         screenSize.height, size.height));
+            }
+        };
+        ViewUtils.invokeAndWaitInEDT(runner);
     }
 
     /**
      * @return Checks whether the view is open or not.
      */
     protected final boolean isOpen() {
+        // broken if view is opened via openViewComponent
         return m_frame.isVisible();
     }
-    
+
     /**
-     * Set a new name for this view. The title is updated to the given title. 
-     * If <code>newName</code> is <code>null</code> the new title is 
-     * <i>base name - &lt; no title &gt; </i>.
+     * Set a new name for this view. The title is updated to the given title. If
+     * <code>newName</code> is <code>null</code> the new title is <i>base
+     * name - &lt; no title &gt; </i>.
      * 
      * @param newName The new title to be set.
      */
     protected final void setViewTitle(final String newName) {
-        if (newName == null) {
-            m_frame.setTitle(getViewName() + " - <no title>");
-        } else {
-            m_frame.setTitle(newName);
-        }
+        Runnable runner = new Runnable() {
+            public void run() {
+                if (newName == null) {
+                    m_frame.setTitle(getViewName() + " - <no title>");
+                } else {
+                    m_frame.setTitle(newName);
+                }
+            }
+        };
+        ViewUtils.invokeAndWaitInEDT(runner);
     }
-    
+
     /**
      * @return The current view's title.
      */
     public final String getViewTitle() {
         return m_frame.getTitle();
     }
-    
+
     /**
-     * Sets the given name as frame name and title. 
+     * Sets the given name as frame name and title.
+     * 
      * @param name The frame's name and title.
      */
     final void setViewName(final String name) {
         m_frame.setName(name);
         m_frame.setTitle(name);
-    }   
-    
+    }
+
     /**
      * Returns the view name as set by <code>#setViewName(String)</code> or
      * <code>null</code> if that hasn't happen yet.
@@ -502,15 +497,24 @@ public abstract class NodeView {
      * @param comp Component to set in the center of the view.
      */
     protected final void setComponent(final Component comp) {
-        if (!m_nodeModel.isExecuted() && m_noDataComp != null) {
-            setComponentIntern(m_noDataComp);
-            m_componentSet = false;
-        } else {
-            setComponentIntern(comp);
-            m_componentSet = true;
-        }
-        m_comp = comp;
-        relayoutFrame(false); // repaint without pack
+        Runnable runner = new Runnable() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void run() {
+                if (!m_nodeModel.isExecuted() && m_noDataComp != null) {
+                    setComponentIntern(m_noDataComp);
+                    m_componentSet = false;
+                } else {
+                    setComponentIntern(comp);
+                    m_componentSet = true;
+                }
+                m_comp = comp;
+                relayoutFrame(false); // repaint without pack
+            }
+        };
+        ViewUtils.invokeAndWaitInEDT(runner);
     }
 
     /**
@@ -523,7 +527,6 @@ public abstract class NodeView {
         if (m_activeComp == cmp || cmp == null) {
             return;
         }
-
         Container cont = m_frame.getContentPane();
         if (m_activeComp != null) {
             cont.remove(m_activeComp);
@@ -532,11 +535,12 @@ public abstract class NodeView {
         m_activeComp = cmp;
         cont.add(m_activeComp, BorderLayout.CENTER);
     }
-    
+
     /**
      * Repaints or pack this frame depending on <code>doPack</code> flag.
-     * @param doPack if <code>true</code> the dialog is packed, otherwise
-     *        just validated and repainted
+     * 
+     * @param doPack if <code>true</code> the dialog is packed, otherwise just
+     *            validated and repainted
      */
     private void relayoutFrame(final boolean doPack) {
         final Runnable run = new Runnable() {
@@ -550,19 +554,8 @@ public abstract class NodeView {
                 }
             }
         };
-        // if event dispatch thread, run directly
-        if (SwingUtilities.isEventDispatchThread()) {
-            run.run();
-        } else {
-            try {
-                // otherwise queue into event dispatch thread
-                SwingUtilities.invokeAndWait(run);
-            } catch (InvocationTargetException ite) {
-                m_logger.error("Exception during view update", ite);
-            } catch (InterruptedException ie) {
-                m_logger.error(Thread.currentThread() + " was interrupted", ie);
-            }
-        }   
+        ViewUtils.invokeAndWaitInEDT(run);
+            
     }
 
     /**
@@ -572,11 +565,12 @@ public abstract class NodeView {
      * @return Default "no label" component.
      */
     private Component createNoDataComp() {
-        JLabel noData = 
-            new JLabel("<html><center>No data to display</center></html>", 
-                    SwingConstants.CENTER);
+        JLabel noData =
+                new JLabel("<html><center>No data to display</center></html>",
+                        SwingConstants.CENTER);
         noData.setPreferredSize(new Dimension(INIT_COMP_WIDTH,
-                INIT_COMP_HEIGTH));
+                        INIT_COMP_HEIGTH));
         return noData;
     }
+
 }
