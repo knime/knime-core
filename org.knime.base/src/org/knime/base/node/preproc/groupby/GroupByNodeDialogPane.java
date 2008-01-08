@@ -74,6 +74,9 @@ public class GroupByNodeDialogPane extends DefaultNodeSettingsPane {
     private final SettingsModelBoolean m_sortInMemory =
         new SettingsModelBoolean(GroupByNodeModel.CFG_SORT_IN_MEMORY, false);
 
+    private final SettingsModelBoolean m_keepColumnName =
+        new SettingsModelBoolean(GroupByNodeModel.CFG_KEEP_COLUMN_NAME, false);
+
     /**Constructor for class GroupByNodeDialogPane.
      */
     GroupByNodeDialogPane() {
@@ -128,6 +131,9 @@ public class GroupByNodeDialogPane extends DefaultNodeSettingsPane {
         final DialogComponent moveGroupCols2Front = new DialogComponentBoolean(
                 m_moveGroupCols2Front, "Move group column(s) to front");
 
+        final DialogComponent keepColName = new DialogComponentBoolean(
+                m_keepColumnName, "Keep original column name(s)");
+
         createNewGroup(" Aggregation methods ");
         setHorizontalPlacement(true);
         addDialogComponent(nominalColMethod);
@@ -139,6 +145,7 @@ public class GroupByNodeDialogPane extends DefaultNodeSettingsPane {
         addDialogComponent(moveGroupCols2Front);
         addDialogComponent(sortInMemory);
         addDialogComponent(enableHilite);
+        addDialogComponent(keepColName);
         setHorizontalPlacement(false);
         closeCurrentGroup();
         createNewGroup(" Column settings ");

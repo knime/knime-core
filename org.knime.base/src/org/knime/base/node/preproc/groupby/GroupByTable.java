@@ -82,6 +82,8 @@ public class GroupByTable {
 
     private final boolean m_moveGroupCols2Front;
 
+    private final boolean m_keepColName;
+
     private final Map<DataCell, Set<DataCell>> m_hiliteMapping;
 
     private final BufferedDataTable m_resultTable;
@@ -102,6 +104,8 @@ public class GroupByTable {
      * maintained to enable hiliting
      * @param moveGroupCols2Front <code>true</code> if the group by columns
      * should be moved to the front of the result table
+     * @param keepColName <code>true</code> if the original column name should
+     * be kept
      * @param exec the <code>ExecutionContext</code>
      * @throws CanceledExecutionException if the user has canceled the execution
      */
@@ -111,7 +115,7 @@ public class GroupByTable {
             final AggregationMethod noneNumericColMethod,
             final int maxUniqueValues, final boolean sortInMemory,
             final boolean enableHilite, final boolean moveGroupCols2Front,
-            final ExecutionContext exec)
+            final boolean keepColName, final ExecutionContext exec)
     throws CanceledExecutionException {
         LOGGER.debug("Entering GroupByTable() of class GroupByTable.");
         if (dataTable == null) {
@@ -147,6 +151,7 @@ public class GroupByTable {
         m_noneNumericColMethod = noneNumericColMethod;
         m_maxUniqueVals = maxUniqueValues;
         m_moveGroupCols2Front = moveGroupCols2Front;
+        m_keepColName = keepColName;
         exec.setMessage("Sorting input table...");
         ExecutionContext subExec = exec.createSubExecutionContext(0.5);
         final SortedTable sortedTable =
@@ -186,7 +191,7 @@ public class GroupByTable {
         final DataTableSpec origSpec = table.getDataTableSpec();
         final DataTableSpec resultSpec = createGroupByTableSpec(
                 origSpec, m_inclList, m_numericColMethod,
-                m_noneNumericColMethod, m_moveGroupCols2Front);
+                m_noneNumericColMethod, m_moveGroupCols2Front, m_keepColName);
         assert (origSpec.getNumColumns() == resultSpec.getNumColumns())
             : "The number of columns must be the same";
         final BufferedDataContainer dc = exec.createDataContainer(resultSpec);
@@ -488,13 +493,15 @@ public class GroupByTable {
      * method
      * @param moveGroupCols2Front <code>true</code> if the group by columns
      * should be moved to the front of the result table
+     * @param keepColName <code>true</code> if the original colum names should
+     * be kept
      * @return the result {@link DataTableSpec}
      */
     public static DataTableSpec createGroupByTableSpec(
             final DataTableSpec spec, final List<String> inclList,
             final AggregationMethod numericalColMethod,
             final AggregationMethod nominalColMethod,
-            final boolean moveGroupCols2Front) {
+            final boolean moveGroupCols2Front, final boolean keepColName) {
         LOGGER.debug("Entering createGroupByTableSpec() "
                 + "of class GroupByTable.");
         if (spec == null) {
@@ -534,8 +541,14 @@ public class GroupByTable {
             } else {
                 final AggregationMethod method = getAggregationMethod(colSpec,
                         numericalColMethod, nominalColMethod);
-                final String aggrColName = method.getColumnName(origName);
-                newName = DataTableSpec.getUniqueColumnName(spec, aggrColName);
+                if (keepColName) {
+                    newName = origName;
+                } else {
+                    final String aggrColName = method.getColumnName(origName);
+                    newName = DataTableSpec.getUniqueColumnName(spec,
+                            aggrColName);
+                }
+
                 newType = method.getColumnType(origType);
                 if (moveGroupCols2Front) {
                     idx = inclList.size() + otherIdx++;
