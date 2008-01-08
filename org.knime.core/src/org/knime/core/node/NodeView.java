@@ -49,7 +49,7 @@ import org.knime.core.node.util.ViewUtils;
  * derived class and must take place in a <code>Panel</code>. This panel is
  * registered in this base class (method <code>#setComponent(Component)</code>)
  * and will be displayed in the JFrame provided and handled by this class.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodeView {
@@ -139,7 +139,7 @@ public abstract class NodeView {
      * a menu bar, and the panel (<code>#getComponent()</code>) in the
      * center. The default title is <i>View - </i>, and the default close
      * operation <code>JFrame.DISPOSE_ON_CLOSE</code>.
-     * 
+     *
      * @param nodeModel The underlying node model.
      * @throws NullPointerException If the <code>nodeModel</code> is null.
      * @see #setComponent(Component)
@@ -223,13 +223,13 @@ public abstract class NodeView {
      * access to your model is needs and cast it if necessary. Alternatively,
      * you can also override this method in your derived node view and do the
      * cast implicitly, for instance:
-     * 
+     *
      * <pre>
      * protected FooNodeModel getNodeModel() {
      *     return (FooNodeModel)super.getNodeModel();
      * }
      * </pre>
-     * 
+     *
      * @return NodeModel reference.
      */
     protected NodeModel getNodeModel() {
@@ -242,7 +242,7 @@ public abstract class NodeView {
      * node is not executed but the view is shown (replaces whatever has been
      * set by <code>#setComponent(Component)</code>. Once the node is
      * executed the user tab is shown again.
-     * 
+     *
      * @param showIt <code>true</code> for replace the current view,
      *            <code>false</code> always show the real view.
      */
@@ -260,7 +260,7 @@ public abstract class NodeView {
         synchronized (m_nodeModel) {
 
             setComponent(m_comp);
-            
+
             try {
                 // CALL abstract model changed
                 modelChanged();
@@ -294,7 +294,7 @@ public abstract class NodeView {
      * events from their assigned models via the
      * <code>NodeModel#notifyViews(Object)</code> method. Can be used to
      * iteratively update the view during execute.
-     * 
+     *
      * @param arg The argument can be everything.
      */
     protected void updateModel(final Object arg) {
@@ -320,7 +320,7 @@ public abstract class NodeView {
 
     /**
      * Returns menu bar of this frame.
-     * 
+     *
      * @return menu bar.
      */
     protected final JMenuBar getJMenuBar() {
@@ -350,7 +350,7 @@ public abstract class NodeView {
      * you derive this class, <strong>do not</strong> call this method. It's
      * being used by the framework (if views are shown within a JFrame) or by
      * eclipse (if available, i.e. when views are embedded in eclipse)
-     * 
+     *
      * @return The view's content pane.
      */
     public final Component openViewComponent() {
@@ -362,7 +362,7 @@ public abstract class NodeView {
 
     /**
      * Opens the view.
-     * 
+     *
      * @see #onOpen
      */
     final void openView() {
@@ -434,7 +434,7 @@ public abstract class NodeView {
      * Set a new name for this view. The title is updated to the given title. If
      * <code>newName</code> is <code>null</code> the new title is <i>base
      * name - &lt; no title &gt; </i>.
-     * 
+     *
      * @param newName The new title to be set.
      */
     protected final void setViewTitle(final String newName) {
@@ -459,7 +459,7 @@ public abstract class NodeView {
 
     /**
      * Sets the given name as frame name and title.
-     * 
+     *
      * @param name The frame's name and title.
      */
     final void setViewName(final String name) {
@@ -470,7 +470,7 @@ public abstract class NodeView {
     /**
      * Returns the view name as set by <code>#setViewName(String)</code> or
      * <code>null</code> if that hasn't happen yet.
-     * 
+     *
      * @return The view's name.
      * @see JFrame#setName(String)
      */
@@ -481,7 +481,7 @@ public abstract class NodeView {
     /**
      * Returns the underlying content pane's panel placed at the center of the
      * view.
-     * 
+     *
      * @return panel of the view's center area.
      */
     protected final Component getComponent() {
@@ -493,7 +493,7 @@ public abstract class NodeView {
      * <code>Component</code> that implements the functionality of the derived
      * class with this function. The foreground and background colors of your
      * panel are set to the default colors defined in this class.
-     * 
+     *
      * @param comp Component to set in the center of the view.
      */
     protected final void setComponent(final Component comp) {
@@ -501,7 +501,6 @@ public abstract class NodeView {
             /**
              * {@inheritDoc}
              */
-            @Override
             public void run() {
                 if (!m_nodeModel.isExecuted() && m_noDataComp != null) {
                     setComponentIntern(m_noDataComp);
@@ -520,7 +519,7 @@ public abstract class NodeView {
     /**
      * Helper method that internally sets the current component; it does not
      * update m_comp (which setComponent does).
-     * 
+     *
      * @param cmp The new component to show (might be m_noDataComp)
      */
     private void setComponentIntern(final Component cmp) {
@@ -538,7 +537,7 @@ public abstract class NodeView {
 
     /**
      * Repaints or pack this frame depending on <code>doPack</code> flag.
-     * 
+     *
      * @param doPack if <code>true</code> the dialog is packed, otherwise just
      *            validated and repainted
      */
@@ -555,13 +554,13 @@ public abstract class NodeView {
             }
         };
         ViewUtils.invokeAndWaitInEDT(run);
-            
+
     }
 
     /**
      * Creates the label that is shown when no node is not connected or not
      * executed.
-     * 
+     *
      * @return Default "no label" component.
      */
     private Component createNoDataComp() {
