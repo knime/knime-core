@@ -30,7 +30,6 @@ import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelectio
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -79,12 +78,12 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
                 "Pruning method", methods));
 
         // confidence value threshold for c4.5 pruning
-        this.addDialogComponent(new DialogComponentNumber(
-              new SettingsModelDoubleBounded(
-              DecisionTreeLearnerNodeModel.KEY_PRUNING_CONFIDENCE_THRESHOLD,
-              DecisionTreeLearnerNodeModel.DEFAULT_PRUNING_CONFIDENCE_THRESHOLD,
-              0.0, 0.5),
-              "Confidence threshold (estimated error)", 0.01, 7));
+//        this.addDialogComponent(new DialogComponentNumber(
+//              new SettingsModelDoubleBounded(
+//              DecisionTreeLearnerNodeModel.KEY_PRUNING_CONFIDENCE_THRESHOLD,
+//              DecisionTreeLearnerNodeModel.DEFAULT_PRUNING_CONFIDENCE_THRESHOLD,
+//              0.0, 0.5),
+//              "Confidence threshold (estimated error)", 0.01, 7));
 
         // min number records for a node
         // also used for determine whether a partition is useful

@@ -77,11 +77,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     public static final String KEY_CLASSIFYCOLUMN = "classifyColumn";
 
-    /**
-     * Key to store the confidence threshold for tree pruning in the settings.
-     */
-    public static final String KEY_PRUNING_CONFIDENCE_THRESHOLD =
-            "significanceTh";
+//    TODO /**
+//     * Key to store the confidence threshold for tree pruning in the settings.
+//     */
+//    public static final String KEY_PRUNING_CONFIDENCE_THRESHOLD =
+//            "significanceTh";
 
     /**
      * Key to store the confidence threshold for tree pruning in the settings.
@@ -154,7 +154,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     public static final String PRUNING_MDL = "MDL";
 
-//    /**
+//    TODO /**
 //     * The constant for estimated error pruning.
 //     */
 //    public static final String PRUNING_ESTIMATED_ERROR = "Estimated error";
@@ -235,11 +235,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     private int m_classColumnIndex;
 
-    /**
-     * The pruning confidence threshold.
-     */
-    private double m_pruningConfidenceThreshold =
-            DEFAULT_PRUNING_CONFIDENCE_THRESHOLD;
+//    TODO /**
+//     * The pruning confidence threshold.
+//     */
+//    private double m_pruningConfidenceThreshold =
+//            DEFAULT_PRUNING_CONFIDENCE_THRESHOLD;
 
     /**
      * The pruning method used for pruning.
@@ -270,7 +270,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     /**
      * Counter for the generated decision tree nodes. This is an atomic integer
-     * to guarantee thread safty.
+     * to guarantee thread safety.
      */
     private AtomicInteger m_counter = new AtomicInteger(0);
 
@@ -361,10 +361,11 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                 + " used threads: "
                 + m_parallelProcessing.getCurrentThreadsInUse());
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Pruning conficence TH: "
-                    + m_pruningConfidenceThreshold);
-        }
+// TODO        
+//        if (LOGGER.isDebugEnabled()) {
+//            LOGGER.debug("Pruning confidence TH: "
+//                    + m_pruningConfidenceThreshold);
+//        }
 
         exec.setProgress("Preparing...");
 
@@ -500,7 +501,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         // now prune according to the selected pruning method
         if (m_pruningMethod.equals(PRUNING_MDL)) {
             Pruner.mdlPruning(m_decisionTree);
-//        } else if (m_pruningMethod.equals(PRUNING_ESTIMATED_ERROR)) {
+//        TODO } else if (m_pruningMethod.equals(PRUNING_ESTIMATED_ERROR)) {
 //            Pruner.estimatedErrorPruning(m_decisionTree,
 //                    m_pruningConfidenceThreshold);
         } else if (m_pruningMethod.equals(PRUNING_NO)) {
@@ -732,10 +733,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             throws InvalidSettingsException {
 
         m_classifyColumn = settings.getString(KEY_CLASSIFYCOLUMN);
-
-        m_pruningConfidenceThreshold =
-                (float)settings.getDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD,
-                        DEFAULT_PRUNING_CONFIDENCE_THRESHOLD);
+// TODO 
+//        m_pruningConfidenceThreshold =
+//                (float)settings.getDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD,
+//                        DEFAULT_PRUNING_CONFIDENCE_THRESHOLD);
         m_numberRecordsStoredForView.loadSettingsFrom(settings);
         m_buildInMemory =
                 settings.getBoolean(KEY_MEMORY_OPTION, DEFAULT_MEMORY_OPTION);
@@ -767,8 +768,8 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         assert (settings != null);
         settings.addString(KEY_CLASSIFYCOLUMN, m_classifyColumn);
-        settings.addDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD,
-                m_pruningConfidenceThreshold);
+// TODO       settings.addDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD,
+//                m_pruningConfidenceThreshold);
         m_numberRecordsStoredForView.saveSettingsTo(settings);
         settings.addBoolean(KEY_MEMORY_OPTION, m_buildInMemory);
         settings.addInt(KEY_MIN_NUMBER_RECORDS_PER_NODE,
@@ -803,13 +804,13 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             throw new InvalidSettingsException("Must be a valid string!");
         }
 
-        double significance =
-                settings.getDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD);
-
-        if (significance < 0 || significance > 0.5) {
-            throw new InvalidSettingsException(
-                    "Significance threshold must be in the range of 0.0 - 0.5");
-        }
+// TODO       double significance =
+//                settings.getDouble(KEY_PRUNING_CONFIDENCE_THRESHOLD);
+//
+//        if (significance < 0 || significance > 0.5) {
+//            throw new InvalidSettingsException(
+//                    "Significance threshold must be in the range of 0.0 - 0.5");
+//        }
     }
 
     /**
