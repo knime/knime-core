@@ -15,13 +15,13 @@
 			they can have as many outcomes as nominal values. In the 
 			case of a binary split the nominal values are divided into two subsets.
 			The algorithm provides two quality measures for split calculation;
-			the gini index and the gain ratio. Further, there exist two
-			post pruning methods to reduce the tree size and increase prediction
-			accuracy. The pruning methods are based on the estimated error and on the minimum
-			description length principal.<br/>
+			the gini index and the gain ratio. Further, there exist a
+			post pruning method to reduce the tree size and increase prediction
+			accuracy. The pruning method is based on the minimum
+			description length principle.<br/>
 			The algorithm can be run in multiple threads, and thus, exploit multiple
 			processors or cores.<br/>
-			Most of the principal techniques used in this decision tree implementation
+			Most of the techniques used in this decision tree implementation
 			can be found in "C4.5 Programs for machine learning", by J.R. Quinlan
 			and in "SPRINT: A Scalable Parallel Classifier for Data Mining", by
 			J. Shafer, R. Agrawal, M. Mehta (<a href="http://citeseer.ist.psu.edu/shafer96sprint.html">http://citeseer.ist.psu.edu/shafer96sprint.html</a>)
@@ -38,11 +38,6 @@
 			(for predictions, use the "Decision Tree Predictor" node).
 			Available is the "Minimal Description Length" (MDL) pruning or
 			it can also be switched off.
-		</option>
-		<option name="Confidence threshold">
-			This parameter is used by the "Estimated Error" pruning method.
-			The smaller the confidence value, the more the tree is pruned.
-			The confidence value c should range between 0.0 &lt; c &lt; 0.5.
 		</option>
 		<option name="Min number records per node">
 			To select the minimum number of records at least required in each node. If 
