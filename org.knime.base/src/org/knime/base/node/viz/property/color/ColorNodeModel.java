@@ -196,13 +196,13 @@ class ColorNodeModel {
         // get domain
         DataColumnDomain domain = inSpecs[INPORT].getColumnSpec(m_column)
                 .getDomain();
-        // either set colors by ranges or descret values
+        // either set colors by ranges or discrete values
         if (m_isNominal) {
             // check if all values set are in the domain of the column spec
             Set<DataCell> list = domain.getValues();
             if (list == null) {
-                throw new InvalidSettingsException("Column " + m_column
-                        + " has no nominal values set:\n"
+                throw new InvalidSettingsException("Column \"" + m_column + "\""
+                        + " has no nominal values set: "
                         + "execute predecessor or add Binner.");
             }
             // check if the mapping's values and the poss values match
