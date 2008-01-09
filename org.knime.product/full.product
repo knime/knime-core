@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <?pde version="3.1"?>
 
-<product name="KNIME" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" useFeatures="true">
+<product application="org.knime.product.KNIME_APPLICATION" id="org.knime.product.KNIME_PRODUCT" name="KNIME" useFeatures="true">
 
    <aboutInfo>
       <image path="/org.knime.product/icons/knime64.gif"/>
@@ -30,19 +30,12 @@ Uses: Java, GEF, Log4J
 
    <windowImages/>
 
-   <splash
-      location="org.knime.product" />
+   <splash location="org.knime.product"/>
    <launcher name="knime">
       <linux icon="/org.knime.product/icons/knime.xpm"/>
       <solaris/>
       <win useIco="false">
-         <bmp
-            winSmallHigh="/org.knime.product/icons/knime16x16_32bit.bmp"
-            winSmallLow="/org.knime.product/icons/knime16x16_8bit.bmp"
-            winMediumHigh="/org.knime.product/icons/knime32x32_32bit.bmp"
-            winMediumLow="/org.knime.product/icons/knime32x32_8bit.bmp"
-            winLargeHigh="/org.knime.product/icons/knime48x48_32bit.bmp"
-            winLargeLow="/org.knime.product/icons/knime48x48_8bit.bmp"/>
+         <bmp winLargeHigh="/org.knime.product/icons/knime48x48_32bit.bmp" winLargeLow="/org.knime.product/icons/knime48x48_8bit.bmp" winMediumHigh="/org.knime.product/icons/knime32x32_32bit.bmp" winMediumLow="/org.knime.product/icons/knime32x32_8bit.bmp" winSmallHigh="/org.knime.product/icons/knime16x16_32bit.bmp" winSmallLow="/org.knime.product/icons/knime16x16_8bit.bmp"/>
       </win>
    </launcher>
 
@@ -57,39 +50,39 @@ Uses: Java, GEF, Log4J
       <feature id="org.eclipse.pde" version="0.0.0"/>
       <feature id="org.eclipse.platform" version="0.0.0"/>
       <feature id="org.eclipse.rcp" version="0.0.0"/>
-      <feature id="org.knime.features.base" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.chem.types" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.birt" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.chem.cdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.chem.plants" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.chem.tools" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.jep" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.jfreechart" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.jython" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.r" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.weka" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.product" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.testing" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.wizard" version="1.3.2.RC1"/>
+      <feature id="org.knime.features.base" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.chem.types" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.birt" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.chem.cdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.chem.plants" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.chem.tools" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.jep" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.jfreechart" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.jython" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.r" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.weka" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.product" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.testing" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.wizard" version="1.3.2.RC2"/>
       <feature id="org.mozilla.rhino" version="0.0.0"/>
       <feature id="org.w3c.sac" version="0.0.0"/>
-      <feature id="org.knime.features.base.exttool" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.base.exttool.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.base.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.chem.types.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.birt.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.chem.cdk.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.chem.plants.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.chem.tools.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.jep.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.jfreechart.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.jython.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.poi" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.poi.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.r.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.ext.weka.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.product.sdk" version="1.3.2.RC1"/>
-      <feature id="org.knime.features.wizard.sdk" version="1.3.2.RC1"/>
+      <feature id="org.knime.features.base.exttool" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.base.exttool.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.base.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.chem.types.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.birt.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.chem.cdk.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.chem.plants.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.chem.tools.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.jep.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.jfreechart.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.jython.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.poi" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.poi.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.r.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.ext.weka.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.product.sdk" version="1.3.2.RC2"/>
+      <feature id="org.knime.features.wizard.sdk" version="1.3.2.RC2"/>
    </features>
 
 </product>

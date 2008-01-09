@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-Name: KNIME Konstanz Information Miner
 Bundle-SymbolicName: org.knime.product;singleton:=true
-Bundle-Version: 1.3.2.RC1
+Bundle-Version: 1.3.2.RC2
 Bundle-ClassPath: workbench-product.jar
 Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-Vendor: Chair for Bioinformatics and Information Mining, Prof. Berthold, University of Konstanz, Germany
