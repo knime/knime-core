@@ -196,8 +196,8 @@ class ColorManager2NodeModel extends NodeModel {
             // check if all values set are in the domain of the column spec
             Set<DataCell> list = domain.getValues();
             if (list == null) {
-                throw new InvalidSettingsException("Column " + m_column
-                        + " has no nominal values set:\n"
+                throw new InvalidSettingsException("Column \"" + m_column + "\""
+                        + " has no nominal values set: "
                         + "execute predecessor or add Binner.");
             }
             // check if the mapping's values and the poss values match
