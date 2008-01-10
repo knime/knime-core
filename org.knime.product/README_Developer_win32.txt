@@ -1,5 +1,5 @@
 
-KNIME 1.3.2.RC2 Developer version
+KNIME 1.3.3 Developer version
 ============================================================
 
 Quickstart guide:

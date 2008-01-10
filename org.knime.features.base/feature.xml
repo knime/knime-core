@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<feature id="org.knime.features.base" image="icons/knime64.gif" label="KNIME" plugin="org.knime.core" provider-name="Chair for Bioinformatics and Information Mining, Prof. Berthold, University of Konstanz, Germany" version="1.3.2.RC2">
+<feature id="org.knime.features.base" image="icons/knime64.gif" label="KNIME" plugin="org.knime.core" provider-name="Chair for Bioinformatics and Information Mining, Prof. Berthold, University of Konstanz, Germany" version="1.3.3">
 
    <description url="http://www.knime.org/">
       This features containes KNIME. All plugins needed to run the
@@ -8,7 +8,7 @@ additional features available.
    </description>
 
    <copyright>
-      Copyright, 2003 - 2007
+      Copyright, 2003 - 2008
 University of Konstanz, Germany
 Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
 and KNIME GmbH, Konstanz, Germany
