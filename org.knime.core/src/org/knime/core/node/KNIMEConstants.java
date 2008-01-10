@@ -45,9 +45,9 @@ public final class KNIMEConstants {
     /** KNIME's minor release number. */
     public static final int MINOR = 3;
     /** KNIME's revision number. */
-    public static final int REV = 2;
+    public static final int REV = 3;
     /** KNIME's build id. */
-    public static final String BUILD = ".RC2";
+    public static final String BUILD = "";
     
     // IMPORTANT: Remember to also update the NodeLogger welcome screen with
     // the current version and the prerequisites
