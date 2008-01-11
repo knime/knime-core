@@ -41,6 +41,7 @@ import org.eclipse.jface.viewers.OpenEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.ui.actions.CloseResourceAction;
+import org.eclipse.ui.actions.CloseUnrelatedProjectsAction;
 import org.eclipse.ui.actions.OpenFileAction;
 import org.eclipse.ui.actions.OpenInNewWindowAction;
 import org.eclipse.ui.internal.Workbench;
@@ -173,6 +174,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                     menu.remove(aItem);
                 } else if (aItem.getAction() instanceof OpenInNewWindowAction) {
 
+                    menu.remove(aItem);
+                } else if (aItem.getAction() instanceof 
+                        CloseUnrelatedProjectsAction) {
                     menu.remove(aItem);
                 }
 
