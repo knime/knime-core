@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- 
+ * -------------------------------------------------------------------
  */
 package org.knime.base.node.parallel.appender;
 
@@ -46,7 +46,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.util.ThreadPool;
 
 /**
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public abstract class ThreadedColAppenderNodeModel extends NodeModel {
@@ -166,7 +166,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
 
     /**
      * Creates a new AbstractParallelNodeModel.
-     * 
+     *
      * @param nrDataIns the number of {@link DataTable}s expected as inputs
      * @param nrDataOuts the number of {@link DataTable}s expected at the
      *            output
@@ -181,7 +181,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
 
     /**
      * Creates a new AbstractParallelNodeModel.
-     * 
+     *
      * @param nrDataIns The number of {@link DataTable} elements expected as
      *            inputs.
      * @param nrDataOuts The number of {@link DataTable} objects expected at the
@@ -195,9 +195,9 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
     /**
      * This method is called before the first chunked is processed. The method
      * must return a cell factory for each output table. The factory must create
-     * the new cells for each row in the input table and also specifiy where the
+     * the new cells for each row in the input table and also specify where the
      * new columns should be placed in the output table.
-     * 
+     *
      * @param data the input data tables
      * @return extended cell factories, one for each output table
      * @throws Exception if something goes wrong during preparation
@@ -330,14 +330,29 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
         }
 
         m_additionalTables = null;
-        return resultTables;
+        return postExecute(resultTables, exec);
+    }
+
+    /**
+     * This method is called after all rows have been processed and combined
+     * into the final result tables. Implementors of subclasses may override
+     * this in order to e.g. change the spec of the result tables. The default
+     * implementation returns the parameter unaltered.
+     *
+     * @param res the combined result tables
+     * @param exec the currently active execution context
+     * @return the output tables of the node.
+     */
+    protected BufferedDataTable[] postExecute(final BufferedDataTable[] res,
+            final ExecutionContext exec) {
+        return res;
     }
 
     /**
      * Returns all additional tables passed into the node, i.e. tables from 1 to
      * n. This result is only non-<code>null</code> during
      * {@link #execute(BufferedDataTable[], ExecutionContext)}.
-     * 
+     *
      * @return the array of additional input tables, or <code>null</code> if
      *         the node is not currently executing
      */
@@ -388,7 +403,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
 
     /**
      * Sets the maximum number of threads that may be used by this node.
-     * 
+     *
      * @param count the maximum thread count
      */
     public void setMaxThreads(final int count) {
@@ -397,7 +412,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
 
     /**
      * Returns the output spec based on the input spec and the cell factory.
-     * 
+     *
      * @param inSpec the input spec
      * @param cellFactory the cell factory used
      * @return the output spec
