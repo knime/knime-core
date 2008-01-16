@@ -22,6 +22,7 @@
  */
 package org.knime.ext.sun.nodes.script;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 
 import org.knime.core.data.DataCell;
@@ -178,11 +179,17 @@ public class ColumnCalculator implements CellFactory {
                 o = null;
             }
         } catch (EvaluationFailedException ee) {
+            Throwable cause = ee.getCause();
+            if (cause instanceof InvocationTargetException) {
+                cause = ((InvocationTargetException)cause).getCause();
+            }
+            String message = 
+                cause != null ? cause.getMessage() : ee.getMessage();
             LOGGER.warn("Evaluation of expression failed for row \""
-                    + row.getKey().getId() + "\": " + ee.getMessage());
+                    + row.getKey().getId() + "\": " + message, ee);
         } catch (IllegalPropertyException ipe) {
             LOGGER.warn("Evaluation of expression failed for row \""
-                    + row.getKey().getId() + "\": " + ipe.getMessage());
+                    + row.getKey().getId() + "\": " + ipe.getMessage(), ipe);
         }
         DataCell result;
         if (m_returnType.equals(Integer.class)) {
