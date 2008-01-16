@@ -30,6 +30,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
@@ -39,6 +40,7 @@ import java.util.Collection;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -46,15 +48,17 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JViewport;
+import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputAdapter;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTable;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -90,6 +94,15 @@ public class TableView extends JScrollPane {
     
     /** Whether or not column header resizing is allowed. Defaults to false. */
     private boolean m_isColumnHeaderResizingAllowed;
+    
+    /** Next row to start search from (defaults to 0). */
+    private int m_searchRow;
+    
+    /** Last search string, needed for continued search. */
+    private String m_searchString;
+    
+    /** Whether continued search only search row id column or entire data. */
+    private boolean m_searchIDOnly;
     
     /** 
      * Creates new empty <code>TableView</code>. Content and handlers are set
@@ -245,7 +258,7 @@ public class TableView extends JScrollPane {
     /** Delegates to super implementation but sets an appropriate preferred
      * size before returning. If the table has no columns (but more than 0 
      * rows), the corner was not shown (because of 0,0 preferred dimension).
-     * @see javax.swing.JScrollPane#getColumnHeader()
+     * {@inheritDoc}
      */
     @Override
     public JViewport getColumnHeader() {
@@ -582,53 +595,98 @@ public class TableView extends JScrollPane {
             }
         }
     }
-
+    
     /**
-     * Tries to find a row key that matches on the given pattern starting
-     * at position <code>startRow</code>. If a matching row is found, the view
-     * is scrolled to that position.
+     * Find cells (or row IDs) that match the search string. If a matching 
+     * element is found, the view is scrolled to that position. Successive calls
+     * of this method with the same arguments will continue the search.
      * 
-     * @param pattern pattern to look for
-     * @param startRow row, where to start the search
+     * @param search The search string.
+     * @param idOnly If only the ID column should be searched.
+     * @throws NullPointerException If <code>search</code> argument is null.
      */
-    protected void findRow(final String pattern, final int startRow) {
-        final int start = Math.min(0, startRow);
-        final TableRowHeaderView view = getHeaderTable();
-        for (int i = start; i < view.getRowCount(); i++) {
-            DataCell key = (DataCell)view.getValueAt(i, 0);
-            if (key.toString().matches(pattern)) {
-                goToRow(startRow + i);
+    protected void find(final String search, final boolean idOnly) {
+        /* assert idOnly = true;
+         * Searching the content is currently disabled for different reasons:
+         * - For continuing at last hit position, we need to store the last
+         *   hit column (not only the row number)
+         * - Need to define a "match" (the implementation below checks whether
+         *   the string, which is rendered, contains the search string
+         */
+        // new search string, reset search position and start on top
+        if (!search.equals(m_searchString) || idOnly != m_searchIDOnly) {
+            m_searchRow = 0;
+        }
+        m_searchString = search;
+        m_searchIDOnly = idOnly;
+        TableContentView cView = getContentTable();
+        if (cView == null) {
+            return;
+        }
+        int rowCount = cView.getRowCount();
+        int lastSearchPosition = m_searchRow;
+        for (int i = 0; i < rowCount; i++) {
+            int pos = (m_searchRow + i) % rowCount;
+            int col = 0;
+            if (pos < lastSearchPosition) {
+                JOptionPane.showMessageDialog(this, 
+                        "Reached end of table, starting at top");
+                lastSearchPosition = -1;
+            }
+            boolean matches = cView.getContentModel().getRowKey(pos).
+                toString().contains(search);
+            if (!m_searchIDOnly) {
+                for (int c = 0; c < cView.getColumnCount(); c++) {
+                    TableCellRenderer rend = cView.getCellRenderer(pos, c);
+                    Component comp = rend.getTableCellRendererComponent(cView, 
+                            cView.getValueAt(pos, c), false, false, pos, c);
+                    if (comp instanceof JLabel 
+                            && ((JLabel)comp).getText().contains(search)) {
+                        col = c;
+                        matches = true;
+                        break;
+                    }
+                }
+            }
+            if (matches) {
+                m_searchRow = pos + 1;
+                gotoCell(pos, col);
                 return;
             }
         }
-        int r = JOptionPane.showConfirmDialog(this, 
-                "<html>No occurences!<br><br>Continue from top?</html>", 
-                "Reached end", JOptionPane.YES_NO_OPTION);
-        if (r == JOptionPane.YES_OPTION) {
-            findRow(pattern, 0);
-        }
+        JOptionPane.showMessageDialog(this, "Search string not found");
+        m_searchRow = 0;
     }
 
     /**
-     * Scrolls to row number <code>rowNumber</code>. This method is invoked
-     * from the navigation menu. If there is no such line number it will 
+     * Scrolls to the given coordinate cell This method is invoked
+     * from the navigation menu. If there is no such coordinate it will 
      * display an error message.
      * 
-     * @param rowNumber the row to scroll to 
+     * @param row the row to scroll to 
+     * @param col the col to scroll to
      */
-    public void goToRow(final int rowNumber) {
+    public void gotoCell(final int row, final int col) {
         TableContentView cView = getContentTable();
         try {
-            cView.getValueAt(rowNumber, 0);
+            cView.getValueAt(row, col);
         } catch (IndexOutOfBoundsException ioe) {
             if (cView.getColumnCount() != 0) {
-                JOptionPane.showMessageDialog(cView, "No such Row: " 
-                        + (rowNumber + 1), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "No such row/col: (" 
+                        + (row + 1) + ", " + (col + 1) + ")", 
+                        "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
         }
-        Rectangle rec = cView.getCellRect(rowNumber, 0, false);
-        cView.getSelectionModel().setSelectionInterval(rowNumber, rowNumber);
+        Rectangle rec = cView.getCellRect(row, Math.max(col, 0), false);
+        cView.getSelectionModel().setSelectionInterval(row, row);
+        if (col >= 0) {
+            ListSelectionModel colSelModel = 
+                cView.getColumnModel().getSelectionModel();
+            if (colSelModel != null) {
+                colSelModel.setSelectionInterval(col, col);
+            }
+        }
         cView.scrollRectToVisible(rec);
     }
 
@@ -660,18 +718,19 @@ public class TableView extends JScrollPane {
         final JMenu result = new JMenu("Navigation");
         result.setMnemonic('N');
         JMenuItem item = new JMenuItem("Go to Row...");
-        item.setMnemonic('G');
+        item.setAccelerator(KeyStroke.getKeyStroke(
+                KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK));
         item.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 String rowString = JOptionPane.showInputDialog(
                         TableView.this, "Enter row number:", "Go to Row", 
                         JOptionPane.QUESTION_MESSAGE);
-                if (rowString == null) { // cancelled
+                if (rowString == null) { // canceled
                      return;
                 }
                 try { 
                     int row = Integer.parseInt(rowString);
-                    goToRow(row - 1);
+                    gotoCell(row - 1, 0);
                 } catch (NumberFormatException nfe) {
                     JOptionPane.showMessageDialog(TableView.this, 
                             "Can't parse " + rowString, "Error", 
@@ -682,23 +741,39 @@ public class TableView extends JScrollPane {
         item.addPropertyChangeListener(new EnableListener(this, true, false));
         item.setEnabled(hasData());
         result.add(item);
-//        item = new JMenuItem("Search Row ID...");
-//        item.setMnemonic('S');
-//        item.addActionListener(new ActionListener() {
-//            public void actionPerformed(final ActionEvent e) {
-//                String in = JOptionPane.showInputDialog(
-//                        m_tableView, "Search Key ( \"*\" = any string, " 
-//                        + "\"?\" = any character): ", "Search for Row ID", 
-//                        JOptionPane.QUESTION_MESSAGE);
-//                if (in == null) { // cancelled
-//                     return;
-//                }
-//                String pattern = in.replaceAll("\\*", ".*");
-//                pattern = pattern.replaceAll("\\?", ".");
-//                findRow(pattern, 0);
-//            }
-//        });
-//        result.add(item);
+        item = new JMenuItem("Find Row ID...");
+        item.setAccelerator(KeyStroke.getKeyStroke(
+                KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK));
+        item.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+//                JCheckBox rowKeyBox = 
+//                    new JCheckBox("ID only", m_searchIDOnly);
+//                JPanel panel = new JPanel(new BorderLayout());
+//                panel.add(new JLabel("Find String: "), BorderLayout.WEST);
+//                panel.add(rowKeyBox, BorderLayout.EAST);
+                String panel = "Find Row ID:";
+                String in = JOptionPane.showInputDialog(
+                        TableView.this, panel, "Search",
+                        JOptionPane.QUESTION_MESSAGE);
+                if (in == null) { // canceled
+                     return;
+                }
+                find(in, true/*rowKeyBox.isSelected()*/);
+            }
+        });
+        item.addPropertyChangeListener(new EnableListener(this, true, false));
+        item.setEnabled(hasData());
+        result.add(item);
+        item = new JMenuItem("Find Next");
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0));
+        item.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                find(m_searchString, m_searchIDOnly);
+            }
+        });
+        item.addPropertyChangeListener(new EnableListener(this, true, false));
+        item.setEnabled(hasData());
+        result.add(item);
         return result;
     } // createNavigationMenu()
     
@@ -795,7 +870,7 @@ public class TableView extends JScrollPane {
                     String in = JOptionPane.showInputDialog(
                             TableView.this, "Enter new row height:", 
                             "" + curRowHeight);
-                    if (in == null) { // cancelled
+                    if (in == null) { // canceled
                          return;
                     }
                     try {
@@ -829,7 +904,7 @@ public class TableView extends JScrollPane {
                     String in = JOptionPane.showInputDialog(
                             TableView.this, "Enter new column width:", 
                             "" + curWidth);
-                    if (in == null) { // cancelled
+                    if (in == null) { // canceled
                         return;
                     }
                     try {
