@@ -435,10 +435,14 @@ class FileRowIterator extends RowIterator {
         }
         if (type.equals(StringCell.TYPE)) {
             return new StringCell(data);
-            // also timing strings now. As per TG.
         } else if (type.equals(IntCell.TYPE)) {
             try {
-                int val = Integer.parseInt(data);
+                // trim numbers, and accept empty as missing value
+                String trimmed = data.trim();
+                if (trimmed.length() == 0) {
+                    return DataType.getMissingCell();
+                }
+                int val = Integer.parseInt(trimmed);
                 return new IntCell(val);
             } catch (NumberFormatException nfe) {
                 int col = 0;
@@ -472,6 +476,11 @@ class FileRowIterator extends RowIterator {
                 dblData = data.replace(m_decSeparator, '.');
             }
             try {
+                // trim numbers, and accept empty as missing value
+                dblData = dblData.trim();
+                if (dblData.length() == 0) {
+                    return DataType.getMissingCell();
+                }
                 double val = Double.parseDouble(dblData);
                 return new DoubleCell(val);
             } catch (NumberFormatException nfe) {

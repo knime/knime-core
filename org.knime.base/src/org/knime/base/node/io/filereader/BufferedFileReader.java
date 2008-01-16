@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 27, 2007 (ohl): created
  */
@@ -44,7 +44,7 @@ public final class BufferedFileReader extends BufferedReader {
     private static final int LINELENGTH = 2048;
 
     private final ByteCountingStream m_countingStream;
-    
+
     private final long m_streamSize;
 
     /*
@@ -57,12 +57,12 @@ public final class BufferedFileReader extends BufferedReader {
     private int m_length = 0;
 
     private ZipInputStream m_zippedSource = null;
-    
+
     private String m_zipEntryName = null;
-    
+
     // set only after the first entry was read entirely!
     private boolean m_hasMoreEntries = false;
-    
+
     /*
      * next points to the next char in the currentLine that is to be returned,
      * or at length() if the line got fully returned (and a new line must be
@@ -83,6 +83,7 @@ public final class BufferedFileReader extends BufferedReader {
         super(in);
         m_countingStream = m;
         m_streamSize = streamSize;
+
     }
 
     /**
@@ -168,7 +169,7 @@ public final class BufferedFileReader extends BufferedReader {
             if (c == -1) {
                 // reached EOF
                 /*
-                 * if we reached EOF we can - in a ZIP archive - check 
+                 * if we reached EOF we can - in a ZIP archive - check
                  * inexpensively if there is another entry following
                  */
                 if (m_zippedSource != null) {
@@ -418,11 +419,11 @@ public final class BufferedFileReader extends BufferedReader {
 
     /**
      * Creates a new reader from the specified location with the default
-     * character set from the Java VM. The returned reader can
-     * be asked for the number of bytes read from the stream 
-     * ({@link #getNumberOfBytesRead()}), and, if the location specifies a local
-     * file - and the size of it can be retrieved - the overall byte count in 
-     * the stream ({@link #getFileSize()}).<br>
+     * character set from the Java VM. The returned reader can be asked for the
+     * number of bytes read from the stream ({@link #getNumberOfBytesRead()}),
+     * and, if the location specifies a local file - and the size of it can be
+     * retrieved - the overall byte count in the stream 
+     * ({@link #getFileSize()}).<br>
      * If the specified file is compressed, it will try to create a ZIP stream
      * (and the byte counts refer both to the compressed file).<br>
      * In addition this reader can be asked for the current line it is reading
@@ -440,7 +441,7 @@ public final class BufferedFileReader extends BufferedReader {
         // creates one with the default character set
         return createNewReader(dataLocation, null);
     }
-    
+
     /**
      * Creates a new reader from the specified location with the default
      * character set from the Java VM. The returned reader can be asked for the
@@ -467,89 +468,103 @@ public final class BufferedFileReader extends BufferedReader {
      *             virtual machine
      */
     public static BufferedFileReader createNewReader(final URL dataLocation,
-            final String charsetName)
-    throws IOException {
-    
+            final String charsetName) throws IOException {
+
         if (dataLocation == null) {
             throw new NullPointerException("Can't open a stream on a null "
                     + "location");
         }
 
-        Charset cs = Charset.defaultCharset();
-        if (charsetName != null) {
-            cs = Charset.forName(charsetName);
-        }
-        
-        // if non-null, the source is zipped and we are reading this entry
-        ZipInputStream zipStream = null;
-        String zipEntryName = null;
-        
-        // stream passed to the reader (either zipped or unzipped stream)
-        InputStreamReader readerStream;
-        // the stream used to get the byte count from
-        ByteCountingStream sourceStream =
-                new ByteCountingStream(dataLocation.openStream());
-
         try {
-            // first see if its a GZIPped file
-            readerStream =
-                    new InputStreamReader(new GZIPInputStream(sourceStream), 
-                            cs);
-        } catch (Exception e) {
 
-            // if not, it could be a ZIPped file
-            sourceStream.close(); // close and reopen
-            sourceStream = new ByteCountingStream(dataLocation.openStream());
+            Charset cs = Charset.defaultCharset();
+            if (charsetName != null) {
+                cs = Charset.forName(charsetName);
+            }
+
+            // if non-null, the source is zipped and we are reading this entry
+            ZipInputStream zipStream = null;
+            String zipEntryName = null;
+
+            // stream passed to the reader (either zipped or unzipped stream)
+            InputStreamReader readerStream;
+            // the stream used to get the byte count from
+            ByteCountingStream sourceStream =
+                    new ByteCountingStream(dataLocation.openStream());
 
             try {
-                zipStream = new ZipInputStream(sourceStream); 
-                readerStream = new InputStreamReader(zipStream, cs);
-                // go to the first zip archive entry
-                ZipEntry ze = zipStream.getNextEntry();
-                if (ze == null) {
-                    // not a zip archive...
-                    zipStream = null;
-                    readerStream = null;
-                } else {
-                    if (ze.getName() != null) {
-                        zipEntryName = ze.getName();
+                // first see if its a GZIPped file
+                readerStream =
+                        new InputStreamReader(
+                                new GZIPInputStream(sourceStream), cs);
+            } catch (Exception e) {
+
+                // if not, it could be a ZIPped file
+                sourceStream.close(); // close and reopen
+                sourceStream =
+                        new ByteCountingStream(dataLocation.openStream());
+
+                try {
+                    zipStream = new ZipInputStream(sourceStream);
+                    readerStream = new InputStreamReader(zipStream, cs);
+                    // go to the first zip archive entry
+                    ZipEntry ze = zipStream.getNextEntry();
+                    if (ze == null) {
+                        // not a zip archive...
+                        zipStream = null;
+                        readerStream = null;
+                    } else {
+                        if (ze.getName() != null) {
+                            zipEntryName = ze.getName();
+                        }
                     }
+
+                } catch (Exception ie) {
+                    // if something explodes, use a regular reader.
+                    readerStream = null;
                 }
-
-            } catch (Exception ie) {
-                // if something explodes, use a regular reader.
-                readerStream = null;
             }
-        }
 
-        // couldn't figure out which reader to use? Take a regular one.
-        if (readerStream == null) {
-            sourceStream.close(); // close and reopen
-            sourceStream =
-                    new ByteCountingStream(dataLocation.openStream());
-            readerStream = new InputStreamReader(sourceStream, cs);
+            // couldn't figure out which reader to use? Take a regular one.
+            if (readerStream == null) {
+                sourceStream.close(); // close and reopen
+                sourceStream =
+                        new ByteCountingStream(dataLocation.openStream());
+                readerStream = new InputStreamReader(sourceStream, cs);
+
+            }
+
+            // see if the underlying source is a file and we can get the size of
+            // it
+            long fileSize = 0;
+            try {
+                File dataFile = new File(dataLocation.toURI());
+                if (dataFile.exists()) {
+                    fileSize = dataFile.length();
+                }
+            } catch (Exception e) {
+                // then don't give them a filesize.
+            }
+
+            BufferedFileReader result =
+                    new BufferedFileReader(readerStream, sourceStream, 
+                            fileSize);
+            if (zipStream != null) {
+                // if it's a zipped source, store some stuff in the reader
+                result.setZippedSource(zipStream);
+                result.setZipEntryName(zipEntryName);
+            }
+            return result;
             
-        }
-        
-        // see if the underlying source is a file and we can get the size of it
-        long fileSize = 0;
-        try {
-            File dataFile = new File(dataLocation.toURI());
-            if (dataFile.exists()) {
-                fileSize = dataFile.length();
-            }
         } catch (Exception e) {
-            // then don't givem a filesize.
+            // a npe flies, if windows tries to open an URL with a space
+            String msg = e.getMessage();
+            if (msg == null) {
+                msg = e.getClass().getSimpleName() + ": <no details>";
+            }
+            throw new IOException("Can't access '"
+                    + dataLocation + "'. (" + msg + ")");
         }
-
-        BufferedFileReader result =
-            new BufferedFileReader(readerStream, sourceStream, fileSize);
-        if (zipStream != null) {
-            // if it's a zipped source, store some stuff in the reader
-            result.setZippedSource(zipStream);
-            result.setZipEntryName(zipEntryName);
-        }
-        return result;
     }
 
     /**
@@ -577,30 +592,30 @@ public final class BufferedFileReader extends BufferedReader {
     }
 
     private void setZipEntryName(final String name) {
-       m_zipEntryName = name;
+        m_zipEntryName = name;
     }
-    
+
     private void setZippedSource(final ZipInputStream zipStream) {
         m_zippedSource = zipStream;
     }
-    
+
     /**
-     * If the underlying source is a ZIP archive this method returns the
-     * name of the entry read. Otherwise null. 
+     * If the underlying source is a ZIP archive this method returns the name of
+     * the entry read. Otherwise null.
      * 
      * @return the entry read, if the source is a ZIP archive, or null.
      */
     public String getZipEntryName() {
         return m_zipEntryName;
     }
-    
+
     /**
      * @return true, if the underlying source is a ZIP archive (not gzip).
      */
     public boolean isZippedSource() {
         return m_zippedSource != null;
     }
-    
+
     /**
      * @return true, if the underlying source is a ZIP archive, if the EOF of
      *         the first entry was read and if there are more entries in the
@@ -610,7 +625,7 @@ public final class BufferedFileReader extends BufferedReader {
     public boolean hasMoreZipEntries() {
         return m_hasMoreEntries;
     }
-    
+
     /**
      * Wraps an input stream and counts the number of bytes read from the
      * stream.
@@ -712,7 +727,7 @@ public final class BufferedFileReader extends BufferedReader {
         public void close() throws IOException {
             m_in.close();
         }
-        
+
     }
 
 }

@@ -233,18 +233,7 @@ public final class FileAnalyzer {
         String rowHeader = null;
         String[] columnHeaders = new String[result.getNumberOfColumns()];
 
-        BufferedReader reader;
-        try {
-            reader = result.createNewInputReader();
-        } catch (NullPointerException npe) {
-            // with Windows the openStream throws a NullPointerException if
-            // we specify ' ' as a sub-dir. Bummer.
-            throw new IOException("Can't access '"
-                    + result.getDataFileLocation() + "'.");
-        } catch (Exception e) {
-            throw new IOException("Can't access '"
-                    + result.getDataFileLocation() + "'.");
-        }
+        BufferedReader reader = result.createNewInputReader();
         FileTokenizer tokenizer = new FileTokenizer(reader);
         tokenizer.setSettings(result);
 
@@ -305,12 +294,14 @@ public final class FileAnalyzer {
                     // the first line ended early - could be anything...
                     continue;
                 }
-                if (columnHeaders[c].equals(missValuePattern)) {
+                String trimmed = columnHeaders[c].trim();
+                if (trimmed.equals(missValuePattern) || trimmed.length() == 0) {
+                    // can't have missing column headers
                     continue;
                 }
                 if (columnTypes[c].equals(IntCell.TYPE)) {
                     try {
-                        Integer.parseInt(columnHeaders[c]);
+                        Integer.parseInt(trimmed);
                         // that column header has data format - may be it IS
                         // data...
                         continue;
@@ -319,7 +310,7 @@ public final class FileAnalyzer {
                     }
                 } else if (columnTypes[c].equals(DoubleCell.TYPE)) {
                     try {
-                        Double.parseDouble(columnHeaders[c]);
+                        Double.parseDouble(trimmed);
                         // that column header has data format - may be it IS
                         // data...
                         continue;
@@ -351,9 +342,8 @@ public final class FileAnalyzer {
             // otherwise we assume the first line doesn't contain headers.
             // pass an array with null strings and it will create headers for us
             result.setFileHasColumnHeaders(false);
-            String[] colNames = new String[columnHeaders.length]; // null
-            // array
-            return createColProps(colNames, userColProps, columnTypes,
+            String[] nulls = new String[columnHeaders.length]; // null array
+            return createColProps(nulls, userColProps, columnTypes,
                     missValuePattern);
         } else {
             // user set fileHasColHeaders - see if it's true or false
@@ -400,18 +390,7 @@ public final class FileAnalyzer {
         // contain column headers - we don't examine them yet).
         String[] rowHeaders = new String[NUMOFLINES + 1];
 
-        BufferedReader reader;
-        try {
-            reader = settings.createNewInputReader();
-        } catch (NullPointerException npe) {
-            // with Windows the openStream throws a NullPointerException if
-            // we specify ' ' as a sub-dir. Bummer.
-            throw new IOException("Can't access '"
-                    + settings.getDataFileLocation() + "'.");
-        } catch (Exception e) {
-            throw new IOException("Can't access '"
-                    + settings.getDataFileLocation() + "'.");
-        }
+        BufferedReader reader = settings.createNewInputReader();
 
         FileTokenizer tokenizer = new FileTokenizer(reader);
         tokenizer.setSettings(settings);
@@ -646,18 +625,7 @@ public final class FileAnalyzer {
     private static DataType[] createColumnTypes(
             final FileReaderNodeSettings userSettings,
             final FileReaderNodeSettings result) throws IOException {
-        BufferedReader reader;
-        try {
-            reader = result.createNewInputReader();
-        } catch (NullPointerException npe) {
-            // with Windows the openStream throws a NullPointerException if
-            // we specify ' ' as a sub-dir. Bummer.
-            throw new IOException("Can't access '"
-                    + result.getDataFileLocation() + "'.");
-        } catch (Exception e) {
-            throw new IOException("Can't access '"
-                    + result.getDataFileLocation() + "'.");
-        }
+        BufferedReader reader = result.createNewInputReader();
         FileTokenizer tokenizer = new FileTokenizer(reader);
         tokenizer.setSettings(result);
         // extract user preset type - if we got any
@@ -718,6 +686,8 @@ public final class FileAnalyzer {
                     // Ignore the extra columns.
                     continue;
                 }
+                // in number column we trim the data
+                token = token.trim();
                 // Allow missing pattern "?" and empty tokens
                 if ((token.length() == 0) || (token.equals(missValuePattern))) {
                     continue;
@@ -819,18 +789,7 @@ public final class FileAnalyzer {
         assert settings.getDataFileLocation() != null;
         assert settings.getAllComments().size() == 0;
 
-        BufferedReader reader;
-        try {
-            reader = settings.createNewInputReader();
-        } catch (NullPointerException npe) {
-            // with Windows the openStream throws a NullPointerException if
-            // we specify ' ' as a sub-dir. Bummer.
-            throw new IOException("Can't access '"
-                    + settings.getDataFileLocation() + "'.");
-        } catch (Exception e) {
-            throw new IOException("Can't access '"
-                    + settings.getDataFileLocation() + "'.");
-        }
+        BufferedReader reader = settings.createNewInputReader();
 
         String line;
         int linesRead = 0;
@@ -876,6 +835,8 @@ public final class FileAnalyzer {
 //            settings.addSingleLineCommentPattern("//", false, false);
 //            settings.addBlockCommentPattern("/*", "*/", false, false);
 //        }
+
+        reader.close();
     }
 
     /**
@@ -893,20 +854,8 @@ public final class FileAnalyzer {
         assert settings.getDataFileLocation() != null;
         assert settings.getAllDelimiters().size() == 0;
 
-        BufferedReader reader;
-        FileTokenizer tokenizer;
-        try {
-            reader = settings.createNewInputReader();
-        } catch (NullPointerException npe) {
-            // with Windows the openStream throws a NullPointerException if
-            // we specify ' ' as a sub-dir. Bummer.
-            throw new IOException("Can't access '"
-                    + settings.getDataFileLocation() + "'.");
-        } catch (Exception e) {
-            throw new IOException("Can't access '"
-                    + settings.getDataFileLocation() + "'.");
-        }
-        tokenizer = new FileTokenizer(reader);
+        BufferedReader reader = settings.createNewInputReader();
+        FileTokenizer tokenizer = new FileTokenizer(reader);
 
         // add '\n' as the only delimiter, so we get one line per token
         settings.addDelimiterPattern("\n", true, false, false);
@@ -1169,23 +1118,8 @@ public final class FileAnalyzer {
     private static boolean testDelimiterSettingsSetColNum(
             final FileReaderNodeSettings settings) throws IOException {
 
-        BufferedReader reader;
-        FileTokenizer tokenizer;
-        // first see how many columns we get with comma and whitespaces.
-        try {
-            reader = settings.createNewInputReader();
-        } catch (NullPointerException npe) {
-            // with Windows the openStream throws a NullPointerException if
-            // we specify ' ' as a sub-dir. Bummer.
-            throw new IOException("Can't access '"
-                    + settings.getDataFileLocation() + "'.");
-        } catch (Exception e) {
-            throw new IOException("Can't access '"
-                    + settings.getDataFileLocation() + "'.");
-        }
-
-        tokenizer = new FileTokenizer(reader);
-
+        BufferedReader reader = settings.createNewInputReader();
+        FileTokenizer tokenizer = new FileTokenizer(reader);
         tokenizer.setSettings(settings);
 
         int linesRead = 0;
@@ -1306,23 +1240,8 @@ public final class FileAnalyzer {
     private static int getMaximumNumberOfColumns(
             final FileReaderNodeSettings settings) throws IOException {
 
-        BufferedReader reader;
-        FileTokenizer tokenizer;
-        // first see how many columns we get with the provided settings.
-        try {
-            reader = settings.createNewInputReader();
-        } catch (NullPointerException npe) {
-            // with Windows the openStream throws a NullPointerException if
-            // we specify ' ' as a sub-dir. Bummer.
-            throw new IOException("Can't access '"
-                    + settings.getDataFileLocation() + "'.");
-        } catch (Exception e) {
-            throw new IOException("Can't access '"
-                    + settings.getDataFileLocation() + "'.");
-        }
-
-        tokenizer = new FileTokenizer(reader);
-
+        BufferedReader reader = settings.createNewInputReader();
+        FileTokenizer tokenizer = new FileTokenizer(reader);
         tokenizer.setSettings(settings);
 
         int linesRead = 0;

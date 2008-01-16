@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   23.03.2005 (ohl): created
  */
@@ -90,9 +90,9 @@ import org.knime.base.node.io.filetokenizer.FileTokenizerException;
 import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
- * 
+ *
  * Implements the {@link java.awt.event.ItemListener} for the file location
  * ComboBox (because we need to remove it and add it again from time to time.
  */
@@ -170,7 +170,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     private Vector<String> m_prevWhiteSpaces;
 
     private JLabel m_errorLabel;
-    
+
     private JLabel m_errorDetail;
 
     private JLabel m_analyzeWarn;
@@ -293,8 +293,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      * combo box. This way we can remove it when we load the file history in the
      * drop down list (because this triggers a useless event), and add it
      * afterwards again.
-     * 
-     * @param e the event 
+     *
+     * @param e the event
      * @see java.awt.event.ItemListener
      *      #itemStateChanged(java.awt.event.ItemEvent)
      */
@@ -694,12 +694,12 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         m_insideDelimChange = true;
 
         m_frSettings.setDelimiterUserSet(true);
-        
+
         // to avoid unnecessary re-analyzing of the file, find out if the
         // delimiter actually changed.
         String newDelim = null;
         if (m_delimField.getSelectedIndex() > -1) {
-            newDelim = 
+            newDelim =
                 ((Delimiter)m_delimField.getSelectedItem()).getDelimiter();
         } else {
             newDelim = FileTokenizerSettings.unescapeString(
@@ -712,7 +712,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 return;
             }
         }
-        
+
         // remove all delimiters except row delimiters
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
             if (m_frSettings.isRowDelimiter(delim.getDelimiter())) {
@@ -897,7 +897,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      * Pops open the dialog of the columnProperties object of the specified
      * column. This will allow the user to enter new column name, type and
      * missing value. Also changes the domain and 'read from file' flag.
-     * 
+     *
      * @param colIdx the index of the column to get new user settings for
      */
     protected void setNewUserSettingsForColumn(final int colIdx) {
@@ -929,7 +929,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         }
 
     }
-    
+
 
     /**
      * {@inheritDoc}
@@ -944,7 +944,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 SwingUtilities.invokeAndWait(new Runnable() {
                    public void run() {
                        loadSettingsFromInternal(settings, specs);
-                   } 
+                   }
                 });
             } catch (InterruptedException ie) {
                 NodeLogger.getLogger(getClass()).warn(
@@ -1030,10 +1030,10 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         saveSettings();
-        String errLabel = getErrorLabelText(); 
+        String errLabel = getErrorLabelText();
         if ((errLabel != null) && (errLabel.trim().length() > 0)) {
             throw new InvalidSettingsException("With the current settings"
-                    + " an error occurs: " + errLabel);            
+                    + " an error occurs: " + errLabel);
         }
         if (m_previewTable.getErrorOccurred()) {
             throw new InvalidSettingsException("With the current settings"
@@ -1041,7 +1041,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     + m_previewTable.getErrorLine() + "): "
                     + m_previewTable.getErrorMsg());
         }
-        // file existence is not checked during model::loadsettings. Do it here.
+        // file existence is not checked during model#loadsettings. Do it here.
         Reader reader = null;
         try {
             reader = m_frSettings.createNewInputReader();
@@ -1051,14 +1051,11 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                                 + m_frSettings.getDataFileLocation().toString()
                                 + "'.");
             }
-        } catch (IOException ioe) {
-            throw new InvalidSettingsException("I/O Error while accessing '"
-                    + m_frSettings.getDataFileLocation().toString() + "'.");
-        } catch (NullPointerException npe) {
-            // occurres with Windows and a space in the path
+        } catch (Exception ioe) {
             throw new InvalidSettingsException("I/O Error while accessing '"
                     + m_frSettings.getDataFileLocation().toString() + "'.");
         }
+        
         try {
             reader.close();
         } catch (IOException ioe) {
@@ -1078,13 +1075,13 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      * unchanged, and if the URL is the same than in the global settings object
      * it will not (re)analyze the data file (and thus not change settings).
      * Unless the parameter forceAnalyze is set <code>true</code>.
-     * 
+     *
      * @param forceAnalyze forces the analysis of the datafile eventhough it
      *            might be the one set in the global settings (and thus already
      *            being analyzed).
      *            <p>
      *            NOTE: May change the global settings object completely.
-     * 
+     *
      */
     protected void analyzeDataFileAndUpdatePreview(final boolean forceAnalyze) {
 
@@ -1102,7 +1099,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             return;
         }
 
-        if (forceAnalyze 
+        if (forceAnalyze
                 || !newURL.equals(m_frSettings.getDataFileLocation())) {
 
             // get new settings from the analyzer
@@ -1131,7 +1128,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     }
                     setErrorLabelText(msg);
                     m_previewTableView.setDataTable(null);
-                    return;                    
+                    return;
                 }
             } else {
                 // keep the old user settings - just blow away generated names
@@ -1175,7 +1172,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     }
                     setErrorLabelText(msg);
                     m_previewTableView.setDataTable(null);
-                    return;                    
+                    return;
                 }
             }
         }
@@ -1201,7 +1198,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             m_previewTableView.setDataTable(null);
             return;
         }
-        FileReaderNodeSettings previewSettings = 
+        FileReaderNodeSettings previewSettings =
             createPreviewSettings(m_frSettings);
         SettingsStatus status = previewSettings.getStatusOfSettings(true, null);
         if (status.getNumOfErrors() > 0) {
@@ -1210,7 +1207,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             return;
         }
         DataTableSpec tSpec = previewSettings.createDataTableSpec();
-        m_previewTable = 
+        m_previewTable =
             new FileReaderPreviewTable(tSpec, previewSettings, null);
         m_previewTable.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
@@ -1225,7 +1222,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      * Creates a new settings object that has the same settings, except for the
      * column names and the "skipColumn" flag. Names are tagged with an asterisk
      * if the name and type of the column is user set, and specially marked if
-     * the user chose to skip (not read in) this column. Additionally all 
+     * the user chose to skip (not read in) this column. Additionally all
      * columns are marked "don't skip", so they appear in the preview table.
      */
     private FileReaderNodeSettings createPreviewSettings(
@@ -1244,16 +1241,16 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         } catch (InvalidSettingsException ise) {
             return null;
         }
-        
+
         int numCols = result.getNumberOfColumns();
         Vector<ColProperty> colProps = result.getColumnProperties();
-        
+
         for (int c = 0; c < numCols; c++) {
 
             ColProperty cProp = colProps.get(c);
             assert (cProp != null);
             String name = cProp.getColumnSpec().getName();
-            
+
             // mark columns marked "skip"
             if (cProp.getSkipThisColumn()) {
                 name = "[SKIP: \"" + name + "\"]";
@@ -1265,7 +1262,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     name = "*" + name;
                 }
             }
-            
+
             // need to make it unique
             int idx = 2; // the index we append to the name to make it unique
             String colName = name;
@@ -1282,7 +1279,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     }
                 }
             } while (!unique);
-            
+
             // set the new name
             cProp.changeColumnName(colName);
             cProp.setSkipThisColumn(false);
@@ -1329,7 +1326,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      */
     private void saveSettings() throws InvalidSettingsException {
         try {
-            URL dataURL 
+            URL dataURL
                 = textToURL(m_urlCombo.getEditor().getItem().toString());
             m_frSettings.setDataFileLocationAndUpdateTableName(dataURL);
         } catch (MalformedURLException mfue) {
@@ -1472,7 +1469,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     /**
      * Pops up the file selection dialog and returns the path to the selected
      * file - or <code>null</code> if the user canceled.
-     * 
+     *
      * @param startingPath the path the dialog starts in
      * @param readXml if <code>true</code> the filter will be set to '*.xml'
      *            files

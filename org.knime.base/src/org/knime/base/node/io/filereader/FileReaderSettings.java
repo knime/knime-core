@@ -1047,15 +1047,10 @@ public class FileReaderSettings extends FileTokenizerSettings {
                         status.addError("I/O Error while connecting to '"
                                 + m_dataFileLocation.toString() + "'.");
                     }
-                } catch (IOException ioe) {
+                } catch (Exception ioe) {
                     status.addError("I/O Error while connecting to '"
                             + m_dataFileLocation.toString() + "'.");
-                } catch (NullPointerException npe) {
-                    // thats a bug in the windows open stream
-                    // a path like c:\blah\ \ (space as dir) causes a NPE.
-                    status.addError("I/O Error while connecting to '"
-                            + m_dataFileLocation.toString() + "'.");
-                }
+                } 
                 if (reader != null) {
                     try {
                         reader.close();
