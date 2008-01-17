@@ -30,7 +30,7 @@ package org.knime.core.node.config;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ConfigStringEntry extends AbstractConfigEntry {
+final class ConfigStringEntry extends AbstractConfigEntry {
 
     /** The String value. */
     private final String m_string;
