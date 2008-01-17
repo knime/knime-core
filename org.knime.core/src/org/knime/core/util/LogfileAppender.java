@@ -35,9 +35,9 @@ import org.knime.core.node.KNIMEConstants;
 
 /**
  * This is a special appender for KNIME that writes into the
- * <code>knime.log</code> in the users <code>.knime</code> directory. If the
- * log file gets bigger the {@link #getMaxLogSize()} the file is gzipped and
- * renamed and a new empty file is created.
+ * <code>knime.log</code> file, which is typically located in the current 
+ * workspace. If the log file gets bigger than {@link #getMaxLogSize()} the 
+ * file is gzipped and renamed and a new empty file is created.
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
