@@ -104,13 +104,14 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
     private static final int PANEL_WIDTH = 5000;
 
-    private static final Delimiter[] DEFAULT_DELIMS = new Delimiter[]{
-    // the <none> MUST be the first one (index zero!)!!!
-            new Delimiter("<none>", false, false, false),
-            new Delimiter(",", false, false, false),
-            new Delimiter(" ", true, false, false),
-            new Delimiter("\t", false, false, false),
-            new Delimiter(";", false, false, false)};
+    private static final Delimiter[] DEFAULT_DELIMS =
+            new Delimiter[]{
+                    // the <none> MUST be the first one (index zero!)!!!
+                    new Delimiter("<none>", false, false, false),
+                    new Delimiter(",", false, false, false),
+                    new Delimiter(" ", true, false, false),
+                    new Delimiter("\t", false, false, false),
+                    new Delimiter(";", false, false, false)};
 
     /*
      * the settings object holding the current state of all settings. The
@@ -261,15 +262,15 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             Document d = ((JTextComponent)editor).getDocument();
             d.addDocumentListener(new DocumentListener() {
                 public void changedUpdate(final DocumentEvent e) {
-                    m_previewTableView.setDataTable(null);
+                    setPreviewTable(null);
                 }
 
                 public void insertUpdate(final DocumentEvent e) {
-                    m_previewTableView.setDataTable(null);
+                    setPreviewTable(null);
                 }
 
                 public void removeUpdate(final DocumentEvent e) {
-                    m_previewTableView.setDataTable(null);
+                    setPreviewTable(null);
                 }
             });
         }
@@ -277,8 +278,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         browse.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 // sets the path in the file text field.
-                String newFile = popupFileChooser(m_urlCombo.getEditor()
-                        .getItem().toString(), false);
+                String newFile =
+                        popupFileChooser(m_urlCombo.getEditor().getItem()
+                                .toString(), false);
                 if (newFile != null) {
                     m_urlCombo.setSelectedItem(newFile);
                     analyzeDataFileAndUpdatePreview(false);
@@ -425,8 +427,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         slcBox.add(Box.createHorizontalStrut(3));
         slcBox.add(m_singleLineComment);
         slcBox.add(Box.createGlue());
-        // now fill the grid
-        // first row
+        // now fill the grid: first row
         panel.add(rowBox);
         panel.add(delimBox);
         panel.add(advBox);
@@ -475,11 +476,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     public void changedUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
-
                     public void insertUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
-
                     public void removeUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
@@ -546,8 +545,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     .setNumberOfColumns(m_frSettings.getNumberOfColumns() + 1);
             // we must create a new colProperty for it - if not already created
             if (m_firstColProp == null) {
-                DataColumnSpec firstColSpec = new DataColumnSpecCreator("Col0",
-                        StringCell.TYPE).createSpec();
+                DataColumnSpec firstColSpec =
+                        new DataColumnSpecCreator("Col0", StringCell.TYPE)
+                                .createSpec();
                 m_firstColProp = new ColProperty();
                 m_firstColProp.setColumnSpec(firstColSpec);
                 // this will cause it to be ignored when re-analyzing:
@@ -568,8 +568,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             // somebody checked the hasRowheader box - that removes one column
             m_frSettings.setFileHasRowHeaders(true);
             if (m_frSettings.getNumberOfColumns() > 0) {
-                m_frSettings.setNumberOfColumns(
-                        m_frSettings.getNumberOfColumns() - 1);
+                m_frSettings.setNumberOfColumns(m_frSettings
+                        .getNumberOfColumns() - 1);
                 Vector<ColProperty> colProps =
                         m_frSettings.getColumnProperties();
                 // save the first colProp in case user changes his mind...
@@ -700,10 +700,11 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         String newDelim = null;
         if (m_delimField.getSelectedIndex() > -1) {
             newDelim =
-                ((Delimiter)m_delimField.getSelectedItem()).getDelimiter();
+                    ((Delimiter)m_delimField.getSelectedItem()).getDelimiter();
         } else {
-            newDelim = FileTokenizerSettings.unescapeString(
-                    (String)m_delimField.getSelectedItem());
+            newDelim =
+                    FileTokenizerSettings.unescapeString((String)m_delimField
+                            .getSelectedItem());
         }
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
             if (delim.getDelimiter().equals(newDelim)) {
@@ -732,8 +733,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 // user selected one from the list (didn't edit a new one)
                 try {
                     // add that delimiter:
-                    Delimiter selDelim = (Delimiter)m_delimField
-                            .getSelectedItem();
+                    Delimiter selDelim =
+                            (Delimiter)m_delimField.getSelectedItem();
                     delimStr = selDelim.getDelimiter();
                     m_frSettings.addDelimiterPattern(delimStr, selDelim
                             .combineConsecutiveDelims(), selDelim
@@ -917,8 +918,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             c = c.getParent();
         }
 
-        Vector<ColProperty> newColProps = ColPropertyDialog.openUserDialog(f,
-                colIdx, cProps);
+        Vector<ColProperty> newColProps =
+                ColPropertyDialog.openUserDialog(f, colIdx, cProps);
 
         if (newColProps != null) {
             // user pressed okay for new settings
@@ -929,7 +930,6 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         }
 
     }
-
 
     /**
      * {@inheritDoc}
@@ -942,9 +942,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         } else {
             try {
                 SwingUtilities.invokeAndWait(new Runnable() {
-                   public void run() {
-                       loadSettingsFromInternal(settings, specs);
-                   }
+                    public void run() {
+                        loadSettingsFromInternal(settings, specs);
+                    }
                 });
             } catch (InterruptedException ie) {
                 NodeLogger.getLogger(getClass()).warn(
@@ -957,8 +957,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     }
 
     /**
-     * We do the entire load settings in the Event/GUI thread as it accesses
-     * a lot of GUI components.
+     * We do the entire load settings in the Event/GUI thread as it accesses a
+     * lot of GUI components.
      */
     private void loadSettingsFromInternal(final NodeSettingsRO settings,
             final DataTableSpec[] specs) {
@@ -994,8 +994,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
          * may help testing.
          */
         try {
-            URL dataFileLocation = new URL(settings
-                    .getString(FileReaderSettings.CFGKEY_DATAURL));
+            URL dataFileLocation =
+                    new URL(settings
+                            .getString(FileReaderSettings.CFGKEY_DATAURL));
             m_frSettings
                     .setDataFileLocationAndUpdateTableName(dataFileLocation);
         } catch (MalformedURLException mfue) {
@@ -1029,6 +1030,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
+
         saveSettings();
         String errLabel = getErrorLabelText();
         if ((errLabel != null) && (errLabel.trim().length() > 0)) {
@@ -1055,7 +1057,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             throw new InvalidSettingsException("I/O Error while accessing '"
                     + m_frSettings.getDataFileLocation().toString() + "'.");
         }
-        
+
         try {
             reader.close();
         } catch (IOException ioe) {
@@ -1095,7 +1097,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             // leave settings unchanged.
             setErrorLabelText("Malformed URL '"
                     + m_urlCombo.getEditor().getItem() + "'.");
-            m_previewTableView.setDataTable(null);
+            setPreviewTable(null);
             return;
         }
 
@@ -1119,7 +1121,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     }
                 } catch (IOException ioe) {
                     setErrorLabelText("Can't access '" + newURL + "'");
-                    m_previewTableView.setDataTable(null);
+                    setPreviewTable(null);
                     return;
                 } catch (FileTokenizerException fte) {
                     String msg = fte.getMessage();
@@ -1127,14 +1129,14 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                         msg = "Invalid Settings: No error message, sorry.";
                     }
                     setErrorLabelText(msg);
-                    m_previewTableView.setDataTable(null);
+                    setPreviewTable(null);
                     return;
                 }
             } else {
                 // keep the old user settings - just blow away generated names
                 // and number of cols.
-                Vector<ColProperty> oldColProps = m_frSettings
-                        .getColumnProperties();
+                Vector<ColProperty> oldColProps =
+                        m_frSettings.getColumnProperties();
 
                 // prepare the settings object for re-analysis
                 m_frSettings.setNumberOfColumns(-1);
@@ -1163,7 +1165,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 } catch (IOException ioe) {
                     m_frSettings.setColumnProperties(oldColProps);
                     setErrorLabelText("Can't access '" + newURL + "'");
-                    m_previewTableView.setDataTable(null);
+                    setPreviewTable(null);
                     return;
                 } catch (FileTokenizerException fte) {
                     String msg = fte.getMessage();
@@ -1171,7 +1173,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                         msg = "Invalid Settings: No error message, sorry.";
                     }
                     setErrorLabelText(msg);
-                    m_previewTableView.setDataTable(null);
+                    setPreviewTable(null);
                     return;
                 }
             }
@@ -1195,27 +1197,44 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         if ((m_frSettings.getDataFileLocation() == null)
                 || (m_frSettings.getDataFileLocation().equals(""))) {
             // if there is no data file specified display empty table
-            m_previewTableView.setDataTable(null);
+            setPreviewTable(null);
             return;
         }
         FileReaderNodeSettings previewSettings =
-            createPreviewSettings(m_frSettings);
+                createPreviewSettings(m_frSettings);
         SettingsStatus status = previewSettings.getStatusOfSettings(true, null);
         if (status.getNumOfErrors() > 0) {
             setErrorLabelText(status.getErrorMessage(0));
-            m_previewTableView.setDataTable(null);
+            setPreviewTable(null);
             return;
         }
+
         DataTableSpec tSpec = previewSettings.createDataTableSpec();
-        m_previewTable =
+        FileReaderPreviewTable newTable =
             new FileReaderPreviewTable(tSpec, previewSettings, null);
-        m_previewTable.addChangeListener(new ChangeListener() {
+        newTable.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 setErrorLabelText(m_previewTable.getErrorMsg(), m_previewTable
                         .getErrorDetail());
             }
         });
-        m_previewTableView.setDataTable(m_previewTable);
+        setPreviewTable(newTable);
+    }
+
+    /**
+     * Updates the preview view with the specified table. Updates the member
+     * variable. Disposes of the old table.
+     *
+     * @param table the new table to store and to display
+     */
+    private void setPreviewTable(final FileReaderPreviewTable table) {
+
+        m_previewTableView.setDataTable(table);
+
+        if (m_previewTable != null) {
+            m_previewTable.dispose();
+        }
+        m_previewTable = table;
     }
 
     /*
@@ -1270,8 +1289,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             do {
                 unique = true;
                 for (int i = 0; i < c; i++) {
-                    if (colName.equals(
-                            colProps.get(i).getColumnSpec().getName())) {
+                    if (colName.equals(colProps.get(i).getColumnSpec()
+                            .getName())) {
                         unique = false;
                         colName = name + "(" + idx + ")";
                         idx++;
@@ -1326,8 +1345,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      */
     private void saveSettings() throws InvalidSettingsException {
         try {
-            URL dataURL
-                = textToURL(m_urlCombo.getEditor().getItem().toString());
+            URL dataURL =
+                    textToURL(m_urlCombo.getEditor().getItem().toString());
             m_frSettings.setDataFileLocationAndUpdateTableName(dataURL);
         } catch (MalformedURLException mfue) {
             throw new InvalidSettingsException("Invalid (malformed) URL for "
@@ -1410,8 +1429,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             c = c.getParent();
         }
         // pop open the advanced settings dialog with our current settings
-        FileReaderAdvancedDialog advDlg = new FileReaderAdvancedDialog(f,
-                m_frSettings);
+        FileReaderAdvancedDialog advDlg =
+                new FileReaderAdvancedDialog(f, m_frSettings);
         advDlg.setModal(true);
         advDlg.setVisible(true);
         // will not continue until user closes the dialog
@@ -1435,8 +1454,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      * xml file.
      */
     protected void readXMLSettings() {
-        String xmlPath = popupFileChooser(m_urlCombo.getEditor().getItem()
-                .toString(), true);
+        String xmlPath =
+                popupFileChooser(m_urlCombo.getEditor().getItem().toString(),
+                        true);
 
         if (xmlPath == null) {
             // user canceled.
@@ -1502,8 +1522,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             String path;
             try {
-                path = chooser.getSelectedFile().getAbsoluteFile()
-                        .toURI().toURL().toString();
+                path =
+                        chooser.getSelectedFile().getAbsoluteFile().toURI()
+                                .toURL().toString();
             } catch (Exception e) {
                 path = "<Error: Couldn't create URL for file>";
             }
@@ -1515,7 +1536,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
     /**
      * Tries to create an URL from the passed string.
-     * 
+     *
      * @param url the string to transform into an URL
      * @return URL if entered value could be properly tranformed, or
      * @throws MalformedURLException if the value passed was invalid
@@ -1542,7 +1563,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     private void setErrorLabelText(final String text) {
         setErrorLabelText(text, null);
     }
-    
+
     private void setErrorLabelText(final String text, final String detailMsg) {
         m_errorLabel.setText(text);
         if (detailMsg == null) {
@@ -1557,7 +1578,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     private String getErrorLabelText() {
         return m_errorLabel.getText();
     }
-    
+
     private void setAnalWarningText(final String text) {
         m_analyzeWarn.setText(text);
         getPanel().invalidate();
@@ -1584,7 +1605,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         /**
          * Does the clipping automatically, clips off characters from the middle
          * of the string.
-         * 
+         *
          * @see JLabel#getText()
          */
         @Override
@@ -1613,18 +1634,22 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 return str;
             }
             if (size <= 30) {
-                result = "..."
-                        + str.substring(str.length() - size + 3, str.length());
+                result =
+                        "..."
+                                + str.substring(str.length() - size + 3, str
+                                        .length());
             } else if (size <= 55) {
-                result = str.substring(0, 12)
-                        + "..."
-                        + str.subSequence(str.length() - size + 15, str
-                                .length());
+                result =
+                        str.substring(0, 12)
+                                + "..."
+                                + str.subSequence(str.length() - size + 15, str
+                                        .length());
             } else {
-                result = str.substring(0, 28)
-                        + "..."
-                        + str.subSequence(str.length() - size + 31, str
-                                .length());
+                result =
+                        str.substring(0, 28)
+                                + "..."
+                                + str.subSequence(str.length() - size + 31, str
+                                        .length());
             }
             return result;
         }

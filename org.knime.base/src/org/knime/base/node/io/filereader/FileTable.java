@@ -22,7 +22,9 @@
 package org.knime.base.node.io.filereader;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Set;
 
 import org.knime.core.data.DataCell;
@@ -38,38 +40,40 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 
-
 /**
  * Implements a {@link DataTable} that reads data from an ASCII file.
- * 
+ *
  * To instantiate this table you need to specify {@link FileReaderSettings} and
- * a {@link org.knime.core.data.DataTableSpec}. File reader settings
- * define from where and how to read the data, the table spec specifies the
- * structure of the table to create.
- * 
+ * a {@link org.knime.core.data.DataTableSpec}. File reader settings define
+ * from where and how to read the data, the table spec specifies the structure
+ * of the table to create.
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class FileTable implements DataTable {
 
     /** The node logger for this class. */
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(FileTable.class);
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(FileTable.class);
 
     // the spec of the structure of the table
     private final DataTableSpec m_tableSpec;
 
     // the settings for the file reader and tokenizer
     private final FileReaderSettings m_frSettings;
-    
+
     // the execution context to which the progress is reported
     private final ExecutionContext m_exec;
 
     private final boolean[] m_skipColums;
-    
+
+    // list of all iterators to close the source, when the table is disposed of
+    private final LinkedList<WeakReference<FileRowIterator>> m_iterators;
+
     /**
      * Creates a new file table with the structure defined in tableSpec and
      * using the settings in frSettings when the file is read.
-     * 
+     *
      * @param tableSpec a table spec defining the structure of the table to
      *            create
      * @param frSettings FileReaderSettings specifying the wheres and hows for
@@ -77,16 +81,16 @@ public class FileTable implements DataTable {
      * @param exec the execution context the progress is reported to; if null,
      *            no progress is reported
      */
-    public FileTable(final DataTableSpec tableSpec, 
+    public FileTable(final DataTableSpec tableSpec,
             final FileReaderSettings frSettings, final ExecutionContext exec) {
-        this(tableSpec, frSettings, createFalseArray(tableSpec.getNumColumns()),
-                exec);
+        this(tableSpec, frSettings,
+                createFalseArray(tableSpec.getNumColumns()), exec);
     }
-    
+
     /**
      * Creates a new file table with the structure defined in tableSpec and
      * using the settings in frSettings when the file is read.
-     * 
+     *
      * @param tableSpec a table spec defining the structure of the table to
      *            create
      * @param frSettings FileReaderSettings specifying the wheres and hows for
@@ -99,8 +103,8 @@ public class FileTable implements DataTable {
      * @param exec the execution context the progress is reported to; if null,
      *            no progress is reported
      */
-    public FileTable(final DataTableSpec tableSpec, 
-            final FileReaderSettings frSettings, final boolean[] skipColumns, 
+    public FileTable(final DataTableSpec tableSpec,
+            final FileReaderSettings frSettings, final boolean[] skipColumns,
             final ExecutionContext exec) {
 
         if ((tableSpec == null) || (frSettings == null)) {
@@ -122,6 +126,7 @@ public class FileTable implements DataTable {
                     + "include is different from the number of columns in the"
                     + " table spec.");
         }
+        m_iterators = new LinkedList<WeakReference<FileRowIterator>>();
         m_tableSpec = tableSpec;
         m_frSettings = frSettings;
         m_skipColums = skipColumns;
@@ -129,19 +134,54 @@ public class FileTable implements DataTable {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        dispose();
+        super.finalize();
+    }
+
+    /**
+     * Call this before releasing the last reference to this table and all its
+     * iterators. It closes the underlying source for all iterators. Especially
+     * if an iterator didn't run to the end of the table, it is required to call
+     * this method. Otherwise the file handle is not released until the garbage
+     * collector cleans up. A call to <code>next()</code> of any iterator
+     * after disposing of the iterator has undefined behavior.
+     */
+    public void dispose() {
+        synchronized (m_iterators) {
+            for (WeakReference<FileRowIterator> w : m_iterators) {
+                FileRowIterator i = w.get();
+                if (i != null) {
+                    i.dispose();
+                }
+            }
+            m_iterators.clear();
+        }
+    }
+
     private static boolean[] createFalseArray(final int length) {
         boolean[] result = new boolean[length];
         Arrays.fill(result, false);
         return result;
     }
-    
+
     /**
      * {@inheritDoc}
      */
     public FileRowIterator iterator() {
         try {
-            return new FileRowIterator(m_frSettings, m_tableSpec, m_skipColums,
-                    m_exec);
+            synchronized (m_iterators) {
+                FileRowIterator i =
+                        new FileRowIterator(m_frSettings, m_tableSpec,
+                                m_skipColums, m_exec);
+                m_iterators.add(new WeakReference<FileRowIterator>(i));
+                return i;
+
+            }
         } catch (IOException ioe) {
             LOGGER.error("I/O Error occurred while trying to open a stream"
                     + " to '" + m_frSettings.getDataFileLocation().toString()
@@ -161,10 +201,10 @@ public class FileTable implements DataTable {
      * Method to check consistency and completeness of the current settings. It
      * will return a {@link SettingsStatus} object which contains info, warning
      * and error messages. Or if the settings are alright it will return null.
-     * 
-     * @param openDataFile tells wether or not this method should try to access
+     *
+     * @param openDataFile tells whether or not this method should try to access
      *            the data file. This will - if set <code>true</code> - verify
-     *            the accessability of the data.
+     *            the accessibility of the data.
      * @return a SettingsStatus object containing info, warning and error
      *         messages, or <code>null</code> if no messages were generated
      *         (i.e. all settings are just fine)
@@ -180,9 +220,9 @@ public class FileTable implements DataTable {
 
     /**
      * Adds its status messages to a passed status object.
-     * 
+     *
      * @param status the object to add messages to - if any.
-     * @param openDataFile specifies if we should check the accessability of the
+     * @param openDataFile specifies if we should check the accessibility of the
      *            data file.
      */
 
@@ -247,7 +287,8 @@ public class FileTable implements DataTable {
                             // if our own column has the same name that's okay
                             continue;
                         }
-                        if (tableSpec.getColumnSpec(n).getName().equals(cName)) {
+                        if (tableSpec.getColumnSpec(n).getName().equals(
+                                cName)) {
                             status.addError("Column with index '" + c
                                     + "' has the same name assigned as "
                                     + "column '" + n + "' ('" + cName + "').");
@@ -269,11 +310,9 @@ public class FileTable implements DataTable {
                     // if set they must be not null
                     for (DataCell v : values) {
                         if (v == null) {
-                            status
-                                    .addError("One of the possible values set for"
-                                            + " the column with index '"
-                                            + c
-                                            + "' is" + " null.");
+                            status.addError("One of the possible values set"
+                                    + " for the column with index '" + c
+                                    + "' is" + " null.");
                             // adding this message once for each col is enough
                             break;
                         }
@@ -288,8 +327,8 @@ public class FileTable implements DataTable {
      * Returns a string summary for this table which is the entire table
      * content. Note, this call might be time consuming since this method
      * iterates over the table to retrieve all data.
-     * 
-     * @see java.lang.Object#toString()
+     *
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
@@ -304,7 +343,8 @@ public class FileTable implements DataTable {
         result.append(sprintDataCell(new StringCell(" "), colLength));
         // "<ColName>[Type]"
         for (int i = 0; i < m_tableSpec.getNumColumns(); i++) {
-            if (m_tableSpec.getColumnSpec(i).getType().equals(StringCell.TYPE)) {
+            if (m_tableSpec.getColumnSpec(i).getType().equals(
+                    StringCell.TYPE)) {
                 result.append(sprintDataCell(new StringCell(m_tableSpec
                         .getColumnSpec(i).getName().toString()
                         + "[Str]"), colLength));

@@ -36,7 +36,7 @@ import java.util.zip.ZipInputStream;
 
 /**
  * A reader that counts the number of bytes read.
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public final class BufferedFileReader extends BufferedReader {
@@ -87,6 +87,15 @@ public final class BufferedFileReader extends BufferedReader {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        close();
+        super.finalize();
+    }
+
+    /**
      * @return the number of bytes read from the inner stream. If the input
      *         stream is a zipped stream, it returns the number of bytes read
      *         from this zipped stream. It the EOF of the stream has been read
@@ -112,7 +121,7 @@ public final class BufferedFileReader extends BufferedReader {
      * In contrast to {@link #readLine} this method doesn't modify the stream
      * (doesn't read from it!) and it returns the entire line (also the
      * characters at the beginning of the line if they were read already).
-     * 
+     *
      * @return the line that is currently read. Returns the empty string, if no
      *         character was read as of yet, and null if the reader was closed.
      * @throws IOException if the stream has been closed
@@ -158,7 +167,7 @@ public final class BufferedFileReader extends BufferedReader {
      * Reads the next line from the underlying reader and stores it in our
      * currentLine variable from which this reader reads the next chars. The
      * '\n' character is stored in the currentLine.
-     * 
+     *
      */
     private void readNextLine() throws IOException {
         // we can't use super.readLine() as it swallows \n characters (which is
@@ -207,7 +216,7 @@ public final class BufferedFileReader extends BufferedReader {
      * returns the next char of the currentLine or sets everything to indicate
      * the EOF, if the underlying reader is done.<br>
      * NOTE: this method is not synchronized and does not check the open status.
-     * 
+     *
      * @return either the next char from the currentLine string, or -1 if the
      *         EOF is reached and sets all flags to the appropriate states then.
      * @throws IOException if something goes wrong during reading
@@ -422,15 +431,15 @@ public final class BufferedFileReader extends BufferedReader {
      * character set from the Java VM. The returned reader can be asked for the
      * number of bytes read from the stream ({@link #getNumberOfBytesRead()}),
      * and, if the location specifies a local file - and the size of it can be
-     * retrieved - the overall byte count in the stream 
+     * retrieved - the overall byte count in the stream
      * ({@link #getFileSize()}).<br>
      * If the specified file is compressed, it will try to create a ZIP stream
      * (and the byte counts refer both to the compressed file).<br>
      * In addition this reader can be asked for the current line it is reading
-     * from ({@link #getCurrentLine()})and the current line number 
+     * from ({@link #getCurrentLine()})and the current line number
      * ({@link #getCurrentLineNumber()}).
-     * 
-     * 
+     *
+     *
      * @param dataLocation the URL of the source to read from. If it is zipped
      *            it will try to open a ZIP stream on it.
      * @return reader reading from the specified location.
@@ -447,19 +456,19 @@ public final class BufferedFileReader extends BufferedReader {
      * character set from the Java VM. The returned reader can be asked for the
      * number of bytes read from the stream ({@link #getNumberOfBytesRead()}),
      * and, if the location specifies a local file - and the size of it can be
-     * retrieved - the overall byte count in the stream 
+     * retrieved - the overall byte count in the stream
      * ({@link #getFileSize()}).<br>
      * If the specified file is compressed, it will try to create a ZIP stream
      * (and the byte counts refer both to the compressed file).<br>
      * In addition this reader can be asked for the current line it is reading
-     * from ({@link #getCurrentLine()})and the current line number 
+     * from ({@link #getCurrentLine()})and the current line number
      * ({@link #getCurrentLineNumber()}).
-     * 
+     *
      * @param dataLocation the URL of the source to read from. If it is zipped
      *            it will try to open a ZIP stream on it.
      * @param charsetName the character set to use. Must be supported by the VM
      * @return reader reading from the specified location.
-     * 
+     *
      * @throws IOException if something went wrong when opening the stream.
      * @throws java.nio.charset.IllegalCharsetNameException If the given charset
      *             name is illegal
@@ -547,7 +556,7 @@ public final class BufferedFileReader extends BufferedReader {
             }
 
             BufferedFileReader result =
-                    new BufferedFileReader(readerStream, sourceStream, 
+                    new BufferedFileReader(readerStream, sourceStream,
                             fileSize);
             if (zipStream != null) {
                 // if it's a zipped source, store some stuff in the reader
@@ -555,7 +564,7 @@ public final class BufferedFileReader extends BufferedReader {
                 result.setZipEntryName(zipEntryName);
             }
             return result;
-            
+
         } catch (Exception e) {
             // a npe flies, if windows tries to open an URL with a space
             String msg = e.getMessage();
@@ -571,7 +580,7 @@ public final class BufferedFileReader extends BufferedReader {
      * Same as the method above ({@link #createNewReader(URL)}), but with an
      * input stream as argument. The {@link #getFileSize()} method of the
      * created reader always returns zero.
-     * 
+     *
      * @param in the stream to read from
      * @return a new buffered reader with some extra functionality (compared to
      *         the {@link BufferedReader}), but no file size (even if the
@@ -602,7 +611,7 @@ public final class BufferedFileReader extends BufferedReader {
     /**
      * If the underlying source is a ZIP archive this method returns the name of
      * the entry read. Otherwise null.
-     * 
+     *
      * @return the entry read, if the source is a ZIP archive, or null.
      */
     public String getZipEntryName() {
@@ -629,7 +638,7 @@ public final class BufferedFileReader extends BufferedReader {
     /**
      * Wraps an input stream and counts the number of bytes read from the
      * stream.
-     * 
+     *
      * @author ohl, University of Konstanz
      */
     static class ByteCountingStream extends InputStream {
