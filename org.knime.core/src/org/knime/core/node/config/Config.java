@@ -86,10 +86,10 @@ import sun.misc.BASE64Encoder;
 public abstract class Config extends AbstractConfigEntry 
         implements Serializable, ConfigRO, ConfigWO {
 
-	private static final long serialVersionUID = -1823858289784818403L;
+    private static final long serialVersionUID = -1823858289784818403L;
    
-	private static final NodeLogger LOGGER = NodeLogger.getLogger(Config.class);
-    
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(Config.class);
+
     private static final String CFG_ARRAY_SIZE = "array-size";
     private static final String CFG_IS_NULL    = "is_null";
     private static final String CFG_DATA_CELL  = "datacell";
