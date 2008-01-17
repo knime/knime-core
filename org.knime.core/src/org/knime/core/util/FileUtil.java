@@ -229,7 +229,7 @@ public final class FileUtil {
     } // deleteRecursively(File)
 
     /**
-     * Recursivly packs all the the files and directories beneath the
+     * Recursively packs all the the files and directories beneath the
      * <code>rootDir</code> into a zip file. The zip file will contain the
      * root directory as the only entry in its root.
      * 
@@ -366,9 +366,11 @@ public final class FileUtil {
         File rootDir =
                 (dir == null) ? new File(System.getProperty("java.io.tmpdir"))
                         : dir;
-        File tempDir =
-                new File(rootDir, prefix + System.currentTimeMillis()
+        File tempDir;
+        do {
+            tempDir = new File(rootDir, prefix + System.currentTimeMillis()
                         + TEMP_FILES.size());
+        } while (tempDir.exists());
         if (!tempDir.mkdirs()) {
             throw new IOException("Cannot create temporary directory '"
                     + tempDir.getCanonicalPath() + "'.");
