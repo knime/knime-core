@@ -111,7 +111,7 @@ class NoKeyBuffer extends Buffer {
     }
     /**
      * Does nothing as row keys are not stored.
-     * @see Buffer#writeRowKey(RowKey, DCObjectOutputStream)
+     * {@inheritDoc}
      */
     @Override
     void writeRowKey(final RowKey key, final DCObjectOutputStream outStream) 
@@ -121,10 +121,10 @@ class NoKeyBuffer extends Buffer {
     
     /**
      * Returns always the same key, does nothing to the stream.
-     * @see Buffer#readRowKey(DCObjectInputStream)
+     * {@inheritDoc}
      */
     @Override
-    RowKey readRowKey(final DCObjectInputStream inStream) throws IOException {
+    RowKey readRowKey(final DCObjectInputStream inStream) {
         return DUMMY_KEY;
     }
 }

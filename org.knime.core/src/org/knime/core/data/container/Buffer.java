@@ -63,6 +63,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -325,7 +326,7 @@ class Buffer {
      * provide backward compatibility.
      */
     private int m_version = IVERSION;
-
+    
     /**
      * Creates new buffer for <strong>writing</strong>. It has assigned a 
      * given spec, and a max row count that may resize in memory. 
@@ -392,7 +393,7 @@ class Buffer {
         }
         // just check if data is present!
         if (binFile == null || !binFile.canRead() || !binFile.isFile()) {
-            throw new IOException("Unable to reade from file: " + binFile);
+            throw new IOException("Unable to read from file: " + binFile);
         }
         m_openIteratorSet = new HashSet<WeakReference<FromFileIterator>>();
     }
@@ -452,13 +453,27 @@ class Buffer {
                 // write next rows directly to file  
                 m_maxRowsInMem = 0;
             }
-        } catch (IOException ioe) {
-            String fileName = (m_binFile != null 
-                    ? "\"" + m_binFile.getName() + "\"" : "");
-            throw new RuntimeException(
-                    "Unable to write to file " + fileName , ioe);
+            assert (m_list.size() <= m_maxRowsInMem);
+        } catch (Throwable e) {
+            if (!(e instanceof IOException)) {
+                LOGGER.coding("Writing cells to temporary buffer must not "
+                        + "throw " + e.getClass().getSimpleName());
+            }
+            StringBuilder builder = 
+                new StringBuilder("Error while writing to buffer");
+            if (m_binFile != null) {
+                builder.append(", failed to write to file \"");
+                builder.append(m_binFile.getName());
+                builder.append("\"");
+            }
+            builder.append(": ");
+            String message = e.getMessage();
+            if (message == null || message.length() == 0) {
+                message = "No details available";
+            }
+            builder.append(message);
+            throw new RuntimeException(builder.toString(), e);
         }
-        assert (m_list.size() <= m_maxRowsInMem);
     } // addRow(DataRow)
     
     private BlobSupportDataRow saveBlobs(final DataRow row) throws IOException {
@@ -786,12 +801,11 @@ class Buffer {
      * to return always the same key.
      * @param inStream To read from
      * @return The row key as read right from the stream.
-     * @throws IOException If that fails.
+     * @throws IOException If reading fails for IO problems.
      */
-    RowKey readRowKey(final DCObjectInputStream inStream) 
-        throws IOException {
-        DataCell id = readDataCell(inStream);
-        return new RowKey(id);
+    RowKey readRowKey(final DCObjectInputStream inStream) throws IOException {
+        DataCell keyCell = readDataCell(inStream);
+        return new RowKey(keyCell);
     }
     
     /** Writes a data cell to the outStream.
@@ -854,10 +868,10 @@ class Buffer {
         return serializer;
     }
     
-    /* Reads a datacell from a string. */
+    /** Reads a datacell from inStream, does no exception handling. */
     @SuppressWarnings("unchecked")
     private DataCell readDataCell(final DCObjectInputStream inStream) 
-        throws IOException {
+            throws IOException {
         if (m_version == 1) {
             return readDataCellVersion1(inStream);
         }
@@ -880,7 +894,7 @@ class Buffer {
                     m_globalRepository.get(address.getBufferID());
                 if (cnTbl == null) {
                     throw new IOException(
-                            "Unable to retrieve table that owns the blob cell");
+                    "Unable to retrieve table that owns the blob cell");
                 }
                 blobBuffer = cnTbl.getBuffer();
             }
@@ -901,12 +915,7 @@ class Buffer {
             DataCellSerializer<? extends DataCell> serializer = 
                 DataType.getCellSerializer(type);
             assert serializer != null;
-            try {
-                return inStream.readDataCell(serializer);
-            } catch (IOException ioe) {
-                LOGGER.warn("Unable to read cell from file.", ioe);
-                return DataType.getMissingCell();
-            }
+            return inStream.readDataCell(serializer);
         }
     }
     
@@ -1378,6 +1387,13 @@ class Buffer {
     private class FromFileIterator extends RowIterator {
         
         private int m_pointer;
+        /** If an exception has been thrown while reading from this buffer (only
+         * if it has been written to disc). If so, further error messages are 
+         * only written to debug output in order to reduce message spam on the
+         * console. 
+         */
+        private boolean m_hasThrownReadException;
+        
         private DCObjectInputStream m_inStream;
         
         /**
@@ -1446,29 +1462,66 @@ class Buffer {
                 throw new NoSuchElementException("Iterator at end");
             }
             final DCObjectInputStream inStream = m_inStream;
+            RowKey key;
             try {
-                // read Row key
-                RowKey key = readRowKey(inStream);
-                int colCount = m_spec.getNumColumns();
-                DataCell[] cells = new DataCell[colCount];
-                for (int i = 0; i < colCount; i++) {
-                    cells[i] = readDataCell(inStream);
+                key = readRowKey(inStream);
+            } catch (Throwable throwable) {
+                handleReadThrowable(throwable);
+                // can't ensure that we generate a unique key but it should
+                // cover 99.9% of all cases
+                DataCell keyCell = new StringCell(
+                        "Read_failed__auto_generated_key_" + m_pointer);
+                key = new RowKey(keyCell);
+            }
+            int colCount = m_spec.getNumColumns();
+            DataCell[] cells = new DataCell[colCount];
+            for (int i = 0; i < colCount; i++) {
+                DataCell nextCell;
+                try {
+                    nextCell = readDataCell(m_inStream);
+                } catch (final Throwable e) {
+                    handleReadThrowable(e);
+                    nextCell = DataType.getMissingCell();
                 }
+                cells[i] = nextCell;
+            }
+            try {
                 char eoRow = inStream.readChar();
                 if (eoRow != ROW_SEPARATOR) {
                     throw new IOException("Expected end of row character, " 
-                            + "got '" + eoRow + "'");
+                            + "got '" + eoRow + "', (char " + (int)eoRow + ")");
                 }
-                return new BlobSupportDataRow(key, cells);
-            } catch (Exception ioe) {
-                throw new RuntimeException("Cannot read line "  
-                    + (m_pointer + 1) + " from file \"" 
-                        + m_binFile.getName() + "\"", ioe);
+            } catch (IOException ioe) {
+                handleReadThrowable(ioe);
             } finally {
                 m_pointer++;
             }
+            return new BlobSupportDataRow(key, cells);
         }
         
+        private void handleReadThrowable(final Throwable throwable) {
+            String warnMessage = "Errors while reading row "  
+                    + (m_pointer + 1) + " from file \"" 
+                    + m_binFile.getName() + "\": " + throwable.getMessage();
+            if (!m_hasThrownReadException) {
+                warnMessage = warnMessage.concat(
+                        "; Suppressing further warnings.");
+                LOGGER.error(warnMessage, throwable);
+            } else {
+                LOGGER.debug(warnMessage, throwable);
+            }
+            if (!(throwable instanceof IOException)) {
+                String messageCoding = throwable.getClass().getSimpleName() 
+                + " caught, implementation may only throw IOException.";
+                if (!m_hasThrownReadException) {
+                    LOGGER.coding(messageCoding);
+                } else {
+                    LOGGER.debug(messageCoding);
+                }
+            }
+            m_hasThrownReadException = true;
+        }
+
         private synchronized void clearIteratorInstance() {
             m_pointer = Buffer.this.m_size; // mark it as end of file
             // already closed (clear has been called before)
