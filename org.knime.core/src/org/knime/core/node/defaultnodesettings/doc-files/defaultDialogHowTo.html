@@ -764,13 +764,14 @@ Mainly used for column filtering.</td>
 
       <td>DialogComponentColumnNameSelection</td>
 
-      <td>SettingsModelString</td>
+      <td>SettingsModelString<br><br>SettingsModelColumnName</td>
 
       <td style="white-space: nowrap;">String
-getStringValue()</td>
+getStringValue()<br><br> String getColumnName() <br>boolean useRowID()</td>
 
       <td>Stores the name of the selected column. Uses the
-renderer of the type of the corresponding column.</td>
+renderer of the type of the corresponding column.<br>
+Using the SettingsModelColumnName will add a RowID option to the select list.</td>
 
     </tr>
 
