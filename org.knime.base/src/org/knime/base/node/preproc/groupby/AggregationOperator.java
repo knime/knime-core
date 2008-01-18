@@ -47,7 +47,6 @@ public abstract class AggregationOperator {
      */
     public AggregationOperator(final int maxUniqueValues) {
         m_maxUniqueValues = maxUniqueValues;
-        reset();
     }
 
 

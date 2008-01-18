@@ -25,6 +25,9 @@
     			<li>Mode: Takes the value with the most occurrences per
     			 group. If multiple values match this criterion 
     			 the first occurrence is written to the output table.</li>
+    			 <li>Concatenate: Concatenates the values per group.</li>
+    			 <li>Unique concatenate:Concatenates each value only once 
+    			 per group.</li>
     			<li>Count: Counts members per group.</li>
     		</ul>
 			Additional aggregation methods only available for numerical columns:
