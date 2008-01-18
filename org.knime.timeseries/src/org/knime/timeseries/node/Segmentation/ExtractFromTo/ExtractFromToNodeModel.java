@@ -178,7 +178,7 @@ public class ExtractFromToNodeModel extends NodeModel {
 //        final int totalRowCount = in.getRowCount();
         try {
            for (DataRow r : in) {
-              TimestampCell tsc = (TimestampCell) r.getCell(colIndex);
+              TimestampValue tsc = (TimestampValue) r.getCell(colIndex);
             
                 java.util.Date d1 = tsc.getDate();
               if (d1.after(m_tscFrom.getDate())

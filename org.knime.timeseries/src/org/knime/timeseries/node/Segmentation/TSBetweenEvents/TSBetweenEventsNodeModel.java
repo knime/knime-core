@@ -233,7 +233,7 @@ public class TSBetweenEventsNodeModel extends NodeModel {
            int count = 0;
            for (DataRow r : in) {
               String event = r.getCell(colIndex).toString();
-              TimestampCell tsc = (TimestampCell) r.getCell(timestampColIndex);
+              TimestampValue tsc = (TimestampValue) r.getCell(timestampColIndex);
               
               if (event.equals(m_event)) {
                   t.close();

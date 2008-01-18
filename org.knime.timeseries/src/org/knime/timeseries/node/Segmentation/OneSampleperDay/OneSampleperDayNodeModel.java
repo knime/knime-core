@@ -171,7 +171,7 @@ public class OneSampleperDayNodeModel extends NodeModel {
 
         try {
            for (DataRow r : in) {
-              TimestampCell tsc = (TimestampCell) r.getCell(colIndex);
+              TimestampValue tsc = (TimestampValue) r.getCell(colIndex);
             
               Calendar d1 = Calendar.getInstance();
               d1.setTime(tsc.getDate());
