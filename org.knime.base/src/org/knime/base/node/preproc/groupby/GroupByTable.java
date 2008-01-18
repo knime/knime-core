@@ -25,22 +25,10 @@
 
 package org.knime.base.node.preproc.groupby;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.knime.base.data.sort.SortedTable;
-import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
@@ -49,6 +37,18 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+
+import org.knime.base.data.sort.SortedTable;
+import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -497,7 +497,7 @@ public class GroupByTable {
      * be kept
      * @return the result {@link DataTableSpec}
      */
-    public static DataTableSpec createGroupByTableSpec(
+    static final DataTableSpec createGroupByTableSpec(
             final DataTableSpec spec, final List<String> inclList,
             final AggregationMethod numericalColMethod,
             final AggregationMethod nominalColMethod,
@@ -519,48 +519,35 @@ public class GroupByTable {
             throw new IllegalArgumentException(
                     "Invalid none numerical aggregation method");
         }
-        final String[] names = new String[spec.getNumColumns()];
-        final DataType[] types = new DataType[spec.getNumColumns()];
+        final DataColumnSpec[] colSpecs =
+            new DataColumnSpec[spec.getNumColumns()];
         int otherIdx = 0;
         for (int i = 0, length = spec.getNumColumns(); i < length; i++) {
-            final DataColumnSpec colSpec = spec.getColumnSpec(i);
-            final String origName = colSpec.getName();
-            final DataType origType = colSpec.getType();
-            final String newName;
-            final DataType newType;
+            final DataColumnSpec origSpec = spec.getColumnSpec(i);
             final int idx;
-            final int groupIdx = inclList.indexOf(origName);
+            final int groupIdx = inclList.indexOf(origSpec.getName());
+            final DataColumnSpec newSpec;
             if (groupIdx >= 0) {
-                newName = origName;
-                newType = origType;
                 if (moveGroupCols2Front) {
                     idx = groupIdx;
                 } else {
                     idx = i;
                 }
+                newSpec = origSpec;
             } else {
-                final AggregationMethod method = getAggregationMethod(colSpec,
+                final AggregationMethod method = getAggregationMethod(origSpec,
                         numericalColMethod, nominalColMethod);
-                if (keepColName) {
-                    newName = origName;
-                } else {
-                    final String aggrColName = method.getColumnName(origName);
-                    newName = DataTableSpec.getUniqueColumnName(spec,
-                            aggrColName);
-                }
-
-                newType = method.getColumnType(origType);
+                newSpec = method.createColumnSpec(origSpec, keepColName);
                 if (moveGroupCols2Front) {
                     idx = inclList.size() + otherIdx++;
                 } else {
                     idx = i;
                 }
             }
-            names[idx] = newName;
-            types[idx] = newType;
+            colSpecs[idx] = newSpec;
         }
         LOGGER.debug("Exiting createGroupByTableSpec() of class GroupByTable.");
-        return new DataTableSpec(names, types);
+        return new DataTableSpec(colSpecs);
     }
 
     /**
