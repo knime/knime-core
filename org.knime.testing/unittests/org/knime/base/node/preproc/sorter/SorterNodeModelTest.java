@@ -28,6 +28,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataType;
+import org.knime.core.data.IntValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
@@ -350,7 +351,7 @@ public class SorterNodeModelTest extends TestCase {
         k = dimension - 1;
         while (rowIt.hasNext()) {
             RowKey rk = rowIt.next().getKey();
-            IntCell ic = (IntCell)rk.getId();
+            IntValue ic = (IntValue)rk.getId();
             assertEquals(k, ic.getIntValue());
             k--;
         }
