@@ -89,12 +89,11 @@ final class ColorManager2DialogNominal extends JPanel {
             flag = false;
         } else {
             m_columnValues.setEnabled(true);
-            for (Object cell : map.keySet()) {
+            for (DataCell cell : map.keySet()) {
                 assert cell != null;
                 Color color = map.get(cell);
                 assert color != null;
-                m_columnModel.addElement(new ColorManager2Icon((DataCell)cell,
-                        color));
+                m_columnModel.addElement(new ColorManager2Icon(cell, color));
             }
             flag = true;
         }
