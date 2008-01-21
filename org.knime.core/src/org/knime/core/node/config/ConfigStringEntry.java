@@ -24,13 +24,14 @@
  */
 package org.knime.core.node.config;
 
-
 /**
  * Config entry for String values.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
 final class ConfigStringEntry extends AbstractConfigEntry {
+    
+    private static final long serialVersionUID = -1651694785295750285L;
 
     /** The String value. */
     private final String m_string;
