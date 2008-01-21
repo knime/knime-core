@@ -257,7 +257,7 @@ public class DFFT {
 			final int D = 9;
 			for (int i = len - D - 1; i < len + D; i++) {
 				int offs = i-(len-1); // aktueller offset
-				System.out.println("i="+i+"   offset="+offs);
+				//System.out.println("i="+i+"   offset="+offs);
 				
 				final double sumx,sumx2,sumy,sumy2;
 				double anz;
@@ -320,11 +320,11 @@ public class DFFT {
 				
 				double cc = (CC[2*i] - sumx*sumy/anz );
 				double dd = Math.sqrt( (sumx2 - sumx*sumx/anz) * (sumy2 - sumy*sumy/anz) );
-					System.out.println("X "+sumx+" "+sumy+" "+sumx2+" "+sumy2+" "+CC[2*i]+" "+cc+" "+dd+" "+(cc/dd));
+				//System.out.println("X "+sumx+" "+sumy+" "+sumx2+" "+sumy2+" "+CC[2*i]+" "+cc+" "+dd+" "+(cc/dd));
 				cc /= dd;
 
 				if (cc > max) { max = cc; shift=i; }
-				System.out.println("shift="+i+"("+offs+"  d="+cc);
+				//System.out.println("shift="+i+"("+offs+"  d="+cc);
 
 			}
 			

@@ -22,9 +22,6 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
      */
     private RowKey[] m_keys;
    
-    // offset matrix
-    private int[][] m_offsets;
-
     /**
      * Constructor for a Fuzzy c-means algorithm (with no noise detection).
      * 
@@ -68,7 +65,12 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
             final DataTable table) {
        super.init(nrRows, dimension, table);
        initData(table);
-       m_offsets = new int[getNrRows()][getNrClusters()];
+       double[][] m_clusters = getClusterCentres();
+       for (int c = 0; c < m_clusters.length; c++) {
+           for (int i = 0; i < m_clusters[c].length; i++) {
+               m_clusters[c][i] = m_data[c][i];
+           }
+       }
     }
     
     /**
@@ -168,45 +170,18 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
      */
     private void updateWeightMatrix(final double[][] data) {
        int nrRows = getNrRows();
-       double[][] clusters = getClusters();
-       double[][] weightMatrix = getweightMatrix();
+       double[][] clusters = getClusters().clone();
        boolean noise = isNoise();
        double fuzzifier = getFuzzifier();
        double delta = getDelta();
         for (int currentRow = 0; currentRow < nrRows; currentRow++) {
             double[] row = data[currentRow];
-            int i = 0;
-
-            // first check if the actual row is equal to a cluster center
-            int sameCluster = -1;
-
-            int nrClusters = (noise) ? clusters.length - 1
-                    : clusters.length;
-            while ((sameCluster < 0) && (i < nrClusters)) {
-                for (int j = 0; j < row.length; j++) {
-                    if (row[j] == clusters[i][j]) {
-                        sameCluster = i;
-                    } else {
-                        sameCluster = -1;
-                        break;
-                    }
-                }
-                i++;
-            }
 
             /*
              * The weight of a data point is 1 if it is exactly on the position
              * of the cluster, in this case 0 for the others
              */
-            if (sameCluster >= 0) {
-                for (i = 0; i < weightMatrix[0].length; i++) {
-                    if (i != sameCluster) {
-                        setWeightMatrixValue(currentRow, i, 0);
-                    } else {
-                        setWeightMatrixValue(currentRow, i, 1);
-                    }
-                }
-            } else {
+            double epsilon = 1E-8;
                 // calculate the fuzzy membership to each cluster
                 for (int j = 0; j < clusters.length; j++) {
                     // for each cluster
@@ -214,7 +189,7 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
                     if (noise && j == clusters.length - 1) {
                         distNumerator = Math.pow(delta, 2.0);
                     } else {
-                        distNumerator = getDistance(clusters[j], row, j, currentRow);
+                        distNumerator = getDistance(clusters[j], row, j, currentRow)+epsilon;
                     }
                     double sum = 0;
                     for (int k = 0; k < clusters.length; k++) {
@@ -222,15 +197,17 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
                         if (noise && k == clusters.length - 1) {
                             distance = Math.pow(delta, 2.0);
                         } else {
-                            distance = getDistance(clusters[k], row, k, currentRow);
+                            distance = getDistance(clusters[k], row, k, currentRow)+epsilon;
                         }
                         sum += Math.pow((distNumerator / distance),
                                 (1.0 / (fuzzifier - 1.0)));
                     }
                     setWeightMatrixValue(currentRow, j, (1 / sum));
+                    //System.out.print(weightMatrix[currentRow][j]+" ");
                 }
-            }
+                //System.out.println();
         }
+        //System.out.println();
     }
 
     /*
@@ -239,8 +216,7 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
      */
     private double getDistance(final double[] vector1, final double[] vector2,int j,int i) {
     	DFFT.calcDistance(vector1, vector2);
-    	System.out.println("i="+i+" j="+j+" o="+DFFT.getOffset()+" d="+DFFT.getDistValue());
-    	m_offsets[i][j] = DFFT.getOffset();
+    	//System.out.println("i="+i+" j="+j+" o="+DFFT.getOffset()+" d="+DFFT.getDistValue());
         return DFFT.getDistValue();
     }
 
@@ -251,8 +227,9 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
         int dimension = getDimension();
         int nrRows = getNrRows();
         int nrClusters = getNrClusters();
-        double[][] clusters = getClusters();
-        double[][] weightMatrix = getweightMatrix();
+        double[][] clusters = getClusters().clone();
+        for (int i=0;i<clusters.length;++i) clusters[i]=clusters[i].clone();
+        double[][] weightMatrix = getweightMatrix().clone();
         double fuzzifier = getFuzzifier();
         boolean noise = isNoise();
         double[] sumNumerator = new double[3*dimension];
@@ -273,7 +250,8 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
 
             for (int currentRow = 0; currentRow < nrRows; currentRow++) {
                 double[] row = data[currentRow];
-				final int o = m_offsets[currentRow][c];
+                getDistance(clusters[c], row, c, currentRow);
+				final int o = -DFFT.getOffset();
 				
                 // for all attributes in X
 				for (int i=0;i<dimension;++i) {
@@ -297,11 +275,19 @@ public class FCMAlgorithmMemory extends FCCAlgorithm {
 			}
 			
 			// Übernahme           
+			double t = 0;
            for (int j = 0; j < dimension; j++) {
              double newValue = sumNumerator[maxpos+j]/sumDenominator[maxpos+j];
-             addTotalChange(Math.abs(clusters[c][j] - newValue));
-             setClusterValue(c, j, newValue);
+             t+=newValue*newValue;
            }
+           t=Math.sqrt(t);
+           for (int j = 0; j < dimension; j++) {
+               double newValue = (sumNumerator[maxpos+j]/sumDenominator[maxpos+j])/t;
+               addTotalChange(Math.abs(clusters[c][j] - newValue));
+               setClusterValue(c, j, newValue);
+               //System.out.print((int)(newValue*100)+" ");
+           }
+           //System.out.println();
         }
 
         /*
