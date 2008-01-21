@@ -227,7 +227,7 @@ public class SVMLearnerNodeModel extends NodeModel {
         // convert input data
         ArrayList<DoubleVector> inputData = new ArrayList<DoubleVector>();
         ArrayList<String> categories = new ArrayList<String>();
-        StringCell stringcell = null;
+        StringValue classvalue = null;
         for (DataRow row : inData[0]) {
             exec.checkCanceled();
             ArrayList<Double> values = new ArrayList<Double>();
@@ -241,14 +241,14 @@ public class SVMLearnerNodeModel extends NodeModel {
                     DoubleValue cell = (DoubleValue)row.getCell(i);
                     values.add(cell.getDoubleValue());
                 } else {
-                    stringcell = (StringCell)row.getCell(m_classpos);
-                    if (!categories.contains(stringcell.getStringValue())) {
-                        categories.add(stringcell.getStringValue());
+                    classvalue = (StringValue)row.getCell(m_classpos);
+                    if (!categories.contains(classvalue.getStringValue())) {
+                        categories.add(classvalue.getStringValue());
                     }
                 }
             }
             if (add) {
-                inputData.add(new DoubleVector(values, stringcell
+                inputData.add(new DoubleVector(values, classvalue
                         .getStringValue()));
             }
         }
