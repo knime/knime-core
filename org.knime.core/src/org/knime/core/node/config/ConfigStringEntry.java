@@ -31,7 +31,7 @@ package org.knime.core.node.config;
  */
 final class ConfigStringEntry extends AbstractConfigEntry {
     
-    private static final long serialVersionUID = -868125425900580024L;
+    private static final long serialVersionUID = -1651694785295750285L;
 
     /** The String value. */
     private final String m_string;
