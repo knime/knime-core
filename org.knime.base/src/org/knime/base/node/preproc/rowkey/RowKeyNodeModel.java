@@ -331,6 +331,7 @@ public class RowKeyNodeModel extends NodeModel {
                 && inSpecs[DATA_IN_PORT] != null);
         m_tableSpec = inSpecs[DATA_IN_PORT];
         if (m_tableSpec != null
+                && m_appendRowKey.getBooleanValue()
                 && m_tableSpec.containsName(m_newColumnName.getStringValue())) {
             throw new InvalidSettingsException("Column with name: '"
                     + m_newColumnName.getStringValue() + "' already exists."
