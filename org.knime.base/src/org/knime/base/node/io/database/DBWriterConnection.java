@@ -27,7 +27,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -74,15 +76,8 @@ final class DBWriterConnection {
             throws Exception, CanceledExecutionException {
         Connection conn = dbConn.createConnection();
         DataTableSpec spec = data.getDataTableSpec();
-        StringBuilder wildcard = new StringBuilder("(");
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            if (i > 0) {
-                wildcard.append(", ?");
-            } else {
-                wildcard.append("?");
-            }
-        }
-        wildcard.append(")");
+        // mapping from spec columns to database columns
+        final int[] mapping;
         // append data to existing table
         if (appendData) {
             ResultSet rs = null;
@@ -99,20 +94,29 @@ final class DBWriterConnection {
             // if table exists
             if (rs != null) {
                 ResultSetMetaData rsmd = rs.getMetaData();
-                if (spec.getNumColumns() != rsmd.getColumnCount()) {
-                    throw new RuntimeException("Number of columns from input "
-                            + "and in database does not match: " 
-                            + spec.getNumColumns() + " <> "
-                            + rsmd.getColumnCount());
+                if (spec.getNumColumns() > rsmd.getColumnCount()) {
+                    Set<String> set = new LinkedHashSet<String>();
+                    for (int i = 0; i < spec.getNumColumns(); i++) {
+                        set.add(spec.getColumnSpec(i).getName());
+                    }       
+                    for (int i = 0; i < rsmd.getColumnCount(); i++) {
+                        String colName = rsmd.getColumnName(i + 1);
+                        if (set.contains(colName)) {
+                            set.remove(colName);
+                        }
+                    }
+                    throw new RuntimeException("No. of columns in input table"
+                            + " > in database. Not existing columns in DB: " 
+                            + set.toString());
                 }
+                mapping = new int[rsmd.getColumnCount()];
                 for (int i = 0; i < rsmd.getColumnCount(); i++) {
                     String name = rsmd.getColumnName(i + 1);
-                    DataColumnSpec cspec = spec.getColumnSpec(i);
-                    if (!cspec.getName().equals(name)) {
-                        throw new RuntimeException("Column name from input "
-                                + "does not match column name in database at "
-                                + "position " + i + ": " + name);
+                    mapping[i] = spec.findColumnIndex(name);
+                    if (mapping[i] < 0) {
+                        continue;
                     }
+                    DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
                     int type = rsmd.getColumnType(i + 1);
                     switch (type) {
                         // check all int compatible types 
@@ -149,8 +153,11 @@ final class DBWriterConnection {
                     }
                 }
                 rs.close();
+            } else {
+                mapping = new int[spec.getNumColumns()];
             }
         } else {
+            mapping = new int[spec.getNumColumns()];
             try {
                 // remove existing table (if any)
                 conn.createStatement().execute("DROP TABLE " + table);
@@ -161,6 +168,18 @@ final class DBWriterConnection {
             conn.createStatement().execute("CREATE TABLE " + table + " " 
                     + createStmt(spec, sqlTypes));
         }
+        
+        // creates the wild card string based on the number of columns
+        // this string it used everytime an new row is inserted into the db 
+        final StringBuilder wildcard = new StringBuilder("(");
+        for (int i = 0; i < mapping.length; i++) {
+            if (i > 0) {
+                wildcard.append(", ?");
+            } else {
+                wildcard.append("?");
+            }
+        }
+        wildcard.append(")");
         
         // create table meta data with empty column information
         PreparedStatement stmt = conn.prepareStatement("INSERT INTO " + table
@@ -178,10 +197,14 @@ final class DBWriterConnection {
             exec.checkCanceled();
             exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
             DataRow row = it.next();
-            for (int i = 0; i < row.getNumCells(); i++) {
+            for (int i = 0; i < mapping.length; i++) {
                 int dbIdx = i + 1;
-                DataColumnSpec cspec = spec.getColumnSpec(i);
-                DataCell cell = row.getCell(i);
+                if (mapping[i] < 0) {
+                    stmt.setNull(dbIdx, Types.NULL);
+                    continue;
+                }
+                DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
+                DataCell cell = row.getCell(mapping[i]);
                 if (cspec.getType().isCompatible(IntValue.class)) {
                     if (cell.isMissing()) {
                         stmt.setNull(dbIdx, Types.INTEGER);
