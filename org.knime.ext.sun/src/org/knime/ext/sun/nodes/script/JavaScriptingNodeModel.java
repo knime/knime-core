@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.ext.sun.nodes.script;
 
@@ -52,7 +52,7 @@ import org.knime.ext.sun.nodes.script.expression.CompilationFailedException;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class JavaScriptingNodeModel extends NodeModel {
@@ -70,20 +70,29 @@ public class JavaScriptingNodeModel extends NodeModel {
 
     /** NodeSettings key for the return type of the expression. */
     protected static final String CFG_RETURN_TYPE = "return_type";
-    
-    /** NodeSettings key whether to check for compilation problems when 
+
+    /** NodeSettings key whether to check for compilation problems when
      * dialog closes (not used in the nodemodel, though). */
-    protected static final String CFG_TEST_COMPILATION = 
+    protected static final String CFG_TEST_COMPILATION =
         "test_compilation_on_dialog_close";
-    
+
     private String m_expression;
+
+    /* the compiled version is stored because it is expensive to create it. Do
+     * not rely on its existence!
+     */
+    private Expression m_compiledExpression = null;
+
+   /* The input table spec at the time the above expression was compiled
+    */
+    private DataTableSpec m_inputSpec = null;
 
     private Class<?> m_returnType;
 
     private String m_colName;
 
     private boolean m_isReplace;
-    
+
     /** Only important for dialog: Test the syntax of the snippet code
      * when the dialog closes, bug fix #1229. */
     private boolean m_isTestCompilationOnDialogClose = true;
@@ -129,12 +138,16 @@ public class JavaScriptingNodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_expression = settings.getString(CFG_EXPRESSION);
+        // after we got a new expression delete the compiled version of it.
+        m_compiledExpression = null;
+        m_inputSpec = null;
+
         m_colName = settings.getString(CFG_COLUMN_NAME);
         m_isReplace = settings.getBoolean(CFG_IS_REPLACE);
         String returnType = settings.getString(CFG_RETURN_TYPE);
         m_returnType = getReturnType(returnType);
         // this setting is not available in 1.2.x
-        m_isTestCompilationOnDialogClose = 
+        m_isTestCompilationOnDialogClose =
             settings.getBoolean(CFG_TEST_COMPILATION, true);
     }
 
@@ -145,7 +158,12 @@ public class JavaScriptingNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTableSpec inSpec = inData[0].getDataTableSpec();
-        ColumnRearranger c = createColumnRearranger(inSpec);
+        if (m_tempFile == null) {
+            m_tempFile = createTempFile();
+        }
+        Expression exp =
+            compile(m_expression, inSpec, m_returnType, m_tempFile);
+        ColumnRearranger c = createColumnRearranger(inSpec, exp);
         BufferedDataTable o = exec.createColumnRearrangeTable(inData[0], c,
                 exec);
         return new BufferedDataTable[]{o};
@@ -187,7 +205,22 @@ public class JavaScriptingNodeModel extends NodeModel {
         }
         ColumnRearranger c;
         try {
-            c = createColumnRearranger(inSpecs[0]);
+            if ((m_compiledExpression == null)
+                    || (!m_inputSpec.equalStructure(inSpecs[0]))) {
+                // if the spec changes, we need to re-compile the expression
+                if (m_tempFile == null) {
+                    m_tempFile = createTempFile();
+                }
+                m_compiledExpression =
+                    compile(m_expression, inSpecs[0], m_returnType, m_tempFile);
+                m_inputSpec = inSpecs[0];
+            }
+
+            assert m_compiledExpression != null;
+            assert m_inputSpec != null;
+
+            c = createColumnRearranger(inSpecs[0], m_compiledExpression);
+
         } catch (IOException ioe) {
             LOGGER.warn("Unable to create temp file.", ioe);
             setWarningMessage("Unable to create temp file.");
@@ -202,14 +235,10 @@ public class JavaScriptingNodeModel extends NodeModel {
         return new DataTableSpec[]{c.createSpec()};
     }
 
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec)
-            throws InvalidSettingsException, IOException,
-            CompilationFailedException, InstantiationException {
+    private ColumnRearranger createColumnRearranger(final DataTableSpec spec,
+            final Expression exp)
+            throws InvalidSettingsException, InstantiationException {
         DataColumnSpec newColSpec = getNewColSpec();
-        if (m_tempFile == null) {
-            m_tempFile = createTempFile();
-        }
-        Expression exp = compile(m_expression, spec, m_returnType, m_tempFile);
         ColumnCalculator cc = new ColumnCalculator(exp, m_returnType, spec,
                 newColSpec);
         ColumnRearranger result = new ColumnRearranger(spec);
@@ -241,7 +270,7 @@ public class JavaScriptingNodeModel extends NodeModel {
             }
         }
     }
-    
+
     /** Determine the class file name of the javaFile argument. Needed to
      * check if temp file is ok and on exit (to delete all traces of this node).
      * @param javaFile The file name of java file
@@ -277,7 +306,7 @@ public class JavaScriptingNodeModel extends NodeModel {
 
     /**
      * Get the class associated with returnType.
-     * 
+     *
      * @param returnType <code>Double.class.getName()</code>
      * @return the associated class
      * @throws InvalidSettingsException if the argument is invalid
@@ -299,7 +328,7 @@ public class JavaScriptingNodeModel extends NodeModel {
     /**
      * Tries to compile the given expression as entered in the dialog with the
      * current spec.
-     * 
+     *
      * @param expression the expression from dialog or settings
      * @param spec the spec
      * @param rType the return type, e.g. <code>Integer.class</code>
@@ -372,7 +401,7 @@ public class JavaScriptingNodeModel extends NodeModel {
                     break;
                 case '$':
                     if ("".equals(t.sval)) {
-                        isNextTokenSpecial = !isNextTokenSpecial;   
+                        isNextTokenSpecial = !isNextTokenSpecial;
                     } else {
                         s = t.sval;
                         int colIndex = spec.findColumnIndex(s);
@@ -381,9 +410,9 @@ public class JavaScriptingNodeModel extends NodeModel {
                                     "No such column: "
                                     + s + " (at line " + t.lineno() + ")");
                         }
-                        colFieldName = 
+                        colFieldName =
                             ColumnCalculator.createColField(colIndex);
-                        DataType colType = 
+                        DataType colType =
                             spec.getColumnSpec(colIndex).getType();
                         correctedExp.append(colFieldName);
                         if (colType.isCompatible(IntValue.class)) {
@@ -398,7 +427,7 @@ public class JavaScriptingNodeModel extends NodeModel {
                         nameValueMap.put(colFieldName, type.getName());
                     }
                     break;
-                default: 
+                default:
                     throw new IllegalStateException(
                             "Unexpected type in tokenizer: "
                             + tokType + " (at line " + t.lineno() + ")");
@@ -407,7 +436,7 @@ public class JavaScriptingNodeModel extends NodeModel {
         } catch (IOException e) {
             throw new InvalidSettingsException(
                     "Unable to tokenize expression string", e);
-            
+
         }
         return new Expression(correctedExp.toString(), nameValueMap, rType,
                 tempFile);
