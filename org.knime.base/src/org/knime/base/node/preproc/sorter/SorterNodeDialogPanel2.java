@@ -171,8 +171,8 @@ public class SorterNodeDialogPanel2 extends JPanel {
                 snm = new SpinnerNumberModel(1, 1, maxCols, 1);
             }
             spinner.setModel(snm);
-            spinner.setMaximumSize(new Dimension(100, 30));
-            spinner.setPreferredSize(new Dimension(100, 30));
+            spinner.setMaximumSize(new Dimension(50, 25));
+            spinner.setPreferredSize(new Dimension(50, 25));
             NumberEditor ne = (NumberEditor)spinner.getEditor();
             final JFormattedTextField spinnertextfield = ne.getTextField();
             // workaround to ensure same background color
@@ -180,6 +180,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
             // when spinner's text field is editable false
             spinnertextfield.setEditable(false);
             spinnertextfield.setBackground(backColor);
+           
 
             addSortItemButton.addActionListener(new ActionListener() {
                 public void actionPerformed(final ActionEvent ae) {
