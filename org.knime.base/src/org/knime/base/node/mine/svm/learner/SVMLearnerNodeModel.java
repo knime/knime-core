@@ -45,6 +45,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -179,6 +180,7 @@ public class SVMLearnerNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec myspec = inSpecs[0];
+        StringBuilder errormessage = new StringBuilder();
         if (myspec.getNumColumns() > 0) {
             if (m_classcol.getStringValue().equals("")) {
                 throw new InvalidSettingsException("Class column not set");
@@ -196,11 +198,9 @@ public class SVMLearnerNodeModel extends NodeModel {
                                 myspec.findColumnIndex(m_classcol
                                         .getStringValue());
                     } else {
-                        if (colspec.getType().isCompatible(StringValue.class)) {
-                            throw new InvalidSettingsException(
-                                    "Unknown String column "
-                                            + colspec.getName()
-                                            + " (is not class column)");
+                        if (!colspec.getType().isCompatible(
+                                DoubleValue.class)) {
+                            errormessage.append(colspec.getName() + ",");
                         }
                     }
                 }
@@ -208,6 +208,15 @@ public class SVMLearnerNodeModel extends NodeModel {
                     throw new InvalidSettingsException("Class column "
                             + m_classcol.getStringValue() + " not found"
                             + " in DataTableSpec.");
+                }
+                if (errormessage.length() > 0) {
+                    // remove last ','
+                    int pos = errormessage.length();
+                    errormessage.replace(pos - 1, pos, " ");
+                    errormessage
+                            .append(": incompatible type."
+                                    + " Will be ignored.");
+                    setWarningMessage(errormessage.toString());
                 }
             }
         }
@@ -220,14 +229,39 @@ public class SVMLearnerNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        m_spec = inData[0].getDataTableSpec();
-        m_classpos = m_spec.findColumnIndex(m_classcol
-                                    .getStringValue());
+        BufferedDataTable traintable = inData[0];
+        // Clean input data...
+        StringBuilder errormessage = new StringBuilder();
+        DataTableSpec inputSpec = inData[0].getDataTableSpec();
+        Vector<Integer> excludeVector = new Vector<Integer>();
+        for (int i = 0; i < inputSpec.getNumColumns(); i++) {
+            DataColumnSpec colspec = inputSpec.getColumnSpec(i);
+            if (!colspec.getType().isCompatible(DoubleValue.class)
+                    && !colspec.getName().equals(m_classcol.getStringValue())) {
+                errormessage.append(colspec.getName() + ",");
+                excludeVector.add(i);
+            }
+        }
+        // ...if necessary
+        if (excludeVector.size() > 0) {
+            int[] exclude = new int[excludeVector.size()];
+            for (int e = 0; e < exclude.length; e++) {
+                exclude[e] = excludeVector.get(e);
+            }
+            ColumnRearranger colre = new ColumnRearranger(
+                    inData[0].getDataTableSpec());
+            colre.remove(exclude);
+            traintable =
+                    exec.createColumnRearrangeTable(inData[0], colre, exec);
+        }
+        m_spec = traintable.getDataTableSpec();
+        m_classpos = m_spec.findColumnIndex(m_classcol.getStringValue());
+
         // convert input data
         ArrayList<DoubleVector> inputData = new ArrayList<DoubleVector>();
         ArrayList<String> categories = new ArrayList<String>();
         StringValue classvalue = null;
-        for (DataRow row : inData[0]) {
+        for (DataRow row : traintable) {
             exec.checkCanceled();
             ArrayList<Double> values = new ArrayList<Double>();
             boolean add = true;
@@ -306,6 +340,13 @@ public class SVMLearnerNodeModel extends NodeModel {
                     m_svms[i] = bst[i].getSvm();
                 }
             }
+        }
+        if (errormessage.length() > 0) {
+            // remove last ','
+            int pos = errormessage.length();
+            errormessage.replace(pos - 1, pos, " ");
+            errormessage.append(": incompatible type. Ignored.");
+            setWarningMessage(errormessage.toString());
         }
         return new BufferedDataTable[]{};
     }
