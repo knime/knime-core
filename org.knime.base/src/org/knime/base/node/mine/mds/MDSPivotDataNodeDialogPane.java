@@ -24,9 +24,6 @@
  */
 package org.knime.base.node.mine.mds;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.NodeSettingsRO;
@@ -35,42 +32,23 @@ import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
- * Dialog for the MDS Pivot node.
+ * Dialog for the MDS Projector node.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class MDSPivotNodeDialogPane extends DefaultNodeSettingsPane {
+public class MDSPivotDataNodeDialogPane extends DefaultNodeSettingsPane {
     
     /**
-     * Creates new dialog pane for MDS Pivot node.
+     * Creates new dialog pane for MDS Projector node.
      */
     @SuppressWarnings("unchecked")
-    public MDSPivotNodeDialogPane() {
-        final SettingsModelIntegerBounded pivotModel =
-            MDSPivotNodeModel.createPivotElements();
-        pivotModel.setEnabled(true);
-        final SettingsModelBoolean pivotCheckbox = 
-            MDSPivotNodeModel.createPivotCheckbox();
-        final DialogComponentNumber pivotComponent = 
-            new DialogComponentNumber(pivotModel, 
-                    "No. of pivot rows used for MDS: ", 1);
-        pivotCheckbox.addChangeListener(new ChangeListener() {
-            public void stateChanged(final ChangeEvent e) {
-                pivotModel.setEnabled(pivotCheckbox.getBooleanValue());
-            } 
-        });
+    public MDSPivotDataNodeDialogPane() {
         super.createNewGroup(" Lower dimension ");
         addDialogComponent(new DialogComponentNumber(
                 MDSPivotNodeModel.createLowerDimension(), 
                 "Lower dimension", 1));
-        super.createNewGroup(" Pivot elements ");
-        addDialogComponent(new DialogComponentBoolean(pivotCheckbox, 
-                "Define no. of pivots"));
-        addDialogComponent(pivotComponent);
         super.createNewGroup(" Column selection ");
         addDialogComponent(new DialogComponentColumnFilter(
                 MDSPivotNodeModel.createColumnFilter(), 0, DoubleValue.class));
@@ -106,7 +84,5 @@ public class MDSPivotNodeDialogPane extends DefaultNodeSettingsPane {
                     + "least 2 double-value columns.");
         }
     }
-    
-    
 
 }

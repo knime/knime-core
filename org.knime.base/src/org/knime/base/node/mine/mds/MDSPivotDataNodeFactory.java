@@ -41,7 +41,7 @@ public class MDSPivotDataNodeFactory extends NodeFactory {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new MDSPivotNodeDialogPane();
+        return new MDSPivotDataNodeDialogPane();
     }
 
     /**

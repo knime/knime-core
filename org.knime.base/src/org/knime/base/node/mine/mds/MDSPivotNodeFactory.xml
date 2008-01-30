@@ -5,26 +5,30 @@
 	
 	<shortDescription>
 		Performs a Classical Multi-Dimensional Scaling (MDS). Objects are placed
-		according to a selected sub-set of all dissimilarities.
+		according to a selected sub-set (pivots) of all dissimilarities.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>
 			Performs a Classical Multi-Dimensional Scaling (MDS). Objects are placed
-			according to a selected sub-set of all dissimilarities.
+			according to a selected sub-set (pivots) of all dissimilarities.
 			For details see 
 			<a href="http://www.inf.uni-konstanz.de/algo/publications/bp-empmdsld-06.pdf">
     		Eigensolver Methods for Progressive Multidimensional Scaling of Large Data</a>
     		published by Brandes and Pich.
 		</intro>
-		<option name="Lower Dimension:">
+		<option name="Lower dimension:">
 			Select lower dimensionality to embed data into.
 		</option>
 		<option name="Pivot elements:">
-			Select number of pivot elements.
+			If selected, specify the number of pivot rows.
 		</option>
-	    <option name="Column Selection:">
+	    <option name="Column selection:">
 			Select number of columns to be embedded into lower dimension.
+		</option>
+	    <option name="Append all column not used for MDS:">
+			Appends all columns (numeric and non-numeric) to the resulting
+			lower-dimensional table.
 		</option>
 	</fullDescription>
 	
@@ -32,4 +36,5 @@
 		<dataIn name="High-dim. data" index="0">High-dimensional data</dataIn>
 		<dataOut name="Lower-dim. data" index="0">Lower-dimensional data</dataOut>
 	</ports>	
+	
 </knimeNode>

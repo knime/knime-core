@@ -546,6 +546,10 @@
             factory-class="org.knime.base.node.mine.mds.MDSPivotNodeFactory"
             id="org.knime.base.node.mine.mds.MDSPivotNodeFactory"/>
       <node
+            category-path="/mining/mds"
+            factory-class="org.knime.base.node.mine.mds.MDSPivotDataNodeFactory"
+            id="org.knime.base.node.mine.mds.MDSPivotDataNodeFactory"/>
+      <node
             category-path="/mining/modeleval"
             factory-class="org.knime.base.node.viz.enrich.EnrichmentPlotterFactory"
             id="org.knime.chem.node.viz.enrich.EnrichmentPlotterFactory"/>

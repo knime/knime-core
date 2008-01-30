@@ -24,15 +24,25 @@
  */
 package org.knime.base.node.mine.mds;
 
+import java.util.List;
+import java.util.Random;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  * 
@@ -55,13 +65,29 @@ public class MDSPivotDataNodeModel extends MDSPivotNodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (!inSpecs[0].equalStructure(inSpecs[1])) {
-            throw new InvalidSettingsException("Input specs don't have equal"
-                    + " structure.");
+        List<String> incl = m_numericFilter.getIncludeList();
+        for (String s : incl) {
+            if (!inSpecs[0].containsName(s)) {
+                throw new InvalidSettingsException("Column \"" + s 
+                        + "\" not in input spec at port 0.");
+            }
+        }
+        for (String s : incl) {
+            if (!inSpecs[1].containsName(s)) {
+                throw new InvalidSettingsException("Column \"" + s 
+                        + "\" not in input spec at port 1.");
+            } else {
+                if (!inSpecs[1].getColumnSpec(s).getType().isCompatible(
+                        DoubleValue.class)) {
+                    throw new InvalidSettingsException("Column \"" + s 
+                            + "\" in input spec at port 1 is not "
+                            + "double-value compatible.");
+                }
+            }
         }
         DataTableSpec[] resultSpec = super.configure(
                 new DataTableSpec[]{inSpecs[0]});
-        return new DataTableSpec[]{resultSpec[0], resultSpec[0]};
+        return new DataTableSpec[]{resultSpec[0], createSpec(inSpecs[1])};
     }
 
     /**
@@ -70,59 +96,105 @@ public class MDSPivotDataNodeModel extends MDSPivotNodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        final int nrPivotRows = inData[0].getRowCount();
-        final int nrDataRows = inData[1].getRowCount();
-        ColumnRearranger colRe = createColumnRearranger(
-                inData[0].getDataTableSpec());
-        colRe.keepOnly(m_numericFilter.getIncludeList().toArray(new String[0]));
+        final int nrRows = inData[0].getRowCount();
+        final DataTableSpec ospec = inData[0].getDataTableSpec();
+        ColumnRearranger colRe = createColumnRearranger(ospec);
+        final List<String> incl = m_numericFilter.getIncludeList();
+        colRe.keepOnly(incl.toArray(new String[0]));
         BufferedDataTable data = exec.createColumnRearrangeTable(
-                inData[0], colRe, exec.createSilentSubProgress(0.1));
+                inData[0], colRe, exec.createSilentSubProgress(0.0));
         final int colCnt = data.getDataTableSpec().getNumColumns();
-        double[][] dataArray = new double[colCnt][nrPivotRows + nrDataRows];
+        double[][] dataArray = new double[colCnt][nrRows];
         int rowIdx = 0;
         for (DataRow row : data) {
             exec.checkCanceled();
             for (int i = 0; i < colCnt; i++) {
-                dataArray[i][rowIdx] = 
-                    ((DoubleValue) row.getCell(i)).getDoubleValue();
-            }
-            rowIdx++;
-        }
-        colRe = createColumnRearranger(inData[1].getDataTableSpec());
-        colRe.keepOnly(m_numericFilter.getIncludeList().toArray(new String[0]));
-        data = exec.createColumnRearrangeTable(inData[1], colRe, 
-                exec.createSilentSubProgress(0.1));
-        for (DataRow row : data) {
-            exec.checkCanceled();
-            for (int i = 0; i < colCnt; i++) {
-                dataArray[i][rowIdx] = 
-                    ((DoubleValue) row.getCell(i)).getDoubleValue();
+                DataCell cell = row.getCell(i);
+                if (cell.isMissing()) {
+                    dataArray[i][rowIdx] = Double.NaN;
+                } else {
+                    dataArray[i][rowIdx] = 
+                        ((DoubleValue) cell).getDoubleValue();
+                }
             }
             rowIdx++;
         }
         final int lowDim = m_lowerDim.getIntValue();
-        double[][] result = new double[lowDim][nrPivotRows + nrDataRows];
-        super.executeMDS(dataArray, nrPivotRows, result, exec);
-        DataTableSpec spec = createSpec(lowDim);
-        BufferedDataContainer buf1 = exec.createDataContainer(spec);
-        BufferedDataContainer buf2 = exec.createDataContainer(spec);
+        double[][] result = new double[lowDim][nrRows];
+        if (nrRows > 0) {
+            // initialize with random nonzero stuff
+            Random random = new Random(0L);
+            for (int i = 0; i < result.length; i++) {
+                for (int j = 0; j < result[0].length; j++) {
+                    result[i][j] = random.nextDouble();
+                }
+            }
+            super.executeMDS(dataArray, nrRows, result, exec);
+        }
+        DataTableSpec spec0 = createSpec(lowDim, ospec);
+        BufferedDataContainer buf1 = exec.createDataContainer(spec0);
         rowIdx = 0;
         for (DataRow row : inData[0]) {
             exec.checkCanceled();
-            double[] doubles = new double[result.length];
+            DataCell[] doubles;
+            if (m_appendColumns.getBooleanValue()) {
+                doubles = new DataCell[ospec.getNumColumns() 
+                                       - incl.size() + lowDim];
+                int idx = 0;
+                for (int j = 0; j < ospec.getNumColumns(); j++) {
+                    if (!incl.contains(ospec.getColumnSpec(j).getName())) {
+                        DataCell cell = row.getCell(j);
+                        doubles[(idx++) + lowDim] = cell;
+                    }
+                }
+            } else {
+                doubles = new DoubleCell[result.length];
+            }
             for (int j = 0; j < result.length; j++) {
-                doubles[j] = result[j][rowIdx];
+                doubles[j] = new DoubleCell(result[j][rowIdx]);
             }
             DataRow newRow = new DefaultRow(row.getKey(), doubles);
             buf1.addRowToTable(newRow);
             rowIdx++;
         }
         buf1.close();
+        colRe = createColumnRearranger(inData[1].getDataTableSpec());
+        colRe.keepOnly(incl.toArray(new String[0]));
+        data = exec.createColumnRearrangeTable(inData[1], colRe, 
+                exec.createSilentSubProgress(0.0));
+        rowIdx = 0;
+        final DataTableSpec spec1 = inData[1].getDataTableSpec();
+        final int nrCells1 = spec1.getNumColumns() + lowDim - incl.size();
+        BufferedDataContainer buf2 = 
+            exec.createDataContainer(createSpec(spec1));
         for (DataRow row : inData[1]) {
             exec.checkCanceled();
-            double[] doubles = new double[result.length];
-            for (int j = 0; j < result.length; j++) {
-                doubles[j] = result[j][rowIdx];
+            DataCell[] doubles;
+            if (m_appendColumns.getBooleanValue()) {
+                doubles = new DataCell[nrCells1];
+                int idx = 0;
+                for (int j = 0; j < spec1.getNumColumns(); j++) {
+                    if (!incl.contains(spec1.getColumnSpec(j).getName())) {
+                        DataCell cell = row.getCell(j);
+                        doubles[(idx++) + lowDim] = cell;
+                    }
+                }
+            } else {
+                doubles = new DoubleCell[result.length];
+            }
+            double[] scale = new double[incl.size()];
+            for (int j = 0; j < incl.size(); j++) {
+                int idx = spec1.findColumnIndex(incl.get(j));
+                DataCell cell = row.getCell(idx);
+                if (cell.isMissing()) {
+                   scale[j] = Double.NaN;
+                } else {
+                    scale[j] = ((DoubleValue) cell).getDoubleValue();
+                }
+            }
+            double[] place = ClassicalMDS.place(result, dataArray, scale);
+            for (int i = 0; i < place.length; i++) {
+                doubles[i] = new DoubleCell(place[i]);
             }
             DataRow newRow = new DefaultRow(row.getKey(), doubles);
             buf2.addRowToTable(newRow);
@@ -130,6 +202,69 @@ public class MDSPivotDataNodeModel extends MDSPivotNodeModel {
         }
         buf2.close();
         return new BufferedDataTable[]{buf1.getTable(), buf2.getTable()};
+    }
+    
+    private DataTableSpec createSpec(final DataTableSpec spec) {
+        final int lowDim = m_lowerDim.getIntValue();
+        final List<String> incl = m_numericFilter.getIncludeList();
+        final int nrCells1 = spec.getNumColumns() + lowDim - incl.size();
+        DataColumnSpec[] cspecs;
+        if (m_appendColumns.getBooleanValue()) {
+            cspecs = new DataColumnSpec[nrCells1];
+            int idx = 0;
+            for (int j = 0; j < spec.getNumColumns(); j++) {
+                if (!incl.contains(spec.getColumnSpec(j).getName())) {
+                    cspecs[(idx++) + lowDim] = spec.getColumnSpec(j);
+                }
+            }
+        } else {
+            cspecs = new DataColumnSpec[lowDim];
+        }
+        for (int i = 0; i < lowDim; i++) {
+            String name = new String("X" + (i + 1));
+            DataType type = DoubleCell.TYPE;
+            cspecs[i] = new DataColumnSpecCreator(name, type).createSpec();
+        }
+        return new DataTableSpec(cspecs);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        m_lowerDim.loadSettingsFrom(settings);
+        m_numericFilter.loadSettingsFrom(settings);
+        m_appendColumns.loadSettingsFrom(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void reset() {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_lowerDim.saveSettingsTo(settings);
+        m_numericFilter.saveSettingsTo(settings);
+        m_appendColumns.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void validateSettings(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        m_lowerDim.validateSettings(settings);
+        m_numericFilter.validateSettings(settings);
+        m_appendColumns.validateSettings(settings);
     }
 
 }
