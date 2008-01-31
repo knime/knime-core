@@ -185,6 +185,7 @@ public class SVMLearnerNodeModel extends NodeModel {
             if (m_classcol.getStringValue().equals("")) {
                 throw new InvalidSettingsException("Class column not set");
             } else {
+                int validColumns = 0;
                 boolean found = false;
                 for (DataColumnSpec colspec : myspec) {
                     if (colspec.getName().equals(m_classcol.getStringValue())) {
@@ -201,6 +202,8 @@ public class SVMLearnerNodeModel extends NodeModel {
                         if (!colspec.getType().isCompatible(
                                 DoubleValue.class)) {
                             errormessage.append(colspec.getName() + ",");
+                        } else {
+                            validColumns++;
                         }
                     }
                 }
@@ -208,6 +211,10 @@ public class SVMLearnerNodeModel extends NodeModel {
                     throw new InvalidSettingsException("Class column "
                             + m_classcol.getStringValue() + " not found"
                             + " in DataTableSpec.");
+                }
+                if (validColumns == 0) {
+                    throw new InvalidSettingsException("Input DataTable does"
+                            + " not contain one single valid column.");
                 }
                 if (errormessage.length() > 0) {
                     // remove last ','
