@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.partition;
 
@@ -38,7 +38,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class PartitionNodeModel extends AbstractSamplingNodeModel {
@@ -117,9 +117,7 @@ public class PartitionNodeModel extends AbstractSamplingNodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (!hasBeenConfigured()) {
-            throw new InvalidSettingsException("No method specified");
-        }
+        checkSettings(inSpecs[0]);
         DataTableSpec[] outs = new DataTableSpec[2];
         outs[OUTPORT_A] = inSpecs[0];
         outs[OUTPORT_B] = inSpecs[0];

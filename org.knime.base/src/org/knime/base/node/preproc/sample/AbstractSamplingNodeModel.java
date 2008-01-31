@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.sample;
 
@@ -30,6 +30,7 @@ import java.util.Random;
 
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -40,7 +41,7 @@ import org.knime.core.node.NodeSettingsWO;
 /**
  * NodeModel implementation to sample rows from an input table, thus, this node
  * has one inport. The number of outports is defined by the derived class
- * 
+ *
  * @see SamplingNodeModel
  * @see org.knime.base.node.preproc.partition.PartitionNodeModel
  * @author Bernd Wiswedel, University of Konstanz
@@ -50,7 +51,7 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
 
     /**
      * Empty constructor, defines one inport and a given number of outports.
-     * 
+     *
      * @param outs the number of outports
      */
     public AbstractSamplingNodeModel(final int outs) {
@@ -137,7 +138,7 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
     /**
      * Method to be used in the execute method to determine the row filter for
      * the sampling.
-     * 
+     *
      * @param in the data table from the inport
      * @param exec the execution monitor to check for cancelation
      * @return a row filter for sampling according to current settings
@@ -196,16 +197,42 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
 
     /**
      * Has the node been configured, i.e. a method has been set
-     * 
+     *
      * @return <code>true</code> if the node is configured
+     *
+     * @deprecated use {@link #checkSettings(DataTableSpec)} instead because
+     * this also checks for the class column if stratified sampling has been
+     * selected
      */
+    @Deprecated
     protected boolean hasBeenConfigured() {
         return m_settings.method() != null;
     }
 
+
+    /**
+     * Checks if the node settings are valid, i.e. a method has been set and the
+     * class column exists if stratified sampling has been chosen.
+     *
+     * @param inSpec the input table's spec
+     * @throws InvalidSettingsException if the settings are invalid
+     */
+    protected void checkSettings(final DataTableSpec inSpec)
+        throws InvalidSettingsException {
+        if (m_settings.method() == null) {
+            throw new InvalidSettingsException("No sampling method selected");
+        }
+        if (m_settings.stratifiedSampling() && !inSpec
+                        .containsName(m_settings.classColumn())) {
+            throw new InvalidSettingsException("Column '"
+                    + m_settings.classColumn() + "' for stratified sampling "
+                    + "does not exist");
+        }
+    }
+
     /**
      * Returns the settings of this object.
-     * 
+     *
      * @return a reference to the the settings
      */
     public SamplingNodeSettings getSettings() {

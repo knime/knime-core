@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.sample;
 
@@ -36,7 +36,7 @@ import org.knime.core.node.InvalidSettingsException;
 /**
  * NodeModel implementation to sample rows from an input table, thus, this node
  * has one in- and one outport.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class SamplingNodeModel extends AbstractSamplingNodeModel {
@@ -87,7 +87,7 @@ public class SamplingNodeModel extends AbstractSamplingNodeModel {
                         + out.getRowCount() + ")");
             }
         }
-        
+
         return new BufferedDataTable[]{out};
     }
 
@@ -97,10 +97,7 @@ public class SamplingNodeModel extends AbstractSamplingNodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (hasBeenConfigured()) {
-            return inSpecs;
-        } else {
-            throw new InvalidSettingsException("Not configured.");
-        }
+        checkSettings(inSpecs[0]);
+        return inSpecs;
     }
 }
