@@ -21,7 +21,12 @@
 			Select lower dimensionality to embed data into.
 		</option>
 		<option name="Pivot elements:">
-			If selected, specify the number of pivot rows.
+			If selected, specify the number of pivot rows. These rows are then 
+			used to calculate the MDS-embedding on. The remaining rows are
+			mapped corresponding these embedding. Due to performance reasons, it
+			is recommend to set this number, if the number of rows exceed a 
+			certain threshold, that is, the similarity matrix of all rows 
+			would not fit into memory.
 		</option>
 	    <option name="Column selection:">
 			Select number of columns to be embedded into lower dimension.

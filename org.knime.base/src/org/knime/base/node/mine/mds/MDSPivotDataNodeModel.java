@@ -43,6 +43,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * 
@@ -105,23 +106,23 @@ public class MDSPivotDataNodeModel extends MDSPivotNodeModel {
                 inData[0], colRe, exec.createSilentSubProgress(0.0));
         final int colCnt = data.getDataTableSpec().getNumColumns();
         double[][] dataArray = new double[colCnt][nrRows];
-        int rowIdx = 0;
+        int rowCnt = 0;
         for (DataRow row : data) {
             exec.checkCanceled();
             for (int i = 0; i < colCnt; i++) {
                 DataCell cell = row.getCell(i);
                 if (cell.isMissing()) {
-                    dataArray[i][rowIdx] = Double.NaN;
+                    break;
                 } else {
-                    dataArray[i][rowIdx] = 
+                    dataArray[i][rowCnt] = 
                         ((DoubleValue) cell).getDoubleValue();
                 }
             }
-            rowIdx++;
+            rowCnt++;
         }
         final int lowDim = m_lowerDim.getIntValue();
         double[][] result = new double[lowDim][nrRows];
-        if (nrRows > 0) {
+        if (rowCnt > 0) {
             // initialize with random nonzero stuff
             Random random = new Random(0L);
             for (int i = 0; i < result.length; i++) {
@@ -129,14 +130,15 @@ public class MDSPivotDataNodeModel extends MDSPivotNodeModel {
                     result[i][j] = random.nextDouble();
                 }
             }
-            super.executeMDS(dataArray, nrRows, result, exec);
+            super.executeMDS(dataArray, rowCnt, result, exec);
         }
         DataTableSpec spec0 = createSpec(lowDim, ospec);
         BufferedDataContainer buf1 = exec.createDataContainer(spec0);
-        rowIdx = 0;
+        rowCnt = 0;
         for (DataRow row : inData[0]) {
             exec.checkCanceled();
             DataCell[] doubles;
+            boolean isMissing = false;
             if (m_appendColumns.getBooleanValue()) {
                 doubles = new DataCell[ospec.getNumColumns() 
                                        - incl.size() + lowDim];
@@ -145,24 +147,30 @@ public class MDSPivotDataNodeModel extends MDSPivotNodeModel {
                     if (!incl.contains(ospec.getColumnSpec(j).getName())) {
                         DataCell cell = row.getCell(j);
                         doubles[(idx++) + lowDim] = cell;
+                    } else {
+                        isMissing |= row.getCell(j).isMissing();
                     }
                 }
             } else {
                 doubles = new DoubleCell[result.length];
             }
             for (int j = 0; j < result.length; j++) {
-                doubles[j] = new DoubleCell(result[j][rowIdx]);
+                if (isMissing) {
+                    doubles[j] = DataType.getMissingCell();
+                } else {
+                    doubles[j] = new DoubleCell(result[j][rowCnt]);
+                }
             }
             DataRow newRow = new DefaultRow(row.getKey(), doubles);
             buf1.addRowToTable(newRow);
-            rowIdx++;
+            rowCnt++;
         }
         buf1.close();
         colRe = createColumnRearranger(inData[1].getDataTableSpec());
         colRe.keepOnly(incl.toArray(new String[0]));
         data = exec.createColumnRearrangeTable(inData[1], colRe, 
                 exec.createSilentSubProgress(0.0));
-        rowIdx = 0;
+        rowCnt = 0;
         final DataTableSpec spec1 = inData[1].getDataTableSpec();
         final int nrCells1 = spec1.getNumColumns() + lowDim - incl.size();
         BufferedDataContainer buf2 = 
@@ -170,6 +178,7 @@ public class MDSPivotDataNodeModel extends MDSPivotNodeModel {
         for (DataRow row : inData[1]) {
             exec.checkCanceled();
             DataCell[] doubles;
+            boolean isMissing = false;
             if (m_appendColumns.getBooleanValue()) {
                 doubles = new DataCell[nrCells1];
                 int idx = 0;
@@ -177,28 +186,32 @@ public class MDSPivotDataNodeModel extends MDSPivotNodeModel {
                     if (!incl.contains(spec1.getColumnSpec(j).getName())) {
                         DataCell cell = row.getCell(j);
                         doubles[(idx++) + lowDim] = cell;
+                    } else {
+                        isMissing |= row.getCell(j).isMissing();
                     }
                 }
             } else {
                 doubles = new DoubleCell[result.length];
             }
-            double[] scale = new double[incl.size()];
-            for (int j = 0; j < incl.size(); j++) {
-                int idx = spec1.findColumnIndex(incl.get(j));
-                DataCell cell = row.getCell(idx);
-                if (cell.isMissing()) {
-                   scale[j] = Double.NaN;
-                } else {
+            if (isMissing) {
+                for (int i = 0; i < lowDim; i++) {
+                    doubles[i] = DataType.getMissingCell();
+                }
+            } else {
+                double[] scale = new double[incl.size()];
+                for (int j = 0; j < incl.size(); j++) {
+                    int idx = spec1.findColumnIndex(incl.get(j));
+                    DataCell cell = row.getCell(idx);
                     scale[j] = ((DoubleValue) cell).getDoubleValue();
                 }
-            }
-            double[] place = ClassicalMDS.place(result, dataArray, scale);
-            for (int i = 0; i < place.length; i++) {
-                doubles[i] = new DoubleCell(place[i]);
+                double[] place = ClassicalMDS.place(result, dataArray, scale);
+                for (int i = 0; i < place.length; i++) {
+                    doubles[i] = new DoubleCell(place[i]);
+                }
             }
             DataRow newRow = new DefaultRow(row.getKey(), doubles);
             buf2.addRowToTable(newRow);
-            rowIdx++;
+            rowCnt++;
         }
         buf2.close();
         return new BufferedDataTable[]{buf1.getTable(), buf2.getTable()};
@@ -265,6 +278,16 @@ public class MDSPivotDataNodeModel extends MDSPivotNodeModel {
         m_lowerDim.validateSettings(settings);
         m_numericFilter.validateSettings(settings);
         m_appendColumns.validateSettings(settings);
+    }
+    
+    /**
+     * Forwards the corresponding input hilite handler from input 0 to output 0,
+     * and input 1 to output 1.
+     * {@inheritDoc}
+     */
+    @Override
+    protected HiLiteHandler getOutHiLiteHandler(final int outIndex) {
+        return getInHiLiteHandler(outIndex);
     }
 
 }

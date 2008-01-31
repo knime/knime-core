@@ -178,29 +178,29 @@ public class MDSPivotNodeModel extends NodeModel {
         colRe.keepOnly(m_numericFilter.getIncludeList().toArray(new String[0]));
         data = exec.createColumnRearrangeTable(
                 data, colRe, exec.createSilentSubProgress(0.0));
-        final int rowCnt = data.getRowCount();
+        final int nrRows = data.getRowCount();
         final int colCnt = data.getDataTableSpec().getNumColumns();
-        double[][] dataArray = new double[colCnt][rowCnt];
-        int rowIdx = 0;
+        double[][] dataArray = new double[colCnt][nrRows];
+        int rowCnt = 0;
         for (DataRow row : data) {
             exec.checkCanceled();
             for (int i = 0; i < colCnt; i++) {
                 DataCell cell = row.getCell(i);
                 if (cell.isMissing()) {
-                    dataArray[i][rowIdx] = Double.NaN;
+                    break;
                 } else {
-                    dataArray[i][rowIdx] = 
+                    dataArray[i][rowCnt] = 
                         ((DoubleValue) cell).getDoubleValue();
                 }
             }
-            rowIdx++;
+            rowCnt++;
         }
-        int nrPivots = data.getRowCount();
+        int nrPivots = rowCnt;
         if (m_usePivots.getBooleanValue()) {
             nrPivots = Math.min(nrPivots, m_nrPivots.getIntValue());
         }
         final int lowDim = m_lowerDim.getIntValue();
-        double[][] result = new double[lowDim][rowCnt];
+        double[][] result = new double[lowDim][nrRows];
         if (rowCnt > 0) {
             // initialize with random nonzero stuff
             Random random = new Random(0L);
@@ -213,11 +213,12 @@ public class MDSPivotNodeModel extends NodeModel {
         }
         DataTableSpec spec = createSpec(lowDim, ospec);
         BufferedDataContainer buf = exec.createDataContainer(spec);
-        rowIdx = 0;
+        rowCnt = 0;
         List<String> incl = m_numericFilter.getIncludeList();
         for (DataRow row : inData[0]) {
             exec.checkCanceled();
             DataCell[] doubles;
+            boolean isMissing = false;
             if (m_appendColumns.getBooleanValue()) {
                 doubles = new DataCell[ospec.getNumColumns() 
                                        - incl.size() + lowDim];
@@ -226,17 +227,23 @@ public class MDSPivotNodeModel extends NodeModel {
                     if (!incl.contains(ospec.getColumnSpec(j).getName())) {
                         DataCell cell = row.getCell(j);
                         doubles[(idx++) + lowDim] = cell;
+                    } else {
+                        isMissing |= row.getCell(j).isMissing();
                     }
                 }
             } else {
                 doubles = new DoubleCell[result.length];
             }
             for (int j = 0; j < result.length; j++) {
-                doubles[j] = new DoubleCell(result[j][rowIdx]);
+                if (isMissing) {
+                    doubles[j] = DataType.getMissingCell();
+                } else {
+                    doubles[j] = new DoubleCell(result[j][rowCnt]);
+                }
             }
             DataRow newRow = new DefaultRow(row.getKey(), doubles);
             buf.addRowToTable(newRow);
-            rowIdx++;
+            rowCnt++;
         }
         buf.close();
         return new BufferedDataTable[]{buf.getTable()};
