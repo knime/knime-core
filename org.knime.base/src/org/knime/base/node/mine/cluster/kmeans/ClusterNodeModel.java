@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.knime.base.data.append.column.AppendedColumnRow;
+import org.knime.base.node.mine.cluster.assign.Prototype;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -41,6 +42,7 @@ import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataTable;
@@ -122,12 +124,9 @@ public class ClusterNodeModel extends NodeModel {
     private DataTableSpec m_appendedSpec;
 
     // predictor params constants
-    private static final String CFG_PROTOTYPES = "prototypes";
-
+   
     private static final String CFG_PROTOTYPE = "prototype";
 
-    private static final String CFG_USED_COLS = "usedColumns";
-    
     private static final String CFG_FEATURE_NAMES = "FeatureNames";
     
     private static final String CFG_HILITEMAPPING = "HiLiteMapping";
@@ -535,8 +534,9 @@ public class ClusterNodeModel extends NodeModel {
     @Override
     protected void saveModelContent(final int index,
             final ModelContentWO predParams) throws InvalidSettingsException {
-        ModelContentWO clusterConfig = predParams
-                .addModelContent(CFG_PROTOTYPES);
+        /*
+         * Determine the columns that have been used for clustering.
+         */
         String[] colsUsed = new String[m_dimension - m_nrIgnoredColumns];
         int pos = 0;
         for (int i = 0; i < m_spec.getNumColumns(); i++) {
@@ -544,9 +544,23 @@ public class ClusterNodeModel extends NodeModel {
                 colsUsed[pos++] = m_spec.getColumnSpec(i).getName();
             }
         }
-        clusterConfig.addStringArray(CFG_USED_COLS, colsUsed);
+       
+        ModelContentWO specWO =
+                predParams.addModelContent(Prototype.CFG_COLUMNSUSED);
+        ColumnRearranger colre = new ColumnRearranger(m_spec);
+        colre.keepOnly(colsUsed);
+        DataTableSpec clusterSpec = colre.createSpec();
+        clusterSpec.save(specWO);
+
+        ModelContentWO protos =
+                predParams.addModelContent(Prototype.CFG_PROTOTYPE);
+
         for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
-            clusterConfig.addDoubleArray(CFG_PROTOTYPE + c, m_clusters[c]);
+            ModelContentWO protoWO = protos.addModelContent(CFG_PROTOTYPE + c);
+            Prototype proto =
+                    new Prototype(m_clusters[c], new StringCell(CLUSTER
+                            + c));
+            proto.save(protoWO);
         }
     }
 
