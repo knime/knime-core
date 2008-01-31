@@ -610,6 +610,11 @@
             factory-class="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory"
             id="org.knime.base.node.preproc.colcombine.ColCombineNodeFactory">
       </node>
+      <node
+            category-path="/mining/clustering"
+            factory-class="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory"
+            id="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory">
+      </node>
    </extension>
    
    
