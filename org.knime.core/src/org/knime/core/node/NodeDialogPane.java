@@ -412,7 +412,7 @@ public abstract class NodeDialogPane {
      */
     protected final int addTab(final String title, final Component comp) {
 
-        checkUniquness(title, comp);
+        checkUniqueness(title, comp);
 
         return insertNewTabAt(Integer.MAX_VALUE, title, comp);
 
@@ -444,7 +444,7 @@ public abstract class NodeDialogPane {
     protected final int addTabAt(final int index, final String title,
             final Component comp) {
 
-        checkUniquness(title, comp);
+        checkUniqueness(title, comp);
 
         if (index < 0) {
             throw new IndexOutOfBoundsException("Index must be greater than"
@@ -457,7 +457,7 @@ public abstract class NodeDialogPane {
      * Throws an exception if the specified tab title or component is already
      * contained in the dialog. Or one of the arguments is null.
      */
-    private void checkUniquness(final String title, final Component comp) {
+    private void checkUniqueness(final String title, final Component comp) {
         if (title == null) {
             throw new NullPointerException("The title of a tab in the dialog"
                     + " can't be null");
