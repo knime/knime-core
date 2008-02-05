@@ -67,6 +67,9 @@ import org.knime.core.util.MutableInteger;
  */
 public abstract class NodeDialogPane {
 
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(NodeDialogPane.class);
+
     // This listener needs to be static and not an anonymous inner class
     // because it stays registered in some static Swing classes. Thus a long
     // reference chain will prevent quite a lot of memory to get garbage
@@ -395,26 +398,74 @@ public abstract class NodeDialogPane {
 
     /**
      * Adds a new component in a new tab to the node's dialog. Tabs are
-     * referenced by their title (to remove or replace them). If the specified
-     * title already exists or if the specified component is already used by
-     * another tab an exception is thrown. The tab is added at the right most
-     * position (for nodes with outputs this is left of KNIME's default tab
-     * though).
+     * referenced by their title (to remove or replace them). The tab is added
+     * at the right most position (for nodes with outputs this is left of
+     * KNIME's default tab though).
+     *<p>
+     * If the specified title already exists, this method creates a new unique
+     * title for the new tab (and issues a coding problem warning). If the same
+     * title with the same component was added before, this method does nothing
+     * (but issues a coding problem warning). Also, the same component with
+     * a different title is accepted (again with a coding problem warning), the
+     * tab that was added before with this component is removed before adding
+     * the component again to the dialog.
      *
      * @param title The title of the tab for the given component. Must be unique
      *            for this dialog.
      * @param comp The component to add to this dialog's tabbed pane.
-     * @return the index where the new tab actually has been placed.
      * @throws NullPointerException If either the title or the component is
      *             <code>null</code>.
-     * @throws IllegalArgumentException if the title or the component already
-     *             exists in the dialog
      */
-    protected final int addTab(final String title, final Component comp) {
+    protected final void addTab(final String title, final Component comp) {
 
-        checkUniqueness(title, comp);
+        if (title == null) {
+            throw new NullPointerException("The title of a tab in the dialog"
+                    + " can't be null");
+        }
+        if (comp == null) {
+            throw new NullPointerException("The component in the dialog's"
+                    + " tab can't be null");
+        }
 
-        return insertNewTabAt(Integer.MAX_VALUE, title, comp);
+        String titleToUse = title;
+
+        // check if the title was used before
+        Component existComp = m_tabs.get(title);
+        if (existComp != null) {
+            if (existComp == comp) {
+                // this tab is already in the dialog. Do nothing. Warn them.
+                LOGGER.coding("The exact same tab component is added to "
+                        + "the dialog twice. Ignoring it.");
+                return;
+            } else {
+                // there is already a (different component) with the same
+                // title: change the title to be unique
+                int idx = 2;
+                while (m_tabs.containsKey(titleToUse)) {
+                    titleToUse = title + " (#" + idx + ")";
+                    idx++;
+                }
+                LOGGER.coding("The title of a tab in the dialog must be "
+                        + "unique. Title '" + title + "' changed to unique '"
+                        + titleToUse + "'.");
+            }
+        }
+
+        // see if they are reusing the component (with a different title)
+        if (m_tabs.containsValue(comp)) {
+            // Not good. Rename that tab!
+            int compIdx = m_pane.indexOfComponent(comp);
+            assert compIdx >= 0;
+            String oldTitle = m_pane.getTitleAt(compIdx);
+            renameTab(oldTitle, titleToUse);
+            LOGGER.coding("The component was already added to the dialog with"
+                    + " a different tab title (old title: '" + oldTitle
+                    + "', new title: '" + title + "'). The old tab is"
+                    + " renamed to '" + titleToUse + "'.");
+            return;
+        }
+
+        insertNewTabAt(Integer.MAX_VALUE, titleToUse, comp);
 
     }
 
@@ -422,11 +473,15 @@ public abstract class NodeDialogPane {
      * Adds a new tab at a certain position in the tabbed pane of the node's
      * dialog. Tabs are referenced by their title (to remove or replace them).
      * If the specified title already exists or if the specified component is
-     * already used by another tab an exception is thrown. If the specified
-     * index is greater than the number of existing tabs, the tab is added at
-     * the right most position. For nodes with outputs this is left of KNIME's
-     * "General Node Settings" tab though. The actual index of the new tab after
-     * insertion is returned.
+     * already used by another tab this method throws an exception. If the
+     * specified index is greater than the number of existing tabs, the tab is
+     * added at the right most position. For nodes with outputs this is left of
+     * KNIME's "General Node Settings" tab though. The actual index of the new
+     * tab after insertion is returned.
+     * <p>
+     * NOTE: This method is more restrictive than the
+     * {@link #addTab(String, Component)} method, in that it does not accept
+     * duplicate titles or components.
      *
      * @param index the index of the new tab after insertion. Must be greater
      *            than or equal to zero.
@@ -444,20 +499,6 @@ public abstract class NodeDialogPane {
     protected final int addTabAt(final int index, final String title,
             final Component comp) {
 
-        checkUniqueness(title, comp);
-
-        if (index < 0) {
-            throw new IndexOutOfBoundsException("Index must be greater than"
-                    + " or equal to zero");
-        }
-        return insertNewTabAt(index, title, comp);
-    }
-
-    /*
-     * Throws an exception if the specified tab title or component is already
-     * contained in the dialog. Or one of the arguments is null.
-     */
-    private void checkUniqueness(final String title, final Component comp) {
         if (title == null) {
             throw new NullPointerException("The title of a tab in the dialog"
                     + " can't be null");
@@ -474,6 +515,12 @@ public abstract class NodeDialogPane {
             throw new IllegalArgumentException("Can't register the same "
                     + "component twice in the same dialog");
         }
+
+        if (index < 0) {
+            throw new IndexOutOfBoundsException("Index must be greater than"
+                    + " or equal to zero");
+        }
+        return insertNewTabAt(index, title, comp);
     }
 
     /**
@@ -630,34 +677,31 @@ public abstract class NodeDialogPane {
     }
 
     /**
-     * Returns a component from the tabbed pane for the given
-     * <code>title</code>.
+     * Returns the component of the tab with the specified title.
      *
-     * @param title The name of this component.
-     * @return Component in the tabbed pane with the given <code>title</code>.
+     * @param title The name of tab to return the component from.
+     * @return the component of the tab with the given <code>title</code>.
      */
     protected final Component getTab(final String title) {
         return m_tabs.get(title);
     }
 
     /**
-     * Removes a component given by the <code>title</code> from the tabbed
-     * pane.
+     * Removes the tab and its component specified by the <code>title</code>
+     * from the tabbed pane. Does nothing if a tab with the specified title
+     * doesn't exist.
      *
      * @param name The title of the tab to remove.
-     * @return the index where the removed tab was placed. Or -1 if no tab with
-     *         the specified name existed.
-     * @see #getTab(String)
+     * @see #getTabIndex(String)
+     * @see #addTabAt(int, String, Component)
      */
-    protected final int removeTab(final String name) {
-        final MutableInteger result = new MutableInteger(-1);
+    protected final void removeTab(final String name) {
         final Component comp = getTab(name);
 
         if (comp != null) {
             ViewUtils.invokeAndWaitInEDT(new Runnable() {
                 public void run() {
                     comp.removeHierarchyListener(HIERARCHY_LISTENER);
-                    result.setValue(m_pane.indexOfTab(name));
                     m_pane.remove(comp);
                     m_tabs.remove(name);
                 }
@@ -665,8 +709,16 @@ public abstract class NodeDialogPane {
             });
         }
 
-        return result.intValue();
+    }
 
+    /**
+     * Returns the current index of the specified tab. Or -1 if no tab with the
+     * given title exists.
+     * @param title of the tab to return the index for.
+     * @return the index of the tab with the specified title.
+     */
+    protected final int getTabIndex(final String title) {
+        return m_pane.indexOfTab(title);
     }
 
     private static class MiscSettingsTab extends JPanel {
