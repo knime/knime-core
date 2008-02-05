@@ -36,6 +36,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.util.StringFormat;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -301,8 +302,12 @@ public final class BatchExecutor {
                 FileUtil.zipDir(output, workflowDir, 9);
             }
         }
-        System.out.println(
-                "Finished in " + (System.currentTimeMillis() - t) + "ms");
+        // Get elapsed time in milliseconds
+        long elapsedTimeMillis = System.currentTimeMillis() - t;
+        String niceTime = StringFormat.formatElapsedTime(elapsedTimeMillis);
+        String timeString = ("Finished in " + niceTime 
+                + " (" + elapsedTimeMillis + "ms)");
+        System.out.println(timeString);
         return 0;
     }
 }

@@ -28,10 +28,8 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.GridLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -57,7 +55,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -66,10 +63,13 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
+import org.knime.base.node.io.filetokenizer.Comment;
+import org.knime.base.node.io.filetokenizer.Delimiter;
+import org.knime.base.node.io.filetokenizer.FileTokenizerException;
+import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -82,12 +82,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.tableview.TableView;
+import org.knime.core.node.util.ConvenientComboBoxRenderer;
 import org.knime.core.util.FileReaderFileFilter;
-
-import org.knime.base.node.io.filetokenizer.Comment;
-import org.knime.base.node.io.filetokenizer.Delimiter;
-import org.knime.base.node.io.filetokenizer.FileTokenizerException;
-import org.knime.base.node.io.filetokenizer.FileTokenizerSettings;
 
 /**
  *
@@ -225,7 +221,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         m_urlCombo = new JComboBox();
         m_urlCombo.setEditable(true);
-        m_urlCombo.setRenderer(new MyComboBoxRenderer());
+        m_urlCombo.setRenderer(new ConvenientComboBoxRenderer());
         m_urlCombo.setMaximumSize(new Dimension(PANEL_WIDTH, buttonHeight));
         m_urlCombo.setMinimumSize(new Dimension(350, buttonHeight));
         m_urlCombo.setPreferredSize(new Dimension(350, buttonHeight));
@@ -1586,72 +1582,4 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         getPanel().repaint();
     }
 
-    /** Renderer that also supports to show customized tooltip. */
-    private static class MyComboBoxRenderer extends BasicComboBoxRenderer {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Component getListCellRendererComponent(final JList list,
-                final Object value, final int index, final boolean isSelected,
-                final boolean cellHasFocus) {
-            if (index > -1) {
-                list.setToolTipText(value.toString());
-            }
-            return super.getListCellRendererComponent(list, value, index,
-                    isSelected, cellHasFocus);
-        }
-
-        /**
-         * Does the clipping automatically, clips off characters from the middle
-         * of the string.
-         *
-         * @see JLabel#getText()
-         */
-        @Override
-        public String getText() {
-            Insets ins = getInsets();
-            int width = getWidth() - ins.left - ins.right;
-            String s = super.getText();
-            FontMetrics fm = getFontMetrics(getFont());
-            String clipped = s;
-            while (clipped.length() > 5 && fm.stringWidth(clipped) > width) {
-                clipped = format(s, clipped.length() - 3);
-            }
-            return clipped;
-        }
-
-        /*
-         * builds strings with the following pattern: if size is smaller than
-         * 30, return the last 30 chars in the string; if the size is larger
-         * than 30: return the first 12 chars + ... + chars from the end. Size
-         * more than 55: the first 28 + ... + rest from the end.
-         */
-        private String format(final String str, final int size) {
-            String result;
-            if (str.length() <= size) {
-                // short enough - return it unchanged
-                return str;
-            }
-            if (size <= 30) {
-                result =
-                        "..."
-                                + str.substring(str.length() - size + 3, str
-                                        .length());
-            } else if (size <= 55) {
-                result =
-                        str.substring(0, 12)
-                                + "..."
-                                + str.subSequence(str.length() - size + 15, str
-                                        .length());
-            } else {
-                result =
-                        str.substring(0, 28)
-                                + "..."
-                                + str.subSequence(str.length() - size + 31, str
-                                        .length());
-            }
-            return result;
-        }
-    }
 }
