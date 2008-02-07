@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.03.2005 (ohl): created
  */
@@ -54,9 +54,9 @@ import org.knime.core.node.ExecutionMonitor;
  * These values can be changed, in case somebody knows better limits. It
  * provides a list of all values seen for each string column (i.e. a list of all
  * values appearing in the rows stored - not the entire data table).
- * If the maximal number of possible values (2000) is exceeded, no possible 
+ * If the maximal number of possible values (2000) is exceeded, no possible
  * values are available.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class DefaultDataArray implements DataArray {
@@ -75,9 +75,9 @@ public class DefaultDataArray implements DataArray {
 
     /* the first row we've stored */
     private int m_firstRow;
-    
+
     private static final int MAX_POSS_VALUES = 2000;
-    
+
     private boolean[] m_ignoreCols;
 
     /*
@@ -92,7 +92,7 @@ public class DefaultDataArray implements DataArray {
      * starting from the row specified in the "<code>firstRow</code>"
      * parameter. The rows can be accessed by index later on always starting
      * with index zero.
-     * 
+     *
      * @param dTable the data table to read the rows from
      * @param firstRow the first row to store (must be greater than zero)
      * @param numOfRows the number of rows to store (must be zero or more)
@@ -109,7 +109,7 @@ public class DefaultDataArray implements DataArray {
     /**
      * Same, but allows for user cancellation from a progress monitor, while the
      * container is filled.
-     * 
+     *
      * @param dTable the data table to read the rows from
      * @param firstRow the first row to store (must be greater than zero)
      * @param numOfRows the number of rows to store (must be zero or more)
@@ -126,7 +126,6 @@ public class DefaultDataArray implements DataArray {
     private void init(final DataTable dTable, final int firstRow,
             final int numOfRows, final ExecutionMonitor execMon)
             throws CanceledExecutionException {
-
         if (dTable == null) {
             throw new NullPointerException("Must provide non-null data table"
                     + " for DataArray");
@@ -159,7 +158,6 @@ public class DefaultDataArray implements DataArray {
                 m_possVals.set(c, new LinkedHashSet<DataCell>());
             }
         }
-
         // now fill our data structures
         RowIterator rIter = dTable.iterator();
         int rowNumber = 0;
@@ -180,16 +178,18 @@ public class DefaultDataArray implements DataArray {
             // check min, max values and possible values for each column
             for (int c = 0; c < numOfColumns; c++) {
                 DataCell cell = row.getCell(c);
-                DataValueComparator comp = cell.getType().getComparator();
 
                 if (cell.isMissing()) {
                     // ignore missing values.
                     continue;
                 }
-                
+
                 if (m_ignoreCols[c]) {
                     continue;
                 }
+
+                DataValueComparator comp =
+                    tSpec.getColumnSpec(c).getType().getComparator();
 
                 // test the min value
                 if (m_minVal[c] == null) {
@@ -307,7 +307,7 @@ public class DefaultDataArray implements DataArray {
 
     /**
      * Sets a new max value for the specified column.
-     * 
+     *
      * @param colIdx the index of the column to set the new max value for
      * @param newMaxValue the new max value for the specified column. Must not
      *            be <code>null</code> and must fit the type of the column.
@@ -326,7 +326,7 @@ public class DefaultDataArray implements DataArray {
 
     /**
      * Sets a new min value for the specified column.
-     * 
+     *
      * @param colIdx the index of the column to set the new min value for. Must
      *            be between zero and the size of this container.
      * @param newMinValue the new min value for the specified column. Must not
