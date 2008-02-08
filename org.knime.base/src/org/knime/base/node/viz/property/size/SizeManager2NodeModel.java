@@ -42,6 +42,7 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -57,6 +58,12 @@ public class SizeManager2NodeModel extends NodeModel {
     /** The selected column. */
     private final SettingsModelString m_column = 
         SizeManager2NodeDialogPane.createColumnModel();
+    
+    private final SettingsModelDouble m_factor =
+        SizeManager2NodeDialogPane.createFactorModel();
+    
+    private final SettingsModelString m_mapping = 
+        SizeManager2NodeDialogPane.createMappingModel();
 
     /** Keeps port number for the single input port. */
     static final int INPORT = 0;
@@ -170,7 +177,9 @@ public class SizeManager2NodeModel extends NodeModel {
                 .getDoubleValue();
         double maximum = ((DoubleValue) cspec.getDomain().getUpperBound())
                 .getDoubleValue();
-        return new SizeHandler(new SizeModelDouble(minimum, maximum));
+        return new SizeHandler(new SizeModelDouble(minimum, maximum, 
+                m_factor.getDoubleValue(),
+                SizeModelDouble.Mapping.valueOf(m_mapping.getStringValue())));
     }
     
     /**
@@ -191,6 +200,13 @@ public class SizeManager2NodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_column.loadSettingsFrom(settings);
+        try {
+            m_factor.loadSettingsFrom(settings);
+            m_mapping.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            m_factor.setDoubleValue(2);
+            m_mapping.setStringValue(SizeModelDouble.Mapping.LINEAR.name());
+        }
     }
 
     /**
@@ -199,6 +215,8 @@ public class SizeManager2NodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_column.saveSettingsTo(settings);
+        m_factor.saveSettingsTo(settings);
+        m_mapping.saveSettingsTo(settings);
     }
 
     /**
@@ -208,6 +226,12 @@ public class SizeManager2NodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_column.validateSettings(settings);
+        try {
+            m_factor.validateSettings(settings);
+            m_mapping.validateSettings(settings);
+        } catch (InvalidSettingsException ise) {
+            // ignore it
+        }
     }
 
     /**

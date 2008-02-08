@@ -96,7 +96,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     /**
      * Registers listeners to the control elements of the 
      * {@link org.knime.base.node.viz.plotter.parcoord
-     * .ParallelCoordinatePlotterProperties}
+     * .ParallelCoordinatePlotterProperties}.
      */
     public ParallelCoordinatesPlotter() {
         super(new ParallelCoordinateDrawingPane(), 
@@ -554,7 +554,9 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 LineInfo line = new LineInfo(points, domainValues,
                         m_selected.contains(row.getKey().getId()), 
                         isHilite, array.getDataTableSpec().getRowColor(row),
-                        array.getDataTableSpec().getRowSize(row), row.getKey());
+                        array.getDataTableSpec().getRowSizeFactor(row), 
+                        row.getKey());
+                
                 line.setShape(array.getDataTableSpec().getRowShape(row));
                 lines.add(line);
             }

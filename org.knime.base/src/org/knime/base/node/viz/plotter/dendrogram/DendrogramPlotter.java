@@ -300,7 +300,7 @@ public class DendrogramPlotter extends ScatterPlotter {
                 .getDataTableSpec();
             p.setColor(spec.getRowColor(row));
             p.setShape(spec.getRowShape(row));
-            p.setRelativeSize(spec.getRowSize(row));
+            p.setRelativeSize(spec.getRowSizeFactor(row));
             p.setHilite(delegateIsHiLit(row.getKey().getId()));
         }
         viewNode = new BinaryTreeNode<DendrogramPoint>(p);

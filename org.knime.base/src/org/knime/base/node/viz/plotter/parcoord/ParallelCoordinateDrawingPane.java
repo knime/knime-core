@@ -372,7 +372,7 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
                     g.setColor(line.getColor().getColor(line.isSelected(),
                         line.isHilite()));
                 }
-                int size = (int)(DOT_SIZE + (DOT_SIZE * line.getSize()));
+                int size = (int)(DOT_SIZE * line.getSize());
                 ((Graphics2D)g).setStroke(new BasicStroke(getStrokeSize(
                         line.getSize())));
                 for (Point p1 : line.getPoints()) {
@@ -627,7 +627,7 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
     
     
     private int getStrokeSize(final double lineSize) {
-        return m_lineSize + (int)(3 * lineSize);
+        return (int) (m_lineSize * lineSize);
     }
     
     /**

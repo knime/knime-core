@@ -304,7 +304,7 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
                     DotInfo dot = new DotInfo(x, y, row.getKey(),
                             hilite, data
                                     .getDataTableSpec().getRowColor(row), data
-                                    .getDataTableSpec().getRowSize(row),
+                                    .getDataTableSpec().getRowSizeFactor(row),
                             rowNr);
                     dot.setShape(data.getDataTableSpec().getRowShape(row));
                     dot.setXDomainValue(xValue);

@@ -149,8 +149,7 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
         Color c = dot.getColor().getColor();
         int x = dot.getXCoord();
         int y = dot.getYCoord();
-        int size = (int)(m_dotSize 
-                + (m_dotSize * dot.getSize()));
+        int size = (int)(m_dotSize * dot.getSize());
         shape.paint(g, x, y, size, c, isHilite, isSelected, m_fade);
     }
     
@@ -237,8 +236,13 @@ public class ScatterPlotterDrawingPane extends BasicDrawingPane {
             int y = dot.getYCoord();
             DataCell xDomain = dot.getXDomainValue();
             DataCell yDomain = dot.getYDomainValue();
-            if (x < p.x + (m_dotSize / 2) && x > p.x - (m_dotSize / 2)
-                    && y < p.y + (m_dotSize / 2) && y > p.y - (m_dotSize / 2)) {
+            double dotSize = (m_dotSize * dot.getSize());
+            // assure to have at least one pixel to test
+            if (dotSize < 2) {
+                dotSize = 2;
+            }
+            if (x < p.x + (dotSize / 2) && x > p.x - (dotSize / 2)
+                    && y < p.y + (dotSize / 2) && y > p.y - (dotSize / 2)) {
                 if (first) {
                     if (xDomain != null) {
                         tooltip.append("x: " + xDomain.toString());

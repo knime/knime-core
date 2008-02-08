@@ -592,8 +592,10 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
      * value of the corresponding cell of the given row.
      * 
      * @param row the row for which the size is requested
-     * @return size in [0,1] or -1 if an error occurred (illegal cell, missing)
+     * @return size in [0,1] or 0 if an error occurred (illegal cell, missing)
+     * @deprecated use row size factor instead
      */
+    @Deprecated
     public double getRowSize(final DataRow row) {
         if (m_sizeHandlerColIndex == -1) {
             return SizeHandler.DEFAULT_SIZE;
@@ -601,6 +603,25 @@ public final class DataTableSpec implements Iterable<DataColumnSpec> {
         return m_columnSpecs[m_sizeHandlerColIndex].getSizeHandler().getSize(
                 row.getCell(m_sizeHandlerColIndex));
     }
+
+    /**
+     * Return the size (as a scaling factor) that an object should have when 
+     * displaying information concerning this row (for instance in a 
+     * scatterplot). The size
+     * is determined by the {@link SizeHandler} of this spec, which is
+     * associated with exactly one column. The size therefore depends on the
+     * value of the corresponding cell of the given row.
+     * 
+     * @param row the row for which the size is requested
+     * @return size in [1, ) or 1 if an error occurred (illegal cell, missing)
+     */
+    public double getRowSizeFactor(final DataRow row) {
+        if (m_sizeHandlerColIndex == -1) {
+            return SizeHandler.DEFAULT_SIZE_FACTOR;
+        }
+        return m_columnSpecs[m_sizeHandlerColIndex].getSizeHandler()
+            .getSizeFactor(row.getCell(m_sizeHandlerColIndex));
+    }    
     
     /**
      * {@inheritDoc}

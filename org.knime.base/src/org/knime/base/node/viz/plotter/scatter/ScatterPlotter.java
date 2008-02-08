@@ -385,7 +385,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
             List<DotInfo> dotList = new ArrayList<DotInfo>();
             int rowNr = 0;
             for (DataRow row : rowsCont) {
-                double size = rowsCont.getDataTableSpec().getRowSize(row);
+                double size = rowsCont.getDataTableSpec().getRowSizeFactor(row);
                 ColorAttr colorAttr =
                         rowsCont.getDataTableSpec().getRowColor(row);
                 boolean isHilite = delegateIsHiLit(row.getKey().getId());

@@ -15,7 +15,15 @@
 		
 		<option name="Column selection">
 		Select one column from which size should be derived.
-		</option>		
+		</option>
+		<option name="Scaling factor">Adjust the maximal scaling factor, i.e.
+			the entered value results in the maximal magnification. 
+			If the entered factor is n, the maximal value will be n times larger 
+			than the minimal value.
+		</option>
+		<option name="Mapping method">Select which mapping method to use, to map 
+		the domain onto the scaled range.
+		</option>
 	</fullDescription>
 	
 	<ports>

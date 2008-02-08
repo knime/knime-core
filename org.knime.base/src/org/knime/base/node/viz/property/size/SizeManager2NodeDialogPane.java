@@ -26,8 +26,13 @@ package org.knime.base.node.viz.property.size;
 
 import org.knime.core.data.BoundedValue;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.property.SizeModelDouble;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
+import org.knime.core.node.defaultnodesettings.SettingsModelDouble;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -42,15 +47,41 @@ public class SizeManager2NodeDialogPane extends DefaultNodeSettingsPane {
     static final SettingsModelString createColumnModel() {
         return new SettingsModelString("selected_column", null);
     }
+    
+    /**
+     * 
+     * @return settings model for scaling factor
+     */
+    static final SettingsModelDouble createFactorModel() {
+        return new SettingsModelDoubleBounded("size_factor", 2, 1, 
+                Integer.MAX_VALUE);
+    }
+    
+    /**
+     * 
+     * @return settings model for mapping method
+     */
+    static final SettingsModelString createMappingModel() {
+        return new SettingsModelString("size_mapping_method",
+                SizeModelDouble.Mapping.LINEAR.name());
+    }
 
     /**
      * Create a new size manager dialog.
      */
+    @SuppressWarnings("unchecked")
     public SizeManager2NodeDialogPane() {
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColumnModel(), 
                 "Column to use for size settings ", 0, 
                 BoundedValue.class, DoubleValue.class));
+        
+        addDialogComponent(new DialogComponentNumber(
+                createFactorModel(), "Scaling factor: ", 1));
+        
+        addDialogComponent(new DialogComponentStringSelection(
+                createMappingModel(), "Select mapping method ",
+                SizeModelDouble.Mapping.getStringValues()));
     }
 
 }
