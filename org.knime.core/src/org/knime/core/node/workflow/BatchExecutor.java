@@ -31,7 +31,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.DefaultNodeProgressMonitor;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
@@ -226,32 +226,39 @@ public final class BatchExecutor {
             workflowDir = input;
         }
 
-        final WorkflowManager wfm = new WorkflowManager();
         File workflowFile =
-                new File(workflowDir, WorkflowManager.WORKFLOW_FILE);
+                new File(workflowDir, WorkflowPersistor.WORKFLOW_FILE);
         if (!workflowFile.exists()) {
-            workflowFile =
-                    new File(workflowDir.listFiles()[0],
-                            WorkflowManager.WORKFLOW_FILE);
+            workflowFile = new File(workflowDir.listFiles()[0],
+                            WorkflowPersistor.WORKFLOW_FILE);
         }
 
-        wfm.load(workflowFile, new DefaultNodeProgressMonitor());
+        WorkflowManager wfm = WorkflowManager.load(
+                workflowFile.getParentFile(), new ExecutionMonitor());
         if (reset) {
-            wfm.resetAndConfigureAll();
+            wfm.resetAll();
         }
 
         for (Option o : options) {
             int[] idPath = o.m_nodeIDs;
-            NodeContainer cont = wfm.getNodeContainerById(idPath[0]);
+            NodeID subID = new NodeID(wfm.getID(), idPath[0]);
+            NodeContainer cont = wfm.getNodeContainer(subID);
             for (int i = 1; i < idPath.length; i++) {
-                cont = cont.getEmbeddedWorkflowManager().
-                    getNodeContainerById(idPath[i]);
+                if (cont instanceof WorkflowManager) {
+                    WorkflowManager subWM = (WorkflowManager)cont;
+                    subID = new NodeID(subID, idPath[i]);
+                    cont = subWM.getNodeContainer(subID);
+                } else {
+                    cont = null;
+                }
             }
             if (cont == null) {
                 LOGGER.warn("No node with id " 
                         + Arrays.toString(idPath) + " found.");
             } else {
+                WorkflowManager parent = cont.getParent();
                 NodeSettings settings = new NodeSettings("something");
+                parent.saveNodeSettings(cont.getID(), settings);
                 cont.saveSettings(settings);
                 NodeSettings model = settings.getNodeSettings(Node.CFG_MODEL);
                 String[] splitName = o.m_name.split("/");
@@ -290,13 +297,44 @@ public final class BatchExecutor {
                     throw new IllegalArgumentException("Unknown option type '"
                             + o.m_type + "'");                   
                 }
-                cont.loadSettings(settings);
+                parent.loadNodeSettings(cont.getID(), settings);
             }
         }
 
-        wfm.executeAll(true);
+        System.out.println(wfm.printNodeSummary(wfm.getID(), 0));
+        final Object waiter = new Object();
+        synchronized (waiter) {
+            wfm.addNodeStateChangeListener(new NodeStateChangeListener() {
+                public void stateChanged(NodeStateEvent state) {
+                    synchronized (waiter) {
+                        switch (state.getState()) {
+                        case EXECUTED:
+                            waiter.notifyAll();
+                        case IDLE:
+                        case CONFIGURED:
+                        default:
+                        }
+                    }
+                } 
+            });
+            if (wfm.getParent().canExecuteNode(wfm.getID())) {
+                wfm.getParent().executeNode(wfm.getID());
+            } else {
+                throw new RuntimeException("Can't execute flow.");
+            }
+            switch (wfm.getState()) {
+            case EXECUTED: break;
+            default:
+                try {
+                    waiter.wait();
+                } catch (InterruptedException ie) {
+                    throw new RuntimeException("Thread was interrupted", ie);
+                }
+                break;
+            }
+        }
         if (!noSave) {
-            wfm.save(workflowFile, new DefaultNodeProgressMonitor());
+            wfm.save(workflowFile.getParentFile(), new ExecutionMonitor(), true);
 
             if (output != null) {
                 FileUtil.zipDir(output, workflowDir, 9);
