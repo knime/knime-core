@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   27.06.2006 (sieb): created
  */
@@ -28,12 +28,11 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.views.navigator.ResourcePatternFilter;
-import org.knime.core.node.workflow.WorkflowManager;
-
+import org.knime.core.node.workflow.WorkflowPersistor;
 /**
  * Implements the knime resource filter for the knime resource navigator. Only
  * the project has to be shown.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class KnimeResourcePatternFilter extends ResourcePatternFilter {
@@ -62,7 +61,7 @@ public class KnimeResourcePatternFilter extends ResourcePatternFilter {
                
                 for (IResource currentResource : children) {
                     if (currentResource.getName().equals(
-                            WorkflowManager.WORKFLOW_FILE)) {
+                            WorkflowPersistor.WORKFLOW_FILE)) {
                         return true;
                     }
                 }

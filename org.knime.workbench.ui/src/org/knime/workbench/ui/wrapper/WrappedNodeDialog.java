@@ -24,11 +24,6 @@
  */
 package org.knime.workbench.ui.wrapper;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 import javax.swing.JPanel;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -47,17 +42,14 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.WorkflowInExecutionException;
-
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -74,7 +66,7 @@ public class WrappedNodeDialog extends Dialog {
 
     private Panel2CompositeWrapper m_wrapper;
 
-    private final NodeDialogPane m_dialogPane;
+    private final GenericNodeDialogPane m_dialogPane;
 
     private Menu m_menuBar;
 
@@ -96,7 +88,7 @@ public class WrappedNodeDialog extends Dialog {
         super(parentShell);
         this.setShellStyle(SWT.APPLICATION_MODAL | SWT.SHELL_TRIM);
         m_nodeContainer = nodeContainer;
-        m_dialogPane = m_nodeContainer.getDialogPane();
+        m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
     }
 
     /**
@@ -118,8 +110,8 @@ public class WrappedNodeDialog extends Dialog {
         rootItem.setAccelerator(SWT.CTRL | 'F');
         rootItem.setMenu(menu);
 
-        final FileDialog openDialog = new FileDialog(newShell, SWT.OPEN);
-        final FileDialog saveDialog = new FileDialog(newShell, SWT.SAVE);
+//        final FileDialog openDialog = new FileDialog(newShell, SWT.OPEN);
+//        final FileDialog saveDialog = new FileDialog(newShell, SWT.SAVE);
 
         MenuItem itemLoad = new MenuItem(menu, SWT.PUSH);
         itemLoad.setText("Load Settings");
@@ -127,6 +119,8 @@ public class WrappedNodeDialog extends Dialog {
         itemLoad.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
+                // TODO: functionality disabled (dialog menu item)
+                /*
                 String file = openDialog.open();
                 if (file != null) {
                     try {
@@ -139,6 +133,7 @@ public class WrappedNodeDialog extends Dialog {
                         showErrorMessage(ex.getMessage());
                     }
                 }
+                */
             }
         });
         MenuItem itemSave = new MenuItem(menu, SWT.PUSH);
@@ -147,6 +142,8 @@ public class WrappedNodeDialog extends Dialog {
         itemSave.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
+                // TODO : functionality disabled (dialog menu item)
+                /*
                 String file = saveDialog.open();
                 if (file != null) {
                     try {
@@ -161,6 +158,7 @@ public class WrappedNodeDialog extends Dialog {
                         showErrorMessage(ioe.getMessage());
                     }
                 }
+                */
             }
         });
 
@@ -257,38 +255,64 @@ public class WrappedNodeDialog extends Dialog {
     }
 
     private boolean doApply(final SelectionEvent e) {
-        boolean result = false;
         // event.doit = false cancels the SWT selection event, so that the
         // dialog is not closed on errors.
         try {
             // if the settings are equal and the node is executed
             // to the previous settings inform the user but do nothing
             // (no reset)
-            if (m_dialogPane.isModelAndDialogSettingsEqual()
-                    && m_nodeContainer.isExecuted()) {
+            if (m_nodeContainer.getState().equals(
+                            NodeContainer.State.EXECUTED)) {
+                if (m_nodeContainer.areDialogAndNodeSettingsEqual()) {
+                    // settings not changed
                 informNothingChanged();
-                result = true;
-            } else if (confirmApply()) {
-                m_nodeContainer.applyDialogSettings();
+                    e.doit = true;
+                    return true;
+                } else {
+                    // settings have changed
+                    if (m_nodeContainer.areDialogSettingsValid()) {
+                        // valid settings
+                        if (confirmApply()) {
+                            // apply settings
+                            m_nodeContainer.applySettingsFromDialog();
                 e.doit = true;
-                result = true;
+                            return true;
             } else {
+                            // user canceled reset and apply
+                            // let the dialog open
                 e.doit = false;
+                            return false;
+                        }
+                    } else {
+                        // invalid settings
+                        // apply settings to get the exception
+                        m_nodeContainer.applySettingsFromDialog();
+                        // we should never go here
+                        // (since we should have invalid settings)
+                        throw new IllegalStateException(
+                                "Settings are not valid but apply "
+                                + "settings throws no exception");
+            }
+                }
+            } else {
+                // not executed
+                m_nodeContainer.applySettingsFromDialog();
+                e.doit = true;
+                return true;
             }
         } catch (InvalidSettingsException ise) {
-            e.doit = false;
             showErrorMessage("Invalid Settings\n" + ise.getMessage());
-        } catch (WorkflowInExecutionException ex) {
-            e.doit = false;
+
+        } catch (IllegalStateException ex) {
             showErrorMessage("You cannot apply node settings if the workflow"
                     + " is executing. Please stop execution or wait until all"
                     + " nodes have been finished.");            
         } catch (Exception exc) {
-            e.doit = false;
             showErrorMessage(exc.getClass().getSimpleName() + ": "
                     + exc.getMessage());
         }
-        return result;
+        e.doit = false;
+        return false;
     }
 
     /**
