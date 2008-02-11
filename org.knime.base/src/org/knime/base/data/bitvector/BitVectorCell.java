@@ -146,6 +146,9 @@ public class BitVectorCell extends DataCell implements BitVectorValue {
      * @param nrOfBits the number for the fixed length of the cell
      */
     public BitVectorCell(final BitSet bits, final int nrOfBits) {
+        if (bits != null) {
+            assert bits.length() <= nrOfBits;
+        }
         m_nrBits = nrOfBits;
         m_bits = bits;
     }
