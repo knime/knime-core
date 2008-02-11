@@ -335,13 +335,7 @@ public class WrappedNodeDialog extends Dialog {
     protected boolean confirmApply() {
 
         // no confirm dialog necessary, if the node was not executed before
-        if (!m_nodeContainer.isExecuted()) {
-            return true;
-        }
-        // If the settings are invalid, we don't want to show our dialog here.
-        try {
-            m_dialogPane.validateSettings();
-        } catch (InvalidSettingsException e) {
+        if (!m_nodeContainer.getState().equals(NodeContainer.State.EXECUTED)) {
             return true;
         }
 
@@ -374,18 +368,6 @@ public class WrappedNodeDialog extends Dialog {
      * therefore the settings are not reset (node stays executed). 
      */
     protected void informNothingChanged() {
-
-        // no dialog necessary, if the node was not executed before
-        if (!m_nodeContainer.isExecuted()) {
-            return;
-        }
-        // If the settings are invalid, we don't want to show our dialog here.
-        try {
-            m_dialogPane.validateSettings();
-        } catch (InvalidSettingsException e) {
-            return;
-        }
-
         MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
                 SWT.ICON_INFORMATION | SWT.OK);
         mb.setText("Settings were not changed.");

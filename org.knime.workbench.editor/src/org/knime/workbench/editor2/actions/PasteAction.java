@@ -24,25 +24,14 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import java.util.List;
-
-import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeExtraInfo;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.editparts.AbstractWorkflowEditPart;
-import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**
  * Implements the clipboard paste action to paste nodes and connections from the
@@ -51,8 +40,8 @@ import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
  * @author Christoph Sieb, University of Konstanz
  */
 public class PasteAction extends AbstractClipboardAction {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(PasteAction.class);
+//    private static final NodeLogger LOGGER =
+//            NodeLogger.getLogger(PasteAction.class);
 
     /**
      * Constructs a new clipboard paste action.
@@ -108,7 +97,8 @@ public class PasteAction extends AbstractClipboardAction {
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-
+        // TODO: functionality disabled
+        /*
         // get the workflow manager
         WorkflowManager manager = getManager();
 
@@ -187,7 +177,7 @@ public class PasteAction extends AbstractClipboardAction {
         // Give focus to the editor again. Otherwise the actions (selection)
         // is not updated correctly.
         getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-
+    */
     }
 
     protected int[] calculateShift(int[] ids) {

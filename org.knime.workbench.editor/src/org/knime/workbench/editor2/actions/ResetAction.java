@@ -32,11 +32,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
-<<<<<<< .working
-import org.knime.core.node.workflow.WorkflowInExecutionException;
-=======
 import org.knime.core.node.workflow.NodeContainer;
->>>>>>> .merge-right.r14482
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;

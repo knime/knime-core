@@ -31,9 +31,9 @@ import java.util.Set;
 
 import org.eclipse.draw2d.IFigure;
 import org.knime.core.node.NodeOutPort;
+import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.workbench.editor2.figures.NewToolTipFigure;
 import org.knime.workbench.editor2.figures.NodeOutPortFigure;
 
 /**
@@ -69,28 +69,6 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
         return portFigure;
     }
 
-
-    /**
-     * Tries to build the tooltip from the port name and if this is a data
-     * outport and the node is configured/executed, it appends also the number
-     * of columns and rows
-     */
-    public void rebuildTooltip() {
-        String name = getNodeContainer().getOutportName(getId());
-        int cols = getNodeContainer().getNumOutportCols(getId());
-        int rows = getNodeContainer().getNumOutportRows(getId());
-        StringBuilder sb = new StringBuilder();
-        sb.append(name);
-        if (cols >= 0) {
-            sb.append(" (Cols: " + cols);
-            if (rows >= 0) {
-                sb.append(", Rows: " + rows + ")");
-            } else {
-                sb.append(")");
-            }
-        }
-        ((NewToolTipFigure)getFigure().getToolTip()).setText(sb.toString());
-    }
 
     /**
      * This returns the (single !) connection that has this in-port as a target.

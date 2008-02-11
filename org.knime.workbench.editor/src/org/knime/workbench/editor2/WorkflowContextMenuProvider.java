@@ -46,6 +46,7 @@ import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.OpenPortViewAction;
 import org.knime.workbench.editor2.actions.OpenViewAction;
 import org.knime.workbench.editor2.actions.OpenViewEmbeddedAction;
+import org.knime.workbench.editor2.actions.OpenWorkflowPortViewAction;
 import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
@@ -183,7 +184,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                 // add for node views option if applicable
                 LOGGER.debug("adding open node-view action(s) "
                         + "to context menu...");
-                int numNodeViews = container.getNumViews();
+                int numNodeViews = container.getNrViews();
                 /*
                  * BW: disabled this feature, no embedded eclipse views
                  * available (to enable them uncomment the following lines and

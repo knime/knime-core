@@ -768,7 +768,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     + "'. That is most likely an implementation error.", t);
         }
 
-    
+    }
     
     public void childAdded(final EditPart child, final int index) {
         // TODO Auto-generated method stub

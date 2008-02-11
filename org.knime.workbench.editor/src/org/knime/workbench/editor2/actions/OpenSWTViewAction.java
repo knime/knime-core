@@ -18,30 +18,8 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import java.awt.Component;
-import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JApplet;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.SwingUtilities;
-
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.awt.SWT_AWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.Shell;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 
@@ -54,8 +32,8 @@ public class OpenSWTViewAction extends Action {
 
     private final int m_index;
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(OpenSWTViewAction.class);
+//    private static final NodeLogger LOGGER = NodeLogger
+//            .getLogger(OpenSWTViewAction.class);
 
 //    private Map<Menu, JMenu>m_menuMapping = new HashMap<Menu, JMenu>();
 
@@ -101,6 +79,8 @@ public class OpenSWTViewAction extends Action {
      */
     @Override
     public void run() {
+        // TODO: temporarily disabled to make it compile
+        /*
         Display.getDefault().syncExec(new Runnable() {
 
             public void run() {
@@ -150,7 +130,7 @@ public class OpenSWTViewAction extends Action {
                             + "'. That is most likely an implementation error.",
                             t);
                 }
-
+            
             }
 
             private void createMenuBar(final Shell shell,
@@ -200,5 +180,6 @@ public class OpenSWTViewAction extends Action {
                 topMenu.setMenu(swtMenu);
             }
         });
+        */
     }
 }

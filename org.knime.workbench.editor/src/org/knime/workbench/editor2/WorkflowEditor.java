@@ -183,7 +183,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private PropertySheetPage m_undoablePropertySheetPage;
 
-    private WorkflowSelectionTool m_selectionTool;
+    private final WorkflowSelectionTool m_selectionTool;
 
     /**
      * Stores possible exceptions from the workflow manager that can occur
@@ -195,7 +195,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     private boolean m_loadingCanceled;
 
     private String m_loadingCanceledMessage;
-
 
     /**
      * Indicates if this editor has been closed.
@@ -254,25 +253,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         File tmpDirFile = new File(tmpDir);
         if (!(tmpDirFile.isDirectory() && tmpDirFile.canWrite())) {
             LOGGER.error("Can't set temp directory to \"" + tmpDir + "\", "
-                    + "not a directory or not writable");
-        } else {
-            System.setProperty("java.io.tmpdir", tmpDir);
-            LOGGER.debug("Setting temp dir environment variable "
-                    + "(java.io.tmpdir) to \"" + tmpDir + "\"");
-        }
-        int maxThreads = pStore.getInt(PreferenceConstants.P_MAXIMUM_THREADS);
-        if (maxThreads <= 0) {
-            LOGGER.warn("Can set " + maxThreads 
-                    + " as number of threads to use");
-        } else {
-            KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(maxThreads);
-            LOGGER.debug("Setting KNIME max thread count to " + maxThreads);
-        }
-        String tmpDir = pStore.getString(PreferenceConstants.P_TEMP_DIR);
-        // check for existence and if writable
-        File tmpDirFile = new File(tmpDir);
-        if (!(tmpDirFile.isDirectory() && tmpDirFile.canWrite())) {
-            LOGGER.error("Can't set temp directory to \"" + tmpDir + "\", " 
                     + "not a directory or not writable");
         } else {
             System.setProperty("java.io.tmpdir", tmpDir);
@@ -509,18 +489,17 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
     }
 
-
-    private List<IEditorPart>getSubEditors(){
-        List<IEditorPart>editors = new ArrayList<IEditorPart>();
+    private List<IEditorPart> getSubEditors() {
+        List<IEditorPart> editors = new ArrayList<IEditorPart>();
         for (NodeContainer child : m_manager.getNodeContainers()) {
             if (child instanceof SingleNodeContainer) {
                 continue;
             }
-            WorkflowManagerInput in = new WorkflowManagerInput(
-                    (WorkflowManager)child,
-                    this);
-            IEditorPart editor = PlatformUI.getWorkbench()
-                .getActiveWorkbenchWindow().getActivePage().findEditor(in);
+            WorkflowManagerInput in =
+                    new WorkflowManagerInput((WorkflowManager)child, this);
+            IEditorPart editor =
+                    PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                            .getActivePage().findEditor(in);
             if (editor != null) {
                 editors.add(editor);
             }
@@ -782,8 +761,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         if (input instanceof WorkflowManagerInput) {
             m_parentEditor = ((WorkflowManagerInput)input).getParentEditor();
-            WorkflowManager wfm = ((WorkflowManagerInput)input)
-                .getWorkflowManager();
+            WorkflowManager wfm =
+                    ((WorkflowManagerInput)input).getWorkflowManager();
             setWorkflowManager(wfm);
             setPartName(input.getName());
             wfm.addListener(this);
@@ -843,6 +822,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
+            // this one sets the workflow manager in the editor
             LoadWorkflowRunnable loadWorflowRunnable =
                     new LoadWorkflowRunnable(this, file);
             ps.busyCursorWhile(loadWorflowRunnable);
@@ -859,8 +839,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                                             .getActiveShell(),
                                             SWT.ICON_INFORMATION | SWT.OK);
                             mb.setText("Editor could not be opened");
-                            mb
-                                    .setMessage(m_loadingCanceledMessage);
+                            mb.setMessage(m_loadingCanceledMessage);
                             mb.open();
                         }
                     });
@@ -1122,14 +1101,14 @@ public class WorkflowEditor extends GraphicalEditor implements
             Display.getDefault().asyncExec(new Runnable() {
                 public void run() {
                     editor.firePropertyChange(IEditorPart.PROP_DIRTY);
-        }
+                }
             });
         }
         // try {
         // // try to refresh project
         // // m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
         // // monitor);
-        //            
+        //
         // //archive attribute aendern
         // } catch (CoreException e) {
         // // TODO Auto-generated catch block
@@ -1312,7 +1291,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             if (b) {
                 markDirty();
             } else {
-            m_isDirty = b;
+                m_isDirty = b;
             }
             firePropertyChange(IEditorPart.PROP_DIRTY);
         }
@@ -1326,7 +1305,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
-     *
+     * 
      * @see org.knime.core.node.workflow.WorkflowListener
      *      #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
      */
@@ -1336,23 +1315,22 @@ public class WorkflowEditor extends GraphicalEditor implements
         markDirty();
         updateActions();
 
-        if (event.getType().equals(WorkflowEvent.Type.NODE_WAITING) ) {
+        if (event.getType().equals(WorkflowEvent.Type.NODE_WAITING)) {
             NodeContainer nc = (NodeContainer)event.getOldValue();
 
-                NodeProgressMonitor pm =
-                        (NodeProgressMonitor)event.getNewValue();
+            NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
 
-                ProgressMonitorJob job =
-                        new ProgressMonitorJob(nc.getCustomName() + " ("
-                                + nc.getName() + ")", pm, m_manager, nc,
-                                "Queued for execution...");
-                // Reverted as not properly ordered yet. Improve in next version
-                // job.schedule();
+            ProgressMonitorJob job =
+                    new ProgressMonitorJob(nc.getCustomName() + " ("
+                            + nc.getName() + ")", pm, m_manager, nc,
+                            "Queued for execution...");
+            // Reverted as not properly ordered yet. Improve in next version
+            // job.schedule();
 
-                Object o = m_dummyNodeJobs.put(event.getID(), job);
-                assert (o == null);
+            Object o = m_dummyNodeJobs.put(event.getID(), job);
+            assert (o == null);
 
-        } else if (event.getType().equals(WorkflowEvent.Type.NODE_STARTED) ) {
+        } else if (event.getType().equals(WorkflowEvent.Type.NODE_STARTED)) {
             ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
             if (j != null) {
                 LOGGER.debug("'Node Started' event received for "
@@ -1365,15 +1343,13 @@ public class WorkflowEditor extends GraphicalEditor implements
             NodeContainer nc = (NodeContainer)event.getOldValue();
             NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
 
-
-
             // TODO : check for correctness
 
-//            currentListener = nc.getProgressListener();
-//            if (currentListener == null) {
-                currentListener = new ProgressFigure();
-                nc.addProgressListener(currentListener);
-//            }
+            // currentListener = nc.getProgressListener();
+            // if (currentListener == null) {
+            currentListener = new ProgressFigure();
+            nc.addProgressListener(currentListener);
+            // }
 
             pm.addProgressListener(currentListener);
 
@@ -1595,14 +1571,12 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_manager = manager;
     }
 
-
     /**
      * @return returns true if this editor has been closed on the workbench
      */
     public boolean isClosed() {
         return m_closed;
     }
-
 
     /**
      * Transposes a point according to the given zoom manager.
