@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,20 +18,23 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
- * History
- *   22.03.2005 (mb): created
- *   10.01.2006 (mb): clean up for code review
  */
 package org.knime.core.node.workflow;
 
+import java.util.EventListener;
 
-/** Interface for an object that's held within a ConnectionContainer and
- * allows loading and saving of information. Usually such objects
- * will hold information about the Edge's position(s) in some layout.
- * 
- * @author M. Berthold, University of Konstanz
+/**
+ * Listener for <code>NodeProgressEvent</code> fired when the progress
+ * information has changed.
+ *
+ * @author Thomas Gabriel, University of Konstanz
  */
-public interface ConnectionExtraInfo extends ExtraInfo {
-   
+public interface NodeProgressListener extends EventListener {
+
+    /**
+     * Invoked when the progress has changed.
+     * @param pe The progress event holding the progress information.
+     */
+    void progressChanged(NodeProgressEvent pe);
+
 }

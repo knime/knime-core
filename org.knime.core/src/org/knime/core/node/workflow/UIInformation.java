@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   20.07.2006 (sieb): created
  */
@@ -30,14 +30,14 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Basic interface for extra information.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
-public interface ExtraInfo {
+public interface UIInformation {
 
     /**
      * Stores all contained information into the given configuration.
-     * 
+     *
      * @param config The configuration to write the current settings into.
      * @see #load
      */
@@ -45,11 +45,11 @@ public interface ExtraInfo {
 
     /**
      * Reads the information from the NodeSettings object.
-     * 
+     *
      * @param config Retrieve the data from.
      * @throws InvalidSettingsException If the required keys are not available
      *             in the NodeSettings.
-     * 
+     *
      * @see #save
      */
     void load(final NodeSettingsRO config) throws InvalidSettingsException;
