@@ -36,6 +36,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 
 
 
@@ -72,6 +73,53 @@ extends PieNodeModel<InteractivePieVizModel> {
             new InteractivePieVizModel(m_model, getPieColumnName(),
                     getAggregationColumnName());
         return vizModel;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    throws InvalidSettingsException {
+        try {
+            return super.configure(inSpecs);
+        } catch (final InvalidSettingsException e) {
+            //try to set some default values
+            final DataTableSpec spec = inSpecs[0];
+            if (spec == null) {
+                throw new IllegalArgumentException(
+                "No table specification found");
+            }
+            final int numColumns = spec.getNumColumns();
+            if (numColumns < 1) {
+                throw new InvalidSettingsException(
+                "Input table should have at least 1 column.");
+            }
+            boolean pieFound = false;
+            boolean aggrFound = false;
+            for (int i = 0; i < numColumns; i++) {
+                final DataColumnSpec columnSpec = spec.getColumnSpec(i);
+                if (!pieFound
+                        && PieNodeModel.PIE_COLUMN_FILTER.includeColumn(
+                                columnSpec)) {
+                    setPieColumnName(columnSpec.getName());
+                    pieFound = true;
+                } else if (!aggrFound
+                        && PieNodeModel.AGGREGATION_COLUMN_FILTER.includeColumn(
+                                columnSpec)) {
+                    setAggregationColumnName(columnSpec.getName());
+                    aggrFound = true;
+                }
+                if (pieFound && aggrFound) {
+                    break;
+                }
+            }
+            if (!pieFound) {
+                throw new InvalidSettingsException(
+                "No column compatible with this node.");
+            }
+        }
+        return new DataTableSpec[0];
     }
 
     /**

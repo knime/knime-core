@@ -85,50 +85,6 @@ public class InteractivePieProperties
         onSelectAggrMethod(vizModel.getAggregationMethod());
         super.addColumnTab(m_pieCol, m_aggrCol);
     }
-    /**
-     * The columns settings panel which contains the x column
-     * and aggregation column selection box.
-     *
-     * @return the columns selection panel
-     */
-//    private Box createColumnSettingsBox() {
-////the x column box
-//        final Box xColumnBox = Box.createHorizontalBox();
-////        xColumnBox.setBorder(BorderFactory
-////                .createEtchedBorder(EtchedBorder.RAISED));
-//        final JLabel xColLabelLabel =
-//            new JLabel(PieProperties.PIE_COLUMN_LABEL);
-//        xColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-//        xColumnBox.add(xColLabelLabel);
-//        xColumnBox.add(Box.createHorizontalGlue());
-//        xColumnBox.add(m_pieCol);
-//        xColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-////the aggregation column box
-//        final Box aggrColumnBox = Box.createHorizontalBox();
-////      xColumnBox.setBorder(BorderFactory
-////              .createEtchedBorder(EtchedBorder.RAISED));
-//      final JLabel aggrColLabelLabel =
-//          new JLabel(PieProperties.AGGREGATION_COLUMN_LABEL);
-//      aggrColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-//      aggrColumnBox.add(aggrColLabelLabel);
-//      aggrColumnBox.add(Box.createHorizontalGlue());
-//      aggrColumnBox.add(m_aggrCol);
-//      aggrColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-////        final Box aggrColumnBox = Box.createHorizontalBox();
-////        aggrColumnBox.add(m_aggrCol);
-////        aggrColumnBox.add(Box.createRigidArea(HORIZONTAL_SPACER_DIM));
-//
-////the box which surround both column selection boxes
-//        final Box columnsBox = Box.createVerticalBox();
-//        columnsBox.setBorder(BorderFactory
-//                .createEtchedBorder(EtchedBorder.RAISED));
-//        columnsBox.add(Box.createVerticalGlue());
-//        columnsBox.add(xColumnBox);
-//        columnsBox.add(Box.createVerticalGlue());
-//        columnsBox.add(aggrColumnBox);
-//        columnsBox.add(Box.createVerticalGlue());
-//        return columnsBox;
-//    }
 
     /**
      * @param listener adds the listener to the x column select box.

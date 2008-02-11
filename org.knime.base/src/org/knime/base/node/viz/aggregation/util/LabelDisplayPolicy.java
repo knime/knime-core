@@ -39,7 +39,7 @@ public enum LabelDisplayPolicy implements ButtonGroupEnumInterface {
     /**Display none labels at all.*/
     NONE("none", "None", "Display no labels", false),
     /**Display the label of all bars..*/
-    ALL("all", "All bars", "Display all labels", false),
+    ALL("all", "All elements", "Display all labels", false),
     /**Display the label of the selected bars.*/
     SELECTED("selected", "Selected elements",
             "Display labels only for selected elements", true);

@@ -31,7 +31,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.Hashtable;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -524,60 +523,6 @@ public abstract class AbstractHistogramProperties extends
     }
 
   /**
-     * Sets the label of the given slider.
-     *
-     * @param slider the slider to label
-     * @param divisor the steps are calculated
-     *            <code>maxVal - minVal / divisor</code>
-     */
-    private static void setSliderLabels(final JSlider slider,
-            final int divisor, final boolean showDigitsAndTicks) {
-        // show at least the min, middle and max value on the slider.
-        final int minimum = slider.getMinimum();
-        final int maximum = slider.getMaximum();
-        final int increment = (maximum - minimum) / divisor;
-        if (increment < 1) {
-            // if their is no increment we don't need to enable this slider
-            // Hashtable labels = m_barWidth.createStandardLabels(1);
-            final Hashtable<Integer, JLabel> labels =
-                new Hashtable<Integer, JLabel>(1);
-            labels.put(new Integer(minimum), new JLabel("Min"));
-            slider.setLabelTable(labels);
-            slider.setPaintLabels(true);
-            slider.setEnabled(false);
-        } else if (showDigitsAndTicks) {
-            // slider.setLabelTable(slider.createStandardLabels(increment));
-            final Hashtable<Integer, JLabel> labels =
-                new Hashtable<Integer, JLabel>();
-            // labels.put(minimum, new JLabel("Min"));
-            labels.put(new Integer(minimum),
-                    new JLabel(Integer.toString(minimum)));
-            for (int i = 1; i < divisor; i++) {
-                final int value = minimum + i * increment;
-                labels.put(new Integer(value),
-                        new JLabel(Integer.toString(value)));
-            }
-            // labels.put(maximum, new JLabel("Max"));
-            labels.put(new Integer(maximum),
-                    new JLabel(Integer.toString(maximum)));
-            slider.setLabelTable(labels);
-            slider.setPaintLabels(true);
-            slider.setMajorTickSpacing(divisor);
-            slider.setPaintTicks(true);
-            // slider.setSnapToTicks(true);
-            slider.setEnabled(true);
-        } else {
-            final Hashtable<Integer, JLabel> labels =
-                new Hashtable<Integer, JLabel>();
-            labels.put(new Integer(minimum), new JLabel("Min"));
-            labels.put(new Integer(maximum), new JLabel("Max"));
-            slider.setLabelTable(labels);
-            slider.setPaintLabels(true);
-            slider.setEnabled(true);
-        }
-    }
-
-    /**
      *
      * @param spec current data table specification
      * @param xColName preselected x column name
@@ -614,7 +559,7 @@ public abstract class AbstractHistogramProperties extends
         m_noOfBins.setMaximum(maxNoOfBins);
         m_noOfBins.setValue(currentNoOfBins);
         m_noOfBinsLabel.setText(Integer.toString(currentNoOfBins));
-        AbstractHistogramProperties.setSliderLabels(m_noOfBins, 2, true);
+        GUIUtils.setSliderLabels(m_noOfBins, 2, true);
         // disable this noOfbins slider for nominal values
         if (vizModel.isBinNominal() || vizModel.isFixed()) {
             m_noOfBins.setEnabled(false);
@@ -738,7 +683,7 @@ public abstract class AbstractHistogramProperties extends
         m_binWidth.setEnabled(true);
         m_binWidth.setToolTipText(
                 AbstractHistogramProperties.BIN_WIDTH_TOOLTIP);
-        AbstractHistogramProperties.setSliderLabels(m_binWidth, 2, false);
+        GUIUtils.setSliderLabels(m_binWidth, 2, false);
         for (final ChangeListener listener : widthListeners) {
             m_binWidth.addChangeListener(listener);
         }
