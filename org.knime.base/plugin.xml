@@ -402,37 +402,9 @@
            factory-class="org.knime.base.node.viz.histogram.node.HistogramNodeFactory"
            id="org.knime.base.node.viz.histogram.node.HistogramNodeFactory"/>
      <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.xvalidation.XValidateNodeFactory"
-           id="org.knime.base.node.meta.xvalidation.XValidateNodeFactory"/>
-     <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.MetaNodeFactory11"
-           id="org.knime.base.node.meta.MetaNodeFactory11"/>
-     <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.MetaNodeFactory12"
-           id="org.knime.base.node.meta.MetaNodeFactory12"/>
-     <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.MetaNodeFactory21"
-           id="org.knime.base.node.meta.MetaNodeFactory21"/>
-     <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.MetaNodeFactory22"
-           id="org.knime.base.node.meta.MetaNodeFactory22"/>
-     <node
            category-path="/view"
            factory-class="org.knime.base.node.viz.histogram.node.FixedColumnHistogramNodeFactory"
            id="org.knime.base.node.viz.histogram.node.FixedColumnHistogramNodeFactory"/>
-     <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.looper.LooperFactory"
-           id="org.knime.base.node.meta.looper.LooperFactory"/>
-     <node
-           category-path="/meta"
-           factory-class="org.knime.base.node.meta.MetaNodeFactory01"
-           id="org.knime.base.node.meta.MetaNodeFactory01"/>
      <node
            category-path="/manipulation/column"
            factory-class="org.knime.base.node.preproc.normalize.NormalizerApplyNodeFactory"

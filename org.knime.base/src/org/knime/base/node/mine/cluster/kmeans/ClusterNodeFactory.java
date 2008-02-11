@@ -21,22 +21,20 @@
  */
 package org.knime.base.node.mine.cluster.kmeans;
 
+import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * Create classes for k-means Clustering NodeModel, NodeView and NodeDialogPane.
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public class ClusterNodeFactory extends NodeFactory {
+public class ClusterNodeFactory extends GenericNodeFactory<ClusterNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public ClusterNodeModel createNodeModel() {
         return new ClusterNodeModel();
     }
 
@@ -52,11 +50,12 @@ public class ClusterNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int i, final NodeModel nodeModel) {
+    public ClusterNodeView createNodeView(final int i,
+            final ClusterNodeModel nodeModel) {
         if (i != 0) {
             throw new IllegalStateException();
         }
-        return new ClusterNodeView((ClusterNodeModel)nodeModel);
+        return new ClusterNodeView(nodeModel);
     }
 
     /**

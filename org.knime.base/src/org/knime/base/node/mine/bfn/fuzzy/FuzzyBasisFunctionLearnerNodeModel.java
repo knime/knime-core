@@ -28,13 +28,14 @@ import org.knime.base.node.mine.bfn.fuzzy.shrink.Shrink;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.FuzzyIntervalCell;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
 
 /**
  * The fuzzy basis function model training
@@ -69,7 +70,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
      * @throws CanceledExecutionException if the training was canceled
      */
     @Override
-    public BufferedDataTable[] execute(final BufferedDataTable[] data,
+    public PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws CanceledExecutionException {
         return super.execute(data, exec);
     }
@@ -89,7 +90,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
      * {@inheritDoc}
      */
     @Override
-    public DataTableSpec[] configure(final DataTableSpec[] ins)
+    public PortObjectSpec[] configure(final PortObjectSpec[] ins)
             throws InvalidSettingsException {
         return super.configure(ins);
     }

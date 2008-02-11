@@ -49,12 +49,16 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortType;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
@@ -69,7 +73,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
  * 
  * @author Michael Berthold, University of Konstanz
  */
-public class ClusterNodeModel extends NodeModel {
+public class ClusterNodeModel extends GenericNodeModel {
     /** Constant for the RowKey generation and identification in the view. */
     public static final String CLUSTER = "cluster_";
 
@@ -151,7 +155,12 @@ public class ClusterNodeModel extends NodeModel {
      * Constructor, remember parent and initialize status.
      */
     ClusterNodeModel() {
-        super(1, 1, 0, 1); // specify one input, one output and one model
+        super(new PortType[] {
+                BufferedDataTable.TYPE},
+              new PortType[] {
+                BufferedDataTable.TYPE,
+                ModelContent.TYPE}
+                ); // specify one data input, one data output and one model
         m_mapper = null;
         m_translator = new HiLiteTranslator(new DefaultHiLiteHandler(),
                 m_mapper);
@@ -177,7 +186,7 @@ public class ClusterNodeModel extends NodeModel {
      * Appends to the given node settings the model specific configuration, that
      * are, the current settings (e.g. from the
      * {@link org.knime.core.node.NodeDialogPane}), as wells, the
-     * {@link NodeModel} itself if applicable.
+     * {@link GenericNodeModel} itself if applicable.
      * <p>
      * Method is called by the {@link org.knime.core.node.Node} if the
      * current configuration needs to be saved.
@@ -193,8 +202,8 @@ public class ClusterNodeModel extends NodeModel {
     }
 
     /**
-     * Method is called when the {@link NodeModel} before the model has to
-     * change it's configuration using the given one. This method is also called
+     * Method is called when before the model has to change it's configuration
+     * (@see loadsettings) using the given one. This method is also called
      * by the {@link org.knime.core.node.Node}.
      * 
      * @param settings to validate
@@ -217,8 +226,8 @@ public class ClusterNodeModel extends NodeModel {
     }
 
     /**
-     * Method is called when the {@link NodeModel} has to set its configuration
-     * using the given one. This method is also called by the
+     * Method is called when the {@link GenericNodeModel} has to set its
+     * configuration using the given one. This method is also called by the
      * {@link org.knime.core.node.Node}. Note that the settings should
      * have been validated before this method is called.
      * 
@@ -340,15 +349,16 @@ public class ClusterNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] data,
+    protected PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws Exception {
         assert (data.length == 1);
+        BufferedDataTable inData = (BufferedDataTable)data[0];
         // get dimension of feature space
-        m_dimension = data[0].getDataTableSpec().getNumColumns();
+        m_dimension = inData.getDataTableSpec().getNumColumns();
         HashMap<DataCell, Set<DataCell>> mapping
           = new HashMap<DataCell, Set<DataCell>>();
 
-        initialize(data[0]);
+        initialize(inData);
         // --------- create clusters --------------
         // reserve space for cluster center updates (do batch update!)
         double[][] delta = new double[m_nrOfClusters.getIntValue()][];
@@ -381,7 +391,7 @@ public class ClusterNodeModel extends NodeModel {
             }
             // assume that we are done (i.e. clusters have stopped changing)
             finished = true;
-            RowIterator rowIt = data[0].iterator(); // first training example
+            RowIterator rowIt = inData.iterator(); // first training example
             int nrOverallPatterns = 0;
             while (rowIt.hasNext()) {
                 DataRow currentRow = rowIt.next();
@@ -445,7 +455,7 @@ public class ClusterNodeModel extends NodeModel {
         } while (j < m_dimension);
         // create output container and also mapping for HiLiteing
         DataContainer labeledInput = new DataContainer(m_appendedSpec);
-        for (DataRow row : data[0]) {
+        for (DataRow row : inData) {
             int winner = findClosestPrototypeFor(row);
             DataCell key = new StringCell(CLUSTER + winner);
             labeledInput.addRowToTable(new AppendedColumnRow(row, key));
@@ -460,8 +470,10 @@ public class ClusterNodeModel extends NodeModel {
         labeledInput.close();
         m_mapper = new DefaultHiLiteMapper(mapping);
         m_translator.setMapper(m_mapper);
-        return new BufferedDataTable[]{exec.createBufferedDataTable(
-                labeledInput.getTable(), exec)};
+        BufferedDataTable outData = exec.createBufferedDataTable(
+                labeledInput.getTable(), exec);
+        ModelContent outModel = createModelContent();
+        return new PortObject[]{outData, outModel};
     }
 
     private void initialize(final DataTable input) {
@@ -528,12 +540,8 @@ public class ClusterNodeModel extends NodeModel {
         return winner;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveModelContent(final int index,
-            final ModelContentWO predParams) throws InvalidSettingsException {
+    private ModelContent createModelContent() {
+        ModelContent predParams = new ModelContent("kMeans Cluster Model");
         /*
          * Determine the columns that have been used for clustering.
          */
@@ -562,12 +570,13 @@ public class ClusterNodeModel extends NodeModel {
                             + c));
             proto.save(protoWO);
         }
+        return predParams;
     }
 
     /**
      * Clears the model.
      * 
-     * @see NodeModel#reset()
+     * @see GenericNodeModel#reset()
      */
     @Override
     protected void reset() {
@@ -586,13 +595,13 @@ public class ClusterNodeModel extends NodeModel {
      * @return the copied input spec
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs) {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) {
         // make sure we are a 1-input
         assert (inSpecs.length == 1);
+        m_spec = (DataTableSpec)inSpecs[0];
         // input is output spec with all double compatible values set to
         // Double.
-        m_dimension = inSpecs[0].getNumColumns();
-        m_spec = inSpecs[0];
+        m_dimension = m_spec.getNumColumns();
         // Find out which columns we can use (must be Double compatible)
         // Note that, for simplicity, we still use the entire dimensionality
         // for cluster prototypes below and simply ignore useless columns.
@@ -605,8 +614,8 @@ public class ClusterNodeModel extends NodeModel {
                 && m_usedColumns.getExcludeList().size() == 0) {
             List<String> includedColumns = new ArrayList<String>();
             List<String> excludedColumns = new ArrayList<String>();
-            for (int i = 0; i < inSpecs[0].getNumColumns(); i++) {
-                DataColumnSpec colSpec = inSpecs[0].getColumnSpec(i);
+            for (int i = 0; i < m_spec.getNumColumns(); i++) {
+                DataColumnSpec colSpec = m_spec.getColumnSpec(i);
                 if (colSpec.getType().isCompatible(DoubleValue.class)) {
                     includedColumns.add(colSpec.getName());        
                 } else {
@@ -620,12 +629,12 @@ public class ClusterNodeModel extends NodeModel {
         // add all excluded columns to the ignore list
         for (int i = 0; i < m_dimension; i++) {
             // ignore if not compatible with double
-            m_ignoreColumn[i] = !(inSpecs[0].getColumnSpec(i).getType()
+            m_ignoreColumn[i] = !(m_spec.getColumnSpec(i).getType()
                     .isCompatible(DoubleValue.class)) 
                     || 
                     //  or if it is in the exclude list:
                     m_usedColumns.getExcludeList()
-                    .contains(inSpecs[0].getColumnSpec(i).getName());
+                    .contains(m_spec.getColumnSpec(i).getName());
             if (m_ignoreColumn[i]) {
                 m_nrIgnoredColumns++;
             }
@@ -659,7 +668,8 @@ public class ClusterNodeModel extends NodeModel {
         DataColumnSpec labelColSpec = creator.createSpec();
         DataTableSpec appendedSpec = new DataTableSpec(labelColSpec);
         m_appendedSpec = new DataTableSpec(m_spec, appendedSpec);
-        return new DataTableSpec[]{m_appendedSpec};
+        // return spec for data and model outport!
+        return new DataTableSpec[]{m_appendedSpec, m_appendedSpec};
     }
 
     /**

@@ -65,7 +65,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      * 
      */
     public BasisFunctionPredictorCellFactory(
-            final DataColumnSpec[] modelSpecs, final String newTargetName) {
+            final DataTableSpec modelSpecs, final String newTargetName) {
         m_model = null;
         m_filteredColumns = null;
         m_dontKnowClass = Double.NaN;
@@ -74,10 +74,10 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
     }
     
     private static DataColumnSpec[] createSpec(
-            final DataColumnSpec[] modelSpecs, final String newTargetName) {
-        int modelClassIdx = modelSpecs.length - 5;
+            final DataTableSpec modelSpecs, final String newTargetName) {
+        int modelClassIdx = modelSpecs.getNumColumns() - 5;
         Set<DataCell> possClasses = 
-            modelSpecs[modelClassIdx].getDomain().getValues();
+            modelSpecs.getColumnSpec(modelClassIdx).getDomain().getValues();
         if (possClasses == null) {
             return new DataColumnSpec[0];
         }
@@ -88,7 +88,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
                     it.next().toString(), DoubleCell.TYPE).createSpec();
         }
         DataColumnSpecCreator newTargetSpec = new DataColumnSpecCreator(
-                modelSpecs[modelClassIdx]);
+                modelSpecs.getColumnSpec(modelClassIdx));
         newTargetSpec.setName(newTargetName);
         specs[specs.length - 1] = newTargetSpec.createSpec();
         return specs;
@@ -108,7 +108,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      * @throws NullPointerException if one of the arguments is <code>null</code>
      */
     public BasisFunctionPredictorCellFactory(final DataTableSpec dataSpec, 
-            final DataColumnSpec[] modelSpecs,
+            final DataTableSpec modelSpecs,
             final List<BasisFunctionPredictorRow> model,
             final String newTargetName,
             final double dontKnowClass,
@@ -128,10 +128,10 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
         
         m_specs = createSpec(modelSpecs, newTargetName);
         
-        m_filteredColumns = new int[modelSpecs.length - 5];
+        m_filteredColumns = new int[modelSpecs.getNumColumns() - 5];
         for (int i = 0; i < m_filteredColumns.length; i++) {
             m_filteredColumns[i] = dataSpec.findColumnIndex(
-                    modelSpecs[i].getName());
+                    modelSpecs.getColumnSpec(i).getName());
         }
     }
     

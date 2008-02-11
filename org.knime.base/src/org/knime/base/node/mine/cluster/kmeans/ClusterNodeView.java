@@ -46,7 +46,7 @@ import javax.swing.tree.TreePath;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorAttr;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
 
@@ -54,7 +54,8 @@ import org.knime.core.node.property.hilite.KeyEvent;
 /**
  * @author Michael Berthold, University of Konstanz
  */
-public class ClusterNodeView extends NodeView implements HiLiteListener {
+public class ClusterNodeView extends GenericNodeView<ClusterNodeModel>
+implements HiLiteListener {
 
     // private static final NodeLogger LOGGER = NodeLogger.getLogger(
     // ClusterNodeView.class);
@@ -123,7 +124,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
             public void mouseReleased(final MouseEvent e) {
                 boolean selected = m_selected.size() > 0;
                 m_hiliteMenu.getMenuComponent(HILITE_POS).setEnabled(selected);
-                boolean hasHilite = ((ClusterNodeModel)getNodeModel())
+                boolean hasHilite = getNodeModel()
                         .getHiLiteHandler().getHiLitKeys().size() > 0;
                 m_hiliteMenu.getMenuComponent(UNHILITE_POS).setEnabled(
                         selected && hasHilite);
@@ -144,8 +145,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
              * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
-                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
-                    .fireHiLiteEvent(m_selected);
+                getNodeModel().getHiLiteHandler().fireHiLiteEvent(m_selected);
             }
         });
         menu.add(item);
@@ -155,8 +155,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
              * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
-                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
-                .fireUnHiLiteEvent(m_selected);
+                getNodeModel().getHiLiteHandler().fireUnHiLiteEvent(m_selected);
             }
         });
         menu.add(item);
@@ -166,8 +165,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
              * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
-                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
-                        .fireClearHiLiteEvent();
+                getNodeModel().getHiLiteHandler().fireClearHiLiteEvent();
             }
         });
         menu.add(item);
@@ -183,8 +181,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
              * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
-                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
-                    .fireHiLiteEvent(m_selected);
+                getNodeModel().getHiLiteHandler().fireHiLiteEvent(m_selected);
             }
 
         });
@@ -196,8 +193,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
              * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
-                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
-                    .fireUnHiLiteEvent(m_selected);
+                getNodeModel().getHiLiteHandler().fireUnHiLiteEvent(m_selected);
             }
 
         });
@@ -209,8 +205,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
              * {@inheritDoc}
              */
             public void actionPerformed(final ActionEvent arg0) {
-                ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
-                        .fireClearHiLiteEvent();
+                getNodeModel().getHiLiteHandler().fireClearHiLiteEvent();
             }
         });
         menu.add(item);
@@ -222,8 +217,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
      */
     public void hiLite(final KeyEvent event) {
         getComponent().repaint();
-        ((ClusterNodeModel)getNodeModel()).getHiLiteHandler().fireHiLiteEvent(
-                event.keys());
+        getNodeModel().getHiLiteHandler().fireHiLiteEvent(event.keys());
     }
 
     /**
@@ -231,8 +225,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
      */
     public void unHiLite(final KeyEvent event) {
         getComponent().repaint();
-        ((ClusterNodeModel)getNodeModel()).getHiLiteHandler().fireUnHiLiteEvent(
-                event.keys());
+        getNodeModel().getHiLiteHandler().fireUnHiLiteEvent(event.keys());
     }
 
 
@@ -240,8 +233,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
      * {@inheritDoc}
      */
     public void unHiLiteAll() {
-        ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
-            .fireClearHiLiteEvent();
+        getNodeModel().getHiLiteHandler().fireClearHiLiteEvent();
         getComponent().repaint();
     }
 
@@ -250,8 +242,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
      */
     @Override
     protected void onOpen() {
-        ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
-                .addHiLiteListener(this);
+        getNodeModel().getHiLiteHandler().addHiLiteListener(this);
     }
 
     /**
@@ -260,8 +251,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
     @Override
     protected void onClose() {
         // nothing to do, listeners are unregistered elsewhere
-        ((ClusterNodeModel)getNodeModel()).getHiLiteHandler()
-                .removeHiLiteListener(this);
+        getNodeModel().getHiLiteHandler().removeHiLiteListener(this);
     }
 
     /**
@@ -275,12 +265,9 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
         DefaultMutableTreeNode root = null;
         if (getNodeModel() == null) { // do we even have a NodeModel?
             root = new DefaultMutableTreeNode("No Model");
-        } else if (!(getNodeModel() instanceof ClusterNodeModel)) {
-            // if it's not the correct type of model, say so (shouldn't happen)
-            root = new DefaultMutableTreeNode("Wrong type of Model!");
         } else { // check for empty cluster model before adding content to
             // tree
-            ClusterNodeModel myModel = (ClusterNodeModel)getNodeModel();
+            ClusterNodeModel myModel = getNodeModel();
             if (!myModel.hasModel()) {
                 root = new DefaultMutableTreeNode("Empty Model");
             } else { // put cluster info into the tree
@@ -346,7 +333,7 @@ public class ClusterNodeView extends NodeView implements HiLiteListener {
             if (value instanceof ClusterMutableTreeNode) {
                 // can cast and check whether it is hilited
                 ClusterMutableTreeNode node = (ClusterMutableTreeNode)value;
-                m_isHilite = ((ClusterNodeModel)getNodeModel())
+                m_isHilite = getNodeModel()
                         .getHiLiteHandler().isHiLit(node.getRowId());
             } else {
                 m_isHilite = false;

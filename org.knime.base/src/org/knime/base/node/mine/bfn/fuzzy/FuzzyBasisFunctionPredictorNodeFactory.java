@@ -22,22 +22,23 @@
 package org.knime.base.node.mine.bfn.fuzzy;
 
 import org.knime.base.node.mine.bfn.BasisFunctionPredictorNodeDialog;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class FuzzyBasisFunctionPredictorNodeFactory extends NodeFactory {
+public class FuzzyBasisFunctionPredictorNodeFactory 
+        extends GenericNodeFactory<FuzzyBasisFunctionPredictorNodeModel> {
+    
     
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public FuzzyBasisFunctionPredictorNodeModel createNodeModel() {
         return new FuzzyBasisFunctionPredictorNodeModel();
     }
 
@@ -53,8 +54,9 @@ public class FuzzyBasisFunctionPredictorNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int i, final NodeModel nodeModel) {
-        assert false;
+    public GenericNodeView<FuzzyBasisFunctionPredictorNodeModel> createNodeView(
+            final int viewIndex, 
+            final FuzzyBasisFunctionPredictorNodeModel nodeModel) {
         return null;
     }
 

@@ -26,19 +26,18 @@ package org.knime.base.node.io.database;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBReaderNodeFactory extends NodeFactory {
+public class DBReaderNodeFactory extends NodeFactory<DBReaderNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public DBReaderNodeModel createNodeModel() {
         return new DBReaderNodeModel(0, 1);
     }
 
@@ -54,8 +53,8 @@ public class DBReaderNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<DBReaderNodeModel> createNodeView(final int viewIndex,
+            final DBReaderNodeModel nodeModel) {
         return null;
     }
 

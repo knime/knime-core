@@ -21,24 +21,22 @@
  */
 package org.knime.base.node.mine.bfn.fuzzy;
 
-import org.knime.base.node.mine.bfn.BasisFunctionLearnerNodeModel;
-import org.knime.base.node.mine.bfn.BasisFunctionLearnerNodeView;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.GenericNodeDialogPane;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeView;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class FuzzyBasisFunctionLearnerNodeFactory extends NodeFactory {
+public class FuzzyBasisFunctionLearnerNodeFactory
+        extends GenericNodeFactory<FuzzyBasisFunctionLearnerNodeModel> {
     
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public FuzzyBasisFunctionLearnerNodeModel createNodeModel() {
         return new FuzzyBasisFunctionLearnerNodeModel();
     }
 
@@ -49,15 +47,15 @@ public class FuzzyBasisFunctionLearnerNodeFactory extends NodeFactory {
     public int getNrNodeViews() {
         return 1;
     }
-
+    
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int i, final NodeModel nodeModel) {
-        assert i == 0;
-        return new BasisFunctionLearnerNodeView(
-                (BasisFunctionLearnerNodeModel)nodeModel);
+    public GenericNodeView<FuzzyBasisFunctionLearnerNodeModel> createNodeView(
+            final int viewIndex, 
+            final FuzzyBasisFunctionLearnerNodeModel nodeModel) {
+        return new FuzzyBasisFunctionLearnerNodeView(nodeModel);
     }
 
     /**
@@ -73,7 +71,7 @@ public class FuzzyBasisFunctionLearnerNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeDialogPane createNodeDialogPane() {
+    public GenericNodeDialogPane createNodeDialogPane() {
         return new FuzzyBasisFunctionLearnerNodeDialog();
     }
 }

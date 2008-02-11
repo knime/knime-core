@@ -33,11 +33,11 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.mine.bfn.BasisFunctionLearnerNodeDialogPane;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.PortObjectSpec;
 
 /**
  * A dialog for PNN learner to set properties, such as theta minus and plus. 
@@ -143,7 +143,7 @@ public class RadialBasisFunctionLearnerNodeDialog
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         super.loadSettingsFrom(settings, specs);
         // update theta minus
         m_thetaMinus.setValue(new Double(settings.getDouble(

@@ -56,7 +56,8 @@ import org.knime.core.node.property.hilite.KeyEvent;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-final class HiliteScorerNodeView extends NodeView implements HiLiteListener {
+final class HiliteScorerNodeView extends NodeView<HiliteScorerNodeModel> 
+        implements HiLiteListener {
     /*
      * Components displaying the scorer table, number of correct/wrong
      * classified patterns, and the error percentage number.

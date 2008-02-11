@@ -30,11 +30,11 @@ import javax.swing.JPanel;
 import org.knime.base.node.mine.bfn.BasisFunctionLearnerNodeDialogPane;
 import org.knime.base.node.mine.bfn.fuzzy.norm.Norm;
 import org.knime.base.node.mine.bfn.fuzzy.shrink.Shrink;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.PortObjectSpec;
 
 /**
  * A dialog for the fuzzy basisfunction learner to set the following properties:
@@ -79,7 +79,7 @@ public class FuzzyBasisFunctionLearnerNodeDialog
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         super.loadSettingsFrom(settings, specs);
         // set shrink choice
         int shrink = settings.getInt(Shrink.SHRINK_KEY, 0);
