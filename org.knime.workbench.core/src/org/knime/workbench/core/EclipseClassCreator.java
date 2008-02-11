@@ -38,7 +38,6 @@ import org.knime.core.eclipseUtil.ClassCreator;
 import org.knime.core.node.NodeLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
-
 /**
  * Class creator, used inside Eclipse to load classes for the KNIME core. We
  * need this to lookup classes from the contributing plugins.
