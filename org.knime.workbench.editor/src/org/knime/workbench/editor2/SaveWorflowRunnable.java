@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.01.2007 (sieb): created
  */
@@ -33,8 +33,8 @@ import javax.swing.UIManager;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowInExecutionException;
 
 /**
  * A runnable which is used by the {@link WorkflowEditor} to save a workflow
@@ -42,7 +42,7 @@ import org.knime.core.node.workflow.WorkflowInExecutionException;
  * runnable an own class file is necessary sucht that all references to the
  * created workflow manager can be deleted, otherwise the manager can not be
  * deleted later and the memeory can not be freed.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 class SaveWorflowRunnable extends PersistWorflowRunnable {
@@ -60,7 +60,7 @@ class SaveWorflowRunnable extends PersistWorflowRunnable {
 
     /**
      * Creates a runnable that saves the worfklow.
-     * 
+     *
      * @param editor
      *            the editor holding the workflow to save
      * @param workflowFile
@@ -80,14 +80,14 @@ class SaveWorflowRunnable extends PersistWorflowRunnable {
     }
 
     /**
-     * 
+     *
      */
     public void run(final IProgressMonitor pm) {
         CheckThread checkThread = null;
         try {
             // create progress monitor
             ProgressHandler progressHandler = new ProgressHandler(pm, m_editor
-                    .getWorkflowManager().getNodes().size(),
+                    .getWorkflowManager().getNodeContainers().size(),
                     "Saving workflow... (can not be canceled)");
             final DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
             progressMonitor.addProgressListener(progressHandler);
@@ -98,7 +98,8 @@ class SaveWorflowRunnable extends PersistWorflowRunnable {
 
             checkThread.start();
 
-            m_editor.getWorkflowManager().save(m_workflowFile, progressMonitor);
+            // TODO: execution monitor? progress monitor??
+            m_editor.getWorkflowManager().save(m_workflowFile, new ExecutionMonitor(), true);
 
         } catch (FileNotFoundException fnfe) {
             LOGGER.fatal("File not found", fnfe);
@@ -120,7 +121,8 @@ class SaveWorflowRunnable extends PersistWorflowRunnable {
             LOGGER.info("Canceled saving worflow: " + m_workflowFile.getName());
             m_exceptionMessage.append("Saving workflow" + " was canceled.");
             m_monitor.setCanceled(true);
-        } catch (WorkflowInExecutionException e) {
+            /*
+        } catch (Exception e) {
             // inform the user
             m_exceptionMessage.append("Execution in progress! "
                     + "The workflow could not be saved.");
@@ -128,12 +130,14 @@ class SaveWorflowRunnable extends PersistWorflowRunnable {
             LOGGER.warn("Could not save workflow,"
                     + " node execution in progress");
             m_monitor.setCanceled(true);
+            */
         } catch (Error e) {
             LOGGER.error("Could not save workflow", e);
 
             m_exceptionMessage.append("Could not save workflow: "
                     + e.getMessage());
             m_monitor.setCanceled(true);
+
         } catch (Exception e) {
             LOGGER.error("Could not save workflow", e);
 

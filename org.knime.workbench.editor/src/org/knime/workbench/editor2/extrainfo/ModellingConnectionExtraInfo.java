@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.workflow.ConnectionExtraInfo;
+import org.knime.core.node.workflow.UIInformation;
 
 /**
  * Default implementation of a connection extra info.
@@ -38,14 +38,14 @@ import org.knime.core.node.workflow.ConnectionExtraInfo;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class ModellingConnectionExtraInfo implements ConnectionExtraInfo {
+public class ModellingConnectionExtraInfo implements UIInformation {
     /** The key under which the type is registered. * */
     public static final String KEY_VERSION = "extrainfo.conn.version";
 
     /** The key under which the bounds are registered. * */
     public static final String KEY_BENDPOINTS = "extrainfo.conn.bendpoints";
 
-    private ArrayList<int[]> m_bendpoints = new ArrayList<int[]>();
+    private final ArrayList<int[]> m_bendpoints = new ArrayList<int[]>();
 
     /**
      * Constructs a <code>ModellingConnectionExtraInfo</code>.

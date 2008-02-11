@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
+import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 
@@ -40,19 +41,13 @@ import org.knime.workbench.editor2.figures.NodeInPortFigure;
  */
 public class NodeInPortEditPart extends AbstractPortEditPart {
     /**
+     * @param type the type of the port
      * @param portID The id for this incoming port
      */
-    public NodeInPortEditPart(final int portID) {
-        super(portID);
+    public NodeInPortEditPart(final PortType type, final int portID) {
+        super(type, portID, true);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isModelPort() {
-        return getNodeContainer().isPredictorInPort(getId());
-    }
 
     /**
      * {@inheritDoc}
@@ -62,10 +57,9 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
         // Create the figure, we need the number of ports from the parent
         // container
         NodeContainer container = getNodeContainer();
-        boolean isModelPort = container.isPredictorInPort(getId());
-        NodeInPortFigure portFigure = new NodeInPortFigure(getId(), container
-                .getNrModelContentInPorts(), container.getNrDataInPorts(),
-                container.getInportName(getId()), isModelPort);
+        NodeInPortFigure portFigure = new NodeInPortFigure(getType(),
+                getId(), container.getNrInPorts(),
+                container.getInPort(getId()).getPortName());
 
         return portFigure;
     }
@@ -80,8 +74,8 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
      */
     @Override
     public List getModelTargetConnections() {
-        ConnectionContainer container = getManager().getIncomingConnectionAt(
-                getNodeContainer(), getId());
+        ConnectionContainer container = getManager().getIncomingConnectionFor(
+                getNodeContainer().getID(), getId());
 
         if (container != null) {
             return Collections.singletonList(container);

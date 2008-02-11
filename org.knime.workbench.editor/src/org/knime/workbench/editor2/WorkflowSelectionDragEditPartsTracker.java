@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.03.2006 (sieb): created
  */
@@ -34,16 +34,14 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.commands.CompoundCommand;
 import org.eclipse.gef.commands.UnexecutableCommand;
 import org.eclipse.gef.tools.DragEditPartsTracker;
-
+import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
-import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
 
 /**
  * Adjusts the default <code>DragEditPartsTracker</code> to create commands
  * that also move bendpoints.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker {
@@ -51,7 +49,7 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
     /**
      * Constructs a new WorkflowSelectionDragEditPartsTracker with the given
      * source edit part.
-     * 
+     *
      * @param sourceEditPart the source edit part
      */
     public WorkflowSelectionDragEditPartsTracker(final EditPart sourceEditPart) {
@@ -65,10 +63,10 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
      * request type to either {@link org.eclipse.gef.RequestConstants#REQ_MOVE}
      * or {@link org.eclipse.gef.RequestConstants#REQ_ORPHAN}, depending on the
      * result of {@link #isMove()}.
-     * 
+     *
      * Aditionally the method creats a command to adapt connections where both
      * node container are include in the drag operation.
-     * 
+     *
      * @see org.eclipse.gef.tools.AbstractTool#getCommand()
      */
     @Override
@@ -119,6 +117,7 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
         return command;
     }
 
+    // TODO: rewrite to handle also workflow ports!
     private ConnectionContainerEditPart[] getEmbracedConnections(
             final List<EditPart> parts) {
 
@@ -136,17 +135,19 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
                 for (ConnectionContainerEditPart connectionPart : outPortConnectionParts) {
 
                     // get the in-port-node part of the connection and check
-                    NodeInPortEditPart inPortPart = null;
-                    if (connectionPart.getTarget() instanceof NodeInPortEditPart) {
-                        inPortPart = (NodeInPortEditPart)connectionPart
+                    AbstractPortEditPart inPortPart = null;
+                    if (connectionPart.getTarget() != null
+                            && ((AbstractPortEditPart)connectionPart
+                                    .getTarget()).isInPort()) {
+                        inPortPart = (AbstractPortEditPart)connectionPart
                                 .getTarget();
-                    } else {
-                        inPortPart = (NodeInPortEditPart)connectionPart
+                    } else if (connectionPart.getSource() != null){
+                        inPortPart = (AbstractPortEditPart)connectionPart
                                 .getSource();
                     }
 
-                    if (isPartInList(inPortPart.getParent(), parts)) {
-
+                    if (inPortPart != null
+                            && isPartInList(inPortPart.getParent(), parts)) {
                         result.add(connectionPart);
                     }
                 }
@@ -161,11 +162,12 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
 
         // result list
         List<ConnectionContainerEditPart> result = new ArrayList<ConnectionContainerEditPart>();
-        List<EditPart> children = (List<EditPart>)containerPart.getChildren();
+        List<EditPart> children = containerPart.getChildren();
 
         for (EditPart part : children) {
-            if (part instanceof NodeOutPortEditPart) {
-                NodeOutPortEditPart outPortPart = (NodeOutPortEditPart)part;
+            if (part instanceof AbstractPortEditPart
+                    && !((AbstractPortEditPart)part).isInPort()) {
+                AbstractPortEditPart outPortPart = (AbstractPortEditPart)part;
 
                 // append all connection edit parts
                 result.addAll(outPortPart.getSourceConnections());

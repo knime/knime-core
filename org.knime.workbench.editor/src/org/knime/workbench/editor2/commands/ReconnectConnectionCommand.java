@@ -76,7 +76,7 @@ public class ReconnectConnectionCommand extends Command {
 
             // request started on out port?
             cmd.setSourceNode(nodePart);
-            cmd.setSourcePortID(((NodeOutPortEditPart)host).getId());
+            cmd.setSourcePortID(((AbstractPortEditPart)host).getId());
             cmd.setStartedOnOutPort(true);
             // LOGGER.debug("Started connection on out-port...");
         } else if (host instanceof NodeInPortEditPart) {

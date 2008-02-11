@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.05.2005 (Florian Georg): created
  */
@@ -32,7 +32,11 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
+<<<<<<< .working
 import org.knime.core.node.workflow.WorkflowInExecutionException;
+=======
+import org.knime.core.node.workflow.NodeContainer;
+>>>>>>> .merge-right.r14482
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -41,18 +45,18 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  * Action to reset a node.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class ResetAction extends AbstractNodeAction {
-    private static final NodeLogger LOGGER = 
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(ResetAction.class);
 
     /** unique ID for this action. * */
     public static final String ID = "knime.action.reset";
 
     /**
-     * 
+     *
      * @param editor The workflow editor
      */
     public ResetAction(final WorkflowEditor editor) {
@@ -82,8 +86,8 @@ public class ResetAction extends AbstractNodeAction {
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor("icons/resetNode.gif");
     }
-    
-    
+
+
 
     /**
      * {@inheritDoc}
@@ -105,7 +109,7 @@ public class ResetAction extends AbstractNodeAction {
     /**
      * Resets all nodes, this is lightweight and does not need to be executed
      * inside an async job.
-     * 
+     *
      * @see org.knime.workbench.editor2.actions. AbstractNodeAction#
      *      runOnNodes(org.knime.workbench.editor2.
      *      editparts.NodeContainerEditPart[])
@@ -132,7 +136,7 @@ public class ResetAction extends AbstractNodeAction {
                 KNIMEUIPlugin.getDefault().savePluginPreferences();
             }
         }
-        
+
         LOGGER.debug("Resetting " + nodeParts.length + " node(s)");
         try {
             for (int i = 0; i < nodeParts.length; i++) {
@@ -143,18 +147,20 @@ public class ResetAction extends AbstractNodeAction {
                             + " is locked and can't be reset now");
                     continue;
                 }
-    
-                getManager().resetAndConfigureNode(
+
+                getManager().resetNode(
                         nodeParts[i].getNodeContainer().getID());
             }
-        } catch (WorkflowInExecutionException ex) {
+
+        } catch (Exception ex) {
             MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
                     SWT.ICON_INFORMATION | SWT.OK);
             mb.setText("Reset not allowed");
             mb.setMessage("You cannot reset a node while the workflow is in"
-                    + " execution.");
-            mb.open();            
+                    + " execution. " + ex.getMessage());
+            mb.open();
         }
+
     }
 
     /**
@@ -164,10 +170,11 @@ public class ResetAction extends AbstractNodeAction {
     @Override
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts = getSelectedNodeParts();
-        
+
         for (int i = 0; i < parts.length; i++) {
             NodeContainerEditPart part = parts[i];
-            if (part.getNodeContainer().isExecuted()) {
+            if (part.getNodeContainer().getState().equals(
+                    NodeContainer.State.EXECUTED)) {
                 return true;
             }
         }

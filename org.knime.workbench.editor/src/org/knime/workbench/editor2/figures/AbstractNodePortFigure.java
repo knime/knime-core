@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   31.05.2005 (Florian Georg): created
  */
@@ -33,10 +33,13 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.PortType;
 
 /**
  * Abstract figure for common displaying behaviour of node ports.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public abstract class AbstractNodePortFigure extends Shape {
@@ -46,25 +49,34 @@ public abstract class AbstractNodePortFigure extends Shape {
     /** height of a port figure. * */
     public static final int HEIGHT = 9;
 
-    private boolean m_isConnected;
-
     private boolean m_hasData;
 
-    private int m_numModelPorts;
+    private final int m_numPorts;
 
-    private int m_numDataPorts;
+    private final PortType m_type;
+
+//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+//            AbstractNodePortFigure.class);
+
 
     /**
      * Abstract consturctor, must be called.
-     * 
-     * @param numModelPorts Number of model ports
-     * @param numDataPorts Number of data ports
+     *
+     * @param type port type
+     * @param numPorts number of ports
      */
-    public AbstractNodePortFigure(final int numModelPorts,
-            final int numDataPorts) {
+    public AbstractNodePortFigure(final PortType type,
+            final int numPorts) {
+        m_type = type;
+        m_numPorts = numPorts;
+    }
 
-        m_numModelPorts = numModelPorts;
-        m_numDataPorts = numDataPorts;
+    /**
+     *
+     * @return type of the port
+     */
+    public PortType getType() {
+        return m_type;
     }
 
     /**
@@ -79,7 +91,7 @@ public abstract class AbstractNodePortFigure extends Shape {
     /**
      * TODO FIXME isConnected state is never set, so we can't get nice red/green
      * colors.
-     * 
+     *
      * @return The foreground color, depending on the current state
      * @see org.eclipse.draw2d.IFigure#getForegroundColor()
      */
@@ -106,39 +118,35 @@ public abstract class AbstractNodePortFigure extends Shape {
     }
 
     /**
-     * @return Returns the isConnected.
-     */
-    public boolean isConnected() {
-        return m_isConnected;
-    }
-
-    /**
-     * @param isConnected The isConnected to set.
-     */
-    public void setConnected(final boolean isConnected) {
-        m_isConnected = isConnected;
-    }
-
-    /**
      * We need to set the colors explicitly.
-     * 
+     *
      * @see org.eclipse.draw2d.Shape#fillShape(org.eclipse.draw2d.Graphics)
      */
     @Override
     protected void fillShape(final Graphics graphics) {
-        if (isModelPort()) {
+        if (getType().equals(ModelContent.TYPE)) {
+            // model
             graphics.setBackgroundColor(Display.getCurrent().getSystemColor(
                     SWT.COLOR_BLUE));
-        } else {
+        } else if (getType().equals(BufferedDataTable.TYPE)) {
+            // data
             graphics.setBackgroundColor(Display.getCurrent().getSystemColor(
                     SWT.COLOR_BLACK));
+        } else {
+            // unknown type
+            graphics.setBackgroundColor(Display.getCurrent().getSystemColor(
+                    SWT.COLOR_GRAY));
         }
-        // graphics.setBackgroundColor(getBackgroundColor());
-        Rectangle r = getBounds().getCopy().shrink(3, 3);
-        PointList points = createShapePoints(r);
 
+        // TODO: database port
+
+        // graphics.setBackgroundColor(getBackgroundColor());
+        // TODO: different for workflow port and node port!!!
+        Rectangle r;
+            r = getBounds().getCopy().shrink(3, 3);
+        PointList points = createShapePoints(r);
         // data ports are not filled, model ports are filled
-        if (isModelPort()) {
+        if (getType().equals(ModelContent.TYPE)) {
             graphics.fillPolygon(points);
         } else {
             graphics.drawPolygon(points);
@@ -149,18 +157,23 @@ public abstract class AbstractNodePortFigure extends Shape {
 
     /**
      * NOT USED AT THE MOMENT.
-     * 
+     *
      * @see org.eclipse.draw2d.Shape#outlineShape(org.eclipse.draw2d.Graphics)
      */
     @Override
     protected void outlineShape(final Graphics graphics) {
-        if (isModelPort()) {
+        if (getType().equals(ModelContent.TYPE)) {
             graphics.setForegroundColor(Display.getCurrent().getSystemColor(
                     SWT.COLOR_BLUE));
-        } else {
+        } else if (getType().equals(BufferedDataTable.TYPE)){
             graphics.setForegroundColor(Display.getCurrent().getSystemColor(
                     SWT.COLOR_BLACK));
+        } else {
+            graphics.setForegroundColor(Display.getCurrent().getSystemColor(
+                    SWT.COLOR_GRAY));
         }
+
+        // TODO: data base port
 
         // graphics.setForegroundColor(getForegroundColor());
         // Rectangle r = getBounds().getCopy().shrink(2, 2);
@@ -175,23 +188,17 @@ public abstract class AbstractNodePortFigure extends Shape {
 
     /**
      * Create a point list for the triangular figure (a polygon).
-     * 
+     *
      * @param r The bounds
      * @return the pointlist (size=3)
      */
     protected abstract PointList createShapePoints(final Rectangle r);
 
-    /**
-     * Whether this is a model or data port.
-     * 
-     * @return model port (true - false)
-     */
-    protected abstract boolean isModelPort();
 
     /**
      * Children must return a <code>Locator</code> that calculate the position
      * inside the hosting figure.
-     * 
+     *
      * @return The locator
      */
     public abstract Locator getLocator();
@@ -200,20 +207,7 @@ public abstract class AbstractNodePortFigure extends Shape {
      * @return Returns the allover number of ports.
      */
     public int getNumPorts() {
-        return m_numDataPorts + m_numModelPorts;
+        return m_numPorts;
     }
 
-    /**
-     * @return the number of data ports.
-     */
-    int getNumDataPorts() {
-        return m_numDataPorts;
-    }
-
-    /**
-     * @return the number of model ports.
-     */
-    int getNumModelPorts() {
-        return m_numModelPorts;
-    }
 }

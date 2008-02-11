@@ -28,7 +28,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -83,7 +82,6 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -96,12 +94,12 @@ import org.eclipse.ui.views.properties.IPropertySheetPage;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeProgressListener;
 import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeLogger.LEVEL;
-import org.knime.core.node.meta.MetaInputModel;
-import org.knime.core.node.meta.MetaOutputModel;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeProgressListener;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowListener;
@@ -111,6 +109,7 @@ import org.knime.workbench.editor2.actions.CancelAction;
 import org.knime.workbench.editor2.actions.CancelAllAction;
 import org.knime.workbench.editor2.actions.CopyAction;
 import org.knime.workbench.editor2.actions.CutAction;
+import org.knime.workbench.editor2.actions.DefaultOpenViewAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAllAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
@@ -164,7 +163,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     private ActionRegistry m_actionRegistry;
 
     /** the <code>EditDomain</code>. */
-    private DefaultEditDomain m_editDomain;
+    private final DefaultEditDomain m_editDomain;
 
     /** the dirty state. */
     private boolean m_isDirty;
@@ -176,6 +175,9 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     // private File m_file;
     private IFile m_fileResource;
+
+    // if we are a subworkflow editor, we have to store the parent for saving
+    private WorkflowEditor m_parentEditor;
 
     private NewOverviewOutlinePage m_overviewOutlinePage;
 
@@ -194,10 +196,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     private String m_loadingCanceledMessage;
 
-    /**
-     * Keeps all meta workflow editors which were opend from this editor.
-     */
-    private HashSet<MetaWorkflowEditor> m_childEditors;
 
     /**
      * Indicates if this editor has been closed.
@@ -242,6 +240,25 @@ public class WorkflowEditor extends GraphicalEditor implements
                     + NodeLogger.LOG_FILE + "\n");
         } catch (IOException ioe) {
             LOGGER.error("Could not print welcome message: ", ioe);
+        }
+        int maxThreads = pStore.getInt(PreferenceConstants.P_MAXIMUM_THREADS);
+        if (maxThreads <= 0) {
+            LOGGER.warn("Can set " + maxThreads
+                    + " as number of threads to use");
+        } else {
+            KNIMEConstants.GLOBAL_THREAD_POOL.setMaxThreads(maxThreads);
+            LOGGER.debug("Setting KNIME max thread count to " + maxThreads);
+        }
+        String tmpDir = pStore.getString(PreferenceConstants.P_TEMP_DIR);
+        // check for existence and if writable
+        File tmpDirFile = new File(tmpDir);
+        if (!(tmpDirFile.isDirectory() && tmpDirFile.canWrite())) {
+            LOGGER.error("Can't set temp directory to \"" + tmpDir + "\", "
+                    + "not a directory or not writable");
+        } else {
+            System.setProperty("java.io.tmpdir", tmpDir);
+            LOGGER.debug("Setting temp dir environment variable "
+                    + "(java.io.tmpdir) to \"" + tmpDir + "\"");
         }
         int maxThreads = pStore.getInt(PreferenceConstants.P_MAXIMUM_THREADS);
         if (maxThreads <= 0) {
@@ -352,7 +369,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         LOGGER.debug("Creating WorkflowEditor...");
 
-        m_childEditors = new HashSet<MetaWorkflowEditor>();
         m_closed = false;
 
         // create an edit domain for this editor (handles the command stack)
@@ -493,6 +509,25 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
     }
 
+
+    private List<IEditorPart>getSubEditors(){
+        List<IEditorPart>editors = new ArrayList<IEditorPart>();
+        for (NodeContainer child : m_manager.getNodeContainers()) {
+            if (child instanceof SingleNodeContainer) {
+                continue;
+            }
+            WorkflowManagerInput in = new WorkflowManagerInput(
+                    (WorkflowManager)child,
+                    this);
+            IEditorPart editor = PlatformUI.getWorkbench()
+                .getActiveWorkbenchWindow().getActivePage().findEditor(in);
+            if (editor != null) {
+                editors.add(editor);
+            }
+        }
+        return editors;
+    }
+
     /**
      * Deregisters all listeners when the editor is disposed.
      * 
@@ -504,31 +539,16 @@ public class WorkflowEditor extends GraphicalEditor implements
         // remember that this editor has been closed
         m_closed = true;
 
-        // first of all close all child editors
-        for (MetaWorkflowEditor metaWorkflowEditor : m_childEditors) {
-
-            IWorkbenchPage page =
-                    PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-                            .getActivePage();
-            if (page != null) {
-                page.closeEditor(metaWorkflowEditor, false);
-            }
-        }
-
-        // shutdown is only performed if this is not a meta-workflow editor
-        if (!(this instanceof MetaWorkflowEditor)) {
-            if (m_manager != null) {
-                m_manager.shutdown();
-                m_manager.waitUntilFinished();
-            }
-        }
-
         // remove appender listener from "our" NodeLogger
         NodeLogger.getLogger(WorkflowEditor.class).debug("Disposing editor...");
         // // remove appender listener from "our" NodeLogger
         // for (int i = 0; i < APPENDERS.size(); i++) {
         // removeAppender(APPENDERS.get(i));
         // }
+
+        for (IEditorPart child : getSubEditors()) {
+            child.getEditorSite().getPage().closeEditor(child, false);
+        }
 
         m_manager.removeListener(this);
         getSite().getWorkbenchWindow().getSelectionService()
@@ -580,6 +600,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction setNameAndDescription =
                 new SetNameAndDescriptionAction(this);
 
+        AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
+
         // copy / cut / paste action
         CopyAction copy = new CopyAction(this);
         CutAction cut = new CutAction(this);
@@ -601,6 +623,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(executeAndView);
         m_actionRegistry.registerAction(reset);
         m_actionRegistry.registerAction(setNameAndDescription);
+        m_actionRegistry.registerAction(defaultOpenView);
 
         m_actionRegistry.registerAction(copy);
         m_actionRegistry.registerAction(cut);
@@ -621,6 +644,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(executeAndView.getId());
         m_editorActions.add(reset.getId());
         m_editorActions.add(setNameAndDescription.getId());
+        m_editorActions.add(defaultOpenView.getId());
 
         m_editorActions.add(copy.getId());
         m_editorActions.add(cut.getId());
@@ -748,11 +772,29 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Sets the editor input, that is, the file that contains the serialized
      * workflow manager.
      * 
-     * @see org.eclipse.ui.part.EditorPart#setInput(org.eclipse.ui.IEditorInput)
+     * {@inheritDoc}
      */
     @Override
     protected void setInput(final IEditorInput input) {
         LOGGER.debug("Setting input into editor...");
+
+        setDefaultInput(input);
+
+        if (input instanceof WorkflowManagerInput) {
+            m_parentEditor = ((WorkflowManagerInput)input).getParentEditor();
+            WorkflowManager wfm = ((WorkflowManagerInput)input)
+                .getWorkflowManager();
+            setWorkflowManager(wfm);
+            setPartName(input.getName());
+            wfm.addListener(this);
+            if (getGraphicalViewer() != null) {
+                loadProperties();
+            }
+
+            // update Actions, as now there's everything available
+            updateActions();
+            return;
+        }
 
         // register listener to check wether the underlying knime file (input)
         // has been deleted or renamed
@@ -761,6 +803,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         setDefaultInput(input);
         // we only support file inputs
+
+        // TODO: input should also be possible from WFM
 
         m_fileResource = ((IFileEditorInput)input).getFile();
 
@@ -1003,6 +1047,17 @@ public class WorkflowEditor extends GraphicalEditor implements
         // Exception messages from the inner thread
         final StringBuffer exceptionMessage = new StringBuffer();
 
+        if (m_fileResource == null && m_parentEditor != null) {
+            m_parentEditor.doSave(monitor);
+            m_isDirty = false;
+            Display.getDefault().asyncExec(new Runnable() {
+                public void run() {
+                    firePropertyChange(IEditorPart.PROP_DIRTY);
+                }
+            });
+            return;
+        }
+
         try {
             // make sure the resource is "fresh" before saving...
             // m_fileResource.refreshLocal(IResource.DEPTH_ONE, null);
@@ -1059,6 +1114,17 @@ public class WorkflowEditor extends GraphicalEditor implements
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        // mark all sub editors as saved
+        for (IEditorPart subEditor : getSubEditors()) {
+            final WorkflowEditor editor = (WorkflowEditor)subEditor;
+            ((WorkflowEditor)subEditor).setIsDirty(false);
+            Display.getDefault().asyncExec(new Runnable() {
+                public void run() {
+                    editor.firePropertyChange(IEditorPart.PROP_DIRTY);
+        }
+            });
+        }
         // try {
         // // try to refresh project
         // // m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
@@ -1069,6 +1135,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         // // TODO Auto-generated catch block
         // LOGGER.debug("", e);
         // }
+
+        // mark sub editors as saved
 
         monitor.done();
     }
@@ -1102,6 +1170,10 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     @Override
     public boolean isDirty() {
+        // if we are a subworkflow editor we are never dirty
+        if (m_parentEditor != null) {
+            return false;
+        }
         return m_isDirty;
     }
 
@@ -1141,7 +1213,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             final ISelection selection) {
 
         // update available actions
-        updateActions(m_editorActions);
+        updateActions();
 
         // paint the incoming and outgoing connections of all
         // selected nodes "bold" (helps to differentiate the connections)
@@ -1237,18 +1309,24 @@ public class WorkflowEditor extends GraphicalEditor implements
         boolean b = m_editDomain.getCommandStack().isDirty();
         if (b != m_isDirty) {
             // If state has changed, notify listeners
+            if (b) {
+                markDirty();
+            } else {
             m_isDirty = b;
+            }
             firePropertyChange(IEditorPart.PROP_DIRTY);
         }
 
     }
 
-    private final Map<Integer, ProgressMonitorJob> m_dummyNodeJobs =
-            new HashMap<Integer, ProgressMonitorJob>();
+    private final Map<NodeID, ProgressMonitorJob> m_dummyNodeJobs =
+            new HashMap<NodeID, ProgressMonitorJob>();
+
+    private NodeProgressListener currentListener;
 
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
-     * 
+     *
      * @see org.knime.core.node.workflow.WorkflowListener
      *      #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
      */
@@ -1256,11 +1334,11 @@ public class WorkflowEditor extends GraphicalEditor implements
         LOGGER.debug("Workflow event triggered: " + event.toString());
 
         markDirty();
+        updateActions();
 
-        if (event instanceof WorkflowEvent.NodeWaiting) {
+        if (event.getType().equals(WorkflowEvent.Type.NODE_WAITING) ) {
             NodeContainer nc = (NodeContainer)event.getOldValue();
-            if (!(MetaOutputModel.class.isAssignableFrom(nc.getModelClass()) || MetaInputModel.class
-                    .isAssignableFrom(nc.getModelClass()))) {
+
                 NodeProgressMonitor pm =
                         (NodeProgressMonitor)event.getNewValue();
 
@@ -1274,8 +1352,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 Object o = m_dummyNodeJobs.put(event.getID(), job);
                 assert (o == null);
 
-            }
-        } else if (event instanceof WorkflowEvent.NodeStarted) {
+        } else if (event.getType().equals(WorkflowEvent.Type.NODE_STARTED) ) {
             ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
             if (j != null) {
                 LOGGER.debug("'Node Started' event received for "
@@ -1288,30 +1365,26 @@ public class WorkflowEditor extends GraphicalEditor implements
             NodeContainer nc = (NodeContainer)event.getOldValue();
             NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
 
-            NodeProgressListener currentListener;
 
-            currentListener = nc.getProgressListener();
-            if (currentListener == null) {
+
+            // TODO : check for correctness
+
+//            currentListener = nc.getProgressListener();
+//            if (currentListener == null) {
                 currentListener = new ProgressFigure();
-                nc.setProgressListener(currentListener);
-            }
+                nc.addProgressListener(currentListener);
+//            }
 
             pm.addProgressListener(currentListener);
 
-        } else if (event instanceof WorkflowEvent.NodeFinished) {
+        } else if (event.getType().equals(WorkflowEvent.Type.NODE_FINISHED)) {
             ProgressMonitorJob j = m_dummyNodeJobs.remove(event.getID());
+            NodeContainer nc = (NodeContainer)event.getOldValue();
+            if (nc != null && currentListener != null) {
+                nc.removeNodeProgressListener(currentListener);
+            }
             if (j != null) {
                 j.finish();
-            }
-        } else if (event instanceof WorkflowEvent.NodeRemoved) {
-
-            // if a node removed node was a meta node
-            // a possible open meta editor must be closed
-            MetaWorkflowEditor childEditor =
-                    getEditor((NodeContainer)event.getOldValue());
-            if (childEditor != null && !childEditor.isClosed()) {
-                PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-                        .getActivePage().closeEditor(childEditor, false);
             }
         }
 
@@ -1329,6 +1402,9 @@ public class WorkflowEditor extends GraphicalEditor implements
                     firePropertyChange(IEditorPart.PROP_DIRTY);
                 }
             });
+            if (m_parentEditor != null) {
+                m_parentEditor.markDirty();
+            }
         }
     }
 
@@ -1519,38 +1595,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_manager = manager;
     }
 
-    /**
-     * Tries to add the given editor.
-     * 
-     * @param editor the edior to add as a child
-     * 
-     * @return true if the given editor was not added already
-     */
-    public boolean addEditor(final MetaWorkflowEditor editor) {
-        return m_childEditors.add(editor);
-    }
-
-    /**
-     * Returns the editor for the given meta node container.
-     * 
-     * @param metaNodeContainer the meta node container to look up
-     * 
-     * @return the editor for this meta node container, null if container was
-     *         not found
-     */
-    public MetaWorkflowEditor getEditor(final NodeContainer metaNodeContainer) {
-
-        for (MetaWorkflowEditor metaWorkflowEditor : m_childEditors) {
-
-            if (metaWorkflowEditor.representsNodeContainer(metaNodeContainer)) {
-                return metaWorkflowEditor;
-            }
-        }
-
-        // if there was no editor found representing the given meta node
-        // container return null
-        return null;
-    }
 
     /**
      * @return returns true if this editor has been closed on the workbench
@@ -1559,14 +1603,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         return m_closed;
     }
 
-    /**
-     * Removes the given editor from the child editor set.
-     * 
-     * @param editor the editor to remove
-     */
-    public void removeEditor(final IEditorPart editor) {
-        m_childEditors.remove(editor);
-    }
 
     /**
      * Transposes a point according to the given zoom manager.
@@ -1677,7 +1713,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @param dirty whether the editor should be marked as dirty or not
      * @see LoadWorkflowRunnable
      */
-    void setIsDirty(boolean dirty) {
+    void setIsDirty(final boolean dirty) {
         m_isDirty = dirty;
     }
 

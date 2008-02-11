@@ -48,8 +48,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.NodeProgressListener;
-import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -163,38 +163,38 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /** tooltip for displaying the full heading. * */
-    private NewToolTipFigure m_headingTooltip;
+    private final NewToolTipFigure m_headingTooltip;
 
     /** content pane, contains the port visuals and the icon. * */
-    private ContentFigure m_contentFigure;
+    private final ContentFigure m_contentFigure;
 
     /** contains the the "traffic light". * */
-    private StatusFigure m_statusFigure;
+    private final StatusFigure m_statusFigure;
 
     /** contains the the "progress bar". * */
     private ProgressFigure m_progressFigure;
 
     /** The background color to apply. */
-    private Color m_backgroundColor;
+    private final Color m_backgroundColor;
 
     /** contains the the warning/error sign. * */
-    private InfoWarnErrorPanel m_infoWarnErrorPanel;
+    private final InfoWarnErrorPanel m_infoWarnErrorPanel;
 
     /**
      * The node name. E.g File Reader
      */
-    private Label m_heading;
+    private final Label m_heading;
 
     /**
      * The user specified node name. E.g. Molecule Data 4
      */
-    private Label m_name;
+    private final Label m_name;
 
     /**
      * Tooltip for displaying the user description. This tooltip is displayed
      * with the user name
      */
-    private NewToolTipFigure m_nameTooltip;
+    private final NewToolTipFigure m_nameTooltip;
 
     /**
      * An optional user description.
@@ -631,9 +631,9 @@ public class NodeContainerFigure extends RectangleFigure {
      * @author Florian Georg, University of Konstanz
      */
     private class ContentFigure extends Figure {
-        private Label m_iconFigure;
+        private final Label m_iconFigure;
 
-        private Label m_deleteIcon;
+        private final Label m_deleteIcon;
 
         private static final String BACKGROUND_OTHER =
                 "icons/node/" + "background_other.png";
@@ -662,7 +662,7 @@ public class NodeContainerFigure extends RectangleFigure {
         private static final String BACKGROUND_UNKNOWN =
                 "icons/node/" + "background_unknown.png";
 
-        private Label m_backgroundIcon;
+        private final Label m_backgroundIcon;
 
         /**
          * The base icon without overlays.
@@ -822,17 +822,17 @@ public class NodeContainerFigure extends RectangleFigure {
         /**
          * The info figure.
          */
-        private InfoWarnErrorFigure m_infoFigure;
+        private final InfoWarnErrorFigure m_infoFigure;
 
         /**
          * The warning figure.
          */
-        private InfoWarnErrorFigure m_warningFigure;
+        private final InfoWarnErrorFigure m_warningFigure;
 
         /**
          * The error figure.
          */
-        private InfoWarnErrorFigure m_errorFigure;
+        private final InfoWarnErrorFigure m_errorFigure;
 
         /**
          * Constructor for a new <code>SignPanel</code>.
@@ -965,7 +965,7 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     private class StatusFigure extends Figure {
 
-        private Label m_label;
+        private final Label m_label;
 
         /**
          * Creates a new bottom figure.
@@ -1020,7 +1020,7 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     private class InfoWarnErrorFigure extends Figure {
 
-        private Label m_label;
+        private final Label m_label;
 
         /**
          * Creates a new bottom figure.
@@ -1102,9 +1102,9 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private class OverlayImage extends CompositeImageDescriptor {
 
-        private Image m_baseImage;
+        private final Image m_baseImage;
 
-        private Image m_overlayImage;
+        private final Image m_overlayImage;
 
         /**
          * Creates an overlay image descriptor.

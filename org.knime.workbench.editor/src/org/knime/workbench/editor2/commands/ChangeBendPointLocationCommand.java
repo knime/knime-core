@@ -56,12 +56,12 @@ public class ChangeBendPointLocationCommand extends Command {
     public ChangeBendPointLocationCommand(final ConnectionContainer container,
             final Point locationShift, final ZoomManager zoomManager) {
         if (container == null
-                || container.getExtraInfo() == null
-                || !(container.getExtraInfo() instanceof ModellingConnectionExtraInfo)) {
+                || container.getUIInfo() == null
+                || !(container.getUIInfo() instanceof ModellingConnectionExtraInfo)) {
             return;
         }
 
-        m_extraInfo = (ModellingConnectionExtraInfo)container.getExtraInfo();
+        m_extraInfo = (ModellingConnectionExtraInfo)container.getUIInfo();
         m_locationShift = locationShift;
         m_container = container;
 
@@ -117,6 +117,6 @@ public class ChangeBendPointLocationCommand extends Command {
         }
 
         // must set explicitly so that event is fired by container
-        m_container.setExtraInfo(m_extraInfo);
+        m_container.setUIInfo(m_extraInfo);
     }
 }

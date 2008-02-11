@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.06.2005 (Florian Georg): created
  */
@@ -33,6 +33,9 @@ import org.eclipse.gef.Request;
 import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
 import org.eclipse.gef.requests.SelectionRequest;
 import org.eclipse.gef.tools.ConnectionDragCreationTool;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.NodeOutPort;
+import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
@@ -42,6 +45,8 @@ import org.knime.workbench.editor2.editparts.anchor.InPortConnectionAnchor;
 import org.knime.workbench.editor2.editparts.anchor.OutPortConnectionAnchor;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.AbstractNodePortFigure;
+import org.knime.workbench.editor2.figures.AbstractWorkflowPortFigure;
+import org.knime.workbench.editor2.figures.NewToolTipFigure;
 
 /**
  * Abstract base class for the edit parts that control the nodes. This editpart
@@ -49,21 +54,39 @@ import org.knime.workbench.editor2.figures.AbstractNodePortFigure;
  * out ports. Note that all(!) nodes are registered as listener for workflow
  * events on the underlying <code>WorkflowManager</code>. This is necessary
  * because we need de be able to react on connection changes.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
         implements NodeEditPart, WorkflowListener {
 
-    private int m_id;
+    private final int m_id;
+    private final PortType m_type;
+    private final boolean m_isInPort;
 
     /**
      * Subclasses must call this with the appropriate portID (= portIndex).
-     * 
+     *
      * @param portID The id for this port
      */
-    public AbstractPortEditPart(final int portID) {
+    public AbstractPortEditPart(final PortType type, final int portID,
+            final boolean inPort) {
         m_id = portID;
+        m_type = type;
+        m_isInPort = inPort;
+    }
+
+
+    public boolean isInPort() {
+        return m_isInPort;
+    }
+
+    /**
+     *
+     * @return type of this port (usually Data, Model or Database)
+     */
+    public PortType getType() {
+        return m_type;
     }
 
     /**
@@ -72,27 +95,21 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     public int getId() {
         return m_id;
     }
-    
-    /**
-     * @return if this is a model port.
-     */    
-    public abstract boolean isModelPort();
-
     /**
      * Convenience, returns the hosting container.
-     * 
+     *
      * @return the container
      */
-    protected final NodeContainer getNodeContainer() {
+    protected NodeContainer getNodeContainer() {
         return (NodeContainer) getParent().getModel();
     }
 
     /**
      * Convenience, returns the WFM.
-     * 
+     *
      * @return the workflow manager
      */
-    protected final WorkflowManager getManager() {
+    protected WorkflowManager getManager() {
         return ((WorkflowRootEditPart) getParent().getParent())
                 .getWorkflowManager();
     }
@@ -100,7 +117,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     /**
      * We must register *every* node as a listener on the Workflow, as we have
      * not real objects for it.
-     * 
+     *
      * @see org.eclipse.gef.EditPart#activate()
      */
     @Override
@@ -111,7 +128,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
 
     /**
      * Remove the port as a listener from the workflow.
-     * 
+     *
      * @see org.eclipse.gef.EditPart#deactivate()
      */
     @Override
@@ -123,7 +140,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     /**
      * We install the the <code>GRAPHICAL_NODE_ROLE</code> which enables the
      * edit part to create connections to other edit parts.
-     * 
+     *
      * @see org.eclipse.gef.editparts.AbstractEditPart#createEditPolicies()
      */
     @Override
@@ -137,38 +154,48 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
 
     /**
      * Refreshes the visuals of the port visuals.
-     * 
+     *
      * @see org.eclipse.gef.editparts.AbstractEditPart#refreshVisuals()
      */
     @Override
     protected void refreshVisuals() {
         // get the figure and update the constraint for it - locator is provided
         // by the figure itself
-        NodeContainerEditPart parent = (NodeContainerEditPart) getParent();
-        AbstractNodePortFigure f = (AbstractNodePortFigure) getFigure();
-        parent.setLayoutConstraint(this, f, f.getLocator());
+        // TODO: replace with with workflow port erdit part
+        if (getParent() instanceof NodeContainerEditPart) {
+            NodeContainerEditPart parent = (NodeContainerEditPart) getParent();
+            AbstractNodePortFigure f = (AbstractNodePortFigure) getFigure();
+            parent.setLayoutConstraint(this, f, f.getLocator());
+
+        } else if (getParent() instanceof WorkflowRootEditPart) {
+            WorkflowRootEditPart parent = (WorkflowRootEditPart) getParent();
+            AbstractWorkflowPortFigure f = (AbstractWorkflowPortFigure) getFigure();
+            parent.setLayoutConstraint(this, f, f.getLocator());
+
+        }
     }
 
     /**
      * We're just interessted in events that have something to do with our port.
      * In this case we need to update the connections and visuals.
-     * 
+     *
      * @param event the workflow event
      */
     public void workflowChanged(final WorkflowEvent event) {
         ConnectionContainer c = null;
 
-        if (event instanceof WorkflowEvent.ConnectionAdded) {
+        if (event.getType().equals(WorkflowEvent.Type.CONNECTION_ADDED)) {
             c = (ConnectionContainer) event.getNewValue();
-        } else if (event instanceof WorkflowEvent.ConnectionRemoved) {
-            c = (ConnectionContainer) event.getOldValue();
+        } else if (event.getType().equals(
+                    WorkflowEvent.Type.CONNECTION_REMOVED)) {
+            c = (ConnectionContainer) event.getNewValue();
         }
 
         // if we have a connection to refresh...
-        if (c != null) {
+        if (c != null && getNodeContainer() != null) {
             // only refresh if we are actually involved in the connection change
-            if (c.getSource() == getNodeContainer()
-                    || c.getTarget() == getNodeContainer()) {
+            if (c.getSource() == getNodeContainer().getID()
+                    || c.getDest() == getNodeContainer().getID()) {
                 refreshChildren();
                 refreshSourceConnections();
                 refreshTargetConnections();
@@ -180,7 +207,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     /**
      * This activates the ConnectionDragCreationTool, as soon as the user clicks
      * on this edit part. (event REQ_SELECTION)
-     * 
+     *
      * @see org.eclipse.gef.EditPart#getDragTracker(org.eclipse.gef.Request)
      */
     @Override
@@ -235,6 +262,50 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      */
     public ConnectionAnchor getTargetConnectionAnchor(final Request request) {
         return new InPortConnectionAnchor(getFigure());
+    }
+
+
+    /**
+     *
+     * @param port port
+     * @return tooltip text for the port (with number of columns and rows)
+     */
+    protected String getTooltipText(final String portName,
+            final NodeOutPort port) {
+        String name = portName;
+        if (portName == null) {
+            name = port.getPortName();
+        }
+        int cols = -1;
+        int rows = -1;
+        if (port.getPortObject() != null
+                && port.getPortType().equals(BufferedDataTable.TYPE)) {
+            cols = ((BufferedDataTable)port.getPortObject()).getDataTableSpec()
+                .getNumColumns();
+            rows = ((BufferedDataTable)port.getPortObject()).getRowCount();
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(name);
+        if (cols >= 0) {
+            sb.append(" (Cols: " + cols);
+            if (rows >= 0) {
+                sb.append(", Rows: " + rows + ")");
+            } else {
+                sb.append(")");
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Tries to build the tooltip from the port name and if this is a data
+     * outport and the node is configured/executed, it appends also the number
+     * of columns and rows.
+     */
+    public void rebuildTooltip() {
+        NodeOutPort port = getNodeContainer().getOutPort(getId());
+        String tooltip = getTooltipText(port.getPortName(), port);
+        ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
     }
 
 }

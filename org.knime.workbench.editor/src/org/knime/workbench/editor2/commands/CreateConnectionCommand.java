@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.06.2005 (Florian Georg): created
  */
@@ -28,21 +28,26 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.WorkflowInExecutionException;
 import org.knime.core.node.workflow.WorkflowManager;
-
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 
 /**
  * Command for creating connections between an in-port and an out-port.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class CreateConnectionCommand extends Command {
-    private NodeContainerEditPart m_sourceNode;
 
-    private NodeContainerEditPart m_targetNode;
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            CreateConnectionCommand.class);
+
+    // TODO: allow also workflow root edit parts
+    private ConnectableEditPart m_sourceNode;
+
+    // TODO: allow also workflow root edit parts
+    private ConnectableEditPart m_targetNode;
 
     private int m_sourcePortID = -1;
 
@@ -80,20 +85,23 @@ public class CreateConnectionCommand extends Command {
     /**
      * @return Returns the sourceNode.
      */
-    public NodeContainerEditPart getSourceNode() {
+    // TODO: allow also workflow root edit parts
+    public ConnectableEditPart getSourceNode() {
         return m_sourceNode;
     }
 
     /**
      * @param sourceNode The sourceNode to set.
      */
-    public void setSourceNode(final NodeContainerEditPart sourceNode) {
+    // TODO: allow also WorkflowRootEditParts
+    public void setSourceNode(final ConnectableEditPart sourceNode) {
         m_sourceNode = sourceNode;
     }
 
     /**
      * @return Returns the sourcePortID.
      */
+    // TODO: rename in index
     public int getSourcePortID() {
         return m_sourcePortID;
     }
@@ -101,6 +109,7 @@ public class CreateConnectionCommand extends Command {
     /**
      * @param sourcePortID The sourcePortID to set.
      */
+    // TODO: rename in index
     public void setSourcePortID(final int sourcePortID) {
         m_sourcePortID = sourcePortID;
     }
@@ -108,20 +117,23 @@ public class CreateConnectionCommand extends Command {
     /**
      * @return Returns the targetNode.
      */
-    public NodeContainerEditPart getTargetNode() {
+    // TODO: allow also WorkflowRootEditParts
+    public ConnectableEditPart getTargetNode() {
         return m_targetNode;
     }
 
     /**
      * @param targetNode The targetNode to set.
      */
-    public void setTargetNode(final NodeContainerEditPart targetNode) {
+    // TODO: allow also WorkflowRootEditPart
+    public void setTargetNode(final ConnectableEditPart targetNode) {
         m_targetNode = targetNode;
     }
 
     /**
      * @return Returns the targetPortID.
      */
+    // TODO: rename in index
     public int getTargetPortID() {
         return m_targetPortID;
     }
@@ -129,6 +141,7 @@ public class CreateConnectionCommand extends Command {
     /**
      * @param targetPortID The targetPortID to set.
      */
+    // TODO: rename in index
     public void setTargetPortID(final int targetPortID) {
         m_targetPortID = targetPortID;
     }
@@ -145,17 +158,20 @@ public class CreateConnectionCommand extends Command {
      * @return <code>true</code> if the connection can be added (that is, all
      *         fields were set to valid values before and the corresponding edit
      *         parts are not locked
-     * 
+     *
      * TODO if only a portIndex is -1, try to find an appropriate index on the
      * current source/target node
      * @see org.eclipse.gef.commands.Command#canExecute()
      */
     @Override
     public boolean canExecute() {
-
+        return true;
+        /*
+        // TODO: target port id is < 0 -> why???
         if (m_targetPortID < 0) {
             return false;
         }
+        // TODO: meta through connection???
         if (m_sourceNode == m_targetNode) {
             return false;
         }
@@ -166,30 +182,36 @@ public class CreateConnectionCommand extends Command {
             // known once two nodes are selected to connect
             return false;
         }
-        if (m_targetNode.isLocked()) {
 
-            return false;
+        if (m_targetNode instanceof NodeContainerEditPart) {
+            NodeContainerEditPart targetNC
+                = (NodeContainerEditPart)m_targetNode;
+            return targetNC.isLocked();
+            // TODO if workflow manager is executing or so
         }
 
+        if (m_targetNode instanceof WorkflowRootEditPart) {
+            WorkflowManager wfm = ((WorkflowRootEditPart)m_targetNode)
+                .getWorkflowManager();
+            if (wfm.getState().equals(NodeContainer.State.EXECUTING)) {
+                return false;
+            } else {
+                return true;
+            }
+        }
         // let check the workflow manager if the connection can be created
         // in case it can not an exception is thrown which is caught and
         // displayed to the user
-        try {
-            m_manager.checkAddConnection(m_sourceNode.getNodeContainer()
+            return m_manager.canAddConnection(m_sourceNode.getNodeContainer()
                     .getID(), m_sourcePortID, m_targetNode.getNodeContainer()
                     .getID(), m_targetPortID);
-        } catch (Exception e) {
-
-            return false;
-        }
-
-        return true;
+       */
     }
 
     /**
      * We can undo, if the connection was created and the edit parts are not
      * locked.
-     * 
+     *
      * @see org.eclipse.gef.commands.Command#canUndo()
      */
     @Override
@@ -204,25 +226,34 @@ public class CreateConnectionCommand extends Command {
      */
     @Override
     public void execute() {
-
+        if (m_sourceNode == null || m_targetNode == null) {
+            LOGGER.debug("source or target node null: " + m_sourceNode
+                    + " " + m_targetNode);
+            return;
+        }
+//        LOGGER.info("source node: " + m_sourceNode.getNodeContainer());
+//        LOGGER.info("target node: " + m_targetNode.getNodeContainer());
         // let check the workflow manager if the connection can be created
         // in case it can not an exception is thrown which is caught and
         // displayed to the user
         try {
-            m_manager.checkAddConnection(m_sourceNode.getNodeContainer()
-                    .getID(), m_sourcePortID, m_targetNode.getNodeContainer()
-                    .getID(), m_targetPortID);
-
+            LOGGER.info("adding connection from "
+                    + m_sourceNode.getNodeContainer()
+                    .getID() + " " + m_sourcePortID
+                    + " to " + m_targetNode.getNodeContainer().getID()
+                    + " " + m_targetPortID);
             m_connection =
                     m_manager.addConnection(m_sourceNode.getNodeContainer()
                             .getID(), m_sourcePortID, m_targetNode
                             .getNodeContainer().getID(), m_targetPortID);
 
         } catch (Exception e) {
+            LOGGER.error("Connection could not be created.", e);
             showInfoMessage("Connection could not be created.",
                     "The two nodes could not be connected due to "
                             + "the following reason:\n " + e.getMessage());
         }
+
     }
 
     private void showInfoMessage(final String header, final String message) {
@@ -239,6 +270,8 @@ public class CreateConnectionCommand extends Command {
      */
     @Override
     public void undo() {
+        // TODO: functionality disabled
+        /*
         // Connection must be de-registered on workflow
         try {
             m_manager.removeConnection(m_connection);
@@ -251,5 +284,6 @@ public class CreateConnectionCommand extends Command {
                     + " is in execution.");
             mb.open();
         }
+        */
     }
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.05.2005 (Florian Georg): created
  */
@@ -39,18 +39,18 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
  * Action to open the dialog of a node.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class OpenDialogAction extends AbstractNodeAction {
-    private static final NodeLogger LOGGER = 
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(OpenDialogAction.class);
 
     /** unique ID for this action. * */
     public static final String ID = "knime.action.openDialog";
 
     /**
-     * 
+     *
      * @param editor The workflow editor
      */
     public OpenDialogAction(final WorkflowEditor editor) {
@@ -112,8 +112,7 @@ public class OpenDialogAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         LOGGER.debug("Opening node dialog...");
         NodeContainer container = (NodeContainer) nodeParts[0].getModel();
-
-        //  
+        //
         // This is embedded in a special JFace wrapper dialog
         //
         try {
@@ -128,9 +127,9 @@ public class OpenDialogAction extends AbstractNodeAction {
             mb.setText("Dialog cannot be opened");
             mb.setMessage("The dialog cannot be opened for the following"
                     + " reason:\n" + ex.getMessage());
-            mb.open();            
+            mb.open();
         } catch (Throwable t) {
-            LOGGER.error("The dialog pane for node '" 
+            LOGGER.error("The dialog pane for node '"
                     + container.getNameWithID() + "' has thrown a '"
                     + t.getClass().getSimpleName()
                     + "'. That is most likely an implementation error.", t);

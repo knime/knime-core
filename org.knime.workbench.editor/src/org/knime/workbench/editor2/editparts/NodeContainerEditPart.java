@@ -31,6 +31,8 @@ import java.util.Vector;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DragTracker;
+import org.eclipse.gef.EditPart;
+import org.eclipse.gef.EditPartListener;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
@@ -38,17 +40,27 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePort;
-import org.knime.core.node.NodeProgressListener;
-import org.knime.core.node.NodeStateListener;
-import org.knime.core.node.NodeStatus;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.NodeFactory.NodeType;
+import org.knime.core.node.GenericNodeFactory.NodeType;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.NodeMessageEvent;
+import org.knime.core.node.workflow.NodeMessageListener;
+import org.knime.core.node.workflow.NodeProgressEvent;
+import org.knime.core.node.workflow.NodeProgressListener;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.NodeUIInformationEvent;
+import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.directnodeedit.NodeEditManager;
 import org.knime.workbench.editor2.directnodeedit.UserNodeNameCellEditorLocator;
@@ -68,7 +80,8 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
  * @author Christoph Sieb, University of Konstanz
  */
 public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
-        NodeStateListener {
+        NodeStateChangeListener, NodeProgressListener, NodeMessageListener,
+        NodeUIInformationListener, EditPartListener, ConnectableEditPart {
     /**
      * The time (in ms) within two clicks are treated as double click. TODO: get
      * the system double click time
@@ -133,14 +146,18 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         super.activate();
 
         // listen to node container (= model object)
-        getNodeContainer().addListener(this);
+        getNodeContainer().addNodeStateChangeListener(this);
+        getNodeContainer().addNodeMessageListener(this);
+        getNodeContainer().addProgressListener(this);
+        getNodeContainer().addUIInformationListener(this);
+        addEditPartListener(this);
 
         // If we already have extra info, init figure now
         // 
         // 
-        if (getNodeContainer().getExtraInfo() != null) {
+        if (getNodeContainer().getUIInformation() != null) {
             initFigureFromExtraInfo((ModellingNodeExtraInfo)getNodeContainer()
-                    .getExtraInfo());
+                    .getUIInformation());
             m_figureInitialized = true;
         } else {
             // set the initial settings to the figure on the next "stateChanged"
@@ -177,7 +194,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 info.setNodeLocation(250, 10, -1, -1);
             }
 
-            getNodeContainer().setExtraInfo(info);
+            getNodeContainer().setUIInformation(info);
 
         }
     }
@@ -188,8 +205,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void deactivate() {
         super.deactivate();
-
-        getNodeContainer().removeListener(this);
+        getNodeContainer().removeNodeStateChangeListener(this);
+        getNodeContainer().removeNodeMessageListener(this);
+        getNodeContainer().removeNodeProgressListener(this);
+        getNodeContainer().removeUIInformationListener(this);
     }
 
     /**
@@ -205,18 +224,19 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         NodeProgressListener currentListener;
 
-        currentListener = getNodeContainer().getProgressListener();
-        if (currentListener == null) {
+        // TODO: check this
+//        currentListener = getNodeContainer().getProgressListener();
+//        if (currentListener == null) {
             currentListener = new ProgressFigure();
-            getNodeContainer().setProgressListener(currentListener);
-        }
+            getNodeContainer().addProgressListener(currentListener);
+//        }
 
         // create the visuals for the node container
         NodeContainerFigure nodeFigure =
                 new NodeContainerFigure((ProgressFigure)currentListener);
 
         // init the user specified node name
-        nodeFigure.setCustomName(getNodeContainer().getCustomName());
+        nodeFigure.setCustomName(getCustomName());
 
         return nodeFigure;
     }
@@ -292,10 +312,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         ArrayList<NodePort> ports = new ArrayList<NodePort>();
         NodeContainer container = getNodeContainer();
 
-        ports.addAll(container.getInPorts());
-
-        ports.addAll(container.getOutPorts());
-
+        for (int i = 0; i < container.getNrInPorts(); i++) {
+            ports.add(container.getInPort(i));
+        }
+        for (int i = 0; i < container.getNrOutPorts(); i++) {
+            ports.add(container.getOutPort(i));
+        }
         return ports;
     }
 
@@ -310,12 +332,110 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         super.refreshVisuals();
     }
 
-    /**
-     * Handles state changes for the underlying node.
-     * 
-     * @see org.knime.core.node.NodeStateListener#stateChanged(NodeStatus, int)
-     */
-    public void stateChanged(final NodeStatus state, final int id) {
+
+
+    public void stateChanged(final NodeStateEvent state) {
+        Display.getDefault().asyncExec(new Runnable() {
+            public void run() {
+//                NodeContainer nodeContainer = getNodeContainer();
+                NodeContainerFigure fig = (NodeContainerFigure)getFigure();
+                if (state.getState().equals(NodeContainer.State.CONFIGURED)) {
+
+                    fig.setState(NodeContainerFigure.STATE_READY, "");
+
+                    // it is possible that configured events are received
+                    // even though the node is queued or executing
+                    // (Meta nodes or consecutive nodes when the previous one
+                    // finished executing)
+                    // thus, these cases are checked before a configured (ready)
+                    // or not configured is set
+//                    if (nodeContainer.getState().equals(NodeContainer.State.EXECUTING)) {
+//                        fig.setState(NodeContainerFigure.STATE_EXECUTING, "");
+//                    } else if (nodeContainer.getState().equals(NodeContainer.State.QUEUED)) {
+//                        fig.setState(NodeContainerFigure.STATE_QUEUED, "");
+//                    } else if (getWorkflow().canExecuteNode(nodeContainer.getID())) {
+//                        fig.setState(NodeContainerFigure.STATE_READY, "");
+//                    } else {
+//                        fig.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, "");
+//                    }
+
+                    // TODO: removed node reset event
+
+                } else if (state.getState().equals(NodeContainer.State.IDLE)) {
+                        fig.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, "");
+                } else if (state.getState().equals(NodeContainer.State.QUEUED)) {
+
+                    fig.setState(NodeContainerFigure.STATE_QUEUED, "");
+
+                } else if (state.getState().equals(NodeContainer.State.EXECUTING)) {
+                    fig.setState(NodeContainerFigure.STATE_EXECUTING, "");
+
+                    // deactivate edit part and set locking flag
+                    // NodeContainerEditPart.this.deactivateEditPolicies();
+                    m_isLocked = true;
+                } else if (state.getState().equals(NodeContainer.State.EXECUTED)) {
+                        fig.setState(NodeContainerFigure.STATE_EXECUTED, "");
+                    // re-activate edit part and clear locking flag
+                    // NodeContainerEditPart.this.activateEditPolicies();
+                    m_isLocked = false;
+                }
+                updateNodeStatus();
+
+                // reset the tooltip text of the outports
+                for (Object part : getChildren()) {
+
+                    if (part instanceof NodeOutPortEditPart
+                            || part instanceof WorkflowInPortEditPart) {
+                        AbstractPortEditPart outPortPart =
+                                (AbstractPortEditPart)part;
+                        outPortPart.rebuildTooltip();
+                    }
+                }
+
+                // always refresh visuals
+                refreshVisuals();
+
+            }
+
+        });
+
+    }
+
+    public void progressChanged(final NodeProgressEvent pe) {
+
+    }
+
+    public void messageChanged(final NodeMessageEvent messageEvent) {
+        //
+        // As this code updates the UI it must be executed in the UI thread.
+        //
+        Display.getDefault().asyncExec(new Runnable() {
+
+            public void run() {
+                NodeContainerFigure fig = (NodeContainerFigure)getFigure();
+                NodeMessage msg = messageEvent.getMessage();
+
+                    // re-activate edit part and clear locking flag
+                    // NodeContainerEditPart.this.activateEditPolicies();
+                    m_isLocked = false;
+                if (msg.getMessageType().equals(NodeMessage.Type.WARNING)) {
+                    fig.setState(NodeContainerFigure.STATE_WARNING,
+                            msg.getMessage());
+                } else if (msg.getMessageType().equals(NodeMessage.Type.ERROR)) {
+                    fig.setState(NodeContainerFigure.STATE_ERROR,
+                            msg.getMessage());
+                }
+                updateNodeStatus();
+
+                // always refresh visuals
+                refreshVisuals();
+
+            }
+
+        });
+    }
+
+    public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
 
         //
         // As this code updates the UI it must be executed in the UI thread.
@@ -323,10 +443,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         Display.getDefault().asyncExec(new Runnable() {
 
             public void run() {
-                NodeContainer nodeContainer = getNodeContainer();
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
 
-                if (state instanceof NodeStatus.ExtrainfoChanged) {
                     // case NodeContainer.EVENT_EXTRAINFO_CHANGED:
                     LOGGER.debug("ExtraInfo changed, "
                             + "updating bounds and visuals...");
@@ -339,7 +457,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     ModellingNodeExtraInfo ei = null;
                     ei =
                             (ModellingNodeExtraInfo)getNodeContainer()
-                                    .getExtraInfo();
+                                    .getUIInformation();
 
                     //
                     // if not already initialized, do this now.
@@ -361,81 +479,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
                     // check status of node
                     updateNodeStatus();
-                } else if (state instanceof NodeStatus.Configured) {
-
-                    // it is possible that configured events are received
-                    // even though the node is queued or executing
-                    // (Meta nodes or consecutive nodes when the previous one
-                    // finished executing)
-                    // thus, these cases are checked before a configured (ready)
-                    // or not configured is set
-                    if (nodeContainer.isExecuting()) {
-                        fig.setState(NodeContainerFigure.STATE_EXECUTING, state
-                                .getMessage());
-                    } else if (getWorkflow().isQueued(nodeContainer)) {
-                        fig.setState(NodeContainerFigure.STATE_QUEUED, state
-                                .getMessage());
-                    } else if (getNodeContainer().isExecutableUpToHere()) {
-                        fig.setState(NodeContainerFigure.STATE_READY, state
-                                .getMessage());
-                    } else {
-                        fig.setState(NodeContainerFigure.STATE_NOT_CONFIGURED,
-                                state.getMessage());
-                    }
-                } else if (state instanceof NodeStatus.Reset) {
-                    if (getNodeContainer().isExecutableUpToHere()) {
-                        fig.setState(NodeContainerFigure.STATE_READY, state
-                                .getMessage());
-                    } else {
-                        fig.setState(NodeContainerFigure.STATE_NOT_CONFIGURED,
-                                state.getMessage());
-                    }
-                } else if (state instanceof NodeStatus.Queued) {
-
-                    fig.setState(NodeContainerFigure.STATE_QUEUED, state
-                            .getMessage());
-
-                } else if (state instanceof NodeStatus.StartExecute) {
-                    fig.setState(NodeContainerFigure.STATE_EXECUTING, state
-                            .getMessage());
-
-                    // deactivate edit part and set locking flag
-                    // NodeContainerEditPart.this.deactivateEditPolicies();
-                    m_isLocked = true;
-                } else if (state instanceof NodeStatus.EndExecute) {
-                    if (nodeContainer.isExecuted()) {
-                        fig.setState(NodeContainerFigure.STATE_EXECUTED, state
-                                .getMessage());
-                    } else {
-                        if (getNodeContainer().isExecutableUpToHere()) {
-                            fig.setState(NodeContainerFigure.STATE_READY, state
-                                    .getMessage());
-                        } else {
-                            fig.setState(
-                                    NodeContainerFigure.STATE_NOT_CONFIGURED,
-                                    state.getMessage());
-                        }
-                    }
-
-                    // re-activate edit part and clear locking flag
-                    // NodeContainerEditPart.this.activateEditPolicies();
-                    m_isLocked = false;
-                } else if (state instanceof NodeStatus.Warning) {
-                    fig.setState(NodeContainerFigure.STATE_WARNING, state
-                            .getMessage());
-                } else if (state instanceof NodeStatus.ExecutionCanceled) {
-                    fig.setState(NodeContainerFigure.STATE_WARNING, state
-                            .getMessage() != null ? state.getMessage()
-                            : "Execution canceled");
-                } else if (state instanceof NodeStatus.Error) {
-                    fig.setState(NodeContainerFigure.STATE_ERROR, state
-                            .getMessage());
-                } else if (state instanceof NodeStatus.CustomName) {
-                    fig.setCustomName(getNodeContainer().getCustomName());
-                } else if (state instanceof NodeStatus.CustomDescription) {
-                    fig.setCustomDescription(getNodeContainer()
-                            .getDescription());
-                }
+                    fig.setCustomName(getCustomName());
+                    fig.setCustomDescription(evt.getDescription());
                 updateNodeStatus();
 
                 // reset the tooltip text of the outports
@@ -455,6 +500,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         });
 
+    }
+
+    private String getCustomName() {
+        String userName = getNodeContainer().getCustomName();
+        if (userName == null) {
+            userName = "Node " + getNodeContainer().getID();
+        }
+        return userName;
     }
 
     /**
@@ -477,8 +530,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // String iconPath = ei.getIconPath();
         NodeType type = getNodeContainer().getType();
         String name = getNodeContainer().getName();
-        String userName = getNodeContainer().getCustomName();
-        String description = getNodeContainer().getDescription();
+        String description = getNodeContainer().getCustomDescription();
 
         // get the icon
         Image icon = null;
@@ -509,20 +561,25 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
         f.setType(type);
         f.setLabelText(name);
-        f.setCustomName(userName);
+        f.setCustomName(getCustomName());
         f.setCustomDescription(description);
 
         // TODO FIXME construct initial state here (after loading) - this should
         // be made nicer
-        boolean isExecuted = getNodeContainer().isExecuted();
+        boolean isExecuted = getNodeContainer().getState().equals(
+                NodeContainer.State.EXECUTED);
         if (isExecuted) {
             f.setState(NodeContainerFigure.STATE_EXECUTED, null);
         } else {
-            if (getNodeContainer().isExecuting()) {
+            if (getNodeContainer().getState().equals(
+                    NodeContainer.State.EXECUTING)) {
                 f.setState(NodeContainerFigure.STATE_EXECUTING, null);
-            } else if (getWorkflow().isQueued(getNodeContainer())) {
+            } else if (getNodeContainer().getState().equals(
+                    NodeContainer.State.QUEUED)) {
                 f.setState(NodeContainerFigure.STATE_QUEUED, null);
-            } else if (getNodeContainer().isExecutableUpToHere()) {
+                // TODO: check this
+            } else if (getNodeContainer().getState().equals(
+                    NodeContainer.State.CONFIGURED)) {
                 f.setState(NodeContainerFigure.STATE_READY, null);
             } else {
                 f.setState(NodeContainerFigure.STATE_NOT_CONFIGURED, null);
@@ -537,11 +594,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * currently displayed message is removed.
      */
     private void updateNodeStatus() {
-        NodeStatus status = getNodeContainer().getStatus();
         NodeContainerFigure containerFigure = (NodeContainerFigure)getFigure();
+        NodeMessage nodeMessage = getNodeContainer().getNodeMessage();
+        if (nodeMessage != null) {
 
-        if (status != null) {
-            String message = status.getMessage();
+            String message = nodeMessage.getMessage();
 
             // if there is a message, set it, else remove the current message
             // if set
@@ -550,7 +607,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 int messageType;
 
                 // message type tranlation for workbench
-                if (status instanceof NodeStatus.Error) {
+                if (nodeMessage.getMessageType() == NodeMessage.Type.ERROR) {
                     messageType = NodeContainerFigure.STATE_ERROR;
                 } else {
                     messageType = NodeContainerFigure.STATE_WARNING;
@@ -607,7 +664,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         for (Object part : getChildren()) {
 
             if (part instanceof NodeOutPortEditPart) {
-                result.addAll(((NodeOutPortEditPart)part)
+                result.addAll(((AbstractPortEditPart)part)
                         .getSourceConnections());
             }
         }
@@ -658,6 +715,24 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     public void openDialog() {
         NodeContainer container = (NodeContainer)getModel();
 
+        if (container instanceof WorkflowManager) {
+            // open new editor for subworkflow
+            LOGGER.debug("opening new editor for sub-workflow");
+            try {
+                WorkflowEditor parent = (WorkflowEditor)PlatformUI
+                    .getWorkbench().getActiveWorkbenchWindow()
+                        .getActivePage().getActiveEditor();
+                WorkflowManagerInput input = new WorkflowManagerInput(
+                        (WorkflowManager)container, parent);
+                PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                    .getActivePage().openEditor(input,
+                            "org.knime.workbench.editor.WorkflowEditor");
+            } catch (PartInitException e) {
+                LOGGER.error("Error while opening new editor", e);
+                e.printStackTrace();
+            }
+            return;
+        }
         // if this node does not have a dialog
         if (!container.hasDialog()) {
 
@@ -692,5 +767,31 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     + t.getClass().getSimpleName()
                     + "'. That is most likely an implementation error.", t);
         }
+
+    
+    
+    public void childAdded(final EditPart child, final int index) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void partActivated(final EditPart editpart) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void partDeactivated(final EditPart editpart) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void removingChild(final EditPart child, final int index) {
+        // TODO Auto-generated method stub
+
+    }
+
+    public void selectedStateChanged(final EditPart editpart) {
+        LOGGER.debug(getNodeContainer().getNameWithID() + " "
+                + getNodeContainer().getState());
     }
 }

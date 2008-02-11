@@ -63,7 +63,7 @@ public class NewBendpointMoveCommand extends Command {
     public NewBendpointMoveCommand(final ConnectionContainer connection,
             final int index, final Point newLocation,
             final ZoomManager zoomManager) {
-        m_extraInfo = (ModellingConnectionExtraInfo)connection.getExtraInfo();
+        m_extraInfo = (ModellingConnectionExtraInfo)connection.getUIInfo();
         m_connection = connection;
 
         m_index = index;
@@ -90,7 +90,7 @@ public class NewBendpointMoveCommand extends Command {
         m_extraInfo.addBendpoint(bendpoint.x, bendpoint.y, m_index);
 
         // issue notfication
-        m_connection.setExtraInfo(m_extraInfo);
+        m_connection.setUIInfo(m_extraInfo);
     }
 
     /**
@@ -106,7 +106,7 @@ public class NewBendpointMoveCommand extends Command {
         m_extraInfo.addBendpoint(newLocation.x, newLocation.y, m_index);
 
         // issue notfication
-        m_connection.setExtraInfo(m_extraInfo);
+        m_connection.setUIInfo(m_extraInfo);
 
     }
 
@@ -122,6 +122,6 @@ public class NewBendpointMoveCommand extends Command {
         m_extraInfo.addBendpoint(oldLocation.x, oldLocation.y, m_index);
 
         // issue notfication
-        m_connection.setExtraInfo(m_extraInfo);
+        m_connection.setUIInfo(m_extraInfo);
     }
 }

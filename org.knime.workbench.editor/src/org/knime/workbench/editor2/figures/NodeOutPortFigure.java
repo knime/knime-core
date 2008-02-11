@@ -28,6 +28,9 @@ import org.eclipse.draw2d.Locator;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.PortType;
 
 /**
  * Figure for displaying a <code>NodeOutPort</code> inside a node.
@@ -35,38 +38,26 @@ import org.eclipse.draw2d.geometry.Rectangle;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeOutPortFigure extends AbstractNodePortFigure {
-    private int m_id;
-
-    private boolean m_isModelPort;
+    private final int m_id;
 
     /**
      * 
      * @param id The id of the port, needed to determine the position inside the
      *            surrounding node visual
-     * @param numModelPorts number of model ports of this figure
-     * @param numDataPorts number of data ports of this figure
-     * @param tooltip The tooltip text for this port
-     * @param isModelPort indicates a model inPort, displayed with a diff. shape
+     * @param type the port type
+     * @param numPorts total number of ports
+     * @param tooltip the tooltip for the node
      */
-    public NodeOutPortFigure(final int id, final int numModelPorts,
-            final int numDataPorts, final String tooltip,
-            final boolean isModelPort) {
+    public NodeOutPortFigure(final PortType type,
+            final int id,
+            final int numPorts, final String tooltip) {
 
-        super(numModelPorts, numDataPorts);
+        super(type, numPorts);
         m_id = id;
-        m_isModelPort = isModelPort;
-        setOpaque(false);
+//        setOpaque(false);
         setToolTip(new NewToolTipFigure(tooltip));
         setFill(true);
         setOutline(true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean isModelPort() {
-        return m_isModelPort;
     }
 
     /**
@@ -74,10 +65,11 @@ public class NodeOutPortFigure extends AbstractNodePortFigure {
      * 
      * @param r The bounds
      * @return the pointlist (size=3)
+     * {@inheritDoc}
      */
     @Override
     protected PointList createShapePoints(final Rectangle r) {
-        if (!m_isModelPort) {
+        if (getType().equals(BufferedDataTable.TYPE)) {
             PointList points = new PointList(3);
             points.addPoint(r.getLeft().getCopy().translate(WIDTH,
                     -(HEIGHT / 2)));
@@ -85,7 +77,7 @@ public class NodeOutPortFigure extends AbstractNodePortFigure {
             points.addPoint(r.getLeft().getCopy()
                     .translate(WIDTH, (HEIGHT / 2)));
             return points;
-        } else {
+        } else if (getType().equals(ModelContent.TYPE)) {
             PointList points = new PointList(4);
             points.addPoint(r.getLeft().getCopy().translate(WIDTH,
                     -(HEIGHT / 2 - 0)));
@@ -96,7 +88,18 @@ public class NodeOutPortFigure extends AbstractNodePortFigure {
             points.addPoint(r.getLeft().getCopy().translate(WIDTH,
                     (HEIGHT / 2 + 0)));
             return points;
+        } else {
+            // unknown
+            PointList points = new PointList(3);
+            points.addPoint(r.getLeft().getCopy().translate(WIDTH,
+                    -(HEIGHT / 2)));
+            points.addPoint(r.getLeft().getCopy().translate(WIDTH * 2, 0));
+            points.addPoint(r.getLeft().getCopy()
+                    .translate(WIDTH, (HEIGHT / 2)));
+            return points;
         }
+
+        // TODO database port
     }
 
     /**
@@ -104,14 +107,14 @@ public class NodeOutPortFigure extends AbstractNodePortFigure {
      * depending on the number of ports. Always try to fill up as much height as
      * possible.
      * 
-     * @see org.eclipse.draw2d.IFigure#getPreferredSize(int, int)
+     * {@inheritDoc}
      */
     @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
         Dimension d = new Dimension();
 
         d.height = (getParent().getBounds().height) / getNumPorts();
-        d.width = NodeContainerFigure.WIDTH / 4;
+        d.width = getParent().getBounds().width / 4;
         return d;
     }
 
@@ -121,8 +124,8 @@ public class NodeOutPortFigure extends AbstractNodePortFigure {
      */
     @Override
     public Locator getLocator() {
-        return new PortLocator((NodeContainerFigure)getParent().getParent(),
-                PortLocator.TYPE_OUTPORT, getNumModelPorts(),
-                getNumDataPorts(), m_id, m_isModelPort);
+        return new NodePortLocator(
+                (NodeContainerFigure)getParent().getParent(),
+            false, getNumPorts(), m_id, getType());
     }
 }

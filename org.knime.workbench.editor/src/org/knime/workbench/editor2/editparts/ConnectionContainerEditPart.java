@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.06.2005 (Florian Georg): created
  */
@@ -31,6 +31,7 @@ import org.eclipse.draw2d.Connection;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.commands.Command;
@@ -38,8 +39,7 @@ import org.eclipse.gef.editparts.AbstractConnectionEditPart;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
@@ -51,27 +51,28 @@ import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 /**
  * EditPart controlling a <code>ConnectionContainer</code> object in the
  * workflow.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         implements WorkflowListener {//, ZoomListener {
-    private final boolean m_isModelPortConnection;
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            ConnectionContainerEditPart.class);
 
     /**
      * The constructor.
-     * 
+     *
      * @param isModelConn
      *            a flag telling if this is a connection between model ports or
      *            not.
      */
-    public ConnectionContainerEditPart(final boolean isModelConn) {
-        m_isModelPortConnection = isModelConn;
+    public ConnectionContainerEditPart() {
     }
 
     /**
      * Creates a GEF command to shift the connections bendpoints.
-     * 
+     *
      * @param request
      *            the underlying request holding information about the shift
      * @return the command to change the bendpoint locations
@@ -89,13 +90,28 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
                 (ConnectionContainer) getModel(), moveDelta, zoomManager);
     }
 
+
+    @Override
+    public void setSource(final EditPart editPart) {
+        LOGGER.debug("set source: " + editPart);
+        super.setSource(editPart);
+    }
+
+    @Override
+    public void setTarget(final EditPart editPart) {
+        LOGGER.debug("set target: " + editPart);
+        super.setTarget(editPart);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void activate() {
         super.activate();
-        ((ConnectionContainer) getModel()).addWorkflowListener(this);
+        LOGGER.debug("activate: " + getModel());
+        refresh();
+//        ((ConnectionContainer) getModel()).addWorkflowListener(this);
     }
 
     /**
@@ -104,7 +120,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     @Override
     public void deactivate() {
         super.deactivate();
-        ((ConnectionContainer) getModel()).removeWorkflowListener(this);
+//        ((ConnectionContainer) getModel()).removeWorkflowListener(this);
     }
 
     /**
@@ -141,12 +157,13 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 
         // Decorations
         // PolygonDecoration pD = new PolygonDecoration();
-        if (m_isModelPortConnection) {
-            // pD.setScale(9, 5);
-            conn.setForegroundColor(Display.getCurrent().getSystemColor(
-                    SWT.COLOR_BLUE));
-            conn.setLineWidth(1);
-        }
+        // TODO: functionality disabled
+//        if (m_type.equals(ModelContent.TYPE)) {
+//            // pD.setScale(9, 5);
+//            conn.setForegroundColor(Display.getCurrent().getSystemColor(
+//                    SWT.COLOR_BLUE));
+//            conn.setLineWidth(1);
+//        }
 
 //        // register as zoom listener to adapt the line width
 //        ZoomManager zoomManager =
@@ -176,10 +193,12 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     @Override
     protected void refreshVisuals() {
         super.refreshVisuals();
+        LOGGER.debug("refreshing visuals for: " + getModel());
         ModellingConnectionExtraInfo ei = null;
         ei =
-                (ModellingConnectionExtraInfo) ((ConnectionContainer) getModel())
-                        .getExtraInfo();
+                (ModellingConnectionExtraInfo) ((ConnectionContainer)getModel())
+                        .getUIInfo();
+        LOGGER.debug("modelling info: " + ei);
         if (ei == null) {
             return;
         }
@@ -212,7 +231,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 //
 //    /**
 //     * Adapts the line width according to the zoom level.
-//     * 
+//     *
 //     * @param zoom
 //     *            the zoom level from the zoom manager
 //     */

@@ -52,7 +52,7 @@ public class NewBendpointDeleteCommand extends Command {
     public NewBendpointDeleteCommand(final ConnectionContainer connection,
             final int index) {
         m_connection = connection;
-        m_extraInfo = (ModellingConnectionExtraInfo) connection.getExtraInfo();
+        m_extraInfo = (ModellingConnectionExtraInfo) connection.getUIInfo();
         m_index = index;
     }
 
@@ -65,7 +65,7 @@ public class NewBendpointDeleteCommand extends Command {
         m_extraInfo.removeBendpoint(m_index);
 
         // issue notfication
-        m_connection.setExtraInfo(m_extraInfo);
+        m_connection.setUIInfo(m_extraInfo);
     }
 
     /**
@@ -76,7 +76,7 @@ public class NewBendpointDeleteCommand extends Command {
         m_extraInfo.removeBendpoint(m_index);
 
         // issue notfication
-        m_connection.setExtraInfo(m_extraInfo);
+        m_connection.setUIInfo(m_extraInfo);
     }
 
     /**
@@ -87,6 +87,6 @@ public class NewBendpointDeleteCommand extends Command {
         m_extraInfo.addBendpoint(m_point[0], m_point[1], m_index);
 
         // issue notfication
-        m_connection.setExtraInfo(m_extraInfo);
+        m_connection.setUIInfo(m_extraInfo);
     }
 }
