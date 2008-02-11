@@ -362,6 +362,15 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
     }
 
     /**
+    *
+    * @return a {@link JFrame} with an initialized {@link GenericNodeView}
+    */
+   public final JFrame createFrame() {
+       openView();
+       return m_frame;
+   }
+
+    /**
      * Opens the view.
      *
      * @see #onOpen
