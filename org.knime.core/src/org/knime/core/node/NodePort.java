@@ -24,8 +24,6 @@
  */
 package org.knime.core.node;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
  * Abstract node port implementation which keeps a unique id and a port name.
@@ -38,14 +36,12 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodePort {
-    /**
-     * The node this port is input for. Needs to be notified of (dis)connect
-     * actions and new data available at the connected counter part (outport).
-     */
-    private final Node m_node;
 
     /** This ports ID assigned from the underlying node. */
     private final int m_portID;
+    
+    /** The type of this port. */
+    private final PortType m_portType;
 
     /** The port name which can be used for displaying purposes. */
     private String m_portName;
@@ -56,15 +52,29 @@ public abstract class NodePort {
      * <code>#setPortName(String)</code>.
      * 
      * @param portID the port's id, greater or equal zero
-     * @param node the node this port belongs to
      * 
      * @see #setPortName(String)
      */
-    NodePort(final int portID, final Node node) {
+    NodePort(final int portID, final PortType pType) {
         assert (portID >= 0);
+        assert (pType != null);
         m_portID = portID;
-        m_node = node;
+        m_portType = pType;
         setPortName(null);
+    }
+
+    /**
+     * @return The port id.
+     */
+    public final int getPortID() {
+        return m_portID;
+    }
+    
+    /**
+     * @return The port type. 
+     */
+    public final PortType getPortType() {
+        return m_portType;
     }
 
     /**
@@ -81,7 +91,7 @@ public abstract class NodePort {
      * @param portName The new name for this port. If null is passed, the
      *            default name will be generated.
      */
-    final void setPortName(final String portName) {
+    public final void setPortName(final String portName) {
         if (portName == null || portName.trim().length() == 0) {
             if (this instanceof NodeInPort) {
                 m_portName = "Inport " + m_portID;
@@ -93,59 +103,4 @@ public abstract class NodePort {
         }
     }
 
-    /**
-     * @return This port's id.
-     */
-    public final int getPortID() {
-        return m_portID;
-    }
-
-    /**
-     * Returns <code>true</code> if this port has a connection to another
-     * port.
-     * 
-     * @return <code>true</code> If a connection exists otherwise
-     *         <code>false</code>.
-     */
-    public abstract boolean isConnected();
-
-    /**
-     * Interface to identify <code>DataPort</code> objects wich can return
-     * <code>DataTable</code>, <code>DataTableSpec</code>,
-     * <code>HiLiteHandler</code> objects.
-     */
-    interface DataPort {
-        /**
-         * @return The node port's <code>DataTable</code>.
-         */
-        BufferedDataTable getBufferedDataTable();
-
-        /**
-         * @return The node port's <code>DataTableSpec</code>.
-         */
-        DataTableSpec getDataTableSpec();
-
-        /**
-         * @return The node port's <code>HiLiteHandler</code>.
-         */
-        HiLiteHandler getHiLiteHandler();
-    }
-
-    /**
-     * Interface to identify <code>PredcitorParamsPort</code> objects which
-     * returns <code>ModelContent</code> objects.
-     */
-    interface ModelContentPort {
-        /**
-         * @return The node port's <code>ModelContent</code> object.
-         */
-        ModelContentRO getModelContent();
-    }
-
-    /**
-     * @return The node this port belongs to.
-     */
-    final Node getNode() {
-        return m_node;
-    }
-} // NodePort
+}

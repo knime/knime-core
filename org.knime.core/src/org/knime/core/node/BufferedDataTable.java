@@ -60,11 +60,16 @@ import org.knime.core.node.config.ConfigRO;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class BufferedDataTable implements DataTable {
+public final class BufferedDataTable implements DataTable, PortObject {
     
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(BufferedDataTable.class);
-  
+
+    /** Define port type of objects of this class when used as PortObjects.
+     */
+    public static final PortType TYPE =
+        new PortType(DataTableSpec.class, BufferedDataTable.class);
+    
     /** internal ID for any generated table. */
     private static final AtomicInteger lastID = new AtomicInteger(0);
 

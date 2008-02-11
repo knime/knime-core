@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   26.10.2005 (gabriel): created
  *   15.05.1006 (sieb&ohl): reviewed
@@ -44,9 +44,9 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 /**
- * A port view showing the port's <code>ModelContent</code> as 
+ * A port view showing the port's <code>ModelContent</code> as
  * <code>JTree</code>.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class ModelContentOutPortView extends NodeOutPortView {
@@ -55,20 +55,20 @@ final class ModelContentOutPortView extends NodeOutPortView {
     private final JTree m_tree;
 
     /** If no ModelContent available. */
-    private static final TreeNode NO_TEXT 
+    private static final TreeNode NO_TEXT
         = new DefaultMutableTreeNode("<No Model>", false);
-    
+
     private final JPopupMenu m_treePopup = new JPopupMenu();
 
     /**
      * A view showing the data model stored in the specified ModelContent
      * output port.
-     * 
+     *
      * @param nodeName Name of the node the inspected port belongs to. Will
      *            be part of the frame's title.
      * @param portName Name of the port to view the ModelContent from. Will
      *            be part of the frame's title.
-     * 
+     *
      */
     ModelContentOutPortView(final String nodeName, final String portName) {
         super(nodeName + ", " + portName);
@@ -87,7 +87,7 @@ final class ModelContentOutPortView extends NodeOutPortView {
                         expandAll(tp);
                     }
                 }
-            } 
+            }
         });
         m_treePopup.add(expand);
         final JMenuItem collapse = new JMenuItem("Collapse");
@@ -99,7 +99,7 @@ final class ModelContentOutPortView extends NodeOutPortView {
                         collapseAll(tp);
                     }
                 }
-            } 
+            }
         });
         m_treePopup.add(collapse);
         m_tree.add(m_treePopup);
@@ -109,20 +109,20 @@ final class ModelContentOutPortView extends NodeOutPortView {
                 if (e.isPopupTrigger() && m_tree.getSelectionPaths() != null) {
                     m_treePopup.show(m_tree, e.getX(), e.getY());
                 }
-            } 
+            }
            @Override
            public void mousePressed(final MouseEvent e) {
                if (e.isPopupTrigger() && m_tree.getSelectionPaths() != null) {
                    m_treePopup.show(m_tree, e.getX(), e.getY());
                }
-           } 
+           }
         });
         Container cont = getContentPane();
         cont.setLayout(new BorderLayout());
         cont.setBackground(NodeView.COLOR_BACKGROUND);
         cont.add(new JScrollPane(m_tree), BorderLayout.CENTER);
     }
-    
+
     private void expandAll(final TreePath parent) {
         TreeNode node = (TreeNode) parent.getLastPathComponent();
         if (node.getChildCount() >= 0) {
@@ -134,7 +134,7 @@ final class ModelContentOutPortView extends NodeOutPortView {
         }
         m_tree.expandPath(parent);
     }
-    
+
     private void collapseAll(final TreePath parent) {
         TreeNode node = (TreeNode) parent.getLastPathComponent();
         if (node.getChildCount() >= 0) {
@@ -149,16 +149,18 @@ final class ModelContentOutPortView extends NodeOutPortView {
 
     /**
      * Updates the view's content with new ModelContent object.
-     * 
+     *
      * @param predParams The new content can be null.
      */
-    void updateModelContent(final ModelContentRO predParams) {
+    @Override
+    void update(final PortObject predParams, final PortObjectSpec spec) {
         m_tree.removeAll();
         if (predParams == null) {
             m_tree.setModel(new DefaultTreeModel(NO_TEXT));
         } else {
             //String text = predParams.toString();
-            m_tree.setModel(new DefaultTreeModel(predParams));
+            m_tree.setModel(new DefaultTreeModel(
+                    (ModelContent)predParams));
         }
         super.updatePortView();
     }

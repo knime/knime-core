@@ -20,7 +20,7 @@
  * --------------------------------------------------------------------- *
  * History
  *   03.08.2005 (ohl): created
- *   08.05.2006(sieb, ohl): reviewed 
+ *   08.05.2006(sieb, ohl): reviewed
  */
 package org.knime.core.node;
 
@@ -37,23 +37,43 @@ import javax.swing.WindowConstants;
 
 /**
  * Implements a view to inspect the data stored in an output port.
- * 
+ *
  * @author ohl, University of Konstanz
  */
 abstract class NodeOutPortView extends JFrame {
 
     /** Keeps track if view has been opened before. */
     private boolean m_wasOpened = false;
-    
+
     /** Initial frame width. */
     static final int INIT_WIDTH = 500;
-    
+
     /** Initial frame height. */
     static final int INIT_HEIGHT = 400;
 
     /**
+     * Returns the appropriate {@link NodeOutPortView} for the passed type.
+     * @param type the type of the port
+     * @param nodeName the name of the node
+     * @param portName the name of the port
+     * @return the appropriate type for the given port type
+     */
+    static NodeOutPortView createOutPortView(final PortType type,
+            final String nodeName, final String portName) {
+        if (type == BufferedDataTable.TYPE) {
+            return new DataOutPortView(nodeName, portName);
+        } else if (type == ModelContent.TYPE) {
+            return new ModelContentOutPortView(nodeName, portName);
+        } else {
+            throw new IllegalArgumentException(
+                    "Port type " + type + " not supported yet!");
+        }
+        // TODO: add support for other port types (DB)
+    }
+
+    /**
      * A view showing the data stored in the specified ouput port.
-     * 
+     *
      * @param name The name of the node the inspected port belongs to.
      */
     NodeOutPortView(final String name) {
@@ -94,7 +114,7 @@ abstract class NodeOutPortView extends JFrame {
         setVisible(true);
         toFront();
     }
-    
+
     /**
      * Validates and repaints the super component.
      */
@@ -115,5 +135,13 @@ abstract class NodeOutPortView extends JFrame {
                 screenSize.width, getWidth()), Math.min(
                         screenSize.height, getHeight()));
     }
-    
+
+    /**
+     * Sets the content of the view.
+     * @param portObject a data table, model content or other
+     * @param portObjectSpec data table spec or model content spec or other spec
+     */
+    abstract void update(final PortObject portObject,
+            final PortObjectSpec portObjectSpec);
+
 }

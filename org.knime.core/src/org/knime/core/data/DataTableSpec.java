@@ -39,6 +39,7 @@ import org.knime.core.data.property.SizeHandler;
 import org.knime.core.data.property.ShapeFactory.Shape;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
@@ -76,7 +77,8 @@ import org.knime.core.node.config.ConfigWO;
  * 
  * @author Peter Ohl, University of Konstanz
  */
-public final class DataTableSpec implements Iterable<DataColumnSpec> {
+public final class DataTableSpec
+implements PortObjectSpec, Iterable<DataColumnSpec> {
 
     /** Key for column spec sub-configs. */
     private static final String CFG_COLUMN_SPEC = "column_spec_";

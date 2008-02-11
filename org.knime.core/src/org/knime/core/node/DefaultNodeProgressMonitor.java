@@ -29,6 +29,11 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeProgress;
+import org.knime.core.node.workflow.NodeProgressEvent;
+import org.knime.core.node.workflow.NodeProgressListener;
+
 /**
  * The default node progress monitor which keep a progress value between 0 and
  * 1, and a progress message. Both can be <code>null</code> if not available
@@ -183,6 +188,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             final String message) {
         if (setProgressIntern(progress) | setMessageIntern(message, null)) {
             m_changed = true;
+            fireProgressChanged();
         }
     }
 
@@ -195,6 +201,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     public synchronized void setProgress(final double progress) {
         if (setProgressIntern(progress)) {
             m_changed = true;
+            fireProgressChanged();
         }
     }
 
@@ -203,6 +210,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      */
     public synchronized void setMessage(final String message) {
         setProgress(message);
+        fireProgressChanged();
     }
 
     /**
@@ -301,12 +309,13 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
     private void fireProgressChanged() {
         m_changed = false;
-        NodeProgressEvent pe =
-                new NodeProgressEvent(getProgress(), createMessage(m_message,
+        NodeProgress pe =
+                new NodeProgress(getProgress(), createMessage(m_message,
                         m_append));
         for (NodeProgressListener l : m_listeners) {
             try {
-                l.progressChanged(pe);
+            	// TODO: provide actual NodeID here
+                l.progressChanged(new NodeProgressEvent(new NodeID(0), pe));
             } catch (Throwable t) {
                 LOGGER.error("Exception while notifying listeners", t);
             }

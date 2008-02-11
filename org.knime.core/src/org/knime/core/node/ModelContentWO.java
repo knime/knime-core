@@ -31,7 +31,7 @@ import org.knime.core.node.config.ConfigWO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public interface ModelContentWO extends ConfigWO {
+public interface ModelContentWO extends ConfigWO, PortObject {
 
     /**
      * Creates new <code>ModelContentWO</code> object for the given key and

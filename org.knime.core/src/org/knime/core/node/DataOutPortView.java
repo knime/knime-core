@@ -71,11 +71,11 @@ final class DataOutPortView extends NodeOutPortView {
     
     private final JLabel m_busyLabel;
 
-    private String m_nodeName;
+    private final String m_nodeName;
 
-    private String m_portName;
+    private final String m_portName;
 
-    private DataTable m_table;
+    private BufferedDataTable m_table;
     
     private DataTableSpec m_tableSpec;
     
@@ -135,10 +135,11 @@ final class DataOutPortView extends NodeOutPortView {
      * @param table The new table (may be null).
      * @param spec The new spec.
      */
-    void update(final DataTable table, final DataTableSpec spec) {
+    @Override
+    void update(final PortObject table, final PortObjectSpec spec) {
         synchronized (m_updateLock) {
-            m_table = table;
-            m_tableSpec = spec;
+            m_table = (BufferedDataTable)table;
+            m_tableSpec = (DataTableSpec)spec;
         
             if (isVisible()) {
                 showComponent(m_busyLabel);

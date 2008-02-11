@@ -21,6 +21,8 @@
  */
 package org.knime.core.node;
 
+import org.knime.core.node.workflow.NodeProgressListener;
+
 
 /**
  * Implement this interface if you want to get informed about progress change

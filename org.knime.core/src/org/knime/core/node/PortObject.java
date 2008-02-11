@@ -1,5 +1,4 @@
-/* 
- * -------------------------------------------------------------------
+/* ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -17,22 +16,17 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
+ * 
+ * History
+ *   10.09.2007 (mb): created
  */
 package org.knime.core.node;
 
 /**
- * Listener for <code>NodeProgressEvent</code> fired when the progress
- * information has changed.
  * 
- * @author Thomas Gabriel, University of Konstanz
+ * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
-public interface NodeProgressListener {
+public interface PortObject {
 
-    /**
-     * Invoked when the progress has changed.
-     * @param pe The progress event holding the progress information.
-     */
-    void progressChanged(NodeProgressEvent pe);
-    
 }

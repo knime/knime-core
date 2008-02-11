@@ -41,6 +41,15 @@ public final class ModelContent extends Config
         implements ModelContentRO, ModelContentWO {
     
     /**
+     * Defines the <code>PortType</code> for <code>ModelContent</code> objects
+     * using <code>DataTableSpec.class</code> and 
+     * <code>ModelContent.class</code> as underling object spec and object 
+     * content.
+     */
+    public static final PortType TYPE = new PortType(PortObjectSpec.class,
+            ModelContent.class);
+    
+    /**
      * Hides public default constructor.
      * 
      * @param key The key for this ModelContent.
