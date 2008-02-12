@@ -24,7 +24,6 @@ package org.knime.base.node.mine.bfn;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -64,7 +63,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     private final List<BasisFunctionPredictorRow> m_bfs = 
         new ArrayList<BasisFunctionPredictorRow>();
 
-    private DataColumnSpec[] m_modelSpec;
+    private DataTableSpec m_modelSpec;
     
     /**
      * Creates a new basisfunction predictor model with two inputs, the first
@@ -87,7 +86,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
         final DataTableSpec dataSpec = data.getDataTableSpec();
         final ColumnRearranger colreg = new ColumnRearranger(dataSpec);
         colreg.append(new BasisFunctionPredictorCellFactory(
-                dataSpec, new DataTableSpec(m_modelSpec), m_bfs, m_applyColumn, 
+                dataSpec, m_modelSpec, m_bfs, m_applyColumn, 
                 m_dontKnow, normalizeClassification()));
         
         return new BufferedDataTable[]{exec.createColumnRearrangeTable(
@@ -102,23 +101,22 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
      */
     public void loadModelContent(final ModelContentRO predParams) 
             throws InvalidSettingsException {
-        // load rules
         ModelContentRO ruleModel = predParams.getModelContent("rules");
         for (String key : ruleModel.keySet()) {
             ModelContentRO bfParam = ruleModel.getModelContent(key);
             BasisFunctionPredictorRow bf = createPredictorRow(bfParam);
             m_bfs.add(bf);
         }
-        // load model info
-        ModelContentRO modelInfo = predParams.getModelContent("model_spec");
-        Set<String> keySet = modelInfo.keySet();
-        m_modelSpec = new DataColumnSpec[keySet.size()];
-        int idx = 0;
-        for (String key : keySet) {
-            m_modelSpec[idx] = 
-                DataColumnSpec.load(modelInfo.getConfig(key));
-            idx++;
-        }
+//        // load model info
+//        ModelContentRO modelInfo = predParams.getModelContent("model_spec");
+//        Set<String> keySet = modelInfo.keySet();
+//        m_modelSpec = new DataColumnSpec[keySet.size()];
+//        int idx = 0;
+//        for (String key : keySet) {
+//            m_modelSpec[idx] = 
+//                DataColumnSpec.load(modelInfo.getConfig(key));
+//            idx++;
+//        }
     }
 
     /**
@@ -154,7 +152,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     /**
      * @return spec of the applied data
      */
-    public DataColumnSpec[] getModelSpecs() {
+    public DataTableSpec getModelSpecs() {
         return m_modelSpec;
     }
     
@@ -171,40 +169,42 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     @Override
     public DataTableSpec[] configure(final PortObjectSpec[] portObjSpec)
             throws InvalidSettingsException {
-        if (m_bfs.size() == 0) {
-            throw new InvalidSettingsException("No rules available!");
-        }
-        if (m_modelSpec == null || m_modelSpec.length == 0) {
-            throw new InvalidSettingsException("No model spec found.");
+        m_modelSpec = (DataTableSpec) portObjSpec[1];
+        if (m_modelSpec.getNumColumns() == 0) {
+            throw new InvalidSettingsException("Model spec is empty.");
         }
         
-        final DataTableSpec inSpec = (DataTableSpec) portObjSpec[0];
+        final DataTableSpec dataSpec = (DataTableSpec) portObjSpec[0];
         // data model columns need to be in the data
-        for (int i = 0; i < m_modelSpec.length - 5; i++) {
-            int idx = inSpec.findColumnIndex(m_modelSpec[i].getName());
+        for (int i = 0; i < m_modelSpec.getNumColumns() - 5; i++) {
+            DataColumnSpec cspec = m_modelSpec.getColumnSpec(i);
+            int idx = dataSpec.findColumnIndex(cspec.getName());
             if (idx >= 0) {
-                DataType dataType = inSpec.getColumnSpec(idx).getType();
+                DataType dataType = dataSpec.getColumnSpec(idx).getType();
                 Class<? extends DataValue> prefValue = 
-                    m_modelSpec[i].getType().getPreferredValueClass();
+                    cspec.getType().getPreferredValueClass();
                 if (!dataType.isCompatible(prefValue)) {
                     throw new InvalidSettingsException("Model column '"
-                            + m_modelSpec[i].getName() + "' of type '"
-                            + m_modelSpec[i].getType() 
+                            + cspec.getName() + "' of type '"
+                            + cspec.getType() 
                             + "' is not a super type of '" + dataType + "'");
                 }
             } else {
                 throw new InvalidSettingsException("Model column name '"
-                        + m_modelSpec[i].getName() + "' not in data spec.");
+                        + cspec.getName() + "' not in data spec.");
             }
         }
-        return new DataTableSpec[]{createSpec(inSpec).createSpec()};
+        DataTableSpec outSpec = createSpec(dataSpec, m_modelSpec).createSpec();
+        return new DataTableSpec[]{outSpec};
     }
     
-    private ColumnRearranger createSpec(final DataTableSpec oSpec) {
-        m_applyColumn = DataTableSpec.getUniqueColumnName(oSpec, m_applyColumn);
-        ColumnRearranger colreg = new ColumnRearranger(oSpec);
+    private ColumnRearranger createSpec(
+            final DataTableSpec dataSpec, final DataTableSpec modelSpec) {
+        m_applyColumn = DataTableSpec.getUniqueColumnName(
+                dataSpec, m_applyColumn);
+        ColumnRearranger colreg = new ColumnRearranger(dataSpec);
         colreg.append(new BasisFunctionPredictorCellFactory(
-                new DataTableSpec(m_modelSpec), m_applyColumn));
+                modelSpec, m_applyColumn));
         return colreg;
     }
     

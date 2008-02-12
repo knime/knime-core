@@ -267,8 +267,6 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
     @Override
     public PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws CanceledExecutionException {
-        // check input data
-        assert (inData != null && inData.length == 1 && inData[0] != null);
         BufferedDataTable data = (BufferedDataTable) inData[0];
         // find all double cell columns in the data
         DataTableSpec tSpec = data.getDataTableSpec();
@@ -473,13 +471,12 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
 
     private ModelContent saveModelContent() {
         ModelContent pp = new ModelContent("basisfunction_model");
-        // add used columns
-        ModelContentWO modelSpec = pp.addModelContent("model_spec");
-        for (int i = 0; i < m_modelSpec.length; i++) {
-            DataColumnSpec cspec = m_modelSpec[i];
-            cspec.save(modelSpec.addConfig(cspec.getName()));
-        }
-        // save basisfunctions
+//        // add used columns
+//        ModelContentWO modelSpec = pp.addModelContent("model_spec");
+//        for (int i = 0; i < m_modelSpec.length; i++) {
+//            DataColumnSpec cspec = m_modelSpec[i];
+//            cspec.save(modelSpec.addConfig(cspec.getName()));
+//        }
         ModelContentWO ruleSpec = pp.addModelContent("rules");
         for (DataCell key : m_bfs.keySet()) {
             List<BasisFunctionLearnerRow> list = m_bfs.get(key);
