@@ -126,7 +126,7 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
 
             if (createEmptyWorkflow) {
                 // && createEmptyWorkflow.intValue() == 0) {
-                m_editor.setWorkflowManager(WorkflowManager.ROOT.createProject());
+                m_editor.setWorkflowManager(WorkflowManager.ROOT.createAndAddProject());
                 m_editor.setIsDirty(false);
             }
 
