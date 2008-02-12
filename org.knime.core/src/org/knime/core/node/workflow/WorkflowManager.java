@@ -1244,6 +1244,50 @@ public final class WorkflowManager extends NodeContainer {
         }
         return atLeastOneChainDoes;
     }
+    
+    /** Return list of nodes, sorted by traversing the graph breadth first.
+     * 
+     */
+    Iterable<NodeID> getBreathFirstListOfNodes() {
+        // first create list of nodes without predecessor or only the WFM
+        // itself (i.e. connected to outside "world" only.
+        ArrayList<NodeID> bfsSortedNodes = new ArrayList<NodeID>();
+        for (NodeID thisNode : m_nodes.keySet()) {
+            Set<ConnectionContainer> incomingConns
+                       = m_connectionsByDest.get(thisNode);
+            boolean onlyWFMorNothing = true;
+            for (ConnectionContainer thisConn : incomingConns) {
+                if (thisConn.getSource() != this.getID()) {
+                    onlyWFMorNothing = false;
+                }
+            }
+            if (onlyWFMorNothing) {
+                bfsSortedNodes.add(thisNode);
+            }
+        }
+        // now keep adding nodes until we can't find new ones anymore
+        int currNodeIndex = 0;
+        while (currNodeIndex < bfsSortedNodes.size()) {
+        NodeID currNode = bfsSortedNodes.get(currNodeIndex);
+            // look at all successors of this node
+            for (ConnectionContainer cc : m_connectionsBySource.get(currNode)) {
+                NodeID succNode = cc.getDest();
+                // and make sure all predecessors of this successor are already
+                // in the list
+                boolean allContained = true;
+                for (ConnectionContainer cc2 : 
+                               m_connectionsByDest.get(succNode)) {
+                    if (!(bfsSortedNodes.contains(cc2.getSource()))) {
+                        allContained = false;
+                    }
+                }
+                if (allContained) {
+                    bfsSortedNodes.add(succNode);
+                }
+            }
+        }
+        return bfsSortedNodes;
+    }
 
     /** semaphore to avoid multiple checks for newly executable nodes
      * to interfere / interleave with each other.
