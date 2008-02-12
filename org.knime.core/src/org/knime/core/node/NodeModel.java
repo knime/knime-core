@@ -110,6 +110,15 @@ public abstract class NodeModel extends GenericNodeModel {
         for (int i = 0; i < m_nrDataInPorts; i++) {
             inTableSpecs[i] = (DataTableSpec)(inSpecs[i]);
         }
+        for (int i = m_nrDataInPorts;
+        i < m_nrDataInPorts + m_nrModelInPorts; i++) {
+            int mdlIndex = i - m_nrDataInPorts;
+            if (inSpecs[i] instanceof MeanLittleWrapper) {
+                MeanLittleWrapper mlw = (MeanLittleWrapper)inSpecs[i];
+                ModelContentRO mdl = mlw.m_hiddenModel;
+                loadModelContent(mdlIndex, mdl);
+            }
+        }
         // call old-style configure
         DataTableSpec[] outTableSpecs = configure(inTableSpecs);
         // copy output specs and put dummy model-out specs in result array
@@ -118,13 +127,36 @@ public abstract class NodeModel extends GenericNodeModel {
         for (int i = 0; outTableSpecs != null && i < m_nrDataOutPorts; i++) {
             returnObjectSpecs[i] = outTableSpecs[i];
         }
+        m_localOutModels = new MeanLittleWrapper[m_nrModelOutPorts];
         for (int i = m_nrDataOutPorts;
              i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
-            returnObjectSpecs[i] = null;
+            ModelContent thisMdl = new ModelContent("ModelContent");
+            saveModelContent(i - m_nrDataOutPorts, thisMdl);
+            m_localOutModels[i - m_nrDataOutPorts] = new MeanLittleWrapper(thisMdl);
+            returnObjectSpecs[i] = new MeanLittleWrapper(thisMdl);
         }
         return returnObjectSpecs;
     }
 
+    /////////////////////////////////////
+    // The following is a hack to allow usage of ModelContent object already
+    // during configure! (old v1.x model ports!)
+    //
+    // hide model content in a modern style PortObjectSpec
+    private class MeanLittleWrapper implements PortObjectSpec {
+        MeanLittleWrapper(final ModelContentRO mdl) {
+            m_hiddenModel = mdl;
+        }
+        ModelContentRO m_hiddenModel;
+    }
+    //
+    // allow to replace model content generated during execute in the modern
+    // style PortObjectSpec (Schweinerei! changes spec under the model's ass)
+    private MeanLittleWrapper[] m_localOutModels;
+    //
+    // end of evil hack.
+    ///////////////////////////////////////////
+    
     protected abstract BufferedDataTable[] execute(
             final BufferedDataTable[] inData, final ExecutionContext exec)
             throws Exception;
@@ -157,10 +189,11 @@ public abstract class NodeModel extends GenericNodeModel {
         }
         for (int i = m_nrDataOutPorts;
              i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
-            int mdlIndex = i - m_nrDataOutPorts;
-            ModelContentWO thisMdl = new ModelContent("ModelContent");
+            int mdlIndex = i - m_nrDataInPorts;
+            ModelContent thisMdl = new ModelContent("ModelContent");
             saveModelContent(mdlIndex, thisMdl);
             returnObjects[i] = thisMdl;
+            m_localOutModels[mdlIndex].m_hiddenModel = thisMdl;
         }
         // and return the assembled data+models
         return returnObjects;
