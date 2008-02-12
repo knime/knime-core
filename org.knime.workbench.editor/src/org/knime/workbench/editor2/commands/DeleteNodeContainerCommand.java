@@ -106,13 +106,19 @@ public class DeleteNodeContainerCommand extends Command {
             }
         } catch (Exception ex) {
             LOGGER.warn("Operation not allowed.", ex);
-            MessageBox mb =
-                    new MessageBox(Display.getDefault().getActiveShell(),
-                            SWT.ICON_INFORMATION | SWT.OK);
-            mb.setText("Operation not allowed");
-            mb.setMessage("You cannot remove a node while the workflow"
-                    + " is in execution.");
-            mb.open();
+            Display.getDefault().asyncExec(new Runnable() {
+
+                public void run() {                    
+                    MessageBox mb =
+                        new MessageBox(Display.getDefault().getActiveShell(),
+                                SWT.ICON_INFORMATION | SWT.OK);
+                    mb.setText("Operation not allowed");
+                    mb.setMessage("You cannot remove a node while the workflow"
+                            + " is in execution.");
+                    mb.open();
+                }
+                
+            });
         }
     }
 
