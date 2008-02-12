@@ -587,6 +587,11 @@
             factory-class="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory"
             id="org.knime.base.node.mine.cluster.assign.ClusterAssignerNodeFactory">
       </node>
+      <node
+            category-path="/mining/modeleval"
+            factory-class="org.knime.base.node.viz.roc.ROCNodeFactory"
+            id="org.knime.base.node.viz.roc.ROCNodeFactory">
+      </node>
    </extension>
    
    
