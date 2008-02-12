@@ -470,8 +470,9 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     persistor.loadNodeContainer(
                             nodeFile, exec, loadID, nodeSetting);
                 if (childResult.hasErrors()) {
-                    loadResult.addError("Errors during loading node "
-                            + "with ID suffix" + nodeIDSuffix, childResult);
+                    loadResult.addError("Errors during loading "
+                            + (isMeta ? "meta " : "") + "node "
+                            + "with ID suffix " + nodeIDSuffix, childResult);
                 }
             } catch (InvalidSettingsException e) {
                 String error = "Unable to load node with ID suffix " 

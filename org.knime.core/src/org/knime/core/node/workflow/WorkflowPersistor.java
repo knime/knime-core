@@ -174,5 +174,11 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             return m_errors.toString();
         }
         
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return m_errors.toString();
+        }
+        
     }
 }
