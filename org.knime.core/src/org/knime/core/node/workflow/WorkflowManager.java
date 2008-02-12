@@ -66,6 +66,7 @@ import org.knime.core.node.PortType;
 import org.knime.core.node.GenericNodeFactory.NodeType;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
  * Container holding nodes and connections consisting a workflow. In contrast
@@ -183,8 +184,8 @@ public final class WorkflowManager extends NodeContainer
         for (ConnectionContainerTemplate c : persistor.getConnectionSet()) {
             int sourceIDSuffix = c.getSourceID();
             int targetIDSuffix = c.getTargetID();
-            assert sourceIDSuffix != targetIDSuffix : 
-                "Can't insert connection, source and target are equal";
+            assert sourceIDSuffix != targetIDSuffix
+                : "Can't insert connection, source and target are equal";
             ConnectionType type = ConnectionType.STD;
             NodeID source;
             NodeID dest;
@@ -207,6 +208,7 @@ public final class WorkflowManager extends NodeContainer
             if (source == null || dest == null) {
                 LOGGER.warn("Unable to insert connection \"" + c
                         + "\", one of the nodes does not exist in the flow");
+                continue;
             }
             // TODO sanity check wrt connection type possible?
             ConnectionContainer cc = addConnection(
@@ -1622,7 +1624,11 @@ public final class WorkflowManager extends NodeContainer
         // into this map, the repository is deleted when the loading is done
         int loadID = System.identityHashCode(persistor);
         BufferedDataTable.initRepository(loadID);
-        persistor.loadWorkflow(settings, directory, exec, loadID);
+        LoadResult loadResult = 
+            persistor.loadWorkflow(settings, directory, exec, loadID);
+        if (loadResult.hasErrors()) {
+            LOGGER.warn(loadResult.getErrors());
+        }
         WorkflowManager result;
         synchronized (ROOT.m_dirtyWorkflow) {
             NodeID newID = ROOT.createUniqueID();

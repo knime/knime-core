@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -79,7 +80,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     
     WorkflowOutPort[] getOutPorts();
     
-    public void loadWorkflow(NodeSettingsRO settings, 
+    public LoadResult loadWorkflow(NodeSettingsRO settings, 
             final File workflowDirectory, ExecutionMonitor exec, int loadID)
             throws CanceledExecutionException, IOException,
             InvalidSettingsException;
@@ -125,5 +126,53 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         UIInformation getUiInfo() {
             return m_uiInfo;
         }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return "Connection [" + getSourceID() + "(" 
+                + getSourcePort() + ") -> " + getTargetID() 
+                + "( " + getTargetPort() + ")]";
+        }
+
+    }
+    
+    public static final class LoadResult {
+        
+        private final StringBuilder m_errors;
+        
+        public LoadResult() {
+            m_errors = new StringBuilder();
+        }
+        
+        public void addError(final String error) {
+            m_errors.append(error);
+            m_errors.append('\n');
+        }
+        
+        public void addError(final String parentName, final LoadResult loadResult) {
+            m_errors.append(parentName);
+            m_errors.append('\n');
+            StringTokenizer tokenizer = 
+                new StringTokenizer(loadResult.toString(), "\n");
+            while (tokenizer.hasMoreTokens()) {
+                m_errors.append("  ");
+                m_errors.append(tokenizer.nextToken());
+                m_errors.append('\n');
+            }
+        }
+        
+        public void addError(final LoadResult loadResult) {
+            m_errors.append(loadResult.m_errors);
+        }
+        
+        public boolean hasErrors() {
+            return m_errors.length() != 0;
+        }
+        
+        public String getErrors() {
+            return m_errors.toString();
+        }
+        
     }
 }

@@ -1,4 +1,4 @@
- /* 
+                           /* 
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -31,6 +31,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
  * 
@@ -98,37 +99,52 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     }
 
    /** {@inheritDoc} */
-    public void load(final NodeSettingsRO settings)
-            throws InvalidSettingsException, IOException,
-            CanceledExecutionException {
-        m_customName = loadCustomName(settings);
-        m_customDescription = loadCustomDescription(settings);
-        m_state = loadState(settings);
+    public LoadResult load(final NodeSettingsRO settings)
+            throws IOException, CanceledExecutionException {
+        LoadResult loadResult = new LoadResult();
+        try {
+            m_customName = loadCustomName(settings);
+        } catch (InvalidSettingsException e) {
+            String error = "Invalid custom name in settings: " + e.getMessage();
+            loadResult.addError(error);
+            LOGGER.debug(error, e);
+            m_customName = null;
+        }
+        try {
+            m_customDescription = loadCustomDescription(settings);
+        } catch (InvalidSettingsException e) {
+            String error = 
+                "Invalid custom description in settings: " + e.getMessage();
+            loadResult.addError(error);
+            LOGGER.debug(error, e);
+            m_customDescription = null;
+        }
+        try {
+            m_state = loadState(settings);
+        } catch (InvalidSettingsException e) {
+            String error = "Can't restore node's state, fallback to " 
+                + State.IDLE + ": " + e.getMessage();
+            loadResult.addError(error);
+            LOGGER.debug(error, e);
+            m_state = State.IDLE;
+        }
+        return loadResult;
     }
     
-    protected String loadCustomName(final NodeSettingsRO settings) {
+    protected String loadCustomName(final NodeSettingsRO settings) 
+        throws InvalidSettingsException {
         if (!settings.containsKey(KEY_CUSTOM_NAME)) {
             return null;
         }
-        try {
-            return settings.getString(KEY_CUSTOM_NAME);
-        } catch (InvalidSettingsException e) {
-            LOGGER.warn("Invalid custom name in settings, expected string");
-            return null;
-        }
+        return settings.getString(KEY_CUSTOM_NAME);
     }
 
-    protected String loadCustomDescription(final NodeSettingsRO settings) {
+    protected String loadCustomDescription(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
         if (!settings.containsKey(KEY_CUSTOM_DESCRIPTION)) {
             return null;
         }
-        try {
-            return settings.getString(KEY_CUSTOM_DESCRIPTION);
-        } catch (InvalidSettingsException e) {
-            LOGGER.warn(
-                    "Invalid custom description in settings, expected string");
-            return null;
-        }
+        return settings.getString(KEY_CUSTOM_DESCRIPTION);
     }
 
     protected State loadState(final NodeSettingsRO settings)

@@ -41,6 +41,7 @@ import org.knime.core.node.Node.MemoryPolicy;
 import org.knime.core.node.Node.SettingsLoaderAndWriter;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.util.FileUtil;
 
 public class NodePersistorVersion_1xx implements NodePersistor {
@@ -273,19 +274,13 @@ public class NodePersistorVersion_1xx implements NodePersistor {
     }
 
     protected File loadNodeInternDirectory(final NodeSettingsRO settings, 
-            final File nodeDir)
-            throws InvalidSettingsException {
+            final File nodeDir) throws InvalidSettingsException {
         return getNodeInternDirectory(nodeDir);
     }
     
     protected GenericNodeFactory<GenericNodeModel> loadNodeFactoryClass(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return m_class;
-    }
-    
-    protected void loadOverride(final Node node, NodeSettingsRO settings)
-            throws InvalidSettingsException {
-
     }
     
     /** Is configured according to the settings object. 
@@ -300,34 +295,24 @@ public class NodePersistorVersion_1xx implements NodePersistor {
         return m_isExecuted;
     }
     
-    public Node load(final GenericNodeFactory<GenericNodeModel> factory, 
+    public LoadResult load(Node node,
             final File configFile, ExecutionMonitor execMon, int loadID,
-            HashMap<Integer, ContainerTable> tblRep) throws IOException, 
-            InvalidSettingsException, CanceledExecutionException {
-        NodeSettingsRO settings = NodeSettings.loadFromXML(new FileInputStream(
-                configFile));
-        Node node = new Node(factory);
+            HashMap<Integer, ContainerTable> tblRep) 
+            throws InvalidSettingsException, IOException, CanceledExecutionException {
+        LoadResult result = new LoadResult();
         m_portObjects = new PortObject[node.getNrOutPorts()];
         m_portObjectSpecs = new PortObjectSpec[node.getNrOutPorts()];
-        if (node == null || !configFile.isFile() || !configFile.canRead()) {
-            m_isExecuted = false;
-            m_isConfigured = false;
-            String errorMessage = "Unable to load \"" + node.getName() + "\": "
-            + SETTINGS_FILE_NAME + " can't be read: " + configFile;
-            m_nodeMessage = new NodeMessage(Type.ERROR, errorMessage);
-            throw new IOException(errorMessage);
-        }
         m_nodeDirectory = configFile.getParentFile();
-        try {
-            loadOverride(node, settings);
-        } catch (InvalidSettingsException ise) {
-            String e = "Failed to call loadOverride: " + ise.getMessage();
-            LOGGER.warn(e);
-            m_nodeMessage = new NodeMessage(Type.ERROR, e);
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e);
-        } catch (Error e) {
-            throw new InvalidSettingsException(e);
+        NodeSettingsRO settings;
+        if (!configFile.isFile() || !configFile.canRead()) {
+            String error = "Unable to load \"" + node.getName() + "\": "
+                    + "Can't read config file \"" + configFile + "\"";
+            m_nodeMessage = new NodeMessage(Type.ERROR, error);
+            result.addError(error);
+            settings = new NodeSettings("empty");
+        } else {
+            settings = 
+                NodeSettings.loadFromXML(new FileInputStream(configFile));
         }
     
         try {
@@ -337,12 +322,8 @@ public class NodePersistorVersion_1xx implements NodePersistor {
             }
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load node message: " + ise.getMessage();
-            LOGGER.warn(e);
-            m_nodeMessage = new NodeMessage(Type.ERROR, e);
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e);
-        } catch (Error e) {
-            throw new InvalidSettingsException(e);
+            result.addError(e);
+            LOGGER.debug(e, ise);
         }
     
         try {
@@ -352,42 +333,36 @@ public class NodePersistorVersion_1xx implements NodePersistor {
             m_modelSettings = nodeSettings.getModelSettings();
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load node settings: " + ise.getMessage();
-            LOGGER.warn(e);
-            m_nodeMessage = new NodeMessage(Type.ERROR, e);
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e);
-        } catch (Error e) {
-            throw new InvalidSettingsException(e);
+            result.addError(e);
+            LOGGER.debug(e, ise);
         }
     
         try {
             m_isExecuted = loadIsExecuted(settings);
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load execution flag: " + ise.getMessage();
-            LOGGER.warn(e);
-            m_nodeMessage = new NodeMessage(Type.ERROR, e);
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e);
-        } catch (Error e) {
-            throw new InvalidSettingsException(e);
+            result.addError(e);
+            LOGGER.debug(e, ise);
         }
     
         try {
             m_isConfigured = loadIsConfigured(settings);
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load configuration flag: " + ise.getMessage();
-            LOGGER.warn(e);
-            m_nodeMessage = new NodeMessage(Type.ERROR, e);
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e);
-        } catch (Error e) {
-            throw new InvalidSettingsException(e);
+            result.addError(e);
+            LOGGER.debug(e, ise);
         }
     
         // load internals
         if (m_isExecuted) {
-            m_nodeInternDirectory = 
-                loadNodeInternDirectory(settings, m_nodeDirectory);
+            try {
+                m_nodeInternDirectory = 
+                    loadNodeInternDirectory(settings, m_nodeDirectory);
+            } catch (InvalidSettingsException ise) {
+                String e = "Unable to load internals directory";
+                result.addError(e);
+                LOGGER.debug(e, ise);
+            }
         }
     
         for (int i = 0; i < node.getNrOutPorts(); i++) {
@@ -399,7 +374,7 @@ public class NodePersistorVersion_1xx implements NodePersistor {
                             node, settings, loadID, i);
                 }
                 if (m_isExecuted) {
-                    m_portObjects[i]= loadPortObject(node,
+                    m_portObjects[i] = loadPortObject(node,
                             settings, execPort, loadID, i, tblRep);
                 }
             } catch (InvalidSettingsException ise) {
@@ -418,7 +393,7 @@ public class NodePersistorVersion_1xx implements NodePersistor {
         }
         execMon.setMessage("Loading settings into node instance");
         node.load(this, execMon.createSilentSubProgress(0.0));
-        return node;
+        return result;
     }
 
     /** {@inheritDoc} */

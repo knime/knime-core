@@ -31,6 +31,7 @@ import java.util.HashMap;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.Node.MemoryPolicy;
 import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 
 public interface NodePersistor {
@@ -75,10 +76,9 @@ public interface NodePersistor {
             final ExecutionMonitor execMon, final boolean isSavePortObjects)
             throws IOException, CanceledExecutionException;
     
-    Node load(final GenericNodeFactory<GenericNodeModel> factory, 
-            final File nodeFile, ExecutionMonitor execMon, int loadID, 
-            HashMap<Integer, ContainerTable> tblRep) throws IOException, 
-            InvalidSettingsException, CanceledExecutionException;
+    LoadResult load(Node node, final File nodeFile, ExecutionMonitor execMon,
+            int loadID, HashMap<Integer, ContainerTable> tblRep)
+            throws IOException, InvalidSettingsException, CanceledExecutionException;
     
     File getNodeDirectory();
     boolean isConfigured();

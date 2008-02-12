@@ -70,7 +70,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     
     static boolean canReadVersion(final String versionString) {
         boolean result = versionString.equals("0.9.0");
-        result |= versionString.matches("1\\.[0123]\\.[0-9].*");
+        result |= versionString.matches("1\\.[01234]\\.[0-9].*");
         return result;
     }
     
@@ -351,120 +351,289 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return m_outPorts;
     }
     
-    public void loadWorkflow(final NodeSettingsRO settings, 
+    public LoadResult loadWorkflow(final NodeSettingsRO settings, 
             final File workflowDirectory, final ExecutionMonitor exec, 
-            int loadID) throws CanceledExecutionException, IOException,
-            InvalidSettingsException {
-        m_name = loadWorkflowName(settings);
+            int loadID) throws CanceledExecutionException, IOException {
+        LoadResult loadResult = new LoadResult();
+        try {
+            m_name = loadWorkflowName(settings);
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load workflow name: " + e.getMessage();
+            LOGGER.debug(error, e);
+            loadResult.addError(error);
+            m_name = "Workflow";
+        }
         /* read nodes */
-        NodeSettingsRO nodes = loadSettingsForNodes(settings);
+        NodeSettingsRO nodes;
+        try {
+            nodes = loadSettingsForNodes(settings);
+        } catch (InvalidSettingsException e) {
+            String error = "Can't load nodes in workflow, config not found: "
+                + e.getMessage();
+            LOGGER.debug(error, e);
+            loadResult.addError(error);
+            // stop loading here
+            return loadResult;
+        }
         for (String nodeKey : nodes.keySet()) {
-            NodeSettingsRO nodeSetting = nodes.getNodeSettings(nodeKey);
-            boolean isMeta = loadIsMetaNode(nodeSetting);
+            NodeSettingsRO nodeSetting;
+            try {
+                nodeSetting = nodes.getNodeSettings(nodeKey);
+            } catch (InvalidSettingsException e) {
+                String error = "Unable to load settings for node with internal "
+                    + "id \"" + nodeKey + "\": " + e.getMessage();
+                LOGGER.debug(error, e);
+                loadResult.addError(error);
+                continue;
+            }
+            int nodeIDSuffix;
+            try {
+                nodeIDSuffix = loadNodeIDSuffix(nodeSetting);
+            } catch (InvalidSettingsException e) {
+                nodeIDSuffix = getRandomNodeID();
+                String error = "Unable to load node ID (internal id \""
+                    + nodeKey + "\"), trying random number " + nodeIDSuffix
+                    + "instead: " + e.getMessage();
+                LOGGER.debug(error, e);
+                loadResult.addError(error);
+            }
+            boolean isMeta;
+            try {
+                isMeta = loadIsMetaNode(nodeSetting);
+            } catch (InvalidSettingsException e) {
+                String error = "Can't retrieve meta flag for contained node "
+                    + "with id suffix " + nodeIDSuffix + ", attempting to read"
+                    + "ordinary (not-meta) node: " + e.getMessage();
+                LOGGER.debug(error, e);
+                loadResult.addError(error);
+                isMeta = false;
+            }
             NodeContainerPersistor persistor;
             if (isMeta) {
                 persistor = createWorkflowPersistor();
             } else {
                 persistor = createSingleNodeContainerPersistor();
             }
-            int nodeIDSuffix = loadNodeIDSuffix(nodeSetting);
             UIInformation uiInfo = null;
-            String uiInfoClassName = loadUIInfoClassName(nodeSetting);
+            String uiInfoClassName;
+            try {
+                uiInfoClassName = loadUIInfoClassName(nodeSetting);
+            } catch (InvalidSettingsException e) {
+                String error = "Unable to load UI information class name " +
+                		"to node with ID suffix " + nodeIDSuffix 
+                		+ ", no UI information available: " + e.getMessage();
+                LOGGER.debug(error, e);
+                loadResult.addError(error);
+                uiInfoClassName = null;
+            }
             if (uiInfoClassName != null) {
                 uiInfo = loadUIInfoInstance(uiInfoClassName);
+                try {
+                    // avoid NoClassDefFoundErrors by using magic class loader
+                    uiInfo = (UIInformation)(GlobalClassCreator
+                            .createClass(uiInfoClassName).newInstance());
+                } catch (Exception e) {
+                    String error = "Unable to load UI information class \""
+                        + uiInfoClassName + "\" to node with ID suffix " 
+                        + nodeIDSuffix + ", no UI information available: "
+                        + e.getMessage();
+                    LOGGER.debug(error, e);
+                    loadResult.addError(error);
+                    uiInfo = null;
+                }
                 if (uiInfo != null) {
-                    loadUIInfoSettings(uiInfo, nodeSetting);
+                    try {
+                        loadUIInfoSettings(uiInfo, nodeSetting);
+                    } catch (InvalidSettingsException e) {
+                        String error = "Unable to load UI information to " 
+                            + "node with ID suffix" + nodeIDSuffix
+                            + ", no UI information available: " 
+                            + e.getMessage();
+                        LOGGER.debug(error, e);
+                        loadResult.addError(error);
+                        uiInfo = null;
+                    }
                 }
             }
-            File nodeFile = loadNodeFile(nodeSetting, workflowDirectory);
-            persistor.loadNodeContainer(nodeFile, exec, loadID);
+            File nodeFile;
+            try {
+                nodeFile = loadNodeFile(nodeSetting, workflowDirectory);
+            } catch (InvalidSettingsException e) {
+                String error = "Unable to load settings for node " 
+                    + "with ID suffix" + nodeIDSuffix + ": " + e.getMessage();
+                LOGGER.debug(error, e);
+                loadResult.addError(error);
+                continue;
+            }
+            try {
+                LoadResult childResult =
+                    persistor.loadNodeContainer(
+                            nodeFile, exec, loadID, nodeSetting);
+                if (childResult.hasErrors()) {
+                    loadResult.addError("Errors during loading node "
+                            + "with ID suffix" + nodeIDSuffix, childResult);
+                }
+            } catch (InvalidSettingsException e) {
+                String error = "Unable to load node with ID suffix " 
+                        + nodeIDSuffix + " into workflow, skipping it: "
+                        + e.getMessage();
+                loadResult.addError(error);
+                LOGGER.debug(error, e);
+                continue;
+            }
             NodeContainerMetaPersistor meta = persistor.getMetaPersistor();
+            if (m_nodeContainerLoaderMap.containsKey(nodeIDSuffix)) {
+                int randomID = getRandomNodeID();
+                loadResult.addError("Duplicate id encountered in workflow: " 
+                        + nodeIDSuffix + ", uniquifying to random id " 
+                        + randomID + ", this possibly screws the connections");
+                nodeIDSuffix = randomID;
+            }
             meta.setNodeIDSuffix(nodeIDSuffix);
             meta.setUIInfo(uiInfo);
-            if (m_nodeContainerLoaderMap.containsKey(nodeIDSuffix)) {
-                throw new InvalidSettingsException("Duplicate id encountered "
-                        + "in workflow: " + nodeIDSuffix);
-            }
             m_nodeContainerLoaderMap.put(nodeIDSuffix, persistor);
         }
 
         /* read connections */
-        NodeSettingsRO connections = loadSettingsForConnections(settings);
+        NodeSettingsRO connections;
+        try {
+            connections = loadSettingsForConnections(settings);
+            if (connections == null) {
+                connections = new NodeSettings("<<empty connections>>");
+            }
+        } catch (InvalidSettingsException e) {
+            String error = "Can't load workflow connections, config not found: "
+                + e.getMessage();
+            LOGGER.debug(error, e);
+            loadResult.addError(error);
+            connections = new NodeSettings("<<empty connections>>");
+        }
         for (String connectionKey : connections.keySet()) {
-            ConnectionContainerTemplate c = loadConnection(connections
-                    .getNodeSettings(connectionKey));
+            ConnectionContainerTemplate c;
+            try {
+                c = loadConnection(connections.getNodeSettings(connectionKey));
+            } catch (InvalidSettingsException e) {
+                String error = "Can't load connection with internal ID \""
+                    + connectionKey + "\": " + e.getMessage();
+                LOGGER.debug(error, e);
+                loadResult.addError(error);
+                continue;
+            }
             int sourceIDSuffix = c.getSourceID();
             if (!m_nodeContainerLoaderMap.containsKey(sourceIDSuffix)
                     && sourceIDSuffix != -1) {
-                LOGGER.warn("Unable to load node connection " + c
+                loadResult.addError("Unable to load node connection " + c
                         + ", source node does not exist");
             }
             int targetIDSuffix = c.getTargetID();
             if (!m_nodeContainerLoaderMap.containsKey(targetIDSuffix)
                     && targetIDSuffix != -1) {
-                LOGGER.warn("Unable to load node connection " + c
+                loadResult.addError("Unable to load node connection " + c
                         + ", destination node does not exist");
             }
             if (!m_connectionSet.add(c)) {
-                LOGGER.warn("Duplicate connection information: " + c);
+                loadResult.addError(
+                        "Duplicate connection information: " + c);
             }
         }
         
         /* read in and outports */
-        NodeSettingsRO inPorts = loadInPortsSetting(settings);
-        int inPortCount = inPorts != null ? inPorts.keySet().size() : 0;
-        m_inPorts = new WorkflowInPort[inPortCount];
-        if (inPortCount > 0) {
-            for (String key : inPorts.keySet()) {
-                NodeSettingsRO sub = inPorts.getNodeSettings(key);
-                WorkflowInPort p = loadInPort(sub);
-                int index = p.getPortID();
-                if (index < 0 || index >= inPortCount) {
-                    throw new InvalidSettingsException(
-                            "Invalid inport index " + index);
-                }
-                if (m_inPorts[index] != null) {
-                    throw new InvalidSettingsException(
-                            "Duplicate inport definition for index: " + index);
-                }
-                m_inPorts[index] = p;
+        NodeSettingsRO inPorts;
+        try {
+            inPorts = loadInPortsSetting(settings);
+            if (inPorts == null) {
+                inPorts = new NodeSettings("<<empty>>");
             }
+        } catch (InvalidSettingsException e) {
+            String error = "Can't load workflow ports, config not found";
+            LOGGER.debug(error, e);
+            loadResult.addError(error);
+            inPorts = new NodeSettings("<<empty>>");
+        }
+        int inPortCount = inPorts.keySet().size();
+        m_inPorts = new WorkflowInPort[inPortCount];
+        for (String key : inPorts.keySet()) {
+            WorkflowInPort p;
+            try {
+                NodeSettingsRO sub = inPorts.getNodeSettings(key);
+                p = loadInPort(sub);
+            } catch (InvalidSettingsException e) {
+                String error = "Can't load workflow inport (internal ID \""
+                    + key + "\", skipping it: " + e.getMessage();
+                LOGGER.debug(error, e);
+                loadResult.addError(error);
+                continue;
+            }
+            int index = p.getPortID();
+            if (index < 0 || index >= inPortCount) {
+                loadResult.addError("Invalid inport index " + index);
+            }
+            if (m_inPorts[index] != null) {
+                loadResult.addError(
+                        "Duplicate inport definition for index: " + index);
+            }
+            m_inPorts[index] = p;
         }
         
-        NodeSettingsRO outPorts = loadOutPortsSetting(settings);
-        int outPortCount = outPorts != null ? outPorts.keySet().size() : 0;
-        m_outPorts = new WorkflowOutPort[outPortCount];
-        if (outPortCount > 0) {
-            for (String key : outPorts.keySet()) {
-                NodeSettingsRO sub = outPorts.getNodeSettings(key);
-                WorkflowOutPort p = loadOutPort(sub);
-                int index = p.getPortID();
-                if (index < 0 || index >= outPortCount) {
-                    throw new InvalidSettingsException(
-                            "Invalid inport index " + index);
-                }
-                if (m_outPorts[index] != null) {
-                    throw new InvalidSettingsException(
-                            "Duplicate outport definition for index: " + index);
-                }
-                m_outPorts[index] = p;
+        NodeSettingsRO outPorts;
+        try {
+            outPorts = loadOutPortsSetting(settings);
+            if (outPorts == null) {
+                outPorts = new NodeSettings("<<empty>>");
             }
+        } catch (InvalidSettingsException e) {
+            String error = "Can't load workflow out ports, config not found: "
+                + e.getMessage();
+            LOGGER.debug(error, e);
+            loadResult.addError(error);
+            outPorts = new NodeSettings("<<empty>>");
         }
+        int outPortCount = outPorts.keySet().size();
+        m_outPorts = new WorkflowOutPort[outPortCount];
+        for (String key : outPorts.keySet()) {
+            WorkflowOutPort p;
+            try {
+                NodeSettingsRO sub = outPorts.getNodeSettings(key);
+                p = loadOutPort(sub);
+            } catch (InvalidSettingsException e) {
+                String error = "Can't load workflow outport (internal ID \""
+                    + key + "\", skipping it: " + e.getMessage();
+                LOGGER.debug(error, e);
+                loadResult.addError(error);
+                continue;
+            }
+            int index = p.getPortID();
+            if (index < 0 || index >= outPortCount) {
+                loadResult.addError("Invalid inport index " + index);
+            }
+            if (m_outPorts[index] != null) {
+                loadResult.addError(
+                        "Duplicate outport definition for index: " + index);
+            }
+            m_outPorts[index] = p;
+        }
+        return loadResult;
     }
     
     /** {@inheritDoc} */
-    public void loadNodeContainer(final File nodeFile, 
-            final ExecutionMonitor exec, final int loadID) 
+    public LoadResult loadNodeContainer(final File nodeFile, 
+            final ExecutionMonitor exec, final int loadID, final NodeSettingsRO parentSettings) 
     throws InvalidSettingsException, CanceledExecutionException, IOException {
+        LoadResult loadResult = new LoadResult();
         m_metaPersistor = createNodeContainerMetaPersistor();
         if (nodeFile == null || !nodeFile.isFile()) {
-            throw new InvalidSettingsException("Can't read file \"" 
-                    + nodeFile.getAbsolutePath() +"\"");
+            String error = "Can't read workflow file \"" 
+                + nodeFile.getAbsolutePath() + "\"";
+            throw new IOException(error);
         }
         InputStream in = new BufferedInputStream(new FileInputStream(nodeFile));
         NodeSettingsRO subWFSettings = NodeSettings.loadFromXML(in);
-        m_metaPersistor.load(subWFSettings);
-        loadWorkflow(subWFSettings, nodeFile.getParentFile(), exec, loadID);
+        LoadResult metaLoadResult = m_metaPersistor.load(subWFSettings);
+        loadResult.addError(metaLoadResult);
+        LoadResult workflowLoadResult = loadWorkflow(
+                subWFSettings, nodeFile.getParentFile(), exec, loadID);
+        loadResult.addError(workflowLoadResult);
+        return loadResult;
     }
 
     protected int loadNodeIDSuffix(final NodeSettingsRO settings)
@@ -603,6 +772,15 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     protected WorkflowPersistorVersion1xx createWorkflowPersistor() {
         return new WorkflowPersistorVersion1xx(
                 getGlobalTableRepository());
+    }
+    
+    private int getRandomNodeID() {
+        // some number between 10k and 20k, hopefully unique.
+        int nodeIDSuffix = 10000 + (int)(Math.random() * 10000);
+        while (m_nodeContainerLoaderMap.containsKey(nodeIDSuffix)) {
+            nodeIDSuffix += 1;
+        }
+        return nodeIDSuffix;
     }
 
 }

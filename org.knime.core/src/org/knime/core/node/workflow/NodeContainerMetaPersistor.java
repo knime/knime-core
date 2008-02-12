@@ -27,9 +27,9 @@ package org.knime.core.node.workflow;
 import java.io.IOException;
 
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 interface NodeContainerMetaPersistor {
 
@@ -53,7 +53,6 @@ interface NodeContainerMetaPersistor {
     
     void setUIInfo(final UIInformation uiInfo);
     
-    void load(final NodeSettingsRO settings)
-            throws InvalidSettingsException, IOException,
-            CanceledExecutionException;
+    LoadResult load(final NodeSettingsRO settings) 
+        throws IOException, CanceledExecutionException;
 }

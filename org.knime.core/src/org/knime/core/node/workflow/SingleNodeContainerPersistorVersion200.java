@@ -52,6 +52,13 @@ public class SingleNodeContainerPersistorVersion200 extends
         super(tableRep);
     }
     
+    /** {@inheritDoc} */
+    @Override
+    protected String loadNodeFactoryClassName(NodeSettingsRO parentSettings,
+            NodeSettingsRO settings) throws InvalidSettingsException {
+        return settings.getString(KEY_FACTORY_NAME);
+    }
+    
     @Override
     protected String loadNodeFile(NodeSettingsRO settings) 
         throws InvalidSettingsException {

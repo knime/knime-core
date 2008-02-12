@@ -44,6 +44,7 @@ import org.knime.core.node.NodePersistorVersion_1xx;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
  * 
@@ -85,50 +86,66 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     }
 
     /** {@inheritDoc} */
-    public void loadNodeContainer(final File nodeSettingsFile, 
-            final ExecutionMonitor exec, final int loadID) 
-    throws InvalidSettingsException, CanceledExecutionException, IOException {
+    public LoadResult loadNodeContainer(final File nodeSettingsFile, 
+            final ExecutionMonitor exec, final int loadID, final NodeSettingsRO parentSettings) 
+            throws InvalidSettingsException, 
+            CanceledExecutionException, IOException {
+        LoadResult result = new LoadResult();
+        String error;
         if (nodeSettingsFile == null || !nodeSettingsFile.isFile()) {
-            throw new InvalidSettingsException(
-                    "Can't read file " + nodeSettingsFile.getAbsolutePath());
+            throw new IOException("Can't read node file \"" 
+                    + nodeSettingsFile.getAbsolutePath() + "\"");
         }
         NodeSettingsRO settings = NodeSettings.loadFromXML(
                 new BufferedInputStream(new FileInputStream(nodeSettingsFile)));
         String nodeFactoryClassName;
         try {
-            nodeFactoryClassName = loadNodeFactoryClassName(settings);
+            nodeFactoryClassName = loadNodeFactoryClassName(
+                    parentSettings, settings);
         } catch (InvalidSettingsException e) {
             if (nodeSettingsFile.getName().equals(
                     WorkflowPersistor.WORKFLOW_FILE)) {
-                throw new InvalidSettingsException(
-                        "Can't load meta flows in this version", e);
+                error = "Can't load meta flows in this version";
+            } else {
+                error = "Can't load node factory class name";
             }
-            throw e;
+            throw new InvalidSettingsException(error);
         }
         GenericNodeFactory<GenericNodeModel> nodeFactory;
+        
         try {
             nodeFactory = loadNodeFactory(nodeFactoryClassName);
-        } catch (InstantiationException e) {
-            throw new InvalidSettingsException(
-                    "Unable to load factory class \"" + nodeFactoryClassName
-                            + "\"", e);
-        } catch (IllegalAccessException e) {
-            throw new InvalidSettingsException(
-                    "Unable to load factory class \"" + nodeFactoryClassName
-                            + "\"", e);
-        } catch (ClassNotFoundException e) {
-            throw new InvalidSettingsException(
-                    "Unable to load factory class \"" + nodeFactoryClassName
-                            + "\"", e);
+        } catch (Exception e) {
+            error =  "Unable to load factory class \"" 
+                + nodeFactoryClassName + "\"";
+            throw new InvalidSettingsException(error);
         }
         m_metaPersistor = createNodeContainerMetaPersistor();
-        m_metaPersistor.load(settings);
+        LoadResult metaResult = m_metaPersistor.load(settings);
+        if (metaResult.hasErrors()) {
+            result.addError(metaResult);
+        }
         File nodeDir = nodeSettingsFile.getParentFile();
-        String nodeFileName = loadNodeFile(settings);
+        String nodeFileName;
+        m_metaPersistor.setState(State.IDLE);
+        try {
+            nodeFileName = loadNodeFile(settings);
+        } catch (InvalidSettingsException e) {
+            error = "Unable to load node settings file for node with ID suffix "
+                    + m_metaPersistor.getNodeIDSuffix() + " (factory class \""
+                    + nodeFactoryClassName + "\"): " + e.getMessage();
+            result.addError(error);
+            LOGGER.debug(error, e);
+            return result;
+        }
         File nodeFile = new File(nodeDir, nodeFileName);
         NodePersistor nodePersistor = createNodePersistor();
-        m_node = nodePersistor.load(nodeFactory, nodeFile, exec, 
-                loadID, m_globalTableRepository);
+        m_node = new Node(nodeFactory);
+        LoadResult nodeLoadResult = nodePersistor.load(
+                m_node, nodeFile, exec, loadID, m_globalTableRepository);
+        if (nodeLoadResult.hasErrors()) {
+            result.addError(nodeLoadResult);
+        }
         State nodeState;
         if (nodePersistor.isExecuted()) {
             nodeState = State.EXECUTED;
@@ -138,6 +155,7 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
             nodeState = State.IDLE;
         }
         m_metaPersistor.setState(nodeState);
+        return result;
     }
     
     protected NodeContainerMetaPersistorVersion1xx 
@@ -145,9 +163,10 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
         return new NodeContainerMetaPersistorVersion1xx();
     }
     
-    protected String loadNodeFactoryClassName(final NodeSettingsRO settings)
+    protected String loadNodeFactoryClassName(
+            final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        return settings.getString(KEY_FACTORY_NAME);
+        return parentSettings.getString(KEY_FACTORY_NAME);
     }
 
     @SuppressWarnings("unchecked")

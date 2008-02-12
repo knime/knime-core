@@ -30,6 +30,8 @@ import java.io.IOException;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
  * 
@@ -41,8 +43,8 @@ public interface NodeContainerPersistor {
 
     NodeContainerMetaPersistor getMetaPersistor();
 
-    void loadNodeContainer(final File workflowDir,
-            final ExecutionMonitor exec, final int loadID)
-            throws InvalidSettingsException, CanceledExecutionException,
-            IOException;
+    LoadResult loadNodeContainer(final File workflowDir, 
+            final ExecutionMonitor exec, final int loadID, final NodeSettingsRO parentSettings) 
+        throws InvalidSettingsException, 
+        CanceledExecutionException, IOException;
 }
