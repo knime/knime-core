@@ -322,7 +322,7 @@ public final class WorkflowManager extends NodeContainer {
             // check to make sure we can safely remove this node
             NodeContainer nc = m_nodes.get(nodeID);
             if (nc == null) {
-                throw new IllegalStateException("Node does not exist!");
+                return false;
             }
             if ((nc.getState() != NodeContainer.State.IDLE)
                     && (nc.getState() != NodeContainer.State.CONFIGURED)
@@ -343,8 +343,7 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (m_dirtyWorkflow) {
             // check to make sure we can safely remove this node
             if (!canRemoveNode(nodeID)) {
-                throw new IllegalStateException("Node is not idle and"
-                        + " can not be removed");
+                throw new IllegalStateException("Node can not be removed");
             }
             // remove lists of in- and outgoing connections.
             while (m_connectionsByDest.get(nodeID).size() > 0) {
@@ -471,6 +470,23 @@ public final class WorkflowManager extends NodeContainer {
     public ConnectionContainer addConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort) {
+        return addConnection(source, sourcePort, dest, destPort, true);
+    }
+
+    /** Add new connection - throw Exception if the same connection
+     * already exists.
+     *
+     * @param source node id
+     * @param sourcePort port index at source node
+     * @param dest destination node id
+     * @param destPort port index at destination node
+     * @param configure if true, configure destination node after insertions
+     * @return newly created Connection object
+     * @throws IllegalArgumentException if connection already exists
+     */
+    public ConnectionContainer addConnection(final NodeID source,
+            final int sourcePort, final NodeID dest,
+            final int destPort, final boolean configure) {
         assert source != null;
         assert dest != null;
         assert sourcePort >= 0;
@@ -531,9 +547,12 @@ public final class WorkflowManager extends NodeContainer {
                         sourceNC.getOutPort(sourcePort));
             }
         }
-        // make sure the destination node is configured again (and all of
-        // its successors if needed):
-        configure(dest);
+        // if so desired...
+        if (configure) {
+            // ...make sure the destination node is configured again (and all of
+            // its successors if needed):
+            configure(dest);
+        }
         // and finally notify listeners
         notifyWorkflowListeners(new WorkflowEvent(
                 WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
