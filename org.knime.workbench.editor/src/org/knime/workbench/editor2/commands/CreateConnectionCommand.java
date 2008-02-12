@@ -165,47 +165,20 @@ public class CreateConnectionCommand extends Command {
      */
     @Override
     public boolean canExecute() {
-        return true;
-        /*
-        // TODO: target port id is < 0 -> why???
-        if (m_targetPortID < 0) {
-            return false;
-        }
-        // TODO: meta through connection???
-        if (m_sourceNode == m_targetNode) {
-            return false;
-        }
-        if ((m_sourceNode == null) || (m_targetNode == null)) {
-
-            // do not inform the user!! this check is just for the different
-            // stages during a connection creation (dragging) such that it is
-            // known once two nodes are selected to connect
-            return false;
-        }
-
-        if (m_targetNode instanceof NodeContainerEditPart) {
-            NodeContainerEditPart targetNC
-                = (NodeContainerEditPart)m_targetNode;
-            return targetNC.isLocked();
-            // TODO if workflow manager is executing or so
-        }
-
-        if (m_targetNode instanceof WorkflowRootEditPart) {
-            WorkflowManager wfm = ((WorkflowRootEditPart)m_targetNode)
-                .getWorkflowManager();
-            if (wfm.getState().equals(NodeContainer.State.EXECUTING)) {
+        try {
+            if (m_sourceNode == null || m_targetNode == null) {
                 return false;
-            } else {
-                return true;
             }
-        }
         // let check the workflow manager if the connection can be created
         // in case it can not an exception is thrown which is caught and
         // displayed to the user
             return m_manager.canAddConnection(m_sourceNode.getNodeContainer()
                     .getID(), m_sourcePortID, m_targetNode.getNodeContainer()
                     .getID(), m_targetPortID);
-       */
+        } catch (Throwable t) {
+            LOGGER.warn("can create connection? ", t);
+        }
+        return false;
     }
 
     /**
