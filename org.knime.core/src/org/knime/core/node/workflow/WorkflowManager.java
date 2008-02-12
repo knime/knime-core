@@ -249,6 +249,10 @@ public final class WorkflowManager extends NodeContainer {
         LOGGER.info("Created subworkflow " + this.getID());
     }
 
+    ///////////////////////////////////////
+    // Node / Project / Metanode operations
+    ///////////////////////////////////////
+    
     /** Create new project - which is the same as creating a new subworkflow
      * at this level with no in- or outports.
      *
@@ -349,8 +353,8 @@ public final class WorkflowManager extends NodeContainer {
                 getID(), nodeID, null));
     }
 
-    /** Creates new meta node. We will automatically find
-     * the next available free index for the new node within this workflow.
+    /** Creates new meta node. We will automatically find the next available
+     * free index for the new node within this workflow.
      * @param inPorts types of external inputs (going into this workflow)
      * @param outPorts types of external outputs (exiting this workflow)
      * @return newly created WorflowManager
@@ -358,10 +362,9 @@ public final class WorkflowManager extends NodeContainer {
     public WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
             final PortType[] outPorts) {
         if (this == ROOT && (inPorts.length != 0 || outPorts.length != 0)) {
-            throw new IllegalStateException("Can't create sub workflow on " +
-            		"root workflow manager, use createProject() instead");
+            throw new IllegalStateException("Can't create sub workflow on "
+                + "root workflow manager, use createProject() instead");
         }
-        // TODO synchronize to avoid messing with running workflows!
         NodeID newID;
         WorkflowManager wfm;
         synchronized (m_dirtyWorkflow) {
@@ -376,6 +379,8 @@ public final class WorkflowManager extends NodeContainer {
     }
     
     /** Creates new meta node from a persistor instance. 
+     * @param persistor to read from 
+     * @param newID new id to be used
      * @return newly created WorflowManager
      */
     WorkflowManager createSubWorkflow(final WorkflowPersistor persistor, 
@@ -392,23 +397,25 @@ public final class WorkflowManager extends NodeContainer {
     ////////////////////////////////////////////
     
     /**
+     * Create a new, unique node ID. Should be run within a synchronized
+     * block to avoid duplicates!
+     * 
      * @return next available unused index.
      */
     private NodeID createUniqueID() {
-        // find next available ID
         int nextIndex = 1;
         if (!m_nodes.isEmpty()) {
             NodeID lastID = m_nodes.lastKey();
             nextIndex = lastID.getIndex() + 1;
-    }
+        }
         NodeID newID = new NodeID(this.getID(), nextIndex);
         assert !m_nodes.containsKey(newID);
         return newID;
     }
     
-    /** Adds the argument to m_nodes and adds empty connection sets to
-     * m_connectionsBySource and m_connectionsByDest
-     * @param nodeContainer Container to add.
+    /** Adds the NodeContainer to m_nodes and adds empty connection sets to
+     * m_connectionsBySource and m_connectionsByDest.
+     * @param nodeContainer new Container to add.
      */
     private void addNodeContainer(final NodeContainer nodeContainer) {
         if (this == ROOT && !(nodeContainer instanceof WorkflowManager)) {
@@ -421,13 +428,19 @@ public final class WorkflowManager extends NodeContainer {
                     + " workflow, use createProject() instead");
         }
         NodeID id = nodeContainer.getID();
-        assert !m_nodes.containsKey(id) : "\"" 
-            + nodeContainer.getNameWithID() + "\" already contained in flow";
-        m_nodes.put(id, nodeContainer);
-        // and create Sets of in and outgoing connections
-        m_connectionsBySource.put(id, new HashSet<ConnectionContainer>());
-        m_connectionsByDest.put(id, new HashSet<ConnectionContainer>());
+        synchronized (m_dirtyWorkflow) {
+            assert !m_nodes.containsKey(id) : "\"" 
+               + nodeContainer.getNameWithID() + "\" already contained in flow";
+            m_nodes.put(id, nodeContainer);
+            // and create Sets of in and outgoing connections
+            m_connectionsBySource.put(id, new HashSet<ConnectionContainer>());
+            m_connectionsByDest.put(id, new HashSet<ConnectionContainer>());
+        }
     }
+
+    ///////////////////////////
+    // Connection operations
+    ///////////////////////////
 
     /** Add new connection - throw Exception if the same connection
      * already exists.
