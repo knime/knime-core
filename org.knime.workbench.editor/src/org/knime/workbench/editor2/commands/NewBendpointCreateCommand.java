@@ -28,9 +28,8 @@ import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.ZoomManager;
-import org.knime.core.node.workflow.ConnectionContainer;
-
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**
@@ -48,7 +47,7 @@ public class NewBendpointCreateCommand extends Command {
 
     private AbsoluteBendpoint m_bendpoint;
 
-    private final ConnectionContainer m_connection;
+    private final ConnectionContainerEditPart m_connection;
 
     private final ZoomManager m_zoomManager;
 
@@ -59,10 +58,13 @@ public class NewBendpointCreateCommand extends Command {
      * @param index bendpoint index
      * @param location where ?
      */
-    public NewBendpointCreateCommand(final ConnectionContainer connection,
-            final int index, final Point location, final ZoomManager zoomManager) {
+    public NewBendpointCreateCommand(
+            final ConnectionContainerEditPart connection,
+            final int index, final Point location, 
+            final ZoomManager zoomManager) {
         m_connection = connection;
-        m_extraInfo = (ModellingConnectionExtraInfo)connection.getUIInfo();
+        m_extraInfo = (ModellingConnectionExtraInfo)connection
+            .getUIInformation();
         if (m_extraInfo == null) {
             m_extraInfo = new ModellingConnectionExtraInfo();
         }
@@ -85,7 +87,7 @@ public class NewBendpointCreateCommand extends Command {
         m_extraInfo.addBendpoint(m_bendpoint.x, m_bendpoint.y, m_index);
 
         // we need this to fire some update event up
-        m_connection.setUIInfo(m_extraInfo);
+        m_connection.setUIInformation(m_extraInfo);
 
     }
 
@@ -100,7 +102,7 @@ public class NewBendpointCreateCommand extends Command {
         m_extraInfo.addBendpoint(location.x, location.y, m_index);
 
         // we need this to fire some update event up
-        m_connection.setUIInfo(m_extraInfo);
+        m_connection.setUIInformation(m_extraInfo);
     }
 
     /**
@@ -111,6 +113,6 @@ public class NewBendpointCreateCommand extends Command {
         m_extraInfo.removeBendpoint(m_index);
 
         // we need this to fire some update event up
-        m_connection.setUIInfo(m_extraInfo);
+        m_connection.setUIInformation(m_extraInfo);
     }
 }

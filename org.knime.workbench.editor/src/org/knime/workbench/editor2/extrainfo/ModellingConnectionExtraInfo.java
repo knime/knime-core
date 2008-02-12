@@ -129,4 +129,15 @@ public class ModellingConnectionExtraInfo implements UIInformation {
             point[1] += moveDist[1];
         }
     }
+    
+    @Override
+    public String toString() {
+        StringBuilder bld = new StringBuilder("bendpoints: ");
+        for (int[] bendpoints : m_bendpoints) {
+            for (int i = 0; i < bendpoints.length; i++) {
+                bld.append(bendpoints[i] + ", ");
+            }
+        }
+        return bld.toString();
+    }
 }

@@ -41,6 +41,7 @@ import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
@@ -55,7 +56,7 @@ import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
  * @author Florian Georg, University of Konstanz
  */
 public class ConnectionContainerEditPart extends AbstractConnectionEditPart
-        implements WorkflowListener {//, ZoomListener {
+        implements WorkflowListener { //, ZoomListener {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             ConnectionContainerEditPart.class);
@@ -63,9 +64,6 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     /**
      * The constructor.
      *
-     * @param isModelConn
-     *            a flag telling if this is a connection between model ports or
-     *            not.
      */
     public ConnectionContainerEditPart() {
     }
@@ -86,17 +84,24 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
                         .getProperty(ZoomManager.class.toString()));
 
         Point moveDelta = boundsRequest.getMoveDelta();
-        return new ChangeBendPointLocationCommand(
-                (ConnectionContainer) getModel(), moveDelta, zoomManager);
+        return new ChangeBendPointLocationCommand(this, moveDelta, zoomManager);
     }
 
 
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public void setSource(final EditPart editPart) {
         LOGGER.debug("set source: " + editPart);
         super.setSource(editPart);
     }
 
+    /**
+     * 
+     * {@inheritDoc}
+     */
     @Override
     public void setTarget(final EditPart editPart) {
         LOGGER.debug("set target: " + editPart);
@@ -111,7 +116,6 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         super.activate();
         LOGGER.debug("activate: " + getModel());
         refresh();
-//        ((ConnectionContainer) getModel()).addWorkflowListener(this);
     }
 
     /**
@@ -120,7 +124,6 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
     @Override
     public void deactivate() {
         super.deactivate();
-//        ((ConnectionContainer) getModel()).removeWorkflowListener(this);
     }
 
     /**
@@ -185,6 +188,27 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      */
     public void workflowChanged(final WorkflowEvent event) {
         refreshVisuals();
+    }
+    
+    /**
+     * Forwards the ui information to the model and refreshes the connection.
+     * 
+     * @param uiInfo the information about the connection (used only if 
+     * bendpoints are used)
+     */
+    public void setUIInformation(final UIInformation uiInfo) {
+        ((ConnectionContainer)getModel()).setUIInfo(uiInfo);
+        refreshVisuals();
+    }
+    
+    
+    /**
+     * 
+     * @return the ui information of this connection (may be null if no 
+     *  bendpoints are involved)
+     */
+    public UIInformation getUIInformation() {
+        return ((ConnectionContainer)getModel()).getUIInfo();
     }
 
     /**
