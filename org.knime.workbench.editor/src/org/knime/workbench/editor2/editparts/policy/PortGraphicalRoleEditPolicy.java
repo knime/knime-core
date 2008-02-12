@@ -71,8 +71,8 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
         if (!(getHost() instanceof AbstractPortEditPart)) {
             return null;
         }
-        LOGGER.info("create connection host: " + getHost());
-        LOGGER.info("create connection host parent : " + getHost().getParent());
+        LOGGER.debug("create connection host: " + getHost());
+        LOGGER.debug("create connection host parent : " + getHost().getParent());
         ConnectableEditPart nodePart = (ConnectableEditPart)getHost()
                 .getParent();
 
