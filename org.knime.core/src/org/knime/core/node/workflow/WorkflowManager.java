@@ -255,7 +255,7 @@ public final class WorkflowManager extends NodeContainer {
      * @return newly created workflow
      */
     public WorkflowManager createAndAddProject() {
-        WorkflowManager wfm = createSubWorkflow(new PortType[0],
+        WorkflowManager wfm = createAndAddSubWorkflow(new PortType[0],
                 new PortType[0]);
         LOGGER.info("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
@@ -281,8 +281,8 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /** Uses given Factory to create a new node and then adds new node to the
-     * workflow manager. We will automatically find the
-     * next available free index for the new node within the given prefix.
+     * workflow manager. We will automatically find the next available free
+     * index for the new node within the given prefix.
      *
      * @param factory NodeFactory used to create the new node
      * @return newly created (unique) NodeID
@@ -310,14 +310,23 @@ public final class WorkflowManager extends NodeContainer {
     /** Remove node if possible. Throws an exception if node is "busy" and can
      * not be removed at this time.
      *
-     * @param nodeID
+     * @param nodeID id of node to be removed
      */
     public void removeNode(final NodeID nodeID) {
         synchronized (m_dirtyWorkflow) {
-            if (!isNodeRemovable(nodeID)) {
-                throw new IllegalStateException("Node can not be removed!");
+            // check to make sure we can safely remove this node
+            NodeContainer nc = m_nodes.get(nodeID);
+            if (nc == null) {
+                throw new IllegalStateException("Node does not exist!");
             }
-            // remove node as well as lists of in- and outgoing connections.
+            if ((nc.getState() != NodeContainer.State.IDLE)
+                    && (nc.getState() != NodeContainer.State.CONFIGURED)
+                    && (nc.getState() != NodeContainer.State.EXECUTED)) {
+                // node is either currently executing or waiting to be
+                throw new IllegalStateException("Node is not idle and"
+                        + " can not be removed");
+            }
+            // remove lists of in- and outgoing connections.
             while (m_connectionsByDest.get(nodeID).size() > 0) {
                 ConnectionContainer toDel =
                     m_connectionsByDest.get(nodeID).iterator().next();
@@ -332,6 +341,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             assert m_connectionsBySource.get(nodeID).size() == 0;
             m_connectionsBySource.remove(nodeID);
+            // and finally remove node itself as well.
             m_nodes.remove(nodeID);
         }
         notifyWorkflowListeners(
@@ -339,27 +349,13 @@ public final class WorkflowManager extends NodeContainer {
                 getID(), nodeID, null));
     }
 
-    /** Check if specified node can safely be removed.
-     *
-     * @param nodeID
-     * @return true if node is removable.
-     */
-    public boolean isNodeRemovable(final NodeID nodeID) {
-        // TODO maybe we should test a few others things as well? WFM executing?
-        if (!m_nodes.containsKey(nodeID)) {
-            return false;
-        }
-        return true;
-    }
-
     /** Creates new meta node. We will automatically find
      * the next available free index for the new node within this workflow.
-     * @param nrInPorts number of external inputs (going into this workflow)
-     * @param nrOutPorts number of external outputs (leaving this workflow)
+     * @param inPorts types of external inputs (going into this workflow)
+     * @param outPorts types of external outputs (exiting this workflow)
      * @return newly created WorflowManager
      */
-    // TODO this should be called addSubWorkflow or createAndAddSubWorkflow
-    public WorkflowManager createSubWorkflow(final PortType[] inPorts,
+    public WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
             final PortType[] outPorts) {
         if (this == ROOT && (inPorts.length != 0 || outPorts.length != 0)) {
             throw new IllegalStateException("Can't create sub workflow on " +
