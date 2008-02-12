@@ -25,7 +25,6 @@ package org.knime.core.node.workflow;
 
 import java.net.URL;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.GenericNodeModel;
@@ -189,12 +188,6 @@ public final class SingleNodeContainer extends NodeContainer
     boolean configureNode(final PortObjectSpec[] inObjectSpecs)
             throws IllegalStateException {
         synchronized (m_dirtyNode) {
-            // TODO: consider other types too...
-            // convert all PortObjectSpecs to DataTableSpecs
-            DataTableSpec[] inSpecs = new DataTableSpec[inObjectSpecs.length];
-            for (int i = 0; i < inSpecs.length; i++) {
-                inSpecs[i] = (DataTableSpec)(inObjectSpecs[i]);
-            }
             // remember old specs
             PortObjectSpec[] prevSpecs =
                     new PortObjectSpec[getNrOutPorts()];
@@ -204,14 +197,14 @@ public final class SingleNodeContainer extends NodeContainer
             // perform action
             switch (getState()) {
             case IDLE:
-                if (m_node.configure(inSpecs)) {
+                if (m_node.configure(inObjectSpecs)) {
                     setNewState(State.CONFIGURED);
                 } else {
                     setNewState(State.IDLE);
                 }
                 break;
             case UNCONFIGURED_MARKEDFOREXEC:
-                if (m_node.configure(inSpecs)) {
+                if (m_node.configure(inObjectSpecs)) {
                     setNewState(State.MARKEDFOREXEC);
                 } else {
                     setNewState(State.UNCONFIGURED_MARKEDFOREXEC);
@@ -219,7 +212,7 @@ public final class SingleNodeContainer extends NodeContainer
                 break;
             case CONFIGURED:
                 // m_node.reset();
-                boolean success = m_node.configure(inSpecs);
+                boolean success = m_node.configure(inObjectSpecs);
                 if (success) {
                     setNewState(State.CONFIGURED);
                 } else {
@@ -231,7 +224,7 @@ public final class SingleNodeContainer extends NodeContainer
                 // these are dangerous - otherwise re-queued loop-ends are
                 // reset!
                 // m_node.reset();
-                success = m_node.configure(inSpecs);
+                success = m_node.configure(inObjectSpecs);
                 if (success) {
                     setNewState(State.MARKEDFOREXEC);
                 } else {
