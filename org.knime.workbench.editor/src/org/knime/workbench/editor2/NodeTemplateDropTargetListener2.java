@@ -28,7 +28,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.Transfer;
-import org.knime.core.node.NodeFactory;
+import org.knime.core.node.GenericNodeFactory;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
@@ -122,7 +123,7 @@ public class NodeTemplateDropTargetListener2 implements
         // check instanceof NodeTemplate and fire a CreateRequest
         LOGGER.info("drop: " + event);
         if (isNodeTemplate()) {
-            NodeTemplate template =(NodeTemplate)((IStructuredSelection)
+            NodeTemplate template = (NodeTemplate)((IStructuredSelection)
                         m_transfer.getSelection()).getFirstElement();
             CreateRequest request = new CreateRequest();
             // TODO for some reason sometimes the event contains no object - but
@@ -136,7 +137,8 @@ public class NodeTemplateDropTargetListener2 implements
                     .getRootEditPart().getContents();
                 m_viewer.getEditDomain().getCommandStack().execute(
                         new CreateNodeCommand(root.getWorkflowManager(),
-                                (NodeFactory) factory.getNewObject(),
+                                (GenericNodeFactory<? extends GenericNodeModel>)
+                                    factory.getNewObject(),
                                 getDropLocation(event)));
             }
         }
