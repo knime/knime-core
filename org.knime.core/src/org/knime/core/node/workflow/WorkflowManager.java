@@ -69,58 +69,80 @@ import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplat
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
- * Container holding nodes and connections consisting a workflow. In contrast
- * to previous implementations, this class will now handle all transport of
- * data from node to subsequent nodes, that is, nodes do not know their
- * pre- or successors anymore.
+ * Container holding nodes and connections of a (sub) workflow. In contrast
+ * to previous implementations, this class will now handle all control, such
+ * as transport of data and specs from node to subsequent nodes. That is, nodes
+ * do not know their pre- or successors anymore.
+ * A WorkflowManager can also play the role of a NodeContainer, thus
+ * representing a metanode/subworkflow.
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
-public final class WorkflowManager extends NodeContainer
-{
+public final class WorkflowManager extends NodeContainer {
 
-    /** my logger */
+    /** my logger. */
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(WorkflowManager.class);
-
-    /** mapping from NodeID to Nodes. */
-    private final TreeMap<NodeID, NodeContainer> m_nodes =
-        new TreeMap<NodeID, NodeContainer>();
-    /** mapping from source NodeID to set of outgoing connections. */
-    private final TreeMap<NodeID, Set<ConnectionContainer>> m_connectionsBySource =
-        new TreeMap<NodeID, Set<ConnectionContainer>>();
-    /** mapping from destination NodeID to set of incoming connections. */
-    private final TreeMap<NodeID, Set<ConnectionContainer>> m_connectionsByDest =
-        new TreeMap<NodeID, Set<ConnectionContainer>>();
 
     /** Name of this workflow (usually displayed at top of the node figure). */
     private String m_name = "Workflow Manager";
 
-    /** ports of this Metanode (both arrays can have 0 length!) */
+    // Nodes held in this workflow:
+
+    /** mapping from NodeID to Nodes. */
+    private final TreeMap<NodeID, NodeContainer> m_nodes =
+        new TreeMap<NodeID, NodeContainer>();
+    
+    // Connections (by node, source and destination). Note that meta
+    // connections (in- and outgoing of this workflow) are also part
+    // of these maps.
+    
+    /** mapping from source NodeID to set of outgoing connections. */
+    private final TreeMap<NodeID, Set<ConnectionContainer>>
+        m_connectionsBySource =
+            new TreeMap<NodeID, Set<ConnectionContainer>>();
+    /** mapping from destination NodeID to set of incoming connections. */
+    private final TreeMap<NodeID, Set<ConnectionContainer>>
+        m_connectionsByDest =
+            new TreeMap<NodeID, Set<ConnectionContainer>>();
+
+    // Ports of the workflow (empty if it is not a subworkflow):
+    
+    /** ports of this Metanode (both arrays can have 0 length!). */
     private final WorkflowInPort[] m_inPorts;
     private final WorkflowOutPort[] m_outPorts;
+
+    // Misc members:
     
+    /** for internal usage, holding output table references. */
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
 
-    /** Listeners interested in status changes */
+    /** Listeners interested in status changes. */
     private final CopyOnWriteArrayList<WorkflowListener> m_wfmListeners;
 
-
-    public final static WorkflowManager ROOT =
-        new WorkflowManager(null, NodeID.ROOTID,
-                new PortType[0], new PortType[0]);
-
     /**
-     * semaphore to make sure we never deal with inconsistent nodes within the
+     * Semaphore to make sure we never deal with inconsistent nodes within the
      * workflow. Changes to state or outputs (port/data) need to synchronize
      * against this so that nodes collecting input (states/specs/data) can make
      * sure that they look at one consistent "snapshot" of a workflow. This
      * semaphore will be used by all "connected" children of this node. Isolated
      * workflows create a new semaphore.
      */
-    protected Object m_dirtyWorkflow;
+    private Object m_dirtyWorkflow;
 
-    /** Constructor - create new child workflow container.
+    /** The root of everything, a workflow with no in- or outputs.
+     * This workflow holds the top level projects. */
+    public static final WorkflowManager ROOT =
+        new WorkflowManager(null, NodeID.ROOTID,
+                new PortType[0], new PortType[0]);
+
+
+    ///////////////////////
+    // Constructors
+    ///////////////////////
+    
+    /** Constructor - create new child workflow container with a parent,
+     * a new ID, and the number and type of in/outports as specified.
      */
     private WorkflowManager(final WorkflowManager parent, final NodeID id,
             final PortType[] inTypes, final PortType[] outTypes) {
@@ -134,16 +156,20 @@ public final class WorkflowManager extends NodeContainer
             m_outPorts[i] = new WorkflowOutPort(i, outTypes[i]);
         }
         if (m_inPorts.length == 0 && m_outPorts.length == 0) {
-            // this workflow is not connected to parent (it is likely a project)
+            // this workflow is not connected to parent via any ports
+            // (it is likely a project)
+            // we can start a new table repository since there can not
+            // be any dependencies...
             m_globalTableRepository = new HashMap<Integer, ContainerTable>();
-            // we do not need to synchronize across unconnected workflows
+            // ...and we do not need to synchronize across unconnected workflows
             m_dirtyWorkflow = new Object();
         } else {
+            // otherwise we may have incoming and/or outgoing dependencies...
             m_globalTableRepository = parent.m_globalTableRepository;
-            // workflow is connected with parent, synchronize across border
+            // ...synchronize across border
             m_dirtyWorkflow = parent.m_dirtyWorkflow;
         }
-        // add set for this (meta-) node's in- and output connections
+        // add sets for this (meta-) node's in- and output connections
         m_connectionsByDest.put(getID(), new HashSet<ConnectionContainer>());
         m_connectionsBySource.put(getID(), new HashSet<ConnectionContainer>());
         // initialize listener list
@@ -151,7 +177,9 @@ public final class WorkflowManager extends NodeContainer
         // done.
         LOGGER.info("Created subworkflow " + this.getID());
     }
-    
+
+    /** Constructor - create new workflow from persistor.
+     */
     private WorkflowManager(final WorkflowManager parent, final NodeID id,
             final WorkflowPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
@@ -165,7 +193,7 @@ public final class WorkflowManager extends NodeContainer
         m_dirtyWorkflow = new Object();
         m_globalTableRepository = persistor.getGlobalTableRepository();
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
-        // id suffix are uniquified by using the entries in this map
+        // id suffix are made unique by using the entries in this map
         Map<Integer, NodeID> translationMap = new HashMap<Integer, NodeID>();
 
         for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry
@@ -220,18 +248,35 @@ public final class WorkflowManager extends NodeContainer
         LOGGER.info("Created subworkflow " + this.getID());
     }
 
-    /** Create new project - which translates to creating a new subworkflow
-     * at this level with no in or outports.
+    /** Create new project - which is the same as creating a new subworkflow
+     * at this level with no in- or outports.
      *
      * @return newly created workflow
      */
-    // TODO should be called createAndAddProject()?
-    // TODO (created by Bernd, to be done by Michael): we need a removeProject()?
-    public WorkflowManager createProject() {
+    public WorkflowManager createAndAddProject() {
         WorkflowManager wfm = createSubWorkflow(new PortType[0],
                 new PortType[0]);
         LOGGER.info("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
+    }
+
+    /** Remove a project - the same as remove node but we make sure it really
+     * looks like a project (i.e. has no in- or outports).
+     * 
+     * @param id of the project to be removed.
+     */
+    public void removeProject(final NodeID id) {
+        NodeContainer nc = m_nodes.get(id);
+        if (nc instanceof WorkflowManager) {
+            WorkflowManager wfm = (WorkflowManager)nc;
+            if ((wfm.getNrInPorts() == 0) && (wfm.getNrOutPorts() == 0)) {
+                // looks like a project, remove it
+                removeNode(id);
+                return;
+            }
+        }
+        throw new IllegalArgumentException(
+                "Node: " + id + " is not a project!");
     }
 
     /**
@@ -1651,9 +1696,10 @@ public final class WorkflowManager extends NodeContainer
                 this, workflowFile, exec, isSaveData);
     }
 
-    /////////////////////////////////////
+    //////////////////////////////////////
     // NodeContainer implementations
-    /////////////////////////////////////
+    // (WorkflowManager acts as meta node)
+    //////////////////////////////////////
 
     /** {@inheritDoc} */
     @Override
