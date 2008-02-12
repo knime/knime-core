@@ -44,7 +44,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  */
 public class DeleteNodeContainerCommand extends Command {
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(DeleteConnectionCommand.class);
+            NodeLogger.getLogger(DeleteNodeContainerCommand.class);
 
     private final NodeContainerEditPart m_part;
 
@@ -74,7 +74,6 @@ public class DeleteNodeContainerCommand extends Command {
         boolean isNotLocked = !m_part.isLocked();
 
         // is the node a deletable node
-
         // does the workflow status allow deletion of the selected node
         // only if the workflow is not executing
         boolean workflowAllowsDeletion =
@@ -93,7 +92,6 @@ public class DeleteNodeContainerCommand extends Command {
         // The WFM must removes all connections for us, before the node is
         // removed.
         try {
-            m_manager.removeNode(m_part.getNodeContainer().getID());
             if (m_part.getNodeContainer() instanceof WorkflowManager) {
                 WorkflowManagerInput in = new WorkflowManagerInput(
                         (WorkflowManager)m_part.getNodeContainer(),
@@ -104,6 +102,7 @@ public class DeleteNodeContainerCommand extends Command {
                     editor.getEditorSite().getPage().closeEditor(editor, false);
                 }
             }
+            m_manager.removeNode(m_part.getNodeContainer().getID());
         } catch (Exception ex) {
             LOGGER.warn("Operation not allowed.", ex);
             Display.getDefault().asyncExec(new Runnable() {
