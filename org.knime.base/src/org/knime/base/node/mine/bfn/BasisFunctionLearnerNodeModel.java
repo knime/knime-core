@@ -132,15 +132,6 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
 
     /** Translates hilite events between model and training data. */
     private final HiLiteTranslator m_translator;
-    
-    /** Number of data inports. */
-    public static final int NR_DATA_INS   = 1;
-    /** Number of data outports. */
-    public static final int NR_DATA_OUTS  = 1;
-    /** Number of model inports. */
-    public static final int NR_MODEL_INS  = 0;
-    /** Number of model outports. */
-    public static final int NR_MODEL_OUTS = 1;
 
     /**
      * Creates a new model with one data in and out port, and model outport.

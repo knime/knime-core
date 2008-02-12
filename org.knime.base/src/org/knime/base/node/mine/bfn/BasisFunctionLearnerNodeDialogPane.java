@@ -59,6 +59,7 @@ public abstract class BasisFunctionLearnerNodeDialogPane
     /**
      * Creates a new pane with basics and column filter panel.
      */
+    @SuppressWarnings("unchecked")
     protected BasisFunctionLearnerNodeDialogPane() {
         // panel with model specific settings
         m_basicsPanel = new BasisFunctionLearnerNodeDialogPanel();

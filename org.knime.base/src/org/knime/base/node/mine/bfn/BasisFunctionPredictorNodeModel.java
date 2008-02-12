@@ -94,7 +94,13 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
                 data, colreg, exec)};
     }
 
-    private void loadModelContent(final ModelContentRO predParams) 
+    /**
+     * Reads the rule model used for prediction from the
+     * <code>ModelContentRO</code> object.
+     * @param predParams used to read rule model from
+     * @throws InvalidSettingsException if the model contains invalid settings
+     */
+    public void loadModelContent(final ModelContentRO predParams) 
             throws InvalidSettingsException {
         // load rules
         ModelContentRO ruleModel = predParams.getModelContent("rules");
