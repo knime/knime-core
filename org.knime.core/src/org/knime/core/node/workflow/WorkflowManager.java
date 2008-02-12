@@ -100,18 +100,18 @@ public final class WorkflowManager extends NodeContainer {
     /** mapping from source NodeID to set of outgoing connections. */
     private final TreeMap<NodeID, Set<ConnectionContainer>>
         m_connectionsBySource =
-            new TreeMap<NodeID, Set<ConnectionContainer>>();
+        new TreeMap<NodeID, Set<ConnectionContainer>>();
     /** mapping from destination NodeID to set of incoming connections. */
     private final TreeMap<NodeID, Set<ConnectionContainer>>
         m_connectionsByDest =
-            new TreeMap<NodeID, Set<ConnectionContainer>>();
+        new TreeMap<NodeID, Set<ConnectionContainer>>();
 
     // Ports of the workflow (empty if it is not a subworkflow):
-    
+
     /** ports of this Metanode (both arrays can have 0 length!). */
     private final WorkflowInPort[] m_inPorts;
     private final WorkflowOutPort[] m_outPorts;
-
+    
     // Misc members:
     
     /** for internal usage, holding output table references. */
@@ -119,6 +119,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /** Listeners interested in status changes. */
     private final CopyOnWriteArrayList<WorkflowListener> m_wfmListeners;
+
 
     /**
      * Semaphore to make sure we never deal with inconsistent nodes within the
@@ -140,7 +141,7 @@ public final class WorkflowManager extends NodeContainer {
     ///////////////////////
     // Constructors
     ///////////////////////
-    
+
     /** Constructor - create new child workflow container with a parent,
      * a new ID, and the number and type of in/outports as specified.
      */
@@ -177,7 +178,7 @@ public final class WorkflowManager extends NodeContainer {
         // done.
         LOGGER.info("Created subworkflow " + this.getID());
     }
-
+    
     /** Constructor - create new workflow from persistor.
      */
     private WorkflowManager(final WorkflowManager parent, final NodeID id,
@@ -403,12 +404,12 @@ public final class WorkflowManager extends NodeContainer {
         if (!m_nodes.isEmpty()) {
             NodeID lastID = m_nodes.lastKey();
             nextIndex = lastID.getIndex() + 1;
-        }
+    }
         NodeID newID = new NodeID(this.getID(), nextIndex);
         assert !m_nodes.containsKey(newID);
         return newID;
     }
-
+    
     /** Adds the argument to m_nodes and adds empty connection sets to
      * m_connectionsBySource and m_connectionsByDest
      * @param nodeContainer Container to add.
@@ -1006,9 +1007,9 @@ public final class WorkflowManager extends NodeContainer {
                 }
             default:
             }
-            checkForQueuableNodes();
-            checkForNodeStateChanges();
         }
+        checkForQueuableNodes();
+        checkForNodeStateChanges();
     }
 
     /** {@inheritDoc} */
