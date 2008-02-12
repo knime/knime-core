@@ -311,12 +311,13 @@ public final class WorkflowManager extends NodeContainer {
         return newID;
     }
 
-    /** Remove node if possible. Throws an exception if node is "busy" and can
-     * not be removed at this time.
-     *
+    /** Check if specific node can be removed (i.e. is not currently being
+     * executed or waiting to be).
+     * 
      * @param nodeID id of node to be removed
+     * @return true if node can safely be removed.
      */
-    public void removeNode(final NodeID nodeID) {
+    public boolean canRemoveNode(final NodeID nodeID) {
         synchronized (m_dirtyWorkflow) {
             // check to make sure we can safely remove this node
             NodeContainer nc = m_nodes.get(nodeID);
@@ -327,6 +328,21 @@ public final class WorkflowManager extends NodeContainer {
                     && (nc.getState() != NodeContainer.State.CONFIGURED)
                     && (nc.getState() != NodeContainer.State.EXECUTED)) {
                 // node is either currently executing or waiting to be
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /** Remove node if possible. Throws an exception if node is "busy" and can
+     * not be removed at this time.
+     *
+     * @param nodeID id of node to be removed
+     */
+    public void removeNode(final NodeID nodeID) {
+        synchronized (m_dirtyWorkflow) {
+            // check to make sure we can safely remove this node
+            if (!canRemoveNode(nodeID)) {
                 throw new IllegalStateException("Node is not idle and"
                         + " can not be removed");
             }
