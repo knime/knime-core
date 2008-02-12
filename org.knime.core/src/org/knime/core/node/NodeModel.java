@@ -18,9 +18,9 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
- *   17.01.2006(sieb, ohl): reviewed 
+ *   17.01.2006(sieb, ohl): reviewed
  */
 package org.knime.core.node;
 
@@ -34,7 +34,7 @@ import org.knime.core.data.DataTableSpec;
  * <p>
  * The <code>NodeModel</code> should contain the node's "model", i.e., what
  * ever is stored, contained, done in this node - it's the "meat" of this node.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class NodeModel extends GenericNodeModel {
@@ -43,19 +43,19 @@ public abstract class NodeModel extends GenericNodeModel {
     private final int m_nrDataOutPorts;
     private final int m_nrModelInPorts;
     private final int m_nrModelOutPorts;
-    
+
     /**
      * Creates a new model with the given number of in- and outputs.
-     * 
+     *
      * @param nrDataIns Number of data inputs.
      * @param nrDataOuts Number of data outputs.
-     * 
+     *
      * @see NodeModel#NodeModel(int, int, int, int)
      */
     protected NodeModel(final int nrDataIns, final int nrDataOuts) {
         this(nrDataIns, nrDataOuts, 0, 0);
     }
-    
+
     private static PortType[] createArrayOfDataAndModelTypes(
             final int nrDataPorts, final int nrModelPorts) {
         PortType[] pTypes = new PortType[nrDataPorts + nrModelPorts];
@@ -69,9 +69,9 @@ public abstract class NodeModel extends GenericNodeModel {
     }
 
     /** Old-style constructor creating a NodeModel that also has model ports.
-     * 
+     *
      * DO NOT USE ANYMORE, USE @see GenericNodeModel INSTEAD
-     * 
+     *
      * @param nrDataIns
      * @param nrDataOuts
      * @param nrModelIns
@@ -89,7 +89,7 @@ public abstract class NodeModel extends GenericNodeModel {
     }
 
     /**
-     * 
+     *
      * @param inSpecs
      * @return
      * @throws InvalidSettingsException
@@ -124,13 +124,14 @@ public abstract class NodeModel extends GenericNodeModel {
         }
         return returnObjectSpecs;
     }
-    
+
     protected abstract BufferedDataTable[] execute(
-            final BufferedDataTable[] inData, final ExecutionContext exec) 
+            final BufferedDataTable[] inData, final ExecutionContext exec)
             throws Exception;
-    
+
+    @Override
     protected final PortObject[] execute(
-            final PortObject[] inData, final ExecutionContext exec) 
+            final PortObject[] inData, final ExecutionContext exec)
             throws Exception {
         // convert all PortObjects to DataTables
         BufferedDataTable[] inTables =
@@ -156,27 +157,27 @@ public abstract class NodeModel extends GenericNodeModel {
         }
         for (int i = m_nrDataOutPorts;
              i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
-            int mdlIndex = i - m_nrDataInPorts;
+            int mdlIndex = i - m_nrDataOutPorts;
             ModelContentWO thisMdl = new ModelContent("ModelContent");
             saveModelContent(mdlIndex, thisMdl);
             returnObjects[i] = thisMdl;
         }
         // and return the assembled data+models
         return returnObjects;
-    }        
+    }
 
     ///////////////////// DEPRECATED STARTS HERE /////////////////////
-    
+
     /**
      * Override this method if <code>ModelContent</code> input(s) have
      * been set. This method is then called for each ModelContent input to
      * load the <code>ModelContent</code> after the previous node has been
      * executed successfully or is reset.
-     * 
-     * <p>This implementation throws a InvalidSettingsException as it should 
+     *
+     * <p>This implementation throws a InvalidSettingsException as it should
      * not have been called: If a derived NodeModel defines a model input, it
      * must override this method.
-     * 
+     *
      * @param index The input index, starting from 0.
      * @param predParams The ModelContent to load, which can be null to
      *            indicate that no ModelContent model is available.
@@ -197,8 +198,8 @@ public abstract class NodeModel extends GenericNodeModel {
      * <code>ModelContent</code> output to save the
      * <code>ModelContent</code> after this node has been successfully
      * executed.
-     * 
-     * <p>This implementation throws a InvalidSettingsException as it should 
+     *
+     * <p>This implementation throws a InvalidSettingsException as it should
      * not have been called: If a derived NodeModel defines a model output, it
      * must override this method.
 
