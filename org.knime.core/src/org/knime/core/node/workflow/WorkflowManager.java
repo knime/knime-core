@@ -279,21 +279,6 @@ public final class WorkflowManager extends NodeContainer {
                 "Node: " + id + " is not a project!");
     }
 
-    /**
-     * @return next available unused index.
-     */
-    private NodeID createUniqueID() {
-        // find next available ID
-        int nextIndex = 1;
-        if (!m_nodes.isEmpty()) {
-            NodeID lastID = m_nodes.lastKey();
-            nextIndex = lastID.getIndex() + 1;
-        }
-        NodeID newID = new NodeID(this.getID(), nextIndex);
-        assert !m_nodes.containsKey(newID);
-        return newID;
-    }
-
     /** Uses given Factory to create a new node and then adds new node to the
      * workflow manager. We will automatically find the
      * next available free index for the new node within the given prefix.
@@ -405,6 +390,25 @@ public final class WorkflowManager extends NodeContainer {
         return new WorkflowManager(this, newID, persistor);
     }
     
+    ////////////////////////////////////////////
+    // Helper methods for Node/Workflow creation
+    ////////////////////////////////////////////
+    
+    /**
+     * @return next available unused index.
+     */
+    private NodeID createUniqueID() {
+        // find next available ID
+        int nextIndex = 1;
+        if (!m_nodes.isEmpty()) {
+            NodeID lastID = m_nodes.lastKey();
+            nextIndex = lastID.getIndex() + 1;
+        }
+        NodeID newID = new NodeID(this.getID(), nextIndex);
+        assert !m_nodes.containsKey(newID);
+        return newID;
+    }
+
     /** Adds the argument to m_nodes and adds empty connection sets to
      * m_connectionsBySource and m_connectionsByDest
      * @param nodeContainer Container to add.
