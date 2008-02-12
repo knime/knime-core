@@ -471,21 +471,21 @@ public final class WorkflowManager extends NodeContainer {
     public ConnectionContainer addConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort) {
+        assert source != null;
+        assert dest != null;
+        assert sourcePort >= 0;
+        assert destPort >= 0;
         ConnectionContainer newConn = null;
         ConnectionType newConnType = null;
         NodeContainer sourceNC;
         NodeContainer destNC;
         synchronized (m_dirtyWorkflow) {
-            // TODO check valid types on ports
-            assert source != null;
-            assert dest != null;
-            assert sourcePort >= 0;
-            assert destPort >= 0;
-            // check type and underlying nodes
+            if (!canAddConnection(source, sourcePort, dest, destPort)) {
+                throw new IllegalArgumentException("Can not add connection!");
+            }
             sourceNC = m_nodes.get(source);
             destNC = m_nodes.get(dest);
-            assert (source.equals(this.getID())) || (sourceNC != null);
-            assert (dest.equals(this.getID())) || (destNC != null);
+            // determine type of new connection:
             if ((sourceNC == null) && (destNC == null)) {
                 newConnType = ConnectionType.WFMTHROUGH;
             } else if (sourceNC == null) {
@@ -513,8 +513,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             // handle special cases with port reference chains (WFM border
             // crossing connections:
-            if (   (source.equals(getID()))
-                && (dest.equals(getID())) ) {
+            if ((source.equals(getID())) && (dest.equals(getID()))) {
                 // connection goes directly from workflow in to workflow outport
                 assert newConnType == ConnectionType.WFMTHROUGH;
                 getOutPort(destPort).setUnderlyingPort(
@@ -532,8 +531,10 @@ public final class WorkflowManager extends NodeContainer {
                         sourceNC.getOutPort(sourcePort));
             }
         }
+        // make sure the destination node is configured again (and all of
+        // its successors if needed):
         configure(dest);
-
+        // and finally notify listeners
         notifyWorkflowListeners(new WorkflowEvent(
                 WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
         LOGGER.info("Added new connection from node " + source
@@ -556,9 +557,11 @@ public final class WorkflowManager extends NodeContainer {
         NodeContainer sourceNode = m_nodes.get(source);
         NodeContainer destNode = m_nodes.get(dest);
         // sanity checks (index/null)
-        // TODO: consider also connections to this as WMFIN/OUT Conns.
-        if ((sourceNode == null) || (destNode == null)) {
-            return true;  // too easy...
+        if (!(source.equals(this.getID()) || (sourceNode != null))) {
+            return false;
+        }
+        if (!(dest.equals(this.getID()) || (destNode != null))) {
+            return false;
         }
         if (sourceNode.getNrOutPorts() <= sourcePort) {
             return false;
@@ -569,6 +572,13 @@ public final class WorkflowManager extends NodeContainer {
         if ((sourcePort < 0) || (destPort < 0)) {
             return false;
         }
+        // check for type compatibility:
+        
+        // TODO mir san hier
+        
+//        Class<PortObjectSpec> inComingType = null;
+//        Class<PortObjectSpec> outGoingType = null;
+        
         // check for existence
         Set<ConnectionContainer> scc = m_connectionsBySource.get(source);
         ConnectionContainer cc = new ConnectionContainer(source, sourcePort,
