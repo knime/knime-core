@@ -78,7 +78,7 @@ public class DeleteNodeContainerCommand extends Command {
         // does the workflow status allow deletion of the selected node
         // only if the workflow is not executing
         boolean workflowAllowsDeletion =
-                m_manager.isNodeRemovable(m_part.getNodeContainer().getID());
+                m_manager.canRemoveNode(m_part.getNodeContainer().getID());
         return isNotLocked && workflowAllowsDeletion;
     }
 
