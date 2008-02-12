@@ -29,7 +29,6 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ModelContent;
 import org.knime.core.node.PortType;
 
 /**
@@ -77,25 +76,15 @@ public class NodeInPortFigure extends AbstractNodePortFigure {
                     (HEIGHT / 2)));
             return points;
         }
-        if (getType().equals(ModelContent.TYPE)) {
-            PointList points = new PointList(4);
-            points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
-                    -((HEIGHT - 1) / 2)));
-            points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3,
-                    -((HEIGHT - 1) / 2)));
-            points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3,
-                    ((HEIGHT - 1) / 2)));
-            points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
-                    ((HEIGHT - 1) / 2 - 1)));
-            return points;
-        }
-        //unknown
-        PointList points = new PointList(3);
+        PointList points = new PointList(4);
         points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
-                -(HEIGHT / 2)));
-        points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3, 0));
+                -((HEIGHT - 1) / 2)));
+        points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3,
+                -((HEIGHT - 1) / 2)));
+        points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3,
+                ((HEIGHT - 1) / 2)));
         points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
-                (HEIGHT / 2)));
+                ((HEIGHT - 1) / 2 - 1)));
         return points;
 
             // TODO database port

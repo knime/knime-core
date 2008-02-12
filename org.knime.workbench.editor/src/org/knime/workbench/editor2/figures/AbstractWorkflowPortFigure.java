@@ -22,7 +22,7 @@ import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Locator;
 import org.eclipse.draw2d.Shape;
-import org.knime.core.node.ModelContent;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.PortType;
 
 /**
@@ -98,7 +98,7 @@ public abstract class AbstractWorkflowPortFigure extends Shape {
      */
     @Override
     public void outlineShape(final Graphics graphics) {
-        if (!m_portType.equals(ModelContent.TYPE)) {
+        if (m_portType.equals(BufferedDataTable.TYPE)) {
             drawTriangle(graphics);
         }
     }
@@ -110,7 +110,7 @@ public abstract class AbstractWorkflowPortFigure extends Shape {
      */
      @Override
      protected void fillShape(final Graphics g) {
-         if (m_portType.equals(ModelContent.TYPE)) {
+         if (!m_portType.equals(BufferedDataTable.TYPE)) {
              drawSquare(g);
          }
      }

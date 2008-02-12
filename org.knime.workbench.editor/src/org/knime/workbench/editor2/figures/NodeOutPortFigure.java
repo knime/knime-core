@@ -29,7 +29,6 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ModelContent;
 import org.knime.core.node.PortType;
 
 /**
@@ -77,27 +76,17 @@ public class NodeOutPortFigure extends AbstractNodePortFigure {
             points.addPoint(r.getLeft().getCopy()
                     .translate(WIDTH, (HEIGHT / 2)));
             return points;
-        } else if (getType().equals(ModelContent.TYPE)) {
-            PointList points = new PointList(4);
-            points.addPoint(r.getLeft().getCopy().translate(WIDTH,
-                    -(HEIGHT / 2 - 0)));
-            points.addPoint(r.getLeft().getCopy().translate(WIDTH * 2,
-                    -(HEIGHT / 2 - 0)));
-            points.addPoint(r.getLeft().getCopy().translate(WIDTH * 2,
-                    (HEIGHT / 2 + 0)));
-            points.addPoint(r.getLeft().getCopy().translate(WIDTH,
-                    (HEIGHT / 2 + 0)));
-            return points;
-        } else {
-            // unknown
-            PointList points = new PointList(3);
-            points.addPoint(r.getLeft().getCopy().translate(WIDTH,
-                    -(HEIGHT / 2)));
-            points.addPoint(r.getLeft().getCopy().translate(WIDTH * 2, 0));
-            points.addPoint(r.getLeft().getCopy()
-                    .translate(WIDTH, (HEIGHT / 2)));
-            return points;
-        }
+        } 
+        PointList points = new PointList(4);
+        points.addPoint(r.getLeft().getCopy().translate(WIDTH,
+                -(HEIGHT / 2 - 0)));
+        points.addPoint(r.getLeft().getCopy().translate(WIDTH * 2,
+                -(HEIGHT / 2 - 0)));
+        points.addPoint(r.getLeft().getCopy().translate(WIDTH * 2,
+                (HEIGHT / 2 + 0)));
+        points.addPoint(r.getLeft().getCopy().translate(WIDTH,
+                (HEIGHT / 2 + 0)));
+        return points;
 
         // TODO database port
     }
