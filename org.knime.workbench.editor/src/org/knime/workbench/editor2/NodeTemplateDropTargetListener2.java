@@ -97,7 +97,7 @@ public class NodeTemplateDropTargetListener2 implements
                     .toControl(event.x, event.y).x,
                     m_viewer.getControl()
                     .toControl(event.x, event.y).y);
-        LOGGER.info("to control: " + p);
+        LOGGER.debug("to control: " + p);
         return p;
     }
 
@@ -121,7 +121,7 @@ public class NodeTemplateDropTargetListener2 implements
     public void drop(final DropTargetEvent event) {
         // TODO: get the Selection from the LocalSelectionTransfer
         // check instanceof NodeTemplate and fire a CreateRequest
-        LOGGER.info("drop: " + event);
+        LOGGER.debug("drop: " + event);
         if (isNodeTemplate()) {
             NodeTemplate template = (NodeTemplate)((IStructuredSelection)
                         m_transfer.getSelection()).getFirstElement();
