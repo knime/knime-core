@@ -27,8 +27,6 @@ package org.knime.workbench.editor2;
 import org.eclipse.gef.requests.CreationFactory;
 import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.GenericNodeModel;
-import org.knime.core.node.NodeFactory;
-
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
@@ -77,6 +75,6 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
      * {@inheritDoc}
      */
     public Object getObjectType() {
-        return NodeFactory.class;
+        return GenericNodeFactory.class;
     }
 }

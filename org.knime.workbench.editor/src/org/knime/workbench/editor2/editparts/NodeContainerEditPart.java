@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.knime.core.node.NodeFactory;
+import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePort;
 import org.knime.core.node.NotConfigurableException;
@@ -554,7 +554,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         if (icon == null) {
             icon =
                     ImageRepository.getScaledImage(
-                            NodeFactory.getDefaultIcon(), 16, 16);
+                            GenericNodeFactory.getDefaultIcon(), 16, 16);
         }
         if (icon != null) {
             f.setIcon(icon);
