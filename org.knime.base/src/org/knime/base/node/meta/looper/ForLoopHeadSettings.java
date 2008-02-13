@@ -30,7 +30,7 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Thorsten Meinl, University of Konstanz
  */
-public class LooperSettings {
+public class ForLoopHeadSettings {
     private int m_loops = 10;
     
     /**

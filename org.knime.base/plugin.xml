@@ -592,6 +592,26 @@
             factory-class="org.knime.base.node.viz.roc.ROCNodeFactory"
             id="org.knime.base.node.viz.roc.ROCNodeFactory">
       </node>
+      <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory"
+            id="org.knime.base.node.meta.xvalidation.XValidatePartitionerFactory">
+      </node>
+      <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory"
+            id="org.knime.base.node.meta.xvalidation.AggregateOutputNodeFactory">
+      </node>
+      <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.meta.looper.ForLoopHeadNodeFactory"
+            id="org.knime.base.node.meta.looper.ForLoopHeadNodeFactory">
+      </node>
+      <node
+            category-path="/meta"
+            factory-class="org.knime.base.node.meta.looper.ForLoopTailNodeFactory"
+            id="org.knime.base.node.meta.looper.ForLoopTailNodeFactory">
+      </node>
    </extension>
    
    

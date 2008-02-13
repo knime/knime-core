@@ -18,43 +18,34 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.meta.looper;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ * This factory create all necessary classes for the for-loop head node.
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class LooperFactory extends NodeFactory {
+public class ForLoopHeadNodeFactory extends NodeFactory<ForLoopHeadNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new LooperDialog();
+        return new ForLoopHeadNodeDialog();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
-        return new LooperModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        return null;
+    public ForLoopHeadNodeModel createNodeModel() {
+        return new ForLoopHeadNodeModel();
     }
 
     /**
@@ -71,5 +62,14 @@ public class LooperFactory extends NodeFactory {
     @Override
     protected boolean hasDialog() {
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<ForLoopHeadNodeModel> createNodeView(final int index,
+            final ForLoopHeadNodeModel model) {
+        return null;
     }
 }
