@@ -24,7 +24,6 @@
  */
 package org.knime.workbench.editor2.figures;
 
-import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Locator;
 import org.eclipse.draw2d.Shape;
@@ -33,6 +32,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
+import org.knime.base.node.io.database.DBConnection;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.PortType;
@@ -41,6 +41,7 @@ import org.knime.core.node.PortType;
  * Abstract figure for common displaying behaviour of node ports.
  *
  * @author Florian Georg, University of Konstanz
+ * @author Fabian Dill, University of Konstanz
  */
 public abstract class AbstractNodePortFigure extends Shape {
     /** width of a port figure. * */
@@ -48,8 +49,6 @@ public abstract class AbstractNodePortFigure extends Shape {
 
     /** height of a port figure. * */
     public static final int HEIGHT = 9;
-
-    private boolean m_hasData;
 
     private final int m_numPorts;
 
@@ -80,110 +79,81 @@ public abstract class AbstractNodePortFigure extends Shape {
     }
 
     /**
-     * @return The background color, depending on the current state
-     * @see org.eclipse.draw2d.IFigure#getBackgroundColor()
+     * We need to set the colors explicitly dependend on the {@link PortType}.
+     * Currently supported are {@link BufferedDataTable#TYPE} : black, 
+     * {@link ModelContent#TYPE} : blue, {@link DBConnection#TYPE} : 
+     * dark yellow.
+     * 
+     * @return the background color, dependend on the {@link PortType}
+     * {@inheritDoc}
      */
     @Override
     public Color getBackgroundColor() {
-        return (m_hasData ? ColorConstants.green : ColorConstants.white);
+        Color color = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
+        if (getType().equals(ModelContent.TYPE)) {
+            // model
+            color = Display.getCurrent().getSystemColor(SWT.COLOR_BLUE);
+        } else if (getType().equals(BufferedDataTable.TYPE)) {
+            // data
+            color = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
+        } else if (getType().equals(DBConnection.TYPE)) {
+            // database
+            color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_YELLOW);
+        }
+        return color;
     }
-
+    
     /**
-     * TODO FIXME isConnected state is never set, so we can't get nice red/green
-     * colors.
-     *
-     * @return The foreground color, depending on the current state
-     * @see org.eclipse.draw2d.IFigure#getForegroundColor()
+     * The color is determined with {@link #getBackgroundColor()} and set.
+     * 
+     * {@inheritDoc}
      */
     @Override
-    public Color getForegroundColor() {
-        // return (m_isConnected ? ColorConstants.green : ColorConstants.red);
-        return ColorConstants.black;
+    public void paintFigure(final Graphics graphics) {
+        graphics.setBackgroundColor(getBackgroundColor());        
+        super.paintFigure(graphics);
     }
 
     /**
-     * @return Returns the hasData.
-     */
-    public boolean getHasData() {
-        return m_hasData;
-    }
-
-    /**
-     * @param hasData The hasData to set.
-     */
-    public void setHasData(final boolean hasData) {
-        m_hasData = hasData;
-
-        setFill(m_hasData);
-    }
-
-    /**
-     * We need to set the colors explicitly.
+     * Fills the shape, the points of the actual shape are set in 
+     * {@link NodeInPortFigure#createShapePoints(Rectangle)} and 
+     * {@link NodeOutPortFigure#createShapePoints(Rectangle)}. Only data ports
+     * (ports of type {@link BufferedDataTable#TYPE})are outlined, all other 
+     * port types are filled.
      *
-     * @see org.eclipse.draw2d.Shape#fillShape(org.eclipse.draw2d.Graphics)
+     * {@inheritDoc}
+     * @see NodeInPortFigure#createShapePoints(Rectangle)
+     * @see NodeOutPortFigure#createShapePoints(Rectangle)
      */
     @Override
     protected void fillShape(final Graphics graphics) {
-        if (getType().equals(ModelContent.TYPE)) {
-            // model
-            graphics.setBackgroundColor(Display.getCurrent().getSystemColor(
-                    SWT.COLOR_BLUE));
-        } else if (getType().equals(BufferedDataTable.TYPE)) {
-            // data
-            graphics.setBackgroundColor(Display.getCurrent().getSystemColor(
-                    SWT.COLOR_BLACK));
-        } else {
-            // unknown type
-            graphics.setBackgroundColor(Display.getCurrent().getSystemColor(
-                    SWT.COLOR_GRAY));
-        }
-
-        // TODO: database port
-
-        // graphics.setBackgroundColor(getBackgroundColor());
-        // TODO: different for workflow port and node port!!!
-        Rectangle r;
-            r = getBounds().getCopy().shrink(3, 3);
+        Rectangle r = getBounds().getCopy().shrink(3, 3);
         PointList points = createShapePoints(r);
         // data ports are not filled, model ports are filled
-        if (getType().equals(ModelContent.TYPE)) {
+        if (!getType().equals(BufferedDataTable.TYPE)) {
             graphics.fillPolygon(points);
-        } else {
-            graphics.drawPolygon(points);
         }
-
-        // graphics.fillRectangle(getBounds());
     }
 
+
     /**
-     * NOT USED AT THE MOMENT.
+     * Outlines the shape, the points of the actual shape are set in 
+     * {@link NodeInPortFigure#createShapePoints(Rectangle)} and 
+     * {@link NodeOutPortFigure#createShapePoints(Rectangle)}. Only data ports
+     * (ports of type {@link BufferedDataTable#TYPE})are outlined, all other 
+     * port types are filled.
      *
-     * @see org.eclipse.draw2d.Shape#outlineShape(org.eclipse.draw2d.Graphics)
+     * {@inheritDoc}
+     * @see NodeInPortFigure#createShapePoints(Rectangle)
+     * @see NodeOutPortFigure#createShapePoints(Rectangle)
      */
     @Override
     protected void outlineShape(final Graphics graphics) {
-        if (getType().equals(ModelContent.TYPE)) {
-            graphics.setForegroundColor(Display.getCurrent().getSystemColor(
-                    SWT.COLOR_BLUE));
-        } else if (getType().equals(BufferedDataTable.TYPE)){
-            graphics.setForegroundColor(Display.getCurrent().getSystemColor(
-                    SWT.COLOR_BLACK));
-        } else {
-            graphics.setForegroundColor(Display.getCurrent().getSystemColor(
-                    SWT.COLOR_GRAY));
+        Rectangle r = getBounds().getCopy().shrink(3, 3);
+        PointList points = createShapePoints(r);
+        if (getType().equals(BufferedDataTable.TYPE)) {            
+            graphics.drawPolygon(points);
         }
-
-        // TODO: data base port
-
-        // graphics.setForegroundColor(getForegroundColor());
-        // Rectangle r = getBounds().getCopy().shrink(2, 2);
-        // TODO debug border
-        // graphics.drawRectangle(r);
-
-        // get polygon from implementation...
-        // PointList points = createShapePoints(r);
-
-        // graphics.drawPolygon(points);
     }
 
     /**
