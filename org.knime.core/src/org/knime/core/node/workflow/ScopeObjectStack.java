@@ -135,38 +135,10 @@ public final class ScopeObjectStack {
      * @see java.util.Stack#peek()
      */
     public <T extends ScopeContext> T peekContext(final Class<T> type) {
-        return peekContext(type, false);
-    }
-
-    /**
-     * @return The top-most element on the stack that complies with the given
-     * class argument or <code>null</code> if no such element is found.
-     * @param <T> The class type of the context object
-     * @param type The desired scope class
-     * @param useMyContext Whether to search only for stack objects, which have
-     * been put onto the stack by the calling node. 
-     * @see java.util.Stack#peek()
-     */
-    public <T extends ScopeContext> T peekContext(
-            final Class<T> type, final boolean useMyContext) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             ScopeObject e = m_stack.get(i);
             if (type.isInstance(e)) {
-                // skip objects of other origin (if so desired)
-                if (useMyContext && !e.getOriginatingNode().equals(m_nodeID)) {
-                    // stack must not contain object owned by myself 
-                    // (otherwise we have a clash)
-                    for (int j = i; j >= 0; j--) {
-                        ScopeObject e2 = m_stack.get(j);
-                        if (type.isInstance(e2) 
-                                && e2.getOriginatingNode().equals(m_nodeID)) {
-                            throw new IllegalStateException(
-                                    "Unclosed loop on stack");
-                        }
-                    }
-                } else {
-                    return type.cast(e);
-                }
+                return type.cast(e);
             }
         }
         return null;
