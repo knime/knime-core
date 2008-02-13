@@ -40,7 +40,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistor;
-import org.knime.core.node.NodePersistorVersion_1xx;
+import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.NodeContainer.State;
@@ -89,8 +89,8 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
         return new SingleNodeContainer(wm, id, this);
     }
     
-    protected NodePersistorVersion_1xx createNodePersistor() {
-        return new NodePersistorVersion_1xx();
+    protected NodePersistorVersion1xx createNodePersistor() {
+        return new NodePersistorVersion1xx();
     }
 
     /** {@inheritDoc} */

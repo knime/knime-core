@@ -44,10 +44,10 @@ import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.util.FileUtil;
 
-public class NodePersistorVersion_1xx implements NodePersistor {
+public class NodePersistorVersion1xx implements NodePersistor {
 
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(NodePersistorVersion_1xx.class);
+            .getLogger(NodePersistorVersion1xx.class);
 
     private boolean m_isExecuted;
 
@@ -83,7 +83,7 @@ public class NodePersistorVersion_1xx implements NodePersistor {
      * @param cl The factory class for the node. The factory being used to
      * instantiate a node is retrieved using the 
      */
-    public NodePersistorVersion_1xx(
+    public NodePersistorVersion1xx(
             final GenericNodeFactory<GenericNodeModel> cl) {
         m_class = cl;
     }
@@ -91,7 +91,7 @@ public class NodePersistorVersion_1xx implements NodePersistor {
     /** Constructor that should be used when node is saved. It's not been used
      * for loading, i.e. all getXXX() methods will return invalid values.
      */
-    public NodePersistorVersion_1xx() {
+    public NodePersistorVersion1xx() {
         this(null);
     }
     
