@@ -578,13 +578,32 @@ public final class WorkflowManager extends NodeContainer {
      * @return true if connection cc is removable.
      */
     public boolean canRemoveConnection(final ConnectionContainer cc) {
-        // FIXME some more tests may be nice?
+        // make sure connection exists
         if (!m_connectionsByDest.get(cc.getDest()).contains(cc)) {
             return false;
         }
         if (!m_connectionsBySource.get(cc.getSource()).contains(cc)) {
             return false;
         }
+        // retrieve state of source and destination NodeContainer (could be WFM)
+        NodeContainer.State sourceState = cc.getSource().equals(this.getID())
+            ? this.getState()
+            : m_nodes.get(cc.getSource()).getState();
+        NodeContainer.State destState = cc.getDest().equals(this.getID())
+            ? this.getState()
+            : m_nodes.get(cc.getDest()).getState();
+        // make sure neither source nor destination are "in use"...
+        if (!(sourceState.equals(NodeContainer.State.IDLE)
+              || sourceState.equals(NodeContainer.State.CONFIGURED)
+              || sourceState.equals(NodeContainer.State.EXECUTED))) {
+            return false;
+        }
+        if (!(destState.equals(NodeContainer.State.IDLE)
+              || destState.equals(NodeContainer.State.CONFIGURED)
+              || destState.equals(NodeContainer.State.EXECUTED))) {
+              return false;
+          }
+        // that's it, folks.
         return true;
     }
 
@@ -595,7 +614,8 @@ public final class WorkflowManager extends NodeContainer {
     public void removeConnection(final ConnectionContainer cc) {
         synchronized (m_dirtyWorkflow) {
             if (!canRemoveConnection(cc)) {
-                return;
+                throw new IllegalArgumentException(
+                        "Can not remove connection!");
             }
             // check type and underlying nodes
             NodeID source = cc.getSource();
@@ -628,8 +648,8 @@ public final class WorkflowManager extends NodeContainer {
             }
             // handle special cases with port reference chains (WFM border
             // crossing connections:
-            if (   (source.equals(getID()))
-                && (dest.equals(getID())) ) {
+            if ((source.equals(getID()))
+                && (dest.equals(getID()))) {
                 // connection goes directly from workflow in to workflow outport
                 assert cc.getType() == ConnectionType.WFMTHROUGH;
                 getOutPort(cc.getDestPort()).setUnderlyingPort(null);
@@ -645,11 +665,25 @@ public final class WorkflowManager extends NodeContainer {
                 getOutPort(cc.getDestPort()).setUnderlyingPort(null);
             }
         }
+        // and finally reset the destination node - since it has incomplete
+        // incoming connections now...
+        if (cc.getDest().equals(this.getID())) {
+            // in case of WFM being disconnected make sure outside
+            // successors are reset
+            this.getParent().resetNode(this.getID());
+        } else {
+            // otherwise just reset successor, rest will be handled by WFM
+            resetNode(cc.getDest());
+        }
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED,
                         null, null, cc));
     }
 
+    /////////////////////////////////
+    // Utility Connection Functions
+    /////////////////////////////////
+    
     /**
      * Returns the set of outgoing connections for the node with the passed id
      * at the specified port.
