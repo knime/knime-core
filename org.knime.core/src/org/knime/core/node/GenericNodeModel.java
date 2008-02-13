@@ -405,10 +405,12 @@ public abstract class GenericNodeModel {
         // - only if the execute didn't issue a warning already
         if ((getWarningMessage() == null)
                 || (getWarningMessage().length() == 0)) {
-            boolean hasData = (outData.length == 0);
+            boolean hasData = false;
+            boolean hasDataPorts = false;
             for (int i = 0; i < outData.length; i++) {
                 if (outData[i] instanceof BufferedDataTable) {
                     // do some sanity checks on PortObjects holding data tables
+                    hasDataPorts = true;
                     BufferedDataTable outDataTable =
                         (BufferedDataTable)outData[i];
                     if (outDataTable.getDataTableSpec().getNumColumns() < 1) {
@@ -425,7 +427,7 @@ public abstract class GenericNodeModel {
                     }
                 }
             }
-            if (!hasData) {
+            if (hasDataPorts && !hasData) {
                 setWarningMessage(
                         "Node created empty data tables on all out-ports.");
             }
