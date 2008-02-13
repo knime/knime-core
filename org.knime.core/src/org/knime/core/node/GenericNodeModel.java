@@ -825,16 +825,24 @@ public abstract class GenericNodeModel {
     /** Return top element ScopeConcept from stack but leave it on there.
      *
      */
-    protected final ScopeContext peekScopeContext(
-            final Class<? extends ScopeContext> type) {
+    protected final <T extends ScopeContext> T peekScopeContext(
+            final Class<T> type) {
         return m_scopeContextStackContainer.peekContext(type);
     }
 
+    /** Return top element ScopeConcept from stack but leave it on there.
+     *
+     */
+    protected final <T extends ScopeContext> T peekScopeContext(
+            final Class<T> type, final boolean myContextOnly) {
+        return m_scopeContextStackContainer.peekContext(type, myContextOnly);
+    }
+    
     /** Return top element ScopeContext from stack and remove it.
      *
      */
-    protected final ScopeContext popScopeContext(
-        final Class<? extends ScopeContext> type) {
+    protected final <T extends ScopeContext> T  popScopeContext(
+        final Class<T> type) {
         return m_scopeContextStackContainer.pop(type);
     }
 
