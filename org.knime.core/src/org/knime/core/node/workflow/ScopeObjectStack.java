@@ -140,7 +140,7 @@ public final class ScopeObjectStack {
     public <T extends ScopeContext> T peekContext(final Class<T> type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             ScopeObject e = m_stack.get(i);
-            if (type.isAssignableFrom(e.getClass())) {
+            if (type.isInstance(e)) {
                 return type.cast(e);
             }
         }
@@ -173,7 +173,7 @@ public final class ScopeObjectStack {
     public <T extends ScopeContext> T pop(final Class<T> type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             ScopeObject e = m_stack.get(i);
-            if (type.isAssignableFrom(e.getClass())) {
+            if (type.isInstance(e)) {
                 m_stack.remove(i);
                 return type.cast(e);
             } else {
