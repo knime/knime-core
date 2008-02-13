@@ -131,14 +131,17 @@ public final class ScopeObjectStack {
 
 
     /**
-     * @return
+     * @return The top-most element on the stack that complies with the given
+     * class argument or <code>null</code> if no such element is found.
+     * @param <T> The class type of the context object
+     * @param type The desired scope class
      * @see java.util.Stack#peek()
      */
-    public ScopeContext peekContext(final Class<? extends ScopeContext> type) {
+    public <T extends ScopeContext> T peekContext(final Class<T> type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             ScopeObject e = m_stack.get(i);
             if (type.isAssignableFrom(e.getClass())) {
-                return (ScopeContext)e;
+                return type.cast(e);
             }
         }
         return null;
@@ -147,7 +150,8 @@ public final class ScopeObjectStack {
     public ScopeVariable peekVariable(final String name) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             ScopeObject e = m_stack.get(i);
-            if (e instanceof ScopeVariable && ((ScopeVariable)e).getName().equals(name)) {
+            if (e instanceof ScopeVariable 
+                    && ((ScopeVariable)e).getName().equals(name)) {
                 return (ScopeVariable)e;
             }
         }
@@ -156,15 +160,22 @@ public final class ScopeObjectStack {
     
 
     /**
-     * @return
+     * Removes all elements from the stack whose class is not of the given type.
+     * It also removes the top-most element complying with the given class. 
+     * If no such element exists, the stack will be empty after this method is
+     * called.
+     * @param <T> The desired scope context type.
+     * @param type The class of that type.
+     * @return The first (top-most) element on the stack of class
+     * <code>type</code> or <code>null</code> if no such element is available. 
      * @see java.util.Stack#pop()
      */
-    public ScopeContext pop(final Class<? extends ScopeContext> type) {
+    public <T extends ScopeContext> T pop(final Class<T> type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             ScopeObject e = m_stack.get(i);
             if (type.isAssignableFrom(e.getClass())) {
                 m_stack.remove(i);
-                return (ScopeContext)e;
+                return type.cast(e);
             } else {
                 m_stack.remove(i);
             }
