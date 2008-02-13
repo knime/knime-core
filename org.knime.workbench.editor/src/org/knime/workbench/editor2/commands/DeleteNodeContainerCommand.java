@@ -65,7 +65,7 @@ public class DeleteNodeContainerCommand extends Command {
     /**
      * If the edit part is locked (= busy), we can't delete the underlying node.
      *
-     * @see org.eclipse.gef.commands.Command#canExecute()
+     * {@inheritDoc}
      */
     @Override
     public boolean canExecute() {
@@ -89,12 +89,18 @@ public class DeleteNodeContainerCommand extends Command {
         LOGGER.debug("Deleting node #" + m_part.getNodeContainer().getID()
                 + " from Workflow");
 
-        // The WFM must removes all connections for us, before the node is
+        // The WFM removes all connections for us, before the node is
         // removed.
         try {
+            // the node must removed before the editor is closed in order to 
+            // get the editor as the parent, otherwise the WorkflowRootEditPart 
+            // is the parent
+            m_manager.removeNode(m_part.getNodeContainer().getID());
+            
             if (m_part.getNodeContainer() instanceof WorkflowManager) {
                 WorkflowManagerInput in = new WorkflowManagerInput(
                         (WorkflowManager)m_part.getNodeContainer(),
+                        // thisis meant by the comment above
                         (WorkflowEditor)m_part.getParent());
                 IEditorPart editor = PlatformUI.getWorkbench()
                     .getActiveWorkbenchWindow().getActivePage().findEditor(in);
@@ -102,7 +108,7 @@ public class DeleteNodeContainerCommand extends Command {
                     editor.getEditorSite().getPage().closeEditor(editor, false);
                 }
             }
-            m_manager.removeNode(m_part.getNodeContainer().getID());
+            
         } catch (Exception ex) {
             LOGGER.warn("Operation not allowed.", ex);
             Display.getDefault().asyncExec(new Runnable() {
