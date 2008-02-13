@@ -434,7 +434,7 @@ public final class WorkflowManager extends NodeContainer {
      * @return newly created Connection object
      * @throws IllegalArgumentException if connection already exists
      */
-    public ConnectionContainer addConnection(final NodeID source,
+    private ConnectionContainer addConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort, final boolean configure) {
         assert source != null;
@@ -554,23 +554,20 @@ public final class WorkflowManager extends NodeContainer {
                 return false;  // WFM outport index exists
             }
         }
-        // check for type compatibility:
-        
-        // TODO mir san hier
-        
-//        Class<PortObjectSpec> inComingType = null;
-//        Class<PortObjectSpec> outGoingType = null;
-        
-        // check for existence
-        Set<ConnectionContainer> scc = m_connectionsBySource.get(source);
-        ConnectionContainer cc = new ConnectionContainer(source, sourcePort,
-                dest, destPort, ConnectionContainer.ConnectionType.STD);
-        if (scc.contains(cc)) {
-            return false;
+        // check for existence of a connection to the destNode/Port
+        Set<ConnectionContainer> scc = m_connectionsByDest.get(dest);
+        for (ConnectionContainer cc : scc) {
+            if (cc.getDestPort() == destPort) {
+                return false;
+            }
         }
         // check type compatibility
-        PortType sourceType = sourceNode.getOutPort(sourcePort).getPortType();
-        PortType destType = destNode.getInPort(destPort).getPortType();
+        PortType sourceType = (sourceNode != null
+            ? sourceNode.getOutPort(sourcePort).getPortType()
+            : this.getInPort(sourcePort).getPortType());
+        PortType destType = (destNode != null
+            ? destNode.getInPort(destPort).getPortType()
+            : this.getOutPort(destPort).getPortType());
         return destType.getPortObjectClass().isAssignableFrom(
                 sourceType.getPortObjectClass());
     }
