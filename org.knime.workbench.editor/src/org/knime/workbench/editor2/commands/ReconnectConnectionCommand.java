@@ -45,6 +45,7 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  * 
  * @author Christoph Sieb, University of Konstanz
  */
+// TODO: not used
 public class ReconnectConnectionCommand extends Command {
     private DeleteConnectionCommand m_deleteCommand;
 
