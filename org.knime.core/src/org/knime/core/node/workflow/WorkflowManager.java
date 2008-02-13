@@ -978,7 +978,7 @@ public final class WorkflowManager extends NodeContainer {
 
     /** cleanup a node after execution.
      *
-     * @param nc
+     * @param nc NodeContainer which just finished execution
      */
     void doAfterExecution(final NodeContainer nc) {
         synchronized (m_dirtyWorkflow) {
@@ -996,7 +996,7 @@ public final class WorkflowManager extends NodeContainer {
                     // first check if the loop is properly configured:
                     if (m_nodes.get(node.getLoopStatus().getOriginatingNode())
                             == null) {
-                        // obviously not: the origin of the loop is not in this WFM!
+                        // obviously not: origin of the loop is not in this WFM!
                         // FIXME: error from WFM!!!
                         // nothing else to do: NC stays configured
                         assert nc.getState() == NodeContainer.State.CONFIGURED;
@@ -1012,7 +1012,8 @@ public final class WorkflowManager extends NodeContainer {
                             m_nodes.get(id).resetNode();
                         }
                         // (4) mark the origin of the loop to be executed again
-                        NodeContainer origin = m_nodes.get(sc.getOriginatingNode());
+                        NodeContainer origin 
+                                    = m_nodes.get(sc.getOriginatingNode());
                         assert origin instanceof SingleNodeContainer;
                         ((SingleNodeContainer)origin).enableReQueuing();
                         // (5) enable the body to be queued as well.
@@ -1226,9 +1227,10 @@ public final class WorkflowManager extends NodeContainer {
         if (succs != null) {
             for (ConnectionContainer conn : succs) {
                 NodeID currID = conn.getDest();
-                if (doesChainOfExecutedNodesReachNode(currID, endNode, resultSet)) {
-                    assert (currID == endNode) ||
-                         (m_nodes.get(currID).getState()
+                if (doesChainOfExecutedNodesReachNode(currID, endNode,
+                                        resultSet)) {
+                    assert     (currID == endNode)
+                            || (m_nodes.get(currID).getState()
                                         == NodeContainer.State.EXECUTED);
                     atLeastOneChainDoes = true;
                 }
@@ -1417,12 +1419,37 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /**
+     * Check if a node has fully connected incoming ports.
+     * 
+     * @param id of Node
+     * @return true if all input ports are connected.
+     */
+    private boolean isFullyConnected(final NodeID id) {
+        if (id.equals(this.getID())) {
+            return getParent().isFullyConnected(id);
+        } else {
+            // get node
+            NodeContainer nc = m_nodes.get(id);
+            // get incoming connections
+            Set<ConnectionContainer> incoming = m_connectionsByDest.get(id);
+            if (incoming.size() < nc.getNrInPorts()) {
+                // Note that this enforces FULLY connected nodes
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    /**
      * Configure node and, if this node's output specs have changed
      * also configure it's successors.
      *
      * @param id of node to configure
      */
     private void configure(final NodeID id) {
+        if (!isFullyConnected(id)) {
+            return;
+        }
         // get node
         NodeContainer nc = m_nodes.get(id);
         if (nc == null) {
