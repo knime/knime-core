@@ -172,12 +172,9 @@ public final class ScopeObjectStack {
      */
     public <T extends ScopeContext> T pop(final Class<T> type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
-            ScopeObject e = m_stack.get(i);
+            ScopeObject e = m_stack.remove(i);
             if (type.isInstance(e)) {
-                m_stack.remove(i);
                 return type.cast(e);
-            } else {
-                m_stack.remove(i);
             }
         }
         return null;
