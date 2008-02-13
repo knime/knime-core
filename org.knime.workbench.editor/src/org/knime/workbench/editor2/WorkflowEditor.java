@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.workbench.editor2;
 
@@ -98,7 +98,6 @@ import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowException;
@@ -121,7 +120,6 @@ import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.job.ProgressMonitorJob;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
-import org.knime.workbench.editor2.figures.ProgressFigure;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -131,7 +129,7 @@ import org.knime.workbench.ui.wizards.imports.WizardProjectsImportPage;
  * This is the implementation of the Eclipse Editor used for editing a
  * <code>WorkflowManager</code> object. This also handles the basic GEF stuff
  * (command stack) and hooks into the workbench to provide actions etc. ...
- * 
+ *
  * @author Florian Georg, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
@@ -302,7 +300,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Register the appenders according to logLevel, i.e.
      * PreferenceConstants.P_LOGLEVEL_DEBUG,
      * PreferenceConstants.P_LOGLEVEL_INFO, etc.
-     * 
+     *
      * @param logLevel The new log level.
      */
     private static void setLogLevel(final String logLevel) {
@@ -376,7 +374,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Add the given Appender to the NodeLogger.
-     * 
+     *
      * @param app Appender to add.
      * @return If the given appender was not previously registered.
      */
@@ -391,7 +389,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Removes the given Appender from the NodeLogger.
-     * 
+     *
      * @param app Appender to remove.
      * @return If the given appended was previously registered.
      */
@@ -406,7 +404,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Returns the clipboard content for this editor.
-     * 
+     *
      * @return the clipboard for this editor
      */
     public ClipboardObject getClipboardContent() {
@@ -421,9 +419,9 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Sets the clipboard content for this editor.
-     * 
+     *
      * @param content the content to set into the clipboard
-     * 
+     *
      */
     public void setClipboardContent(final ClipboardObject content) {
 
@@ -509,7 +507,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Deregisters all listeners when the editor is disposed.
-     * 
+     *
      * @see org.eclipse.ui.IWorkbenchPart#dispose()
      */
     @Override
@@ -545,7 +543,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Creates the editor actions.
-     * 
+     *
      * @see org.eclipse.gef.ui.parts.GraphicalEditor#createActions()
      */
     @Override
@@ -633,7 +631,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * This hooks keys like F2 for editing, delete etc. inside the editor...
-     * 
+     *
      * @return The common (shared) key handler.
      */
     protected KeyHandler getCommonKeyHandler() {
@@ -658,7 +656,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Returns the action registry for this editor. It is "lazy" created on
      * first invocation.
-     * 
+     *
      * @see org.eclipse.gef.ui.parts.GraphicalEditor#getActionRegistry()
      */
     @Override
@@ -672,7 +670,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Creates the graphical viewer that is hosted in this editor and hooks
      * keyhandler and edit domain.
-     * 
+     *
      * @see org.eclipse.gef.ui.parts.GraphicalEditor
      *      #createGraphicalViewer(org.eclipse.swt.widgets.Composite)
      */
@@ -718,7 +716,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * This does nothing by now, as all is handled by
      * <code>createGraphicalViewer</code>.
-     * 
+     *
      * @see org.eclipse.gef.ui.parts.GraphicalEditor
      *      #initializeGraphicalViewer()
      */
@@ -729,7 +727,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Configurs the graphical viewer.
-     * 
+     *
      * @see org.eclipse.gef.ui.parts.GraphicalEditor#configureGraphicalViewer()
      */
     @Override
@@ -751,7 +749,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Sets the editor input, that is, the file that contains the serialized
      * workflow manager.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -878,7 +876,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Sets the input in the super class for defaults.
-     * 
+     *
      * @param input the editor input object
      */
     void setDefaultInput(final IEditorInput input) {
@@ -896,7 +894,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Returns the overview for the outline view.
-     * 
+     *
      * @return the overview
      */
     protected NewOverviewOutlinePage getOverviewOutlinePage() {
@@ -915,7 +913,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Returns the undoable <code>PropertySheetPage</code> for this editor.
-     * 
+     *
      * @return the undoable <code>PropertySheetPage</code>
      */
     protected PropertySheetPage getPropertySheetPage() {
@@ -940,7 +938,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Adaptable implementation for Editor, returns the objects used in this
      * editor, if asked for.
-     * 
+     *
      * @see org.eclipse.gef.ui.parts.GraphicalEditor
      *      #getAdapter(java.lang.Class)
      */
@@ -1128,7 +1126,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Shwos a simple information message.
-     * 
+     *
      * @param message the info message to display
      */
     private void showInfoMessage(final String header, final String message) {
@@ -1173,7 +1171,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Notifies property listeners on the editor about changes (e.g. dirty state
      * has changed). Updates the available actions afterwards
-     * 
+     *
      * @see org.eclipse.ui.part.WorkbenchPart#firePropertyChange(int)
      */
     @Override
@@ -1188,7 +1186,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Called when the editors selection has changed. Updates the list of
      * available actions for the new selection in the editor.
-     * 
+     *
      * @see org.eclipse.ui.ISelectionListener#selectionChanged
      *      (org.eclipse.ui.IWorkbenchPart,
      *      org.eclipse.jface.viewers.ISelection)
@@ -1280,7 +1278,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Called when the command stack has changed, that is, a GEF command was
      * executed (Add,Remove,....). This keeps track of the dirty state of the
      * editor.
-     * 
+     *
      * @see org.eclipse.gef.commands.CommandStackListener
      *      #commandStackChanged(java.util.EventObject)
      */
@@ -1307,11 +1305,9 @@ public class WorkflowEditor extends GraphicalEditor implements
     private final Map<NodeID, ProgressMonitorJob> m_dummyNodeJobs =
             new HashMap<NodeID, ProgressMonitorJob>();
 
-    private NodeProgressListener currentListener;
-
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
-     * 
+     *
      * @see org.knime.core.node.workflow.WorkflowListener
      *      #workflowChanged(org.knime.core.node.workflow.WorkflowEvent)
      */
@@ -1336,35 +1332,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             Object o = m_dummyNodeJobs.put(event.getID(), job);
             assert (o == null);
 
-        } else if (event.getType().equals(WorkflowEvent.Type.NODE_STARTED)) {
-            ProgressMonitorJob j = m_dummyNodeJobs.get(event.getID());
-            if (j != null) {
-                LOGGER.debug("'Node Started' event received for "
-                        + event.getOldValue());
-                j.setStateMessage("Executing");
-                // j.schedule();
-            }
-
-            // this code is for the new progress monitor
-            NodeContainer nc = (NodeContainer)event.getOldValue();
-            NodeProgressMonitor pm = (NodeProgressMonitor)event.getNewValue();
-
-            // TODO : check for correctness
-
-            // currentListener = nc.getProgressListener();
-            // if (currentListener == null) {
-            currentListener = new ProgressFigure();
-            nc.addProgressListener(currentListener);
-            // }
-
-            pm.addProgressListener(currentListener);
-
         } else if (event.getType().equals(WorkflowEvent.Type.NODE_FINISHED)) {
+        // TODO: Cleanup, Review, Beautify.
             ProgressMonitorJob j = m_dummyNodeJobs.remove(event.getID());
-            NodeContainer nc = (NodeContainer)event.getOldValue();
-            if (nc != null && currentListener != null) {
-                nc.removeNodeProgressListener(currentListener);
-            }
             if (j != null) {
                 j.finish();
             }
@@ -1393,7 +1363,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * we need to listen for resource changes to get informed if the currently
      * opened file in the navigator is renamed or deleted.
-     * 
+     *
      * @see org.eclipse.core.resources.IResourceChangeListener
      *      #resourceChanged(org.eclipse.core.resources.IResourceChangeEvent)
      */
@@ -1413,7 +1383,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Simple visitor, checks wheter the currently opened file has been renamed
      * and sets the new name in the editors' tab.
-     * 
+     *
      * @author Florian Georg, University of Konstanz
      */
     private class MyResourceDeltaVisitor implements IResourceDeltaVisitor {
@@ -1561,7 +1531,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      * Creates the underlying <code>WorkflowManager</code> for this editor.
      * Therefore the settings are loaded and the editor registeres itself as
      * listener to get workflow events.
-     * 
+     *
      * @param settings the settings representing this workflow
      */
     // void createWorkflowManager(final NodeSettings settings) {
@@ -1570,7 +1540,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     // }
     /**
      * Sets the underlying workflow manager for this editor.
-     * 
+     *
      * @param manager the workflow manager to set
      */
     void setWorkflowManager(final WorkflowManager manager) {
@@ -1586,7 +1556,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Transposes a point according to the given zoom manager.
-     * 
+     *
      * @param zoomManager the zoom manager providing the zoom levels
      * @param pointToAdapt the point to adapt
      */
@@ -1609,7 +1579,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Adapts a point according to the given zoom manager.
-     * 
+     *
      * @param zoomManager the zoom manager providing the zoom levels
      * @param pointToAdapt the point to adapt
      */
@@ -1631,7 +1601,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     /**
      * Adapts a precission point according to the given zoom manager.
-     * 
+     *
      * @param zoomManager the zoom manager providing the zoom levels
      * @param pointToAdapt the point to adapt
      */
@@ -1655,7 +1625,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Set if the workflow loading process was canceled. Should only be invoked
      * during workflow loading.
-     * 
+     *
      * @param canceled canceled or not
      * @see LoadWorkflowRunnable
      */
@@ -1666,7 +1636,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Set if the workflow loading process was canceled and a message. Should
      * only be invoked during workflow loading.
-     * 
+     *
      * @param message the reason for the cancelation
      * @see LoadWorkflowRunnable
      */
@@ -1678,7 +1648,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Set if the workflow loading process encountered an exception. Should only
      * be invoked during workflow loading.
-     * 
+     *
      * @param exception the exception to set
      * @see LoadWorkflowRunnable
      */
@@ -1689,7 +1659,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Set if the workflow loading process. Should only be invoked during
      * workflow loading.
-     * 
+     *
      * @param dirty whether the editor should be marked as dirty or not
      * @see LoadWorkflowRunnable
      */

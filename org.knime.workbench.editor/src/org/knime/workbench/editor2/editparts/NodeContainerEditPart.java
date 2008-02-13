@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   30.05.2005 (Florian Georg): created
  */
@@ -75,7 +75,7 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 /**
  * Edit part for node containers. This also listens to interesting events, like
  * changed extra infos or execution states
- * 
+ *
  * @author Florian Georg, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
@@ -122,7 +122,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     /**
      * Returns the parent WFM.
-     * 
+     *
      * @return The hosting WFM
      */
     public WorkflowManager getWorkflow() {
@@ -153,8 +153,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         addEditPartListener(this);
 
         // If we already have extra info, init figure now
-        // 
-        // 
+        //
+        //
         if (getNodeContainer().getUIInformation() != null) {
             initFigureFromExtraInfo((ModellingNodeExtraInfo)getNodeContainer()
                     .getUIInformation());
@@ -205,10 +205,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void deactivate() {
         super.deactivate();
-        getNodeContainer().removeNodeStateChangeListener(this);
-        getNodeContainer().removeNodeMessageListener(this);
-        getNodeContainer().removeNodeProgressListener(this);
-        getNodeContainer().removeUIInformationListener(this);
+        NodeContainer nc = getNodeContainer();
+        nc.removeNodeStateChangeListener(this);
+        nc.removeNodeMessageListener(this);
+        nc.removeNodeProgressListener(this);
+        nc.removeUIInformationListener(this);
     }
 
     /**
@@ -217,23 +218,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     @Override
     protected IFigure createFigure() {
 
-        // get the node progress listener from the node container
-        // if not set yet create a new progress figure (listener)
-        // set it in the container and create the figure with either
-        // the old or new progress figure
-
-        NodeProgressListener currentListener;
-
-        // TODO: check this
-//        currentListener = getNodeContainer().getProgressListener();
-//        if (currentListener == null) {
-            currentListener = new ProgressFigure();
-            getNodeContainer().addProgressListener(currentListener);
-//        }
-
-        // create the visuals for the node container
+        // create the visuals for the node container.
         NodeContainerFigure nodeFigure =
-                new NodeContainerFigure((ProgressFigure)currentListener);
+                new NodeContainerFigure(new ProgressFigure());
 
         // init the user specified node name
         nodeFigure.setCustomName(getCustomName());
@@ -241,9 +228,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         return nodeFigure;
     }
 
+
     /**
      * Return the content pane for the model children (= ports).
-     * 
+     *
      * @see org.eclipse.gef.GraphicalEditPart#getContentPane()
      */
     @Override
@@ -279,7 +267,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     /**
      * Installs the COMPONENT_ROLE for this edit part.
-     * 
+     *
      * @see org.eclipse.gef.editparts.AbstractEditPart#createEditPolicies()
      */
     @Override
@@ -304,7 +292,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * Returns the model children (= the ports) of the
      * <code>NodeContainer</code> managed by this edit part. Note that in/out
      * ports are handled the same.
-     * 
+     *
      * @see org.eclipse.gef.editparts.AbstractEditPart#getModelChildren()
      */
     @Override
@@ -323,7 +311,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     /**
      * Refreshes the visuals for this node representation.
-     * 
+     *
      * @see org.eclipse.gef.editparts.AbstractEditPart#refreshVisuals()
      */
     @Override
@@ -401,8 +389,13 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void progressChanged(final NodeProgressEvent pe) {
-
+        // forward the new progress to our progress figure
+        ((NodeContainerFigure)getFigure()).getProgressFigure().progressChanged(
+                pe.getNodeProgress());
     }
 
     public void messageChanged(final NodeMessageEvent messageEvent) {
@@ -514,7 +507,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * Initializes the figure with data from the node extra info object. This
      * must be done only once, but after the node has been added to the WFM
      * (otherwise the extra info object is not available).
-     * 
+     *
      * @param ei Extra info to provide to the figure
      */
     private void initFigureFromExtraInfo(final ModellingNodeExtraInfo ei) {
@@ -624,7 +617,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * Marks this node parts figure. Used to hilite it from the rest of the
      * parts.
-     * 
+     *
      * @see NodeContainerEditPart#unmark()
      */
     public void mark() {
@@ -634,7 +627,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     /**
      * Resets the marked part.
-     * 
+     *
      * @see NodeContainerEditPart#mark()
      */
     public void unmark() {
@@ -645,7 +638,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * Overridden to return a custom <code>DragTracker</code> for
      * NodeContainerEditParts.
-     * 
+     *
      * @see org.eclipse.gef.EditPart#getDragTracker(Request)
      */
     @Override
@@ -710,7 +703,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     /**
      * Opens the node dialog on double click.
-     * 
+     *
      */
     public void openDialog() {
         NodeContainer container = (NodeContainer)getModel();
@@ -731,7 +724,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         LOGGER.debug(container.getName()
                 + ": Opening node dialog after double click...");
 
-        //  
+        //
         // This is embedded in a special JFace wrapper dialog
         //
         try {
@@ -754,7 +747,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     + "'. That is most likely an implementation error.", t);
         }
 
-    }
+        }
 
     private void openSubWorkflowEditor(NodeContainer container) {
         // open new editor for subworkflow
@@ -774,7 +767,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
         return;
     }
-    
+
     public void childAdded(final EditPart child, final int index) {
         // TODO Auto-generated method stub
 

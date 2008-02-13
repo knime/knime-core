@@ -43,8 +43,6 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.NodeProgress;
-import org.knime.core.node.workflow.NodeProgressEvent;
-import org.knime.core.node.workflow.NodeProgressListener;
 
 /**
  * This figure creates the progress bar within a node container figure.
@@ -52,7 +50,7 @@ import org.knime.core.node.workflow.NodeProgressListener;
  * @author Christoph Sieb, University of Konstanz
  */
 public class ProgressFigure extends RectangleFigure implements
-        NodeProgressListener, MouseMotionListener {
+        MouseMotionListener {
 
     // private static final NodeLogger LOGGER =
     // NodeLogger.getLogger(ProgressFigure.class);
@@ -382,17 +380,14 @@ public class ProgressFigure extends RectangleFigure implements
 
     /**
      * Updates UI after progress has changed.
-     *
-     * @see org.knime.core.node.NodeProgressListener
-     *      #progressChanged(NodeProgressEvent)
+     * @param pe the new progress to display
      */
-    public synchronized void progressChanged(final NodeProgressEvent evt) {
+    public synchronized void progressChanged(final NodeProgress pe) {
 
         if (!ON) {
             return;
         }
 
-        NodeProgress pe =  evt.getNodeProgress();
         int newWorked = m_currentWorked;
         if (pe.hasProgress()) {
             double progress = pe.getProgress().doubleValue();
