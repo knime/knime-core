@@ -25,6 +25,7 @@ package org.knime.core.node.workflow;
 
 import java.net.URL;
 
+import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.GenericNodeModel;
@@ -48,11 +49,12 @@ import org.w3c.dom.Element;
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
 public final class SingleNodeContainer extends NodeContainer
-    implements NodeMessageListener {
+    implements NodeMessageListener, NodeProgressListener {
 
     private final Node m_node;
 
-    private NodeProgressMonitor m_progressMonitor;
+    private final NodeProgressMonitor m_progressMonitor =
+            new DefaultNodeProgressMonitor(this);
 
     /**
      * Create new NodeContainer based on existing Node.
@@ -76,6 +78,7 @@ public final class SingleNodeContainer extends NodeContainer
             + " did not provide Node instance for " + getClass().getSimpleName()
             + " with id \"" + id + "\"";
         m_node.addMessageListener(this);
+
     }
 
     /**
@@ -135,23 +138,6 @@ public final class SingleNodeContainer extends NodeContainer
         return m_node.getNrViews();
     }
 
-
-    /* ------------------ Progress ---------------- */
-
-    /**
-     * @return the progressMonitor
-     */
-    NodeProgressMonitor getProgressMonitor() {
-        return m_progressMonitor;
-    }
-
-    /**
-     * @param progressMonitor the progressMonitor to set
-     */
-    void setProgressMonitor(final NodeProgressMonitor progressMonitor) {
-        m_progressMonitor = progressMonitor;
-    }
-
     /**
      * Set a new JobExecutor for this node but before check for valid state.
      *
@@ -169,7 +155,7 @@ public final class SingleNodeContainer extends NodeContainer
     }
 
     private ExecutionContext createExecutionContext() {
-        return new ExecutionContext(getProgressMonitor(), getNode(),
+        return new ExecutionContext(m_progressMonitor, getNode(),
                 getParent().getGlobalTableRepository());
     }
 
@@ -358,6 +344,9 @@ public final class SingleNodeContainer extends NodeContainer
             case QUEUED:
                 m_node.clearLoopStatus();
                 setNewState(State.EXECUTING);
+                // TODO: the progress monitor should not be accessible from the
+                // public world.
+                ec.getProgressMonitor().reset();
                 boolean success = m_node.execute(inObjects, ec);
                 if (success) {
                     if (m_node.getLoopStatus() == null) {
@@ -460,6 +449,18 @@ public final class SingleNodeContainer extends NodeContainer
     @Override
     public String toString() {
         return m_node.getName() + "(" + getID() + ")" + ";status:" + getState();
+    }
+
+    /* ---------------- progress forwarding methods ------------------- */
+    /**
+     * {@inheritDoc}
+     */
+    public void progressChanged(final NodeProgressEvent pe) {
+        // set our ID as source ID
+        NodeProgressEvent event =
+                new NodeProgressEvent(getID(), pe.getNodeProgress());
+        // forward the event
+        notifyProgressListeners(event);
     }
 
     // dummy methods -----------------------------------------------------

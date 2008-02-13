@@ -79,13 +79,12 @@ public abstract class NodeContainer {
      * internal changes of status etc.
      */
     final protected Object m_dirtyNode = new Object();
-    
+
     /*--------- listener administration------------*/
 
 
     private final CopyOnWriteArraySet<NodeStateChangeListener> m_stateChangeListeners =
             new CopyOnWriteArraySet<NodeStateChangeListener>();
-
 
     private final CopyOnWriteArraySet<NodeMessageListener> m_messageListeners =
         new CopyOnWriteArraySet<NodeMessageListener>();
@@ -97,6 +96,7 @@ public abstract class NodeContainer {
         new CopyOnWriteArraySet<NodeUIInformationListener>();
 
     private UIInformation m_uiInformation;
+
 
     /**
      * Create new NodeContainer with IDLE state.
@@ -114,18 +114,18 @@ public abstract class NodeContainer {
         m_id = id;
         m_state = State.IDLE;
     }
-    
-    NodeContainer(final WorkflowManager parent, final NodeID id, 
+
+    NodeContainer(final WorkflowManager parent, final NodeID id,
             final NodeContainerMetaPersistor persistor) {
         this(parent, id);
-        assert persistor.getState() != null : "State of node \"" + id 
+        assert persistor.getState() != null : "State of node \"" + id
         + "\" in \"" + persistor.getClass().getSimpleName() + "\" is null";
         m_state = persistor.getState();
         m_customDescription = persistor.getCustomDescription();
         m_customName = persistor.getCustomName();
         m_uiInformation = persistor.getUIInfo();
     }
-    
+
     /**
      * @return parent workflowmanager holding this node (or null if root).
      */
@@ -177,6 +177,7 @@ public abstract class NodeContainer {
        return m_progressListeners.add(listener);
    }
 
+
    /**
     *
     * @param listener existing listener to the node progress
@@ -186,16 +187,6 @@ public abstract class NodeContainer {
    public boolean removeNodeProgressListener(
            final NodeProgressListener listener) {
        return m_progressListeners.remove(listener);
-   }
-
-   /**
-    *
-    * @return a progress event containing the current progress and progress
-    *         message
-    */
-   public NodeProgress getProgress() {
-       // TODO: add progress
-       return null;
    }
 
    /**
@@ -209,6 +200,7 @@ public abstract class NodeContainer {
            l.progressChanged(e);
        }
    }
+
 
    /* ------------- message ---------------------*/
 
@@ -473,10 +465,10 @@ public abstract class NodeContainer {
 
     abstract void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException;
-    
+
     abstract void saveSettings(final NodeSettingsWO settings)
     throws InvalidSettingsException;
-    
+
 
     abstract boolean areSettingsValid(final NodeSettingsRO settings);
 

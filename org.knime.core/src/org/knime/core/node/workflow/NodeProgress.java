@@ -25,8 +25,10 @@
 package org.knime.core.node.workflow;
 
 /**
- * Progress events are fired when the progress information has changed, either
- * the progress value between 0 and 1, or the progress message.
+ * Contained in a {@link NodeProgressEvent} which is fired when the progress
+ * information has changed, either the progress (value between 0 and 1 or
+ * <code>null</code>), or the progress message (could also be
+ * <code>null</code>).
  *
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -41,17 +43,21 @@ public final class NodeProgress {
     /**
      * Create a progress event based on progress value and message. Both
      * arguments can be <code>null</code>.
-     * @param progress The progress value or null.
-     * @param message The progress message or null.
+     *
+     * @param progress The progress value or <code>null</code>.
+     * @param message The progress message or <code>null</code>.
      */
     public NodeProgress(final Double progress, final String message) {
         m_progress = progress;
-        m_message  = message;
+        m_message = message;
     }
 
     /**
-     * If the progress value has changed.
-     * @return <code>true</code> if the value has changed.
+     * If the progress value has changed (more correctly is not
+     * <code>null</code>).
+     *
+     * @return <code>true</code> if the progress value is not
+     *         <code>null</code>.
      */
     public boolean hasProgress() {
         return m_progress != null;
@@ -59,23 +65,28 @@ public final class NodeProgress {
 
     /**
      * Current progress value or null.
-     * @return The progress value between 0 and 1, or null.
+     *
+     * @return current progress value between 0 and 1, or <code>null</code>.
      */
     public Double getProgress() {
         return m_progress;
     }
 
     /**
-     * Current progress message or null.
-     * @return The progress message or null.
+     * Current progress message or <code>null</code>.
+     *
+     * @return current progress message or <code>null</code>.
      */
     public String getMessage() {
         return m_message;
     }
 
     /**
-     * If the progress message has changed.
-     * @return <code>true</code> if the progress message has changed.
+     * If the progress message has changed (more correctly is not
+     * <code>null</code>).
+     *
+     * @return <code>true</code> if the progress message is not
+     *         <code>null</code>.
      */
     public boolean hasMessage() {
         return m_message != null;

@@ -148,6 +148,21 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     }
 
     /**
+     * Resets this monitor. I. e. no message and no progress is set. The cancel
+     * flag is cleared. The list of progress listeners is not affected.<br>
+     * NOTE: No notification is send to listeners!
+     * {@inheritDoc}
+     */
+    public synchronized void reset() {
+        if ((m_progress != null) || (m_message != null)) {
+            m_changed = true;
+        }
+        m_cancelExecute = false;
+        m_progress = null;
+        m_message = null;
+    }
+
+    /**
      * @return <code>true</code> if the execution of the
      *         <code>NodeModel</code> has been canceled.
      */
@@ -188,7 +203,6 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
             final String message) {
         if (setProgressIntern(progress) | setMessageIntern(message, null)) {
             m_changed = true;
-            fireProgressChanged();
         }
     }
 
@@ -201,7 +215,6 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
     public synchronized void setProgress(final double progress) {
         if (setProgressIntern(progress)) {
             m_changed = true;
-            fireProgressChanged();
         }
     }
 
@@ -210,7 +223,6 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      */
     public synchronized void setMessage(final String message) {
         setProgress(message);
-        fireProgressChanged();
     }
 
     /**
@@ -218,13 +230,13 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      *
      * @param message The text message shown in the progress monitor.
      */
-    public void setProgress(final String message) {
+    public synchronized void setProgress(final String message) {
         if (setMessageIntern(message, null)) {
             m_changed = true;
         }
     }
 
-    private void appendMessage(final String append) {
+    private synchronized void appendMessage(final String append) {
         if (setMessageIntern(m_message, append)) {
             m_changed = true;
         }
@@ -314,7 +326,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                         m_append));
         for (NodeProgressListener l : m_listeners) {
             try {
-            	// TODO: provide actual NodeID here
+                // we can't provide a useful node id here
                 l.progressChanged(new NodeProgressEvent(new NodeID(0), pe));
             } catch (Throwable t) {
                 LOGGER.error("Exception while notifying listeners", t);
@@ -369,8 +381,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
 
         /**
          * Must not be called. Throws IllegalStateException.
-         *
-         * @see NodeProgressMonitor#addProgressListener(NodeProgressListener)
+         * {@inheritDoc}
          */
         public void addProgressListener(final NodeProgressListener l) {
             throw new IllegalStateException("This method must not be called.");
@@ -379,7 +390,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /**
          * Delegates to parent.
          *
-         * @see NodeProgressMonitor#checkCanceled()
+         * {@inheritDoc}
          */
         public void checkCanceled() throws CanceledExecutionException {
             m_parent.checkCanceled();
@@ -399,10 +410,17 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /**
          * Get the subprogress, the value scaled to [0, 1].
          *
-         * @see NodeProgressMonitor#getProgress()
+         * {@inheritDoc}
          */
         public Double getProgress() {
             return m_lastProg;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void reset() {
+            throw new IllegalStateException("This method must not be called.");
         }
 
         /**
@@ -417,7 +435,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /**
          * Must not be called. Throws IllegalStateException.
          *
-         * @see NodeProgressMonitor#removeProgressListener(NodeProgressListener)
+         * {@inheritDoc}
          */
         public void removeProgressListener(final NodeProgressListener l) {
             throw new IllegalStateException("This method must not be called.");
@@ -426,7 +444,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /**
          * Must not be called. Throws IllegalStateException.
          *
-         * @see NodeProgressMonitor#setExecuteCanceled()
+         * {@inheritDoc}
          */
         public void setExecuteCanceled() {
             throw new IllegalStateException("This method must not be called.");
@@ -442,7 +460,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         /**
          * Delegates to parent.
          *
-         * @see NodeProgressMonitor#setProgress(String)
+          * {@inheritDoc}
          */
         public void setProgress(final String message) {
             setProgress(message, true);
@@ -517,8 +535,8 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
                 m_parent.setProgress(subProgress);
                 Double newProgressOfParent = m_parent.getProgress();
                 if (newProgressOfParent != null) {
-                    if (progressOfParent == null 
-                            || progressOfParent.doubleValue() 
+                    if (progressOfParent == null
+                            || progressOfParent.doubleValue()
                                 != newProgressOfParent.doubleValue()) {
                         m_lastProg = boundedProgress;
                     }
