@@ -170,8 +170,6 @@ public class CreateConnectionCommand extends Command {
                 return false;
             }
         // let check the workflow manager if the connection can be created
-        // in case it can not an exception is thrown which is caught and
-        // displayed to the user
             return m_manager.canAddConnection(m_sourceNode.getNodeContainer()
                     .getID(), m_sourcePortID, m_targetNode.getNodeContainer()
                     .getID(), m_targetPortID);
