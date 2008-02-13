@@ -523,23 +523,36 @@ public final class WorkflowManager extends NodeContainer {
     public boolean canAddConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort) {
+        // get NodeContainer for source/dest - can be null for WFM-connections!
         NodeContainer sourceNode = m_nodes.get(source);
         NodeContainer destNode = m_nodes.get(dest);
         // sanity checks (index/null)
         if (!(source.equals(this.getID()) || (sourceNode != null))) {
-            return false;
+            return false;  // source node exists or is WFM itself
         }
         if (!(dest.equals(this.getID()) || (destNode != null))) {
-            return false;
-        }
-        if (sourceNode.getNrOutPorts() <= sourcePort) {
-            return false;
-        }
-        if (destNode.getNrInPorts() <= destPort) {
-            return false;
+            return false;  // dest node exists or is WFM itself
         }
         if ((sourcePort < 0) || (destPort < 0)) {
-            return false;
+            return false;  // port indices are >= 0
+        }
+        if (sourceNode != null) {
+            if (sourceNode.getNrOutPorts() <= sourcePort) {
+                return false;  // source Node index exists
+            }
+        } else {
+            if (this.getNrInPorts() <= sourcePort) {
+                return false;  // WFM inport index exists
+            }
+        }
+        if (destNode != null) {
+            if (destNode.getNrInPorts() <= destPort) {
+                return false;  // dest Node index exists
+            }
+        } else {
+            if (this.getNrOutPorts() <= destPort) {
+                return false;  // WFM outport index exists
+            }
         }
         // check for type compatibility:
         
