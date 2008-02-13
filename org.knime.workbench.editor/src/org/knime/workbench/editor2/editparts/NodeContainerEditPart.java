@@ -716,21 +716,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeContainer container = (NodeContainer)getModel();
 
         if (container instanceof WorkflowManager) {
-            // open new editor for subworkflow
-            LOGGER.debug("opening new editor for sub-workflow");
-            try {
-                WorkflowEditor parent = (WorkflowEditor)PlatformUI
-                    .getWorkbench().getActiveWorkbenchWindow()
-                        .getActivePage().getActiveEditor();
-                WorkflowManagerInput input = new WorkflowManagerInput(
-                        (WorkflowManager)container, parent);
-                PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-                    .getActivePage().openEditor(input,
-                            "org.knime.workbench.editor.WorkflowEditor");
-            } catch (PartInitException e) {
-                LOGGER.error("Error while opening new editor", e);
-                e.printStackTrace();
-            }
+            openSubWorkflowEditor(container);
             return;
         }
         // if this node does not have a dialog
@@ -768,6 +754,25 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     + "'. That is most likely an implementation error.", t);
         }
 
+    }
+
+    private void openSubWorkflowEditor(NodeContainer container) {
+        // open new editor for subworkflow
+        LOGGER.debug("opening new editor for sub-workflow");
+        try {
+            final WorkflowEditor parent = (WorkflowEditor)PlatformUI
+                .getWorkbench().getActiveWorkbenchWindow()
+                    .getActivePage().getActiveEditor();
+            WorkflowManagerInput input = new WorkflowManagerInput(
+                    (WorkflowManager)container, parent);
+            PlatformUI.getWorkbench()
+                .getActiveWorkbenchWindow().getActivePage().openEditor(input,
+                        "org.knime.workbench.editor.WorkflowEditor");        
+        } catch (PartInitException e) {
+            LOGGER.error("Error while opening new editor", e);
+            e.printStackTrace();
+        }
+        return;
     }
     
     public void childAdded(final EditPart child, final int index) {
