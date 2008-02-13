@@ -373,8 +373,11 @@ public abstract class GenericNodeModel {
 
         // TODO: check outgoing types! (inNode!)
 
+        if (outData == null) {
+            outData = new PortObject[getNrOutPorts()];
+        }
         // if number of out tables does not match: fail
-        if (outData == null || outData.length != getNrOutPorts()) {
+        if (outData.length != getNrOutPorts()) {
             throw new IllegalStateException(
                     "Invalid result. Execution failed. "
                             + "Reason: Incorrect implementation; the execute"
@@ -385,7 +388,10 @@ public abstract class GenericNodeModel {
 
         // check the result, data tables must not be null
         for (int i = 0; i < outData.length; i++) {
-            if (outData[i] == null) {
+            // do not check for null output tables if this is the end node
+            // of a loop and another loop iteration is requested
+            if ((m_scopeContextStackContainer.getLoopStatus() == null)
+                    && (outData[i] == null)) {
                 m_logger.error("Execution failed: Incorrect implementation;"
                         + " the execute method in "
                         + this.getClass().getSimpleName()

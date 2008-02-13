@@ -627,12 +627,16 @@ public final class Node {
                 notifyMessageListeners(m_message);
             }
         }
-        
+
         // check for compatible output PortObjects
         for (int i = 0; i < newOutData.length; i++) {
             PortType thisType = m_model.getOutPortType(i);
-            if (!(thisType.getPortObjectClass().isAssignableFrom(
-                    newOutData[i].getClass()))) {
+            assert (newOutData[i] != null)
+                || (m_model.getScopeContextStackContainer()
+                        .getLoopStatus() != null)
+                : "Null output from non-loopending node";
+            if ((newOutData[i] != null) && !thisType.getPortObjectClass()
+                    .isAssignableFrom(newOutData[i].getClass())) {
                 m_logger.error("Connection Error: Mismatch" +
                         " of output port types (port " + i + ").");
                 m_logger.error("  (Wanted: "

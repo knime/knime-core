@@ -1165,6 +1165,7 @@ public final class WorkflowManager extends NodeContainer {
         Set<NodeID> matchingNodes = new HashSet<NodeID>();
         doesChainOfExecutedNodesReachNode(startNode, endNode, matchingNodes);
         matchingNodes.remove(startNode);
+        matchingNodes.remove(endNode);
         return matchingNodes;
     }
 
