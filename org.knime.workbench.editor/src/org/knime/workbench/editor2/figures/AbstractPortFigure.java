@@ -1,5 +1,4 @@
-/*
- * -------------------------------------------------------------------
+/* ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
@@ -14,13 +13,13 @@
  * otherwise expressly permitted in writing by the copyright owner or
  * as specified in the license file distributed with this product.
  *
- * If you have any questions please contact the copyright holder:
+ * If you have any quesions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * -------------------------------------------------------------------
- *
+ * ---------------------------------------------------------------------
+ * 
  * History
- *   31.05.2005 (Florian Georg): created
+ *   13.02.2008 (Fabian Dill): created
  */
 package org.knime.workbench.editor2.figures;
 
@@ -38,53 +37,56 @@ import org.knime.core.node.ModelContent;
 import org.knime.core.node.PortType;
 
 /**
- * Abstract figure for common displaying behaviour of node ports.
- *
- * @author Florian Georg, University of Konstanz
+ * 
  * @author Fabian Dill, University of Konstanz
  */
-public abstract class AbstractNodePortFigure extends Shape {
-    /** width of a port figure. * */
-    public static final int WIDTH = 9;
-
-    /** height of a port figure. * */
-    public static final int HEIGHT = 9;
-
-    private final int m_numPorts;
-
-    private final PortType m_type;
-
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            AbstractNodePortFigure.class);
-
+public abstract class AbstractPortFigure extends Shape {
+    
+    
+    private final int m_nrOfPorts;
+    private final PortType m_portType;
+    
+    /** Size constant for the workflow ports. */
+    protected static final int WF_PORT_SIZE = 20;
+    
+    /** Size constant for node ports. */
+    protected static final int NODE_PORT_SIZE = 9;
 
     /**
-     * Abstract consturctor, must be called.
      *
      * @param type port type
-     * @param numPorts number of ports
+     * @param nrOfPorts total number of ports
      */
-    public AbstractNodePortFigure(final PortType type,
-            final int numPorts) {
-        m_type = type;
-        m_numPorts = numPorts;
+    public AbstractPortFigure(final PortType type,
+            final int nrOfPorts) {
+        m_portType = type;
+        m_nrOfPorts = nrOfPorts;
+    }
+
+    /**
+     * 
+     * @return the type of the port
+     */
+    protected PortType getType() {
+        return m_portType;
     }
 
     /**
      *
-     * @return type of the port
+     * @return total number of ports
      */
-    public PortType getType() {
-        return m_type;
+    protected int getNrPorts() {
+        return m_nrOfPorts;
     }
-
+    
     /**
      * We need to set the colors explicitly dependend on the {@link PortType}.
      * Currently supported are {@link BufferedDataTable#TYPE} : black, 
-     * {@link ModelContent#TYPE} : blue, {@link DBConnection#TYPE} : 
+     * {@link ModelContent#TYPE} : blue, {@link DatabaseContent#TYPE} : 
      * dark yellow.
      * 
      * @return the background color, dependend on the {@link PortType}
+     * 
      * {@inheritDoc}
      */
     @Override
@@ -155,7 +157,13 @@ public abstract class AbstractNodePortFigure extends Shape {
             graphics.drawPolygon(points);
         }
     }
-
+    
+    //////////////////////////////////////////////////////////////////
+    //
+    // ABSTRACT METHODS
+    //
+    //////////////////////////////////////////////////////////////////
+    
     /**
      * Create a point list for the triangular figure (a polygon).
      *
@@ -164,7 +172,7 @@ public abstract class AbstractNodePortFigure extends Shape {
      */
     protected abstract PointList createShapePoints(final Rectangle r);
 
-
+    
     /**
      * Children must return a <code>Locator</code> that calculate the position
      * inside the hosting figure.
@@ -172,12 +180,5 @@ public abstract class AbstractNodePortFigure extends Shape {
      * @return The locator
      */
     public abstract Locator getLocator();
-
-    /**
-     * @return Returns the allover number of ports.
-     */
-    public int getNumPorts() {
-        return m_numPorts;
-    }
-
+    
 }

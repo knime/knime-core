@@ -18,30 +18,18 @@
  */
 package org.knime.workbench.editor2.figures;
 
-import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.Graphics;
-import org.eclipse.draw2d.Locator;
-import org.eclipse.draw2d.Shape;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.widgets.Display;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.DatabaseContent;
-import org.knime.core.node.ModelContent;
 import org.knime.core.node.PortType;
 
 /**
  *
  * @author Fabian Dill, University of Konstanz
  */
-public abstract class AbstractWorkflowPortFigure extends Shape {
+public abstract class AbstractWorkflowPortFigure extends AbstractPortFigure {
 
     /** Constant for the width and height of the port figure. */
     protected static final int SIZE = 20;
-
-    private final int m_nrOfPorts;
     private final int m_portIndex;
-    private final PortType m_portType;
 
     /**
      *
@@ -51,28 +39,10 @@ public abstract class AbstractWorkflowPortFigure extends Shape {
      */
     public AbstractWorkflowPortFigure(final PortType type,
             final int nrOfPorts, final int portIndex) {
-        m_portType = type;
-        m_nrOfPorts = nrOfPorts;
+        super(type, nrOfPorts);
         m_portIndex = portIndex;
-        setBackgroundColor(ColorConstants.darkBlue);
-        setFill(true);
-        setFillXOR(false);
-        setOutline(true);
-        setForegroundColor(ColorConstants.black);
     }
-
-    protected PortType getType() {
-        return m_portType;
-    }
-
-    /**
-     *
-     * @return total number of ports
-     */
-    protected int getNrPorts() {
-        return m_nrOfPorts;
-    }
-
+    
     /**
      *
      * @return index of this port
@@ -81,75 +51,18 @@ public abstract class AbstractWorkflowPortFigure extends Shape {
         return m_portIndex;
     }
 
+
     /**
-     *
+     * In addition fires a figure moved event in order to notify 
+     * the referring connections where to start/end.
+     * 
      * {@inheritDoc}
      */
-    @Override
-    public boolean isOpaque() {
-        return true;
-    }
-
-
     @Override
     public void paint(final Graphics graphics) {
-        fireFigureMoved();
         super.paint(graphics);
-    }
-    
-    @Override
-    public Color getBackgroundColor() {
-        Color color = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
-        if (getType().equals(ModelContent.TYPE)) {
-            // model
-            color = Display.getCurrent().getSystemColor(SWT.COLOR_BLUE);
-        } else if (getType().equals(BufferedDataTable.TYPE)) {
-            // data
-            color = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
-        } else if (getType().equals(DatabaseContent.TYPE)) {
-            // database
-            color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_YELLOW);
-        }
-        return color;
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public void outlineShape(final Graphics graphics) {
-        if (m_portType.equals(BufferedDataTable.TYPE)) {
-            drawTriangle(graphics);
-        }
+        fireFigureMoved();
     }
 
 
-    /**
-     *
-     * {@inheritDoc}
-     */
-     @Override
-     protected void fillShape(final Graphics g) {
-         if (!m_portType.equals(BufferedDataTable.TYPE)) {
-             drawSquare(g);
-         }
-     }
-
-     /**
-      * Draws a data inport (triangle).
-      *
-      * @param g graphics context
-      */
-     protected abstract void drawTriangle(final Graphics g);
-
-     /**
-      * Draws a model port (filled square).
-      *
-      * @param g graphics context
-      */
-     protected abstract void drawSquare(final Graphics g);
-
-
-     public abstract Locator getLocator();
 }

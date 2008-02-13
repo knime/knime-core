@@ -37,6 +37,7 @@ import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowInPort;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.WorkflowContextMenuProvider;
 import org.knime.workbench.editor2.figures.NewToolTipFigure;
 import org.knime.workbench.editor2.figures.WorkflowInPortFigure;
 
@@ -145,11 +146,33 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
         return f;
     }
 
+    /**
+     * The context menu ({@link WorkflowContextMenuProvider#buildContextMenu(
+     * org.eclipse.jface.action.IMenuManager)}) reads and resets the selection 
+     * state.
+     * 
+     * @return true if the underlying workflow in port figure was clicked, false
+     *  otherwise
+     * @see WorkflowContextMenuProvider#buildContextMenu(
+     *  org.eclipse.jface.action.IMenuManager)
+     * @see WorkflowInPortFigure#setSelected(boolean)
+     *  
+     */
     public boolean isSelected() {
         return ((WorkflowInPortFigure)getFigure()).isSelected();
     }
 
-    
+    /**
+     * The context menu ({@link WorkflowContextMenuProvider#buildContextMenu(
+     * org.eclipse.jface.action.IMenuManager)}) reads and resets the selection 
+     * state.
+     * 
+     * @param isSelected sets and resets the selectino state of the figure
+     * 
+     * @see WorkflowContextMenuProvider#buildContextMenu(
+     *  org.eclipse.jface.action.IMenuManager)
+     *  @see WorkflowInPortFigure#setSelected(boolean)
+     */
     public void setSelected(final boolean isSelected) {
         ((WorkflowInPortFigure)getFigure()).setSelected(isSelected);
     }
@@ -210,6 +233,7 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
      *      #getModelSourceConnections()
      */
     @Override
+    @SuppressWarnings("unchecked")
     protected List getModelTargetConnections() {
         return Collections.EMPTY_LIST;
     }

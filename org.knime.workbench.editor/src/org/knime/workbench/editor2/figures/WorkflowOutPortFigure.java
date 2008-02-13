@@ -18,12 +18,11 @@
  */
 package org.knime.workbench.editor2.figures;
 
-import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Locator;
-import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.PortType;
 
 /**
@@ -49,55 +48,50 @@ public class WorkflowOutPortFigure extends AbstractWorkflowPortFigure  {
     }
 
 
-    @Override
-    public void addNotify() {
-        super.addNotify();
-        Rectangle parent = getParent().getBounds().getCopy();
-        int yPos = (parent.height / (getNrPorts() + 1)) * (getPortIndex() + 1);
-        setBounds(new Rectangle(new Point(parent.width - SIZE, yPos),
-                new Dimension(SIZE, SIZE)));
-        fireFigureMoved();
-    }
-
     /**
-     *
+     * 
      * {@inheritDoc}
      */
     @Override
-    protected void drawSquare(final Graphics g) {
-        Rectangle parent = getParent().getBounds().getCopy();
-        int yPos = (parent.height / (getNrPorts() + 1)) * (getPortIndex() + 1);
-        getBounds().x = parent.width - SIZE;
-        getBounds().y = yPos;
-        getBounds().width = SIZE;
-        getBounds().height = SIZE;
-        Rectangle r = bounds.getCopy();
-//        LOGGER.info("drawing square " + r + " bounds: " + bounds);
-        g.fillRectangle(r);
+    protected PointList createShapePoints(final Rectangle rect) {
+        if (getType().equals(BufferedDataTable.TYPE)) {
+            // triangle
+            Rectangle parent = getParent().getBounds().getCopy();
+            int yPos = (parent.height / (getNrPorts() + 1)) 
+                * (getPortIndex() + 1);
+            getBounds().x = parent.width - SIZE;
+            getBounds().y = yPos;
+            getBounds().width = SIZE;
+            getBounds().height = SIZE;
+            Rectangle r = getBounds().getCopy();
+            PointList list = new PointList(3);
+            list.addPoint(r.x, r.y);
+            list.addPoint(r.x + r.width, r.y + (r.height / 2));
+            list.addPoint(r.x, r.y + r.height);
+            return list;
+        } else {
+            // square
+            Rectangle parent = getParent().getBounds().getCopy();
+            int yPos = (parent.height / (getNrPorts() + 1)) 
+                * (getPortIndex() + 1);
+            int xPos = parent.width - SIZE;
+            getBounds().x = xPos;
+            getBounds().y = yPos;
+            getBounds().width = SIZE;
+            getBounds().height = SIZE;
+            PointList list = new PointList(4);
+            list.addPoint(new Point(xPos, yPos));
+            list.addPoint(new Point(xPos + SIZE, yPos));
+            list.addPoint(new Point(xPos + SIZE, yPos + SIZE));
+            list.addPoint(new Point(xPos, yPos + SIZE));
+            return list;
+        }
     }
 
     /**
-     *
+     * 
      * {@inheritDoc}
      */
-    @Override
-    protected void drawTriangle(final Graphics g) {
-        Rectangle parent = getParent().getBounds().getCopy();
-        int yPos = (parent.height / (getNrPorts() + 1)) * (getPortIndex() + 1);
-        getBounds().x = parent.width - SIZE;
-        getBounds().y = yPos;
-        getBounds().width = SIZE;
-        getBounds().height = SIZE;
-        Rectangle r = getBounds().getCopy();
-        PointList list = new PointList(3);
-        list.addPoint(r.x, r.y);
-        list.addPoint(r.x + r.width, r.y + (r.height / 2));
-        list.addPoint(r.x, r.y + r.height);
-//        LOGGER.info("drawing triangle..." + r);
-        g.drawPolygon(list);
-    }
-
-
     @Override
     public Locator getLocator() {
         return new WorkflowPortLocator(getType(), getPortIndex(),

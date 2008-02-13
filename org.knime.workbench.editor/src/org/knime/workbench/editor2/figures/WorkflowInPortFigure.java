@@ -18,14 +18,13 @@
  */
 package org.knime.workbench.editor2.figures;
 
-import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Locator;
-import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.node.NodeLogger;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.PortType;
+import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
 
 /**
  *
@@ -33,9 +32,9 @@ import org.knime.core.node.PortType;
  */
 public class WorkflowInPortFigure extends AbstractWorkflowPortFigure {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            WorkflowInPortFigure.class);
-
+//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+//            WorkflowInPortFigure.class);
+    
     private boolean m_isSelected = false;
 
     /**
@@ -50,71 +49,32 @@ public class WorkflowInPortFigure extends AbstractWorkflowPortFigure {
         super(type, nrOfPorts, portIndex);
         setToolTip(new NewToolTipFigure(tooltip));
     }
-
-    public void setSelected(final boolean isSelected) {
-        m_isSelected = isSelected;
-    }
-
+    
+    /**
+     * This state is read by the mouse listener added in 
+     * {@link WorkflowInPortEditPart#createFigure()}.
+     * 
+     * @return true if the figure was clicked, false otherwise
+     * @see WorkflowInPortEditPart
+     */
     public boolean isSelected() {
         return m_isSelected;
     }
-
-    @Override
-    public void setBounds(final Rectangle rect) {
-        LOGGER.debug("set bounds to: " + rect);
-        super.setBounds(rect);
-    }
-
-    @Override
-    public void addNotify() {
-        super.addNotify();
-        Rectangle parent = getParent().getBounds().getCopy();
-        int yPos = (parent.height / (getNrPorts() + 1)) * (getPortIndex() + 1);
-        setBounds(new Rectangle(new Point(0, yPos),
-                new Dimension(SIZE, SIZE)));
-        fireFigureMoved();
-    }
-
-
+    
     /**
-     *
+     * This state is set by the mouse listener added in 
+     * {@link WorkflowInPortEditPart#createFigure()}.
+     * 
+     * @param selected true if the figure was clicked, false otherwise
+     * @see WorkflowInPortEditPart
+     */
+    public void setSelected(final boolean selected) {
+        m_isSelected = selected;
+    }
+    
+    /**
      * {@inheritDoc}
      */
-    @Override
-    protected void drawSquare(final Graphics g) {
-        Rectangle parent = getParent().getBounds().getCopy();
-        int yPos = (parent.height / (getNrPorts() + 1)) * (getPortIndex() + 1);
-        getBounds().x = 0;
-        getBounds().y = yPos;
-        getBounds().width = SIZE;
-        getBounds().height = SIZE;
-        Rectangle r = new Rectangle(new Point(0, yPos),
-                new Dimension(SIZE, SIZE));
-//        LOGGER.info("drawing square " + r + " bounds: " + bounds);
-        g.fillRectangle(r);
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    protected void drawTriangle(final Graphics g) {
-        Rectangle parent = getParent().getBounds().getCopy();
-        int yPos = (parent.height / (getNrPorts() + 1)) * (getPortIndex() + 1);
-        getBounds().x = 0;
-        getBounds().y = yPos;
-        getBounds().width = SIZE;
-        getBounds().height = SIZE;
-        Rectangle r = getBounds().getCopy();
-        PointList list = new PointList(3);
-        list.addPoint(r.x, r.y);
-        list.addPoint(r.width, r.y + (r.height / 2));
-        list.addPoint(r.x, r.y + r.height);
-//        LOGGER.info("drawing triangle..." + r);
-        g.drawPolygon(list);
-    }
-
     @Override
     public Locator getLocator() {
         return new WorkflowPortLocator(getType(), getPortIndex(),
@@ -122,5 +82,43 @@ public class WorkflowInPortFigure extends AbstractWorkflowPortFigure {
     }
 
 
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    protected PointList createShapePoints(final Rectangle r) {
+        if (getType().equals(BufferedDataTable.TYPE)) {
+            // triangle
+            Rectangle parent = getParent().getBounds().getCopy();
+            int yPos = (parent.height / (getNrPorts() + 1)) 
+                * (getPortIndex() + 1);
+            getBounds().x = 0;
+            getBounds().y = yPos;
+            getBounds().width = SIZE;
+            getBounds().height = SIZE;
+            Rectangle rect = getBounds().getCopy();
+            PointList list = new PointList(3);
+            list.addPoint(rect.x, rect.y);
+            list.addPoint(rect.width, rect.y + (rect.height / 2));
+            list.addPoint(rect.x, rect.y + rect.height);
+            return list;
+        } else {
+            // square
+            Rectangle parent = getParent().getBounds().getCopy();
+            int yPos = (parent.height / (getNrPorts() + 1)) 
+                * (getPortIndex() + 1);
+            getBounds().x = 0;
+            getBounds().y = yPos;
+            getBounds().width = SIZE;
+            getBounds().height = SIZE;
+            PointList list = new PointList(4);
+            list.addPoint(new Point(0, yPos));
+            list.addPoint(new Point(SIZE, yPos));
+            list.addPoint(new Point(SIZE, yPos + SIZE));
+            list.addPoint(new Point(0, yPos + SIZE));
+            return list;
+        }
+    }
 
 }

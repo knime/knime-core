@@ -36,7 +36,7 @@ import org.knime.core.node.PortType;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class NodeInPortFigure extends AbstractNodePortFigure {
+public class NodeInPortFigure extends AbstractPortFigure {
     private final int m_id;
 
     /**
@@ -69,25 +69,30 @@ public class NodeInPortFigure extends AbstractNodePortFigure {
     protected PointList createShapePoints(final Rectangle r) {
         if (getType().equals(BufferedDataTable.TYPE)) {
             PointList points = new PointList(3);
-            points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
-                    -(HEIGHT / 2)));
-            points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3, 0));
-            points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
-                    (HEIGHT / 2)));
+            points.addPoint(r.getRight().getCopy().translate(
+                    -NODE_PORT_SIZE * 2 - 3,
+                    -(NODE_PORT_SIZE / 2)));
+            points.addPoint(r.getRight().getCopy().translate(
+                    -NODE_PORT_SIZE - 3, 0));
+            points.addPoint(r.getRight().getCopy().translate(
+                    -NODE_PORT_SIZE * 2 - 3,
+                    (NODE_PORT_SIZE / 2)));
             return points;
         }
         PointList points = new PointList(4);
-        points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
-                -((HEIGHT - 1) / 2)));
-        points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3,
-                -((HEIGHT - 1) / 2)));
-        points.addPoint(r.getRight().getCopy().translate(-WIDTH - 3,
-                ((HEIGHT - 1) / 2)));
-        points.addPoint(r.getRight().getCopy().translate(-WIDTH * 2 - 3,
-                ((HEIGHT - 1) / 2 - 1)));
+        points.addPoint(r.getRight().getCopy().translate(
+                -NODE_PORT_SIZE * 2 - 3,
+                -((NODE_PORT_SIZE - 1) / 2)));
+        points.addPoint(r.getRight().getCopy().translate(
+                -NODE_PORT_SIZE - 3,
+                -((NODE_PORT_SIZE - 1) / 2)));
+        points.addPoint(r.getRight().getCopy().translate(
+                -NODE_PORT_SIZE - 3,
+                ((NODE_PORT_SIZE - 1) / 2)));
+        points.addPoint(r.getRight().getCopy().translate(
+                -NODE_PORT_SIZE * 2 - 3,
+                ((NODE_PORT_SIZE - 1) / 2 - 1)));
         return points;
-
-            // TODO database port
     }
 
     /**
@@ -102,8 +107,8 @@ public class NodeInPortFigure extends AbstractNodePortFigure {
         Dimension d = new Dimension();
 //        System.out.println("parent: " + getParent());
 //        System.out.println("parent's bounds: " + getParent().getBounds());
-        d.height = (getParent().getBounds().height) / getNumPorts();
-        d.width = WIDTH;
+        d.height = (getParent().getBounds().height) / getNrPorts();
+        d.width = NODE_PORT_SIZE;
         return d;
     }
 
@@ -115,7 +120,7 @@ public class NodeInPortFigure extends AbstractNodePortFigure {
     @Override
     public Locator getLocator() {
         return new NodePortLocator((NodeContainerFigure)getParent().getParent(),
-                true, getNumPorts(),
+                true, getNrPorts(),
                 m_id, getType());
     }
 }

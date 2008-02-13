@@ -44,7 +44,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.anchor.InPortConnectionAnchor;
 import org.knime.workbench.editor2.editparts.anchor.OutPortConnectionAnchor;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
-import org.knime.workbench.editor2.figures.AbstractNodePortFigure;
+import org.knime.workbench.editor2.figures.AbstractPortFigure;
 import org.knime.workbench.editor2.figures.AbstractWorkflowPortFigure;
 import org.knime.workbench.editor2.figures.NewToolTipFigure;
 
@@ -164,12 +164,13 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
         // TODO: replace with with workflow port erdit part
         if (getParent() instanceof NodeContainerEditPart) {
             NodeContainerEditPart parent = (NodeContainerEditPart) getParent();
-            AbstractNodePortFigure f = (AbstractNodePortFigure) getFigure();
+            AbstractPortFigure f = (AbstractPortFigure) getFigure();
             parent.setLayoutConstraint(this, f, f.getLocator());
 
         } else if (getParent() instanceof WorkflowRootEditPart) {
             WorkflowRootEditPart parent = (WorkflowRootEditPart) getParent();
-            AbstractWorkflowPortFigure f = (AbstractWorkflowPortFigure) getFigure();
+            AbstractWorkflowPortFigure f 
+                = (AbstractWorkflowPortFigure) getFigure();
             parent.setLayoutConstraint(this, f, f.getLocator());
 
         }
