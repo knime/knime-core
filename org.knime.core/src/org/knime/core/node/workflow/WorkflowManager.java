@@ -184,6 +184,7 @@ public final class WorkflowManager extends NodeContainer {
     private WorkflowManager(final WorkflowManager parent, final NodeID id,
             final WorkflowPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
+        m_name = persistor.getName();
         m_inPorts = Arrays.copyOf(
                 persistor.getInPorts(), persistor.getInPorts().length);
         m_outPorts = Arrays.copyOf(
@@ -191,61 +192,10 @@ public final class WorkflowManager extends NodeContainer {
         // add set for this (meta-) node's in- and output connections
         m_connectionsByDest.put(getID(), new HashSet<ConnectionContainer>());
         m_connectionsBySource.put(getID(), new HashSet<ConnectionContainer>());
-        m_dirtyWorkflow = new Object();
+        m_dirtyWorkflow = m_inPorts.length == 0 
+            && m_outPorts.length == 0 ? new Object() : parent.m_dirtyWorkflow;
         m_globalTableRepository = persistor.getGlobalTableRepository();
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
-        // id suffix are made unique by using the entries in this map
-        Map<Integer, NodeID> translationMap = new HashMap<Integer, NodeID>();
-
-        for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry
-                : persistor.getNodeLoaderMap().entrySet()) {
-            int suffix = nodeEntry.getKey();
-            NodeID subId = new NodeID(id, suffix);
-            if (m_nodes.containsKey(id)) {
-                subId = createUniqueID();
-            }
-            translationMap.put(suffix, subId);
-            NodeContainerPersistor pers = nodeEntry.getValue();
-            NodeContainer container = pers.getNodeContainer(this, subId);
-            addNodeContainer(container);
-        }
-
-        for (ConnectionContainerTemplate c : persistor.getConnectionSet()) {
-            int sourceIDSuffix = c.getSourceID();
-            int targetIDSuffix = c.getTargetID();
-            assert sourceIDSuffix != targetIDSuffix
-                : "Can't insert connection, source and target are equal";
-            ConnectionType type = ConnectionType.STD;
-            NodeID source;
-            NodeID dest;
-            if ((sourceIDSuffix == -1) && (targetIDSuffix == -1)) {
-                source = getID();
-                dest = getID();
-                type = ConnectionType.WFMTHROUGH;
-            } else if (sourceIDSuffix == -1) {
-                source = getID(); 
-                dest = translationMap.get(targetIDSuffix);
-                type = ConnectionType.WFMIN;
-            } else if (targetIDSuffix == -1) {
-                dest = getID();
-                source = translationMap.get(sourceIDSuffix);
-                type = ConnectionType.WFMOUT;
-            } else {
-                dest = translationMap.get(targetIDSuffix);
-                source = translationMap.get(sourceIDSuffix);
-            }
-            if (source == null || dest == null) {
-                LOGGER.warn("Unable to insert connection \"" + c
-                        + "\", one of the nodes does not exist in the flow");
-                continue;
-            }
-            // TODO sanity check wrt connection type possible?
-            ConnectionContainer cc = addConnection(
-                    source, c.getSourcePort(), dest, c.getTargetPort());
-            assert cc.getType() == type;
-        }
-        // add set for this (meta-) node's in- and output connections
-        m_name = persistor.getName();
         LOGGER.info("Created subworkflow " + this.getID());
     }
 
@@ -1244,7 +1194,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         return atLeastOneChainDoes;
     }
-    
+
     /** Return list of nodes, sorted by traversing the graph breadth first.
      * 
      */
@@ -1266,9 +1216,8 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
         // now keep adding nodes until we can't find new ones anymore
-        int currNodeIndex = 0;
-        while (currNodeIndex < bfsSortedNodes.size()) {
-        NodeID currNode = bfsSortedNodes.get(currNodeIndex);
+        for (int i = 0; i < bfsSortedNodes.size(); i++) {
+            NodeID currNode = bfsSortedNodes.get(i);
             // look at all successors of this node
             for (ConnectionContainer cc : m_connectionsBySource.get(currNode)) {
                 NodeID succNode = cc.getDest();
@@ -1773,7 +1722,8 @@ public final class WorkflowManager extends NodeContainer {
         int loadID = System.identityHashCode(persistor);
         BufferedDataTable.initRepository(loadID);
         LoadResult loadResult = 
-            persistor.loadWorkflow(settings, directory, exec, loadID);
+            persistor.preLoadNodeContainer(workflowknime, exec, settings);
+        loadResult.addError(persistor.loadNodeContainer(loadID, exec));
         if (loadResult.hasErrors()) {
             LOGGER.warn(loadResult.getErrors());
         }
@@ -1781,6 +1731,7 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (ROOT.m_dirtyWorkflow) {
             NodeID newID = ROOT.createUniqueID();
             result = ROOT.createSubWorkflow(persistor, newID);
+            result.loadContent(persistor, loadID);
             ROOT.addNodeContainer(result);
         }
         BufferedDataTable.clearRepository(loadID);
@@ -1788,6 +1739,100 @@ public final class WorkflowManager extends NodeContainer {
                 + directory.getAbsolutePath() + "\"  into workflow manager "
                 + "instance " + result.getNameWithID());
         return result;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    void loadContent(final NodeContainerPersistor nodePersistor, 
+            final int loadID) {
+        if (!(nodePersistor instanceof WorkflowPersistor)) {
+            throw new IllegalStateException("Expected " 
+                    + WorkflowPersistor.class.getSimpleName() 
+                    + " persistor object, got " 
+                    + nodePersistor.getClass().getSimpleName());
+        }
+        WorkflowPersistor persistor = (WorkflowPersistor)nodePersistor;
+        // id suffix are made unique by using the entries in this map
+        Map<Integer, NodeID> translationMap = new HashMap<Integer, NodeID>();
+        Map<NodeID, NodeContainerPersistor> persistorMap = 
+            new HashMap<NodeID, NodeContainerPersistor>();
+
+        for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry
+                : persistor.getNodeLoaderMap().entrySet()) {
+            int suffix = nodeEntry.getKey();
+            NodeID subId = new NodeID(getID(), suffix);
+            if (m_nodes.containsKey(subId)) {
+                subId = createUniqueID();
+            }
+            NodeContainerPersistor pers = nodeEntry.getValue();
+            translationMap.put(suffix, subId);
+            persistorMap.put(subId, pers);
+            NodeContainer container = pers.getNodeContainer(this, subId);
+            addNodeContainer(container);
+        }
+
+        for (ConnectionContainerTemplate c : persistor.getConnectionSet()) {
+            int sourceIDSuffix = c.getSourceID();
+            int targetIDSuffix = c.getTargetID();
+            assert sourceIDSuffix != targetIDSuffix
+                : "Can't insert connection, source and target are equal";
+            ConnectionType type = ConnectionType.STD;
+            NodeID source;
+            NodeID dest;
+            if ((sourceIDSuffix == -1) && (targetIDSuffix == -1)) {
+                source = getID();
+                dest = getID();
+                type = ConnectionType.WFMTHROUGH;
+            } else if (sourceIDSuffix == -1) {
+                source = getID(); 
+                dest = translationMap.get(targetIDSuffix);
+                type = ConnectionType.WFMIN;
+            } else if (targetIDSuffix == -1) {
+                dest = getID();
+                source = translationMap.get(sourceIDSuffix);
+                type = ConnectionType.WFMOUT;
+            } else {
+                dest = translationMap.get(targetIDSuffix);
+                source = translationMap.get(sourceIDSuffix);
+            }
+            if (source == null || dest == null) {
+                LOGGER.warn("Unable to insert connection \"" + c
+                        + "\", one of the nodes does not exist in the flow");
+                continue;
+            }
+            // TODO sanity check wrt connection type possible?
+            ConnectionContainer cc = addConnection(
+                    source, c.getSourcePort(), dest, c.getTargetPort(), false);
+            assert cc.getType() == type;
+        }
+        Set<NodeID> failedNodes = new HashSet<NodeID>();
+        Set<NodeID> needConfigurationNodes = new HashSet<NodeID>();
+        for (NodeID bfsID : getBreathFirstListOfNodes()) {
+            boolean hasPredecessorFailed = false;
+            for (ConnectionContainer cc : m_connectionsByDest.get(bfsID)) {
+                if (failedNodes.contains(cc.getSource())) {
+                    hasPredecessorFailed = true;
+                }
+            }
+            NodeContainerPersistor containerPersistor = persistorMap.get(bfsID);
+            try {
+                containerPersistor.loadNodeContainer(
+                        loadID, new ExecutionMonitor());
+            } catch (CanceledExecutionException e) {
+            } catch (Exception e) {
+                if (!(e instanceof InvalidSettingsException)
+                        && !(e instanceof IOException)) {
+                    LOGGER.error("Caught " + e.getClass().getSimpleName()
+                            + " during node loading", e);
+                }
+                failedNodes.add(bfsID);
+                if (!hasPredecessorFailed) {
+                    needConfigurationNodes.add(bfsID);
+                }
+            }
+            NodeContainer cont = m_nodes.get(bfsID);
+            cont.loadContent(containerPersistor, loadID);
+        }
     }
 
     public void save(final File directory, final ExecutionMonitor exec,

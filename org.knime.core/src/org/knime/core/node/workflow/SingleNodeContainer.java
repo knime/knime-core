@@ -393,6 +393,11 @@ public final class SingleNodeContainer extends NodeContainer
             m_node.loadSettingsFrom(settings);
         }
     }
+    
+    void loadContent(final NodeContainerPersistor persistor, final int loadID) {
+        setNewState(persistor.getMetaPersistor().getState());
+        setScopeObjectStack(new ScopeObjectStack(getID()));
+    }
 
     @Override
     void saveSettings(final NodeSettingsWO settings)

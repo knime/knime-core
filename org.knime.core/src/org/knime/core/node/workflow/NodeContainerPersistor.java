@@ -42,9 +42,11 @@ public interface NodeContainerPersistor {
     NodeContainer getNodeContainer(final WorkflowManager parent, final NodeID id);
 
     NodeContainerMetaPersistor getMetaPersistor();
-
-    LoadResult loadNodeContainer(final File workflowDir, 
-            final ExecutionMonitor exec, final int loadID, final NodeSettingsRO parentSettings) 
-        throws InvalidSettingsException, 
-        CanceledExecutionException, IOException;
+    
+    LoadResult preLoadNodeContainer(final File nodeFile, 
+            final ExecutionMonitor exec, final NodeSettingsRO parentSettings) 
+        throws InvalidSettingsException, CanceledExecutionException, IOException;
+    
+    LoadResult loadNodeContainer(final int loadID, final ExecutionMonitor exec) 
+        throws InvalidSettingsException, CanceledExecutionException, IOException;
 }

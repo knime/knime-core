@@ -68,8 +68,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     
     private String m_name;
     
+    private NodeSettingsRO m_workflowSett;
+    private File m_workflowDir;
+    
     static boolean canReadVersion(final String versionString) {
         boolean result = versionString.equals("0.9.0");
+        result |= versionString.equals("1.0");
         result |= versionString.matches("1\\.[01234]\\.[0-9].*");
         return result;
     }
@@ -351,12 +355,38 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return m_outPorts;
     }
     
-    public LoadResult loadWorkflow(final NodeSettingsRO settings, 
-            final File workflowDirectory, final ExecutionMonitor exec, 
-            int loadID) throws CanceledExecutionException, IOException {
+    /** {@inheritDoc} */
+    public LoadResult preLoadNodeContainer(final File nodeFile, 
+            final ExecutionMonitor exec, final NodeSettingsRO parentSettings) 
+    throws InvalidSettingsException, CanceledExecutionException, IOException {
+        LoadResult loadResult = new LoadResult();
+        m_metaPersistor = createNodeContainerMetaPersistor();
+        if (nodeFile == null || !nodeFile.isFile()) {
+            String error = "Can't read workflow file \"" 
+                + nodeFile.getAbsolutePath() + "\"";
+            throw new IOException(error);
+        }
+        InputStream in = new BufferedInputStream(new FileInputStream(nodeFile));
+        NodeSettingsRO subWFSettings = NodeSettings.loadFromXML(in);
+        LoadResult metaLoadResult = m_metaPersistor.load(subWFSettings);
+        if (metaLoadResult.hasErrors()) {
+            loadResult.addError(metaLoadResult);
+        }
+        m_workflowSett = subWFSettings;
+        m_workflowDir = nodeFile.getParentFile();
+        return loadResult;
+    }
+    
+    /** {@inheritDoc} */
+    public LoadResult loadNodeContainer(final int loadID, 
+            final ExecutionMonitor exec) 
+    throws InvalidSettingsException, CanceledExecutionException, IOException {
+        if (m_workflowDir == null || m_workflowSett == null) {
+            throw new IllegalStateException("call preLoadNodeContainer before");
+        }
         LoadResult loadResult = new LoadResult();
         try {
-            m_name = loadWorkflowName(settings);
+            m_name = loadWorkflowName(m_workflowSett);
         } catch (InvalidSettingsException e) {
             String error = "Unable to load workflow name: " + e.getMessage();
             LOGGER.debug(error, e);
@@ -366,7 +396,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         /* read nodes */
         NodeSettingsRO nodes;
         try {
-            nodes = loadSettingsForNodes(settings);
+            nodes = loadSettingsForNodes(m_workflowSett);
         } catch (InvalidSettingsException e) {
             String error = "Can't load nodes in workflow, config not found: "
                 + e.getMessage();
@@ -420,8 +450,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 uiInfoClassName = loadUIInfoClassName(nodeSetting);
             } catch (InvalidSettingsException e) {
                 String error = "Unable to load UI information class name " +
-                		"to node with ID suffix " + nodeIDSuffix 
-                		+ ", no UI information available: " + e.getMessage();
+                        "to node with ID suffix " + nodeIDSuffix 
+                        + ", no UI information available: " + e.getMessage();
                 LOGGER.debug(error, e);
                 loadResult.addError(error);
                 uiInfoClassName = null;
@@ -446,7 +476,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                         loadUIInfoSettings(uiInfo, nodeSetting);
                     } catch (InvalidSettingsException e) {
                         String error = "Unable to load UI information to " 
-                            + "node with ID suffix" + nodeIDSuffix
+                            + "node with ID suffix " + nodeIDSuffix
                             + ", no UI information available: " 
                             + e.getMessage();
                         LOGGER.debug(error, e);
@@ -457,18 +487,17 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             }
             File nodeFile;
             try {
-                nodeFile = loadNodeFile(nodeSetting, workflowDirectory);
+                nodeFile = loadNodeFile(nodeSetting, m_workflowDir);
             } catch (InvalidSettingsException e) {
                 String error = "Unable to load settings for node " 
-                    + "with ID suffix" + nodeIDSuffix + ": " + e.getMessage();
+                    + "with ID suffix " + nodeIDSuffix + ": " + e.getMessage();
                 LOGGER.debug(error, e);
                 loadResult.addError(error);
                 continue;
             }
             try {
                 LoadResult childResult =
-                    persistor.loadNodeContainer(
-                            nodeFile, exec, loadID, nodeSetting);
+                    persistor.preLoadNodeContainer(nodeFile, exec, nodeSetting);
                 if (childResult.hasErrors()) {
                     loadResult.addError("Errors during loading "
                             + (isMeta ? "meta " : "") + "node "
@@ -498,7 +527,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         /* read connections */
         NodeSettingsRO connections;
         try {
-            connections = loadSettingsForConnections(settings);
+            connections = loadSettingsForConnections(m_workflowSett);
             if (connections == null) {
                 connections = new NodeSettings("<<empty connections>>");
             }
@@ -541,7 +570,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         /* read in and outports */
         NodeSettingsRO inPorts;
         try {
-            inPorts = loadInPortsSetting(settings);
+            inPorts = loadInPortsSetting(m_workflowSett);
             if (inPorts == null) {
                 inPorts = new NodeSettings("<<empty>>");
             }
@@ -578,7 +607,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         
         NodeSettingsRO outPorts;
         try {
-            outPorts = loadOutPortsSetting(settings);
+            outPorts = loadOutPortsSetting(m_workflowSett);
             if (outPorts == null) {
                 outPorts = new NodeSettings("<<empty>>");
             }
@@ -613,27 +642,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             }
             m_outPorts[index] = p;
         }
-        return loadResult;
-    }
-    
-    /** {@inheritDoc} */
-    public LoadResult loadNodeContainer(final File nodeFile, 
-            final ExecutionMonitor exec, final int loadID, final NodeSettingsRO parentSettings) 
-    throws InvalidSettingsException, CanceledExecutionException, IOException {
-        LoadResult loadResult = new LoadResult();
-        m_metaPersistor = createNodeContainerMetaPersistor();
-        if (nodeFile == null || !nodeFile.isFile()) {
-            String error = "Can't read workflow file \"" 
-                + nodeFile.getAbsolutePath() + "\"";
-            throw new IOException(error);
-        }
-        InputStream in = new BufferedInputStream(new FileInputStream(nodeFile));
-        NodeSettingsRO subWFSettings = NodeSettings.loadFromXML(in);
-        LoadResult metaLoadResult = m_metaPersistor.load(subWFSettings);
-        loadResult.addError(metaLoadResult);
-        LoadResult workflowLoadResult = loadWorkflow(
-                subWFSettings, nodeFile.getParentFile(), exec, loadID);
-        loadResult.addError(workflowLoadResult);
         return loadResult;
     }
 

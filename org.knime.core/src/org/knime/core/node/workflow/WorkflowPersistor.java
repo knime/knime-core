@@ -23,18 +23,12 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
 
 /**
  * 
@@ -79,11 +73,6 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     WorkflowInPort[] getInPorts();
     
     WorkflowOutPort[] getOutPorts();
-    
-    public LoadResult loadWorkflow(NodeSettingsRO settings, 
-            final File workflowDirectory, ExecutionMonitor exec, int loadID)
-            throws CanceledExecutionException, IOException,
-            InvalidSettingsException;
     
     static class ConnectionContainerTemplate {
         private final int m_sourceID;
@@ -130,7 +119,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /** {@inheritDoc} */
         @Override
         public String toString() {
-            return "Connection [" + getSourceID() + "(" 
+            return "[" + getSourceID() + "(" 
                 + getSourcePort() + ") -> " + getTargetID() 
                 + "( " + getTargetPort() + ")]";
         }

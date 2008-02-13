@@ -40,4 +40,6 @@ interface SingleNodeContainerPersistor extends NodeContainerPersistor {
     static final String KEY_FACTORY_NAME = "factory";
 
     Node getNode();
+    
+    ScopeObjectStack getScopeObjectStack();
 }

@@ -30,7 +30,6 @@ import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.Node;
 import org.knime.core.node.NodeDialog;
 import org.knime.core.node.NodeInPort;
 import org.knime.core.node.NodeOutPort;
@@ -494,9 +493,6 @@ public abstract class NodeContainer {
 
     /* -------------- views ---------------- */
 
-    /**
-     * @see Node#getNrViews()
-     */
     public abstract int getNrViews();
 
     public abstract String getViewName(final int i);
@@ -540,6 +536,10 @@ public abstract class NodeContainer {
         notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
                 m_customName, m_customDescription));
     }
+    
+    abstract void loadContent(
+            final NodeContainerPersistor persistor, final int loadID);
+
 
 
 }

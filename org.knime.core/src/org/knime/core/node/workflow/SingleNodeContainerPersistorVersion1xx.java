@@ -61,6 +61,9 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
     
+    private NodeSettingsRO m_nodeSettings;
+    private File m_nodeDir;
+    
     SingleNodeContainerPersistorVersion1xx(
             final HashMap<Integer, ContainerTable> tableRep) {
         m_globalTableRepository = tableRep;
@@ -76,6 +79,11 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     }
     
     /** {@inheritDoc} */
+    public ScopeObjectStack getScopeObjectStack() {
+        return null;
+    }
+    
+    /** {@inheritDoc} */
     public SingleNodeContainer getNodeContainer(
             final WorkflowManager wm, final NodeID id) {
         return new SingleNodeContainer(wm, id, this);
@@ -86,10 +94,9 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     }
 
     /** {@inheritDoc} */
-    public LoadResult loadNodeContainer(final File nodeSettingsFile, 
-            final ExecutionMonitor exec, final int loadID, final NodeSettingsRO parentSettings) 
-            throws InvalidSettingsException, 
-            CanceledExecutionException, IOException {
+    public LoadResult preLoadNodeContainer(final File nodeSettingsFile, 
+            final ExecutionMonitor exec, final NodeSettingsRO parentSettings) 
+    throws InvalidSettingsException, CanceledExecutionException, IOException {
         LoadResult result = new LoadResult();
         String error;
         if (nodeSettingsFile == null || !nodeSettingsFile.isFile()) {
@@ -120,27 +127,36 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
                 + nodeFactoryClassName + "\"";
             throw new InvalidSettingsException(error);
         }
+        m_node = new Node(nodeFactory);
         m_metaPersistor = createNodeContainerMetaPersistor();
         LoadResult metaResult = m_metaPersistor.load(settings);
         if (metaResult.hasErrors()) {
             result.addError(metaResult);
         }
-        File nodeDir = nodeSettingsFile.getParentFile();
+        m_nodeSettings = settings;
+        m_nodeDir = nodeSettingsFile.getParentFile();
+        return result;
+    }
+    
+    /** {@inheritDoc} */
+    public LoadResult loadNodeContainer(final int loadID, 
+            final ExecutionMonitor exec) throws InvalidSettingsException, 
+            CanceledExecutionException, IOException {
+        LoadResult result = new LoadResult();
         String nodeFileName;
-        m_metaPersistor.setState(State.IDLE);
         try {
-            nodeFileName = loadNodeFile(settings);
+            nodeFileName = loadNodeFile(m_nodeSettings);
         } catch (InvalidSettingsException e) {
-            error = "Unable to load node settings file for node with ID suffix "
-                    + m_metaPersistor.getNodeIDSuffix() + " (factory class \""
-                    + nodeFactoryClassName + "\"): " + e.getMessage();
+            String error = 
+                "Unable to load node settings file for node with ID suffix "
+                    + m_metaPersistor.getNodeIDSuffix() + " (node \""
+                    + m_node.getName() + "\"): " + e.getMessage();
             result.addError(error);
             LOGGER.debug(error, e);
             return result;
         }
-        File nodeFile = new File(nodeDir, nodeFileName);
+        File nodeFile = new File(m_nodeDir, nodeFileName);
         NodePersistor nodePersistor = createNodePersistor();
-        m_node = new Node(nodeFactory);
         LoadResult nodeLoadResult = nodePersistor.load(
                 m_node, nodeFile, exec, loadID, m_globalTableRepository);
         if (nodeLoadResult.hasErrors()) {
