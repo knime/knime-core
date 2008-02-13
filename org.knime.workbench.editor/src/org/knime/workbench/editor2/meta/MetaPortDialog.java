@@ -38,6 +38,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.DatabaseContent;
 import org.knime.core.node.ModelContent;
 
 /**
@@ -51,7 +52,26 @@ public class MetaPortDialog extends Dialog {
         /** Data port. */
         DataPort,
         /** Model port. */
-        ModelPort
+        ModelPort,
+        /** Database port. */
+        DatabasePort;
+        
+        private static String[] names;
+        
+        static {
+            names = new String[3];
+            names[0] = DataPort.name();
+            names[1] = ModelPort.name();
+            names[2] = DatabasePort.name();
+        }
+        
+        /**
+         * 
+         * @return the enunm fields as a string array
+         */
+        public static String[] getNames() {
+            return names;
+        }
     }
 
     private Shell m_shell;
@@ -59,10 +79,11 @@ public class MetaPortDialog extends Dialog {
     private Text m_name;
     private Combo m_type;
 
-    private final int WIDTH = 200;
-    private final int HEIGHT = 150;
+    private static final int WIDTH = 200;
+    private static final int HEIGHT = 150;
 
     private Port m_port = null;
+    
 
     /**
      *
@@ -125,8 +146,7 @@ public class MetaPortDialog extends Dialog {
         label2.setText("Port Type:");
         m_type = new Combo(composite,
                 SWT.DROP_DOWN | SWT.SIMPLE | SWT.READ_ONLY | SWT.BORDER);
-        m_type.setItems(new String[] {PortTypes.DataPort.name(),
-                PortTypes.ModelPort.name()});
+        m_type.setItems(PortTypes.names);
         m_type.addFocusListener(new FocusAdapter() {
 
             @Override
@@ -158,6 +178,9 @@ public class MetaPortDialog extends Dialog {
                 } else if (PortTypes.valueOf(selected).equals(
                         PortTypes.ModelPort)) {
                     m_port = new Port(ModelContent.TYPE, m_name.getText());
+                } else if (PortTypes.valueOf(selected).equals(
+                        PortTypes.DatabasePort)) {
+                    m_port = new Port(DatabaseContent.TYPE, m_name.getText());
                 }
                 m_shell.dispose();
             }
