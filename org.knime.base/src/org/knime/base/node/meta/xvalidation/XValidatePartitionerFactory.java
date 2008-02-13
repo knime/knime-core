@@ -18,25 +18,27 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.meta.xvalidation;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ * This factory creates all necessary classes for the cross validation
+ * partioning node.
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class XValidatePartitionerFactory extends NodeFactory {
+public class XValidatePartitionerFactory extends
+        NodeFactory<XValidatePartitionModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public XValidatePartitionModel createNodeModel() {
         return new XValidatePartitionModel();
     }
 
@@ -52,17 +54,8 @@ public class XValidatePartitionerFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
     }
 
     /**
@@ -70,6 +63,15 @@ public class XValidatePartitionerFactory extends NodeFactory {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
+        return new XValidateDialog();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<XValidatePartitionModel> createNodeView(final int index,
+            final XValidatePartitionModel model) {
         return null;
     }
 }

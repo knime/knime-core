@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 6, 2006 (wiswedel): created
  */
@@ -27,18 +27,14 @@ package org.knime.base.node.meta.xvalidation;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
-import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -53,27 +49,29 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * 
+ * This models aggregates the result from each of the cross validation loops. It
+ * will only work together with predecessing {@link XValidatePartitionModel}.
+ *
  * @author Bernd Wiswedel, University of Konstanz
+ * @author Thorsten Meinl, University of Konstanz
  */
 public class AggregateOutputNodeModel extends NodeModel {
-    
-    /** Config key target column. */
-    static final String CFG_TARGET_COL = "target_columns";
-    /** Config key prediction column. */
-    static final String CFG_PREDICT_COL = "prediction_column";
-    
-    private String m_targetCol;
-    private String m_predictCol;
-    
-    private HashMap<RowKey, DataCell> m_predictMap;
-    private ArrayList<DataRow> m_foldStatistics;
-    private DataType m_predictColType;
-    
-    private boolean m_isIgnoreReset;
-    
+    private static final DataTableSpec STATISTICS_SPEC =
+            new DataTableSpec(new DataColumnSpecCreator("Error in %",
+                    DoubleCell.TYPE).createSpec(), new DataColumnSpecCreator(
+                    "Size of Test Set", IntCell.TYPE).createSpec(),
+                    new DataColumnSpecCreator("Error Count", IntCell.TYPE)
+                            .createSpec());
+
+    private final AggregateSettings m_settings = new AggregateSettings();
+
+    private final ArrayList<DataRow> m_foldStatistics =
+            new ArrayList<DataRow>();
+
+    private BufferedDataContainer m_predictionTable;
+
     /**
-     * One input, one output.
+     * Create a new model for the aggregation node.
      */
     public AggregateOutputNodeModel() {
         super(1, 2);
@@ -86,102 +84,42 @@ public class AggregateOutputNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec in = inSpecs[0];
-        if (m_targetCol == null && m_predictCol == null) {
+        if ((m_settings.targetColumn() == null)
+                && (m_settings.predictionColumn() == null)) {
+            // try to guess columns
             for (int i = in.getNumColumns() - 1; i >= 0; i--) {
                 DataColumnSpec c = in.getColumnSpec(i);
                 if (c.getType().isCompatible(StringValue.class)) {
-                    if (m_predictCol == null) {
-                        m_predictCol = c.getName();
+                    if (m_settings.predictionColumn() == null) {
+                        m_settings.predictionColumn(c.getName());
                     } else {
-                        assert m_targetCol == null;
-                        m_targetCol = c.getName();
+                        assert m_settings.targetColumn() == null;
+                        m_settings.targetColumn(c.getName());
                         break; // both columns assigned
                     }
                 }
             }
-            if (m_targetCol == null) {
+            if (m_settings.targetColumn() == null) {
                 throw new InvalidSettingsException(
                         "Invalid input: Need at least two string columns.");
             }
-            setWarningMessage("Auto configuration: Using \"" + m_targetCol 
-                    + "\" as target and \"" + m_predictCol 
-                    + "\" as prediction");
+            setWarningMessage("Auto configuration: Using \""
+                    + m_settings.targetColumn() + "\" as target and \""
+                    + m_settings.predictionColumn() + "\" as prediction");
         }
-        int targetColIndex = in.findColumnIndex(m_targetCol);
-        if (targetColIndex < 0) {
-            throw new InvalidSettingsException(
-                    "No such column: " + m_targetCol);
-        }
-        int predictColIndex = in.findColumnIndex(m_predictCol);
-        if (predictColIndex < 0) {
-            throw new InvalidSettingsException(
-                    "No such column: " + m_predictCol);
-        }
-        if (m_predictColType == null) {
-            m_predictColType = in.getColumnSpec(predictColIndex).getType();
-        } else {
-            m_predictColType = DataType.getCommonSuperType(m_predictColType, 
-                    in.getColumnSpec(predictColIndex).getType());
-        }
-        return new DataTableSpec[]{in, createSpecPort1()};
-    }
-    
-    /**
-     * A column rearranger to be used for the first outport.
-     * @param metaIn The input spec of the outer meta node. 
-     * @return A new column rearranger.
-     * @throws InvalidSettingsException If not configured.
-     */
-    ColumnRearranger createColumnRearrangerPort0(final DataTableSpec metaIn) 
-        throws InvalidSettingsException {
-        if (m_predictColType == null) {
-            throw new InvalidSettingsException("Internal aggregation node has" 
-                    + " not been configured.");
-        }
-        String predictColName = "prediction";
-        while (metaIn.containsName(predictColName)) {
-            predictColName = predictColName.concat("_");
-        }
-        ColumnRearranger result = new ColumnRearranger(metaIn);
-        DataColumnSpecCreator creator = new DataColumnSpecCreator(
-                predictColName, m_predictColType); 
-        SingleCellFactory cellF = new SingleCellFactory(creator.createSpec()) {
-            @Override
-            public DataCell getCell(final DataRow row) {
-                RowKey key = row.getKey();
-                DataCell c = m_predictMap.get(key);
-                return (c == null ? DataType.getMissingCell() : c);
-            }
-        };
-        result.append(cellF);
-        return result;
-    }
-    
-    /**
-     * Generates new table spec for the second outport, i.e. statistics.
-     * @return A new spec
-     */
-    DataTableSpec createSpecPort1() {
-        return new DataTableSpec(
-                new DataColumnSpecCreator(
-                        "Error in %", DoubleCell.TYPE).createSpec(),
-                new DataColumnSpecCreator(
-                        "Size of Test Set", IntCell.TYPE).createSpec(),
-                new DataColumnSpecCreator(
-                        "Error Count", IntCell.TYPE).createSpec());
-    }
 
-    /** Creates the table for the second meta outport.
-     * @param c To create a container from.
-     * @return The table.
-     */
-    BufferedDataTable createOutputPort1(final ExecutionContext c) {
-        BufferedDataContainer con = c.createDataContainer(createSpecPort1());
-        for (DataRow r : m_foldStatistics) {
-            con.addRowToTable(r);
+        int targetColIndex = in.findColumnIndex(m_settings.targetColumn());
+        if (targetColIndex < 0) {
+            throw new InvalidSettingsException("No such column: "
+                    + m_settings.targetColumn());
         }
-        con.close();
-        return con.getTable();
+
+        int predictColIndex = in.findColumnIndex(m_settings.predictionColumn());
+        if (predictColIndex < 0) {
+            throw new InvalidSettingsException("No such column: "
+                    + m_settings.predictionColumn());
+        }
+        return new DataTableSpec[]{in, STATISTICS_SPEC};
     }
 
     /**
@@ -190,19 +128,31 @@ public class AggregateOutputNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        if (m_predictMap == null) {
-            m_predictMap = new HashMap<RowKey, DataCell>();
-            m_foldStatistics = new ArrayList<DataRow>();
+        final XValLoopContext ctx = peekScopeContext(XValLoopContext.class);
+
+        if (ctx == null) {
+            throw new IllegalStateException("No cross validation loop context "
+                    + "found");
         }
-        BufferedDataTable in = inData[0];
+
+        if (ctx.currentIteration() == 1) {
+            m_predictionTable =
+                    exec.createDataContainer(inData[0].getDataTableSpec());
+        }
+        final BufferedDataTable in = inData[0];
+
         final int rowCount = in.getRowCount();
-        int r = 0;
-        int targetColIndex = in.getDataTableSpec().findColumnIndex(m_targetCol);
-        int predictColIndex = 
-            in.getDataTableSpec().findColumnIndex(m_predictCol);
+        final int targetColIndex =
+                in.getDataTableSpec()
+                        .findColumnIndex(m_settings.targetColumn());
+        final int predictColIndex =
+                in.getDataTableSpec().findColumnIndex(
+                        m_settings.predictionColumn());
+        ExecutionMonitor subExec =
+            exec.createSubProgress(ctx.finished() ? 0.9 : 1);
         int correct = 0;
         int incorrect = 0;
-        ExecutionMonitor subExec = exec.createSubProgress(0.5);
+        int r = 0;
         for (DataRow row : in) {
             RowKey key = row.getKey();
             DataCell target = row.getCell(targetColIndex);
@@ -213,33 +163,45 @@ public class AggregateOutputNodeModel extends NodeModel {
                 incorrect++;
             }
             r++;
-            subExec.setProgress(r / (double)rowCount, 
-                    "Calculating output " + r + "/" + in.getRowCount() 
-                    + " (\"" + key + "\")");
+
+            m_predictionTable.addRowToTable(row);
+            subExec.setProgress(r / (double)rowCount, "Calculating output " + r
+                    + "/" + rowCount + " (\"" + key + "\")");
             subExec.checkCanceled();
-            m_predictMap.put(key, predict);
         }
-        DataRow stats = new DefaultRow(
-                new RowKey("fold " + m_foldStatistics.size()), 
-                new DoubleCell(100.0 * incorrect / rowCount),
-                new IntCell(rowCount),
-                new IntCell(incorrect));
-        BufferedDataContainer bufOut2 = 
-            exec.createDataContainer(createSpecPort1());
-        bufOut2.addRowToTable(stats);
-        bufOut2.close();
+
+        DataRow stats =
+                new DefaultRow(new RowKey("fold " + m_foldStatistics.size()),
+                        new DoubleCell(100.0 * incorrect / rowCount),
+                        new IntCell(rowCount), new IntCell(incorrect));
         m_foldStatistics.add(stats);
-        return new BufferedDataTable[]{in, bufOut2.getTable()};
+
+        if (!ctx.finished()) {
+            continueLoop(ctx);
+            return new BufferedDataTable[2];
+        } else {
+            popScopeContext(XValLoopContext.class);
+
+            BufferedDataContainer cont =
+                    exec.createDataContainer(STATISTICS_SPEC);
+            for (DataRow row : m_foldStatistics) {
+                cont.addRowToTable(row);
+            }
+            cont.close();
+
+            m_predictionTable.close();
+            return new BufferedDataTable[]{m_predictionTable.getTable(),
+                    cont.getTable()};
+        }
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(
-            final File nodeInternDir, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
     }
 
     /**
@@ -248,8 +210,7 @@ public class AggregateOutputNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_targetCol = settings.getString(CFG_TARGET_COL);
-        m_predictCol = settings.getString(CFG_PREDICT_COL);
+        m_settings.loadSettings(settings);
     }
 
     /**
@@ -257,21 +218,17 @@ public class AggregateOutputNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        if (!isIgnoreReset()) {
-            m_foldStatistics = null;
-            m_predictMap = null;
-            m_predictColType = null;
-        }
+        m_foldStatistics.clear();
+        m_predictionTable = null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(
-            final File nodeInternDir, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
     }
 
     /**
@@ -279,10 +236,7 @@ public class AggregateOutputNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_targetCol != null) {
-            settings.addString(CFG_TARGET_COL, m_targetCol);
-            settings.addString(CFG_PREDICT_COL, m_predictCol);
-        }
+        m_settings.saveSettings(settings);
     }
 
     /**
@@ -291,26 +245,6 @@ public class AggregateOutputNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        if (settings.getString(CFG_PREDICT_COL) == null) {
-            throw new InvalidSettingsException("No prediction column set.");
-        }
-        if (settings.getString(CFG_TARGET_COL) == null) {
-            throw new InvalidSettingsException("No target column set.");
-        }
+        new AggregateSettings().loadSettings(settings);
     }
-
-    /**
-     * @return the isIgnoreReset
-     */
-    final boolean isIgnoreReset() {
-        return m_isIgnoreReset;
-    }
-
-    /**
-     * @param isIgnoreReset the isIgnoreReset to set
-     */
-    final void setIgnoreReset(final boolean isIgnoreReset) {
-        m_isIgnoreReset = isIgnoreReset;
-    }
-
 }

@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.meta.xvalidation;
 
@@ -38,17 +38,18 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * 
+ * This is the cross validation partitioning node model that divides the input
+ * table into partitions. It will only work together with a successing
+ * {@link AggregateOutputNodeModel}.
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class XValidatePartitionModel extends NodeModel {
-    private XValidateSettings m_settings = new XValidateSettings();
+    private final XValidateSettings m_settings = new XValidateSettings();
 
     private short[] m_partNumbers;
 
-    private short m_currentPartition;
-
-    private boolean m_ignoreNextReset;
+    private boolean m_inLoop;
 
     /**
      * Creates a new model for the internal partitioner node.
@@ -58,36 +59,11 @@ public class XValidatePartitionModel extends NodeModel {
     }
 
     /**
-     * Sets the settings from the {@link XValidateModel}.
-     * 
-     * @param settings the settings
-     */
-    void setSettings(final XValidateSettings settings) {
-        m_settings = settings;
-    }
-
-    /**
-     * Sets the partition number that should be used upon the next
-     * {@link #execute(BufferedDataTable[], ExecutionContext)}.
-     * 
-     * @param partNo the partition number
-     */
-    void setPartitionNumber(final short partNo) {
-        if ((partNo < 0)
-                || ((partNo >= m_settings.validations() && !m_settings
-                        .leaveOneOut()))) {
-            throw new IllegalArgumentException("Illegal partition number: "
-                    + partNo);
-        }
-        m_currentPartition = partNo;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // no settings to save, they are provided by the outer node
+        m_settings.saveSettingsTo(settings);
     }
 
     /**
@@ -96,7 +72,7 @@ public class XValidatePartitionModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // no settings to validate, they are provided by the outer node
+        new XValidateSettings().loadSettingsFrom(settings);
     }
 
     /**
@@ -105,7 +81,7 @@ public class XValidatePartitionModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // no settings to load, they are provided by the outer node
+        m_settings.loadSettingsFrom(settings);
     }
 
     /**
@@ -114,26 +90,38 @@ public class XValidatePartitionModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        if (m_partNumbers == null && !m_settings.leaveOneOut()) {
-            m_partNumbers = new short[inData[0].getRowCount()];
+        XValLoopContext ctx;
+        if (!m_inLoop) {
+            if (m_settings.leaveOneOut()) {
+                ctx = new XValLoopContext(inData[0].getRowCount());
+            } else {
+                m_partNumbers = new short[inData[0].getRowCount()];
 
-            final double partSize =
-                    m_partNumbers.length / (double)m_settings.validations();
-            for (int i = 0; i < m_partNumbers.length; i++) {
-                m_partNumbers[i] = (short)(i / partSize);
-            }
-
-            if (m_settings.randomSampling()) {
+                final double partSize =
+                        m_partNumbers.length / (double)m_settings.validations();
                 for (int i = 0; i < m_partNumbers.length; i++) {
-                    int pos = (int)(Math.random() * m_partNumbers.length);
-                    short x = m_partNumbers[pos];
-                    m_partNumbers[pos] = m_partNumbers[i];
-                    m_partNumbers[i] = x;
+                    m_partNumbers[i] =
+                            (short)Math.min(i / partSize, m_partNumbers.length);
                 }
+
+                if (m_settings.randomSampling()) {
+                    for (int i = 0; i < m_partNumbers.length; i++) {
+                        int pos = (int)(Math.random() * m_partNumbers.length);
+                        short x = m_partNumbers[pos];
+                        m_partNumbers[pos] = m_partNumbers[i];
+                        m_partNumbers[i] = x;
+                    }
+                }
+                ctx = new XValLoopContext(m_settings.validations());
             }
 
-            m_currentPartition = 0;
+            pushScopeContext(ctx);
+            m_inLoop = true;
+        } else {
+            ctx = peekScopeContext(XValLoopContext.class);
         }
+
+        final int currentIteration = ctx.currentIteration();
 
         BufferedDataContainer test =
                 exec.createDataContainer(inData[0].getDataTableSpec());
@@ -146,10 +134,10 @@ public class XValidatePartitionModel extends NodeModel {
         for (DataRow row : inData[0]) {
             exec.setProgress(count / max);
 
-            if (m_settings.leaveOneOut() && (count == m_currentPartition)) {
+            if (m_settings.leaveOneOut() && (count == currentIteration)) {
                 test.addRowToTable(row);
             } else if (!m_settings.leaveOneOut()
-                    && (m_partNumbers[count] == m_currentPartition)) {
+                    && (m_partNumbers[count] == currentIteration)) {
                 test.addRowToTable(row);
             } else {
                 train.addRowToTable(row);
@@ -159,18 +147,8 @@ public class XValidatePartitionModel extends NodeModel {
         test.close();
         train.close();
 
+        ctx.nextIteration();
         return new BufferedDataTable[]{train.getTable(), test.getTable()};
-    }
-
-    /**
-     * Sets if the next reset should be ignored, because we are inside a cross
-     * validation cycle.
-     * 
-     * @param b <code>true</code> if the reset should be ignored,
-     *            <code>false</code> otherwise
-     */
-    void setIgnoreNextReset(final boolean b) {
-        m_ignoreNextReset = b;
     }
 
     /**
@@ -178,10 +156,8 @@ public class XValidatePartitionModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        if (!m_ignoreNextReset) {
-            m_partNumbers = null;
-            m_currentPartition = 0;
-        }
+        m_partNumbers = null;
+        m_inLoop = false;
     }
 
     /**
