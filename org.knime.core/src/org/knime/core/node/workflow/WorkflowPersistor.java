@@ -75,40 +75,40 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     WorkflowOutPort[] getOutPorts();
     
     static class ConnectionContainerTemplate {
-        private final int m_sourceID;
+        private final int m_sourceSuffix;
         private final int m_sourcePort;
-        private final int m_targetID;
-        private final int m_targetPort;
+        private final int m_destSuffix;
+        private final int m_destPort;
         private final UIInformation m_uiInfo;
         
-        ConnectionContainerTemplate(final int sourceID, final int sourcePort, 
-                final int targetID, final int targetPort, 
+        ConnectionContainerTemplate(final int source, final int sourcePort, 
+                final int dest, final int destPort, 
                 final UIInformation uiInfo) {
-            m_sourceID = sourceID;
+            m_sourceSuffix = source;
             m_sourcePort = sourcePort;
-            m_targetID = targetID;
-            m_targetPort = targetPort;
+            m_destSuffix = dest;
+            m_destPort = destPort;
             m_uiInfo = uiInfo;
         }
 
-        /** @return the sourceID */
-        int getSourceID() {
-            return m_sourceID;
+        /** @return the source identifier */
+        int getSourceSuffix() {
+            return m_sourceSuffix;
         }
 
-        /** @return the sourcePort */
+        /** @return the source port */
         int getSourcePort() {
             return m_sourcePort;
         }
 
-        /** @return the targetID */
-        int getTargetID() {
-            return m_targetID;
+        /** @return the destination identifier. */
+        int getDestSuffix() {
+            return m_destSuffix;
         }
 
-        /** @return the targetPort */
-        int getTargetPort() {
-            return m_targetPort;
+        /** @return the destination port */
+        int getDestPort() {
+            return m_destPort;
         }
 
         /** @return the uiInfo */
@@ -119,9 +119,9 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         /** {@inheritDoc} */
         @Override
         public String toString() {
-            return "[" + getSourceID() + "(" 
-                + getSourcePort() + ") -> " + getTargetID() 
-                + "( " + getTargetPort() + ")]";
+            return "[" + getSourceSuffix() + "(" 
+                + getSourcePort() + ") -> " + getDestSuffix() 
+                + "( " + getDestPort() + ")]";
         }
 
     }

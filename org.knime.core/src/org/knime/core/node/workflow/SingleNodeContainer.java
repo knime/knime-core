@@ -394,7 +394,15 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
     
-    void loadContent(final NodeContainerPersistor persistor, final int loadID) {
+    void loadContent(final NodeContainerPersistor nodePersistor, final int loadID) {
+        if (!(nodePersistor instanceof SingleNodeContainerPersistor)) {
+            throw new IllegalStateException("Expected " 
+                    + SingleNodeContainerPersistor.class.getSimpleName() 
+                    + " persistor object, got " 
+                    + nodePersistor.getClass().getSimpleName());
+        }
+        SingleNodeContainerPersistor persistor = 
+            (SingleNodeContainerPersistor)nodePersistor;
         setNewState(persistor.getMetaPersistor().getState());
         setScopeObjectStack(new ScopeObjectStack(getID()));
     }

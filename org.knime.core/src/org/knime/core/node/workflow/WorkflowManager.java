@@ -1772,28 +1772,28 @@ public final class WorkflowManager extends NodeContainer {
         }
 
         for (ConnectionContainerTemplate c : persistor.getConnectionSet()) {
-            int sourceIDSuffix = c.getSourceID();
-            int targetIDSuffix = c.getTargetID();
-            assert sourceIDSuffix != targetIDSuffix
-                : "Can't insert connection, source and target are equal";
+            int sourceSuffix = c.getSourceSuffix();
+            int destSuffix = c.getDestSuffix();
+            assert sourceSuffix != destSuffix
+                : "Can't insert connection, source and destination are equal";
             ConnectionType type = ConnectionType.STD;
             NodeID source;
             NodeID dest;
-            if ((sourceIDSuffix == -1) && (targetIDSuffix == -1)) {
+            if ((sourceSuffix == -1) && (destSuffix == -1)) {
                 source = getID();
                 dest = getID();
                 type = ConnectionType.WFMTHROUGH;
-            } else if (sourceIDSuffix == -1) {
+            } else if (sourceSuffix == -1) {
                 source = getID(); 
-                dest = translationMap.get(targetIDSuffix);
+                dest = translationMap.get(destSuffix);
                 type = ConnectionType.WFMIN;
-            } else if (targetIDSuffix == -1) {
+            } else if (destSuffix == -1) {
                 dest = getID();
-                source = translationMap.get(sourceIDSuffix);
+                source = translationMap.get(sourceSuffix);
                 type = ConnectionType.WFMOUT;
             } else {
-                dest = translationMap.get(targetIDSuffix);
-                source = translationMap.get(sourceIDSuffix);
+                dest = translationMap.get(destSuffix);
+                source = translationMap.get(sourceSuffix);
             }
             if (source == null || dest == null) {
                 LOGGER.warn("Unable to insert connection \"" + c
@@ -1802,7 +1802,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             // TODO sanity check wrt connection type possible?
             ConnectionContainer cc = addConnection(
-                    source, c.getSourcePort(), dest, c.getTargetPort(), false);
+                    source, c.getSourcePort(), dest, c.getDestPort(), false);
             assert cc.getType() == type;
         }
         Set<NodeID> failedNodes = new HashSet<NodeID>();
@@ -1832,6 +1832,9 @@ public final class WorkflowManager extends NodeContainer {
             }
             NodeContainer cont = m_nodes.get(bfsID);
             cont.loadContent(containerPersistor, loadID);
+        }
+        for (NodeID id : needConfigurationNodes) {
+            configure(id);
         }
     }
 

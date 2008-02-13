@@ -549,13 +549,13 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 loadResult.addError(error);
                 continue;
             }
-            int sourceIDSuffix = c.getSourceID();
+            int sourceIDSuffix = c.getSourceSuffix();
             if (!m_nodeContainerLoaderMap.containsKey(sourceIDSuffix)
                     && sourceIDSuffix != -1) {
                 loadResult.addError("Unable to load node connection " + c
                         + ", source node does not exist");
             }
-            int targetIDSuffix = c.getTargetID();
+            int targetIDSuffix = c.getDestSuffix();
             if (!m_nodeContainerLoaderMap.containsKey(targetIDSuffix)
                     && targetIDSuffix != -1) {
                 loadResult.addError("Unable to load node connection " + c
