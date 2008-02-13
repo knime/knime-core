@@ -747,6 +747,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         return m_graphicalViewer;
     }
 
+
     /**
      * Sets the editor input, that is, the file that contains the serialized
      * workflow manager.
@@ -760,20 +761,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         setDefaultInput(input);
 
         if (input instanceof WorkflowManagerInput) {
-            m_parentEditor = ((WorkflowManagerInput)input).getParentEditor();
-            WorkflowManager wfm =
-                    ((WorkflowManagerInput)input).getWorkflowManager();
-            setWorkflowManager(wfm);
-            setPartName(input.getName());
-            wfm.addListener(this);
-            if (getGraphicalViewer() != null) {
-                loadProperties();
-            }
-
-            // update Actions, as now there's everything available
-            updateActions();
-            return;
-        }
+            setWorkflowManagerInput((WorkflowManagerInput)input);
+        } else {
 
         // register listener to check wether the underlying knime file (input)
         // has been deleted or renamed
@@ -868,6 +857,23 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // update Actions, as now there's everything available
         updateActions();
+        }
+    }
+
+    private void setWorkflowManagerInput(final WorkflowManagerInput input) {
+        m_parentEditor = input.getParentEditor();
+        WorkflowManager wfm =
+                ((WorkflowManagerInput)input).getWorkflowManager();
+        setWorkflowManager(wfm);
+        setPartName(input.getName());
+        wfm.addListener(this);
+        if (getGraphicalViewer() != null) {
+            loadProperties();
+        }
+
+        // update Actions, as now there's everything available
+        updateActions();
+        return;
     }
 
     /**
