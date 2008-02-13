@@ -30,11 +30,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.knime.core.node.DatabaseContent;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.PortObject;
-import org.knime.core.node.PortObjectSpec;
-import org.knime.core.node.PortType;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.util.KnimeEncryption;
@@ -43,14 +41,7 @@ import org.knime.core.util.KnimeEncryption;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class DBConnection implements PortObject, PortObjectSpec {
-    
-    /**
-     * Database port type formed <code>PortObjectSpec.class</code> and 
-     * <code>PortObject.class</code> from this class.
-     */
-    public static final PortType TYPE = 
-        new PortType(DBConnection.class, DBConnection.class);
+public class DBConnection implements DatabaseContent {
     
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(DBConnection.class);
