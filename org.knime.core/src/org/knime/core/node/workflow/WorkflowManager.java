@@ -1801,8 +1801,9 @@ public class WorkflowManager implements WorkflowListener {
                 try {
                     double nodeCounter = 1.0;
                     ExecutionMonitor execMon = new ExecutionMonitor(progMon);
-                    for (int i = 0; i < topSortNodes().size(); i++) {
-                        NodeContainer newNode = topSortNodes().get(i);
+                    List<NodeContainer> topSortNodes = topSortNodes();
+                    for (int i = 0; i < topSortNodes.size(); i++) {
+                        NodeContainer newNode = topSortNodes.get(i);
                         execMon.checkCanceled();
                         execMon.setMessage("Loading node: " + newNode.getNameWithID());
                         try {
@@ -1814,7 +1815,7 @@ public class WorkflowManager implements WorkflowListener {
                             File nodeFile = new File(parentDir, nodeFileName);
                             NodeProgressMonitor subProgMon =
                                     execMon.createSubProgress(
-                                            1.0 / topSortNodes().size())
+                                            1.0 / topSortNodes.size())
                                             .getProgressMonitor();
                             newNode.load(loadID, nodeFile, subProgMon);
                         } catch (IOException ioe) {
@@ -1836,7 +1837,7 @@ public class WorkflowManager implements WorkflowListener {
                             LOGGER.error(msg, e);
                             failedNodes.add(newNode);
                         }
-                        progMon.setProgress(nodeCounter / topSortNodes().size());
+                        progMon.setProgress(nodeCounter / topSortNodes.size());
                         // progMon.setMessage("Prog: " + nodeCounter
                         // / topSortNodes().size());
                         nodeCounter += 1.0;
@@ -2235,7 +2236,7 @@ public class WorkflowManager implements WorkflowListener {
         }
     }
 
-    /* Topological sorting of all nodes inthe workflow */
+    /* Topological sorting of all nodes in the workflow */
     private List<NodeContainer> topSortNodes() {
         Collection<NodeContainer> termList = new ArrayList<NodeContainer>();
         for (Integer nodeKey : m_nodesByID.keySet()) {
