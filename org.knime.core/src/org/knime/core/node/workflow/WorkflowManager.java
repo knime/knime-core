@@ -693,45 +693,50 @@ public final class WorkflowManager extends NodeContainer {
      * @return all outgoing connections for the passed node at the specified
      *  port
      */
-    // TODO check for null
-    // TODO synchronize
     public Set<ConnectionContainer> getOutgoingConnectionsFor(final NodeID id,
             final int portIdx) {
-        Set<ConnectionContainer>outConnections = m_connectionsBySource.get(id);
-        Set<ConnectionContainer>outConsForPort
-            = new HashSet<ConnectionContainer>();
-        if (outConnections == null) {
+        synchronized (m_dirtyWorkflow) {
+            Set<ConnectionContainer> outConnections
+                = m_connectionsBySource.get(id);
+            Set<ConnectionContainer> outConsForPort
+                = new HashSet<ConnectionContainer>();
+            if (outConnections == null) {
+                return outConsForPort;
+            }
+            for (ConnectionContainer cont : outConnections) {
+                if (cont.getSourcePort() == portIdx) {
+                    outConsForPort.add(cont);
+                }
+            }
             return outConsForPort;
         }
-        for (ConnectionContainer cont : outConnections) {
-            if (cont.getSourcePort() == portIdx) {
-                outConsForPort.add(cont);
-            }
-        }
-        return outConsForPort;
     }
 
     /**
-     * Returns all incoming connections of the node with the passed node id at
+     * Returns the incoming connection of the node with the passed node id at
      * the specified port.
      * @param id id of the node of interest
      * @param portIdx port index
      * @return incoming connection at that port of the given node
      */
-    // TODO check for null
-    // TODO synchronize
     public ConnectionContainer getIncomingConnectionFor(final NodeID id,
             final int portIdx) {
-        Set<ConnectionContainer>inConns = m_connectionsByDest.get(id);
-        if (inConns != null) {
-            for (ConnectionContainer cont : inConns) {
-                if (cont.getDestPort() == portIdx) {
-                    return cont;
+        synchronized (m_dirtyWorkflow) {
+            Set<ConnectionContainer>inConns = m_connectionsByDest.get(id);
+            if (inConns != null) {
+                for (ConnectionContainer cont : inConns) {
+                    if (cont.getDestPort() == portIdx) {
+                        return cont;
+                    }
                 }
             }
         }
         return null;
     }
+
+    /////////////////////
+    // Node Settings
+    /////////////////////
 
     /** Load Settings into specified node.
      *
@@ -750,12 +755,23 @@ public final class WorkflowManager extends NodeContainer {
         nc.loadSettings(settings);
         configure(id);
     }
-    
+
+    /**
+     * write node settings into Settings object.
+     * 
+     * @param id of node
+     * @param settings to be saved to
+     * @throws InvalidSettingsException thrown if nonsense is written
+     */
     public void saveNodeSettings(final NodeID id, final NodeSettingsWO settings)
     throws InvalidSettingsException {
         NodeContainer nc = getNodeContainer(id);
         nc.saveSettings(settings);
     }
+    
+    ////////////////////////////
+    // Execution of nodes
+    ////////////////////////////
 
     /** Queue all nodes in the workflow (and all subworkflows!)
      * for execution (if they are not executed already).
