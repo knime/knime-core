@@ -22,7 +22,12 @@ import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.Locator;
 import org.eclipse.draw2d.Shape;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.DatabaseContent;
+import org.knime.core.node.ModelContent;
 import org.knime.core.node.PortType;
 
 /**
@@ -90,6 +95,22 @@ public abstract class AbstractWorkflowPortFigure extends Shape {
     public void paint(final Graphics graphics) {
         fireFigureMoved();
         super.paint(graphics);
+    }
+    
+    @Override
+    public Color getBackgroundColor() {
+        Color color = Display.getCurrent().getSystemColor(SWT.COLOR_GRAY);
+        if (getType().equals(ModelContent.TYPE)) {
+            // model
+            color = Display.getCurrent().getSystemColor(SWT.COLOR_BLUE);
+        } else if (getType().equals(BufferedDataTable.TYPE)) {
+            // data
+            color = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
+        } else if (getType().equals(DatabaseContent.TYPE)) {
+            // database
+            color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_YELLOW);
+        }
+        return color;
     }
 
     /**

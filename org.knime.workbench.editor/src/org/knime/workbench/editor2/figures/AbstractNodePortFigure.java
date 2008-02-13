@@ -32,8 +32,8 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
-import org.knime.base.node.io.database.DBConnection;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.DatabaseContent;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.PortType;
 
@@ -96,7 +96,7 @@ public abstract class AbstractNodePortFigure extends Shape {
         } else if (getType().equals(BufferedDataTable.TYPE)) {
             // data
             color = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
-        } else if (getType().equals(DBConnection.TYPE)) {
+        } else if (getType().equals(DatabaseContent.TYPE)) {
             // database
             color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_YELLOW);
         }
