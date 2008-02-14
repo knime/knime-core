@@ -62,8 +62,10 @@ abstract class NodeOutPortView extends JFrame {
             final String nodeName, final String portName) {
         if (type == BufferedDataTable.TYPE) {
             return new DataOutPortView(nodeName, portName);
-        } else if (type == ModelContent.TYPE) {
+        } else if (type == ModelPortObject.TYPE) {
             return new ModelContentOutPortView(nodeName, portName);
+        } else if (type == DatabaseContent.TYPE) {
+            return new DatabaseOutPortView(nodeName, portName);    
         } else {
             throw new IllegalArgumentException(
                     "Port type " + type + " not supported yet!");
@@ -72,7 +74,7 @@ abstract class NodeOutPortView extends JFrame {
     }
 
     /**
-     * A view showing the data stored in the specified ouput port.
+     * A view showing the data stored in the specified output port.
      *
      * @param name The name of the node the inspected port belongs to.
      */

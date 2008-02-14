@@ -20,7 +20,7 @@ package org.knime.workbench.editor2.actions;
 
 
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeOutPort;
 import org.knime.core.node.workflow.NodeContainer;
@@ -61,7 +61,7 @@ public class OpenWorkflowPortViewAction extends OpenPortViewAction {
         if (m_port.getPortType().equals(
                 BufferedDataTable.TYPE)) {
             name = "Workflow Data Inport " + getPortIndex();
-        } else if (m_port.getPortType().equals(ModelContent.TYPE)){
+        } else if (m_port.getPortType().equals(ModelPortObject.TYPE)){
             name = "Workflow Model Inport " + getPortIndex();
         } else {
             name ="Unknown Outport " + getPortIndex();

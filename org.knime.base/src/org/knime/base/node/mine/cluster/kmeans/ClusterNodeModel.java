@@ -53,6 +53,7 @@ import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -159,7 +160,7 @@ public class ClusterNodeModel extends GenericNodeModel {
                 BufferedDataTable.TYPE},
               new PortType[] {
                 BufferedDataTable.TYPE,
-                ModelContent.TYPE}
+                ModelPortObject.TYPE}
                 ); // specify one data input, one data output and one model
         m_mapper = null;
         m_translator = new HiLiteTranslator(new DefaultHiLiteHandler(),

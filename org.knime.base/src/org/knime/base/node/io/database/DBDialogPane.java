@@ -45,11 +45,11 @@ import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.util.StringHistory;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.core.util.SimpleFileFilter;
@@ -174,7 +174,7 @@ public class DBDialogPane extends JPanel {
      * @param specs input spec
      */
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) {
+            final PortObjectSpec[] specs) {
         // database driver and name
         m_driver.removeAllItems();
         m_db.removeAllItems();

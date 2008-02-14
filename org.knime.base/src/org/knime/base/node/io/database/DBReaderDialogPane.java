@@ -32,19 +32,19 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 
-import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.PortObjectSpec;
 
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBReaderDialogPane extends NodeDialogPane {
+public class DBReaderDialogPane extends GenericNodeDialogPane {
     
     private final DBDialogPane m_loginPane = new DBDialogPane();
   
@@ -53,7 +53,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
     /**
      * Creates new dialog.
      */
-    DBReaderDialogPane() {
+    public DBReaderDialogPane() {
         super();
         m_statmnt.setFont(DBDialogPane.FONT);
         m_statmnt.setText("SELECT * FROM <table>");
@@ -73,7 +73,7 @@ public class DBReaderDialogPane extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final PortObjectSpec[] specs) throws NotConfigurableException {
         m_loginPane.loadSettingsFrom(settings, specs);
         // statement
         String statement = 

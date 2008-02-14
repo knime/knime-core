@@ -27,11 +27,10 @@ package org.knime.workbench.editor2.actions;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePort;
 import org.knime.core.node.workflow.NodeContainer;
-
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -96,7 +95,7 @@ public class OpenPortViewAction extends Action {
                 BufferedDataTable.TYPE)) {
             name = "Data Outport " + m_index;
         } else if (m_nodeContainer.getOutPort(m_index).getPortType().equals(
-                ModelContent.TYPE)){
+                ModelPortObject.TYPE)){
             name = "Model Outport " + m_index;
         } else {
             name ="Unknown Outport " + m_index;

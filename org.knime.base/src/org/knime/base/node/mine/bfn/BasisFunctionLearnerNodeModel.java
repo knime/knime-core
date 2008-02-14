@@ -58,6 +58,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
+import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -138,7 +139,7 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
      */
     protected BasisFunctionLearnerNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},  
-              new PortType[]{BufferedDataTable.TYPE, ModelContent.TYPE});
+              new PortType[]{BufferedDataTable.TYPE, ModelPortObject.TYPE});
         m_bfs = new LinkedHashMap<DataCell, List<BasisFunctionLearnerRow>>();
         m_translator = new HiLiteTranslator(new DefaultHiLiteHandler());
     }

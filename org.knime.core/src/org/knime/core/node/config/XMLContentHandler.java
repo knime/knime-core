@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 13, 2006 (wiswedel): created
  */
@@ -42,15 +42,15 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author wiswedel, University of Konstanz
  */
 class XMLContentHandler extends DefaultHandler {
-    
+
     private final Stack<Config> m_elementStack;
     private final String m_fileName;
-    
+
     /**
      * Creates new instance.
      * @param config The config object as root of the xml tree, this
      * class adds sub-entrys to this root node.
-     * @param fileName The file name for eventual error messages. 
+     * @param fileName The file name for eventual error messages.
      */
     XMLContentHandler(final Config config, final String fileName) {
         m_elementStack = new Stack<Config>();
@@ -71,14 +71,14 @@ class XMLContentHandler extends DefaultHandler {
      */
     @Override
     public void endElement(
-            final String uri, final String localName, final String qName) 
+            final String uri, final String localName, final String qName)
         throws SAXException {
         if (ConfigEntries.config.name().equals(qName)) {
             m_elementStack.pop();
-        } 
+        }
         // ignore closing of "entry" tags
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -87,7 +87,7 @@ class XMLContentHandler extends DefaultHandler {
         String message = getParseExceptionInfo(e);
         throw new SAXException(message, e);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -108,7 +108,7 @@ class XMLContentHandler extends DefaultHandler {
 
     /**
      * Returns a string describing parse exception details.
-     * 
+     *
      * @param spe <code>SAXParseException</code>.
      * @return String describing parse exception details.
      */
@@ -126,8 +126,8 @@ class XMLContentHandler extends DefaultHandler {
      * {@inheritDoc}
      */
     @Override
-    public void startElement(final String uri, final String localName, 
-            final String qName, final Attributes attributes) 
+    public void startElement(final String uri, final String localName,
+            final String qName, final Attributes attributes)
         throws SAXException {
         Config peek = m_elementStack.peek();
         if (ConfigEntries.config.name().equals(qName)) {
@@ -138,6 +138,8 @@ class XMLContentHandler extends DefaultHandler {
             String key = attributes.getValue("key");
             String type = attributes.getValue("type");
             String value = attributes.getValue("value");
+
+            //value = unescape(value);
 
             ConfigEntries configEntryType;
             // transform runtime IllegalArgumentException into a IOException
@@ -156,8 +158,8 @@ class XMLContentHandler extends DefaultHandler {
             AbstractConfigEntry ab = configEntryType.createEntry(key, value);
             peek.addEntry(ab);
         } else {
-            // only "config" and "entry" are valid tag names 
-            throw new SAXException("\"" + qName 
+            // only "config" and "entry" are valid tag names
+            throw new SAXException("\"" + qName
                     + "\" is not a valid tag name.");
         }
     }
@@ -167,7 +169,7 @@ class XMLContentHandler extends DefaultHandler {
      */
     @Override
     public InputSource resolveEntity(
-            final String publicId, final String systemId) 
+            final String publicId, final String systemId)
         throws IOException, SAXException {
         assert systemId != null && (systemId.endsWith(XMLConfig.DTD_NAME)
                 || systemId.endsWith(XMLConfig.OLD_DTD_NAME));
@@ -177,21 +179,21 @@ class XMLContentHandler extends DefaultHandler {
         InputStream is = dtdURL.openStream();
         return new InputSource(is);
     }
-    
-    /** Utitlity method that writes the given config object to a content 
+
+    /** Utility method that writes the given config object to a content
      * handler. The content handler will take care to write to a file.
      * @param c The config to write, must not be <code>null</code>.
      * @param handler To write to.
      * @throws SAXException If that fails.
      */
-    static void asXML(final Config c, final ContentHandler handler) 
+    static void asXML(final Config c, final ContentHandler handler)
         throws SAXException {
         handler.startDocument();
         internalAsXML(c, handler);
         handler.endDocument();
     }
-    
-    private static void internalAsXML(final Config c, 
+
+    private static void internalAsXML(final Config c,
             final ContentHandler handler) throws SAXException {
         AttributesImpl attr = new AttributesImpl();
         attr.addAttribute("", "", "key", "CDATA", c.getKey());
@@ -210,6 +212,7 @@ class XMLContentHandler extends DefaultHandler {
                     a.addAttribute("", "", "isnull", "CDATA", "true");
                     value = "";
                 }
+                //value = escape(value);
                 a.addAttribute("", "", "value", "CDATA", value);
                 handler.startElement("", "", "entry", a);
                 handler.endElement("", "", "entry");
@@ -217,4 +220,54 @@ class XMLContentHandler extends DefaultHandler {
         }
         handler.endElement("", "", ConfigEntries.config.name());
     }
+
+//    /**
+//     * Escapes all forbidden XML characters to that we can save them
+//     * nevertheless. They are escaped as %00 to %31.
+//     *
+//     * @param s the string to escape
+//     * @return the escaped string
+//     */
+//    final static String escape(final String s) {
+//        if (s == null) {
+//            return null;
+//        }
+//        char[] c = s.toCharArray();
+//        StringBuilder buf = new StringBuilder();
+//        for (int i = 0; i < c.length; i++) {
+//            if ((c[i] < 32) || (c[i] == '%')) {
+//                buf.append('%');
+//                if (c[i] < 10) {
+//                    buf.append('0');
+//                }
+//                buf.append(Integer.toString(c[i]));
+//            } else {
+//                buf.append(c[i]);
+//            }
+//        }
+//
+//        return buf.toString();
+//    }
+//
+//    /**
+//     * Unescapes all forbidden XML characters that were previous escaped by
+//     * {@link #escape(String)}.
+//     *
+//     * @param s the escaped string
+//     * @return the unescaped string
+//     */
+//    final static String unescape(final String s) {
+//        char[] c = s.toCharArray();
+//        StringBuilder buf = new StringBuilder();
+//        for (int i = 0; i < c.length; i++) {
+//            if (c[i] == '%') {
+//                buf.append((char) ((c[i + 1] - '0') * 10 + (c[i + 2] - '0')));
+//                i += 2;
+//            } else {
+//                buf.append(c[i]);
+//            }
+//        }
+//
+//        return buf.toString();
+//    }
 }

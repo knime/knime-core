@@ -56,7 +56,7 @@ import org.knime.core.node.tableview.TableView;
  * 
  * @author Peter Ohl, University of Konstanz
  */
-final class DataOutPortView extends NodeOutPortView {
+class DataOutPortView extends NodeOutPortView {
     
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(DataOutPortView.class); 

@@ -20,41 +20,36 @@
  * --------------------------------------------------------------------- *
  * 
  * History
- *   13.02.2008 (gabriel): created
+ *   14.02.2008 (gabriel): created
  */
 package org.knime.core.node;
 
+import org.knime.core.data.DataTableSpec;
 
 /**
  * 
- * @author Thomas Gabriel, University of Konstanz
+ * @author gabriel, University of Konstanz
  */
-public final class DatabaseContent implements PortObject {
+public class DatabaseOutPortView extends DataOutPortView {
 
     /**
-     * Database port type formed <code>PortObjectSpec.class</code> and 
-     * <code>PortObject.class</code> from this class.
+     * 
      */
-    public static final PortType TYPE = 
-        new PortType(DatabaseContentSpec.class, DatabaseContent.class);
+    DatabaseOutPortView(final String nodeName, final String portName) {
+        super(nodeName, portName);    }
     
-    private final BufferedDataTable m_data;
-    
-    private final ModelContentRO m_conn;
-    
-    public DatabaseContent(final BufferedDataTable data, 
-            final ModelContentRO conn) {
-        m_data = data;
-        m_conn = conn;
+    @Override
+    void update(PortObject portObj, PortObjectSpec portSpec) {
+        BufferedDataTable table = null;
+        if (portObj != null) {
+            table = ((DatabaseContent) portObj).getDataTable();
+        }
+        DataTableSpec spec = null;
+        if (portSpec != null) {
+            spec = ((DatabaseContentSpec) portSpec).getDataTableSpec();
+        }
+        super.update(table, spec);
     }
     
-    public BufferedDataTable getDataTable() {
-        return m_data;
-    }
-    
-    public ModelContentRO getConnectionModel() {
-        return m_conn;
-    }
-    
-    
+
 }

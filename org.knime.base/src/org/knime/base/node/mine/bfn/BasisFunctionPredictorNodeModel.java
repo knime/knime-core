@@ -36,8 +36,8 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
+import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.PortObject;
@@ -70,7 +70,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
      * one which contains the data and the second with the model.
      */
     protected BasisFunctionPredictorNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, ModelContent.TYPE},
+        super(new PortType[]{BufferedDataTable.TYPE, ModelPortObject.TYPE},
               new PortType[]{BufferedDataTable.TYPE});
     }
 

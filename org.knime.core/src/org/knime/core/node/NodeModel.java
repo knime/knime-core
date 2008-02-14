@@ -146,7 +146,8 @@ public abstract class NodeModel extends GenericNodeModel {
     // during configure! (old v1.x model ports!)
     //
     // hide model content in a modern style PortObjectSpec
-    private class ModelContentWrapper implements PortObjectSpec, PortObject {
+    private class ModelContentWrapper 
+            implements ModelPortObjectSpec, ModelPortObject {
         ModelContentWrapper(final ModelContentRO mdl) {
             m_hiddenModel = mdl;
         }
