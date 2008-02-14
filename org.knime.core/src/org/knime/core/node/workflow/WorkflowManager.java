@@ -1053,8 +1053,13 @@ public final class WorkflowManager extends NodeContainer {
             }
             if (canConfigureSuccessors) {
                 // standard behaviour - configure successors since this node
-                // is done (either executed or failed) and has new specs (maybe).
-                configureSuccessors(nc.getID());
+                // is done (either executed or failed) and has new specs (maybe)
+                // Reconfigure this node as well if it failed!
+                if (nc.getState() == NodeContainer.State.EXECUTED) {
+                    configureSuccessors(nc.getID());
+                } else {
+                    configure(nc.getID());
+                }
             }
             switch (getState()) {
             case EXECUTING:

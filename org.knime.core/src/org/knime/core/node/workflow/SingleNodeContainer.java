@@ -382,8 +382,8 @@ public final class SingleNodeContainer extends NodeContainer
                 m_node.reset();
                 // TODO move this into Node.reset() ?
                 m_node.clearLoopStatus();
-                // TODO reconfigure node!
-                setNewState(State.CONFIGURED);
+                // reconfigure node will be done in WFM, not here!
+                setNewState(State.IDLE);
             }
         }
         // the following triggers checkforqueueablenodes
