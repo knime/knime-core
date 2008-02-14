@@ -136,6 +136,8 @@ public class ProgressFigure extends RectangleFigure implements
      */
     public ProgressFigure() {
 
+        setBounds(new Rectangle(0, 0, WIDTH, HEIGHT));
+
         if (m_currentDisplay != null) {
             m_currentDisplay = Display.getCurrent();
         }

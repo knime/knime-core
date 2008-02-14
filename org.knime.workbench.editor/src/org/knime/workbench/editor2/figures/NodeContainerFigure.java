@@ -982,7 +982,8 @@ public class NodeContainerFigure extends RectangleFigure {
          *
          */
         public StatusFigure() {
-
+            // status figure must have exact same dimensions as progress bar
+            setBounds(new Rectangle(0,0, ProgressFigure.WIDTH, ProgressFigure.HEIGHT));
             ToolbarLayout layout = new ToolbarLayout(false);
             layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
             layout.setStretchMinorAxis(true);
@@ -1017,8 +1018,8 @@ public class NodeContainerFigure extends RectangleFigure {
          */
         @Override
         public Dimension getPreferredSize(final int wHint, final int hHint) {
-            return new Dimension(WIDTH,
-                    m_label.getPreferredSize().height);
+            return new Dimension(getBounds().width,
+                    getBounds().height);
         }
 
     }
