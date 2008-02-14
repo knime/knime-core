@@ -32,7 +32,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.DatabaseContent;
+import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.PortType;
 
@@ -82,7 +82,7 @@ public abstract class AbstractPortFigure extends Shape {
     /**
      * We need to set the colors explicitly dependend on the {@link PortType}.
      * Currently supported are {@link BufferedDataTable#TYPE} : black, 
-     * {@link ModelPortObject#TYPE} : blue, {@link DatabaseContent#TYPE} : 
+     * {@link ModelPortObject#TYPE} : blue, {@link DatabasePortObject#TYPE} : 
      * dark yellow.
      * 
      * @return the background color, dependend on the {@link PortType}
@@ -98,7 +98,7 @@ public abstract class AbstractPortFigure extends Shape {
         } else if (getType().equals(BufferedDataTable.TYPE)) {
             // data
             color = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
-        } else if (getType().equals(DatabaseContent.TYPE)) {
+        } else if (getType().equals(DatabasePortObject.TYPE)) {
             // database
             color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
         }

@@ -26,23 +26,39 @@ package org.knime.core.node;
 
 import org.knime.core.data.DataTableSpec;
 
-
-public class DatabaseContentSpec implements PortObjectSpec {
+/**
+ * Class used as database port object holding a {@link DataTableSpec}
+ * and a <code>ModelContentRO</code> to create a database connection.
+ * 
+ * @author Thomas Gabriel, University of Konstanz
+ */
+public class DatabasePortObjectSpec implements PortObjectSpec {
 
     private final DataTableSpec m_spec;
     
     private final ModelContentRO m_conn;
     
-    public DatabaseContentSpec(final DataTableSpec spec, 
+    /**
+     * Creates a new database port object spec.
+     * @param spec underlying table spec
+     * @param conn connection model
+     */
+    public DatabasePortObjectSpec(final DataTableSpec spec, 
             final ModelContentRO conn) {
         m_spec = spec;
         m_conn = conn;
     }
     
+    /**
+     * @return underlying table spec
+     */
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
     
+    /**
+     * @return connection model
+     */
     public ModelContentRO getConnectionModel() {
         return m_conn;
     }

@@ -24,34 +24,46 @@
  */
 package org.knime.core.node;
 
-
 /**
+ * Class used as database port object holding a {@link BufferedDataTable}
+ * and a <code>ModelContentRO</code> to create a database connection.
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class DatabaseContent implements PortObject {
+public class DatabasePortObject implements PortObject {
 
     /**
      * Database port type formed <code>PortObjectSpec.class</code> and 
      * <code>PortObject.class</code> from this class.
      */
     public static final PortType TYPE = 
-        new PortType(DatabaseContentSpec.class, DatabaseContent.class);
+        new PortType(DatabasePortObjectSpec.class, DatabasePortObject.class);
     
     private final BufferedDataTable m_data;
     
     private final ModelContentRO m_conn;
     
-    public DatabaseContent(final BufferedDataTable data, 
+    /**
+     * Creates a new database port object.
+     * @param data underlying data
+     * @param conn connection model
+     */
+    public DatabasePortObject(final BufferedDataTable data, 
             final ModelContentRO conn) {
         m_data = data;
         m_conn = conn;
     }
     
+    /**
+     * @return underlying data
+     */
     public BufferedDataTable getDataTable() {
         return m_data;
     }
     
+    /**
+     * @return connection model
+     */
     public ModelContentRO getConnectionModel() {
         return m_conn;
     }

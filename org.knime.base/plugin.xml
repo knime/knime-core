@@ -612,6 +612,21 @@
             factory-class="org.knime.base.node.meta.looper.ForLoopTailNodeFactory"
             id="org.knime.base.node.meta.looper.ForLoopTailNodeFactory">
       </node>
+         <node
+         category-path="/database"
+         factory-class="org.knime.base.node.io.database.DBConnectionNodeFactory"
+         id="org.knime.base.node.io.database.DBConnectionNodeFactory">
+   	  </node>
+      <node
+         category-path="/database"
+         factory-class="org.knime.base.node.io.database.DBConnectionWriterNodeFactory"
+         id="org.knime.base.node.io.database.DBConnectionWriterNodeFactory">
+      </node>
+      <node
+         category-path="/database"
+         factory-class="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
+         id="org.knime.base.node.io.database.DBReaderConnectionNodeFactory">
+      </node>
    </extension>
    
    

@@ -42,7 +42,8 @@ public class DatabaseOutPortView extends DataOutPortView {
      * @param portName the name of the port to display view on
      */
     DatabaseOutPortView(final String nodeName, final String portName) {
-        super(nodeName, portName);    }
+        super(nodeName, portName);    
+    }
     
     
     /**
@@ -55,11 +56,11 @@ public class DatabaseOutPortView extends DataOutPortView {
         BufferedDataTable table = null;
         DataTableSpec spec = null;
         if (portObj != null) {
-            table = ((DatabaseContent) portObj).getDataTable();
+            table = ((DatabasePortObject) portObj).getDataTable();
             spec = table.getDataTableSpec();
         } else {
             if (portSpec != null) {
-                spec = ((DatabaseContentSpec) portSpec).getDataTableSpec();
+                spec = ((DatabasePortObjectSpec) portSpec).getDataTableSpec();
             }
         }
         super.update(table, spec);

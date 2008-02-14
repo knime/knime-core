@@ -67,7 +67,7 @@ abstract class NodeOutPortView extends JFrame {
                     "ModelPort type " + type + " not supported yet!");
         } else if (type == NodeModel.OLDSTYLEMODELPORTTYPE) {
             return new ModelContentOutPortView(nodeName, portName);
-        } else if (type == DatabaseContent.TYPE) {
+        } else if (type == DatabasePortObject.TYPE) {
             return new DatabaseOutPortView(nodeName, portName);    
         } else {
             throw new IllegalArgumentException(

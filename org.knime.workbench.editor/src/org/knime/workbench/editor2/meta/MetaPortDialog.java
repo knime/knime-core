@@ -38,7 +38,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.DatabaseContent;
+import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.ModelPortObject;
 
 /**
@@ -180,7 +180,7 @@ public class MetaPortDialog extends Dialog {
                     m_port = new Port(ModelPortObject.TYPE, m_name.getText());
                 } else if (PortTypes.valueOf(selected).equals(
                         PortTypes.DatabasePort)) {
-                    m_port = new Port(DatabaseContent.TYPE, m_name.getText());
+                    m_port = new Port(DatabasePortObject.TYPE, m_name.getText());
                 }
                 m_shell.dispose();
             }
