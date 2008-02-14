@@ -109,7 +109,7 @@ public class WorkflowGraphicalViewerCreator {
 
         // set the factory that is able to create the edit parts to be
         // used in the viewer
-        viewer.setEditPartFactory(new NewWorkflowEditPartFactory());
+        viewer.setEditPartFactory(new WorkflowEditPartFactory());
 
         return viewer;
     }
