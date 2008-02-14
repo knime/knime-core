@@ -396,7 +396,7 @@ public class NewJoinerNodeModel extends NodeModel {
     @Override
     protected void reset() {
         m_hiliteHandler.removeAllHiLiteHandlers();
-        for (int i = 0; i < getNrDataIns(); i++) {
+        for (int i = 0; i < getNrInPorts(); i++) {
             HiLiteHandler hdl = getInHiLiteHandler(i);
             m_hiliteHandler.addHiLiteHandler(hdl);
         }
