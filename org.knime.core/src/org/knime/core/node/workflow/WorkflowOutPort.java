@@ -103,9 +103,9 @@ public class WorkflowOutPort extends NodeOutPort {
         if (m_underlyingPort == null) {
             return null;
         }
-        return m_underlyingPort.getPortObject();
+        return isPortObjectEnabled() ? m_underlyingPort.getPortObject() : null;
     }
-
+    
     /**
      * @return
      * @see org.knime.core.node.NodeOutPort#getPortObjectSpec()

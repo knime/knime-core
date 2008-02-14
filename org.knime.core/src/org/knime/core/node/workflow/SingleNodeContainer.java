@@ -281,6 +281,10 @@ public final class SingleNodeContainer extends NodeContainer
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case EXECUTED:
+                // disable outports
+                for (int i = 0; i < m_node.getNrOutPorts(); i++) {
+                    m_node.getOutPort(i).enablePortObject(false);
+                }
                 m_node.reset();
                 if (m_node.isConfigured()) {
                     setNewState(State.CONFIGURED);
@@ -342,30 +346,44 @@ public final class SingleNodeContainer extends NodeContainer
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case QUEUED:
-                m_node.clearLoopStatus();
-                setNewState(State.EXECUTING);
-                // TODO: the progress monitor should not be accessible from the
-                // public world.
-                ec.getProgressMonitor().reset();
-                boolean success = m_node.execute(inObjects, ec);
-                if (success) {
-                    if (m_node.getLoopStatus() == null) {
-                        setNewState(State.EXECUTED);
-                    } else {
-                        // loop not yet done - "stay" configured until done.
-                        setNewState(State.CONFIGURED);
-                    }
-                } else {
-                    m_node.reset();
-                    // TODO move this into Node.reset() ?
-                    m_node.clearLoopStatus();
-                    // TODO reconfigure node!
-                    setNewState(State.CONFIGURED);
+                // disable outports
+                for (int i = 0; i < m_node.getNrOutPorts(); i++) {
+                    m_node.getOutPort(i).enablePortObject(false);
                 }
+                // clear loop status
+                m_node.clearLoopStatus();
+                // change state to avoid more than one executor
+                setNewState(State.EXECUTING);
                 break;
             default:
                 throw new IllegalStateException("Illegal state " + getState()
                         + " encountered in executeNode(), node: " + getID());
+            }
+        }
+        // TODO: the progress monitor should not be accessible from the
+        // public world.
+        // execute node outside any synchronization!
+        ec.getProgressMonitor().reset();
+        boolean success = m_node.execute(inObjects, ec);
+        // clean up stuff and especially state changes synchronized again
+        synchronized (m_dirtyNode) {
+            if (success) {
+                if (m_node.getLoopStatus() == null) {
+                    // enable outports
+                    for (int i = 0; i < m_node.getNrOutPorts(); i++) {
+                        m_node.getOutPort(i).enablePortObject(true);
+                    }
+                    setNewState(State.EXECUTED);
+                } else {
+                    // loop not yet done - "stay" configured until done.
+                    setNewState(State.CONFIGURED);
+                }
+            } else {
+                m_node.reset();
+                // TODO move this into Node.reset() ?
+                m_node.clearLoopStatus();
+                // TODO reconfigure node!
+                setNewState(State.CONFIGURED);
             }
         }
         // the following triggers checkforqueueablenodes
@@ -531,5 +549,3 @@ public final class SingleNodeContainer extends NodeContainer
     }
 
 }
-
-

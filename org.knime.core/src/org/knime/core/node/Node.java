@@ -974,9 +974,11 @@ public final class Node {
                     if (BufferedDataTable.class.isAssignableFrom(
                             getInPort(i).getPortType().getPortObjectClass())
                             && (inSpecs[i] == null)) {
-                        throw new InvalidSettingsException(
-                                "Node is not executable until all predecessors "
-                                + "are configured and/or executed.");
+                        return false;
+                        // TODO: did we really need a warning here??
+//                        throw new InvalidSettingsException(
+//                                "Node is not executable until all predecessors "
+//                                + "are configured and/or executed.");
                     }
                 }
     

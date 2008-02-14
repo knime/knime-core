@@ -790,6 +790,7 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     public void resetAll() {
+        // TODO: shouldn't we also reset nodes without incoming edges? FileReader inside a Metanode, for example?
         // traverse all nodes that are directly connected to this meta nodes
         // input ports and reset those (with their successors)
         Set<ConnectionContainer> cons = m_connectionsByDest.get(getID());
@@ -820,7 +821,13 @@ public final class WorkflowManager extends NodeContainer {
             default: // nothing to do with "yellow" nodes
             }
         }
-        setNewState(State.CONFIGURED);
+        synchronized (m_dirtyWorkflow) {
+            // make sure ports seem empty to the outside and reset state
+            for (WorkflowOutPort port : m_outPorts) {
+                port.enablePortObject(false);
+            }
+            setNewState(State.CONFIGURED);
+        }
     }
 
     /** mark this node and all not-yet-executed predecessors for execution.
@@ -1065,7 +1072,14 @@ public final class WorkflowManager extends NodeContainer {
                                        .setUnderlyingPort(connectedPort);
                         }
                     }
+                    // this ought to be an atomic operation:
+                    // 1) set state to executed
                     setNewState(State.EXECUTED);
+                    // 2) switch output ports "on"
+                    for (WorkflowOutPort port : m_outPorts) {
+                        port.enablePortObject(true);
+                    }
+                    // and finally run after execution stuff for this as node
                     if (getParent() != null) {
                         getParent().doAfterExecution(this);
                     }

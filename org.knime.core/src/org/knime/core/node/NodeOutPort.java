@@ -45,6 +45,11 @@ public class NodeOutPort extends NodePort {
      * The data table for this port - if any.
      */
     private PortObject m_portObject;
+    
+    /** allow hiding of the underlying content of port if is not yet EXECUTED.
+     * (needed to keep external view on ports in sync with EXECUTED-flag...)
+     */
+    private boolean m_enablePortObject = false;
 
     /**
      * The table spec for this port.
@@ -128,6 +133,24 @@ public class NodeOutPort extends NodePort {
      */
     public PortObject getPortObject() {
         return m_portObject;
+    }
+    
+    /**
+     * Disable/Enable port content - used to make sure port stays in sync
+     * with EXECUTED-flag and does not provide content to the outside while
+     * the node is officially not (yet) executed.
+     * 
+     * @param flag true if content is to be seen
+     */
+    public void enablePortObject(final boolean flag) {
+        m_enablePortObject = flag;
+    }
+    
+    /**
+     * @return true if content is to be seen
+     */
+    public boolean isPortObjectEnabled() {
+        return m_enablePortObject;
     }
 
     /**
