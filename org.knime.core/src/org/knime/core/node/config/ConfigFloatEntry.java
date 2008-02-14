@@ -4,7 +4,7 @@
  * are protected by copyright l
 doaw. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
