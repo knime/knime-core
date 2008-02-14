@@ -135,6 +135,8 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private static final Font FONT_NORMAL;
 
+    private static final Font FONT_SMALL;
+
     private static final Font FONT_USER_NAME;
 
     // private static final Font FONT_EXECUTING;
@@ -159,6 +161,8 @@ public class NodeContainerFigure extends RectangleFigure {
         // FONT_EXECUTING = new Font(current, name, height, SWT.ITALIC);
         FONT_EXECUTED = new Font(current, name, height, SWT.BOLD);
         FONT_NORMAL = FONT_EXECUTED;
+
+        FONT_SMALL = new Font(current, name, 2, SWT.NORMAL);
     }
 
     /** tooltip for displaying the full heading. * */
@@ -581,7 +585,7 @@ public class NodeContainerFigure extends RectangleFigure {
                         + m_contentFigure.getPreferredSize().height
                         + m_infoWarnErrorPanel.getPreferredSize().height
                         + m_statusFigure.getPreferredSize().height
-                        + m_name.getPreferredSize().height + 20;
+                        + m_name.getPreferredSize().height + 5;
         return new Dimension(prefWidth, prefHeight);
     }
 
@@ -992,8 +996,11 @@ public class NodeContainerFigure extends RectangleFigure {
 
             // the font is just set due to a bug in the getPreferedSize
             // method of a lable which accesses the font somewhere
-            // if not set a nullpointer is thrown
-            m_label.setFont(FONT_NORMAL);
+            // if not set a nullpointer is thrown.
+            // PO: Set a small font. The status image (as icon of the label) is
+            // placed at the bottom of the label, which is too low, if the
+            // font is bigger than the slot for the image.
+            m_label.setFont(FONT_SMALL);
 
             // m_label.setIconAlignment(PositionConstants.CENTER);
             add(m_label);
