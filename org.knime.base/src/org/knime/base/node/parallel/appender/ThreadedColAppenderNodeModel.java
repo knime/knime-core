@@ -215,12 +215,12 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
 
         assert (cellFacs != null) : "Implementation Error: The array of "
                 + "generated output table specs must not be null.";
-        assert (cellFacs.length == getNrDataOuts()) : "Implementation Error: "
+        assert (cellFacs.length == getNrOutPorts()) : "Implementation Error: "
                 + " Number of provided DataTableSpecs doesn't match number of "
                 + "output ports";
 
         if (data[0].getRowCount() == 0) {
-            BufferedDataTable[] result = new BufferedDataTable[getNrDataOuts()];
+            BufferedDataTable[] result = new BufferedDataTable[getNrOutPorts()];
             for (int i = 0; i < cellFacs.length; i++) {
                 DataTableSpec spec =
                         createOutputSpec(data[i].getDataTableSpec(),
@@ -254,9 +254,9 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
         final BufferedDataTable[] combinedResults =
                 getCombinedResults(futures, exec);
         final BufferedDataTable[] resultTables =
-                new BufferedDataTable[getNrDataOuts()];
+                new BufferedDataTable[getNrOutPorts()];
 
-        for (int i = 0; i < getNrDataOuts(); i++) {
+        for (int i = 0; i < getNrOutPorts(); i++) {
             final int leftColCount = data[i].getDataTableSpec().getNumColumns();
             ColumnDestination[] dests = cellFacs[i].getColumnDestinations();
             ColumnRearranger crea =
@@ -365,7 +365,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
             final ExecutionContext exec) throws InterruptedException,
             ExecutionException, CanceledExecutionException {
         final BufferedDataTable[][] tempTables =
-                new BufferedDataTable[getNrDataOuts()][futures.size()];
+                new BufferedDataTable[getNrOutPorts()][futures.size()];
         int k = 0;
         for (Future<BufferedDataContainer[]> results : futures) {
             try {
@@ -379,7 +379,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
 
             final BufferedDataContainer[] temp = results.get();
 
-            if ((temp == null) || (temp.length != getNrDataOuts())) {
+            if ((temp == null) || (temp.length != getNrOutPorts())) {
                 throw new IllegalStateException("Invalid result. Execution "
                         + " failed, reason: data is null or number "
                         + "of outputs wrong.");
@@ -392,7 +392,7 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
         }
 
         final BufferedDataTable[] combinedResults =
-                new BufferedDataTable[getNrDataOuts()];
+                new BufferedDataTable[getNrOutPorts()];
         for (int i = 0; i < combinedResults.length; i++) {
             combinedResults[i] =
                     exec.createConcatenateTable(exec, tempTables[i]);
