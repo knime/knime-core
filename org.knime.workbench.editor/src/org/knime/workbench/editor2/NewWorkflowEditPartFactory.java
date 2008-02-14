@@ -31,8 +31,11 @@ import org.knime.core.node.NodeInPort;
 import org.knime.core.node.NodeOutPort;
 import org.knime.core.node.NodePort;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.WorkflowInPort;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowOutPort;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
@@ -40,8 +43,6 @@ import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowOutPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
-import org.knime.workbench.editor2.model.WorkflowInPortProxy;
-import org.knime.workbench.editor2.model.WorkflowOutPortProxy;
 
 /**
  * This factory creates the GEF <code>EditPart</code>s instances (the
@@ -88,53 +89,88 @@ public final class NewWorkflowEditPartFactory implements EditPartFactory {
      *  <li>{@link NodeOutPort}: {@link NodeOutPortEditPart}</li>
      *  <li>{@link ConnectionContainer}: {@link ConnectionContainerEditPart}
      *  </li>
-     *  <li>{@link WorkflowInPortProxy}: {@link WorkflowInPortEditPart}</li>
-     *  <li>{@link WorkflowOutPortProxy}: {@link WorkflowOutPortEditPart}</li>
+     *  <li>{@link WorkflowInPort}: {@link WorkflowInPortEditPart}</li>
+     *  <li>{@link WorkflowOutPort}: {@link WorkflowOutPortEditPart}</li>
      * </ul>
      * 
+     * The {@link WorkflowRootEditPart} has its {@link NodeContainer}s and its
+     * {@link WorkflowInPort}s and {@link WorkflowOutPort}s as model children. 
+     * The {@link NodeContainerEditPart} has its {@link NodePort}s as its 
+     * children. 
+     * 
      * @see WorkflowRootEditPart#getModelChildren()
+     * @see NodeContainerEditPart#getModelChildren()
      * 
      * @throws IllegalArgumentException if any other object is passed
      * 
      * {@inheritDoc}
      */
     public EditPart createEditPart(final EditPart context, final Object model) {
+        // instantiated here
+        // correct type in the if statement
+        // model at the end of method
         EditPart part = null;
         if (model instanceof WorkflowManager) {
+            // this is out "root" workflow manager
             if (m_isTop) {
+                // all following objects of type WorkflowManager are treated as
+                // meta nodes and displayed as NodeContainers
                 m_isTop = false;
                 part = new WorkflowRootEditPart();
             } else {
+                // we already have a "root" workflow manager
+                // must be a meta node
                 part = new NodeContainerEditPart();
             }
         } else if (model instanceof SingleNodeContainer) {
+            // SingleNodeContainer -> NodeContainerEditPart
             part = new NodeContainerEditPart();
+        } else if (model instanceof WorkflowInPort 
+                && context instanceof WorkflowRootEditPart) {
+            // WorkflowInPort and context WorkflowRootEditPart -> 
+            // WorkflowInPortEditPart
+            /*
+             * if the context is a WorkflowRootEditPart it indicates that the 
+             * WorkflowInPort is a model child of the WorkflowRootEditPart, i.e.
+             * we look at it as a workflow in port. If the context is a 
+             * NodeContainerEditPart the WorkflowInPort is a model child of a
+             * NodeContainerEditPart and we look at it as a node in port. 
+             */
+            WorkflowInPort inport = (WorkflowInPort)model;
+            part =
+                new WorkflowInPortEditPart(inport.getPortType(),
+                        inport.getPortID());
+        } else if (model instanceof WorkflowOutPort
+                && context instanceof WorkflowRootEditPart) {
+            // WorkflowOutPort and context WorkflowRootEditPart -> 
+            // WorkflowOutPortEditPart
+            /*
+             * if the context is a WorkflowRootEditPart it indicates that the 
+             * WorkflowOutPort is a model child of the WorkflowRootEditPart, 
+             * i.e. we look at it as a workflow out port. If the context is a 
+             * NodeContainerEditPart the WorkflowOutPort is a model child of a
+             * NodeContainerEditPart and we look at it as a node out port. 
+             */
+            WorkflowOutPort outport = (WorkflowOutPort)model;
+            part =
+                new WorkflowOutPortEditPart(
+                        outport.getPortType(), 
+                        outport.getPortID());
+            // we have to test for WorkflowInPort first because it's a 
+            // subclass of NodeInPort (same holds for WorkflowOutPort and 
+            // NodeOutPort) 
         } else if (model instanceof NodeInPort) {
+            // NodeInPort -> NodeInPortEditPart
             NodePort port = (NodeInPort)model;
             part = new NodeInPortEditPart(port.getPortType(), port.getPortID());
         } else if (model instanceof NodeOutPort) {
-            //
             // NodeOutPort -> NodeOutPortEditPart
             NodePort port = (NodeOutPort)model;
-            part =
-                    new NodeOutPortEditPart(port.getPortType(), port
-                            .getPortID());
+            part = new NodeOutPortEditPart(port.getPortType(), 
+                    port.getPortID());
         } else if (model instanceof ConnectionContainer) {
-            //
             // ConnectionContainer -> ConnectionContainerEditPart
-            //
             part = new ConnectionContainerEditPart();
-        } else if (model instanceof WorkflowInPortProxy) {
-            WorkflowInPortProxy inport = (WorkflowInPortProxy)model;
-            part =
-                    new WorkflowInPortEditPart(inport.getPort().getPortType(),
-                            inport.getPort().getPortID());
-        } else if (model instanceof WorkflowOutPortProxy) {
-            WorkflowOutPortProxy outport = (WorkflowOutPortProxy)model;
-            part =
-                    new WorkflowOutPortEditPart(
-                            outport.getPort().getPortType(), 
-                            outport.getPort().getPortID());
         } else {
             throw new IllegalArgumentException("unknown model obj: " + model);
         }
