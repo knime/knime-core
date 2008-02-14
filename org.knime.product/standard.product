@@ -6,9 +6,9 @@
    <aboutInfo>
       <image path="/org.knime.product/icons/knime64.gif"/>
       <text>
-         Welcome to KNIME v1.4.0.ALPHA
+         Welcome to KNIME v2.0.0.0014633
 the Konstanz Information Miner
-Copyright, 2003 - 2007
+Copyright, 2003 - 2008
 email: contact@knime.org
 
 This version of KNIME is licensed under the Aladdin Open Source 
@@ -49,8 +49,8 @@ Uses: Java, GEF, Log4J
       <feature id="org.eclipse.gef" version="0.0.0"/>
       <feature id="org.eclipse.platform" version="0.0.0"/>
       <feature id="org.eclipse.rcp" version="0.0.0"/>
-      <feature id="org.knime.features.base" version="1.4.0.ALPHA"/>
-      <feature id="org.knime.features.product" version="1.4.0.ALPHA"/>
+      <feature id="org.knime.features.base" version="2.0.0.0014633"/>
+      <feature id="org.knime.features.product" version="2.0.0.0014633"/>
    </features>
 
 </product>
