@@ -100,7 +100,7 @@ public abstract class AbstractPortFigure extends Shape {
             color = Display.getCurrent().getSystemColor(SWT.COLOR_BLACK);
         } else if (getType().equals(DatabaseContent.TYPE)) {
             // database
-            color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_YELLOW);
+            color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
         }
         return color;
     }
