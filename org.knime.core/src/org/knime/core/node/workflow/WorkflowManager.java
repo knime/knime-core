@@ -777,18 +777,24 @@ public final class WorkflowManager extends NodeContainer {
      * for execution (if they are not executed already).
      */
     public void prepareForExecutionAll() {
-        for (NodeContainer nc : m_nodes.values()) {
-            switch (nc.getState()) {
-            case IDLE:
-            case CONFIGURED: nc.enableQueuing();
-            default: // already run(ning)
+        synchronized (m_dirtyWorkflow) {
+            for (NodeContainer nc : m_nodes.values()) {
+                switch (nc.getState()) {
+                case IDLE:
+                case CONFIGURED: nc.enableQueuing();
+                default: // already run(ning)
+                }
             }
         }
-        // TODO remove, should be called independently
         checkForQueuableNodes();
-        // TODO state change?
     }
 
+    /**
+     * Reset all nodes in this workflow. Make sure the reset is propagated
+     * in the right order, that is, only actively reset the "left most"
+     * nodes in the workflow or the ones connected to meta node input
+     * ports only(!).
+     */
     public void resetAll() {
         // TODO: shouldn't we also reset nodes without incoming edges? FileReader inside a Metanode, for example?
         // traverse all nodes that are directly connected to this meta nodes
