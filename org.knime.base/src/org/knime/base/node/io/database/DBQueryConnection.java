@@ -36,6 +36,9 @@ import org.knime.core.node.config.ConfigWO;
  */
 public class DBQueryConnection extends DBConnection {
     
+    /** Place holder <code>&lttable&gt</code>. */
+    public static final String TABLE_PLACEHOLDER = "<table>"; 
+    
     private String m_query = null;
     
     /**
@@ -45,7 +48,7 @@ public class DBQueryConnection extends DBConnection {
     public void validateConnection(final ConfigRO settings)
             throws InvalidSettingsException {
         String query = settings.getString(CFG_STATEMENT);
-        if (query != null && query.contains("<table>")) {
+        if (query != null && query.contains(TABLE_PLACEHOLDER)) {
             throw new InvalidSettingsException(
             "Database table place holder not replaced.");
         }

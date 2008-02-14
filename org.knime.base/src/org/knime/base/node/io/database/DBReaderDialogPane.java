@@ -56,7 +56,8 @@ public class DBReaderDialogPane extends GenericNodeDialogPane {
     public DBReaderDialogPane() {
         super();
         m_statmnt.setFont(DBDialogPane.FONT);
-        m_statmnt.setText("SELECT * FROM <table>");
+        m_statmnt.setText("SELECT * FROM " 
+                + DBQueryConnection.TABLE_PLACEHOLDER);
         final JScrollPane scrollPane = new JScrollPane(m_statmnt,
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -79,7 +80,8 @@ public class DBReaderDialogPane extends GenericNodeDialogPane {
         String statement = 
             settings.getString(DBConnection.CFG_STATEMENT, null); 
         m_statmnt.setText(statement == null 
-                ? "SELECT * FROM <table>" : statement);
+                ? "SELECT * FROM " + DBQueryConnection.TABLE_PLACEHOLDER 
+                : statement);
     }
 
     /**

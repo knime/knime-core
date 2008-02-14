@@ -153,7 +153,8 @@ class DBReaderNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         String query = settings.getString(DBConnection.CFG_STATEMENT);
-        if (query != null && query.contains("<table>")) {
+        if (query != null 
+                && query.contains(DBQueryConnection.TABLE_PLACEHOLDER)) {
             throw new InvalidSettingsException(
                     "Database table place holder not replaced.");
         }

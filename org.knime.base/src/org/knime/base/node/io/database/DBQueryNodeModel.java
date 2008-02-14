@@ -27,6 +27,7 @@ package org.knime.base.node.io.database;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.DatabasePortObjectSpec;
@@ -107,16 +108,15 @@ class DBQueryNodeModel extends GenericNodeModel {
         String newQuery = m_query.getStringValue().replaceAll(
                 VIEW_PLACE_HOLDER, "(" + conn.getQuery() + ")");
         conn.setQuery(newQuery);
-        Exception e = conn.execute(newQuery);
-        if (e != null) {
-            throw e;
-        }
-        return new PortObject[]{
-                new DatabasePortObject(null, conn.createConnectionModel())};
+        DBReaderConnection load = 
+            new DBReaderConnection(conn, conn.getQuery(), 10);
+        BufferedDataTable data = exec.createBufferedDataTable(load, exec);
+        return new PortObject[]{new DatabasePortObject(data, 
+                conn.createConnectionModel())};
     }
 
     /**
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {

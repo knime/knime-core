@@ -130,7 +130,8 @@ class DBWriterNodeModel extends NodeModel {
         String table = settings.getString("table");
         // write settings or skip it
         if (write) {
-            if (table != null && table.contains("<table>")) {
+            if (table != null && table.contains(
+                    DBQueryConnection.TABLE_PLACEHOLDER)) {
                 throw new InvalidSettingsException(
                     "Database table place holder not replaced.");
             }
