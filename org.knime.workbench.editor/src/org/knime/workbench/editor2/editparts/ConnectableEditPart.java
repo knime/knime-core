@@ -19,9 +19,15 @@
 package org.knime.workbench.editor2.editparts;
 
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.commands.CreateConnectionCommand;
 
 /**
- *
+ * Interface for {@link WorkflowRootEditPart} and {@link NodeContainerEditPart}
+ * to provide the underlying {@link WorkflowManager}. This is used in the 
+ * {@link CreateConnectionCommand} to determine the source or target of the 
+ * connection.
+ *  
  * @author Fabian Dill, University of Konstanz
  */
 public interface ConnectableEditPart {

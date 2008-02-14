@@ -125,7 +125,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      *
      * @return The hosting WFM
      */
-    public WorkflowManager getWorkflow() {
+    public WorkflowManager getWorkflowManager() {
         return (WorkflowManager)getParent().getModel();
     }
 

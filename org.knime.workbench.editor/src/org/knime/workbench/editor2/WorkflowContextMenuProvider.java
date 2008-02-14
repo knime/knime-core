@@ -169,7 +169,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                             && ((WorkflowInPortEditPart)child).isSelected()) {
                         action = new OpenWorkflowPortViewAction(
                                 root.getNodeContainer(),
-                                ((WorkflowInPortEditPart)child).getId());
+                                ((WorkflowInPortEditPart)child).getIndex());
                         manager.appendToGroup("outPortViews", action);
                         ((WorkflowInPortEditPart)child).setSelected(false);
                     }

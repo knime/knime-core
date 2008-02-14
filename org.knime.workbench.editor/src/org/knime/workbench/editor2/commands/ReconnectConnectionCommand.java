@@ -77,7 +77,7 @@ public class ReconnectConnectionCommand extends Command {
 
             // request started on out port?
             cmd.setSourceNode(nodePart);
-            cmd.setSourcePortID(((AbstractPortEditPart)host).getId());
+            cmd.setSourcePortID(((AbstractPortEditPart)host).getIndex());
             cmd.setStartedOnOutPort(true);
             // LOGGER.debug("Started connection on out-port...");
         } else if (host instanceof NodeInPortEditPart) {
@@ -105,7 +105,7 @@ public class ReconnectConnectionCommand extends Command {
 
             // LOGGER.debug("Ending connection on out-port...");
         } else if (target instanceof NodeInPortEditPart) {
-            cmd.setTargetPortID(((NodeInPortEditPart)target).getId());
+            cmd.setTargetPortID(((NodeInPortEditPart)target).getIndex());
             cmd.setTargetNode((NodeContainerEditPart)target.getParent());
 
             // LOGGER.debug("Ending connection on in-port...");

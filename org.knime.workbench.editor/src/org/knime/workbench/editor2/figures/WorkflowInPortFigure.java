@@ -24,7 +24,6 @@ import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.PortType;
-import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
 
 /**
  *
@@ -35,7 +34,7 @@ public class WorkflowInPortFigure extends AbstractWorkflowPortFigure {
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            WorkflowInPortFigure.class);
     
-    private boolean m_isSelected = false;
+
 
     /**
      *
@@ -48,28 +47,6 @@ public class WorkflowInPortFigure extends AbstractWorkflowPortFigure {
             final int nrOfPorts, final int portIndex, final String tooltip) {
         super(type, nrOfPorts, portIndex);
         setToolTip(new NewToolTipFigure(tooltip));
-    }
-    
-    /**
-     * This state is read by the mouse listener added in 
-     * {@link WorkflowInPortEditPart#createFigure()}.
-     * 
-     * @return true if the figure was clicked, false otherwise
-     * @see WorkflowInPortEditPart
-     */
-    public boolean isSelected() {
-        return m_isSelected;
-    }
-    
-    /**
-     * This state is set by the mouse listener added in 
-     * {@link WorkflowInPortEditPart#createFigure()}.
-     * 
-     * @param selected true if the figure was clicked, false otherwise
-     * @see WorkflowInPortEditPart
-     */
-    public void setSelected(final boolean selected) {
-        m_isSelected = selected;
     }
     
     /**

@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
+import org.knime.core.node.NodeInPort;
 import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -35,7 +36,10 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.figures.NodeInPortFigure;
 
 /**
- * Edit Part for a <code>NodeInPort</code>.
+ * Edit Part for a {@link NodeInPort}.
+ * Model: {@link NodeInPort}
+ * View: {@link NodeInPortFigure}
+ * Controller: {@link NodeInPortEditPart}
  * 
  * @author Florian Georg, University of Konstanz
  */
@@ -58,8 +62,8 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
         // container
         NodeContainer container = getNodeContainer();
         NodeInPortFigure portFigure = new NodeInPortFigure(getType(),
-                getId(), container.getNrInPorts(),
-                container.getInPort(getId()).getPortName());
+                getIndex(), container.getNrInPorts(),
+                container.getInPort(getIndex()).getPortName());
 
         return portFigure;
     }
@@ -70,28 +74,27 @@ public class NodeInPortEditPart extends AbstractPortEditPart {
      * @return singleton list containing the connection, or an empty list. Never
      *         <code>null</code>
      * 
-     * @see org.eclipse.gef.GraphicalEditPart#getTargetConnections()
+     * {@inheritDoc}
      */
     @Override
-    public List getModelTargetConnections() {
+    public List<ConnectionContainer> getModelTargetConnections() {
         ConnectionContainer container = getManager().getIncomingConnectionFor(
-                getNodeContainer().getID(), getId());
+                getNodeContainer().getID(), getIndex());
 
         if (container != null) {
             return Collections.singletonList(container);
         }
 
-        return Collections.EMPTY_LIST;
+        return EMPTY_LIST;
     }
 
     /**
      * @return empty list, as in-ports are never source for connections
      * 
-     * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart
-     *      #getModelSourceConnections()
+     * {@inheritDoc}
      */
     @Override
-    protected List getModelSourceConnections() {
-        return Collections.EMPTY_LIST;
+    protected List<ConnectionContainer> getModelSourceConnections() {
+        return EMPTY_LIST;
     }
 }

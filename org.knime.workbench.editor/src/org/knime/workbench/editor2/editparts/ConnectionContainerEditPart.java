@@ -31,11 +31,11 @@ import org.eclipse.draw2d.Connection;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.PolylineConnection;
 import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editparts.AbstractConnectionEditPart;
+import org.eclipse.gef.editparts.ZoomListener;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.editpolicies.ConnectionEndpointEditPolicy;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
@@ -47,6 +47,7 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.workbench.editor2.commands.ChangeBendPointLocationCommand;
 import org.knime.workbench.editor2.editparts.policy.ConnectionBendpointEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewConnectionComponentEditPolicy;
+import org.knime.workbench.editor2.editparts.snap.SnapOffBendPointConnectionRouter;
 import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 
 /**
@@ -56,13 +57,12 @@ import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
  * @author Florian Georg, University of Konstanz
  */
 public class ConnectionContainerEditPart extends AbstractConnectionEditPart
-        implements WorkflowListener { //, ZoomListener {
+        implements WorkflowListener, ZoomListener {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             ConnectionContainerEditPart.class);
 
     /**
-     * The constructor.
      *
      */
     public ConnectionContainerEditPart() {
@@ -85,45 +85,6 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
 
         Point moveDelta = boundsRequest.getMoveDelta();
         return new ChangeBendPointLocationCommand(this, moveDelta, zoomManager);
-    }
-
-
-    /**
-     * 
-     * {@inheritDoc}
-     */
-    @Override
-    public void setSource(final EditPart editPart) {
-        LOGGER.debug("set source: " + editPart);
-        super.setSource(editPart);
-    }
-
-    /**
-     * 
-     * {@inheritDoc}
-     */
-    @Override
-    public void setTarget(final EditPart editPart) {
-        LOGGER.debug("set target: " + editPart);
-        super.setTarget(editPart);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void activate() {
-        super.activate();
-        LOGGER.debug("activate: " + getModel());
-        refresh();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void deactivate() {
-        super.deactivate();
     }
 
     /**
@@ -149,37 +110,19 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      */
     @Override
     protected IFigure createFigure() {
-
         PolylineConnection conn = (PolylineConnection) super.createFigure();
-
         // Bendpoints
         SnapOffBendPointConnectionRouter router =
                 new SnapOffBendPointConnectionRouter();
         conn.setConnectionRouter(router);
         conn.setRoutingConstraint(new ArrayList());
-
-        // Decorations
-        // PolygonDecoration pD = new PolygonDecoration();
-        // TODO: functionality disabled
-//        if (m_type.equals(ModelContent.TYPE)) {
-//            // pD.setScale(9, 5);
-//            conn.setForegroundColor(Display.getCurrent().getSystemColor(
-//                    SWT.COLOR_BLUE));
-//            conn.setLineWidth(1);
-//        }
-
-//        // register as zoom listener to adapt the line width
-//        ZoomManager zoomManager =
-//                (ZoomManager) getRoot().getViewer().getProperty(
-//                        ZoomManager.class.toString());
-//
-//        zoomManager.addZoomListener(this);
-//
-//        conn.setLineWidth(calculateLineWidthFromZoomLevel(zoomManager
-//                        .getZoom()));
-
-        // conn.setTargetDecoration(pD);
-
+        // register as zoom listener to adapt the line width
+        ZoomManager zoomManager =
+                (ZoomManager) getRoot().getViewer().getProperty(
+                        ZoomManager.class.toString());
+        zoomManager.addZoomListener(this);
+        conn.setLineWidth(calculateLineWidthFromZoomLevel(zoomManager
+                        .getZoom()));
         return conn;
     }
 
@@ -240,28 +183,31 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         fig.setRoutingConstraint(constraint);
     }
 
-//    private int calculateLineWidthFromZoomLevel(final double zoom) {
-//        double newZoomValue = zoom;
-//        // if the zoom level is larger than 100% the width
-//        // is adapted accordingly
-//        if (zoom < 1.0) {
-//            newZoomValue = 1.0;
-//        }
-//
-//        double connectinWidth = Math.round(newZoomValue);
-//
-//        return (int) connectinWidth;
-//    }
-//
-//    /**
-//     * Adapts the line width according to the zoom level.
-//     *
-//     * @param zoom
-//     *            the zoom level from the zoom manager
-//     */
-//    public void zoomChanged(final double zoom) {
-//
-//        ((PolylineConnection) getFigure())
-//                .setLineWidth(calculateLineWidthFromZoomLevel(zoom));
-//    }
+    private int calculateLineWidthFromZoomLevel(final double zoom) {
+        double newZoomValue = zoom;
+        // if the zoom level is larger than 100% the width
+        // is adapted accordingly
+        if (zoom < 1.0) {
+            newZoomValue = 1.0;
+        }
+        double connectinWidth = Math.round(newZoomValue);
+        return (int) connectinWidth;
+    }
+
+    /**
+     * Adapts the line width according to the zoom level.
+     *
+     * @param zoom the zoom level from the zoom manager
+     */
+    public void zoomChanged(final double zoom) {
+        double newZoomValue = zoom;
+        // if the zoom level is larger than 100% the width
+        // is adapted accordingly
+        if (zoom < 1.0) {
+            newZoomValue = 1.0;
+        }
+        double lineWidth = Math.round(newZoomValue);
+        ((PolylineConnection) getFigure())
+                .setLineWidth((int)lineWidth);
+    }
 }

@@ -19,7 +19,6 @@
 package org.knime.workbench.editor2.editparts;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -29,8 +28,6 @@ import org.eclipse.draw2d.MouseListener;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.gef.EditPart;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeOutPort;
 import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -42,17 +39,19 @@ import org.knime.workbench.editor2.figures.NewToolTipFigure;
 import org.knime.workbench.editor2.figures.WorkflowInPortFigure;
 
 /**
- *
+ * Edit part representing a workflow in port. 
+ * 
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowInPortEditPart extends AbstractPortEditPart {
-//
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            WorkflowInPortEditPart.class);
+
+//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+//            WorkflowInPortEditPart.class);
 
     private static final String PORT_NAME = "Workflow In Port";
 
-
+    private boolean m_isSelected = false;
+    
     /**
      *
      * @param type port type
@@ -61,8 +60,6 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
     public WorkflowInPortEditPart(final PortType type, final int portID) {
         super(type, portID, true);
     }
-
-
 
     /**
      *
@@ -87,16 +84,14 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
         if (getParent() == null) {
             return null;
         }
+        // if the referring WorkflowManager is displayed as a meta node, then  
+        // the parent is a NodeContainerEditPart
+        if (getParent() instanceof NodeContainerEditPart) {
+            return (NodeContainer)getParent().getModel();
+        }
+        // if the referring WorkflowManager is the "root" workflow manager of 
+        // the open editor then the parent is a WorkflowRootEditPart
         return ((WorkflowRootEditPart)getParent()).getWorkflowManager();
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public void setParent(final EditPart parent) {
-        super.setParent(parent);
     }
 
     /**
@@ -110,36 +105,53 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
     }
 
     /**
+     * Creates {@link WorkflowInPortFigure}, sets the tooltip and adds a 
+     * {@link MouseListener} to the figure in order to detect if the figure was
+     * clicked and a context menu entry should be provided to open the port 
+     * view.
+     * 
+     * @see WorkflowContextMenuProvider#buildContextMenu(
+     * org.eclipse.jface.action.IMenuManager)
+     * @see WorkflowInPortFigure
+     *  
      * {@inheritDoc}
      */
     @Override
     protected IFigure createFigure() {
-        NodeOutPort port = getManager().getInPort(getId()).getUnderlyingPort();
-        String tooltip = getTooltipText(PORT_NAME + ": "  + getId(), port);
-//        LOGGER.warn("tooltip: " + tooltip + " for port: " + port
-//                + " with obj: " + port.getPortObject());
-
-        // TODO not port.getName -> workflow inport
+        NodeOutPort port = getManager().getInPort(getIndex()).getUnderlyingPort();
+        String tooltip = getTooltipText(PORT_NAME + ": "  + getIndex(), port);
         WorkflowInPortFigure f = new WorkflowInPortFigure(getType(),
-                getManager().getNrInPorts(), getId(), tooltip);
+                getManager().getNrInPorts(), getIndex(), tooltip);
         f.addMouseListener(new MouseListener() {
 
-            public void mouseDoubleClicked(final MouseEvent me) {
-                // TODO: open port view
-                LOGGER.debug("workflow in port double clicked!");
-            }
+            public void mouseDoubleClicked(final MouseEvent me) { }
 
+            /**
+             * Set the selection state of the figure to true. This is 
+             * evaluated in the context menu. If it is selected a context menu 
+             * entry is provided to open the port view. 
+             * 
+             * @see WorkflowContextMenuProvider#buildContextMenu(
+             *  org.eclipse.jface.action.IMenuManager)
+             *  
+             * {@inheritDoc}
+             */
             public void mousePressed(final MouseEvent me) {
-                // TODO: is rightClick
-                LOGGER.debug("workflow in port mouse pressed...");
-                ((WorkflowInPortFigure)getFigure()).setSelected(true);
-
+                setSelected(true);
             }
-
+            
+            /**
+             * Set the selection state of the figure to true. This is 
+             * evaluated in the context menu. If it is selected a context menu 
+             * entry is provided to open the port view. 
+             * 
+             * @see WorkflowContextMenuProvider#buildContextMenu(
+             *  org.eclipse.jface.action.IMenuManager)
+             *  
+             * {@inheritDoc}
+             */
             public void mouseReleased(final MouseEvent me) {
-                // do nothing
-                LOGGER.debug("workflow in port mouse released...");
-                ((WorkflowInPortFigure)getFigure()).setSelected(false);
+                setSelected(false);
             }
 
         });
@@ -149,38 +161,38 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
     /**
      * The context menu ({@link WorkflowContextMenuProvider#buildContextMenu(
      * org.eclipse.jface.action.IMenuManager)}) reads and resets the selection 
-     * state.
+     * state. This state is read by the mouse listener added in 
+     * {@link #createFigure()}.
      * 
      * @return true if the underlying workflow in port figure was clicked, false
      *  otherwise
      * @see WorkflowContextMenuProvider#buildContextMenu(
      *  org.eclipse.jface.action.IMenuManager)
-     * @see WorkflowInPortFigure#setSelected(boolean)
      *  
      */
     public boolean isSelected() {
-        return ((WorkflowInPortFigure)getFigure()).isSelected();
+        return m_isSelected;
     }
 
     /**
      * The context menu ({@link WorkflowContextMenuProvider#buildContextMenu(
      * org.eclipse.jface.action.IMenuManager)}) reads and resets the selection 
-     * state.
+     * state. This state is set by the mouse listener added in 
+     * {@link #createFigure()}.
      * 
-     * @param isSelected sets and resets the selectino state of the figure
+     * @param isSelected true if the figure was clicked, false otherwise.
      * 
      * @see WorkflowContextMenuProvider#buildContextMenu(
      *  org.eclipse.jface.action.IMenuManager)
-     *  @see WorkflowInPortFigure#setSelected(boolean)
      */
     public void setSelected(final boolean isSelected) {
-        ((WorkflowInPortFigure)getFigure()).setSelected(isSelected);
+        m_isSelected = isSelected;
     }
 
     /**
-     * This returns the (single !) connection that has this in-port as a target.
+     * Returns the connections that has this workflow in-port as a source.
      *
-     * @return singleton list containing the connection, or an empty list. Never
+     * @return list containing the connections, or an empty list. Never
      *         <code>null</code>
      *
      * @see org.eclipse.gef.GraphicalEditPart#getTargetConnections()
@@ -191,51 +203,37 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
         Set<ConnectionContainer> containers =
                 getManager().getOutgoingConnectionsFor(
                         getNodeContainer().getID(),
-                        getId());
-
-        //ConnectionContainer container = getManager().getIncomingConnectionFor(
-        //        getNodeContainer().getID(), getId());
-        LOGGER.debug("manager: " + getManager());
-        LOGGER.debug("node container: " + getNodeContainer());
+                        getIndex());
         List<ConnectionContainer>conns = new ArrayList<ConnectionContainer>();
-
-        for (ConnectionContainer c : containers) {
-            LOGGER.debug("connection container: " + c);
-        }
-
-//        LOGGER.debug("incoming connection: " + container);
         if (containers != null) {
             conns.addAll(containers);
         }
         return conns;
     }
 
-
-    /**
-     * Tries to build the tooltip from the port name and if this is a data
-     * outport and the node is configured/executed, it appends also the number
-     * of columns and rows.
-     */
-    @Override
-    public void rebuildTooltip() {
-        NodeOutPort port = ((WorkflowInPort)getNodeContainer().getInPort(
-                getId())).getUnderlyingPort();
-        String tooltip = getTooltipText(PORT_NAME + ": " + getId(), port);
-        ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
-    }
-
-
     /**
      *
-     * @return empty list, as out-ports are never target for connections
+     * @return empty list, as workflow in ports are never target for connections
      *
      * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart
      *      #getModelSourceConnections()
      */
     @Override
-    @SuppressWarnings("unchecked")
-    protected List getModelTargetConnections() {
-        return Collections.EMPTY_LIST;
+    protected List<ConnectionContainer> getModelTargetConnections() {
+        return EMPTY_LIST;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void rebuildTooltip() {
+        NodeOutPort port = ((WorkflowInPort)getNodeContainer().getInPort(
+                getIndex())).getUnderlyingPort();
+        String tooltip = getTooltipText(PORT_NAME + ": " + getIndex(), port);
+        ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
+    }
+
+
 
 }

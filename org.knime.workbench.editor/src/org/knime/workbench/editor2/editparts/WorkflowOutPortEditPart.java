@@ -40,6 +40,8 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            WorkflowOutPortEditPart.class);
 
+
+    
     /**
      * @param type port type
      * @param portID port id
@@ -71,6 +73,13 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
         if (getParent() == null) {
             return null;
         }
+        // if the referring WorkflowManager is displayed as a meta node, then  
+        // the parent is a NodeContainerEditPart
+        if (getParent() instanceof NodeContainerEditPart) {
+            return (NodeContainer) getParent().getModel();
+        }
+        // if the referring WorkflowManager is the "root" workflow manager of 
+        // the open editor then the parent is a WorkflowRootEditPart
         return ((WorkflowRootEditPart)getParent()).getWorkflowManager();
     }
 
@@ -90,12 +99,13 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
     @Override
     protected IFigure createFigure() {
         return new WorkflowOutPortFigure(getType(),
-                getManager().getNrOutPorts(), getId(), getManager().getName());
+                getManager().getNrOutPorts(), getIndex(), getManager().getName());
     }
 
 
     /**
-     * This returns the (single !) connection that has this in-port as a target.
+     * This returns the (single !) connection that has this workflow out port 
+     * as a target.
      *
      * @return singleton list containing the connection, or an empty list. Never
      *         <code>null</code>
@@ -103,26 +113,27 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
      * @see org.eclipse.gef.GraphicalEditPart#getTargetConnections()
      */
     @Override
-    public List getModelTargetConnections() {
+    public List<ConnectionContainer> getModelTargetConnections() {
         ConnectionContainer container = getManager().getIncomingConnectionFor(
-                getNodeContainer().getID(), getId());
+                getNodeContainer().getID(), getIndex());
 
         if (container != null) {
             return Collections.singletonList(container);
         }
 
-        return Collections.EMPTY_LIST;
+        return EMPTY_LIST;
     }
 
     /**
-     * @return empty list, as in-ports are never source for connections
+     * @return empty list, as workflow out ports are never source for 
+     * connections
      *
      * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart
      *      #getModelSourceConnections()
      */
     @Override
-    protected List getModelSourceConnections() {
-        return Collections.EMPTY_LIST;
+    protected List<ConnectionContainer> getModelSourceConnections() {
+        return EMPTY_LIST;
     }
 
 }

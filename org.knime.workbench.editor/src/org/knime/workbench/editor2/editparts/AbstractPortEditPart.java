@@ -24,6 +24,9 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import org.eclipse.draw2d.ConnectionAnchor;
 import org.eclipse.gef.ConnectionEditPart;
 import org.eclipse.gef.DragTracker;
@@ -31,6 +34,8 @@ import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.NodeEditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
+import org.eclipse.gef.editparts.ZoomListener;
+import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.requests.SelectionRequest;
 import org.eclipse.gef.tools.ConnectionDragCreationTool;
 import org.knime.core.node.BufferedDataTable;
@@ -45,55 +50,72 @@ import org.knime.workbench.editor2.editparts.anchor.InPortConnectionAnchor;
 import org.knime.workbench.editor2.editparts.anchor.OutPortConnectionAnchor;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
-import org.knime.workbench.editor2.figures.AbstractWorkflowPortFigure;
 import org.knime.workbench.editor2.figures.NewToolTipFigure;
 
 /**
- * Abstract base class for the edit parts that control the nodes. This editpart
+ * Abstract base class for the edit parts that control the ports. This editpart
  * returns a <code>DragTracker</code> for starting connections between in- and
- * out ports. Note that all(!) nodes are registered as listener for workflow
- * events on the underlying <code>WorkflowManager</code>. This is necessary
+ * out ports. Note that all(!) ports  are registered as listener for workflow
+ * events on the underlying {@link WorkflowManager}. This is necessary
  * because we need de be able to react on connection changes.
  *
  * @author Florian Georg, University of Konstanz
+ * @author Fabian Dill, University of Konstanz
  */
 public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
-        implements NodeEditPart, WorkflowListener {
+        implements NodeEditPart, WorkflowListener, ZoomListener {
 
-    private final int m_id;
+    private final int m_index;
     private final PortType m_type;
     private final boolean m_isInPort;
+    
+    /**
+     * Instead of using the Collections.EMPTY_LIST we have our own typed empty
+     * list if no connections are available.
+     * @see WorkflowOutPortEditPart#getModelSourceConnections()
+     * @see WorkflowOutPortEditPart#getModelTargetConnections()
+     * 
+     */ 
+    protected static final List<ConnectionContainer> EMPTY_LIST 
+        = new LinkedList<ConnectionContainer>();
 
     /**
-     * Subclasses must call this with the appropriate portID (= portIndex).
+     * Subclasses must call this with the appropriate port type, port index and
+     * a flag whether it is an in or out port.
      *
-     * @param portID The id for this port
+     * @param portIndex The index of this port
+     * @param type the port type
+     * @param inPort true if it is an inport, false otherwise
      */
-    public AbstractPortEditPart(final PortType type, final int portID,
+    public AbstractPortEditPart(final PortType type, final int portIndex,
             final boolean inPort) {
-        m_id = portID;
+        m_index = portIndex;
         m_type = type;
         m_isInPort = inPort;
     }
 
-
+    
+    /**
+     * 
+     * @return true if it is an in port, false if it is an out port
+     */
     public boolean isInPort() {
         return m_isInPort;
     }
 
     /**
      *
-     * @return type of this port (usually Data, Model or Database)
+     * @return type of this port (usually data, model or database)
      */
     public PortType getType() {
         return m_type;
     }
 
     /**
-     * @return Returns the id.
+     * @return the port index.
      */
-    public int getId() {
-        return m_id;
+    public int getIndex() {
+        return m_index;
     }
     /**
      * Convenience, returns the hosting container.
@@ -115,7 +137,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     }
 
     /**
-     * We must register *every* node as a listener on the Workflow, as we have
+     * We must register *every* node as a listener on the workflow, as we have
      * not real objects for it.
      *
      * @see org.eclipse.gef.EditPart#activate()
@@ -124,6 +146,12 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     public void activate() {
         super.activate();
         getManager().addListener(this);
+//      // register as zoom listener to adapt the line width
+        ZoomManager zoomManager =
+                (ZoomManager) getRoot().getViewer().getProperty(
+                        ZoomManager.class.toString());
+
+        zoomManager.addZoomListener(this);
     }
 
     /**
@@ -161,19 +189,10 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     protected void refreshVisuals() {
         // get the figure and update the constraint for it - locator is provided
         // by the figure itself
-        // TODO: replace with with workflow port erdit part
-        if (getParent() instanceof NodeContainerEditPart) {
-            NodeContainerEditPart parent = (NodeContainerEditPart) getParent();
-            AbstractPortFigure f = (AbstractPortFigure) getFigure();
-            parent.setLayoutConstraint(this, f, f.getLocator());
-
-        } else if (getParent() instanceof WorkflowRootEditPart) {
-            WorkflowRootEditPart parent = (WorkflowRootEditPart) getParent();
-            AbstractWorkflowPortFigure f 
-                = (AbstractWorkflowPortFigure) getFigure();
-            parent.setLayoutConstraint(this, f, f.getLocator());
-
-        }
+        AbstractWorkflowEditPart parent 
+            = (AbstractWorkflowEditPart)getParent();
+        AbstractPortFigure f = (AbstractPortFigure) getFigure();
+        parent.setLayoutConstraint(this, f, f.getLocator());
     }
 
     /**
@@ -206,10 +225,27 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     }
 
     /**
+     * Adapts the line width according to the zoom level.
+     *
+     * @param zoom the zoom level from the zoom manager
+     */
+    public void zoomChanged(final double zoom) {
+        double newZoomValue = zoom;
+        // if the zoom level is larger than 100% the width
+        // is adapted accordingly
+        if (zoom < 1.0) {
+            newZoomValue = 1.0;
+        }
+        double connectionWidth = Math.round(newZoomValue);
+        ((AbstractPortFigure) getFigure())
+                .setLineWidth((int)connectionWidth);
+    }
+
+    /**
      * This activates the ConnectionDragCreationTool, as soon as the user clicks
      * on this edit part. (event REQ_SELECTION)
      *
-     * @see org.eclipse.gef.EditPart#getDragTracker(org.eclipse.gef.Request)
+     * {@inheritDoc}
      */
     @Override
     public DragTracker getDragTracker(final Request request) {
@@ -268,7 +304,8 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
 
     /**
      *
-     * @param port port
+     * @param portName port name
+     * @param port the underlying port
      * @return tooltip text for the port (with number of columns and rows)
      */
     protected String getTooltipText(final String portName,
@@ -304,7 +341,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * of columns and rows.
      */
     public void rebuildTooltip() {
-        NodeOutPort port = getNodeContainer().getOutPort(getId());
+        NodeOutPort port = getNodeContainer().getOutPort(getIndex());
         String tooltip = getTooltipText(port.getPortName(), port);
         ((NewToolTipFigure)getFigure().getToolTip()).setText(tooltip);
     }

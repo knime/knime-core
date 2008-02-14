@@ -80,7 +80,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
                 || getHost() instanceof WorkflowInPortEditPart) {
             // request started on out port?
             cmd.setSourceNode(nodePart);
-            cmd.setSourcePortID(((AbstractPortEditPart)getHost()).getId());
+            cmd.setSourcePortID(((AbstractPortEditPart)getHost()).getIndex());
             cmd.setStartedOnOutPort(true);
             // LOGGER.debug("Started connection on out-port...");
         } else if (getHost() instanceof NodeInPortEditPart
@@ -142,7 +142,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
             // LOGGER.debug("Ending connection on out-port...");
         } else if (target instanceof NodeInPortEditPart
                 || target instanceof WorkflowOutPortEditPart) {
-            cmd.setTargetPortID(((AbstractPortEditPart)target).getId());
+            cmd.setTargetPortID(((AbstractPortEditPart)target).getIndex());
             cmd.setTargetNode((ConnectableEditPart)target.getParent());
 
         } else if (target instanceof NodeContainerEditPart) {

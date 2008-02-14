@@ -26,9 +26,7 @@ package org.knime.workbench.editor2.editparts;
 
 import java.util.ArrayList;
 import java.util.EventObject;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.LayoutManager;
@@ -53,8 +51,6 @@ import org.knime.workbench.editor2.editparts.snap.SnapToPortGeometry;
 import org.knime.workbench.editor2.figures.ProgressToolTipHelper;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.figures.WorkflowLayout;
-import org.knime.workbench.editor2.model.WorkflowInPortProxy;
-import org.knime.workbench.editor2.model.WorkflowOutPortProxy;
 
 /**
  * Root controller for the <code>WorkflowManager</code> model object. Consider
@@ -69,11 +65,6 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
             NodeLogger.getLogger(WorkflowRootEditPart.class);
 
     private ProgressToolTipHelper m_toolTipHelper;
-
-    private final Map<Integer, WorkflowInPortProxy>m_inPortProxies
-        = new HashMap<Integer, WorkflowInPortProxy>();
-    private final Map<Integer, WorkflowOutPortProxy>m_outPortProxies
-        = new HashMap<Integer, WorkflowOutPortProxy>();
 
     /**
      * @return The <code>WorkflowManager</code> that is used as model for this
@@ -101,29 +92,21 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     @Override
     @SuppressWarnings("unchecked")
     protected List getModelChildren() {
-        List parts = new ArrayList();
+        List modelChildren = new ArrayList();
         WorkflowManager wfm = getWorkflowManager();
-        parts.addAll(wfm.getNodeContainers());
+        modelChildren.addAll(wfm.getNodeContainers());
         // create my own gui port objects to determine whether
         // they are normal ports or workflow ports
 
         // TODO: don't create new objects!
         // create mapping from port id to workflow port proxy
         for (int i = 0; i < wfm.getNrWorkflowIncomingPorts(); i++) {
-            if (m_inPortProxies.get(i) == null) {
-                m_inPortProxies.put(i,
-                        new WorkflowInPortProxy(wfm.getInPort(i), wfm.getID()));
-            }
-            parts.add(m_inPortProxies.get(i));
+            modelChildren.add(wfm.getInPort(i));
         }
         for (int i = 0; i < wfm.getNrWorkflowOutgoingPorts(); i++) {
-            if (m_outPortProxies.get(i) == null) {
-                m_outPortProxies.put(i, new WorkflowOutPortProxy(
-                        wfm.getOutPort(i), wfm.getID()));
-            }
-            parts.add(m_outPortProxies.get(i));
+            modelChildren.add(wfm.getOutPort(i));
         }
-        return parts;
+        return modelChildren;
     }
 
     /**

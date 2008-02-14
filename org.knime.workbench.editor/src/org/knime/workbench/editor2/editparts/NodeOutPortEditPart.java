@@ -25,7 +25,6 @@
 package org.knime.workbench.editor2.editparts;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -37,16 +36,21 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.figures.NodeOutPortFigure;
 
 /**
- * Edit part for <code>NodeOutPort</code>s.
+ * Edit part for a {@link NodeOutPort}.
+ * Model: {@link NodeOutPort}
+ * View: {@link NodeOutPortFigure}
+ * Controller: {@link NodeOutPortEditPart}
  * 
  * @author Florian Georg, University of Konstanz
  */
 public class NodeOutPortEditPart extends AbstractPortEditPart {
+    
     /**
-     * @param portID The ID of this out port
+     * @param type the port type
+     * @param portIndex the port index
      */
-    public NodeOutPortEditPart(final PortType type, final int portID) {
-        super(type, portID, false);
+    public NodeOutPortEditPart(final PortType type, final int portIndex) {
+        super(type, portIndex, false);
     }
 
     /**
@@ -54,21 +58,16 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
      */
     @Override
     protected IFigure createFigure() {
-
         // Create the figure, we need the number of ports from the parent
         // container
         NodeContainer container = getNodeContainer();
-        NodeOutPort port = container.getOutPort(getId());
+        NodeOutPort port = container.getOutPort(getIndex());
         String tooltip = getTooltipText(port.getPortName(), port);
         NodeOutPortFigure portFigure =
-                new NodeOutPortFigure(getType(), getId(), container
+                new NodeOutPortFigure(getType(), getIndex(), container
                         .getNrOutPorts(), tooltip);
-        // BW: double click on port has been disabled
-        // portFigure.addMouseListener(this);
-
         return portFigure;
     }
-
 
     /**
      * This returns the (single !) connection that has this in-port as a target.
@@ -76,14 +75,14 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
      * @return singleton list containing the connection, or an empty list. Never
      *         <code>null</code>
      *
-     * @see org.eclipse.gef.GraphicalEditPart#getTargetConnections()
+     * {@inheritDoc}
      */
     @Override
     public List<ConnectionContainer> getModelSourceConnections() {
         Set<ConnectionContainer> containers =
                 getManager().getOutgoingConnectionsFor(
                         getNodeContainer().getID(),
-                        getId());
+                        getIndex());
         List<ConnectionContainer>conns = new ArrayList<ConnectionContainer>();
         if (containers != null) {
             conns.addAll(containers);
@@ -95,11 +94,10 @@ public class NodeOutPortEditPart extends AbstractPortEditPart {
      * 
      * @return empty list, as out-ports are never target for connections
      * 
-     * @see org.eclipse.gef.editparts.AbstractGraphicalEditPart
-     *      #getModelSourceConnections()
+     * {@inheritDoc}
      */
     @Override
-    protected List getModelTargetConnections() {
-        return Collections.EMPTY_LIST;
+    protected List<ConnectionContainer> getModelTargetConnections() {
+        return EMPTY_LIST;
     }
 }
