@@ -63,10 +63,13 @@ public abstract class NodeModel extends GenericNodeModel {
             pTypes[i] = BufferedDataTable.TYPE;
         }
         for (int i = nrDataPorts; i < nrDataPorts + nrModelPorts; i++) {
-            pTypes[i] = ModelContent.TYPE;
+            pTypes[i] = OLDSTYLEMODELPORTTYPE;
         }
         return pTypes;
     }
+    
+    private static PortType OLDSTYLEMODELPORTTYPE = new PortType(
+            ModelContentWrapper.class, ModelContentWrapper.class);
 
     /** Old-style constructor creating a NodeModel that also has model ports.
      *
@@ -113,8 +116,8 @@ public abstract class NodeModel extends GenericNodeModel {
         for (int i = m_nrDataInPorts;
         i < m_nrDataInPorts + m_nrModelInPorts; i++) {
             int mdlIndex = i - m_nrDataInPorts;
-            if (inSpecs[i] instanceof MeanLittleWrapper) {
-                MeanLittleWrapper mlw = (MeanLittleWrapper)inSpecs[i];
+            if (inSpecs[i] instanceof ModelContentWrapper) {
+                ModelContentWrapper mlw = (ModelContentWrapper)inSpecs[i];
                 ModelContentRO mdl = mlw.m_hiddenModel;
                 loadModelContent(mdlIndex, mdl);
             }
@@ -127,13 +130,13 @@ public abstract class NodeModel extends GenericNodeModel {
         for (int i = 0; outTableSpecs != null && i < m_nrDataOutPorts; i++) {
             returnObjectSpecs[i] = outTableSpecs[i];
         }
-        m_localOutModels = new MeanLittleWrapper[m_nrModelOutPorts];
+        m_localOutModels = new ModelContentWrapper[m_nrModelOutPorts];
         for (int i = m_nrDataOutPorts;
              i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
             ModelContent thisMdl = new ModelContent("ModelContent");
             saveModelContent(i - m_nrDataOutPorts, thisMdl);
-            m_localOutModels[i - m_nrDataOutPorts] = new MeanLittleWrapper(thisMdl);
-            returnObjectSpecs[i] = new MeanLittleWrapper(thisMdl);
+            m_localOutModels[i - m_nrDataOutPorts] = new ModelContentWrapper(thisMdl);
+            returnObjectSpecs[i] = new ModelContentWrapper(thisMdl);
         }
         return returnObjectSpecs;
     }
@@ -143,8 +146,8 @@ public abstract class NodeModel extends GenericNodeModel {
     // during configure! (old v1.x model ports!)
     //
     // hide model content in a modern style PortObjectSpec
-    private class MeanLittleWrapper implements PortObjectSpec {
-        MeanLittleWrapper(final ModelContentRO mdl) {
+    private class ModelContentWrapper implements PortObjectSpec, PortObject {
+        ModelContentWrapper(final ModelContentRO mdl) {
             m_hiddenModel = mdl;
         }
         ModelContentRO m_hiddenModel;
@@ -152,7 +155,7 @@ public abstract class NodeModel extends GenericNodeModel {
     //
     // allow to replace model content generated during execute in the modern
     // style PortObjectSpec (Schweinerei! changes spec under the model's ass)
-    private MeanLittleWrapper[] m_localOutModels;
+    private ModelContentWrapper[] m_localOutModels;
     //
     // end of evil hack.
     ///////////////////////////////////////////
@@ -192,8 +195,8 @@ public abstract class NodeModel extends GenericNodeModel {
             int mdlIndex = i - m_nrDataInPorts;
             ModelContent thisMdl = new ModelContent("ModelContent");
             saveModelContent(mdlIndex, thisMdl);
-            returnObjects[i] = thisMdl;
             m_localOutModels[mdlIndex].m_hiddenModel = thisMdl;
+            returnObjects[i] = m_localOutModels[mdlIndex];
         }
         // and return the assembled data+models
         return returnObjects;
