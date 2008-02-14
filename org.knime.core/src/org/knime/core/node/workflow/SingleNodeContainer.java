@@ -57,9 +57,9 @@ public final class SingleNodeContainer extends NodeContainer
             new DefaultNodeProgressMonitor(this);
 
     /**
-     * Create new NodeContainer based on existing Node.
+     * Create new SingleNodeContainer based on existing Node.
      *
-     * @param parent the workflowmanager holding this node
+     * @param parent the workflow manager holding this node
      * @param n the underlying node
      * @param id the unique identifier
      */
@@ -70,6 +70,13 @@ public final class SingleNodeContainer extends NodeContainer
         m_node.addMessageListener(this);
     }
 
+    /**
+     * Create new SingleNodeContainer from persistor.
+     * 
+     * @param parent the workflow manager holding this node
+     * @param id the identifier
+     * @param persistor to read from
+     */
     SingleNodeContainer(final WorkflowManager parent, final NodeID id,
             final SingleNodeContainerPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
@@ -160,19 +167,18 @@ public final class SingleNodeContainer extends NodeContainer
     }
 
     // ////////////////////////////////
-    // State transations
+    // Handle State Transitions
     // ////////////////////////////////
 
     /**
      * Configure underlying node and update state accordingly.
      *
-     * @param inSpecs input table specifications
+     * @param inObjectSpecs input table specifications
      * @return true if output specs have changed.
      * @throws IllegalStateException in case of illegal entry state.
      */
     @Override
-    boolean configureNode(final PortObjectSpec[] inObjectSpecs)
-            throws IllegalStateException {
+    boolean configureNode(final PortObjectSpec[] inObjectSpecs) {
         synchronized (m_dirtyNode) {
             // remember old specs
             PortObjectSpec[] prevSpecs =
@@ -240,7 +246,7 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    void enableQueuing() throws IllegalStateException {
+    void enableQueuing() {
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case CONFIGURED:
@@ -261,7 +267,7 @@ public final class SingleNodeContainer extends NodeContainer
      *
      * @throws IllegalStateException in case of illegal entry state.
      */
-    void enableReQueuing() throws IllegalStateException {
+    void enableReQueuing() {
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case EXECUTED:
@@ -277,7 +283,7 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    void resetNode() throws IllegalStateException {
+    void resetNode() {
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case EXECUTED:
@@ -309,6 +315,7 @@ public final class SingleNodeContainer extends NodeContainer
      * Change state of marked (for execution) node to queued once it has been
      * assigned to a JobExecutor.
      *
+     * @param inData the incoming data for the execution
      * @throws IllegalStateException in case of illegal entry state.
      */
     @Override
@@ -332,7 +339,9 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
 
-    /* ------------- internal state change actions ------------ */
+    //////////////////////////////////////
+    //  internal state change actions
+    //////////////////////////////////////
 
     /**
      * Execute underlying Node and update state accordingly.
@@ -341,7 +350,7 @@ public final class SingleNodeContainer extends NodeContainer
      * @throws IllegalStateException in case of illegal entry state.
      */
     private void executeNode(final PortObject[] inObjects,
-            final ExecutionContext ec) throws IllegalStateException {
+            final ExecutionContext ec) {
         getParent().doBeforeExecution(SingleNodeContainer.this);
         synchronized (m_dirtyNode) {
             switch (getState()) {
@@ -362,8 +371,8 @@ public final class SingleNodeContainer extends NodeContainer
         }
         // TODO: the progress monitor should not be accessible from the
         // public world.
-        // execute node outside any synchronization!
         ec.getProgressMonitor().reset();
+        // execute node outside any synchronization!
         boolean success = m_node.execute(inObjects, ec);
         // clean up stuff and especially state changes synchronized again
         synchronized (m_dirtyNode) {
@@ -380,21 +389,21 @@ public final class SingleNodeContainer extends NodeContainer
                 }
             } else {
                 m_node.reset();
-                // TODO move this into Node.reset() ?
                 m_node.clearLoopStatus();
                 // reconfigure node will be done in WFM, not here!
                 setNewState(State.IDLE);
             }
         }
-        // the following triggers checkforqueueablenodes
+        // the following triggers check-for-queueable-nodes, among others
         getParent().doAfterExecution(SingleNodeContainer.this);
     }
 
 
     // //////////////////////////////////////
-    // forwarding methods to underlying Node
+    // Save & Load Settings and Content
     // //////////////////////////////////////
 
+    /** {@inheritDoc} */
     @Override
     void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
@@ -403,7 +412,10 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
     
-    void loadContent(final NodeContainerPersistor nodePersistor, final int loadID) {
+    /** {@inheritDoc} */
+    @Override
+    void loadContent(final NodeContainerPersistor nodePersistor,
+            final int loadID) {
         if (!(nodePersistor instanceof SingleNodeContainerPersistor)) {
             throw new IllegalStateException("Expected " 
                     + SingleNodeContainerPersistor.class.getSimpleName() 
@@ -416,60 +428,46 @@ public final class SingleNodeContainer extends NodeContainer
         setScopeObjectStack(new ScopeObjectStack(getID()));
     }
 
+    /** {@inheritDoc} */
     @Override
     void saveSettings(final NodeSettingsWO settings)
     throws InvalidSettingsException {
         m_node.saveSettingsTo(settings);
     }
 
+    /** {@inheritDoc} */
     @Override
     boolean areSettingsValid(final NodeSettingsRO settings) {
         return m_node.areSettingsValid(settings);
     }
 
-    /** @return name of this node */
-    @Override
-    public String getName() {
-        return m_node.getName();
-    }
+    ////////////////////////////////////
+    // ScopeObjectStack handling
+    ////////////////////////////////////
 
     /**
-     * @see org.knime.core.node.NodeFactory#getNodeFullHTMLDescription
+     * Set ScopeObjectStack.
+     * @param st new stack
      */
-    public String getFullHTMLDescription() {
-        return m_node.getFullHTMLDescription();
-    }
-
-    /**
-     * @see org.knime.core.node.NodeFactory#getNodeOneLineDescription
-     */
-    public String getOneLineDescription() {
-        return m_node.getOneLineDescription();
-    }
-
-
     void setScopeObjectStack(final ScopeObjectStack st) {
         synchronized (m_dirtyNode) {
             m_node.setScopeContextStackContainer(st);
         }
     }
 
+    /**
+     * @return current ScopeObjectStack
+     */
     ScopeObjectStack getScopeObjectStack() {
         synchronized (m_dirtyNode) {
             return m_node.getScopeContextStackContainer();
         }
     }
 
-    /**
-     * @return Node name with status information.
-     * @see java.lang.Object#toString()
-     */
-    @Override
-    public String toString() {
-        return m_node.getName() + "(" + getID() + ")" + ";status:" + getState();
-    }
+    ////////////////////////
+    // Progress forwarding
+    ////////////////////////
 
-    /* ---------------- progress forwarding methods ------------------- */
     /**
      * {@inheritDoc}
      */
@@ -481,7 +479,24 @@ public final class SingleNodeContainer extends NodeContainer
         notifyProgressListeners(event);
     }
 
-    // dummy methods -----------------------------------------------------
+    ///////////////////////////////////
+    // NodeContainer->Node forwarding
+    ///////////////////////////////////
+    
+    /** {@inheritDoc} */
+    @Override
+    public String getName() {
+        return m_node.getName();
+    }
+
+    /**
+     * @return Node name with status information.
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString() {
+        return m_node.getName() + "(" + getID() + ")" + ";status:" + getState();
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -515,8 +530,6 @@ public final class SingleNodeContainer extends NodeContainer
             m_node.loadSettingsFromDialog();
         }
     }
-
-    // --------------------------
 
     /** {@inheritDoc} */
     @Override
