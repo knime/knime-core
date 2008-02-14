@@ -63,6 +63,9 @@ abstract class NodeOutPortView extends JFrame {
         if (type == BufferedDataTable.TYPE) {
             return new DataOutPortView(nodeName, portName);
         } else if (type == ModelPortObject.TYPE) {
+            throw new IllegalArgumentException(
+                    "ModelPort type " + type + " not supported yet!");
+        } else if (type == NodeModel.OLDSTYLEMODELPORTTYPE) {
             return new ModelContentOutPortView(nodeName, portName);
         } else if (type == DatabaseContent.TYPE) {
             return new DatabaseOutPortView(nodeName, portName);    
@@ -70,7 +73,6 @@ abstract class NodeOutPortView extends JFrame {
             throw new IllegalArgumentException(
                     "Port type " + type + " not supported yet!");
         }
-        // TODO: add support for other port types (DB)
     }
 
     /**

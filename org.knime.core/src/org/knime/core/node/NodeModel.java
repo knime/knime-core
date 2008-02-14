@@ -68,7 +68,11 @@ public abstract class NodeModel extends GenericNodeModel {
         return pTypes;
     }
     
-    private static PortType OLDSTYLEMODELPORTTYPE = new PortType(
+    /**
+     * <code>PortType</code> only used for old {@link NodeModel}s with
+     * model ports.
+     */
+    static final PortType OLDSTYLEMODELPORTTYPE = new PortType(
             ModelContentWrapper.class, ModelContentWrapper.class);
 
     /** Old-style constructor creating a NodeModel that also has model ports.
@@ -135,7 +139,8 @@ public abstract class NodeModel extends GenericNodeModel {
              i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
             ModelContent thisMdl = new ModelContent("ModelContent");
             saveModelContent(i - m_nrDataOutPorts, thisMdl);
-            m_localOutModels[i - m_nrDataOutPorts] = new ModelContentWrapper(thisMdl);
+            m_localOutModels[i - m_nrDataOutPorts] = 
+                new ModelContentWrapper(thisMdl);
             returnObjectSpecs[i] = new ModelContentWrapper(thisMdl);
         }
         return returnObjectSpecs;
@@ -146,12 +151,15 @@ public abstract class NodeModel extends GenericNodeModel {
     // during configure! (old v1.x model ports!)
     //
     // hide model content in a modern style PortObjectSpec
-    private class ModelContentWrapper 
+    final class ModelContentWrapper 
             implements ModelPortObjectSpec, ModelPortObject {
+        private ModelContentRO m_hiddenModel;
         ModelContentWrapper(final ModelContentRO mdl) {
             m_hiddenModel = mdl;
         }
-        ModelContentRO m_hiddenModel;
+        final ModelContentRO getModelContent() {
+            return m_hiddenModel;
+        }
     }
     //
     // allow to replace model content generated during execute in the modern
@@ -179,8 +187,9 @@ public abstract class NodeModel extends GenericNodeModel {
         for (int i = m_nrDataInPorts;
              i < m_nrDataInPorts + m_nrModelInPorts; i++) {
             int mdlIndex = i - m_nrDataInPorts;
-            assert (inData[i] instanceof ModelContentRO);
-            ModelContentRO mdl = (ModelContent)inData[i];
+            assert (inData[i] instanceof ModelContentWrapper);
+            ModelContentRO mdl = 
+                ((ModelContentWrapper) inData[i]).getModelContent();
             loadModelContent(mdlIndex, mdl);
         }
         // finally call old style execute

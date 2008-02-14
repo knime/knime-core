@@ -27,29 +27,42 @@ package org.knime.core.node;
 import org.knime.core.data.DataTableSpec;
 
 /**
+ * Database out port overrides the data put port view to visualize the
+ * <code>DataTableSpec</code> after configure and the 
+ * <code>BufferedDataTable</code> after execute.
  * 
- * @author gabriel, University of Konstanz
+ * @author Thomas Gabriel, University of Konstanz
  */
 public class DatabaseOutPortView extends DataOutPortView {
 
     /**
+     * Create new database outport view.
      * 
+     * @param nodeName the name of the underlying node
+     * @param portName the name of the port to display view on
      */
     DatabaseOutPortView(final String nodeName, final String portName) {
         super(nodeName, portName);    }
     
+    
+    /**
+     * Override this method to unpack internal <code>BufferedDataTable</code>
+     * and <code>DataTableSpec</code>.
+     * {@inheritDoc}
+     */
     @Override
-    void update(PortObject portObj, PortObjectSpec portSpec) {
+    void update(final PortObject portObj, final PortObjectSpec portSpec) {
         BufferedDataTable table = null;
+        DataTableSpec spec = null;
         if (portObj != null) {
             table = ((DatabaseContent) portObj).getDataTable();
-        }
-        DataTableSpec spec = null;
-        if (portSpec != null) {
-            spec = ((DatabaseContentSpec) portSpec).getDataTableSpec();
+            spec = table.getDataTableSpec();
+        } else {
+            if (portSpec != null) {
+                spec = ((DatabaseContentSpec) portSpec).getDataTableSpec();
+            }
         }
         super.update(table, spec);
     }
     
-
 }

@@ -312,21 +312,22 @@ public final class DBReaderConnection implements DataTable {
 
         private boolean end() {
             boolean ret;
-            if (m_rowCnt == m_cacheNoRows) {
+            if (m_rowCnt + 1 == m_cacheNoRows) {
                 ret = true;
-            }
-            try {
-                ret = !m_result.next();
-            } catch (SQLException sqle) {
-                LOGGER.error("SQL Exception:", sqle);
-                ret = true;
-            }
-            if (ret) {
+            } else {
                 try {
-                    m_result.close();
-                    m_conn.close();
-                } catch (Exception e) {
-                    LOGGER.error("SQL Exception:", e);
+                    ret = !m_result.next();
+                } catch (SQLException sqle) {
+                    LOGGER.error("SQL Exception:", sqle);
+                    ret = true;
+                }
+                if (ret) {
+                    try {
+                        m_result.close();
+                        m_conn.close();
+                    } catch (Exception e) {
+                        LOGGER.error("SQL Exception:", e);
+                    }
                 }
             }
             return ret;

@@ -43,6 +43,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import org.knime.core.node.NodeModel.ModelContentWrapper;
+
 /**
  * A port view showing the port's <code>ModelContent</code> as
  * <code>JTree</code>.
@@ -150,7 +152,8 @@ final class ModelContentOutPortView extends NodeOutPortView {
     /**
      * Updates the view's content with new ModelContent object.
      *
-     * @param predParams The new content can be null.
+     * @param predParams the new content can be null
+     * @param spec the new spec, not used
      */
     @Override
     void update(final PortObject predParams, final PortObjectSpec spec) {
@@ -159,8 +162,9 @@ final class ModelContentOutPortView extends NodeOutPortView {
             m_tree.setModel(new DefaultTreeModel(NO_TEXT));
         } else {
             //String text = predParams.toString();
-            m_tree.setModel(new DefaultTreeModel(
-                    (ModelContent)predParams));
+            ModelContentRO cont = 
+                ((ModelContentWrapper) predParams).getModelContent();
+            m_tree.setModel(new DefaultTreeModel(cont));
         }
         super.updatePortView();
     }
