@@ -125,6 +125,10 @@ public final class NewWorkflowEditPartFactory implements EditPartFactory {
         } else if (model instanceof SingleNodeContainer) {
             // SingleNodeContainer -> NodeContainerEditPart
             part = new NodeContainerEditPart();
+            
+            // we have to test for WorkflowInPort first because it's a 
+            // subclass of NodeInPort (same holds for WorkflowOutPort and 
+            // NodeOutPort) 
         } else if (model instanceof WorkflowInPort 
                 && context instanceof WorkflowRootEditPart) {
             // WorkflowInPort and context WorkflowRootEditPart -> 
@@ -156,9 +160,6 @@ public final class NewWorkflowEditPartFactory implements EditPartFactory {
                 new WorkflowOutPortEditPart(
                         outport.getPortType(), 
                         outport.getPortID());
-            // we have to test for WorkflowInPort first because it's a 
-            // subclass of NodeInPort (same holds for WorkflowOutPort and 
-            // NodeOutPort) 
         } else if (model instanceof NodeInPort) {
             // NodeInPort -> NodeInPortEditPart
             NodePort port = (NodeInPort)model;
