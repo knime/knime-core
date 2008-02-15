@@ -34,7 +34,7 @@ public final class PortType {
     private final Class<? extends PortObject> m_objectClass;
     
     // made package visible to avoid others from creating new types.
-    PortType(final Class<? extends PortObjectSpec> specClass,
+    public PortType(final Class<? extends PortObjectSpec> specClass,
             final  Class<? extends PortObject> objectClass) {
         if ((specClass == null) || (objectClass == null)) {
             throw new NullPointerException("PortType args must not be null!");
