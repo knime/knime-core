@@ -246,19 +246,35 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    void enableQueuing() {
+    void markForExecution(final boolean flag) {
         synchronized (m_dirtyNode) {
-            switch (getState()) {
-            case CONFIGURED:
-                setNewState(State.MARKEDFOREXEC);
-                return;
-            case IDLE:
-                setNewState(State.UNCONFIGURED_MARKEDFOREXEC);
-                return;
-            default:
-                throw new IllegalStateException("Illegal state " + getState()
-                        + " encountered in enableQueuing().");
-            }
+            if (flag) {  // we want to mark the node for execution!
+                switch (getState()) {
+                case CONFIGURED:
+                    setNewState(State.MARKEDFOREXEC);
+                    return;
+                case IDLE:
+                    setNewState(State.UNCONFIGURED_MARKEDFOREXEC);
+                    return;
+                default:
+                    throw new IllegalStateException("Illegal state "
+                            + getState()
+                            + " encountered in markForExecution(true).");
+                }
+            } else {  // we want to remove the mark for execution
+                switch (getState()) {
+                case MARKEDFOREXEC:
+                    setNewState(State.CONFIGURED);
+                    return;
+                case UNCONFIGURED_MARKEDFOREXEC:
+                    setNewState(State.IDLE);
+                    return;
+                default:
+                    throw new IllegalStateException("Illegal state "
+                            + getState()
+                            + " encountered in markForExecution(false).");
+                }
+            }                    
         }
     }
 
