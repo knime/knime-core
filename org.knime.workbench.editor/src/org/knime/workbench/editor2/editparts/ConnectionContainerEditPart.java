@@ -53,6 +53,10 @@ import org.knime.workbench.editor2.extrainfo.ModellingConnectionExtraInfo;
 /**
  * EditPart controlling a <code>ConnectionContainer</code> object in the
  * workflow.
+ * Model: {@link ConnectionContainer}
+ * View: {@link PolylineConnection} created in {@link #createFigure()}
+ * Controller: {@link ConnectionContainerEditPart}
+ * 
  *
  * @author Florian Georg, University of Konstanz
  */

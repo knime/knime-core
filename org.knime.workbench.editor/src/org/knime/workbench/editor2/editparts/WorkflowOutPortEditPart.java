@@ -29,10 +29,15 @@ import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowOutPort;
 import org.knime.workbench.editor2.figures.WorkflowOutPortFigure;
 
 /**
- *
+ * Edit part for the {@link WorkflowOutPort}.
+ * Model: {@link WorkflowOutPort}
+ * View: {@link WorkflowOutPortFigure}
+ * Controller: {@link WorkflowOutPortEditPart}
+ * 
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowOutPortEditPart extends AbstractPortEditPart {

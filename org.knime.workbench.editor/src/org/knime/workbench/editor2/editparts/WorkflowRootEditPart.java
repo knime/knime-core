@@ -56,6 +56,9 @@ import org.knime.workbench.editor2.figures.WorkflowLayout;
  * Root controller for the <code>WorkflowManager</code> model object. Consider
  * this as the controller for the "background" of the editor. It always has a
  * <code>WorkflowManager</code> as its model object.
+ * 
+ * Model: {@link WorkflowManager}
+ * 
  *
  * @author Florian Georg, University of Konstanz
  */

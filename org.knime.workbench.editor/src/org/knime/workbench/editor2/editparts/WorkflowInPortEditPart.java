@@ -39,7 +39,10 @@ import org.knime.workbench.editor2.figures.NewToolTipFigure;
 import org.knime.workbench.editor2.figures.WorkflowInPortFigure;
 
 /**
- * Edit part representing a workflow in port. 
+ * Edit part representing a {@link WorkflowInPort}.
+ * Model: {@link WorkflowInPort}
+ * View: {@link WorkflowInPortFigure}
+ * Controller: {@link WorkflowInPortEditPart} 
  * 
  * @author Fabian Dill, University of Konstanz
  */
