@@ -33,7 +33,8 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodePersistor;
+import org.knime.core.node.NodePersistorVersion1xx;
+import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -54,6 +55,12 @@ public class SingleNodeContainerPersistorVersion200 extends
     
     /** {@inheritDoc} */
     @Override
+    protected NodePersistorVersion200 createNodePersistor() {
+        return new NodePersistorVersion200();
+    }
+    
+    /** {@inheritDoc} */
+    @Override
     protected String loadNodeFactoryClassName(NodeSettingsRO parentSettings,
             NodeSettingsRO settings) throws InvalidSettingsException {
         return settings.getString(KEY_FACTORY_NAME);
@@ -64,7 +71,13 @@ public class SingleNodeContainerPersistorVersion200 extends
         throws InvalidSettingsException {
         return settings.getString("node_file");
     }
-
+    
+    /** {@inheritDoc} */
+    @Override
+    protected void loadNodeStateIntoMetaPersistor(
+            final NodePersistorVersion1xx nodePersistor) {
+    }
+    
     protected String save(final SingleNodeContainer snc, final File nodeDir, 
             final ExecutionMonitor exec, final boolean isSaveData) 
                 throws CanceledExecutionException, IOException {
@@ -79,8 +92,9 @@ public class SingleNodeContainerPersistorVersion200 extends
             createNodeContainerMetaPersistor();
         metaPersistor.save(snc, settings, exec, isSaveData);
         File nodeXMLFile = saveNodeFileName(settings, nodeDir);
-        NodePersistor persistor = createNodePersistor();
-        persistor.save(snc.getNode(), nodeXMLFile, exec, isSaveData);
+        NodePersistorVersion200 persistor = createNodePersistor();
+        persistor.save(snc.getNode(), nodeXMLFile, exec, isSaveData 
+                && snc.getState().equals(NodeContainer.State.EXECUTED));
         String fileName = SETTINGS_FILE_NAME;
         File nodeSettingsXMLFile = new File(nodeDir, fileName);
         settings.saveToXML(new FileOutputStream(nodeSettingsXMLFile));

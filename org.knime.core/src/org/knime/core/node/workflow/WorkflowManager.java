@@ -1907,7 +1907,8 @@ public final class WorkflowManager extends NodeContainer {
         if (!directory.isDirectory() || !directory.canRead()) {
             throw new IOException("Can't read directory " + directory);
         }
-        File workflowknime = new File(directory, WorkflowPersistor.WORKFLOW_FILE);
+        File workflowknime = 
+            new File(directory, WorkflowPersistor.WORKFLOW_FILE);
         if (!workflowknime.isFile()) {
             throw new IOException("No \"" + WorkflowPersistor.WORKFLOW_FILE 
                     + "\" file in directory \"" + directory.getAbsolutePath()
@@ -2040,6 +2041,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         Set<NodeID> failedNodes = new HashSet<NodeID>();
         Set<NodeID> needConfigurationNodes = new HashSet<NodeID>();
+        LoadResult loadResult = new LoadResult();
         for (NodeID bfsID : getBreathFirstListOfNodes()) {
             boolean hasPredecessorFailed = false;
             for (ConnectionContainer cc : m_connectionsByDest.get(bfsID)) {
@@ -2048,9 +2050,14 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
             NodeContainerPersistor containerPersistor = persistorMap.get(bfsID);
+            NodeContainer cont = m_nodes.get(bfsID);
             try {
-                containerPersistor.loadNodeContainer(
+                LoadResult temp = containerPersistor.loadNodeContainer(
                         loadID, new ExecutionMonitor());
+                if (temp.hasErrors()) {
+                    loadResult.addError("Errors reading node \"" 
+                            + cont.getNameWithID() + "\":", temp);
+                }
             } catch (CanceledExecutionException e) {
             } catch (Exception e) {
                 if (!(e instanceof InvalidSettingsException)
@@ -2063,8 +2070,10 @@ public final class WorkflowManager extends NodeContainer {
                     needConfigurationNodes.add(bfsID);
                 }
             }
-            NodeContainer cont = m_nodes.get(bfsID);
             cont.loadContent(containerPersistor, loadID);
+        }
+        if (loadResult.hasErrors()) {
+            LOGGER.warn(loadResult);
         }
         for (NodeID id : needConfigurationNodes) {
             configure(id);

@@ -39,7 +39,6 @@ import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodePersistor;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -99,7 +98,7 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     throws InvalidSettingsException, CanceledExecutionException, IOException {
         LoadResult result = new LoadResult();
         String error;
-        if (nodeSettingsFile == null || !nodeSettingsFile.isFile()) {
+        if (!nodeSettingsFile.isFile()) {
             throw new IOException("Can't read node file \"" 
                     + nodeSettingsFile.getAbsolutePath() + "\"");
         }
@@ -116,7 +115,7 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
             } else {
                 error = "Can't load node factory class name";
             }
-            throw new InvalidSettingsException(error);
+            throw new InvalidSettingsException(error, e);
         }
         GenericNodeFactory<GenericNodeModel> nodeFactory;
         
@@ -125,14 +124,12 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
         } catch (Exception e) {
             error =  "Unable to load factory class \"" 
                 + nodeFactoryClassName + "\"";
-            throw new InvalidSettingsException(error);
+            throw new InvalidSettingsException(error, e);
         }
         m_node = new Node(nodeFactory);
         m_metaPersistor = createNodeContainerMetaPersistor();
         LoadResult metaResult = m_metaPersistor.load(settings);
-        if (metaResult.hasErrors()) {
-            result.addError(metaResult);
-        }
+        result.addError(metaResult);
         m_nodeSettings = settings;
         m_nodeDir = nodeSettingsFile.getParentFile();
         return result;
@@ -156,12 +153,27 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
             return result;
         }
         File nodeFile = new File(m_nodeDir, nodeFileName);
-        NodePersistor nodePersistor = createNodePersistor();
-        LoadResult nodeLoadResult = nodePersistor.load(
-                m_node, nodeFile, exec, loadID, m_globalTableRepository);
-        if (nodeLoadResult.hasErrors()) {
+        NodePersistorVersion1xx nodePersistor = createNodePersistor();
+        try {
+            LoadResult nodeLoadResult = nodePersistor.load(
+                    m_node, nodeFile, exec, loadID, m_globalTableRepository);
             result.addError(nodeLoadResult);
+        } catch (final InvalidSettingsException e) {
+            String error = "Error loading node content: " + e.getMessage();
+            LOGGER.debug(error, e);
+            result.addError(error);
         }
+        loadNodeStateIntoMetaPersistor(nodePersistor);
+        return result;
+    }
+    
+    protected NodeContainerMetaPersistorVersion1xx 
+        createNodeContainerMetaPersistor() {
+        return new NodeContainerMetaPersistorVersion1xx();
+    }
+    
+    protected void loadNodeStateIntoMetaPersistor(
+            final NodePersistorVersion1xx nodePersistor) {
         State nodeState;
         if (nodePersistor.isExecuted()) {
             nodeState = State.EXECUTED;
@@ -171,12 +183,6 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
             nodeState = State.IDLE;
         }
         m_metaPersistor.setState(nodeState);
-        return result;
-    }
-    
-    protected NodeContainerMetaPersistorVersion1xx 
-        createNodeContainerMetaPersistor() {
-        return new NodeContainerMetaPersistorVersion1xx();
     }
     
     protected String loadNodeFactoryClassName(

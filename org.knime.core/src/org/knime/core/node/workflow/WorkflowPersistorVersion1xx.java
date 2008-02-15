@@ -369,9 +369,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         InputStream in = new BufferedInputStream(new FileInputStream(nodeFile));
         NodeSettingsRO subWFSettings = NodeSettings.loadFromXML(in);
         LoadResult metaLoadResult = m_metaPersistor.load(subWFSettings);
-        if (metaLoadResult.hasErrors()) {
-            loadResult.addError(metaLoadResult);
-        }
+        loadResult.addError(metaLoadResult);
         m_workflowSett = subWFSettings;
         m_workflowDir = nodeFile.getParentFile();
         return loadResult;
@@ -380,7 +378,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     /** {@inheritDoc} */
     public LoadResult loadNodeContainer(final int loadID, 
             final ExecutionMonitor exec) 
-    throws InvalidSettingsException, CanceledExecutionException, IOException {
+            throws CanceledExecutionException, IOException {
         if (m_workflowDir == null || m_workflowSett == null) {
             throw new IllegalStateException("call preLoadNodeContainer before");
         }
