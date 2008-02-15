@@ -67,7 +67,7 @@ public abstract class NodeModel extends GenericNodeModel {
         }
         return pTypes;
     }
-    
+
     /**
      * <code>PortType</code> only used for old {@link NodeModel}s with
      * model ports.
@@ -75,14 +75,21 @@ public abstract class NodeModel extends GenericNodeModel {
     static final PortType OLDSTYLEMODELPORTTYPE = new PortType(
             ModelContentWrapper.class, ModelContentWrapper.class);
 
-    /** Old-style constructor creating a NodeModel that also has model ports.
+    /**
      *
-     * DO NOT USE ANYMORE, USE @see GenericNodeModel INSTEAD
+     * Old-style constructor creating a NodeModel that also has model ports.
      *
-     * @param nrDataIns
-     * @param nrDataOuts
-     * @param nrModelIns
-     * @param nrModelOuts
+     * @param nrDataIns the number of <code>DataTable</code> elements expected
+     *            as inputs
+     * @param nrDataOuts the number of <code>DataTable</code> objects expected
+     *            at the output
+     * @param nrModelIns the number of <code>ModelContent</code>
+     *            elements available as inputs
+     * @param nrModelOuts the number of <code>ModelContent</code>
+     *            objects available at the output
+     *
+     * @deprecated Please use the {@link GenericNodeModel} instead of this
+     * constructor if you want to have model ports
      */
     @Deprecated
     protected NodeModel(final int nrDataIns, final int nrDataOuts,
@@ -139,7 +146,7 @@ public abstract class NodeModel extends GenericNodeModel {
              i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
             ModelContent thisMdl = new ModelContent("ModelContent");
             saveModelContent(i - m_nrDataOutPorts, thisMdl);
-            m_localOutModels[i - m_nrDataOutPorts] = 
+            m_localOutModels[i - m_nrDataOutPorts] =
                 new ModelContentWrapper(thisMdl);
             returnObjectSpecs[i] = new ModelContentWrapper(thisMdl);
         }
@@ -151,7 +158,7 @@ public abstract class NodeModel extends GenericNodeModel {
     // during configure! (old v1.x model ports!)
     //
     // hide model content in a modern style PortObjectSpec
-    final class ModelContentWrapper 
+    final class ModelContentWrapper
             implements ModelPortObjectSpec, ModelPortObject {
         private ModelContentRO m_hiddenModel;
         ModelContentWrapper(final ModelContentRO mdl) {
@@ -168,7 +175,7 @@ public abstract class NodeModel extends GenericNodeModel {
     //
     // end of evil hack.
     ///////////////////////////////////////////
-    
+
     protected abstract BufferedDataTable[] execute(
             final BufferedDataTable[] inData, final ExecutionContext exec)
             throws Exception;
@@ -188,7 +195,7 @@ public abstract class NodeModel extends GenericNodeModel {
              i < m_nrDataInPorts + m_nrModelInPorts; i++) {
             int mdlIndex = i - m_nrDataInPorts;
             assert (inData[i] instanceof ModelContentWrapper);
-            ModelContentRO mdl = 
+            ModelContentRO mdl =
                 ((ModelContentWrapper) inData[i]).getModelContent();
             loadModelContent(mdlIndex, mdl);
         }
