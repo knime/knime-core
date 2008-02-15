@@ -374,6 +374,14 @@ public abstract class NodeContainer {
     abstract void markForExecution(final boolean flag)
     throws IllegalStateException;
 
+    /** Cancel execution of a marked, queued, or executing node. (Tolerate
+     * execute as this may happen throughout cancelation).
+     * 
+     * @throws IllegalStateException
+     */
+    abstract void cancelExecution()
+    throws IllegalStateException;
+
     /** Actually queue the node for execution together with ingoing data.
      * The outgoing data is held in the nodes {@link NodeOutPort}s.
      *
