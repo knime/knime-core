@@ -171,10 +171,16 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
                 @Override
                 public InputSource resolveEntity(final String pubId,
                         final String sysId) throws IOException, SAXException {
-                    if ((pubId != null)
-                            && pubId.equals("-//UNIKN//DTD KNIME Node 1.0//EN")) {
+                    if (pubId != null) {
                         String path = GenericNodeFactory.class.getPackage().getName();
-                        path = path.replace('.', '/') + "/Node.dtd";
+                        if (pubId.equals("-//UNIKN//DTD KNIME Node 1.0//EN")) {
+                            path = path.replace('.', '/') + "/Node1xx.dtd";
+                        } else if (pubId.equals("-//UNIKN//DTD KNIME Node 2.0//EN")) {
+                            path = path.replace('.', '/') + "/Node.dtd";
+                        } else {
+                            return super.resolveEntity(pubId, sysId);
+                        }
+
                         InputStream in =
                                 GenericNodeFactory.class.getClassLoader()
                                         .getResourceAsStream(path);
