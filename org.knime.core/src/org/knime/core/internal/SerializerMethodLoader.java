@@ -31,8 +31,11 @@ import java.lang.reflect.Type;
 import org.knime.core.node.NodeLogger;
 
 /**
- * 
- * @author wiswedel, University of Konstanz
+ * Utility class to invoke static methods on classes to retrieve a serializer
+ * factory. This class is outsourced as it is used in different places,
+ * for instance {@link org.knime.core.data.DataType} and 
+ * {@link org.knime.core.node.NodePersistorVersion200}
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public final class SerializerMethodLoader {
     
@@ -41,7 +44,26 @@ public final class SerializerMethodLoader {
 
     private SerializerMethodLoader() {
     }
-    
+
+    /**
+     * Invokes a static method named <code>methodName</code> on class 
+     * <code>encapsulatingClass</code>, which is supposed to have no arguments
+     * and whose return type is <code>V&lt;T&gt;</code>. One example is:
+     * <pre>
+     *    DataCellSerializer&lt;FooCell&gt; getCellSerializer() { ... }
+     * </pre> 
+     * defined on class <code>FooCell</code>.
+     * @param <T> Class type, which defines the method (also the parameterized
+     * return type.
+     * @param <V> The inherited class of class Serializer.
+     * @param encapsulatingClass The class defining this method. 
+     * @param desiredReturnType The expected return type, implementing 
+     *        interface {@link Serializer}
+     * @param methodName The name of the method.
+     * @return The return value of that method.
+     * @throws NoSuchMethodException If this method can't be found or invoked
+     * for any reason.
+     */
     @SuppressWarnings("unchecked") // access to CLASS_TO_SERIALIZER_MAP
     public static <T, V extends Serializer<T>> V getSerializer(
             final Class<T> encapsulatingClass, final Class<V> desiredReturnType,

@@ -25,6 +25,13 @@
  */
 package org.knime.core.data;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,6 +45,8 @@ import org.knime.core.data.property.ShapeFactory;
 import org.knime.core.data.property.SizeHandler;
 import org.knime.core.data.property.ShapeFactory.Shape;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContent;
+import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.config.ConfigRO;
@@ -79,7 +88,7 @@ import org.knime.core.node.config.ConfigWO;
  */
 public final class DataTableSpec
 implements PortObjectSpec, Iterable<DataColumnSpec> {
-
+    
     /** Key for column spec sub-configs. */
     private static final String CFG_COLUMN_SPEC = "column_spec_";
 
@@ -91,6 +100,41 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DataTableSpec.class);
+    
+    /** Method required by the interface {@link PortObjectSpec}. Not meant
+     * for public use.
+     * @return A new serializer responsible for loading/saving.
+     */
+    static PortObjectSpecSerializer<DataTableSpec> 
+            getPortObjectSpecSerializer() {
+        return new PortObjectSpecSerializer<DataTableSpec>() {
+            private static final String FILENAME = "spec.xml";
+            
+            /** {@inheritDoc} */
+            @Override
+            protected DataTableSpec loadPortObjectSpec(final File directory)
+                throws IOException {
+                InputStream in = new BufferedInputStream(
+                        new FileInputStream(new File(directory, FILENAME)));
+                ModelContentRO cnt = ModelContent.loadFromXML(in);
+                try {
+                    return DataTableSpec.load(cnt);
+                } catch (InvalidSettingsException e) {
+                    throw new IOException(e.getMessage(), e);
+                }
+            }
+            
+            /** {@inheritDoc} */
+            @Override
+            protected void savePortObjectSpec(final DataTableSpec spec,
+                    final File directory) throws IOException {
+                ModelContent cnt = new ModelContent(FILENAME);
+                spec.save(cnt);
+                cnt.saveToXML(new BufferedOutputStream(
+                        new FileOutputStream(new File(directory, FILENAME))));
+            }
+        };
+    }
 
     private static DataColumnSpec[] appendTableSpecs(final DataTableSpec spec1,
             final DataTableSpec spec2) {

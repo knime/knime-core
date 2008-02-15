@@ -24,6 +24,9 @@
  */
 package org.knime.core.node;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.knime.core.data.DataTableSpec;
 
 
@@ -158,14 +161,56 @@ public abstract class NodeModel extends GenericNodeModel {
     // during configure! (old v1.x model ports!)
     //
     // hide model content in a modern style PortObjectSpec
-    final class ModelContentWrapper
+    final static class ModelContentWrapper
             implements ModelPortObjectSpec, ModelPortObject {
-        private ModelContentRO m_hiddenModel;
-        ModelContentWrapper(final ModelContentRO mdl) {
+        private ModelContent m_hiddenModel;
+        ModelContentWrapper(final ModelContent mdl) {
             m_hiddenModel = mdl;
         }
         final ModelContentRO getModelContent() {
             return m_hiddenModel;
+        }
+        
+        static PortObjectSerializer<ModelContentWrapper> getPortObjectSerializer() {
+            return new PortObjectSerializer<ModelContentWrapper>() {
+                protected ModelContentWrapper loadPortObject(
+                        final File directory, final ExecutionMonitor c)
+                        throws IOException, CanceledExecutionException {
+                    ModelContent cnt = new ModelContent();
+                    cnt.load(directory, c);
+                    return new ModelContentWrapper(cnt);
+                }
+
+                protected void savePortObject(ModelContentWrapper o,
+                        final File directory, final ExecutionMonitor c)
+                        throws IOException, CanceledExecutionException {
+                    o.m_hiddenModel.save(directory, c);
+                }
+            };
+        }
+        
+        static PortObjectSpecSerializer<ModelContentWrapper> getPortObjectSpecSerializer() {
+            return new PortObjectSpecSerializer<ModelContentWrapper>() {
+                protected ModelContentWrapper loadPortObjectSpec(
+                        final File directory) throws IOException{
+                    ModelContent cnt = new ModelContent();
+                    try {
+                        cnt.load(directory, new ExecutionMonitor());
+                    } catch (CanceledExecutionException e) {
+                        throw new IllegalStateException("Canceled");
+                    }
+                    return new ModelContentWrapper(cnt);
+                }
+                
+                protected void savePortObjectSpec(ModelContentWrapper o,
+                        final File directory) throws IOException {
+                    try {
+                        o.m_hiddenModel.save(directory, new ExecutionMonitor());
+                    } catch (CanceledExecutionException e) {
+                        throw new IllegalStateException("Canceled");
+                    }
+                }
+            };
         }
     }
     //

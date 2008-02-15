@@ -72,10 +72,6 @@ public interface NodePersistor {
     /** Config key: What memory policy to use for a node outport. */
     static final String CFG_MEMORY_POLICY = "memory_policy";
 
-    void save(final Node node, final File nodeFile,
-            final ExecutionMonitor execMon, final boolean isSavePortObjects)
-            throws IOException, CanceledExecutionException;
-    
     LoadResult load(Node node, final File nodeFile, ExecutionMonitor execMon,
             int loadID, HashMap<Integer, ContainerTable> tblRep)
             throws IOException, InvalidSettingsException, CanceledExecutionException;

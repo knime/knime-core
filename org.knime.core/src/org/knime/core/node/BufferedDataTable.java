@@ -160,6 +160,16 @@ public final class BufferedDataTable implements DataTable, PortObject {
         return lastID.incrementAndGet();
     }
     
+    /** Throws <code>IllegalStateException</code> as this method is not
+     * supposed to be called; refer to the API of {@link PortObject} for details
+     * on this method. The KNIME engine treats objects of this kind differently.
+     * @return Nothing as an exception is being thrown.
+     */
+    static PortObjectSerializer<BufferedDataTable> getPortObjectSerializer() {
+        throw new IllegalStateException("No access on BufferedDataTables "
+                + "via generic PortObjectSerializer");
+    }
+    
     private final KnowsRowCountTable m_delegate;
     private int m_tableID;
     private Node m_owner;

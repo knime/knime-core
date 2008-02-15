@@ -25,15 +25,12 @@
 package org.knime.core.node;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
@@ -42,7 +39,6 @@ import org.knime.core.node.Node.SettingsLoaderAndWriter;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
-import org.knime.core.util.FileUtil;
 
 public class NodePersistorVersion1xx implements NodePersistor {
 
@@ -95,23 +91,64 @@ public class NodePersistorVersion1xx implements NodePersistor {
         this(null);
     }
     
-    protected PortObject loadPortObject(final Node node,
-            final NodeSettingsRO settings, final ExecutionMonitor execMon,
-            final int loadID, final int index,
-            final HashMap<Integer, ContainerTable> tblRep)
-            throws InvalidSettingsException, CanceledExecutionException,
-            IOException {
-        PortType type = node.getOutPort(index).getPortType();
-        boolean isDataPort = BufferedDataTable.class.isAssignableFrom(type
-                .getPortObjectClass());
-        if (isDataPort) {
-            return loadBufferedDataTable(node, settings, execMon, loadID,
-                    index, tblRep);
-        } else {
-            return loadModelContent(node, settings, execMon, index);
-        }
+    protected boolean loadIsExecuted(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        return settings.getBoolean(CFG_ISEXECUTED);
     }
 
+    protected boolean loadIsConfigured(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        return settings.getBoolean(CFG_ISCONFIGURED);
+    }
+
+    protected NodeMessage loadNodeMessage(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        return null;
+    }
+    
+    static File getNodeInternDirectory(final File nodeDir) {
+        return new File(nodeDir, INTERN_FILE_DIR);
+    }
+
+    protected File loadNodeInternDirectory(final NodeSettingsRO settings, 
+            final File nodeDir) throws InvalidSettingsException {
+        return getNodeInternDirectory(nodeDir);
+    }
+    
+    protected GenericNodeFactory<GenericNodeModel> loadNodeFactoryClass(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return m_class;
+    }
+    
+    protected void loadPorts(final Node node,
+            final ExecutionMonitor execMon, final NodeSettingsRO settings,
+            final int loadID, final HashMap<Integer, ContainerTable> tblRep)
+            throws IOException, InvalidSettingsException,
+            CanceledExecutionException {
+        for (int i = 0; i < node.getNrOutPorts(); i++) {
+            ExecutionMonitor execPort = execMon
+                    .createSubProgress(1.0 / node.getNrOutPorts());
+            PortType type = node.getOutPort(i).getPortType();
+            boolean isDataPort = BufferedDataTable.class.isAssignableFrom(type
+                    .getPortObjectClass());
+            if (m_isConfigured) {
+                PortObjectSpec spec = 
+                    loadPortObjectSpec(node, settings, loadID, i);
+                setPortObjectSpec(i, spec);
+            }
+            if (m_isExecuted) {
+                PortObject object;
+                if (isDataPort) {
+                    object = loadBufferedDataTable(
+                            node, settings, execPort, loadID, i, tblRep);
+                } else {
+                    object = loadModelContent(node, settings, execMon, i);
+                }
+                setPortObject(i, object);
+            }
+        }
+    }
+    
     private BufferedDataTable loadBufferedDataTable(final Node node,
             final NodeSettingsRO settings, final ExecutionMonitor execMon,
             final int loadID, final int index,
@@ -146,8 +183,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
             String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
             // dir = /data/data_i
             File dir = new File(dataDir, dataName);
-            BufferedDataTable t = BufferedDataTable.loadFromFile(dir, portSettings,
-                    execSubData, loadID,
+            BufferedDataTable t = BufferedDataTable.loadFromFile(
+                    dir, portSettings, execSubData, loadID,
                     // we didn't have blobs in 1.1.x
                     new HashMap<Integer, ContainerTable>());
             t.setOwnerRecursively(node);
@@ -182,7 +219,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         NodeSettingsRO model = settings.getNodeSettings(CFG_MODEL_FILES);
         String modelName = model.getString(CFG_OUTPUT_PREFIX + modelIndex);
         File targetFile = new File(m_nodeDirectory, modelName);
-
+    
         // in an earlier version the model settings were written
         // directly (without zipping); now the settings are
         // zipped (see save()); to be backward compatible
@@ -201,7 +238,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return pred;
     }
 
-    protected PortObjectSpec loadPortObjectSpec(final Node node,
+    private PortObjectSpec loadPortObjectSpec(final Node node,
             final NodeSettingsRO settings, final int loadID, final int index)
             throws InvalidSettingsException, CanceledExecutionException,
             IOException {
@@ -254,35 +291,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
     }
 
-    protected boolean loadIsExecuted(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        return settings.getBoolean(CFG_ISEXECUTED);
-    }
-
-    protected boolean loadIsConfigured(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        return settings.getBoolean(CFG_ISCONFIGURED);
-    }
-
-    protected NodeMessage loadNodeMessage(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        return null;
-    }
-    
-    static File getNodeInternDirectory(final File nodeDir) {
-        return new File(nodeDir, INTERN_FILE_DIR);
-    }
-
-    protected File loadNodeInternDirectory(final NodeSettingsRO settings, 
-            final File nodeDir) throws InvalidSettingsException {
-        return getNodeInternDirectory(nodeDir);
-    }
-    
-    protected GenericNodeFactory<GenericNodeModel> loadNodeFactoryClass(
-            final NodeSettingsRO settings) throws InvalidSettingsException {
-        return m_class;
-    }
-    
     /** Is configured according to the settings object. 
      * @return If node is saved in configured state. */
     public boolean isConfigured() {
@@ -364,33 +372,22 @@ public class NodePersistorVersion1xx implements NodePersistor {
                 LOGGER.debug(e, ise);
             }
         }
-    
-        for (int i = 0; i < node.getNrOutPorts(); i++) {
-            ExecutionMonitor execPort = execMon
-                    .createSubProgress(1.0 / node.getNrOutPorts());
-            try {
-                if (m_isConfigured) {
-                    m_portObjectSpecs[i] = loadPortObjectSpec(
-                            node, settings, loadID, i);
-                }
-                if (m_isExecuted) {
-                    m_portObjects[i] = loadPortObject(node,
-                            settings, execPort, loadID, i, tblRep);
-                }
-            } catch (InvalidSettingsException ise) {
-                String e = "Unable to load content for output port " + i + ": "
-                        + ise.getMessage();
-                LOGGER.warn(e);
-                m_nodeMessage = new NodeMessage(Type.ERROR, e);
-            } catch (IOException ioe) {
-                String e = "Unable to load content for output port " + i + ": "
-                        + ioe.getMessage();
-                LOGGER.warn(e);
-                m_nodeMessage = new NodeMessage(Type.ERROR, e);
-            } finally {
-                execPort.setProgress(1.0);
-            }
+        try {
+            loadPorts(node, execMon, settings, loadID, tblRep);
+        } catch (InvalidSettingsException ise) {
+            String e = "Unable to load content for node \"" + node.getName()
+                + "\": " + ise.getMessage();
+            LOGGER.warn(e);
+            m_nodeMessage = new NodeMessage(Type.ERROR, e);
+        } catch (IOException ioe) {
+            String e = "Unable to load content for \"" + node.getName()
+                + "\": " + ioe.getMessage();
+            LOGGER.warn(e);
+            m_nodeMessage = new NodeMessage(Type.ERROR, e);
+        } finally {
+            execMon.setProgress(1.0);
         }
+
         execMon.setMessage("Loading settings into node instance");
         node.load(this, execMon.createSilentSubProgress(0.0));
         return result;
@@ -420,218 +417,32 @@ public class NodePersistorVersion1xx implements NodePersistor {
     public PortObject getPortObject(final int outportIndex) {
         return m_portObjects[outportIndex];
     }
+    
+    /**
+     * @param idx The outport index.
+     * @param portObject the portObjects to set
+     */
+    public void setPortObject(final int idx, final PortObject portObject) {
+        m_portObjects[idx] = portObject;
+    }
 
     /** {@inheritDoc} */
     public PortObjectSpec getPortObjectSpec(final int outportIndex) {
         return m_portObjectSpecs[outportIndex];
     }
 
+    /**
+     * @param idx The outport index.
+     * @param portObjectSpec the portObjects to set
+     */
+    public void setPortObjectSpec(
+            final int idx, final PortObjectSpec portObjectSpec) {
+        m_portObjectSpecs[idx] = portObjectSpec;
+    }
+    
     /** {@inheritDoc} */
     public NodeMessage getNodeMessage() {
         return m_nodeMessage;
-    }
-    
-    /**
-     * Saves the node, node settings, and all internal structures, spec, data,
-     * and models, to the given node directory (located at the node file).
-     * 
-     * @param nodeFile To write node settings to.
-     * @param execMon Used to report progress during saving.
-     * @throws IOException If the node file can't be found or read.
-     * @throws CanceledExecutionException If the saving has been canceled.
-     */
-    public void save(final Node node, final File nodeFile, 
-            final ExecutionMonitor execMon, final boolean isSaveData) 
-        throws IOException, CanceledExecutionException {
-        NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
-        final File nodeDir = nodeFile.getParentFile();
-        saveOverride(node, settings);
-        saveCustomName(node, settings);
-        saveIsExecuted(node, settings, isSaveData);
-        saveIsConfigured(node, settings);
-        node.saveSettingsTo(settings);
-        saveNodeMessage(node, settings);
-        saveNodeInternDirectory(node, nodeDir, settings, execMon);
-        savePortObjectsAndSpecs(node, nodeDir, settings, execMon, isSaveData);
-        settings.saveToXML(new BufferedOutputStream(
-                new FileOutputStream(nodeFile)));
-    }
-
-    protected void savePortObjectsAndSpecs(final Node node, final File nodeDir,
-            final NodeSettingsWO settings, ExecutionMonitor exec, 
-            final boolean saveData) 
-        throws IOException, CanceledExecutionException {
-        // delete previous directory no matter what.
-        deleteDataDirectory(nodeDir);
-        if (node.getNrOutPorts() == 0 
-                || node.isAutoExecutable() || !node.isExecuted()) {
-            return;
-        }
-        final int portCount = node.getNrOutPorts();
-        int dataOutportCount = 0;
-        int modelOutportCount = 0;
-        for (int i = 0; i < portCount; i++) {
-            PortType type = node.getOutPort(i).getPortType();
-            if (BufferedDataTable.class.isAssignableFrom(
-                    type.getPortObjectClass())) {
-                dataOutportCount += 1;
-            } else {
-                modelOutportCount += 1;
-            }
-        }
-        if (dataOutportCount > 0) {
-            ExecutionMonitor subProgress = exec.createSubProgress(
-                    dataOutportCount / (double)portCount);
-            subProgress.setMessage("Saving output data");
-            saveDataPorts(node, nodeDir, settings, subProgress, saveData);
-            subProgress.setProgress(1.0);
-        }
-        if (modelOutportCount > 0) {
-            ExecutionMonitor subProgress = exec.createSubProgress(
-                    modelOutportCount / (double)portCount);
-            subProgress.setMessage("Saving output models");
-            saveModelPorts(node, nodeDir, settings, exec, saveData);
-            subProgress.setProgress(1.0);
-        }
-    }
-    
-    protected void saveDataPorts(final Node node, final File nodeDir, 
-            final NodeSettingsWO nodeSettings, ExecutionMonitor exec, 
-            final boolean isSaveData) 
-        throws IOException, CanceledExecutionException {
-        // dataSettings = subtree in settings.xml
-        NodeSettingsWO dataSettings =
-            nodeSettings.addNodeSettings(CFG_DATA_FILE);
-        dataSettings.addString(CFG_DATA_FILE_DIR, DATA_FILE_DIR);
-        File dataDir = new File(nodeDir, DATA_FILE_DIR);
-        dataDir.mkdir();
-        if (!dataDir.isDirectory() || !dataDir.canWrite()) {
-            throw new IOException("Can not write directory "
-                    + dataDir.getAbsolutePath());
-        }
-        final int portCount = node.getNrOutPorts();
-        for (int i = 0; i < portCount; i++) {
-            PortType type = node.getOutPort(i).getPortType();
-            if (BufferedDataTable.class.isAssignableFrom(
-                    type.getPortObjectClass())) {
-                exec.setMessage("Saving data output " + i);
-                saveBufferedDataTable(node, dataDir, dataSettings, 
-                        exec.createSubProgress(0.0), i, isSaveData);
-            }
-        }
-        exec.setProgress(1.0);
-    }
-    
-    protected void deleteDataDirectory(final File nodeDir) {
-        // delete previous directory no matter what.
-        File dataDir = new File(nodeDir, DATA_FILE_DIR);
-        if (dataDir.exists()) {
-            FileUtil.deleteRecursively(dataDir);
-        }
-    }
-    
-    protected void saveModelPorts(final Node node, final File nodeDir, 
-            final NodeSettingsWO nodeSettings, ExecutionMonitor exec, 
-            final boolean isSaveData) 
-        throws IOException, CanceledExecutionException {
-        if (!node.isExecuted() || !isSaveData) {
-            return;
-        }
-        NodeSettingsWO models = nodeSettings.addNodeSettings(CFG_MODEL_FILES);
-        final int portCount = node.getNrOutPorts();
-        for (int i = 0; i < portCount; i++) {
-            PortType type = node.getOutPort(i).getPortType();
-            if (!BufferedDataTable.class.isAssignableFrom(
-                    type.getPortObjectClass())) {
-                exec.setMessage("Saving model output " + i);
-                saveModelContent(node, nodeDir, models, 
-                        exec.createSubProgress(0.0), i);
-            }
-        }
-        exec.setProgress(1.0);
-    }
-    
-    protected void saveBufferedDataTable(final Node node, final File dataDir,
-            final NodeSettingsWO dataSettings, final ExecutionMonitor exec,
-            final int pIndex, final boolean isSaveData) 
-        throws IOException, CanceledExecutionException {
-        NodeSettingsWO portSettings =
-                dataSettings.addNodeSettings(CFG_OUTPUT_PREFIX + pIndex);
-        String dataName = createDataFileDirName(pIndex);
-        File dir = new File(dataDir, dataName);
-        dir.mkdir();
-        if (!(dir.isDirectory() && dir.canWrite())) {
-            throw new IOException("Can not write directory "
-                    + dir.getAbsolutePath());
-        }
-        portSettings.addString(CFG_DATA_FILE_DIR, dataName);
-        if (node.isExecuted() && isSaveData) {
-            BufferedDataTable table = 
-                (BufferedDataTable)node.getOutPort(pIndex).getPortObject();
-            table.save(dir, exec);
-        } else {
-            DataTableSpec spec = 
-                (DataTableSpec)node.getOutPort(pIndex).getPortObjectSpec();
-            if (spec == null) {
-                portSettings.addBoolean(CFG_HAS_SPEC_FILE, false);
-            } else {
-                portSettings.addBoolean(CFG_HAS_SPEC_FILE, true);
-                BufferedDataTable.saveSpec(spec, dir);
-            }
-        }
-        exec.setProgress(1.0);
-    }
-    
-    protected void saveModelContent(final Node node, final File m_nodeDir,
-            final NodeSettingsWO settings, final ExecutionMonitor exec, 
-            final int i) throws IOException, CanceledExecutionException {
-        int modelIndex = i - countDataOutPorts(node);
-        ModelContentRO pred = 
-            (ModelContentRO)node.getOutPort(i).getPortObject();
-        if (pred != null) {
-            String modelFileName = createModelFileName(modelIndex);
-            settings.addString(CFG_OUTPUT_PREFIX + modelIndex, modelFileName);
-            File targetFile = new File(m_nodeDir, modelFileName);
-            // reset from previous saving
-            targetFile.delete();
-            BufferedOutputStream out = new BufferedOutputStream(
-                    new GZIPOutputStream(new FileOutputStream(targetFile)));
-            pred.saveToXML(out);
-        }
-        exec.setProgress(1.0);
-    }
-    
-    protected void saveIsExecuted(final Node node, 
-            final NodeSettingsWO settings, boolean isSaveData) {
-        settings.addBoolean(CFG_ISEXECUTED, node.isExecuted() && isSaveData);
-    }
-    
-    protected void saveIsConfigured(
-            final Node node, final NodeSettingsWO settings) {
-        // write configured flag
-        settings.addBoolean(CFG_ISCONFIGURED, node.isConfigured());
-    }
-    protected void saveNodeMessage(
-            final Node node, final NodeSettingsWO settings) {
-    }
-    
-    protected void saveNodeInternDirectory(final Node node, final File nodeDir,
-            final NodeSettingsWO settings, final ExecutionMonitor exec) 
-        throws CanceledExecutionException {
-        if (!node.isAutoExecutable() && node.isExecuted()) {
-            File nodeInternDir = getNodeInternDirectory(nodeDir);
-            node.saveInternals(nodeInternDir, exec);
-        }
-    }
-    
-    protected void saveCustomName(
-            final Node node, final NodeSettingsWO settings) {
-        // write node name
-        settings.addString(CFG_NAME, node.getName());
-    }
-    protected void saveOverride(
-            final Node node, final NodeSettingsWO settings) {
-        
     }
     
     private static int countDataOutPorts(final Node node) {
