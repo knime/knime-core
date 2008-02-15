@@ -363,14 +363,15 @@ public abstract class NodeContainer {
     abstract boolean configureNode(final PortObjectSpec[] specs)
     throws IllegalStateException;
 
-    /** Enable queuing of underlying node for execution. This really only
-     * changes the state of the node and once all pre-conditions for
-     * execution are fulfilled (e.g. configuration succeeded and all
+    /** Enable (or disable) queuing of underlying node for execution. This
+     * really only changes the state of the node and once all pre-conditions
+     * for execution are fulfilled (e.g. configuration succeeded and all
      * ingoing objects are available) the node will be actually queued.
      *
+     * @param flag determines if node is marked or unmarked for execution
      * @throws IllegalStateException in case of illegal entry state.
      */
-    abstract void enableQueuing()
+    abstract void markForExecution(final boolean flag)
     throws IllegalStateException;
 
     /** Actually queue the node for execution together with ingoing data.
