@@ -24,6 +24,11 @@
  */
 package org.knime.core.node;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import org.knime.core.data.DataTableSpec;
 
 /**
@@ -61,6 +66,56 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
      */
     public ModelContentRO getConnectionModel() {
         return m_conn;
+    }
+    
+    /**
+     * Serializer used to save <code>DatabasePortObjectSpec</code>.
+     * @return a new database spec serializer
+     */
+    static PortObjectSpecSerializer<DatabasePortObjectSpec> 
+            getPortObjectSpecSerializer() {
+        return new PortObjectSpecSerializer<DatabasePortObjectSpec>() {
+
+            @Override
+            protected DatabasePortObjectSpec loadPortObjectSpec(
+                    final File directory) throws IOException {
+                return load(directory);
+            }
+
+            @Override
+            protected void savePortObjectSpec(
+                    final DatabasePortObjectSpec portObjectSpec, 
+                    final File directory) throws IOException {
+                save(directory, portObjectSpec);
+            }
+        };
+    }
+    
+    private static DatabasePortObjectSpec load(final File dir)
+            throws IOException {
+        File connFile = new File(dir, "db_connection.xml");
+        ModelContentRO conn = ModelContent.loadFromXML(
+                new FileInputStream(connFile));
+        File specFile = new File(dir, "spec.xml");
+        ModelContentRO specModel = ModelContent.loadFromXML(
+                new FileInputStream(specFile));
+        DataTableSpec spec = null;
+        try {
+            spec = DataTableSpec.load(specModel);
+        } catch (InvalidSettingsException ise) {
+            throw new IOException(ise);
+        }
+        return new DatabasePortObjectSpec(spec, conn);
+    }
+    
+    private static void save(final File dir, 
+            final DatabasePortObjectSpec portObjectSpec) throws IOException {
+        File connFile = new File(dir, "db_connection.xml");
+        portObjectSpec.m_conn.saveToXML(new FileOutputStream(connFile));
+        ModelContent specModel = new ModelContent("spec.xml");
+        portObjectSpec.m_spec.save(specModel);
+        File specFile = new File(dir, "spec.xml");
+        specModel.saveToXML(new FileOutputStream(specFile));
     }
     
 }

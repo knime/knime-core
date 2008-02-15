@@ -24,6 +24,7 @@
  */
 package org.knime.core.node;
 
+import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 
 /**
@@ -53,7 +54,7 @@ public class DatabaseOutPortView extends DataOutPortView {
      */
     @Override
     void update(final PortObject portObj, final PortObjectSpec portSpec) {
-        BufferedDataTable table = null;
+        DataTable table = null;
         DataTableSpec spec = null;
         if (portObj != null) {
             table = ((DatabasePortObject) portObj).getDataTable();

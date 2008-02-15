@@ -75,7 +75,7 @@ class DataOutPortView extends NodeOutPortView {
 
     private final String m_portName;
 
-    private BufferedDataTable m_table;
+    private DataTable m_table;
     
     private DataTableSpec m_tableSpec;
     
@@ -129,18 +129,27 @@ class DataOutPortView extends NodeOutPortView {
         cont.add(m_tabs, BorderLayout.CENTER);
     }
     
-    /** Updates table and spec. This is executed in a newly created thread to
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    void update(final PortObject table, final PortObjectSpec spec) {
+        this.update((DataTable) table, (DataTableSpec) spec); 
+    }
+    
+    /** 
+     * Updates table and spec. This is executed in a newly created thread to
      * allow the view to pop up quickly. The view will show a label that
      * the data is being loaded while the set process is executing.
      * @param table The new table (may be null).
      * @param spec The new spec.
      */
-    @Override
-    void update(final PortObject table, final PortObjectSpec spec) {
+    protected void update(final DataTable table, final DataTableSpec spec) {
         synchronized (m_updateLock) {
-            m_table = (BufferedDataTable)table;
-            m_tableSpec = (DataTableSpec)spec;
-        
+            m_table = table;
+            m_tableSpec = spec;
+            
             if (isVisible()) {
                 showComponent(m_busyLabel);
                 updateAll();

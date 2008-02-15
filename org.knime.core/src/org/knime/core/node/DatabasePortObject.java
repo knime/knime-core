@@ -24,6 +24,14 @@
  */
 package org.knime.core.node;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import org.knime.core.data.DataTable;
+import org.knime.core.data.container.ContainerTable;
+
 /**
  * Class used as database port object holding a {@link BufferedDataTable}
  * and a <code>ModelContentRO</code> to create a database connection.
@@ -39,7 +47,7 @@ public class DatabasePortObject implements PortObject {
     public static final PortType TYPE = 
         new PortType(DatabasePortObjectSpec.class, DatabasePortObject.class);
     
-    private final BufferedDataTable m_data;
+    private final DataTable m_data;
     
     private final ModelContentRO m_conn;
     
@@ -47,9 +55,17 @@ public class DatabasePortObject implements PortObject {
      * Creates a new database port object.
      * @param data underlying data
      * @param conn connection model
+     * @throws NullPointerException if one of the arguments is null
      */
-    public DatabasePortObject(final BufferedDataTable data, 
+    public DatabasePortObject(final DataTable data, 
             final ModelContentRO conn) {
+        if (data == null) {
+            throw new NullPointerException("DataTable must not be null!");
+        }
+        if (conn == null) {
+            throw new NullPointerException(
+                    "Datbase connection must not be null!");
+        }
         m_data = data;
         m_conn = conn;
     }
@@ -57,7 +73,7 @@ public class DatabasePortObject implements PortObject {
     /**
      * @return underlying data
      */
-    public BufferedDataTable getDataTable() {
+    public DataTable getDataTable() {
         return m_data;
     }
     
@@ -66,6 +82,49 @@ public class DatabasePortObject implements PortObject {
      */
     public ModelContentRO getConnectionModel() {
         return m_conn;
+    }
+    
+    /**
+     * Serializer used to save <code>DatabasePortObject</code>.
+     * @return a new database port object serializer
+     */
+    static PortObjectSerializer<DatabasePortObject> getPortObjectSerializer() {
+        return new PortObjectSerializer<DatabasePortObject>() {
+            /** {@inheritDoc} */
+            @Override
+            protected void savePortObject(final DatabasePortObject portObject,
+                    final File directory, final ExecutionMonitor exec)
+                    throws IOException, CanceledExecutionException {
+                save(directory, exec, portObject);
+
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            protected DatabasePortObject loadPortObject(final File directory,
+                    final ExecutionMonitor exec) throws IOException,
+                    CanceledExecutionException {
+                return load(directory);
+            }
+        };
+    }
+    
+    private static DatabasePortObject load(final File dir) throws IOException {
+        File connFile = new File(dir, "db_connection.xml");
+        ModelContentRO conn = ModelContent.loadFromXML(
+                new FileInputStream(connFile));
+        File dataFile = new File(dir, "data.zip");
+        ContainerTable data = BufferedDataContainer.readFromZip(dataFile);
+        return new DatabasePortObject(data, conn);
+    }
+    
+    private static void save(final File dir, final ExecutionMonitor em,
+            final DatabasePortObject portObject) 
+            throws IOException, CanceledExecutionException {
+        File connFile = new File(dir, "db_connection.xml");
+        portObject.m_conn.saveToXML(new FileOutputStream(connFile));
+        File dataFile = new File(dir, "data.zip");
+        BufferedDataContainer.writeToZip(portObject.m_data, dataFile, em);
     }
     
     
