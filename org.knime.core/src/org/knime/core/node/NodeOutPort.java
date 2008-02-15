@@ -46,10 +46,11 @@ public class NodeOutPort extends NodePort {
      */
     private PortObject m_portObject;
     
-    /** allow hiding of the underlying content of port if is not yet EXECUTED.
-     * (needed to keep external view on ports in sync with EXECUTED-flag...)
+    /** the following flag allows SingleNodeContainers/WFMs to hide
+     * the PortObjects after a Node.execute() until the state of the
+     * SNC/WFM has been adjusted to "EXECUTED".
      */
-    private boolean m_enablePortObject = false;
+    private boolean m_hidePortObject = true;
 
     /**
      * The table spec for this port.
@@ -129,10 +130,13 @@ public class NodeOutPort extends NodePort {
      * Returns the DataTable for this port, as set by the node this port is
      * output for.
      *
-     * @return DataTable the DataTable for this port. Could be null.
+     * @return PortObject the object for this port. Can be null.
      */
     public PortObject getPortObject() {
-        return m_portObject;
+        // the following test allows SingleNodeContainers/WFMs to hide
+        // the PortObjects after a Node.execute() until the state of the
+        // SNC/WFM has been adjusted to "EXECUTED"
+        return isPortObjectHidden() ? m_portObject : null;
     }
     
     /**
@@ -142,15 +146,15 @@ public class NodeOutPort extends NodePort {
      * 
      * @param flag true if content is to be seen
      */
-    public void enablePortObject(final boolean flag) {
-        m_enablePortObject = flag;
+    public void hidePortObject(final boolean flag) {
+        m_hidePortObject = flag;
     }
     
     /**
      * @return true if content is to be seen
      */
-    public boolean isPortObjectEnabled() {
-        return m_enablePortObject;
+    public boolean isPortObjectHidden() {
+        return m_hidePortObject;
     }
 
     /**

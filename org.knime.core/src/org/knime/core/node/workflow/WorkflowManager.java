@@ -828,10 +828,6 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
         synchronized (m_dirtyWorkflow) {
-            // make sure ports seem empty to the outside and reset state
-            for (WorkflowOutPort port : m_outPorts) {
-                port.enablePortObject(false);
-            }
             setNewState(State.CONFIGURED);
         }
     }
@@ -974,8 +970,14 @@ public final class WorkflowManager extends NodeContainer {
             switch (getState()) {
             case QUEUED:  // if the WorkflowManager itself was queued:
                 setNewState(State.EXECUTING); // some nodes IN this WFM are executing
+                // disable outports (to avoid access to PortObject when
+                // any inside Node.execute has written them but the State flag
+                // of the WFM has not yet been updated
+                for (WorkflowOutPort port : m_outPorts) {
+                    port.hidePortObject(false);
+                }
                 if (allInternalNodesFinished()) {
-                    setNewState(State.EXECUTED);  // all of them are done already!
+                    doAfterExecution(this);
                 }
             default:
                 // any other state: nc was executed directly within this WFM!
@@ -1087,9 +1089,11 @@ public final class WorkflowManager extends NodeContainer {
                     // this ought to be an atomic operation:
                     // 1) set state to executed
                     setNewState(State.EXECUTED);
-                    // 2) switch output ports "on"
+                    // 2) switch output ports "on" (to avoid access to
+                    // PortObject when any inside Node.execute has written them
+                    // but the State flag of the WFM has not yet been updated
                     for (WorkflowOutPort port : m_outPorts) {
-                        port.enablePortObject(true);
+                        port.hidePortObject(true);
                     }
                     // and finally run after execution stuff for this as node
                     if (getParent() != null) {
@@ -1389,7 +1393,8 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 }
                 if (allPortObjectsExist) {
-                    newState = State.EXECUTED;
+                    doAfterExecution(this);
+                    return;
                 }
             } else if (nrNodesInState[State.CONFIGURED.ordinal()] == nrNodes) {
                 newState = State.CONFIGURED;

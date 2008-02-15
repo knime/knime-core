@@ -287,10 +287,6 @@ public final class SingleNodeContainer extends NodeContainer
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case EXECUTED:
-                // disable outports
-                for (int i = 0; i < m_node.getNrOutPorts(); i++) {
-                    m_node.getOutPort(i).enablePortObject(false);
-                }
                 m_node.reset();
                 if (m_node.isConfigured()) {
                     setNewState(State.CONFIGURED);
@@ -355,9 +351,11 @@ public final class SingleNodeContainer extends NodeContainer
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case QUEUED:
-                // disable outports
+                // disable outports (to avoid access to PortObject when
+                // Node.execute has written them but the State flag of the
+                // NodeContainer has not yet been updated
                 for (int i = 0; i < m_node.getNrOutPorts(); i++) {
-                    m_node.getOutPort(i).enablePortObject(false);
+                    m_node.getOutPort(i).hidePortObject(false);
                 }
                 // clear loop status
                 m_node.clearLoopStatus();
@@ -378,9 +376,10 @@ public final class SingleNodeContainer extends NodeContainer
         synchronized (m_dirtyNode) {
             if (success) {
                 if (m_node.getLoopStatus() == null) {
-                    // enable outports
+                    // enable outports (see above, avoid problems with
+                    // ports having content and State not yet reflecting this.
                     for (int i = 0; i < m_node.getNrOutPorts(); i++) {
-                        m_node.getOutPort(i).enablePortObject(true);
+                        m_node.getOutPort(i).hidePortObject(true);
                     }
                     setNewState(State.EXECUTED);
                 } else {
