@@ -1292,6 +1292,12 @@ public final class WorkflowManager extends NodeContainer {
         return null;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    void cancelExecution() {
+        assert false;
+    }
+
     /////////////////////////////////////////////////////////
     // WFM as NodeContainer: Dialog related implementations
     /////////////////////////////////////////////////////////
@@ -1435,7 +1441,7 @@ public final class WorkflowManager extends NodeContainer {
     /** semaphore to avoid multiple checks for newly executable nodes
      * to interfere / interleave with each other.
      */
-    private final Object m_currentlyexecuting = new Object();
+    private final Object m_currentlychecking = new Object();
 
     private void checkForQueuableNodes() {
         boolean remainingNodes;
@@ -1467,11 +1473,21 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /**
+     * Cancel execution of the given NodeContainer.
+     * 
+     * @param nc node to be canceled
+     */
+    public void cancelExecution(final NodeContainer nc) {
+        assert nc != null;
+        nc.cancelExecution();
+    }
+
+    /**
      * Check if any internal nodes have changed state which might mean that
      * this WFM also needs to change its state...
      */
     private void checkForNodeStateChanges() {
-        synchronized (m_currentlyexecuting) {
+        synchronized (m_currentlychecking) {
             int[] nrNodesInState = new int[State.values().length];
             int nrNodes = 0;
             for (NodeContainer ncIt : m_nodes.values()) {
@@ -1870,18 +1886,6 @@ public final class WorkflowManager extends NodeContainer {
         for (WorkflowListener listener : m_wfmListeners) {
             listener.workflowChanged(evt);
         }
-    }
-
-    /* ------------------------------------------------------------- */
-
-
-
-    public void shutdown() {
-        // TODO
-    }
-
-    public void cancelExecution(final NodeContainer nc) {
-        assert nc != null;
     }
 
     ///////////////////////////////

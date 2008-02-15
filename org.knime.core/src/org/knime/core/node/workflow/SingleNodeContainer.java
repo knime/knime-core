@@ -51,8 +51,13 @@ import org.w3c.dom.Element;
 public final class SingleNodeContainer extends NodeContainer
     implements NodeMessageListener, NodeProgressListener {
 
+    /** underlying node. */
     private final Node m_node;
 
+    /** remember ID of the job when this node is submitted to a JobExecutor. */
+    private JobID m_executionID;
+
+    /** progress monitor. */
     private final NodeProgressMonitor m_progressMonitor =
             new DefaultNodeProgressMonitor(this);
 
@@ -246,6 +251,32 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
+    void resetNode() {
+        synchronized (m_dirtyNode) {
+            switch (getState()) {
+            case EXECUTED:
+                m_node.reset();
+                if (m_node.isConfigured()) {
+                    setNewState(State.CONFIGURED);
+                } else {
+                    setNewState(State.IDLE);
+                }
+                return;
+            case MARKEDFOREXEC:
+                setNewState(State.CONFIGURED);
+                return;
+            case UNCONFIGURED_MARKEDFOREXEC:
+                setNewState(State.IDLE);
+                return;
+            default:
+                throw new IllegalStateException("Illegal state " + getState()
+                        + " encountered in resetNode().");
+            }
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
     void markForExecution(final boolean flag) {
         synchronized (m_dirtyNode) {
             if (flag) {  // we want to mark the node for execution!
@@ -297,32 +328,6 @@ public final class SingleNodeContainer extends NodeContainer
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    void resetNode() {
-        synchronized (m_dirtyNode) {
-            switch (getState()) {
-            case EXECUTED:
-                m_node.reset();
-                if (m_node.isConfigured()) {
-                    setNewState(State.CONFIGURED);
-                } else {
-                    setNewState(State.IDLE);
-                }
-                return;
-            case MARKEDFOREXEC:
-                setNewState(State.CONFIGURED);
-                return;
-            case UNCONFIGURED_MARKEDFOREXEC:
-                setNewState(State.IDLE);
-                return;
-            default:
-                throw new IllegalStateException("Illegal state " + getState()
-                        + " encountered in resetNode().");
-            }
-        }
-    }
-
     /**
      * Change state of marked (for execution) node to queued once it has been
      * assigned to a JobExecutor.
@@ -337,7 +342,8 @@ public final class SingleNodeContainer extends NodeContainer
             case MARKEDFOREXEC:
                 setNewState(State.QUEUED);
                 ExecutionContext execCon = createExecutionContext();
-                findJobExecutor().submitJob(new JobRunnable(execCon) {
+                m_executionID
+                       = findJobExecutor().submitJob(new JobRunnable(execCon) {
                     @Override
                     public void run(final ExecutionContext ec) {
                         executeNode(inData, ec);
@@ -350,6 +356,30 @@ public final class SingleNodeContainer extends NodeContainer
             }
         }
     }
+    
+
+    /** {@inheritDoc} */
+    @Override
+    void cancelExecution() {
+        synchronized (m_dirtyNode) {
+            switch (getState()) {
+            case MARKEDFOREXEC:
+                setNewState(State.CONFIGURED);
+                break;
+            case QUEUED:
+            case EXECUTING:
+                findJobExecutor().cancelJob(m_executionID);
+                break;
+            case EXECUTED:
+                // Too late - do nothing.
+                break;
+            default:
+                throw new IllegalStateException("Illegal state " + getState()
+                        + " encountered in cancelExecution().");
+            }
+        }
+    }
+    
 
     //////////////////////////////////////
     //  internal state change actions
