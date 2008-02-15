@@ -627,6 +627,11 @@
          factory-class="org.knime.base.node.io.database.DBReaderConnectionNodeFactory"
          id="org.knime.base.node.io.database.DBReaderConnectionNodeFactory">
       </node>
+            <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPosNodeFactory"
+            id="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPositionNodeFactory">
+      </node>
    </extension>
    
    
