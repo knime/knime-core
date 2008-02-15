@@ -23,10 +23,59 @@
  */
 package org.knime.core.node;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.knime.core.internal.SerializerMethodLoader.Serializer;
+
 /**
+ * General interface for object specifications that are passed along node 
+ * connections. Most prominent example of such a class is 
+ * {@link org.knime.core.data.DataTableSpec}, which is used to represent table
+ * specification. <code>PortObjectSpec</code> objects represent the information
+ * that is necessary during a node's 
+ * {@link GenericNodeModel#configure(PortObjectSpec[]) configuration step}. 
+ * They are assumed to be fairly small objects (usually reside in memory) and 
+ * describe the general structure of {@link PortObject} objects (which are
+ * passed along the connections during a node's execution). 
+ * Both the class of a <code>PortObjectSpec</code> and a {@link PortObject} 
+ * describe {@link PortType}.
  * 
+ * <p><b>Important:</b>Along with the methods defined by this interface, 
+ * implementors also need to define a static method with the following 
+ * signature:
+ * <pre>
+ *  public static PortObjectSpec loadPortObjectSpec(final File directory)
+ *      throws IOException {...}
+ * </pre>
+ * This method is used when the workflow is restored from disk; it is
+ * the counterpart to the {@link #savePortObjectSpec(File) save method}
+ * (which is an object method).  
+ * @see org.knime.core.data.DataTableSpec
+ * @see PortObject
+ * @see PortType
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
 public interface PortObjectSpec {
 
+    static abstract class PortObjectSpecSerializer
+        <T extends PortObjectSpec> implements Serializer<T> {
+        
+        /** Saves the port specification to a directory location.
+         * @param portObjectSpec The spec to save.
+         * @param directory Where to save to
+         * @throws IOException If that fails for IO problems.
+         */
+        protected abstract void savePortObjectSpec(final T portObjectSpec,
+                final File directory)
+        throws IOException;
+        
+        /** Load a specification from a directory location.
+         * @param directory Where to load from
+         * @return The restored object.
+         * @throws IOException If that fails for IO problems.
+         */
+        protected abstract T loadPortObjectSpec(final File directory)
+            throws IOException;
+    }
 }
