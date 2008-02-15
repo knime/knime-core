@@ -24,8 +24,16 @@
  */
 package org.knime.core.node;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.knime.core.node.config.Config;
 
@@ -37,16 +45,36 @@ import org.knime.core.node.config.Config;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class ModelContent extends Config 
-        implements ModelContentRO, ModelContentWO {
+public class ModelContent extends Config 
+    implements ModelContentRO, ModelContentWO {
+
+    /** Throws <code>IllegalStateException</code> as this method is not
+     * supposed to be called; refer to the API of {@link PortObject} for details
+     * on this method. The KNIME engine treats objects of this kind differently.
+     * @return Nothing as an exception is being thrown.
+     */
+    static PortObjectSerializer<ModelContent> getPortObjectSpecSerializer() {
+        throw new IllegalStateException("No access on ModelContent "
+                        + "via generic PortObjectSerializer");
+    }
     
     /**
-     * Hides public default constructor.
-     * 
+     * Creates new content object. 
      * @param key The key for this ModelContent.
      */
     public ModelContent(final String key) {
         super(key);
+    }
+    
+    /** Default constructor which is called via reflection when the object
+     * represents a {@link PortObject}. Derived classes must provide
+     * this constructor if they represent a {@link PortObject} and rely
+     * on the framework to restore this object after loading. Derived classes
+     * may also override the methods{@link #saveOverride(ExecutionMonitor)} and
+     * {@link #loadOverride(ExecutionMonitor)}.
+     */
+    protected ModelContent() {
+        this("modelcontent");
     }
 
     /**
@@ -93,6 +121,85 @@ public final class ModelContent extends Config
     public ModelContent getModelContent(final String key)
             throws InvalidSettingsException {
         return (ModelContent) super.getConfig(key);
-    } 
+    }
 
+    /** File name that's used for the save and load (object-) methods. */
+    private static final String FILE_NAME = "model.xml.gz";
+    
+    /** Saves this object to a directory. This method is used when (derived)
+     * objects represent a {@link PortObject}. This method will invoke 
+     * {@link #saveOverride(ExecutionMonitor)} prior to saving.
+     * @param directory Where to save to.
+     * @param exec To report progress to.
+     * @throws IOException If saving fails for IO problems.
+     * @throws CanceledExecutionException If canceled.
+     * @see #load(InputStream)
+     * @see #saveOverride(ExecutionMonitor)
+     */
+    final void save(final File directory, final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
+        exec.setMessage("Saving content to model container");
+        ExecutionMonitor sub = exec.createSubProgress(0.5);
+        saveOverride(sub);
+        exec.checkCanceled();
+        sub.setProgress(1.0);
+        exec.setMessage("Saving model container to file");
+        OutputStream out = new GZIPOutputStream(new BufferedOutputStream(
+                new FileOutputStream(new File(directory, FILE_NAME))));
+        saveToXML(out);
+    }
+    
+    /** Override hook when derived classes need to persist internal settings.
+     * <p>This method is called prior to saving in order to allow sub-classes
+     * to save their internal structure (i.e. fields that are defined in the
+     * sub-class) into the ModelContent structure. If this method is overridden,
+     * it contains a sequence of <code>super.addXXX(String, YYY)</code> 
+     * invocations.
+     * @param exec To report progress to and to check for cancelation.
+     * @throws CanceledExecutionException If canceled.
+     * @see #loadOverride(ExecutionMonitor)
+     */
+    protected void saveOverride(final ExecutionMonitor exec) 
+        throws CanceledExecutionException {
+    }
+    
+    /** Load this object from a directory. This method is used when (derived)
+     * objects represent a {@link PortObject}. This method will invoke 
+     * {@link #loadOverride(ExecutionMonitor)} after loading from file.
+     * @param directory Where to load from
+     * @param exec To report progress to.
+     * @throws IOException If loading fails for IO problems.
+     * @throws CanceledExecutionException If canceled.
+     * @see #save(File, ExecutionMonitor)
+     * @see #loadOverride(ExecutionMonitor)
+     */
+    final void load(final File directory, final ExecutionMonitor exec) 
+            throws IOException, CanceledExecutionException {
+        exec.setMessage("Loading model container from file");
+        InputStream in = new GZIPInputStream(new BufferedInputStream(
+                new FileInputStream(new File(directory, FILE_NAME))));
+        load(in);
+        exec.setProgress(0.5);
+        exec.setMessage("Loading content from model container");
+        ExecutionMonitor sub = exec.createSubProgress(0.5);
+        try {
+            loadOverride(sub);
+        } catch (InvalidSettingsException e) {
+            throw new IOException(e.getMessage(), e);
+        }
+        sub.setProgress(1.0);
+    }
+    
+    /** Override hook when derived classes need to load internal settings.
+     * This method is the counterpart of the 
+     * {@link #saveOverride(ExecutionMonitor)} method.
+     * @param exec To report progress to and to check for cancelation.
+     * @throws InvalidSettingsException 
+     * @throws CanceledExecutionException If canceled.
+     * @see #loadOverride(ExecutionMonitor)
+     */ 
+    protected void loadOverride(final ExecutionMonitor exec) 
+        throws InvalidSettingsException, CanceledExecutionException  {
+    }
+    
 }

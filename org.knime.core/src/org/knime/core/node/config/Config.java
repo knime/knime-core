@@ -44,6 +44,7 @@ import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.tree.TreeNode;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
@@ -64,6 +65,7 @@ import org.knime.core.node.config.Config.DataCellEntry.FuzzyNumberCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.IntCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.MissingCellEntry;
 import org.knime.core.node.config.Config.DataCellEntry.StringCellEntry;
+import org.xml.sax.SAXException;
 
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
@@ -1738,7 +1740,29 @@ public abstract class Config extends AbstractConfigEntry
         if (in == null) {
             throw new NullPointerException();
         }
-        return XMLConfig.load(config, in);
+        config.load(in);
+        return config;
+    }
+    
+    /**
+     * Read config entries from an XML file into this object.
+     * @param is The XML inputstream storing the configuration to read
+     * @throws IOException If the stream could not be read.
+     */
+    protected void load(final InputStream is) throws IOException {
+        try {
+            XMLConfig.load(this, is);
+        } catch (SAXException se) {
+            IOException ioe = new IOException(se.getMessage());
+            ioe.initCause(se);
+            throw ioe;
+        } catch (ParserConfigurationException pce) {
+            IOException ioe = new IOException(pce.getMessage());
+            ioe.initCause(pce);
+            throw ioe;
+        } finally {
+            is.close();
+        }
     }
 
     /* --- serialize objects --- */

@@ -42,7 +42,7 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
     
     private AbstractConfigEntry m_parent = null;
 
-    private final String m_key;
+    private String m_key;
     
     /**
      * Creates a new Config entry by the given key and type.
@@ -78,6 +78,14 @@ abstract class AbstractConfigEntry implements Serializable, TreeNode {
      */
     public final String getKey() {
         return m_key;
+    }
+    
+    /** Set a new key.
+     * @param key the key to set
+     * @throws IllegalArgumentException If argument is null. 
+     */
+    final void setKey(final String key) {
+        m_key = checkKey(key);
     }
     
     /**

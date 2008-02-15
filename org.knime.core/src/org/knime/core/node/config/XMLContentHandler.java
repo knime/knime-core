@@ -45,6 +45,7 @@ class XMLContentHandler extends DefaultHandler {
 
     private final Stack<Config> m_elementStack;
     private final String m_fileName;
+    private boolean m_isFirst = true;
 
     /**
      * Creates new instance.
@@ -121,6 +122,7 @@ class XMLContentHandler extends DefaultHandler {
                 + "\n" + "xml: URI=" + m_fileName + "\n" + "dtd: URI="
                 + systemId;
     }
+    
 
     /**
      * {@inheritDoc}
@@ -131,10 +133,16 @@ class XMLContentHandler extends DefaultHandler {
         throws SAXException {
         Config peek = m_elementStack.peek();
         if (ConfigEntries.config.name().equals(qName)) {
-            // create sub config
-            Config subConfig = peek.addConfig(attributes.getValue("key"));
-            m_elementStack.push(subConfig);
+            if (m_isFirst) {
+                m_isFirst = false;
+                peek.setKey(attributes.getValue("key"));
+            } else {
+                // create sub config
+                Config subConfig = peek.addConfig(attributes.getValue("key"));
+                m_elementStack.push(subConfig);
+            }
         } else if ("entry".equals(qName)) {
+            assert !m_isFirst : "First element in xml is not a config";
             String key = attributes.getValue("key");
             String type = attributes.getValue("type");
             String value = attributes.getValue("value");
