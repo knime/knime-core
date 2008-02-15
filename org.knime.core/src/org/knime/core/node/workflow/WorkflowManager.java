@@ -1278,6 +1278,7 @@ public final class WorkflowManager extends NodeContainer {
      * @param nodeID id of node.
      */
     public void executeNode(final NodeID nodeID) {
+        assert m_nodes.get(nodeID) != null;
         synchronized (m_dirtyWorkflow) {
             if (canExecuteNode(nodeID)) {
                 m_nodes.get(nodeID).markForExecution(true);
@@ -1879,8 +1880,8 @@ public final class WorkflowManager extends NodeContainer {
         // TODO
     }
 
-    public void cancelExecution(final NodeContainer nodeContainer) {
-        // TODO
+    public void cancelExecution(final NodeContainer nc) {
+        assert nc != null;
     }
 
     ///////////////////////////////
