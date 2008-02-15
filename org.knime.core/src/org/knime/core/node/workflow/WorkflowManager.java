@@ -1103,8 +1103,10 @@ public final class WorkflowManager extends NodeContainer {
             default:
             }
         }
-        checkForQueuableNodes();
-        checkForNodeStateChanges();
+        if (nc instanceof SingleNodeContainer) {
+            checkForQueuableNodes();
+            checkForNodeStateChanges();
+        }
     }
 
     /** {@inheritDoc} */
