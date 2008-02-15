@@ -79,15 +79,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         final File nodeDir = nodeFile.getParentFile();
         saveCustomName(node, settings);
         node.saveSettingsTo(settings);
-        // TODO do not save those flags
-        saveIsExecuted(settings, node.isExecuted() && isSaveData);
-        saveIsConfigured(settings, node.isConfigured());
         saveNodeMessage(node, settings);
         File nodeInternDir = getNodeInternDirectory(nodeDir);
         if (nodeInternDir.exists()) {
             FileUtil.deleteRecursively(nodeInternDir);
         }
-        if (!node.isAutoExecutable() && (node.isExecuted() || isSaveData)) {
+        if (!node.isAutoExecutable() && isSaveData) {
             saveNodeInternDirectory(node, nodeInternDir, settings, execMon);
         }
         savePorts(node, nodeDir, settings, execMon, isSaveData);
@@ -106,16 +103,18 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         NodeSettingsWO portSettings = settings.addNodeSettings("ports");
         exec.setMessage("Saving outport data");
         for (int i = 0; i < portCount; i++) {
+            String portName = "port_" + i;
             ExecutionMonitor subProgress =
                     exec.createSubProgress(1 / (double)portCount);
-            String portDirName = "port_" + i;
             NodeSettingsWO singlePortSetting =
-                    portSettings.addNodeSettings(portDirName);
+                    portSettings.addNodeSettings(portName);
             singlePortSetting.addInt("index", i);
             NodeOutPort port = node.getOutPort(i);
             PortObjectSpec spec = port.getPortObjectSpec();
             PortObject object = port.getPortObject();
+            String portDirName;
             if (spec != null || object != null) {
+                portDirName = portName;
                 File portDir = new File(nodeDir, portDirName);
                 subProgress.setMessage("Cleaning directory "
                         + portDir.getAbsolutePath());
@@ -125,24 +124,16 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     throw new IOException("Can not write port directory "
                             + portDir.getAbsolutePath());
                 }
-                singlePortSetting.addString("port_dir_location", portDirName);
                 savePort(node, portDir, singlePortSetting, 
                         subProgress, i, saveData);
+            } else {
+                portDirName = null;
             }
+            singlePortSetting.addString("port_dir_location", portDirName);
             subProgress.setProgress(1.0);
         }
     }
     
-    protected void saveIsExecuted(
-            final NodeSettingsWO settings, boolean isExecuted) {
-        settings.addBoolean(CFG_ISEXECUTED, isExecuted);
-    }
-
-    protected void saveIsConfigured(final NodeSettingsWO settings, 
-            final boolean isConfigured) {
-        settings.addBoolean(CFG_ISCONFIGURED, isConfigured);
-    }
-
     protected void savePort(final Node node, final File portDir, 
             final NodeSettingsWO settings, final ExecutionMonitor exec, 
             final int portIdx, final boolean saveData) 
@@ -238,6 +229,20 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     protected void saveCustomName(final Node node, final NodeSettingsWO settings) {
         settings.addString(CFG_NAME, node.getName());
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected boolean loadIsExecuted(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        return false;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected boolean loadIsConfigured(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        return false;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -263,10 +268,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                         "Invalid outport index in settings: " + index);
             }
             String portDirN = singlePortSetting.getString("port_dir_location");
-            File portDir = new File(getNodeDirectory(), portDirN);
-            subProgress.setMessage("Port " + index);
-            loadPort(node, portDir, singlePortSetting, 
-                    subProgress, index, loadID, tblRep);
+            if (portDirN != null) {
+                File portDir = new File(getNodeDirectory(), portDirN);
+                subProgress.setMessage("Port " + index);
+                loadPort(node, portDir, singlePortSetting, 
+                        subProgress, index, loadID, tblRep);
+            }
             subProgress.setProgress(1.0);
         }
     }
