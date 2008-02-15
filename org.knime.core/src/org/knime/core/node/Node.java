@@ -469,36 +469,22 @@ public final class Node {
     public boolean isAutoExecutable() {
         return m_model.isAutoExecutable();
     }
-
+    
     /**
-     * Returns <code>true</code> if the node is executable, i.e. all ports
-     * have predecessors connected and data tables available. And, this node
-     * must be configured correctly. And, it must not be executed already.
-     * 
-     * @return <code>true</code> if the node is executable, otherwise
-     *         <code>false</code>.
+     *  only used in NodePersistorv1xx
      */
-    public boolean isExecutable() {
-        return m_model.isConfigured();
-    }
-
-    /**
-     * @return <code>true</code> if the underlying <code>NodeModel</code>
-     *         has been executed.
-     * @see NodeModel#isExecuted()
-     */
+    @Deprecated
     public boolean isExecuted() {
         return m_model.isExecuted();
     }
-
+    
     /**
-     * @return <code>true</code> if the underlying <code>NodeModel</code>
-     *         has been configured.
-     * @see GenericNodeModel#isConfigured()
+     *  only used in NodePersistorv1xx
      */
+    @Deprecated
     public boolean isConfigured() {
         return m_model.isConfigured();
-        }
+    }
 
     /**
      * Starts executing this node. If the node has been executed already, it
@@ -1279,7 +1265,7 @@ public final class Node {
 
     void saveInternals(final File internDir, final ExecutionMonitor exec)
         throws CanceledExecutionException {
-        m_logger.assertLog(isExecuted(), "Can't save internals, not executed");
+        m_logger.assertLog(m_model.isExecuted(), "Can't save internals, not executed");
             if (internDir.exists()) {
                 FileUtil.deleteRecursively(internDir);
             }
@@ -1319,7 +1305,7 @@ public final class Node {
 
     void loadInternals(final File internDir, final ExecutionMonitor exec)
         throws CanceledExecutionException {
-        if (isExecuted()) {
+        if (m_model.isExecuted()) {
             try {
                 m_model.loadInternals(internDir, exec);
                 processModelWarnings();
@@ -1479,9 +1465,7 @@ public final class Node {
     @Override
     public String toString() {
         return "Node @" + hashCode() + " [" + m_name + ";in="
-                + m_model.getNrInPorts() + ";out=" + m_outPorts.length
-                + ";configured=" + m_model.isConfigured() + ";executable="
-                + isExecutable() + ";executed=" + isExecuted() + "]";
+                + m_model.getNrInPorts() + ";out=" + m_outPorts.length + "]";
     }
 
     /**
