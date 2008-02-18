@@ -63,7 +63,8 @@ public class WorkflowOutPortFigure extends AbstractWorkflowPortFigure {
         m_freeze = true;
         m_parentSize = rect;
         setBounds(getNewBounds(m_parentSize));
-        repaint();
+        fireFigureMoved();
+//        repaint();
     }
     
     private Rectangle getNewBounds(final Rectangle parent) {
@@ -129,6 +130,7 @@ public class WorkflowOutPortFigure extends AbstractWorkflowPortFigure {
         m_freeze = false;
         repaint();
     }
+    
 
     /**
      * 
