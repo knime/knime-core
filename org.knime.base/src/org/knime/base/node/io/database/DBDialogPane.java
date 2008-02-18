@@ -31,6 +31,8 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
@@ -93,6 +95,9 @@ public class DBDialogPane extends JPanel {
     static final StringHistory DATABASE_URLS = StringHistory.getInstance(
             "database_urls");
     
+    /** Default user place holder, <code>&ltuser&gt</code>. */
+    static final String DFT_USER_TAG = "<user>";
+    
     /**
      * Creates new dialog.
      */
@@ -135,6 +140,14 @@ public class DBDialogPane extends JPanel {
         userPanel.setBorder(BorderFactory.createTitledBorder(" User name "));
         m_user.setPreferredSize(new Dimension(400, 20));
         m_user.setFont(FONT);
+        m_user.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(final FocusEvent fe) {
+                if (m_user.getText().equals(DFT_USER_TAG)) {
+                    m_user.setText("");
+                }
+            } 
+        });
         userPanel.add(m_user);
         super.add(userPanel);
         JPanel passPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -186,7 +199,7 @@ public class DBDialogPane extends JPanel {
                 dbName == null ? "jdbc:odbc:<database_name>" : dbName);
         // user
         String user = settings.getString("user", null);
-        m_user.setText(user == null ? "<user>" : user);
+        m_user.setText(user == null ? DFT_USER_TAG : user);
         // password
         String password = settings.getString("password", null);
         m_pass.setText(password == null ? "" : password);

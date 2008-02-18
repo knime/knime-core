@@ -27,9 +27,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -94,25 +93,28 @@ final class DBWriterConnection {
             // if table exists
             if (rs != null) {
                 ResultSetMetaData rsmd = rs.getMetaData();
+                final Map<String, Integer> columnNames = 
+                    new LinkedHashMap<String, Integer>();
+                for (int i = 0; i < spec.getNumColumns(); i++) {
+                    String colName = replaceColumnName(
+                            spec.getColumnSpec(i).getName());
+                    columnNames.put(colName, i);
+                }       
                 if (spec.getNumColumns() > rsmd.getColumnCount()) {
-                    Set<String> set = new LinkedHashSet<String>();
-                    for (int i = 0; i < spec.getNumColumns(); i++) {
-                        set.add(spec.getColumnSpec(i).getName());
-                    }       
                     for (int i = 0; i < rsmd.getColumnCount(); i++) {
                         String colName = rsmd.getColumnName(i + 1);
-                        if (set.contains(colName)) {
-                            set.remove(colName);
+                        if (columnNames.containsKey(colName)) {
+                            columnNames.remove(colName);
                         }
                     }
                     throw new RuntimeException("No. of columns in input table"
-                            + " > in database. Not existing columns in DB: " 
-                            + set.toString());
+                            + " > in database; not existing columns: " 
+                            + columnNames.keySet().toString());
                 }
                 mapping = new int[rsmd.getColumnCount()];
                 for (int i = 0; i < rsmd.getColumnCount(); i++) {
                     String name = rsmd.getColumnName(i + 1);
-                    mapping[i] = spec.findColumnIndex(name);
+                    mapping[i] = columnNames.get(name);
                     if (mapping[i] < 0) {
                         continue;
                     }
@@ -130,10 +132,11 @@ final class DBWriterConnection {
                         case Types.BIGINT:
                         // check all double compatible types
                             if (!cspec.getType().isCompatible(IntValue.class)) {
-                                throw new RuntimeException("Column type from "
-                                        + "input does not match type in "
-                                        + "database at position " + i 
-                                        + ": " + type);
+                                throw new RuntimeException("Column \"" + name
+                                        + "\" of type \"" + cspec.getType()
+                                        + "\" from input does not match type "
+                                        + "\"" + rsmd.getColumnTypeName(i + 1)
+                                        + "\" in database at position " + i);
                             }
                             break;
                         case Types.FLOAT:
@@ -143,10 +146,11 @@ final class DBWriterConnection {
                         case Types.REAL:
                             if (!cspec.getType().isCompatible(
                                     DoubleValue.class)) {
-                                throw new RuntimeException("Column type from "
-                                        + "input does not match type in "
-                                        + "database at position " + i 
-                                        + ": " + type);
+                                throw new RuntimeException("Column \"" + name
+                                        + "\" of type \"" + cspec.getType()
+                                        + "\" from input does not match type "
+                                        + "\"" + rsmd.getColumnTypeName(i + 1)
+                                        + "\" in database at position " + i);
                             }
                             break;
                         // all other cases are fine for string-type columns
@@ -155,9 +159,15 @@ final class DBWriterConnection {
                 rs.close();
             } else {
                 mapping = new int[spec.getNumColumns()];
+                for (int k = 0; k < mapping.length; k++) {
+                    mapping[k] = k;
+                }
             }
         } else {
             mapping = new int[spec.getNumColumns()];
+            for (int k = 0; k < mapping.length; k++) {
+                mapping[k] = k;
+            }
             try {
                 // remove existing table (if any)
                 conn.createStatement().execute("DROP TABLE " + table);
@@ -239,8 +249,8 @@ final class DBWriterConnection {
                     String errorMsg = "Error in row #" + cnt + ": " 
                         + row.getKey() + ", " + e.getMessage();
                     exec.setMessage(errorMsg);
-                    if (errorCnt++ < 100) {
-                        LOGGER.warn(errorMsg, e);
+                    if (errorCnt++ < 10) {
+                        LOGGER.warn(errorMsg);
                     } else {
                         errorCnt = -1;
                         LOGGER.warn(errorMsg + " - more errors...", e);
@@ -268,11 +278,15 @@ final class DBWriterConnection {
             }
             DataColumnSpec cspec = spec.getColumnSpec(i);
             String colName = cspec.getName();
-            String column = colName.replaceAll("[^a-zA-Z0-9]", "_");
+            String column = replaceColumnName(colName);
             buf.append(column + " " + sqlTypes.get(colName));
         }
         buf.append(")");
         return buf.toString();
+    }
+    
+    private static String replaceColumnName(final String oldName) {
+        return oldName.replaceAll("[^a-zA-Z0-9]", "_");
     }
 
 }
