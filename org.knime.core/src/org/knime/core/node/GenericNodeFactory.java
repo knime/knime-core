@@ -129,8 +129,6 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
 
     private final String m_fullAsHTML;
 
-    private boolean m_hasXMLBeenValidated = false;
-
     private static DocumentBuilder parser;
 
     private static Transformer transformer;
@@ -211,19 +209,6 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
         } catch (TransformerFactoryConfigurationError ex) {
             NodeLogger.getLogger(GenericNodeFactory.class).error(ex.getMessage(), ex);
         }
-    }
-
-    /**
-     * Constructor for use in subclasses that can be used to avoid checking the
-     * XML file. Please think twice if you really need to use this constructor.
-     *
-     * @param checkXML <code>true</code> if the XML file should be checked
-     *            (this is the default when using the standard constructor),
-     *            <code>false</code> otherwise
-     */
-    protected GenericNodeFactory(final boolean checkXML) {
-        this();
-        m_hasXMLBeenValidated = !checkXML;
     }
 
     /**
@@ -781,10 +766,7 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
      */
     final T callCreateNodeModel() {
         T result = createNodeModel();
-        if (!m_hasXMLBeenValidated) {
-            m_hasXMLBeenValidated = true;
-            checkConsistency(result);
-        }
+        checkConsistency(result);
         return result;
     }
 
@@ -792,7 +774,7 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
      * Returns the number of possible views.
      *
      * @return The number of views available for this node.
-     * @see #createNodeView(int,NodeModel)
+     * @see #createNodeView(int,GenericNodeModel)
      */
     protected abstract int getNrNodeViews();
 
