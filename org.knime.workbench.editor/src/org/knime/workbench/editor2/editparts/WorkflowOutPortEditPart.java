@@ -25,6 +25,9 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
@@ -40,7 +43,8 @@ import org.knime.workbench.editor2.figures.WorkflowOutPortFigure;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class WorkflowOutPortEditPart extends AbstractPortEditPart {
+public class WorkflowOutPortEditPart extends AbstractPortEditPart 
+    implements ControlListener {
 
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            WorkflowOutPortEditPart.class);
@@ -87,6 +91,18 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
         // the open editor then the parent is a WorkflowRootEditPart
         return ((WorkflowRootEditPart)getParent()).getWorkflowManager();
     }
+    
+    /**
+     * We must register *every* node as a listener on the workflow, as we have
+     * not real objects for it.
+     *
+     * @see org.eclipse.gef.EditPart#activate()
+     */
+    @Override
+    public void activate() {
+        super.activate();
+        getRoot().getViewer().getControl().addControlListener(this);
+    }
 
     /**
      * Convenience, returns the WFM.
@@ -104,7 +120,8 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
     @Override
     protected IFigure createFigure() {
         return new WorkflowOutPortFigure(getType(),
-                getManager().getNrOutPorts(), getIndex(), getManager().getName());
+                getManager().getNrOutPorts(), getIndex(), 
+                getManager().getName());
     }
 
 
@@ -139,6 +156,31 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart {
     @Override
     protected List<ConnectionContainer> getModelSourceConnections() {
         return EMPTY_LIST;
+    }
+
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void controlMoved(final ControlEvent e) {
+    }
+
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void controlResized(final ControlEvent e) {
+        Display.getCurrent().syncExec(new Runnable() {
+            public void run() {
+                ((WorkflowOutPortFigure)getFigure()).setParentSize(
+                        new Rectangle(0, 0,
+                                getRoot().getViewer().getControl().getSize().x, 
+                                getRoot().getViewer().getControl()
+                                .getSize().y));  
+            }
+        });
     }
 
 }
