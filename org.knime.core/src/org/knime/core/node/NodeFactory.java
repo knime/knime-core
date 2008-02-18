@@ -39,13 +39,6 @@ public abstract class NodeFactory<T extends NodeModel>
     protected NodeFactory() {
         super();
     }
-    
-    /**
-     * @see GenericNodeFactory#GenericNodeFactory(boolean)
-     */
-    protected NodeFactory(final boolean checkXML) {
-        super(checkXML);
-    }
 
     @Override
     public final GenericNodeView<GenericNodeModel> createNodeView(int viewIndex,
