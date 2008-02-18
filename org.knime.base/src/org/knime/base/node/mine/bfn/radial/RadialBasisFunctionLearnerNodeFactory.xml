@@ -80,7 +80,7 @@
 			Rules as Gaussian functions, classification columns,
 			and additional rule measures.
 		</dataOut>
-		<modelOut index="0" name="PNN Model" type="PNNModel">
+		<modelOut index="0" name="PNN Model">
 			PNN model can be used for prediction.
 		</modelOut>
 	</ports>

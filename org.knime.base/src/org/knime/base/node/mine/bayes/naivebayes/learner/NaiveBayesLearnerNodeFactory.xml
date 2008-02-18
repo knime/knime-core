@@ -33,7 +33,7 @@
 	
 	<ports>
 		<dataIn index="0" name="The training data">Training data</dataIn>
-		<modelOut index="0" name="Naive Bayes Model" type="naiveBayesModel">
+		<modelOut index="0" name="Naive Bayes Model">
 		Learned naive Bayes model</modelOut>
 	</ports>
 	<views>

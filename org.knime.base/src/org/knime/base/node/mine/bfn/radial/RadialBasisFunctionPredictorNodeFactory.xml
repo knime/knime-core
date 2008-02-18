@@ -38,7 +38,7 @@
     	<dataOut index="0" name="Predicted Data">
     		Predicted data with one additional classification column.
     	</dataOut>
-		<modelIn index="0" name="PNN Model" type="PNNModel">
+		<modelIn index="0" name="PNN Model">
 			PNN Model to which test data is applied.
 		</modelIn>
 	</ports>

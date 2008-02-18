@@ -52,7 +52,7 @@
 	<ports>
 		<dataIn index="0" name="Numeric input data">Numeric input data to evaluate</dataIn>
 		<dataOut index="0" name="Correlation measure">Correlation variables in a square matrix</dataOut>
-		<modelOut name="Correlation Model" index="0" type="correlation">
+		<modelOut name="Correlation Model" index="0">
 			A model containing the correlation measures. This model is appropriate 
 			to be read by the Correlation Filter node.</modelOut>
 	</ports>

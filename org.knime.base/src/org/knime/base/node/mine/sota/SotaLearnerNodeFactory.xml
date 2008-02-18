@@ -108,7 +108,7 @@
 		<dataIn name="Any input table" index="0">
 			Datatable with integer columns to do clustering on
 		</dataIn>
-		<modelOut index="0" name="The model of the trained SOTA" type="sotaModel">
+		<modelOut index="0" name="The model of the trained SOTA">
 			The model of the trained SOTA.
 		</modelOut>
 	</ports>	

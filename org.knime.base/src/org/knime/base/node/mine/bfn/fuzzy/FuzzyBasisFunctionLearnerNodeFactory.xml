@@ -89,7 +89,7 @@
 			Rules with fuzzy intervals in each dimension, classification columns,
 			and additional rule measures.
 		</dataOut>
-		<modelOut index="0" name="Fuzzy Rule Model" type="FuzzyRuleModel">
+		<modelOut index="0" name="Fuzzy Rule Model">
 			Fuzzy Rule Model can be used for prediction.
 		</modelOut>
 	</ports>	

@@ -29,7 +29,7 @@
 	<ports>
 		<dataIn index="0" name="Data to classify">Data to classify</dataIn>
 		<dataOut index="0" name="The classified data">Classified data</dataOut>
-		<modelIn index="0" name="The model to use" type="naiveBayesModel">
+		<modelIn index="0" name="The model to use">
 		Naive Bayes Model</modelIn>
 	</ports>
 </knimeNode>

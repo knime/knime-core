@@ -39,7 +39,7 @@
     	<dataOut index="0" name="Predicted Data">
     		Predicted data with one additional classification column.
     	</dataOut>
-		<modelIn index="0" name="Fuzzy Rule Model" type="FuzzyRuleModel">
+		<modelIn index="0" name="Fuzzy Rule Model">
 			Fuzzy Rule Model to which test data is applied.
 		</modelIn>
 	</ports>
