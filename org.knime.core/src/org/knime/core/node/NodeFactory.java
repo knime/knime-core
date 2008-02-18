@@ -31,7 +31,21 @@ package org.knime.core.node;
  * @param <T> The specific NodeModel implementation, which is generated
  */
 public abstract class NodeFactory<T extends NodeModel>
-    extends GenericNodeFactory<GenericNodeModel> {
+        extends GenericNodeFactory<GenericNodeModel> {
+    
+    /**
+     * @see GenericNodeFactory#GenericNodeFactory()
+     */
+    protected NodeFactory() {
+        super();
+    }
+    
+    /**
+     * @see GenericNodeFactory#GenericNodeFactory(boolean)
+     */
+    protected NodeFactory(final boolean checkXML) {
+        super(checkXML);
+    }
 
     @Override
     public final GenericNodeView<GenericNodeModel> createNodeView(int viewIndex,
