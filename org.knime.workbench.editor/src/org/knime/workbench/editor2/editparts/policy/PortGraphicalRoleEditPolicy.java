@@ -39,6 +39,7 @@ import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowOutPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
+import org.knime.workbench.editor2.figures.WorkflowOutPortFigure;
 
 /**
  * This is the edit policy that enables port-edit parts to create connections
@@ -51,7 +52,7 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
-
+  
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             PortGraphicalRoleEditPolicy.class);
     /**
@@ -71,8 +72,9 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
         if (!(getHost() instanceof AbstractPortEditPart)) {
             return null;
         }
-        LOGGER.debug("create connection host: " + getHost());
-        LOGGER.debug("create connection host parent : " + getHost().getParent());
+//        LOGGER.debug("create connection host: " + getHost());
+//        LOGGER.debug("create connection host parent : " + getHost()
+        // .getParent());
         ConnectableEditPart nodePart = (ConnectableEditPart)getHost()
                 .getParent();
 
@@ -82,7 +84,13 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
             cmd.setSourceNode(nodePart);
             cmd.setSourcePortID(((AbstractPortEditPart)getHost()).getIndex());
             cmd.setStartedOnOutPort(true);
-            // LOGGER.debug("Started connection on out-port...");
+             LOGGER.debug("Started connection -> freeze size");
+             if (getHost() instanceof NodeOutPortEditPart) {                 
+                 freezeSize((WorkflowRootEditPart)getHost().getParent()
+                         .getParent());
+             } else if (getHost() instanceof WorkflowInPortEditPart) {
+                 freezeSize((WorkflowRootEditPart)getHost().getParent());
+             }
         } else if (getHost() instanceof NodeInPortEditPart
                 || getHost() instanceof WorkflowOutPortEditPart) {
             // // request started on in port ?
@@ -95,7 +103,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
 
         // we need the manager to execute the command
 
-        // TODO: if NodeContainerEditPart -> getPrent
+        // TODO: if NodeContainerEditPart -> getParent
         if (nodePart instanceof NodeContainerEditPart) {
         cmd.setManager(
                 ((WorkflowRootEditPart)((NodeContainerEditPart)nodePart)
@@ -114,9 +122,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
     /**
      * This tries to complete the command to create a connection.
      *
-     * @see org.eclipse.gef.editpolicies.GraphicalNodeEditPolicy#
-     *      getConnectionCompleteCommand(
-     *      org.eclipse.gef.requests.CreateConnectionRequest)
+     * {@inheritDoc}
      */
     @Override
     protected Command getConnectionCompleteCommand(
@@ -139,12 +145,18 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
             // cmd.setSourceNode((NodeContainerEditPart) target.getParent());
             return null;
 
-            // LOGGER.debug("Ending connection on out-port...");
+//             LOGGER.debug("Ending connection on out-port...");
         } else if (target instanceof NodeInPortEditPart
                 || target instanceof WorkflowOutPortEditPart) {
             cmd.setTargetPortID(((AbstractPortEditPart)target).getIndex());
             cmd.setTargetNode((ConnectableEditPart)target.getParent());
-
+            LOGGER.debug("connection end -> release size freeze");
+            if (getHost() instanceof NodeOutPortEditPart) {                 
+                releaseSizeFreeze((WorkflowRootEditPart)getHost().getParent()
+                        .getParent());
+            } else if (getHost() instanceof WorkflowInPortEditPart) {
+                releaseSizeFreeze((WorkflowRootEditPart)getHost().getParent());
+            }
         } else if (target instanceof NodeContainerEditPart) {
 
             if (cmd.wasStartedOnOutPort()) {
@@ -166,6 +178,40 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
         return cmd;
 
     }
+    
+    /**
+     * Freezes the size of all {@link WorkflowOutPortEditPart}s in order to 
+     * prevent workflow out ports from moving right, if a connection is dragged 
+     * outside the cureent workbench's size.
+     * 
+     * @param manager the workflow root edit part
+     * @see #releaseSizeFreeze(WorkflowRootEditPart)
+     */
+    protected void freezeSize(final WorkflowRootEditPart manager) {
+        for (Object o : manager.getChildren()) {
+            if (o instanceof WorkflowOutPortEditPart) {
+                ((WorkflowOutPortFigure)((WorkflowOutPortEditPart)o)
+                            .getFigure()).freezeSize();
+            }
+        }
+    }
+
+    /**
+     * Releases the freezing of the size of all {@link WorkflowOutPortEditPart}s
+     * in order to prevent workflow out ports from moving right, if a connection
+     * is dragged outside the cureent workbench's size.
+     * 
+     * @param manager the workflow root edit part
+     * @see #freezeSize(WorkflowRootEditPart)
+     */
+    protected void releaseSizeFreeze(final WorkflowRootEditPart manager) {
+        for (Object o : manager.getChildren()) {
+            if (o instanceof WorkflowOutPortEditPart) {
+                ((WorkflowOutPortFigure)((WorkflowOutPortEditPart)o)
+                            .getFigure()).releaseSizeFreeze();
+            }
+        }        
+    }
 
     /**
      * {@inheritDoc}
@@ -186,7 +232,8 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
 //        WorkflowManager manager = ((WorkflowRootEditPart)nodePart.getParent())
 //                .getWorkflowManager();
 //
-//        ReconnectConnectionCommand reconnectCommand = new ReconnectConnectionCommand(
+//        ReconnectConnectionCommand reconnectCommand 
+        // = new ReconnectConnectionCommand(
 //                connection, manager, null, null);
 //
 //        return reconnectCommand;
