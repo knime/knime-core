@@ -2037,7 +2037,9 @@ public final class WorkflowManager extends NodeContainer {
         Set<NodeID> needConfigurationNodes = new HashSet<NodeID>();
         LoadResult loadResult = new LoadResult();
         for (NodeID bfsID : getBreathFirstListOfNodes()) {
-            boolean needsReset = false;
+            // failed nodes may not even be in m_nodes - we reset everything
+            // which is not fully connected
+            boolean needsReset = !isFullyConnected(bfsID);
             NodeContainerPersistor containerPersistor = persistorMap.get(bfsID);
             NodeContainer cont = m_nodes.get(bfsID);
             try {
