@@ -148,7 +148,7 @@ public abstract class NodeModel extends GenericNodeModel {
         for (int i = m_nrDataOutPorts;
              i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
             ModelContent thisMdl = new ModelContent("ModelContent");
-            saveModelContent(i - m_nrDataOutPorts, thisMdl);
+//            saveModelContent(i - m_nrDataOutPorts, thisMdl);
             m_localOutModels[i - m_nrDataOutPorts] =
                 new ModelContentWrapper(thisMdl);
             returnObjectSpecs[i] = new ModelContentWrapper(thisMdl);
@@ -254,7 +254,7 @@ public abstract class NodeModel extends GenericNodeModel {
         }
         for (int i = m_nrDataOutPorts;
              i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
-            int mdlIndex = i - m_nrDataInPorts;
+            int mdlIndex = i - m_nrDataOutPorts;
             ModelContent thisMdl = new ModelContent("ModelContent");
             saveModelContent(mdlIndex, thisMdl);
             m_localOutModels[mdlIndex].m_hiddenModel = thisMdl;
@@ -276,13 +276,16 @@ public abstract class NodeModel extends GenericNodeModel {
      * not have been called: If a derived NodeModel defines a model input, it
      * must override this method.
      *
+     * @deprecated Node with model in- or outputs should extend 
+     * {@link GenericNodeModel} and set the port types accordingly. As of 
+     * KNIME 2.0, models are ordinary port objects.  
      * @param index The input index, starting from 0.
      * @param predParams The ModelContent to load, which can be null to
      *            indicate that no ModelContent model is available.
      * @throws InvalidSettingsException If the predictive parameters could not
      *             be loaded.
      */
-    @Deprecated
+    @Deprecated 
     protected void loadModelContent(final int index,
             final ModelContentRO predParams) throws InvalidSettingsException {
         assert predParams == predParams;
@@ -300,7 +303,10 @@ public abstract class NodeModel extends GenericNodeModel {
      * <p>This implementation throws a InvalidSettingsException as it should
      * not have been called: If a derived NodeModel defines a model output, it
      * must override this method.
-
+     * @deprecated Node with model in- or outputs should extend 
+     * {@link GenericNodeModel} and set the port types accordingly. As of 
+     * KNIME 2.0, models are ordinary port objects.  
+     * 
      * @param index The output index, starting from 0.
      * @param predParams The ModelContent to save to.
      * @throws InvalidSettingsException If the model could not be saved.
