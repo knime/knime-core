@@ -373,6 +373,15 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_workflowSett = subWFSettings;
         m_workflowDir = nodeFile.getParentFile();
 
+        try {
+            m_name = loadWorkflowName(m_workflowSett);
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load workflow name: " + e.getMessage();
+            LOGGER.debug(error, e);
+            loadResult.addError(error);
+            m_name = "Workflow";
+        }
+
         /* read in and outports */
         NodeSettingsRO inPorts;
         try {
@@ -459,14 +468,6 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             throw new IllegalStateException("call preLoadNodeContainer before");
         }
         LoadResult loadResult = new LoadResult();
-        try {
-            m_name = loadWorkflowName(m_workflowSett);
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load workflow name: " + e.getMessage();
-            LOGGER.debug(error, e);
-            loadResult.addError(error);
-            m_name = "Workflow";
-        }
         /* read nodes */
         NodeSettingsRO nodes;
         try {
