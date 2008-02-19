@@ -62,6 +62,18 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     
     private NodeSettingsRO m_nodeSettings;
     private File m_nodeDir;
+    private boolean m_needsResetAfterLoad;
+    
+    /** {@inheritDoc} */
+    public boolean needsResetAfterLoad() {
+        return m_needsResetAfterLoad;
+    }
+    
+    /** Indicate that node should be reset after load (due to load problems). */
+    public void setNeedsResetAfterLoad() {
+        m_needsResetAfterLoad = true;
+    }
+
     
     SingleNodeContainerPersistorVersion1xx(
             final HashMap<Integer, ContainerTable> tableRep) {
@@ -162,6 +174,9 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
             String error = "Error loading node content: " + e.getMessage();
             LOGGER.debug(error, e);
             result.addError(error);
+        }
+        if (nodePersistor.needsResetAfterLoad()) {
+            setNeedsResetAfterLoad();
         }
         loadNodeStateIntoMetaPersistor(nodePersistor);
         return result;

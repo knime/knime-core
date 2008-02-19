@@ -63,6 +63,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private MemoryPolicy m_memoryPolicy;
     
+    private boolean m_needsResetAfterLoad;
+    
     private final GenericNodeFactory<GenericNodeModel> m_class;
     
     static String createDataFileDirName(final int index) {
@@ -303,6 +305,17 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return m_isExecuted;
     }
     
+    /** {@inheritDoc} */
+    public boolean needsResetAfterLoad() {
+        return m_needsResetAfterLoad;
+    }
+    
+    /** Indicate an error and that this node should better be reset after load.
+     */
+    protected void setNeedsResetAfterLoad() {
+        m_needsResetAfterLoad = true;
+    }
+    
     public LoadResult load(Node node,
             final File configFile, ExecutionMonitor execMon, int loadID,
             HashMap<Integer, ContainerTable> tblRep) 
@@ -318,6 +331,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             m_nodeMessage = new NodeMessage(Type.ERROR, error);
             result.addError(error);
             settings = new NodeSettings("empty");
+            setNeedsResetAfterLoad();
         } else {
             settings = 
                 NodeSettings.loadFromXML(new FileInputStream(configFile));
@@ -351,6 +365,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             String e = "Unable to load execution flag: " + ise.getMessage();
             result.addError(e);
             LOGGER.debug(e, ise);
+            setNeedsResetAfterLoad();
         }
     
         try {
@@ -359,6 +374,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             String e = "Unable to load configuration flag: " + ise.getMessage();
             result.addError(e);
             LOGGER.debug(e, ise);
+            setNeedsResetAfterLoad();
         }
     
         // load internals
@@ -374,16 +390,17 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
         try {
             loadPorts(node, execMon, settings, loadID, tblRep);
-        } catch (InvalidSettingsException ise) {
-            String e = "Unable to load content for node \"" + node.getName()
-                + "\": " + ise.getMessage();
+        } catch (Exception e) {
+            if (!(e instanceof InvalidSettingsException)
+                    && !(e instanceof IOException)) {
+                LOGGER.error("Unexpected \"" + e.getClass().getSimpleName() 
+                        + "\" encountered");
+            }
+            String err = "Unable to load content for node \"" + node.getName()
+                + "\": " + e.getMessage();
             LOGGER.warn(e);
-            m_nodeMessage = new NodeMessage(Type.ERROR, e);
-        } catch (IOException ioe) {
-            String e = "Unable to load content for \"" + node.getName()
-                + "\": " + ioe.getMessage();
-            LOGGER.warn(e);
-            m_nodeMessage = new NodeMessage(Type.ERROR, e);
+            m_nodeMessage = new NodeMessage(Type.ERROR, err);
+            setNeedsResetAfterLoad();
         } finally {
             execMon.setProgress(1.0);
         }

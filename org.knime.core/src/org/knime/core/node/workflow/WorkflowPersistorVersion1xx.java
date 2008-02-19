@@ -68,6 +68,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     
     private String m_name;
     
+    private boolean m_needsResetAfterLoad;
+    
     private NodeSettingsRO m_workflowSett;
     private File m_workflowDir;
     
@@ -356,6 +358,18 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
     
     /** {@inheritDoc} */
+    public boolean needsResetAfterLoad() {
+        return m_needsResetAfterLoad;
+    }
+    
+    /** Indicate that this node should better be reset after load.
+     * (Due to loading problems).
+     */
+    public void setNeedsResetAfterLoad() {
+        m_needsResetAfterLoad = true;
+    }
+    
+    /** {@inheritDoc} */
     public LoadResult preLoadNodeContainer(final File nodeFile, 
             final ExecutionMonitor exec, final NodeSettingsRO parentSettings) 
     throws InvalidSettingsException, CanceledExecutionException, IOException {
@@ -394,6 +408,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             LOGGER.debug(error, e);
             loadResult.addError(error);
             inPorts = new NodeSettings("<<empty>>");
+            needsResetAfterLoad();
         }
         int inPortCount = inPorts.keySet().size();
         m_inPorts = new WorkflowInPort[inPortCount];
@@ -407,11 +422,14 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     + key + "\", skipping it: " + e.getMessage();
                 LOGGER.debug(error, e);
                 loadResult.addError(error);
+                needsResetAfterLoad();
                 continue;
             }
             int index = p.getPortID();
             if (index < 0 || index >= inPortCount) {
                 loadResult.addError("Invalid inport index " + index);
+                needsResetAfterLoad();
+                continue;
             }
             if (m_inPorts[index] != null) {
                 loadResult.addError(
@@ -432,6 +450,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             LOGGER.debug(error, e);
             loadResult.addError(error);
             outPorts = new NodeSettings("<<empty>>");
+            needsResetAfterLoad();
         }
         int outPortCount = outPorts.keySet().size();
         m_outPorts = new WorkflowOutPort[outPortCount];
@@ -445,11 +464,14 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     + key + "\", skipping it: " + e.getMessage();
                 LOGGER.debug(error, e);
                 loadResult.addError(error);
+                needsResetAfterLoad();
                 continue;
             }
             int index = p.getPortID();
             if (index < 0 || index >= outPortCount) {
                 loadResult.addError("Invalid inport index " + index);
+                needsResetAfterLoad();
+                continue;
             }
             if (m_outPorts[index] != null) {
                 loadResult.addError(
@@ -477,6 +499,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 + e.getMessage();
             LOGGER.debug(error, e);
             loadResult.addError(error);
+            needsResetAfterLoad();
             // stop loading here
             return loadResult;
         }

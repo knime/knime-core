@@ -76,6 +76,8 @@ public interface NodePersistor {
             int loadID, HashMap<Integer, ContainerTable> tblRep)
             throws IOException, InvalidSettingsException, CanceledExecutionException;
     
+    boolean needsResetAfterLoad();
+    
     File getNodeDirectory();
     boolean isConfigured();
     boolean isExecuted();

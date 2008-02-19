@@ -1183,26 +1183,23 @@ public final class WorkflowManager extends NodeContainer {
     public void resetNode(final NodeID id) {
         NodeContainer nc = m_nodes.get(id);
         assert nc != null;
-        if (nc.getState() == State.EXECUTING) {
-            throw new IllegalStateException("Can not reset executing node "
-                    + id);
-        }
-        if (nc.getState() == State.QUEUED) {
+        switch (nc.getState()) {
+        case EXECUTING:
+            throw new IllegalStateException(
+                    "Can not reset executing node " + id);
+        case QUEUED:
             throw new IllegalStateException("Can not reset queued node " + id);
-        }
-        // ignore all other states (IDLE, CONFIGURED...)
-        if (nc.getState() == NodeContainer.State.EXECUTED) {
+        case EXECUTED:
             // first visit successors (to avoid having yellow nodes
             // precede green ones - ever so briefly, but still...
             resetSuccessors(id);
             // and finally reset original node.
             nc.resetNode();
             // and launch configure starting with this node
+            // TODO This method is called "resetNode", not "resetAndConfigure"
+            // TODO resetSuccessors calls this method, starting configure storm
             configure(id);
-        } else {
-            if (nc.getState() == State.QUEUED) {
-                throw new IllegalStateException("Can not reset node " + id);
-            }
+        default: // ignore all other states (IDLE, CONFIGURED...)
         }
         checkForNodeStateChanges();
     }
@@ -2040,12 +2037,7 @@ public final class WorkflowManager extends NodeContainer {
         Set<NodeID> needConfigurationNodes = new HashSet<NodeID>();
         LoadResult loadResult = new LoadResult();
         for (NodeID bfsID : getBreathFirstListOfNodes()) {
-            boolean hasPredecessorFailed = false;
-            for (ConnectionContainer cc : m_connectionsByDest.get(bfsID)) {
-                if (failedNodes.contains(cc.getSource())) {
-                    hasPredecessorFailed = true;
-                }
-            }
+            boolean needsReset = false;
             NodeContainerPersistor containerPersistor = persistorMap.get(bfsID);
             NodeContainer cont = m_nodes.get(bfsID);
             try {
@@ -2059,19 +2051,34 @@ public final class WorkflowManager extends NodeContainer {
             } catch (Exception e) {
                 if (!(e instanceof InvalidSettingsException)
                         && !(e instanceof IOException)) {
-                    LOGGER.error("Caught " + e.getClass().getSimpleName()
-                            + " during node loading", e);
+                    LOGGER.error("Caught unexpected \"" 
+                            + e.getClass().getSimpleName()
+                            + "\" during node loading", e);
                 }
-                failedNodes.add(bfsID);
-                if (!hasPredecessorFailed) {
-                    needConfigurationNodes.add(bfsID);
-                }
-                resetNode(bfsID);
+                needsReset = true;
             }
             cont.loadContent(containerPersistor, loadID);
+
+            boolean hasPredecessorFailed = false;
+            for (ConnectionContainer cc : m_connectionsByDest.get(bfsID)) {
+                if (failedNodes.contains(cc.getSource())) {
+                    hasPredecessorFailed = true;
+                }
+            }
+            needsReset |= containerPersistor.needsResetAfterLoad();
+            needsReset |= hasPredecessorFailed;
+            if (needsReset) {
+                failedNodes.add(bfsID);
+            }
+            if (!hasPredecessorFailed && needsReset) {
+                needConfigurationNodes.add(bfsID);
+            }
         }
         if (loadResult.hasErrors()) {
             LOGGER.warn(loadResult);
+        }
+        for (NodeID id : needConfigurationNodes) {
+            resetNode(id);
         }
         for (NodeID id : needConfigurationNodes) {
             configure(id);

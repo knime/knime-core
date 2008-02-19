@@ -43,6 +43,8 @@ public interface NodeContainerPersistor {
 
     NodeContainerMetaPersistor getMetaPersistor();
     
+    boolean needsResetAfterLoad();
+    
     LoadResult preLoadNodeContainer(final File nodeFile, 
             final ExecutionMonitor exec, final NodeSettingsRO parentSettings) 
         throws InvalidSettingsException, CanceledExecutionException, IOException;
