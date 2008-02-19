@@ -328,7 +328,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
         if (!configFile.isFile() || !configFile.canRead()) {
             String error = "Unable to load \"" + node.getName() + "\": "
                     + "Can't read config file \"" + configFile + "\"";
-            m_nodeMessage = new NodeMessage(Type.ERROR, error);
             result.addError(error);
             settings = new NodeSettings("empty");
             setNeedsResetAfterLoad();
@@ -338,14 +337,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
     
         try {
-            if (m_nodeMessage != null) {
-                // load only if above calls went fine
-                m_nodeMessage = loadNodeMessage(settings);
-            }
+            m_nodeMessage = loadNodeMessage(settings);
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load node message: " + ise.getMessage();
             result.addError(e);
-            LOGGER.debug(e, ise);
+            LOGGER.warn(e, ise);
         }
     
         try {
@@ -356,7 +352,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load node settings: " + ise.getMessage();
             result.addError(e);
-            LOGGER.debug(e, ise);
+            LOGGER.warn(e, ise);
         }
     
         try {
@@ -364,7 +360,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load execution flag: " + ise.getMessage();
             result.addError(e);
-            LOGGER.debug(e, ise);
+            LOGGER.warn(e, ise);
             setNeedsResetAfterLoad();
         }
     
@@ -373,7 +369,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         } catch (InvalidSettingsException ise) {
             String e = "Unable to load configuration flag: " + ise.getMessage();
             result.addError(e);
-            LOGGER.debug(e, ise);
+            LOGGER.warn(e, ise);
             setNeedsResetAfterLoad();
         }
     
@@ -385,7 +381,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             } catch (InvalidSettingsException ise) {
                 String e = "Unable to load internals directory";
                 result.addError(e);
-                LOGGER.debug(e, ise);
+                LOGGER.warn(e, ise);
             }
         }
         try {
@@ -398,11 +394,14 @@ public class NodePersistorVersion1xx implements NodePersistor {
             }
             String err = "Unable to load content for node \"" + node.getName()
                 + "\": " + e.getMessage();
-            LOGGER.warn(e);
-            m_nodeMessage = new NodeMessage(Type.ERROR, err);
+            result.addError(err);
+            LOGGER.warn(err, e);
             setNeedsResetAfterLoad();
         } finally {
             execMon.setProgress(1.0);
+        }
+        if (result.hasErrors()) {
+            m_nodeMessage = new NodeMessage(Type.ERROR, result.getErrors());
         }
 
         execMon.setMessage("Loading settings into node instance");
