@@ -34,7 +34,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -185,10 +184,12 @@ public final class WorkflowManager extends NodeContainer {
             final WorkflowPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
         m_name = persistor.getName();
-        m_inPorts = Arrays.copyOf(
-                persistor.getInPorts(), persistor.getInPorts().length);
-        m_outPorts = Arrays.copyOf(
-                persistor.getOutPorts(), persistor.getOutPorts().length);
+        WorkflowInPort[] ins = persistor.getInPorts();
+        m_inPorts = new WorkflowInPort[ins.length];
+        System.arraycopy(ins, 0, m_inPorts, 0, ins.length);
+        WorkflowOutPort[] outs = persistor.getOutPorts();
+        m_outPorts = new WorkflowOutPort[outs.length];
+        System.arraycopy(outs, 0, m_outPorts, 0, outs.length);
         // add set for this (meta-) node's in- and output connections
         m_connectionsByDest.put(getID(), new HashSet<ConnectionContainer>());
         m_connectionsBySource.put(getID(), new HashSet<ConnectionContainer>());
@@ -1019,21 +1020,17 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /**
-     * @return true if all internal nodes have finished execution.
+     * @return true if all internal nodes have finished execution, either
+     * successfully.   
      */
     private boolean allInternalNodesFinished() {
         assert getState().equals(NodeContainer.State.EXECUTING);
-        boolean allNodesDone = true;
-        for (Iterator<NodeContainer> it = m_nodes.values().iterator();
-        it.hasNext() && allNodesDone;) {
-            switch (it.next().getState()) {
-            case EXECUTED:
-                break;
-            default:
-                allNodesDone = false;
+        for (NodeContainer nc : m_nodes.values()) {
+            if (nc.getState().executionInProgress()) {
+                return false;
             }
         }
-        return allNodesDone;
+        return true;
     }
 
     /** cleanup a node after execution.
@@ -2012,7 +2009,7 @@ public final class WorkflowManager extends NodeContainer {
         for (ConnectionContainerTemplate c : persistor.getConnectionSet()) {
             int sourceSuffix = c.getSourceSuffix();
             int destSuffix = c.getDestSuffix();
-            assert sourceSuffix != destSuffix
+            assert sourceSuffix == -1 || sourceSuffix != destSuffix
                 : "Can't insert connection, source and destination are equal";
             ConnectionType type = ConnectionType.STD;
             NodeID source;
@@ -2038,7 +2035,6 @@ public final class WorkflowManager extends NodeContainer {
                         + "\", one of the nodes does not exist in the flow");
                 continue;
             }
-            // TODO sanity check wrt connection type possible?
             ConnectionContainer cc = addConnection(
                     source, c.getSourcePort(), dest, c.getDestPort(), false);
             assert cc.getType() == type;
@@ -2073,6 +2069,7 @@ public final class WorkflowManager extends NodeContainer {
                 if (!hasPredecessorFailed) {
                     needConfigurationNodes.add(bfsID);
                 }
+                resetNode(bfsID);
             }
             cont.loadContent(containerPersistor, loadID);
         }
