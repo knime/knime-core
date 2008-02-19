@@ -1407,7 +1407,7 @@ public final class WorkflowManager extends NodeContainer {
                        = m_connectionsByDest.get(thisNode);
             boolean onlyWFMorNothing = true;
             for (ConnectionContainer thisConn : incomingConns) {
-                if (thisConn.getSource() != this.getID()) {
+                if (!thisConn.getSource().equals(this.getID())) {
                     onlyWFMorNothing = false;
                 }
             }
@@ -1421,6 +1421,10 @@ public final class WorkflowManager extends NodeContainer {
             // look at all successors of this node
             for (ConnectionContainer cc : m_connectionsBySource.get(currNode)) {
                 NodeID succNode = cc.getDest();
+                // this node is not subject to bf traversal
+                if (succNode.equals(getID())) {
+                    continue;
+                }
                 // and make sure all predecessors of this successor are already
                 // in the list
                 boolean allContained = true;
