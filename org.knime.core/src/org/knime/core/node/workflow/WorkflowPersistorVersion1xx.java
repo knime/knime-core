@@ -372,6 +372,82 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         loadResult.addError(metaLoadResult);
         m_workflowSett = subWFSettings;
         m_workflowDir = nodeFile.getParentFile();
+
+        /* read in and outports */
+        NodeSettingsRO inPorts;
+        try {
+            inPorts = loadInPortsSetting(m_workflowSett);
+            if (inPorts == null) {
+                inPorts = new NodeSettings("<<empty>>");
+            }
+        } catch (InvalidSettingsException e) {
+            String error = "Can't load workflow ports, config not found";
+            LOGGER.debug(error, e);
+            loadResult.addError(error);
+            inPorts = new NodeSettings("<<empty>>");
+        }
+        int inPortCount = inPorts.keySet().size();
+        m_inPorts = new WorkflowInPort[inPortCount];
+        for (String key : inPorts.keySet()) {
+            WorkflowInPort p;
+            try {
+                NodeSettingsRO sub = inPorts.getNodeSettings(key);
+                p = loadInPort(sub);
+            } catch (InvalidSettingsException e) {
+                String error = "Can't load workflow inport (internal ID \""
+                    + key + "\", skipping it: " + e.getMessage();
+                LOGGER.debug(error, e);
+                loadResult.addError(error);
+                continue;
+            }
+            int index = p.getPortID();
+            if (index < 0 || index >= inPortCount) {
+                loadResult.addError("Invalid inport index " + index);
+            }
+            if (m_inPorts[index] != null) {
+                loadResult.addError(
+                        "Duplicate inport definition for index: " + index);
+            }
+            m_inPorts[index] = p;
+        }
+
+        NodeSettingsRO outPorts;
+        try {
+            outPorts = loadOutPortsSetting(m_workflowSett);
+            if (outPorts == null) {
+                outPorts = new NodeSettings("<<empty>>");
+            }
+        } catch (InvalidSettingsException e) {
+            String error = "Can't load workflow out ports, config not found: "
+                + e.getMessage();
+            LOGGER.debug(error, e);
+            loadResult.addError(error);
+            outPorts = new NodeSettings("<<empty>>");
+        }
+        int outPortCount = outPorts.keySet().size();
+        m_outPorts = new WorkflowOutPort[outPortCount];
+        for (String key : outPorts.keySet()) {
+            WorkflowOutPort p;
+            try {
+                NodeSettingsRO sub = outPorts.getNodeSettings(key);
+                p = loadOutPort(sub);
+            } catch (InvalidSettingsException e) {
+                String error = "Can't load workflow outport (internal ID \""
+                    + key + "\", skipping it: " + e.getMessage();
+                LOGGER.debug(error, e);
+                loadResult.addError(error);
+                continue;
+            }
+            int index = p.getPortID();
+            if (index < 0 || index >= outPortCount) {
+                loadResult.addError("Invalid inport index " + index);
+            }
+            if (m_outPorts[index] != null) {
+                loadResult.addError(
+                        "Duplicate outport definition for index: " + index);
+            }
+            m_outPorts[index] = p;
+        }
         return loadResult;
     }
     
@@ -564,85 +640,9 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                         "Duplicate connection information: " + c);
             }
         }
-        
-        /* read in and outports */
-        NodeSettingsRO inPorts;
-        try {
-            inPorts = loadInPortsSetting(m_workflowSett);
-            if (inPorts == null) {
-                inPorts = new NodeSettings("<<empty>>");
-            }
-        } catch (InvalidSettingsException e) {
-            String error = "Can't load workflow ports, config not found";
-            LOGGER.debug(error, e);
-            loadResult.addError(error);
-            inPorts = new NodeSettings("<<empty>>");
-        }
-        int inPortCount = inPorts.keySet().size();
-        m_inPorts = new WorkflowInPort[inPortCount];
-        for (String key : inPorts.keySet()) {
-            WorkflowInPort p;
-            try {
-                NodeSettingsRO sub = inPorts.getNodeSettings(key);
-                p = loadInPort(sub);
-            } catch (InvalidSettingsException e) {
-                String error = "Can't load workflow inport (internal ID \""
-                    + key + "\", skipping it: " + e.getMessage();
-                LOGGER.debug(error, e);
-                loadResult.addError(error);
-                continue;
-            }
-            int index = p.getPortID();
-            if (index < 0 || index >= inPortCount) {
-                loadResult.addError("Invalid inport index " + index);
-            }
-            if (m_inPorts[index] != null) {
-                loadResult.addError(
-                        "Duplicate inport definition for index: " + index);
-            }
-            m_inPorts[index] = p;
-        }
-        
-        NodeSettingsRO outPorts;
-        try {
-            outPorts = loadOutPortsSetting(m_workflowSett);
-            if (outPorts == null) {
-                outPorts = new NodeSettings("<<empty>>");
-            }
-        } catch (InvalidSettingsException e) {
-            String error = "Can't load workflow out ports, config not found: "
-                + e.getMessage();
-            LOGGER.debug(error, e);
-            loadResult.addError(error);
-            outPorts = new NodeSettings("<<empty>>");
-        }
-        int outPortCount = outPorts.keySet().size();
-        m_outPorts = new WorkflowOutPort[outPortCount];
-        for (String key : outPorts.keySet()) {
-            WorkflowOutPort p;
-            try {
-                NodeSettingsRO sub = outPorts.getNodeSettings(key);
-                p = loadOutPort(sub);
-            } catch (InvalidSettingsException e) {
-                String error = "Can't load workflow outport (internal ID \""
-                    + key + "\", skipping it: " + e.getMessage();
-                LOGGER.debug(error, e);
-                loadResult.addError(error);
-                continue;
-            }
-            int index = p.getPortID();
-            if (index < 0 || index >= outPortCount) {
-                loadResult.addError("Invalid inport index " + index);
-            }
-            if (m_outPorts[index] != null) {
-                loadResult.addError(
-                        "Duplicate outport definition for index: " + index);
-            }
-            m_outPorts[index] = p;
-        }
         return loadResult;
     }
-
+    
     protected int loadNodeIDSuffix(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         return settings.getInt(KEY_ID);
