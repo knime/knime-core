@@ -275,10 +275,7 @@ public final class WorkflowManager extends NodeContainer {
             if (nc == null) {
                 return false;
             }
-            if ((nc.getState() != NodeContainer.State.IDLE)
-                    && (nc.getState() != NodeContainer.State.CONFIGURED)
-                    && (nc.getState() != NodeContainer.State.EXECUTED)) {
-                // node is either currently executing or waiting to be
+            if (nc.getState().executionInProgress()) {
                 return false;
             }
         }
