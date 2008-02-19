@@ -58,7 +58,20 @@ public abstract class NodeContainer {
         MARKEDFOREXEC,
         QUEUED,
         EXECUTING,
-        EXECUTED
+        EXECUTED;
+        
+        /** @return Whether this state represents an intermediate state,
+         * i.e. where the node is either executing or in some way scheduled
+         * for execution.
+         */
+        public boolean executionInProgress() {
+            switch (this) {
+            case IDLE:
+            case EXECUTED:
+            case CONFIGURED: return false;
+            default: return true;
+            }
+        }
     };
 
     private State m_state;
