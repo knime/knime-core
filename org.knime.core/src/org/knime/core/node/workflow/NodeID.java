@@ -101,7 +101,7 @@ public class NodeID implements Comparable<NodeID> {
         if (m_prefix == ROOTID) {
             return false;
         }
-        return m_prefix.equals(prefix);
+        return m_prefix.hasPrefix(prefix);
     }
     
     /** Returns on string representation of index.
