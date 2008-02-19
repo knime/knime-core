@@ -207,28 +207,52 @@ public class ROCNodeModel extends NodeModel {
                             new boolean[]{false}, exec);
 
             int tp = 0, fp = 0;
+            // these contain the coordinates for the plot
             double[] xValues = new double[size + 1];
             double[] yValues = new double[size + 1];
-            double area = 0;
             int k = 1;
+            final int scoreColIndex =
+                    sortedTable.getDataTableSpec().findColumnIndex(c);
+            DataCell lastScore = null;
             for (DataRow row : sortedTable) {
                 DataCell realClass = row.getCell(classIndex);
                 if (realClass.equals(m_settings.getPositiveClass())) {
                     tp++;
                 } else {
                     fp++;
-                    area += tp;
                 }
-                xValues[k] = fp;
-                yValues[k] = tp;
-                k++;
+                // if values differ (if they are equal we can't prefer one
+                // value over the other as they are indifferent; for a sequence
+                // of equal probabilities, think of what would happen if we 
+                // first encounter all TP and then the FP and the other way
+                // around ... the following lines circumvent this)
+                if (!row.getCell(scoreColIndex).equals(lastScore)) {
+                    xValues[k] = fp;
+                    yValues[k] = tp;
+                    k++;
+                    lastScore = row.getCell(scoreColIndex);
+                }
             }
 
-            for (k = 0; k < size + 1; k++) {
+            xValues = Arrays.copyOf(xValues, k + 1);
+            yValues = Arrays.copyOf(yValues, k + 1);
+
+            while (--k >= 0) {
                 xValues[k] /= fp;
                 yValues[k] /= tp;
             }
-            area /= tp * fp;
+            xValues[xValues.length - 1] = 1;
+            yValues[yValues.length - 1] = 1;
+
+            double area = 0;
+            for (k = 1; k < xValues.length; k++) {
+                if (xValues[k - 1] < xValues[k]) {
+                    // magical math: the rectangle + the triangle under
+                    // the segment xValues[k] to xValues[k - 1]
+                    area += 0.5 * (xValues[k] - xValues[k - 1])
+                        * (yValues[k] + yValues[k - 1]);
+                }
+            }
 
             m_curves.add(new ROCCurve(c, xValues, yValues, area));
             outCont.addRowToTable(new DefaultRow(new RowKey(c.toString()),
@@ -254,19 +278,34 @@ public class ROCNodeModel extends NodeModel {
         BufferedReader in =
                 new BufferedReader(new InputStreamReader(new GZIPInputStream(
                         new FileInputStream(f))));
-        int curves = Integer.parseInt(in.readLine());
-
+        int curves;
+        try {
+            curves = Integer.parseInt(in.readLine());
+        } catch (final NumberFormatException e) {
+            throw new IOException("Can't parse as int: " + e.getMessage(), e);
+        }
         m_curves.clear();
         for (int i = 0; i < curves; i++) {
             String name = in.readLine();
-            double area = Double.parseDouble(in.readLine());
+            double area;
+            try {
+                area = Double.parseDouble(in.readLine());
+            } catch (final NumberFormatException e) {
+                throw new IOException("Can't parse double: " 
+                        + e.getMessage(), e);
+            }
 
             String line = in.readLine();
             line = line.substring(1, line.length() - 1);
             String[] parts = line.split(", ");
             double[] x = new double[parts.length];
             for (int k = 0; k < parts.length; k++) {
-                x[k] = Double.parseDouble(parts[k]);
+                try {
+                    x[k] = Double.parseDouble(parts[k]);
+                } catch (final NumberFormatException e) {
+                    throw new IOException("Can't parse double: " 
+                            + e.getMessage(), e);
+                }
             }
 
             line = in.readLine();
@@ -274,7 +313,12 @@ public class ROCNodeModel extends NodeModel {
             parts = line.split(", ");
             double[] y = new double[parts.length];
             for (int k = 0; k < parts.length; k++) {
-                y[k] = Double.parseDouble(parts[k]);
+                try {
+                    y[k] = Double.parseDouble(parts[k]);
+                } catch (final NumberFormatException e) {
+                    throw new IOException("Can't parse double: " 
+                            + e.getMessage(), e);
+                }
             }
 
             m_curves.add(new ROCCurve(name, x, y, area));
