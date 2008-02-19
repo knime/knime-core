@@ -42,7 +42,7 @@ import org.knime.core.internal.SerializerMethodLoader.Serializer;
  * {@link PortType}.
  * 
  * <p>
- * <b>Important:</b>Implementors of this interface must also provide a
+ * <b>Important:</b> Implementors of this interface must also provide a
  * {@link PortObjectSpecSerializer}, which is used to save and load instances.
  * The framework will try to invoke a static method defined in the
  * implementation with the following signature:
