@@ -36,7 +36,6 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.PortType;
-import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 
 /**
  * 
@@ -329,19 +328,23 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     
     protected void saveConnection(final NodeSettingsWO settings,
             final ConnectionContainer connection) {
-        int sourceID;
-        if (connection.getType().equals(ConnectionType.WFMIN)) {
+        int sourceID = connection.getSource().getIndex();
+        int targetID = connection.getDest().getIndex();
+        switch (connection.getType()) {
+        case WFMIN:
             sourceID = -1;
-        } else {
-            sourceID = connection.getSource().getIndex();
+            break;
+        case WFMOUT:
+            targetID = -1;
+            break;
+        case WFMTHROUGH:
+            sourceID = -1;
+            targetID = -1;
+            break;
+        default:
+            // all handled above
         }
         settings.addInt(KEY_SOURCE_ID, sourceID);
-        int targetID; 
-        if (connection.getType().equals(ConnectionType.WFMOUT)) {
-            targetID = -1;
-        } else {
-            targetID = connection.getDest().getIndex();
-        }
         settings.addInt(KEY_TARGET_ID, targetID);
         int sourcePort = connection.getSourcePort();
         settings.addInt(KEY_SOURCE_PORT, sourcePort);
