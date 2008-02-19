@@ -36,21 +36,28 @@ import org.knime.core.internal.SerializerMethodLoader.Serializer;
  * <code>PortObjects</code> contain the actual data or models, which are used
  * during a node's 
  * {@link GenericNodeModel#execute(PortObject[], ExecutionContext) execution}.
- * They are (meta-)described by {@link PortObjectSpec} objects.
- * Both a specific class of a <code>PortObjectSpec</code> and 
- * a {@link PortObject} describe {@link PortType}.
+ * Their meta-description is represented by a class extending 
+ * {@link PortObjectSpec}. Both a specific class of a 
+ * <code>PortObjectSpec</code> and a {@link PortObject} describe 
+ * {@link PortType}.
  * 
- * <p><b>Important:</b>Along with the methods defined by this interface, 
- * implementors also need to define a static method with the following 
- * signature:
+ * <p><b>Important:</b>Implementors of this interface must also provide a 
+ * {@link PortObjectSerializer}, which is used to save and load instances. The
+ * framework will try to invoke a static method defined in the implementation
+ * with the following signature: 
  * <pre>
- *  public static PortObject loadPortObject(final File directory,
- *      final ExecutionMonitor exec) 
- *      throws IOException, CanceledExecutionException {...}
+ *  public static PortObjectSerializer&lt;FooPortObject&gt; 
+ *          getPortObjectSerializer(
+ *              final File directory, final ExecutionMonitor exec) 
+ *              throws IOException, CanceledExecutionException {...}
  * </pre>
- * This method is used when the workflow is restored from disk; it is
- * the counterpart to the {@link #savePortObject(File, ExecutionMonitor) 
- * save method} (which is an object method).  
+ * If the class does not have such a static method (or it has the wrong 
+ * signature), an exception will be thrown at runtime. There are two exceptions
+ * to this rule: Objects of class {@link BufferedDataTable} and 
+ * {@link ModelContent} are treated separately. As such, they do not define
+ * this method (or their implementations throw an exception as the method is
+ * not called by the framework). However, if you do not extend either of these
+ * two classes, you do need to implement the method mentioned above.  
  * @see org.knime.core.node.BufferedDataTable
  * @see PortObjectSpec
  * @see PortType
@@ -58,6 +65,10 @@ import org.knime.core.internal.SerializerMethodLoader.Serializer;
  */
 public interface PortObject {
     
+    /** Factory class that's used for writing and loading objects of class 
+     * denoted by <code>T</code>. See description of class {@link PortObject}
+     * for details.
+     * @param <T> class of the object to save or load. */
     static abstract class PortObjectSerializer<T extends PortObject> 
         implements Serializer<T> {
         
