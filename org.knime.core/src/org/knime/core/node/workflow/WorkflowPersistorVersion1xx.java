@@ -716,6 +716,10 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         int targetID = settings.getInt(KEY_TARGET_ID);
         int sourcePort = settings.getInt(KEY_SOURCE_PORT);
         int targetPort = settings.getInt(KEY_TARGET_PORT);
+        if (sourceID != -1 && sourceID == targetID) {
+            throw new InvalidSettingsException("Source and Destination must "
+            		+ "not be equal, id is " + sourceID);
+        }
         UIInformation uiInfo = null;
         try {
             String uiInfoClass = loadUIInfoClassName(settings);
