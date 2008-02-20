@@ -471,22 +471,6 @@ public final class Node {
     }
     
     /**
-     *  only used in NodePersistorv1xx
-     */
-    @Deprecated
-    public boolean isExecuted() {
-        return m_model.isExecuted();
-    }
-    
-    /**
-     *  only used in NodePersistorv1xx
-     */
-    @Deprecated
-    public boolean isConfigured() {
-        return m_model.isConfigured();
-    }
-
-    /**
      * Starts executing this node. If the node has been executed already, it
      * does nothing - just returns <code>true</code>.
      * 
