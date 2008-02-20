@@ -256,8 +256,8 @@ public final class SingleNodeContainer extends NodeContainer
             switch (getState()) {
             case EXECUTED:
                 m_node.reset();
-                // After reset of an executed node it has to be configured!
-                setNewState(State.CONFIGURED);
+                // After reset we need explicit configure!
+                setNewState(State.IDLE);
                 return;
             case MARKEDFOREXEC:
                 setNewState(State.CONFIGURED);

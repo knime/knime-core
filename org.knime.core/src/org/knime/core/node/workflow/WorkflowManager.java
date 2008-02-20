@@ -668,10 +668,10 @@ public final class WorkflowManager extends NodeContainer {
         if (cc.getDest().equals(this.getID())) {
             // in case of WFM being disconnected make sure outside
             // successors are reset
-            this.getParent().resetNode(this.getID());
+            this.getParent().resetAndConfigureNode(this.getID());
         } else {
             // otherwise just reset successor, rest will be handled by WFM
-            resetNode(cc.getDest());
+            resetAndConfigureNode(cc.getDest());
         }
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED,
@@ -749,7 +749,7 @@ public final class WorkflowManager extends NodeContainer {
         // TODO synchronize
         NodeContainer nc = getNodeContainer(id);
         // TODO propagate reset to parent (what if "this" is sub flow)
-        resetNode(id);
+        resetAndConfigureNode(id);
         nc.loadSettings(settings);
         configure(id);
     }
@@ -832,6 +832,8 @@ public final class WorkflowManager extends NodeContainer {
             for (NodeContainer nc : sourceNodes) {
                 switch (nc.getState()) {
                 case EXECUTED:
+                    // TODO clean this up - resetNode() reconfigures for every node!
+                    // it would be better to use the internal reset() instead.
                     nc.resetNode();
                     break;
                 case MARKEDFOREXEC:
@@ -1180,7 +1182,7 @@ public final class WorkflowManager extends NodeContainer {
     *
     * @param id of first node in chain to be reset.
     */
-    public void resetNode(final NodeID id) {
+    public void resetAndConfigureNode(final NodeID id) {
         NodeContainer nc = m_nodes.get(id);
         assert nc != null;
         switch (nc.getState()) {
@@ -1190,14 +1192,11 @@ public final class WorkflowManager extends NodeContainer {
         case QUEUED:
             throw new IllegalStateException("Can not reset queued node " + id);
         case EXECUTED:
-            // first visit successors (to avoid having yellow nodes
-            // precede green ones - ever so briefly, but still...
-            resetSuccessors(id);
-            // and finally reset original node.
-            nc.resetNode();
+            // reset all successors first
+            this.resetSuccessors(id);
+            // and then reset node itself
+            m_nodes.get(id).resetNode();
             // and launch configure starting with this node
-            // TODO This method is called "resetNode", not "resetAndConfigure"
-            // TODO resetSuccessors calls this method, starting configure storm
             configure(id);
         default: // ignore all other states (IDLE, CONFIGURED...)
         }
@@ -1205,7 +1204,8 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /** 
-     * Reset successors of all nodes, also climbing up Hierarchie!
+     * Reset successors of all nodes. Do not reset node itself since it
+     * may be a metanode from within we started this.
      * 
      * @param id of node
      */
@@ -1215,12 +1215,17 @@ public final class WorkflowManager extends NodeContainer {
             NodeID currID = conn.getDest();
             if (currID != this.getID()) {
                 // normal connection to another node within this workflow
-                resetNode(currID);
+                // first reset successors of successor
+                this.resetSuccessors(currID);
+                // ..then immediate successor itself
+                m_nodes.get(currID).resetNode();
             } else {
                 // connection goes to a meta outport!
                 assert conn.getType()
                     == ConnectionContainer.ConnectionType.WFMOUT;
-                getParent().resetSuccessors(id);
+                // Note: this also resets node which are connected to OTHER
+                // outports of this metanode!
+                getParent().resetSuccessors(this.getID());
             }
         }
     }
@@ -2080,7 +2085,7 @@ public final class WorkflowManager extends NodeContainer {
             LOGGER.warn(loadResult);
         }
         for (NodeID id : needConfigurationNodes) {
-            resetNode(id);
+            resetAndConfigureNode(id);
         }
         for (NodeID id : needConfigurationNodes) {
             configure(id);
