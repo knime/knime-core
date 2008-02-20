@@ -144,7 +144,7 @@ public class ResetAction extends AbstractNodeAction {
                     continue;
                 }
 
-                getManager().resetNode(
+                getManager().resetAndConfigureNode(
                         nodeParts[i].getNodeContainer().getID());
             }
 
