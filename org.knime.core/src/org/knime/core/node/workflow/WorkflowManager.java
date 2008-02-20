@@ -1642,16 +1642,6 @@ public final class WorkflowManager extends NodeContainer {
             PortObjectSpec[] inSpecs =
                 new PortObjectSpec[nc.getNrInPorts()];
             assembleInputSpecs(id, inSpecs);
-            // create new ScopeContextStack if this is a "real" node
-            if (nc instanceof SingleNodeContainer) {
-                SingleNodeContainer snc = (SingleNodeContainer)nc;
-                ScopeObjectStack[] scscs =
-                    new ScopeObjectStack[snc.getNrInPorts()];
-                assembleSCStackContainer(id, scscs);
-                ScopeObjectStack  scsc =
-                    new ScopeObjectStack(id, scscs);
-                snc.setScopeObjectStack(scsc);
-            }
             // configure node only if it's not yet running or queued or done.
             // This can happen if the WFM queues a node which has more than
             // one predecessor with populated output ports but one of the
@@ -1662,12 +1652,32 @@ public final class WorkflowManager extends NodeContainer {
             case EXECUTING:
             case EXECUTED:
             case QUEUED:
+                // tolerate race condition if configure has "bypassed" node
+                // TODO: remove once BFS is used for configure.
                 break;
-            default:
+            case IDLE:
+            case UNCONFIGURED_MARKEDFOREXEC:
+            case MARKEDFOREXEC:
+                // create new ScopeContextStack if this is a "real" node
+                if (nc instanceof SingleNodeContainer) {
+                    SingleNodeContainer snc = (SingleNodeContainer)nc;
+                    ScopeObjectStack[] scscs =
+                        new ScopeObjectStack[snc.getNrInPorts()];
+                    assembleSCStackContainer(id, scscs);
+                    ScopeObjectStack  scsc =
+                        new ScopeObjectStack(id, scscs);
+                    snc.setScopeObjectStack(scsc);
+                }
+                // configure node itself
                 boolean outputSpecsChanged = nc.configureNode(inSpecs);
-                if (outputSpecsChanged) {  // and configure successors if needed
+                if (outputSpecsChanged) {
+                    // and configure successors if needed
                     configureSuccessors(id);
                 }
+                break;
+            default:
+                throw new IllegalStateException("Wrong state in configure ("
+                        + ncState + ")");
             }
         }
     }
