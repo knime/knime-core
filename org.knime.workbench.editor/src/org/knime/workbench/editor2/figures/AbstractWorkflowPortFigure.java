@@ -18,11 +18,11 @@
  */
 package org.knime.workbench.editor2.figures;
 
-import org.eclipse.draw2d.Graphics;
 import org.knime.core.node.PortType;
 
 /**
- *
+ * TODO: make this class obsolete
+ * 
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class AbstractWorkflowPortFigure extends AbstractPortFigure {
@@ -49,19 +49,6 @@ public abstract class AbstractWorkflowPortFigure extends AbstractPortFigure {
      */
     protected int getPortIndex() {
         return m_portIndex;
-    }
-
-
-    /**
-     * In addition fires a figure moved event in order to notify 
-     * the referring connections where to start/end.
-     * 
-     * {@inheritDoc}
-     */
-    @Override
-    public void paint(final Graphics graphics) {
-        super.paint(graphics);
-        fireFigureMoved();
     }
 
 
