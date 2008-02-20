@@ -21,18 +21,22 @@ package org.knime.workbench.editor2.editparts;
 import java.util.Collections;
 import java.util.List;
 
+import org.eclipse.draw2d.FreeformListener;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowOutPort;
+import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.figures.WorkflowOutPortFigure;
 
 /**
@@ -46,8 +50,8 @@ import org.knime.workbench.editor2.figures.WorkflowOutPortFigure;
 public class WorkflowOutPortEditPart extends AbstractPortEditPart 
     implements ControlListener {
 
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            WorkflowOutPortEditPart.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            WorkflowOutPortEditPart.class);
 
 
     
@@ -93,7 +97,7 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart
     }
     
     /**
-     * We must register *every* node as a listener on the workflow, as we have
+     * We must register *every* port as a listener on the workflow, as we have
      * not real objects for it.
      *
      * @see org.eclipse.gef.EditPart#activate()
@@ -119,6 +123,22 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart
      */
     @Override
     protected IFigure createFigure() {
+        LOGGER.debug("create figure. Parent's figure: " 
+                + ((GraphicalEditPart)getParent()).getFigure());
+        ((WorkflowFigure)((GraphicalEditPart)getParent()).getFigure())
+            .addFreeformListener(new FreeformListener() {
+
+                public void notifyFreeformExtentChanged() {
+                    LOGGER.debug("freeform extend changed: " + 
+                            ((GraphicalEditPart)getParent()).getFigure()
+                            .getBounds());
+//                    ((WorkflowOutPortFigure)getFigure()).setParentSize(
+//                            ((GraphicalEditPart)getParent()).getFigure()
+//                            .getBounds());
+//                    ((WorkflowOutPortFigure)getFigure()).releaseSizeFreeze();
+                }
+                
+            });
         return new WorkflowOutPortFigure(getType(),
                 getManager().getNrOutPorts(), getIndex(), 
                 getManager().getName());
@@ -159,6 +179,16 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart
     }
 
 
+    @Override
+    public void zoomChanged(double zoom) {
+        // TODO store the old size in order to restore it on 
+        // zoom out
+        // on zoom out restore size and on zoom in restore it
+        LOGGER.debug("zoom changed: " + zoom);
+        LOGGER.debug(getFigure().getBounds());
+        super.zoomChanged(zoom);
+    }
+        
     /**
      * 
      * {@inheritDoc}
