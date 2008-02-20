@@ -1213,12 +1213,25 @@ public final class WorkflowManager extends NodeContainer {
         Set<ConnectionContainer> succs = m_connectionsBySource.get(id);
         for (ConnectionContainer conn : succs) {
             NodeID currID = conn.getDest();
-            if (currID != this.getID()) {
+            if (!currID.equals(this.getID())) {
                 // normal connection to another node within this workflow
-                // first reset successors of successor
-                this.resetSuccessors(currID);
-                // ..then immediate successor itself
-                m_nodes.get(currID).resetNode();
+                // first check if it is already reset
+                NodeContainer nc = m_nodes.get(currID);
+                assert nc != null;
+                switch (nc.getState()) {
+                case EXECUTED:
+                    // first reset successors of successor
+                    this.resetSuccessors(currID);
+                    // ..then immediate successor itself
+                    m_nodes.get(currID).resetNode();
+                    break;
+                case IDLE:
+                case CONFIGURED:
+                    break;
+                default:
+                    throw new IllegalStateException("Wrong state of"
+                            + "successor in resetSuccessors.");
+                }
             } else {
                 // connection goes to a meta outport!
                 assert conn.getType()
