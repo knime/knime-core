@@ -102,6 +102,9 @@ public interface PortObject {
      * a <code>DataTableSpec</code>. Make sure that the {@link PortType}
      * defines the correct type based on the same <code>PortObjectSpec</code>
      * as returned by this method.
+     * 
+     * <p>
+     * This method must never return <code>null</code>.
      * @return underlying <code>PortObjectSpec</code> or any derived spec
      */
     PortObjectSpec getSpec();
