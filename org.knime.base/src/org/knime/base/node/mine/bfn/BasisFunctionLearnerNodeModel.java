@@ -108,7 +108,7 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
     private String[] m_dataColumns = null;
     
     /** Keeps a value for missing replacement function index. */
-    private int m_missing = -1;
+    private int m_missing = 0;
 
     /** The <i>shrink_after_commit</i> flag. */
     private boolean m_shrinkAfterCommit = true;
@@ -182,22 +182,37 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
         DataTableSpec inSpec = (DataTableSpec) ins[0];
         // check if target column available
         if (m_targetColumns == null) {
-            throw new InvalidSettingsException("Target columns not available.");
-        }
-        for (String target : m_targetColumns) {
-            if (!inSpec.containsName(target)) {
-                throw new InvalidSettingsException(
-                    "Target \"" + target + "\" column not available.");
+            // find first non-numeric column
+            for (int i = 0; i < inSpec.getNumColumns(); i++) {
+                DataColumnSpec cspec = inSpec.getColumnSpec(i);
+                if (!cspec.getType().isCompatible(DoubleValue.class)) {
+                    m_targetColumns = new String[]{cspec.getName()};
+                    super.setWarningMessage("Target column guessed as \""
+                            + cspec.getName() + "\"");
+                    break;
+                }
             }
-            if (m_targetColumns.length > 1) {
-                if (!inSpec.getColumnSpec(target).getType().isCompatible(
-                        DoubleValue.class)) {
+            if (m_targetColumns == null) {
+                throw new InvalidSettingsException(
+                        "Target columns not available.");
+            }
+        } else {
+            for (String target : m_targetColumns) {
+                if (!inSpec.containsName(target)) {
                     throw new InvalidSettingsException(
-                            "Target \"" + target 
-                            + "\" column not of type DoubleValue.");
+                        "Target \"" + target + "\" column not available.");
+                }
+                if (m_targetColumns.length > 1) {
+                    if (!inSpec.getColumnSpec(target).getType().isCompatible(
+                            DoubleValue.class)) {
+                        throw new InvalidSettingsException(
+                                "Target \"" + target 
+                                + "\" column not of type DoubleValue.");
+                    }
                 }
             }
         }
+        
         // check if double type column available
         if (!inSpec.containsCompatibleType(DoubleValue.class)) {
             throw new InvalidSettingsException(
@@ -231,26 +246,26 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
                 }
             }
             m_dataColumns = dataCols.toArray(new String[dataCols.size()]);
-        }
-        
-        // check data columns, only numeric
-        for (String dataColumn : m_dataColumns) {
-            if (!inSpec.containsName(dataColumn)) {
-                throw new InvalidSettingsException(
-                    "Data \"" + dataColumn + "\" column not available.");
-            }
-            if (!inSpec.getColumnSpec(dataColumn).getType().isCompatible(
-                        DoubleValue.class)) {
+        } else {
+            // check data columns, only numeric
+            for (String dataColumn : m_dataColumns) {
+                if (!inSpec.containsName(dataColumn)) {
                     throw new InvalidSettingsException(
-                            "Data \"" + dataColumn 
-                            + "\" column not of type DoubleValue.");
+                        "Data \"" + dataColumn + "\" column not available.");
+                }
+                if (!inSpec.getColumnSpec(dataColumn).getType().isCompatible(
+                            DoubleValue.class)) {
+                        throw new InvalidSettingsException(
+                                "Data \"" + dataColumn 
+                                + "\" column not of type DoubleValue.");
+                }
             }
         }
         DataTableSpec modelSpec = BasisFunctionFactory.createModelSpec(inSpec,
                 m_dataColumns, m_targetColumns, getModelType());
         return new DataTableSpec[]{modelSpec, modelSpec};
     }
-
+    
     /**
      * @return the type of the learned model cells
      */
