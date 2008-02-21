@@ -42,14 +42,6 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     /** Key for connections. */
     public static final String KEY_CONNECTIONS = "connections";
 
-    public static final String KEY_SOURCE_ID = "sourceID";
-
-    public static final String KEY_SOURCE_PORT = "sourcePort";
-
-    public static final String KEY_TARGET_ID = "targetID";
-
-    public static final String KEY_TARGET_PORT = "targetPort";
-
     public static final String KEY_UI_INFORMATION = "extraInfoClassName";
 
     /** Links the node settings file name. */

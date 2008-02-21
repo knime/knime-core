@@ -46,6 +46,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
             .getLogger(NodePersistorVersion1xx.class);
 
     private boolean m_isExecuted;
+    
+    private boolean m_hasContent;
 
     private boolean m_isConfigured;
 
@@ -97,6 +99,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
             throws InvalidSettingsException {
         return settings.getBoolean(CFG_ISEXECUTED);
     }
+    
+    protected boolean loadHasContent(final NodeSettingsRO settings)
+    throws InvalidSettingsException {
+        return settings.getBoolean(CFG_ISEXECUTED);
+    }
+    
 
     protected boolean loadIsConfigured(final NodeSettingsRO settings)
             throws InvalidSettingsException {
@@ -306,6 +314,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
     }
     
     /** {@inheritDoc} */
+    public boolean hasContent() {
+        return m_hasContent;
+    }
+    
+    /** {@inheritDoc} */
     public boolean needsResetAfterLoad() {
         return m_needsResetAfterLoad;
     }
@@ -355,6 +368,15 @@ public class NodePersistorVersion1xx implements NodePersistor {
             LOGGER.warn(e, ise);
         }
     
+        try {
+            m_hasContent = loadHasContent(settings);
+        } catch (InvalidSettingsException ise) {
+            String e = "Unable to load hasContent flag: " + ise.getMessage();
+            result.addError(e);
+            LOGGER.warn(e, ise);
+            setNeedsResetAfterLoad();
+        }
+        
         try {
             m_isExecuted = loadIsExecuted(settings);
         } catch (InvalidSettingsException ise) {

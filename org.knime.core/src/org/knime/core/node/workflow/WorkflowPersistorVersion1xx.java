@@ -735,13 +735,13 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     protected ConnectionContainerTemplate loadConnection(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        int sourceID = settings.getInt(KEY_SOURCE_ID);
-        int targetID = settings.getInt(KEY_TARGET_ID);
-        int sourcePort = settings.getInt(KEY_SOURCE_PORT);
-        int targetPort = settings.getInt(KEY_TARGET_PORT);
-        if (sourceID != -1 && sourceID == targetID) {
+        int sourceID = settings.getInt("sourceID");
+        int destID = loadConnectionDestID(settings);
+        int sourcePort = settings.getInt("sourcePort");
+        int destPort = loadConnectionDestPort(settings);
+        if (sourceID != -1 && sourceID == destID) {
             throw new InvalidSettingsException("Source and Destination must "
-            		+ "not be equal, id is " + sourceID);
+                    + "not be equal, id is " + sourceID);
         }
         UIInformation uiInfo = null;
         try {
@@ -752,13 +752,23 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             }
         } catch (InvalidSettingsException ise) {
             LOGGER.debug("Could not load UI information for connection "
-                    + "between nodes " + sourceID + " and " + targetID);
+                    + "between nodes " + sourceID + " and " + destID);
         } catch (Throwable t) {
             LOGGER.warn("Exception while loading connection UI information "
-                    + "between nodes " + sourceID + " and " + targetID, t);
+                    + "between nodes " + sourceID + " and " + destID, t);
         }
-        return new ConnectionContainerTemplate(sourceID, sourcePort, targetID,
-                targetPort, uiInfo);
+        return new ConnectionContainerTemplate(sourceID, sourcePort, destID,
+                destPort, uiInfo);
+    }
+    
+    protected int loadConnectionDestID(final NodeSettingsRO settings) 
+        throws InvalidSettingsException {
+        return settings.getInt("targetID");
+    }
+    
+    protected int loadConnectionDestPort(final NodeSettingsRO settings) 
+    throws InvalidSettingsException {
+        return settings.getInt("targetPort");
     }
     
     protected NodeSettingsRO loadSettingsForNodes(final NodeSettingsRO set)

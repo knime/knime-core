@@ -90,6 +90,20 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         super.loadUIInfoSettings(uiInfo, subSettings);
     }
     
+    /** {@inheritDoc} */
+    @Override
+    protected int loadConnectionDestID(NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        return settings.getInt("destID");
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected int loadConnectionDestPort(NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        return settings.getInt("destPort");
+    }
+    
     protected NodeSettingsRO loadInPortsSetting(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         if (settings.containsKey("meta_in_ports")) {
@@ -329,27 +343,27 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     protected void saveConnection(final NodeSettingsWO settings,
             final ConnectionContainer connection) {
         int sourceID = connection.getSource().getIndex();
-        int targetID = connection.getDest().getIndex();
+        int destID = connection.getDest().getIndex();
         switch (connection.getType()) {
         case WFMIN:
             sourceID = -1;
             break;
         case WFMOUT:
-            targetID = -1;
+            destID = -1;
             break;
         case WFMTHROUGH:
             sourceID = -1;
-            targetID = -1;
+            destID = -1;
             break;
         default:
             // all handled above
         }
-        settings.addInt(KEY_SOURCE_ID, sourceID);
-        settings.addInt(KEY_TARGET_ID, targetID);
+        settings.addInt("sourceID", sourceID);
+        settings.addInt("destID", destID);
         int sourcePort = connection.getSourcePort();
-        settings.addInt(KEY_SOURCE_PORT, sourcePort);
+        settings.addInt("sourcePort", sourcePort);
         int targetPort = connection.getDestPort();
-        settings.addInt(KEY_TARGET_PORT, targetPort);
+        settings.addInt("destPort", targetPort);
         UIInformation uiInfo = connection.getUIInfo();
         if (uiInfo != null) {
             saveUIInfoClassName(settings, uiInfo);

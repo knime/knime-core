@@ -445,6 +445,7 @@ public final class WorkflowManager extends NodeContainer {
         NodeContainer destNC;
         synchronized (m_dirtyWorkflow) {
             if (!canAddConnection(source, sourcePort, dest, destPort)) {
+                canAddConnection(source, sourcePort, dest, destPort);
                 throw new IllegalArgumentException("Can not add connection!");
             }
             sourceNC = m_nodes.get(source);
@@ -521,6 +522,9 @@ public final class WorkflowManager extends NodeContainer {
     public boolean canAddConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort) {
+        if (source == null || dest == null) {
+            return false;
+        }
         // get NodeContainer for source/dest - can be null for WFM-connections!
         NodeContainer sourceNode = m_nodes.get(source);
         NodeContainer destNode = m_nodes.get(dest);
@@ -2084,9 +2088,9 @@ public final class WorkflowManager extends NodeContainer {
                 dest = translationMap.get(destSuffix);
                 source = translationMap.get(sourceSuffix);
             }
-            if (source == null || dest == null) {
-                LOGGER.warn("Unable to insert connection \"" + c
-                        + "\", one of the nodes does not exist in the flow");
+            if (!canAddConnection(
+                    source, c.getSourcePort(), dest, c.getDestPort())) {
+                LOGGER.warn("Unable to insert connection \"" + c + "\"");
                 continue;
             }
             ConnectionContainer cc = addConnection(

@@ -81,6 +81,7 @@ public interface NodePersistor {
     File getNodeDirectory();
     boolean isConfigured();
     boolean isExecuted();
+    boolean hasContent();
     File getNodeInternDirectory();
     MemoryPolicy getMemoryPolicy();
     NodeSettingsRO getNodeModelSettings();

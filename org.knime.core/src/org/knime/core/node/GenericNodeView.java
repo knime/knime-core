@@ -513,7 +513,7 @@ public abstract class GenericNodeView<T extends GenericNodeModel> {
              * {@inheritDoc}
              */
             public void run() {
-                if (!m_nodeModel.isExecuted() && m_noDataComp != null) {
+                if (!m_nodeModel.hasContent() && m_noDataComp != null) {
                     setComponentIntern(m_noDataComp);
                     m_componentSet = false;
                 } else {

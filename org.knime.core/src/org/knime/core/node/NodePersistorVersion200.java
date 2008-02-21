@@ -79,6 +79,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         final File nodeDir = nodeFile.getParentFile();
         saveCustomName(node, settings);
         node.saveSettingsTo(settings);
+        saveHasContent(node, settings);
         saveNodeMessage(node, settings);
         File nodeInternDir = getNodeInternDirectory(nodeDir);
         if (nodeInternDir.exists()) {
@@ -210,6 +211,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         content.save(directory, exec);
     }
     
+    protected void saveHasContent(final Node node, 
+            final NodeSettingsWO settings) {
+        boolean hasContent = node.hasContent();
+        settings.addBoolean("hasContent", hasContent);
+    }
+    
     protected void saveNodeMessage(final Node node,
             final NodeSettingsWO settings) {
         NodeMessage message = node.getNodeMessage();
@@ -235,6 +242,13 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     protected boolean loadIsExecuted(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return false;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected boolean loadHasContent(NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        return settings.getBoolean("hasContent");
     }
     
     /** {@inheritDoc} */

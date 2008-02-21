@@ -252,10 +252,10 @@ public final class Node {
         m_model.setConfigured(loader.isConfigured());
         if (m_model.isAutoExecutable()) {
             // will be executed by workflow manager
-            m_model.setExecuted(false);
+            m_model.setHasContent(false);
         } else {
             boolean wasExecuted = loader.isExecuted();
-            m_model.setExecuted(wasExecuted);
+            m_model.setHasContent(wasExecuted);
         }
         m_nodeDir = loader.getNodeDirectory();
         m_message = loader.getNodeMessage();
@@ -473,6 +473,14 @@ public final class Node {
         return m_model.isAutoExecutable();
     }
     
+    /** Delegate method to node model.
+     * @return Whether the node model has (potentially) content to be displayed.
+     * @see GenericNodeModel#hasContent() 
+     */
+    boolean hasContent() {
+        return m_model.hasContent();
+    }
+    
     /**
      * Starts executing this node. If the node has been executed already, it
      * does nothing - just returns <code>true</code>.
@@ -532,8 +540,7 @@ public final class Node {
         // check for compatible input PortObjects
         for (int i = 0; i < inData.length; i++) {
             PortType thisType = m_model.getInPortType(i);
-            if (!(thisType.getPortObjectClass().isInstance(
-                    inData[i].getClass()))) {
+            if (!(thisType.getPortObjectClass().isInstance(inData[i]))) {
                 m_logger.error("Connection Error: Mismatch"
                         + " of input port types (port " + i + ").");
                 m_logger.error("  (Wanted: "
@@ -1284,7 +1291,7 @@ public final class Node {
 
     void loadInternals(final File internDir, final ExecutionMonitor exec)
         throws CanceledExecutionException {
-        if (m_model.isExecuted()) {
+        if (m_model.hasContent()) {
             try {
                 m_model.loadInternals(internDir, exec);
                 processModelWarnings();

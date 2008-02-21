@@ -68,8 +68,8 @@ public abstract class GenericNodeModel {
     /** Stores the result of the last call of <code>#configure()</code>. */
     private boolean m_configured;
 
-    /** Flag for the isExecuted state. */
-    private boolean m_executed;
+    /** Flag for the hasContent state. */
+    private boolean m_hasContent;
 
     /**
      * Flag to indicate that the node should be immediately executed when all
@@ -118,7 +118,7 @@ public abstract class GenericNodeModel {
 
         // model is not configured and not executed
         m_configured = false;
-        m_executed = false;
+        m_hasContent = false;
 
         // set initial array of HiLiteHandlers
         if (getNrInPorts() == 0) {
@@ -433,19 +433,18 @@ public abstract class GenericNodeModel {
             }
         }
 
-        setExecuted(true);
+        setHasContent(true);
         return outData;
     } // executeModel(PortObject[],ExecutionMonitor)
 
     /**
-     * Sets the isExecuted flag and fires a state change event.
-     * @param isExecuted Flag if this node is configured be executed or not.
+     * Sets the hasContent flag and fires a state change event.
+     * @param hasContent Flag if this node is configured be executed or not.
      */
-    final void setExecuted(final boolean isExecuted) {
-        assert !(isExecuted && !m_configured);
-        if (isExecuted != isExecuted()) {
-            // set the state flag to "executed"
-            m_executed = isExecuted;
+    final void setHasContent(final boolean hasContent) {
+        assert !(hasContent && !m_configured);
+        if (hasContent != hasContent()) {
+            m_hasContent = hasContent;
             // and inform all views about the new model
             stateChanged();
         }
@@ -456,7 +455,7 @@ public abstract class GenericNodeModel {
      * @param isConfigured Flag if this node is configured or not.
      */
     final void setConfigured(final boolean isConfigured) {
-        assert !(m_executed && !isConfigured);
+        assert !(m_hasContent && !isConfigured);
         if (isConfigured != isConfigured()) {
             // set the state flag to "configured"
             m_configured = isConfigured;
@@ -465,17 +464,12 @@ public abstract class GenericNodeModel {
     }
 
     /**
-     * Returns <code>true</code> if this model has been executed otherwise
-     * <code>false</code>.
-     *
-     * @return <code>true</code> if the node was execute otherwise
-     *         <code>false</code>.
-     *
-     * @see #executeModel(PortObject[],ExecutionContext)
-     * @see #resetModel()
+     * @return <code>true</code> if this model has been executed and therefore
+     * possibly has content that can be displayed in a view, 
+     * <code>false</code> otherwise.
      */
-    final boolean isExecuted() {
-        return m_executed;
+    final boolean hasContent() {
+        return m_hasContent;
     }
 
     /**
@@ -532,7 +526,7 @@ public abstract class GenericNodeModel {
             m_logger.coding("Reset failed due to a " + name, t);
         } finally {
             // set state to not executed and not configured
-            m_executed = false;
+            m_hasContent = false;
             m_configured = false;
             // reset these property handlers
             resetHiLiteHandlers();
