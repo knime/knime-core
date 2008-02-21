@@ -643,8 +643,7 @@ public final class Node {
             } else {
                 // TODO save them, don't simply hand them over!
                 m_outPorts[p].setPortObject(newOutData[p], this);
-                // TODO we simply leave the spec from the previous "configure"
-                // Correct??
+                m_outPorts[p].setPortObjectSpec(newOutData[p].getSpec());
             }
             m_outPorts[p].setHiLiteHandler(m_model.getOutHiLiteHandler(p));
             m_outPorts[p].setScopeContextStackContainer(

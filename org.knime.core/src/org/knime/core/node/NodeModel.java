@@ -170,6 +170,9 @@ public abstract class NodeModel extends GenericNodeModel {
         final ModelContentRO getModelContent() {
             return m_hiddenModel;
         }
+        public ModelContentWrapper getSpec() {
+            return this;
+        }
         
         static PortObjectSerializer<ModelContentWrapper> getPortObjectSerializer() {
             return new PortObjectSerializer<ModelContentWrapper>() {
@@ -181,7 +184,7 @@ public abstract class NodeModel extends GenericNodeModel {
                     return new ModelContentWrapper(cnt);
                 }
 
-                protected void savePortObject(ModelContentWrapper o,
+                protected void savePortObject(final ModelContentWrapper o,
                         final File directory, final ExecutionMonitor c)
                         throws IOException, CanceledExecutionException {
                     o.m_hiddenModel.save(directory, c);
@@ -202,7 +205,7 @@ public abstract class NodeModel extends GenericNodeModel {
                     return new ModelContentWrapper(cnt);
                 }
                 
-                protected void savePortObjectSpec(ModelContentWrapper o,
+                protected void savePortObjectSpec(final ModelContentWrapper o,
                         final File directory) throws IOException {
                     try {
                         o.m_hiddenModel.save(directory, new ExecutionMonitor());

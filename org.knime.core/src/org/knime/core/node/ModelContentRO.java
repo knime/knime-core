@@ -31,7 +31,8 @@ import org.knime.core.node.config.ConfigRO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public interface ModelContentRO extends ConfigRO, ModelPortObject {
+public interface ModelContentRO 
+        extends ConfigRO, ModelPortObject, ModelPortObjectSpec {
 
     /**
      * Returns a read-only <code>ModelContentRO</code> object from this config.

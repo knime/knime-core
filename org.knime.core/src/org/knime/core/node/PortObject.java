@@ -63,13 +63,13 @@ import org.knime.core.internal.SerializerMethodLoader.Serializer;
  * @see PortType
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
-public interface PortObject {
+public interface PortObject {   
     
     /** Factory class that's used for writing and loading objects of class 
      * denoted by <code>T</code>. See description of class {@link PortObject}
      * for details.
      * @param <T> class of the object to save or load. */
-    static abstract class PortObjectSerializer<T extends PortObject> 
+    abstract static class PortObjectSerializer<T extends PortObject> 
         implements Serializer<T> {
         
         /** Saves the portObject to a directory location.
@@ -94,4 +94,16 @@ public interface PortObject {
                 final File directory, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException;
     }
+    
+    /**
+     * This method has to be implemented by all derived classes. It returns the
+     * corresponding {@link PortObjectSpec} which is used to configure any 
+     * successor node after execution, e.g. a <code>DataTable</code> can return
+     * a <code>DataTableSpec</code>. Make sure that the {@link PortType}
+     * defines the correct type based on the same <code>PortObjectSpec</code>
+     * as returned by this method.
+     * @return underlying <code>PortObjectSpec</code> or any derived spec
+     */
+    PortObjectSpec getSpec();
+    
 }

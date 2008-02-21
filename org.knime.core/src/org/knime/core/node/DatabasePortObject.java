@@ -39,6 +39,7 @@ import org.knime.core.data.container.ContainerTable;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DatabasePortObject implements PortObject {
+    
 
     /**
      * Database port type formed <code>PortObjectSpec.class</code> and 
@@ -47,6 +48,18 @@ public class DatabasePortObject implements PortObject {
     public static final PortType TYPE = 
         new PortType(DatabasePortObjectSpec.class, DatabasePortObject.class);
     
+    /**
+     * {@inheritDoc}
+     */
+    public DatabasePortObjectSpec getSpec() {
+        if (m_data == null) {
+            return new DatabasePortObjectSpec(null, m_conn);
+        } else {
+            return new DatabasePortObjectSpec(
+                    m_data.getDataTableSpec(), m_conn);
+        }
+    }
+
     private final DataTable m_data;
     
     private final ModelContentRO m_conn;

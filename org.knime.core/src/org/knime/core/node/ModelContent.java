@@ -59,6 +59,13 @@ public class ModelContent extends Config
     }
     
     /**
+     * {@inheritDoc}
+     */
+    public PortObjectSpec getSpec() {
+        return this;
+    }
+    
+    /**
      * Creates new content object. 
      * @param key The key for this ModelContent.
      */

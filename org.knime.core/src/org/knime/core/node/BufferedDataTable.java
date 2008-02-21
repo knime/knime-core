@@ -240,6 +240,14 @@ public final class BufferedDataTable implements DataTable, PortObject {
     public DataTableSpec getDataTableSpec() {
         return m_delegate.getDataTableSpec();
     }
+    
+    /**
+     * {@inheritDoc}
+     * @see #getDataTableSpec()
+     */
+    public DataTableSpec getSpec() {
+        return getDataTableSpec();
+    }
 
     /**
      * {@inheritDoc}
