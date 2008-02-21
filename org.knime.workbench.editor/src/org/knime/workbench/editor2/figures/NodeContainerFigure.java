@@ -313,6 +313,9 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     public String wrapText(final String text) {
+        if (text == null || text.length() == 0) {
+            return "";
+        }
         // wrap the text with line breaks if too long
         // we split just one time (i.e. two lines at most)
         if (text.trim().length() < 20) {
