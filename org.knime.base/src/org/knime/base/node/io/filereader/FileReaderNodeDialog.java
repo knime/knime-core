@@ -24,6 +24,7 @@
  */
 package org.knime.base.node.io.filereader;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
@@ -57,6 +58,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
@@ -77,13 +79,16 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.tableview.TableView;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
+import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.workflow.NodeProgressEvent;
+import org.knime.core.node.workflow.NodeProgressListener;
 import org.knime.core.util.FileReaderFileFilter;
+import org.knime.core.util.MutableBoolean;
 
 /**
  *
@@ -93,6 +98,9 @@ import org.knime.core.util.FileReaderFileFilter;
  * ComboBox (because we need to remove it and add it again from time to time.
  */
 class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
+
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(FileReaderNodeDialog.class);
 
     private static final int HORIZ_SPACE = 10;
 
@@ -109,10 +117,16 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     new Delimiter("\t", false, false, false),
                     new Delimiter(";", false, false, false)};
 
+    // max size of files that will be analyzed automatically
+    private static final long AUTO_TRIGGER_SIZE = 500000;
+
+    // if analyze is faster than that we automatically do it
+    private static final long AUTO_TRIGGER_TIME = 1000;
+
     /*
      * the settings object holding the current state of all settings. The
      * components immediately write their state into this object. There is a
-     * load function transfering the settings from this object into the
+     * load function transferring the settings from this object into the
      * component.
      */
     private FileReaderNodeSettings m_frSettings;
@@ -137,7 +151,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      */
     private ColProperty m_firstColProp;
 
-    /* flag to break recusrion */
+    /* flag to break recursion */
     private boolean m_insideLoadDelim;
 
     private boolean m_insideDelimChange;
@@ -158,6 +172,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
     private boolean m_insideLoadColHdr;
 
+    /* if false, dialog waits for user action to analyze file */
+    private boolean m_autoAnalyze;
+
     private JPanel m_dialogPanel;
 
     private JCheckBox m_ignoreWS;
@@ -172,7 +189,27 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
     private JLabel m_analyzeWarn;
 
+    private JPanel m_previewPanel;
+
+    private JPanel m_analysisPanel;
+
+    private JPanel m_previewArea;
+
     private FileReaderPreviewTable m_previewTable;
+
+    private final JButton m_analyzeButton = new JButton("Start Analysis");
+
+    private final JButton m_analyzeCancel = new JButton("Stop Analysis");
+
+    private final JLabel m_analyzeProgressMsg = new JLabel("");
+
+    private final MutableBoolean m_analysisRunning = new MutableBoolean(false);
+
+    private FileReaderExecutionMonitor m_analysisExecMonitor;
+
+    private JProgressBar m_analyzeProgressBar;
+
+    private JCheckBox m_preserveSettings;
 
     /**
      * Creates a new file reader dialog pane.
@@ -188,6 +225,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         m_insideColHdrChange = false;
         m_insideLoadRowHdr = false;
         m_insideRowHdrChange = false;
+        m_autoAnalyze = false;
+        m_analysisExecMonitor = null;
 
         m_prevWhiteSpaces = null;
 
@@ -198,8 +237,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         m_dialogPanel.add(createFileNamePanel());
         m_dialogPanel.add(createSettingsPanel());
-        m_dialogPanel.add(createPreviewPanel());
-
+        m_previewArea = createPreviewArea();
+        m_dialogPanel.add(m_previewArea);
         m_dialogPanel.add(Box.createVerticalGlue());
         super.addTab("Settings", m_dialogPanel);
     }
@@ -235,10 +274,29 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
         fileBox.add(browse);
         fileBox.add(Box.createHorizontalStrut(HORIZ_SPACE));
-        fileBox.add(Box.createVerticalStrut(70));
+        fileBox.add(Box.createVerticalStrut(50));
         fileBox.add(Box.createHorizontalGlue());
 
+        // the checkbox for preserving the current settings on file change
+        Box preserveBox = Box.createHorizontalBox();
+        m_preserveSettings =
+                new JCheckBox("Preserve user settings for new location");
+        m_preserveSettings.setToolTipText("if not checked, the settings you"
+                + " have set are reset, if a new location is entered");
+        m_preserveSettings.setSelected(false);
+        m_preserveSettings.setEnabled(true);
+        m_preserveSettings.addItemListener(new ItemListener() {
+            public void itemStateChanged(final ItemEvent e) {
+                m_frSettings.setPreserveSettings(m_preserveSettings
+                        .isSelected());
+            }
+        });
+        preserveBox.add(Box.createHorizontalGlue());
+        preserveBox.add(m_preserveSettings);
+        preserveBox.add(Box.createHorizontalGlue());
+
         panel.add(fileBox);
+        panel.add(preserveBox);
         panel.setMaximumSize(new Dimension(PANEL_WIDTH, 70));
         panel.setMinimumSize(new Dimension(PANEL_WIDTH, 70));
 
@@ -249,8 +307,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         m_urlCombo.addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(final FocusEvent e) {
-                // analyze file on focus lost.
-                analyzeDataFileAndUpdatePreview(false);
+                fileLocationChanged();
             }
         });
         Component editor = m_urlCombo.getEditor().getEditorComponent();
@@ -279,11 +336,37 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                                 .toString(), false);
                 if (newFile != null) {
                     m_urlCombo.setSelectedItem(newFile);
-                    analyzeDataFileAndUpdatePreview(false);
+//                    fileLocationChanged();
                 }
             }
         });
         return panel;
+    }
+
+    /*
+     * Stores the new location in the settings object, sets default settings,
+     * and starts analysis if needed.
+     */
+    private void fileLocationChanged() {
+        try {
+            boolean fileChanged = takeOverNewFileLocation();
+
+            if (fileChanged) {
+                m_autoAnalyze =
+                        alwaysAnalyze(m_frSettings.getDataFileLocation());
+                if (!m_frSettings.getPreserveSettings()) {
+                    resetSettings();
+                }
+            }
+            // analyze file on focus lost.
+            analyzeDataFileAndUpdatePreview(fileChanged);
+
+        } catch (final InvalidSettingsException e) {
+            // leave settings unchanged.
+            setErrorLabelText("Malformed URL '"
+                    + m_urlCombo.getEditor().getItem() + "'.");
+            setPreviewTable(null);
+        }
     }
 
     /**
@@ -299,8 +382,77 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     public void itemStateChanged(final ItemEvent e) {
         if ((e.getSource() == m_urlCombo)
                 && (e.getStateChange() == ItemEvent.SELECTED)) {
-            analyzeDataFileAndUpdatePreview(false);
+            fileLocationChanged();
         }
+    }
+
+    private JPanel createPreviewArea() {
+
+        // the panel for the preview table
+        m_previewPanel = createPreviewPanel();
+        // the panel for the analyze button and stuff
+        m_analysisPanel = createAnalysisPanel();
+
+        JPanel result = new JPanel();
+        result.setLayout(new BorderLayout());
+        result.add(m_previewPanel, BorderLayout.CENTER);
+        return result;
+    }
+
+    private JPanel createAnalysisPanel() {
+        m_analyzeButton.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                m_analyzeButton.setEnabled(false);
+                analyzeAction();
+            }
+        });
+        m_analyzeButton.setEnabled(false);
+
+        m_analyzeCancel.addActionListener(new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                m_analyzeCancel.setEnabled(false);
+                m_analyzeCancel.setText("Wrapping up");
+                m_analysisExecMonitor.getProgressMonitor().setExecuteCanceled();
+            }
+        });
+        m_analyzeCancel.setEnabled(false);
+
+        m_analyzeProgressBar = new JProgressBar();
+        m_analyzeProgressBar.setIndeterminate(false);
+        m_analyzeProgressBar.setStringPainted(false);
+        m_analyzeProgressBar.setValue(0);
+
+        Box msgBox = Box.createHorizontalBox();
+        msgBox.add(Box.createVerticalStrut(25));
+        msgBox.add(m_analyzeProgressMsg);
+        msgBox.add(Box.createGlue());
+
+        Box progressBox = Box.createVerticalBox();
+        progressBox.add(msgBox);
+        progressBox.add(Box.createVerticalStrut(3));
+        progressBox.add(m_analyzeProgressBar);
+
+        Box buttonBox = Box.createHorizontalBox();
+        buttonBox.add(m_analyzeButton);
+        buttonBox.add(Box.createHorizontalStrut(7));
+        buttonBox.add(m_analyzeCancel);
+
+        Box allBox = Box.createVerticalBox();
+        allBox.add(buttonBox);
+        allBox.add(Box.createVerticalStrut(5));
+        allBox.add(progressBox);
+
+        Box hBox = Box.createHorizontalBox();
+        hBox.add(Box.createGlue());
+        hBox.add(Box.createGlue());
+        hBox.add(allBox);
+        hBox.add(Box.createGlue());
+        hBox.add(Box.createGlue());
+
+        JPanel result = new JPanel();
+        result.setLayout(new BorderLayout());
+        result.add(hBox, BorderLayout.NORTH);
+        return result;
     }
 
     private JPanel createPreviewPanel() {
@@ -472,9 +624,11 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     public void changedUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
+
                     public void insertUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
+
                     public void removeUpdate(final DocumentEvent e) {
                         commentSettingsChanged();
                     }
@@ -933,6 +1087,11 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
+
+        /*
+         * TODO: We need to synchronize the NodeSettings object
+         */
+
         if (SwingUtilities.isEventDispatchThread()) {
             loadSettingsFromInternal(settings, specs);
         } else {
@@ -943,11 +1102,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     }
                 });
             } catch (InterruptedException ie) {
-                NodeLogger.getLogger(getClass()).warn(
-                        "Exception while setting new table.", ie);
+                LOGGER.warn("Exception while setting new table.", ie);
             } catch (InvocationTargetException ite) {
-                NodeLogger.getLogger(getClass()).warn(
-                        "Exception while setting new table.", ite);
+                LOGGER.warn("Exception while setting new table.", ite);
             }
         }
     }
@@ -1027,7 +1184,19 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
 
-        saveSettings();
+        /*
+         * TODO: We need to synchronize the NodeSettings object
+         */
+
+        // if no valid settings exist, we need to analyze the file.
+        if (m_frSettings.getNumberOfColumns() < 0) {
+            setErrorLabelText("Waiting for file analysis to finish..."
+                    + "Click \"Stop\" to cut it short.");
+
+            waitForAnalyzeAction();
+            // the analysis thread should override the error label
+        }
+
         String errLabel = getErrorLabelText();
         if ((errLabel != null) && (errLabel.trim().length() > 0)) {
             throw new InvalidSettingsException("With the current settings"
@@ -1039,146 +1208,432 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     + m_previewTable.getErrorLine() + "): "
                     + m_previewTable.getErrorMsg());
         }
-        // file existence is not checked during model#loadsettings. Do it here.
+
+        FileReaderNodeSettings settingsToSave = m_frSettings;
+
+        /*
+         * if an analysis is currently running we ask the user what to do
+         */
+        synchronized (m_analysisRunning) {
+            if (m_analysisRunning.booleanValue()) {
+                // quickly create a clone of the current settings before it
+                // finishes
+                FileReaderNodeSettings clone =
+                        new FileReaderNodeSettings(m_frSettings);
+                if (JOptionPane.showOptionDialog(getPanel(),
+                        "A file analysis is currently running. "
+                                + "Do you want to wait for it to "
+                                + "finish or use the " + "current settings?",
+                        "File Analysis Running", JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.QUESTION_MESSAGE, null, new String[]{
+                                "Use current settings, cancel analysis",
+                                "Wait for analysis to finish"},
+                        "Wait for analysis to finish") == 1) {
+                    throw new InvalidSettingsException(
+                            "Please check the settings"
+                                    + "after analysis finishes and "
+                                    + "click OK or Apply again");
+                }
+                // stop it.
+                m_analysisExecMonitor.setExecuteInterrupted();
+
+                settingsToSave = clone;
+            }
+
+        }
+
+        // transfers the URL from the textfield into the setting object
+        saveSettings(settingsToSave);
+
+        // file existence is not checked during model#loadSettings. Do it here.
         Reader reader = null;
         try {
-            reader = m_frSettings.createNewInputReader();
+            reader = settingsToSave.createNewInputReader();
             if (reader == null) {
-                throw new InvalidSettingsException(
-                        "I/O Error while accessing '"
-                                + m_frSettings.getDataFileLocation().toString()
-                                + "'.");
+                throw new InvalidSettingsException("I/O Error while "
+                        + "accessing '"
+                        + settingsToSave.getDataFileLocation().toString()
+                        + "'.");
             }
         } catch (Exception ioe) {
             throw new InvalidSettingsException("I/O Error while accessing '"
-                    + m_frSettings.getDataFileLocation().toString() + "'.");
+                    + settingsToSave.getDataFileLocation().toString() + "'.");
         }
-
         try {
             reader.close();
         } catch (IOException ioe) {
             // then don't close it.
         }
 
-        m_frSettings.saveToConfiguration(settings);
+        settingsToSave.saveToConfiguration(settings);
+
+    }
+
+    /*
+     * Reads the entered file location from the edit field and stores the new
+     * value in the settings object. Throws an exception if the entered URL is
+     * invalid. Returns true if the entered location (string) is different from
+     * the one previously set.
+     */
+    private boolean takeOverNewFileLocation() throws InvalidSettingsException {
+
+        URL newURL;
+
+        try {
+            newURL = textToURL(m_urlCombo.getEditor().getItem().toString());
+        } catch (Exception e) {
+            throw new InvalidSettingsException("Invalid URL entered.");
+        }
+
+        URL oldUrl = m_frSettings.getDataFileLocation();
+        String oldString = "";
+        if (oldUrl != null) {
+            oldString = oldUrl.toString();
+        }
+
+        m_frSettings.setDataFileLocationAndUpdateTableName(newURL);
+
+        return !oldString.equals(newURL.toString());
 
     }
 
     /**
      * Updates the preview table, if a new and valid URL was specified in the
-     * data file name textfield. It will override all current settings with the
-     * settings from the file analyzer and display the data file contents with
-     * these new settings. It will do this only when a new and valid URL is set;
-     * if its invalid it will just clear the preview leaving the settings
-     * unchanged, and if the URL is the same than in the global settings object
-     * it will not (re)analyze the data file (and thus not change settings).
-     * Unless the parameter forceAnalyze is set <code>true</code>.
+     * data file name text field or the force parameter is set true. It
+     * overrides all current settings with the settings from the file analyzer -
+     * except when the URL didn't changed and the user has explicitly set some
+     * values. For big files, it just shows a button to trigger analysis. The
+     * analysis runs in the background, and if it finishes it shows the new
+     * content of the file.
+     * <p>
+     * NOTE: May change the global settings object completely.
      *
-     * @param forceAnalyze forces the analysis of the datafile eventhough it
+     * @param forceAnalyze forces the analysis of the datafile even though it
      *            might be the one set in the global settings (and thus already
      *            being analyzed).
-     *            <p>
-     *            NOTE: May change the global settings object completely.
      *
      */
     protected void analyzeDataFileAndUpdatePreview(final boolean forceAnalyze) {
 
-        URL newURL;
+        if (forceAnalyze) {
 
-        // clear preview first.
+            // errors are from previous runs
+            setErrorLabelText("");
 
-        try {
-            newURL = textToURL(m_urlCombo.getEditor().getItem().toString());
-        } catch (Exception e) {
-            // leave settings unchanged.
-            setErrorLabelText("Malformed URL '"
-                    + m_urlCombo.getEditor().getItem() + "'.");
+            // if an analysis is currently running we must cancel it first
+            synchronized (m_analysisRunning) {
+
+                // wait until we have a chance to run the analysis
+                while (m_analysisRunning.booleanValue()) {
+                    // kill off any other analysis
+                    // we are the only and truly one
+                    m_analysisExecMonitor.setExecuteInterrupted();
+                    // wait until it finishes
+                    try {
+                        m_analysisRunning.wait();
+                    } catch (InterruptedException ie) {
+                        // huh?!?
+                    }
+                }
+
+                if (!m_autoAnalyze) {
+                    // invalidate the current settings
+                    m_frSettings.setNumberOfColumns(-1);
+                    showAnalyzeButton();
+                } else {
+                    analyzeAction();
+                }
+            }
+
+        } else {
+
+            updatePreview();
+        }
+    }
+
+    /*
+     * Places the analyze button, progress bar etc. in the preview table area
+     */
+    private void showAnalyzeButton() {
+
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            public void run() {
+                // first remove the preview panel
+                m_previewArea.remove(m_previewPanel);
+                // show the analyze button
+                m_previewArea.add(m_analysisPanel);
+                // enable button!!
+                m_analyzeButton.setEnabled(true);
+                m_analyzeCancel.setText("Stop Analysis");
+                m_analyzeCancel.setEnabled(false);
+                m_analyzeProgressMsg.setText("");
+                m_analyzeProgressBar.setValue(0);
+                getPanel().revalidate();
+                getPanel().repaint();
+            }
+        });
+    }
+
+    /*
+     * places the preview table component in it designated panel
+     */
+    private void showPreviewTable() {
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            public void run() {
+                // first remove the analysis panel
+                m_previewArea.remove(m_analysisPanel);
+                // show preview table
+                m_previewArea.add(m_previewPanel);
+                getPanel().revalidate();
+                getPanel().repaint();
+            }
+        });
+    }
+
+    /**
+     * If an analysis is currently running it will interrupt it (which causes
+     * any analysis results to be discarded). If no analysis is running this
+     * method does nothing. The method returns immediately (and doesn't wait for
+     * the analysis to finish). It does try to aquire the "m_analysisRunning"
+     * lock!
+     */
+    private void interruptAnalysis() {
+        synchronized (m_analysisRunning) {
+            if (m_analysisRunning.booleanValue()) {
+                m_analysisExecMonitor.setExecuteInterrupted();
+            }
+        }
+    }
+
+    /**
+     * If no analysis is running it triggers one and waits until its done,
+     * otherwise it just waits for the running analysis to finish.
+     */
+    protected void waitForAnalyzeAction() {
+        synchronized (m_analysisRunning) {
+            if (!m_analysisRunning.booleanValue()) {
+                analyzeAction();
+            }
+            try {
+                m_analysisRunning.wait();
+            } catch (InterruptedException ie) {
+                // do nothing.
+            }
+        }
+    }
+
+    /**
+     * triggers analysis.
+     */
+    protected void analyzeAction() {
+
+        synchronized (m_analysisRunning) {
+            // wait until we have a chance to run the analysis
+            while (m_analysisRunning.booleanValue()) {
+                LOGGER.error("Internal error: Re-entering analysis thread - "
+                        + "canceling it - waiting for it to finish...");
+                m_analysisExecMonitor.setExecuteInterrupted();
+                // wait until it finishes
+                try {
+                    m_analysisRunning.wait();
+                    LOGGER.error("Alright - continuing with new analysis...");
+                } catch (InterruptedException ie) {
+                    // huh?!?
+                }
+            }
+
+            // Create execution context for progress and cancellations
+            // We use our own progress monitor, we need to distinguish
+            // between user cancel and code interrupts.
+            m_analysisExecMonitor = new FileReaderExecutionMonitor();
+            m_analysisExecMonitor.getProgressMonitor().addProgressListener(
+                    new NodeProgressListener() {
+                        public void progressChanged(
+                                final NodeProgressEvent pEvent) {
+                            if (pEvent.getNodeProgress().getMessage() != null) {
+                                ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+                                    public void run() {
+                                        Double p =
+                                                pEvent.getNodeProgress()
+                                                        .getProgress();
+                                        if (p == null) {
+                                            p = new Double(0.0);
+                                        }
+                                        m_analyzeProgressMsg
+                                                .setText(pEvent
+                                                        .getNodeProgress()
+                                                        .getMessage());
+                                        m_analyzeProgressBar.setValue((int)Math
+                                                .round(100 * p.doubleValue()));
+                                        getPanel().revalidate();
+                                        getPanel().repaint();
+                                    }
+                                });
+                            }
+                        }
+                    });
+
+            // the analysis thread, when finished, clears this flag.
+            m_analysisRunning.setValue(true);
+            // allow for cancellations from now on
+            m_analyzeCancel.setEnabled(true);
             setPreviewTable(null);
-            return;
+            setErrorLabelText("");
+
         }
 
-        if (forceAnalyze
-                || !newURL.equals(m_frSettings.getDataFileLocation())) {
+        // clone current settings
+        FileReaderNodeSettings newFRSettings =
+                new FileReaderNodeSettings(m_frSettings);
 
-            // get new settings from the analyzer
+        Vector<ColProperty> oldColProps = m_frSettings.getColumnProperties();
 
-            if (!newURL.equals(m_frSettings.getDataFileLocation())) {
-                // start from scratch
-                FileReaderNodeSettings newFRNS = new FileReaderNodeSettings();
-                newFRNS.setDataFileLocationAndUpdateTableName(newURL);
-                try {
-                    m_frSettings = FileAnalyzer.analyze(newFRNS);
-                    if (!m_frSettings.analyzeUsedAllRows()) {
-                        setAnalWarningText("WARNING: suggested settings are "
-                                + "based on a partial file analysis only! "
-                                + "Please verify.");
-                    } else {
-                        setAnalWarningText("");
-                    }
-                } catch (IOException ioe) {
-                    setErrorLabelText("Can't access '" + newURL + "'");
-                    setPreviewTable(null);
-                    return;
-                } catch (FileTokenizerException fte) {
-                    String msg = fte.getMessage();
-                    if ((msg == null) || (msg.length() == 0)) {
-                        msg = "Invalid Settings: No error message, sorry.";
-                    }
-                    setErrorLabelText(msg);
-                    setPreviewTable(null);
-                    return;
-                }
-            } else {
-                // keep the old user settings - just blow away generated names
-                // and number of cols.
-                Vector<ColProperty> oldColProps =
-                        m_frSettings.getColumnProperties();
-
-                // prepare the settings object for re-analysis
-                m_frSettings.setNumberOfColumns(-1);
-                Vector<ColProperty> newProps = new Vector<ColProperty>();
-                if (oldColProps != null) {
-                    for (ColProperty cProp : oldColProps) {
-                        // take over only the ones modified by the user
-                        if ((cProp != null) && (cProp.getUserSettings())) {
-                            newProps.add(cProp);
-                        } else {
-                            newProps.add(null);
-                        }
-                    }
-                }
-                m_frSettings.setColumnProperties(newProps);
-                m_frSettings.setDataFileLocationAndUpdateTableName(newURL);
-                try {
-                    m_frSettings = FileAnalyzer.analyze(m_frSettings);
-                    if (!m_frSettings.analyzeUsedAllRows()) {
-                        setAnalWarningText("WARNING: suggested settings are "
-                                + "based on a partial file analysis only! "
-                                + "Please verify.");
-                    } else {
-                        setAnalWarningText("");
-                    }
-                } catch (IOException ioe) {
-                    m_frSettings.setColumnProperties(oldColProps);
-                    setErrorLabelText("Can't access '" + newURL + "'");
-                    setPreviewTable(null);
-                    return;
-                } catch (FileTokenizerException fte) {
-                    String msg = fte.getMessage();
-                    if ((msg == null) || (msg.length() == 0)) {
-                        msg = "Invalid Settings: No error message, sorry.";
-                    }
-                    setErrorLabelText(msg);
-                    setPreviewTable(null);
-                    return;
+        // prepare the settings object for re-analysis
+        newFRSettings.setNumberOfColumns(-1);
+        Vector<ColProperty> newProps = new Vector<ColProperty>();
+        if (oldColProps != null) {
+            for (ColProperty cProp : oldColProps) {
+                // take over only the ones modified by the user
+                if ((cProp != null) && (cProp.getUserSettings())) {
+                    newProps.add(cProp);
+                } else {
+                    newProps.add(null);
                 }
             }
         }
+        newFRSettings.setColumnProperties(newProps);
 
-        loadSettings(false);
+        analyzeInThread(newFRSettings);
 
-        updatePreview();
+    }
 
+    /**
+     * Triggers analysis and returns. After analysis is done, settings are
+     * loaded and the preview is shown.
+     */
+    private void analyzeInThread(final FileReaderNodeSettings userSettings) {
+
+        String threadName = "FileReaderAnalyze";
+        // go!
+        new Thread(new Runnable() {
+            public void run() {
+
+                try {
+                    // take the time how long it takes to analyze this file
+                    long analTime = System.currentTimeMillis();
+
+                    // analyze the file now.
+                    FileReaderNodeSettings newSettings =
+                            FileAnalyzer.analyze(userSettings,
+                                    m_analysisExecMonitor);
+
+                    analTime = System.currentTimeMillis() - analTime;
+
+                    if (m_analysisExecMonitor.wasInterrupted()) {
+                        // if the code stopped us, do nothing more
+                        return;
+                    }
+
+                    // if it finished fast enough always analyze this file
+                    if (!m_analysisExecMonitor.wasCanceled()) {
+                        m_autoAnalyze = (analTime < AUTO_TRIGGER_TIME);
+                    }
+
+                    if (m_analysisExecMonitor.wasCanceled()) {
+                        /*
+                         * if user canceled and we did get an result back from
+                         * analyze we could use these settings after partial
+                         * analysis
+                         */
+                        if (newSettings != null) {
+                            setAnalWarningText("WARNING: suggested settings "
+                                    + "are based on a partial file analysis "
+                                    + "only! Please verify.");
+                        }
+                    } else {
+                        setAnalWarningText("");
+                    }
+
+                    if ((newSettings != null)
+                            && !m_analysisExecMonitor.wasInterrupted()) {
+
+                        m_frSettings = newSettings;
+
+                        loadSettings(false); // false = don't load URL
+
+                        updatePreview();
+                    }
+
+                } catch (IOException ioe) {
+                    setPreviewTable(null);
+                    String msg = ioe.getMessage();
+                    if ((msg == null) || (msg.length() == 0)) {
+                        msg = "No details, sorry.";
+                    }
+                    updatePreview();
+                    setAnalWarningText("I/O Error while analyzing file: ");
+                    m_autoAnalyze = false;
+                    return;
+                } catch (FileTokenizerException fte) {
+                    updatePreview();
+                    String msg = fte.getMessage();
+                    if ((msg == null) || (msg.length() == 0)) {
+                        msg = "Invalid Settings: No error message, sorry.";
+                    }
+                    setErrorLabelText(msg);
+                    setPreviewTable(null);
+                    return;
+
+                } finally {
+
+                    synchronized (m_analysisRunning) {
+                        m_analysisExecMonitor = null;
+                        m_analysisRunning.setValue(false);
+
+                        // disable cancellations
+                        m_analyzeCancel.setEnabled(false);
+                        m_analyzeProgressMsg.setText("");
+                        m_analyzeProgressBar.setValue(0);
+
+                        // wake all threads waiting for us to finish.
+                        m_analysisRunning.notifyAll();
+                    }
+
+                }
+
+            };
+
+        }, threadName).start();
+
+    }
+
+    /**
+     * Tries to figure out if this data source can be always analyzed, without
+     * being triggered by the user. It looks at the size of the file - if
+     * determinable.
+     *
+     * @param location the URL to the source to check
+     * @return true if the data can be analyzed right away, false if the user
+     *         should trigger it.
+     */
+    private boolean alwaysAnalyze(final URL location) {
+        try {
+            BufferedFileReader bfr =
+                    BufferedFileReader.createNewReader(location);
+            long size = bfr.getFileSize();
+            bfr.close();
+
+            if (size == 0) {
+                // couldn't get a size - let the user trigger analyze
+                return false;
+            } else {
+                return (size < AUTO_TRIGGER_SIZE);
+            }
+
+        } catch (IOException ioe) {
+            // something went wrong - don't automatically analyze
+            return false;
+        }
     }
 
     /*
@@ -1194,6 +1649,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 || (m_frSettings.getDataFileLocation().equals(""))) {
             // if there is no data file specified display empty table
             setPreviewTable(null);
+            showPreviewTable();
             return;
         }
         FileReaderNodeSettings previewSettings =
@@ -1202,19 +1658,14 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         if (status.getNumOfErrors() > 0) {
             setErrorLabelText(status.getErrorMessage(0));
             setPreviewTable(null);
+            showPreviewTable();
             return;
         }
-
         DataTableSpec tSpec = previewSettings.createDataTableSpec();
         FileReaderPreviewTable newTable =
-            new FileReaderPreviewTable(tSpec, previewSettings, null);
-        newTable.addChangeListener(new ChangeListener() {
-            public void stateChanged(final ChangeEvent e) {
-                setErrorLabelText(m_previewTable.getErrorMsg(), m_previewTable
-                        .getErrorDetail());
-            }
-        });
+                new FileReaderPreviewTable(tSpec, previewSettings, null);
         setPreviewTable(newTable);
+        showPreviewTable();
     }
 
     /**
@@ -1225,12 +1676,29 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      */
     private void setPreviewTable(final FileReaderPreviewTable table) {
 
+        // register a listener for error messages with the new table
+        if (table != null) {
+            table.addChangeListener(new ChangeListener() {
+                public void stateChanged(final ChangeEvent e) {
+                    if (m_previewTable != null) {
+                        setErrorLabelText(m_previewTable.getErrorMsg(),
+                                m_previewTable.getErrorDetail());
+                    }
+                }
+            });
+        }
+
+        // set the new table in the view
         m_previewTableView.setDataTable(table);
 
+        // properly dispose of the old table
         if (m_previewTable != null) {
+            m_previewTable.removeAllChangeListeners();
             m_previewTable.dispose();
         }
+
         m_previewTable = table;
+
     }
 
     /*
@@ -1248,14 +1716,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         }
 
         // create a clone of the specified settings object.
-        NodeSettings nso = new NodeSettings("TempForCloningSettings");
-        settings.saveToConfiguration(nso);
-        FileReaderNodeSettings result;
-        try {
-            result = new FileReaderNodeSettings(nso);
-        } catch (InvalidSettingsException ise) {
-            return null;
-        }
+
+        FileReaderNodeSettings result = new FileReaderNodeSettings(settings);
 
         int numCols = result.getNumberOfColumns();
         Vector<ColProperty> colProps = result.getColumnProperties();
@@ -1307,6 +1769,20 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     }
 
     /*
+     * replaces the member m_frSettings with a settings object holding default
+     * values - EXCEPT FOR the file location which is taken over from the old
+     * settings object. Loads the new settings into the dialog components.
+     */
+    private void resetSettings() {
+        FileReaderNodeSettings newSettings = new FileReaderNodeSettings();
+        newSettings.setDataFileLocationAndUpdateTableName(m_frSettings
+                .getDataFileLocation());
+        m_frSettings = newSettings;
+        // don't load location - don't trigger analysis
+        loadSettings(false);
+    }
+
+    /*
      * transfers the settings from the private member m_frSettings into the
      * components. Will not transfer the file location unless specified by the
      * parameter.
@@ -1324,6 +1800,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             }
             analyzeDataFileAndUpdatePreview(true);
         }
+        m_preserveSettings.setSelected(m_frSettings.getPreserveSettings());
         loadRowHdrSettings();
         loadColHdrSettings();
         // dis/enable the select recent files button
@@ -1339,11 +1816,12 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      * the only thing left is the file name from the data file location text
      * field.
      */
-    private void saveSettings() throws InvalidSettingsException {
+    private void saveSettings(final FileReaderNodeSettings settings)
+            throws InvalidSettingsException {
         try {
             URL dataURL =
                     textToURL(m_urlCombo.getEditor().getItem().toString());
-            m_frSettings.setDataFileLocationAndUpdateTableName(dataURL);
+            settings.setDataFileLocationAndUpdateTableName(dataURL);
         } catch (MalformedURLException mfue) {
             throw new InvalidSettingsException("Invalid (malformed) URL for "
                     + "the data file location.", mfue);
@@ -1414,6 +1892,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      * Called when the user presses the "Advanced Settings..." button.
      */
     protected void advancedSettings() {
+
         // figure out the parent to be able to make the dialog modal
         Frame f = null;
         Container c = getPanel().getParent();
@@ -1433,14 +1912,16 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         // first check if user closed via the readXML button
         if (advDlg.closedViaReadXML()) {
+            // stop a possibly running analysis
+            interruptAnalysis();
             readXMLSettings();
             analyzeDataFileAndUpdatePreview(false); // don't reanalyze
         } else if (advDlg.closedViaOk()) {
+            // stop a possibly running analysis
+            interruptAnalysis();
             // call with the actual settings
             advDlg.overrideSettings(m_frSettings);
-            if (advDlg.needsReAnalyze()) {
-                analyzeDataFileAndUpdatePreview(true); // re-analyze
-            }
+            analyzeDataFileAndUpdatePreview(advDlg.needsReAnalyze());
         }
         advDlg.dispose();
     }
@@ -1567,8 +2048,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         } else {
             m_errorDetail.setText(detailMsg);
         }
-        getPanel().invalidate();
-        getPanel().validate();
+        getPanel().revalidate();
+        getPanel().repaint();
     }
 
     private String getErrorLabelText() {
@@ -1577,8 +2058,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
     private void setAnalWarningText(final String text) {
         m_analyzeWarn.setText(text);
-        getPanel().invalidate();
-        getPanel().validate();
+        getPanel().revalidate();
         getPanel().repaint();
     }
 

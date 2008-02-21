@@ -207,6 +207,14 @@ public class FileReaderPreviewTable implements DataTable {
         }
     }
 
+    /**
+     * Clears the list of change listeners
+     * @see #addChangeListener(ChangeListener)
+     */
+    void removeAllChangeListeners() {
+        m_listeners.clear();
+    }
+
     private void fireErrorOccuredEvent() {
         ChangeEvent event = new ChangeEvent(this);
         for (ChangeListener l : m_listeners) {

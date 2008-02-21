@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   03.12.2004 (ohl): created
  */
@@ -50,7 +50,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.xml.sax.SAXException;
 
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class FileReaderNodeSettings extends FileReaderSettings {
@@ -71,6 +71,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     private static final String CFGKEY_COLPROPS = "ColumnProperties";
 
     private static final String CFGKEY_EOLDELIMUSERVAL = "delimsAtEOLuserVal";
+
+    private static final String CFG_KEY_PRESERVE = "PreserveSettings";
 
     // flags indicating if the values were actually set or are still at
     // constructor's default. Won't be stored into config.
@@ -94,12 +96,14 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     private boolean m_analyzedAllRows;
 
+    private boolean m_preserveSettings;
+
     /**
      * Creates a new settings object for the file reader note and initializes it
      * from the config object passed. If <code>null</code> is passed default
      * settings will be applied where applicable. The default setting are not
      * valid in the sense that they can't be used without modification.
-     * 
+     *
      * @param cfg a config object containing all settings or <code>null</code>
      *            to create default settings
      * @throws InvalidSettingsException if the settings in the config object are
@@ -114,6 +118,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
         if (cfg != null) {
             m_numOfColumns = cfg.getInt(CFGKEY_NUMOFCOLS);
+            m_preserveSettings = cfg.getBoolean(CFG_KEY_PRESERVE, false);
             readColumnPropsFromConfig(cfg.getNodeSettings(CFGKEY_COLPROPS));
             m_delimsAtEOLUserValue =
                     cfg.getBoolean(CFGKEY_EOLDELIMUSERVAL,
@@ -141,6 +146,39 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     }
 
     /**
+     * Creates a new settings object with the exact same settings as the object
+     * passed in.
+     *
+     * @param clonee the settings object to copy the settings values from.
+     */
+    FileReaderNodeSettings(final FileReaderNodeSettings clonee) {
+       super(clonee);
+
+       m_columnProperties =
+           new Vector<ColProperty>(clonee.m_columnProperties.size());
+       m_columnProperties.setSize(clonee.m_columnProperties.size());
+       for (int i = 0; i < m_columnProperties.size(); i++) {
+           m_columnProperties.set(i,
+                   (ColProperty)clonee.m_columnProperties.get(i).clone());
+       }
+
+       m_numOfColumns = clonee.m_numOfColumns;
+
+       m_hasColHeadersIsSet = clonee.m_hasColHeadersIsSet;
+       m_hasRowHeadersIsSet = clonee.m_hasRowHeadersIsSet;
+       m_ignoreEmptyLinesIsSet = clonee.m_ignoreEmptyLinesIsSet;
+       m_ignoreDelimsAtEndOfRowIsSet = clonee.m_ignoreDelimsAtEndOfRowIsSet;
+       m_delimsAtEOLUserValue = clonee.m_delimsAtEOLUserValue;
+       m_commentIsSet = clonee.m_commentIsSet;
+       m_quoteIsSet = clonee.m_quoteIsSet;
+       m_delimIsSet = clonee.m_delimIsSet;
+       m_whiteIsSet = clonee.m_whiteIsSet;
+       m_analyzedAllRows = clonee.m_analyzedAllRows;
+       m_preserveSettings = clonee.m_preserveSettings;
+
+    }
+
+    /**
      * Creates an empty settings object. It contains no default values.
      */
     public FileReaderNodeSettings() {
@@ -158,13 +196,14 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         m_delimIsSet = false;
         m_whiteIsSet = false;
         m_analyzedAllRows = false;
+        m_preserveSettings = false;
 
     }
 
     /**
      * Writes all settings into the passed configuration object. Except for the
      * analyzedAllRows flag.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -172,6 +211,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         super.saveToConfiguration(cfg);
         cfg.addBoolean(CFGKEY_EOLDELIMUSERVAL, m_delimsAtEOLUserValue);
         cfg.addInt(CFGKEY_NUMOFCOLS, m_numOfColumns);
+        cfg.addBoolean(CFG_KEY_PRESERVE, m_preserveSettings);
         saveColumnPropsToConfig(cfg.addNodeSettings(CFGKEY_COLPROPS));
     }
 
@@ -239,7 +279,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     /**
      * Stores a copy of the vector of properties in the structure.
-     * 
+     *
      * @param colProps the column properties to store
      */
     public void setColumnProperties(
@@ -268,7 +308,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Overriding super method because we store these missing values now in the
      * column properties.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -283,11 +323,11 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Overriding super method because we store these missing values now in the
      * column properties.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    public void setMissingValueForColumn(final int colIdx, 
+    public void setMissingValueForColumn(final int colIdx,
             final String pattern) {
         if ((m_columnProperties == null)
                 || (colIdx >= m_columnProperties.size())) {
@@ -300,7 +340,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Stores the number of columns set by the user. (Must not be the same as
      * the number of column properties stored in this object).
-     * 
+     *
      * @param numOfCols the number of columns to store
      */
     public void setNumberOfColumns(final int numOfCols) {
@@ -319,10 +359,10 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * Derives a DataTableSpec from the current settings. The spec will not
      * contain any domain information. It will contain only the columns to
      * include in the table (excl. the columns to skip).
-     * 
+     *
      * @return a DataTableSpec corresponding to the current settings or
      *         <code>null</code> if the current settings are invalid
-     * 
+     *
      */
     public DataTableSpec createDataTableSpec() {
 
@@ -360,7 +400,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
         }
         return result;
     }
-    
+
     /**
      * Sets default settings in this object. See the submethods for details, but
      * basically its: zero number of columns, no column names and types, file
@@ -399,11 +439,11 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * The settings are not checked. They could be incomplete or invalid. It
      * also reads possible values from the data file - but only if the settings
      * are useable and the table contains a string column.
-     * 
+     *
      * @param xmlLocation location of the xml file to read. Must be a valid URL.
      * @return a new settings object containing the settings read fromt the
      *         specified XML file.
-     * 
+     *
      * @throws IllegalStateException if something goes wrong
      */
     public static FileReaderNodeSettings readSettingsFromXMLFile(
@@ -537,7 +577,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * colProperty objects - if the useFileHeader flag is set in there. All
      * settings must be set properly to enable file reading. Column names will
      * be made unique by adding an increasing index to duplicate names.
-     * 
+     *
      * @throws IOException if there was an error reading the data file
      */
     public void readColumnHeadersFromFile() throws IOException {
@@ -627,7 +667,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Generates a unique column name based on the specified preliminary name
      * and unique to all columns with indecies less than the specified one.
-     * 
+     *
      * @param colIdx the index of the column up to which we should look at and
      *            make the name unique. (That is we ignore all existing col
      *            names of cols wihth higher index.)
@@ -647,8 +687,8 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             unique = true;
             // run through all columns (up to colIdx) and compare the name.
             // Do that with each newly generated name completely
-            for (int c = 0; 
-                 (c < colIdx) && (c < m_columnProperties.size()); 
+            for (int c = 0;
+                 (c < colIdx) && (c < m_columnProperties.size());
                  c++) {
                 ColProperty colProp = m_columnProperties.get(c);
                 if ((colProp != null) && (colProp.getColumnSpec() != null)) {
@@ -669,7 +709,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set true to indicate that the flag is actually set and is not still the
      * default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setIgnoreEmptyLinesUserSet(final boolean s) {
@@ -687,7 +727,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set <code>true</code> to indicate that the flag is actually set and is
      * not still the default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setFileHasRowHeadersUserSet(final boolean s) {
@@ -705,7 +745,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set <code>true</code> to indicate that the flag is actually set and is
      * not still the default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setFileHasColumnHeadersUserSet(final boolean s) {
@@ -723,7 +763,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set <code>true</code> to indicate that the flag is actually set and is
      * not still the default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setCommentUserSet(final boolean s) {
@@ -741,7 +781,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set <code>true</code> to indicate that the flag is actually set and is
      * not still the default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setDelimiterUserSet(final boolean s) {
@@ -759,7 +799,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set <code>true</code> to indicate that the flag is actually set and is
      * not still the default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setQuoteUserSet(final boolean s) {
@@ -777,7 +817,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Set <code>true</code> to indicate that the flag is actually set and is
      * not still the default value.
-     * 
+     *
      * @param s the new value of the flag
      */
     public void setWhiteSpaceUserSet(final boolean s) {
@@ -794,7 +834,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
 
     /**
      * Sets the "is user set" flag and stores the user value.
-     * 
+     *
      * @param ignoreEm if <code>true</code> extra delims at the end of the row
      *            (in case of a tab or space delim) will be ignored.
      */
@@ -831,7 +871,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * {@link FileAnalyzer} looked at all rows when it extracts the default
      * settings. The value of the flag is not stored when the settings are saved
      * into a config, and is not recovered from a config object.
-     * 
+     *
      * @param val the new value of the flag
      */
     void setAnalyzeUsedAllRows(final boolean val) {
@@ -850,7 +890,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
      * Method to check consistency and completeness of the current settings. It
      * will return a {@link SettingsStatus} object which contains info, warning
      * and error messages, if something is fishy with the settings.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -867,7 +907,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
     /**
      * Call this from derived classes to add the status of all super classes.
      * For parameters:
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -938,7 +978,7 @@ public class FileReaderNodeSettings extends FileReaderSettings {
                     ColProperty compProp = m_columnProperties.get(compC);
                     if ((compProp != null) && !compProp.getSkipThisColumn()) {
                         DataColumnSpec compSpec = compProp.getColumnSpec();
-                        if ((compSpec != null) 
+                        if ((compSpec != null)
                                 && (compSpec.getName() != null)) {
                             if (cName.equals(compSpec.getName())) {
                                 status.addError("Column no. " + (c + 1)
@@ -992,5 +1032,26 @@ public class FileReaderNodeSettings extends FileReaderSettings {
             res.append(m_columnProperties.get(c).toString());
         }
         return res.toString();
+    }
+
+    /**
+     * Checks the flag that indicates if settings will be reset at location
+     * change.
+     *
+     * @return true if settings are not reset on file location change.
+     */
+    boolean getPreserveSettings() {
+        return m_preserveSettings;
+    }
+
+    /**
+     * Sets the flag that determines if settings are reset if a new data
+     * location is entered in the dialog.
+     *
+     * @param preserveSettings set true to reset all dialog settings if the data
+     *            location changes, or false to preserve the current settings.
+     */
+    void setPreserveSettings(final boolean preserveSettings) {
+        m_preserveSettings = preserveSettings;
     }
 }

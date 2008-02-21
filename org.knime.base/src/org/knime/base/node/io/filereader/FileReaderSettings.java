@@ -188,6 +188,38 @@ public class FileReaderSettings extends FileTokenizerSettings {
         init();
     }
 
+    /**
+     * Creates a new object holding the same settings values as the one passed
+     * in.
+     * 
+     * @param clonee the object to read the settings values from
+     */
+    public FileReaderSettings(final FileReaderSettings clonee) {
+        super(clonee);
+        m_dataFileLocation = clonee.m_dataFileLocation;
+        m_tableName = clonee.m_tableName;
+
+        m_decimalSeparator = clonee.m_decimalSeparator;
+
+        m_fileHasColumnHeaders = clonee.m_fileHasColumnHeaders;
+        m_fileHasRowHeaders = clonee.m_fileHasRowHeaders;
+        m_ignoreEmptyLines = clonee.m_ignoreEmptyLines;
+        m_ignoreEmptyTokensAtEOR = clonee.m_ignoreEmptyTokensAtEOR;
+        m_supportShortLines = clonee.m_supportShortLines;
+        m_maxNumberOfRowsToRead = clonee.m_maxNumberOfRowsToRead;
+
+        m_rowHeaderPrefix = clonee.m_rowHeaderPrefix;
+        m_uniquifyRowIDs = clonee.m_uniquifyRowIDs;
+
+        m_rowDelimiters = new HashSet<String>(clonee.m_rowDelimiters);
+        m_missingPatterns = new Vector<String>(clonee.m_missingPatterns);
+        m_globalMissPattern = clonee.m_globalMissPattern;
+        m_columnNumberDeterminingLine = clonee.m_columnNumberDeterminingLine;
+
+        m_charsetName = clonee.m_charsetName;
+
+    }
+    
     // initializes private members. Needs to be called from two constructors.
     private void init() {
         m_dataFileLocation = null;

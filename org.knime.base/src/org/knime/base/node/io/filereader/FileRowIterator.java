@@ -455,12 +455,12 @@ class FileRowIterator extends RowIterator {
         if (type.equals(StringCell.TYPE)) {
             return new StringCell(data);
         } else if (type.equals(IntCell.TYPE)) {
+            // for numbers, trim data and accept empty tokens as missing cells
+            String trimmed = data.trim();
+            if (trimmed.isEmpty()) {
+                return DataType.getMissingCell();
+            }
             try {
-                // trim numbers, and accept empty as missing value
-                String trimmed = data.trim();
-                if (trimmed.length() == 0) {
-                    return DataType.getMissingCell();
-                }
                 int val = Integer.parseInt(trimmed);
                 return new IntCell(val);
             } catch (NumberFormatException nfe) {
@@ -475,10 +475,15 @@ class FileRowIterator extends RowIterator {
                         + "').", m_tokenizer.getLineNumber(), rowHeader, row);
             }
         } else if (type.equals(DoubleCell.TYPE)) {
-            String dblData = data;
+            // for numbers, trim data and accept empty tokens as missing cells
+            String trimmed = data.trim();
+            if (trimmed.isEmpty()) {
+                return DataType.getMissingCell();
+            }
+            String dblData = trimmed;
             if (m_customDecimalSeparator) {
                 // we must reject tokens with a '.'.
-                if (data.indexOf('.') >= 0) {
+                if (trimmed.indexOf('.') >= 0) {
                     int col = 0;
                     while (col < row.length && row[col] != null) {
                         col++;
@@ -491,14 +496,9 @@ class FileRowIterator extends RowIterator {
                             + "').", m_tokenizer.getLineNumber(), rowHeader,
                             row);
                 }
-                dblData = data.replace(m_decSeparator, '.');
+                dblData = trimmed.replace(m_decSeparator, '.');
             }
             try {
-                // trim numbers, and accept empty as missing value
-                dblData = dblData.trim();
-                if (dblData.length() == 0) {
-                    return DataType.getMissingCell();
-                }
                 double val = Double.parseDouble(dblData);
                 return new DoubleCell(val);
             } catch (NumberFormatException nfe) {
