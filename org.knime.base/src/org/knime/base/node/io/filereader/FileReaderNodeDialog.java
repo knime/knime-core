@@ -348,8 +348,11 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      * and starts analysis if needed.
      */
     private void fileLocationChanged() {
+
+        boolean fileChanged = false;
+
         try {
-            boolean fileChanged = takeOverNewFileLocation();
+            fileChanged = takeOverNewFileLocation();
 
             if (fileChanged) {
                 m_autoAnalyze =
@@ -358,15 +361,18 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                     resetSettings();
                 }
             }
-            // analyze file on focus lost.
-            analyzeDataFileAndUpdatePreview(fileChanged);
 
         } catch (final InvalidSettingsException e) {
-            // leave settings unchanged.
+            // clear the URL in the settings
+            m_frSettings.setDataFileLocationAndUpdateTableName(null);
+
             setErrorLabelText("Malformed URL '"
                     + m_urlCombo.getEditor().getItem() + "'.");
             setPreviewTable(null);
         }
+
+        // also "analyze" an invalid file (hides "analyze" buttons)
+        analyzeDataFileAndUpdatePreview(fileChanged);
     }
 
     /**
@@ -1272,8 +1278,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     /*
      * Reads the entered file location from the edit field and stores the new
      * value in the settings object. Throws an exception if the entered URL is
-     * invalid. Returns true if the entered location (string) is different from
-     * the one previously set.
+     * invalid (and clears the URL in the settings object before). Returns true
+     * if the entered location (string) is different from the one previously
+     * set.
      */
     private boolean takeOverNewFileLocation() throws InvalidSettingsException {
 
@@ -1282,6 +1289,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         try {
             newURL = textToURL(m_urlCombo.getEditor().getItem().toString());
         } catch (Exception e) {
+            m_frSettings.setDataFileLocationAndUpdateTableName(null);
             throw new InvalidSettingsException("Invalid URL entered.");
         }
 
@@ -1315,7 +1323,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
      */
     protected void analyzeDataFileAndUpdatePreview(final boolean forceAnalyze) {
 
-        if (forceAnalyze) {
+        if (forceAnalyze && (m_frSettings.getDataFileLocation() != null)) {
 
             // errors are from previous runs
             setErrorLabelText("");
@@ -1346,7 +1354,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             }
 
         } else {
-
+            showPreviewTable();
             updatePreview();
         }
     }
@@ -1610,13 +1618,16 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     /**
      * Tries to figure out if this data source can be always analyzed, without
      * being triggered by the user. It looks at the size of the file - if
-     * determinable.
+     * determinable. If the passed URL is null, it returns true.
      *
      * @param location the URL to the source to check
      * @return true if the data can be analyzed right away, false if the user
      *         should trigger it.
      */
     private boolean alwaysAnalyze(final URL location) {
+        if (location == null) {
+            return true;
+        }
         try {
             BufferedFileReader bfr =
                     BufferedFileReader.createNewReader(location);
