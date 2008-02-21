@@ -27,6 +27,7 @@ package org.knime.base.node.io.database;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DatabasePortObject;
@@ -35,6 +36,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.PortObject;
@@ -108,11 +110,12 @@ class DBQueryNodeModel extends GenericNodeModel {
         String newQuery = m_query.getStringValue().replaceAll(
                 VIEW_PLACE_HOLDER, "(" + conn.getQuery() + ")");
         conn.setQuery(newQuery);
+        ModelContentRO cont = conn.createConnectionModel();
         DBReaderConnection load = 
-            new DBReaderConnection(conn, conn.getQuery(), 10);
+            new DBReaderConnection(conn, newQuery, 10);
         BufferedDataTable data = exec.createBufferedDataTable(load, exec);
-        return new PortObject[]{new DatabasePortObject(data, 
-                conn.createConnectionModel())};
+        DatabasePortObject outObj = new DatabasePortObject(data, cont);
+        return new PortObject[]{outObj};
     }
 
     /**
@@ -154,13 +157,19 @@ class DBQueryNodeModel extends GenericNodeModel {
         String newQuery = m_query.getStringValue().replaceAll(
                 VIEW_PLACE_HOLDER, "(" + conn.getQuery() + ")");
         conn.setQuery(newQuery);
+        // try to create database connection
+        DataTableSpec outSpec = null;
         try {
             conn.createConnection();
+            DBReaderConnection reader = 
+                new DBReaderConnection(conn, newQuery);
+            outSpec = reader.getDataTableSpec();
         } catch (Exception e) {
             throw new InvalidSettingsException(e.getMessage());
         }
-        return new PortObjectSpec[]{
-                new DatabasePortObjectSpec(null, conn.createConnectionModel())};
+        ModelContentRO cont = conn.createConnectionModel();
+        DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
+                outSpec, cont);
+        return new PortObjectSpec[]{dbSpec};
     }
-
 }

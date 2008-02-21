@@ -92,10 +92,6 @@ class DBReaderConnectionNodeModel extends GenericNodeModel {
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
-        Exception e = m_conn.execute(m_conn.getQuery());
-        if (e != null) {
-            throw e;
-        }
         ModelContentRO cont = m_conn.createConnectionModel();
         DBReaderConnection load = 
             new DBReaderConnection(m_conn, m_conn.getQuery(), 10);
