@@ -984,6 +984,8 @@ public final class Node {
                 for (int p = 0; p < newOutSpec.length; p++) {
                     // update data table spec
                     m_outPorts[p].setPortObjectSpec(newOutSpec[p]);
+                    m_outPorts[p].setScopeContextStackContainer(
+                            getScopeContextStackContainer());
                 }
 
                 processModelWarnings();

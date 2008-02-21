@@ -254,7 +254,7 @@ public final class WorkflowManager extends NodeContainer {
                new Node((GenericNodeFactory<GenericNodeModel>)factory), newID);
             addNodeContainer(container);
         }
-        configure(newID);
+        configure(newID, true);
         LOGGER.info("Added new node " + newID);
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED,
@@ -499,7 +499,7 @@ public final class WorkflowManager extends NodeContainer {
         if (configure) {
             // ...make sure the destination node is configured again (and all of
             // its successors if needed):
-            configure(dest);
+            configure(dest, true);
         }
         // and finally notify listeners
         notifyWorkflowListeners(new WorkflowEvent(
@@ -751,7 +751,7 @@ public final class WorkflowManager extends NodeContainer {
         // TODO propagate reset to parent (what if "this" is sub flow)
         resetAndConfigureNode(id);
         nc.loadSettings(settings);
-        configure(id);
+        configure(id, true);
     }
 
     /**
@@ -911,17 +911,12 @@ public final class WorkflowManager extends NodeContainer {
         for (int i = 0; i < prevSpecs.length; i++) {
             prevSpecs[i] = getOutPort(i).getPortObjectSpec();
         }
-        // configure all "successors" of myself, that is, every node which
-        // is connected to one of the metanode's inports.
-        this.configureSuccessors(this.getID());
-        // note that we do NOT need to configure nodes without ingoing
-        // connections explicitly. Even though they will not be configured
-        // as successors of our inports they have been configured before.
-
         // make sure we reflect any state changes inside this workflow also
         // in our own state:
         checkForNodeStateChanges();
         
+        // TODO think very hard what a WFM as NC could do here???
+
         // compare old and new specs
         for (int i = 0; i < prevSpecs.length; i++) {
             PortObjectSpec newSpec =
@@ -1063,7 +1058,8 @@ public final class WorkflowManager extends NodeContainer {
                         // (2) find all intermediate node, the loop's "body"
                         Set<NodeID> loopBodyNodes = findExecutedNodesInLoopBody(
                                 sc.getOriginatingNode(), nc.getID());
-                        // (3) reset the nodes in the body
+                        // (3) reset the nodes in the body (only those -
+                        //     make sure end of loop is NOT reset)
                         for (NodeID id : loopBodyNodes) {
                             m_nodes.get(id).resetNode();
                         }
@@ -1072,26 +1068,21 @@ public final class WorkflowManager extends NodeContainer {
                                     = m_nodes.get(sc.getOriginatingNode());
                         assert origin instanceof SingleNodeContainer;
                         ((SingleNodeContainer)origin).enableReQueuing();
-                        // (5) enable the body to be queued as well.
+                        // (5) configure the nodes from start to rest (it's not
+                        //     so important if we configure more than the body)
+                        configure(sc.getOriginatingNode(), false);
+                        // (6) enable the body to be queued again.
                         for (NodeID id : loopBodyNodes) {
-                            configure(id);
                             m_nodes.get(id).markForExecution(true);
                         }
                         // and finally (6) mark end of loop for re-execution
                         nc.markForExecution(true);
                         // make sure we do not accidentially configure the
-                        // remainder of this node since we not yet done with
-                        // the loop
+                        // remainder of this node since we are not yet done
+                        // with the loop
                         canConfigureSuccessors = false;
                     }
                 }
-            }
-            if (canConfigureSuccessors) {
-                // standard behaviour - configure successors since this node
-                // is done (either executed or failed) and has new specs (maybe)
-                // Do not reconfigure this node if it failed - we will delete
-                // any warnings/errors otherwise!
-                configureSuccessors(nc.getID());
             }
             switch (getState()) {
             case EXECUTING:
@@ -1112,6 +1103,13 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 }
             default:
+            }
+            if (canConfigureSuccessors) {
+                // standard behaviour - configure successors since this node
+                // is done (either executed or failed) and has new specs (maybe)
+                // Do not reconfigure this node if it failed - we will delete
+                // any warnings/errors otherwise!
+                configure(nc.getID(), false);
             }
         }
         if (nc instanceof SingleNodeContainer) {
@@ -1197,7 +1195,7 @@ public final class WorkflowManager extends NodeContainer {
             // and then reset node itself
             m_nodes.get(id).resetNode();
             // and launch configure starting with this node
-            configure(id);
+            configure(id, true);
         default: // ignore all other states (IDLE, CONFIGURED...)
         }
         checkForNodeStateChanges();
@@ -1220,6 +1218,8 @@ public final class WorkflowManager extends NodeContainer {
                 assert nc != null;
                 switch (nc.getState()) {
                 case EXECUTED:
+                case MARKEDFOREXEC:
+                case EXECUTING:
                     // first reset successors of successor
                     this.resetSuccessors(currID);
                     // ..then immediate successor itself
@@ -1424,7 +1424,45 @@ public final class WorkflowManager extends NodeContainer {
                 bfsSortedNodes.add(thisNode);
             }
         }
-        // now keep adding nodes until we can't find new ones anymore
+        // find successors...
+        expandListBreathFirst(bfsSortedNodes, null);
+        return bfsSortedNodes;
+    }
+    
+    /** Return list of nodes connected to the given node sorted in breath
+     * first order. Note that also nodes who have another predecessors not
+     * contained in this node may be included as long as at least one input
+     * node is connected to a node in this list!
+     * 
+     * @param id
+     * @return list as described above.
+     */
+    private ArrayList<NodeID> getBreathFirstListOfNodeAndSuccessors(
+            final NodeID id) {
+        // assemble unsorted list of successors
+        HashSet<NodeID> inclusionList = new HashSet<NodeID>();
+        completeSet(inclusionList, id);
+        // and then get all successors which are part of this list in a nice
+        // BFS order
+        ArrayList<NodeID> bfsSortedNodes = new ArrayList<NodeID>();
+        bfsSortedNodes.add(id);
+        expandListBreathFirst(bfsSortedNodes, inclusionList);
+        return bfsSortedNodes;
+    }
+
+    // complete set of nodes depth-first starting with node id.
+    private void completeSet(HashSet<NodeID> nodes, final NodeID id) {
+        nodes.add(id);
+        for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
+            if (cc.getType().equals(ConnectionType.STD)) {
+                completeSet(nodes, cc.getDest());
+            }
+        }
+    }
+    
+    private void expandListBreathFirst(ArrayList<NodeID> bfsSortedNodes,
+            HashSet<NodeID> inclusionList) {
+        // keep adding nodes until we can't find new ones anymore
         for (int i = 0; i < bfsSortedNodes.size(); i++) {
             NodeID currNode = bfsSortedNodes.get(i);
             // look at all successors of this node
@@ -1434,22 +1472,32 @@ public final class WorkflowManager extends NodeContainer {
                 if (succNode.equals(getID())) {
                     continue;
                 }
-                // and make sure all predecessors of this successor are already
-                // in the list
-                boolean allContained = true;
-                for (ConnectionContainer cc2
-                               : m_connectionsByDest.get(succNode)) {
-                    if (!(bfsSortedNodes.contains(cc2.getSource()))) {
-                        allContained = false;
+                // don't check nodes which are already in the list...
+                if (!bfsSortedNodes.contains(succNode)) {
+                    // and make sure all predecessors which are part of the
+                    // inclusion list of this successor are already
+                    // in the list
+                    boolean allContained = true;
+                    for (ConnectionContainer cc2
+                                   : m_connectionsByDest.get(succNode)) {
+                        NodeID pred = cc2.getSource();
+                        if (!(bfsSortedNodes.contains(pred))) {
+                            // check if source is not yet in list
+                            if ((inclusionList == null) ||
+                                    (inclusionList.contains(pred))) {
+                                // but only if it's in the inclusion list
+                                allContained = false;
+                            }
+                        }
                     }
-                }
-                if (allContained) {
-                    bfsSortedNodes.add(succNode);
+                    if (allContained) {
+                        bfsSortedNodes.add(succNode);
+                    }
                 }
             }
         }
-        return bfsSortedNodes;
     }
+    
 
     /** semaphore to avoid multiple checks for newly executable nodes
      * to interfere / interleave with each other.
@@ -1461,24 +1509,24 @@ public final class WorkflowManager extends NodeContainer {
         do {
             remainingNodes = false;
             for (NodeContainer ncIt : m_nodes.values()) {
-                if (ncIt.getState()
-                        == NodeContainer.State.MARKEDFOREXEC) {
-                    final PortObject[] inData =
+                synchronized (m_dirtyWorkflow) {
+                    if (ncIt.getState().equals(
+                            NodeContainer.State.MARKEDFOREXEC)) {
+                        final PortObject[] inData =
                         new PortObject[ncIt.getNrInPorts()];
-                    synchronized (m_dirtyWorkflow) {
                         assembleInputData(ncIt.getID(), inData);
-                    }
-                    boolean dataAvailable = true;
-                    for (int i = 0; i < inData.length; i++) {
-                        if (inData[i] == null) {
-                            dataAvailable = false;
+                        boolean dataAvailable = true;
+                        for (int i = 0; i < inData.length; i++) {
+                            if (inData[i] == null) {
+                                dataAvailable = false;
+                            }
                         }
-                    }
-                    // Check if all data is available. Important, QUEUED
-                    // does not mean the node is already executing!
-                    if (dataAvailable) {
-                        ncIt.queueNode(inData);
-                        remainingNodes = true;
+                        // Check if all data is available. Important, QUEUED
+                        // does not mean the node is already executing!
+                        if (dataAvailable) {
+                            ncIt.queueNode(inData);
+                            remainingNodes = true;
+                        }
                     }
                 }
             }
@@ -1623,79 +1671,63 @@ public final class WorkflowManager extends NodeContainer {
      * also configure it's successors.
      *
      * @param id of node to configure
+     * @param configureMyself
      */
-    private void configure(final NodeID id) {
-        if (!isFullyConnected(id)) {
-            return;
+    private void configure(final NodeID nodeId, final boolean configureMyself) {
+        ArrayList<NodeID> nodes = getBreathFirstListOfNodeAndSuccessors(nodeId);
+        if (!configureMyself) {
+            nodes.remove(nodeId);
         }
-        // get node
-        NodeContainer nc = m_nodes.get(id);
-        if (nc == null) {
+        boolean wfmIsPartOfList = false;
+        for (NodeID currNode : nodes) {
+            NodeContainer nc = m_nodes.get(currNode);
+            if (nc == null) {
+                synchronized (m_dirtyWorkflow) {
+                    // looks like we are trying to configure ourselves - nothing
+                    // to do - wrapping ports already do the trick.
+                    // this WFM itself is configured from the outside!
+                }
+                wfmIsPartOfList = true;
+            }
             synchronized (m_dirtyWorkflow) {
-                // looks like we are trying to configure ourselves - nothing
-                // to do - wrapping ports already do the trick.
-                // this WFM itself is configured from the outside!
-            }
-            return;
-        }
-        synchronized (m_dirtyWorkflow) {
-            PortObjectSpec[] inSpecs =
-                new PortObjectSpec[nc.getNrInPorts()];
-            assembleInputSpecs(id, inSpecs);
-            // configure node only if it's not yet running or queued or done.
-            // This can happen if the WFM queues a node which has more than
-            // one predecessor with populated output ports but one of the
-            // nodes still has not called the "doAfterExecution()" routine
-            // which might attempt to configure the already queued node again.
-            NodeContainer.State ncState = nc.getState();
-            switch (ncState) {
-            case EXECUTING:
-            case EXECUTED:
-            case QUEUED:
-                // tolerate race condition if configure has "bypassed" node
-                // TODO: remove once BFS is used for configure.
-                break;
-            case IDLE:
-            case UNCONFIGURED_MARKEDFOREXEC:
-            case MARKEDFOREXEC:
-                // create new ScopeContextStack if this is a "real" node
-                if (nc instanceof SingleNodeContainer) {
-                    SingleNodeContainer snc = (SingleNodeContainer)nc;
-                    ScopeObjectStack[] scscs =
-                        new ScopeObjectStack[snc.getNrInPorts()];
-                    assembleSCStackContainer(id, scscs);
-                    ScopeObjectStack  scsc =
-                        new ScopeObjectStack(id, scscs);
-                    snc.setScopeObjectStack(scsc);
+                PortObjectSpec[] inSpecs =
+                    new PortObjectSpec[nc.getNrInPorts()];
+                assembleInputSpecs(currNode, inSpecs);
+                // configure node only if it's not yet running, queued or done.
+                // This can happen if the WFM queues a node which has more than
+                // one predecessor with populated output ports but one of the
+                // nodes still has not called the "doAfterExecution()" routine
+                // which might attempt to configure an already queued node again
+                NodeContainer.State ncState = nc.getState();
+                switch (ncState) {
+                case IDLE:
+                case UNCONFIGURED_MARKEDFOREXEC:
+                case CONFIGURED:
+                case MARKEDFOREXEC:
+                    // create new ScopeContextStack if this is a "real" node
+                    if (nc instanceof SingleNodeContainer) {
+                        SingleNodeContainer snc = (SingleNodeContainer)nc;
+                        ScopeObjectStack[] scscs =
+                            new ScopeObjectStack[snc.getNrInPorts()];
+                        assembleSCStackContainer(currNode, scscs);
+                        ScopeObjectStack  scsc =
+                            new ScopeObjectStack(currNode, scscs);
+                        snc.setScopeObjectStack(scsc);
+                    }
+                    // configure node itself
+                    boolean outputSpecsChanged = nc.configureNode(inSpecs);
+                    if (!outputSpecsChanged) {
+                        // remove real only successors from list (ha, ha) 
+                    }
+                    break;
+                default:
+                    throw new IllegalStateException("Wrong state in configure"
+                            + " (" + ncState + "" + nc.getNameWithID() + ")");
                 }
-                // configure node itself
-                boolean outputSpecsChanged = nc.configureNode(inSpecs);
-                if (outputSpecsChanged) {
-                    // and configure successors if needed
-                    configureSuccessors(id);
-                }
-                break;
-            default:
-                throw new IllegalStateException("Wrong state in configure ("
-                        + ncState + ")");
             }
         }
-    }
-
-    /** Configure successors of this node and propagate this further until
-     * specs stop to change or end of pipeline is reached.
-     *
-     * @param id of "parent" node.
-     */
-    private void configureSuccessors(final NodeID id) {
-        Set<ConnectionContainer> outgoing = m_connectionsBySource.get(id);
-        for (ConnectionContainer conn : outgoing) {
-            NodeID currID = conn.getDest();
-            configure(currID);
-            if (conn.getType()
-                    .equals(ConnectionContainer.ConnectionType.WFMOUT)) {
-                getParent().configureSuccessors(this.getID());
-            }
+        if (wfmIsPartOfList) {
+            getParent().configure(this.getID(), false);
         }
     }
 
@@ -2111,7 +2143,8 @@ public final class WorkflowManager extends NodeContainer {
             resetAndConfigureNode(id);
         }
         for (NodeID id : needConfigurationNodes) {
-            configure(id);
+            // TODO Bernd: can you check what you intend to do here?
+            configure(id, true);
         }
     }
 

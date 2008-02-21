@@ -349,7 +349,8 @@ public final class SingleNodeContainer extends NodeContainer
                 return;
             default:
                 throw new IllegalStateException("Illegal state " + getState()
-                        + " encountered in queueNode().");
+                        + " encountered in queueNode(). Node "
+                        + getNameWithID());
             }
         }
     }

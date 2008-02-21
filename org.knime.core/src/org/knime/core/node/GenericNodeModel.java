@@ -867,11 +867,11 @@ public abstract class GenericNodeModel {
         m_scopeContextStackContainer.continueLoop(sc);
     }
 
-    public ScopeObjectStack getScopeContextStackContainer() {
+    ScopeObjectStack getScopeContextStackContainer() {
         return m_scopeContextStackContainer;
     }
 
-    public void setScopeContextStackContainer(final ScopeObjectStack scsc) {
+    void setScopeContextStackContainer(final ScopeObjectStack scsc) {
         m_scopeContextStackContainer = scsc;
     }
 
