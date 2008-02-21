@@ -22,8 +22,6 @@
 package org.knime.base.node.mine.bfn;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -37,7 +35,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.PortObject;
@@ -59,18 +56,14 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     private double m_dontKnow = -1.0;
     
     private boolean m_ignoreDontKnow = false;
-
-    private final List<BasisFunctionPredictorRow> m_bfs = 
-        new ArrayList<BasisFunctionPredictorRow>();
-
-    private DataTableSpec m_modelSpec;
     
     /**
      * Creates a new basisfunction predictor model with two inputs, the first
      * one which contains the data and the second with the model.
      */
     protected BasisFunctionPredictorNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, ModelPortObject.TYPE},
+        super(new PortType[]{BufferedDataTable.TYPE, 
+                BasisFunctionModelContent.TYPE},
               new PortType[]{BufferedDataTable.TYPE});
     }
 
@@ -81,42 +74,17 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     public BufferedDataTable[] execute(final PortObject[] portObj,
             final ExecutionContext exec) 
             throws CanceledExecutionException, InvalidSettingsException {
-        loadModelContent((ModelContentRO) portObj[1]);
+        BasisFunctionModelContent pred = (BasisFunctionModelContent) portObj[1];
+        final DataTableSpec modelSpec = pred.loadSpec();
         final BufferedDataTable data = (BufferedDataTable) portObj[0];
         final DataTableSpec dataSpec = data.getDataTableSpec();
         final ColumnRearranger colreg = new ColumnRearranger(dataSpec);
         colreg.append(new BasisFunctionPredictorCellFactory(
-                dataSpec, m_modelSpec, m_bfs, m_applyColumn, 
-                m_dontKnow, normalizeClassification()));
+                dataSpec, modelSpec, pred.loadBasisFunctions(this), 
+                m_applyColumn, m_dontKnow, normalizeClassification()));
         
         return new BufferedDataTable[]{exec.createColumnRearrangeTable(
                 data, colreg, exec)};
-    }
-
-    /**
-     * Reads the rule model used for prediction from the
-     * <code>ModelContentRO</code> object.
-     * @param predParams used to read rule model from
-     * @throws InvalidSettingsException if the model contains invalid settings
-     */
-    public void loadModelContent(final ModelContentRO predParams) 
-            throws InvalidSettingsException {
-        ModelContentRO ruleModel = predParams.getModelContent("rules");
-        for (String key : ruleModel.keySet()) {
-            ModelContentRO bfParam = ruleModel.getModelContent(key);
-            BasisFunctionPredictorRow bf = createPredictorRow(bfParam);
-            m_bfs.add(bf);
-        }
-//        // load model info
-//        ModelContentRO modelInfo = predParams.getModelContent("model_spec");
-//        Set<String> keySet = modelInfo.keySet();
-//        m_modelSpec = new DataColumnSpec[keySet.size()];
-//        int idx = 0;
-//        for (String key : keySet) {
-//            m_modelSpec[idx] = 
-//                DataColumnSpec.load(modelInfo.getConfig(key));
-//            idx++;
-//        }
     }
 
     /**
@@ -127,7 +95,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
      * @throws InvalidSettingsException if the rule can be read from model
      *             content
      */
-    protected abstract BasisFunctionPredictorRow createPredictorRow(
+    public abstract BasisFunctionPredictorRow createPredictorRow(
             ModelContentRO pp) throws InvalidSettingsException;
     
     /**
@@ -136,24 +104,10 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     public abstract boolean normalizeClassification();
     
     /**
-     * @return a list of basisfunction rules
-     */
-    public List<BasisFunctionPredictorRow> getRules() {
-        return m_bfs;
-    }
-    
-    /**
      * @return the column name contained the winner prediction
      */
     public String getApplyColumn() {
         return m_applyColumn;
-    }
-    
-    /**
-     * @return spec of the applied data
-     */
-    public DataTableSpec getModelSpecs() {
-        return m_modelSpec;
     }
     
     /**
@@ -169,15 +123,16 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     @Override
     public DataTableSpec[] configure(final PortObjectSpec[] portObjSpec)
             throws InvalidSettingsException {
-        m_modelSpec = (DataTableSpec) portObjSpec[1];
-        if (m_modelSpec.getNumColumns() == 0) {
+        // get model spec
+        DataTableSpec modelSpec = (DataTableSpec) portObjSpec[1];
+        if (modelSpec.getNumColumns() == 0) {
             throw new InvalidSettingsException("Model spec is empty.");
         }
-        
+        // get data spec
         final DataTableSpec dataSpec = (DataTableSpec) portObjSpec[0];
         // data model columns need to be in the data
-        for (int i = 0; i < m_modelSpec.getNumColumns() - 5; i++) {
-            DataColumnSpec cspec = m_modelSpec.getColumnSpec(i);
+        for (int i = 0; i < modelSpec.getNumColumns() - 5; i++) {
+            DataColumnSpec cspec = modelSpec.getColumnSpec(i);
             int idx = dataSpec.findColumnIndex(cspec.getName());
             if (idx >= 0) {
                 DataType dataType = dataSpec.getColumnSpec(idx).getType();
@@ -194,7 +149,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
                         + cspec.getName() + "' not in data spec.");
             }
         }
-        DataTableSpec outSpec = createSpec(dataSpec, m_modelSpec).createSpec();
+        DataTableSpec outSpec = createSpec(dataSpec, modelSpec).createSpec();
         return new DataTableSpec[]{outSpec};
     }
     
@@ -213,10 +168,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
      */
     @Override
     public final void reset() {
-        // remove list of basisfunctions
-        m_bfs.clear();
-        // clear model spec
-        m_modelSpec = null;
+
     }
 
     /**

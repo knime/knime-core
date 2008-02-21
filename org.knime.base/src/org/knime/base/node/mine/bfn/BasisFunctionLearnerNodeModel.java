@@ -57,8 +57,6 @@ import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
-import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -135,11 +133,12 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
     private final HiLiteTranslator m_translator;
 
     /**
-     * Creates a new model with one data in and out port, and model outport.
+     * Creates a new model with one data in and out port, and model out-port.
      */
     protected BasisFunctionLearnerNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},  
-              new PortType[]{BufferedDataTable.TYPE, ModelPortObject.TYPE});
+              new PortType[]{BufferedDataTable.TYPE, 
+                BasisFunctionModelContent.TYPE});
         m_bfs = new LinkedHashMap<DataCell, List<BasisFunctionLearnerRow>>();
         m_translator = new HiLiteTranslator(new DefaultHiLiteHandler());
     }
@@ -147,7 +146,7 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
     /**
      * Reset the trained model.
      * 
-     * @see org.knime.core.node.NodeModel#reset()
+     * {@inheritDoc}
      */
     @Override
     protected void reset() {
@@ -342,7 +341,8 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
 
         // return rules[0] and rule_model[1]
         return new PortObject[]{exec.createBufferedDataTable(
-                table, exec), saveModelContent()};
+                table, exec), new BasisFunctionModelContent(
+                      "basisfunction_model", m_bfs, table.getDataTableSpec())};
     }
 
     /**
@@ -468,27 +468,6 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
         settings.addBoolean(MAX_CLASS_COVERAGE, m_maxCoverage);
         // maximum number of epochs
         settings.addInt(MAX_EPOCHS, m_maxEpochs);
-    }
-
-    private ModelContent saveModelContent() {
-        ModelContent pp = new ModelContent("basisfunction_model");
-//        // add used columns
-//        ModelContentWO modelSpec = pp.addModelContent("model_spec");
-//        for (int i = 0; i < m_modelSpec.length; i++) {
-//            DataColumnSpec cspec = m_modelSpec[i];
-//            cspec.save(modelSpec.addConfig(cspec.getName()));
-//        }
-        ModelContentWO ruleSpec = pp.addModelContent("rules");
-        for (DataCell key : m_bfs.keySet()) {
-            List<BasisFunctionLearnerRow> list = m_bfs.get(key);
-            for (BasisFunctionLearnerRow bf : list) {
-                BasisFunctionPredictorRow predBf = bf.getPredictorRow();
-                ModelContentWO bfParam = ruleSpec.addModelContent(bf.getKey()
-                        .getId().toString());
-                predBf.save(bfParam);
-            }
-        }
-        return pp;
     }
 
     /** Model info identifier. */
