@@ -65,35 +65,24 @@ public class WorkflowInPortFigure extends AbstractWorkflowPortFigure {
      */
     @Override
     protected PointList createShapePoints(final Rectangle r) {
+//        Rectangle parent = getParent().getBounds().getCopy();
+//        int yPos = (parent.height / (getNrPorts() + 1)) 
+//            * (getPortIndex() + 1);
+        Rectangle rect = getBounds().getCopy();
         if (getType().equals(BufferedDataTable.TYPE)) {
             // triangle
-            Rectangle parent = getParent().getBounds().getCopy();
-            int yPos = (parent.height / (getNrPorts() + 1)) 
-                * (getPortIndex() + 1);
-            getBounds().x = 0;
-            getBounds().y = yPos;
-            getBounds().width = SIZE;
-            getBounds().height = SIZE;
-            Rectangle rect = getBounds().getCopy();
             PointList list = new PointList(3);
             list.addPoint(rect.x, rect.y);
-            list.addPoint(rect.width, rect.y + (rect.height / 2));
+            list.addPoint(rect.x + rect.width, rect.y + (rect.height / 2));
             list.addPoint(rect.x, rect.y + rect.height);
             return list;
         } else {
             // square
-            Rectangle parent = getParent().getBounds().getCopy();
-            int yPos = (parent.height / (getNrPorts() + 1)) 
-                * (getPortIndex() + 1);
-            getBounds().x = 0;
-            getBounds().y = yPos;
-            getBounds().width = SIZE;
-            getBounds().height = SIZE;
             PointList list = new PointList(4);
-            list.addPoint(new Point(0, yPos));
-            list.addPoint(new Point(SIZE, yPos));
-            list.addPoint(new Point(SIZE, yPos + SIZE));
-            list.addPoint(new Point(0, yPos + SIZE));
+            list.addPoint(new Point(rect.x, rect.y));
+            list.addPoint(new Point(rect.x + rect.width, rect.y));
+            list.addPoint(new Point(rect.x + rect.width, rect.y + rect.height));
+            list.addPoint(new Point(rect.x, rect.y + rect.height));
             return list;
         }
     }

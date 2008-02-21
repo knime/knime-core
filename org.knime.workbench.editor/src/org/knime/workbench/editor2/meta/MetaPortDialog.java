@@ -180,7 +180,8 @@ public class MetaPortDialog extends Dialog {
                     m_port = new Port(ModelPortObject.TYPE, m_name.getText());
                 } else if (PortTypes.valueOf(selected).equals(
                         PortTypes.DatabasePort)) {
-                    m_port = new Port(DatabasePortObject.TYPE, m_name.getText());
+                    m_port = new Port(DatabasePortObject.TYPE, 
+                            m_name.getText());
                 }
                 m_shell.dispose();
             }

@@ -19,6 +19,7 @@
 package org.knime.workbench.editor2.meta;
 
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.PortType;
 
@@ -69,6 +70,8 @@ public class Port {
             return m_name + "(Data)";
         } else if (m_type.equals(ModelPortObject.TYPE)) {
             return m_name + "(Model)";
+        } else if (m_type.equals(DatabasePortObject.TYPE)) {
+            return m_name + "(Data base)";
         } else {
             return m_name + "(unknown)";
         }

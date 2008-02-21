@@ -19,8 +19,9 @@
 package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.IFigure;
-import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.ui.PlatformUI;
+import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.PortType;
 
@@ -49,21 +50,23 @@ public class WorkflowPortLocator extends PortLocator {
      */
     @Override
     public void relocate(final IFigure target) {
-        LOGGER.debug("workflow port locator#relocate ");
-        Rectangle bounds = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-            .getActivePage().getActiveEditor().getEditorSite().
-            getShell().getBounds();
-        LOGGER.debug("editor bounds: "  + bounds);
-        int offset = bounds.height / getNrPorts();
-        int y = getPortIndex() * offset;
-        int x;
+        Rectangle parent = target.getParent().getBounds().getCopy();
+
+        int xPos = parent.x;
         if (isInPort()) {
-            x = 0;
-        } else {
-            x = bounds.width;
+            xPos += parent.width - AbstractPortFigure.WF_PORT_SIZE;
         }
-        target.setBounds(
-                new org.eclipse.draw2d.geometry.Rectangle(x, y, 20, 20));
+        int yPos = (int)(parent.y + (((double)parent.height 
+                / (double) (getNrPorts() + 1)) * (getPortIndex() + 1)));
+        
+        Rectangle portBounds = new Rectangle(new Point(xPos, yPos), 
+                new Dimension(
+                        AbstractPortFigure.WF_PORT_SIZE, 
+                        AbstractPortFigure.WF_PORT_SIZE));
+        
+        LOGGER.debug("workflow port locator#relocate " + portBounds);
+        target.setBounds(portBounds);
+        target.repaint();
     }
 
 }

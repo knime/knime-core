@@ -34,9 +34,6 @@ public class WorkflowOutPortFigure extends AbstractWorkflowPortFigure {
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            WorkflowOutPortFigure.class);
     
-    private Rectangle m_parentSize;
-    
-    private boolean m_freeze = false;
 
     /**
      *
@@ -50,47 +47,27 @@ public class WorkflowOutPortFigure extends AbstractWorkflowPortFigure {
         super(type, nrOfPorts, portIndex);
         setToolTip(new NewToolTipFigure(wfmName + " out port: " + portIndex));
     }
-
-
-    /**
-     * Sets the parent size when it should be fixed (independent of workbench 
-     * size), for example, when the workbench is resized of if a connection is
-     * dragged.
-     * 
-     * @param rect the workbench's control size (or desired size)
-     */
-    public void setParentSize(final Rectangle rect) {
-        m_freeze = true;
-        m_parentSize = rect;
-        setBounds(getNewBounds(m_parentSize));
-        fireFigureMoved();
-//        repaint();
-    }
     
-    private Rectangle getNewBounds(final Rectangle parent) {
-        int yPos = (parent.height / (getNrPorts() + 1)) 
-            * (getPortIndex() + 1);
-        return new Rectangle(parent.width - SIZE,
-            yPos, SIZE, SIZE);
-    }
     
+//    @Override
+//    protected void outlineShape(Graphics graphics) {
+//        Rectangle r = getBounds().getCopy();
+//        PointList list = new PointList(3);
+//        list.addPoint(r.x, r.y);
+//        list.addPoint(r.x + r.width, r.y + (r.height / 2));
+//        list.addPoint(r.x, r.y + r.height);
+//        graphics.drawPolygon(list);
+//    }
+//    
     /**
      * 
      * {@inheritDoc}
      */
     @Override
     protected PointList createShapePoints(final Rectangle rect) {
-        Rectangle parent;
-        if (!m_freeze) {
-            parent = getParent().getBounds().getCopy();
-            m_parentSize = parent;
-        } else {
-            parent = m_parentSize;
-        }
-        setBounds(getNewBounds(parent));
+        Rectangle r = getBounds().getCopy();
         if (getType().equals(BufferedDataTable.TYPE)) {
             // triangle
-            Rectangle r = getBounds().getCopy();
             PointList list = new PointList(3);
             list.addPoint(r.x, r.y);
             list.addPoint(r.x + r.width, r.y + (r.height / 2));
@@ -98,37 +75,13 @@ public class WorkflowOutPortFigure extends AbstractWorkflowPortFigure {
             return list;
         } else {
             // square
-            int yPos = (parent.height / (getNrPorts() + 1)) 
-                * (getPortIndex() + 1);
-            int xPos = parent.width - SIZE;
             PointList list = new PointList(4);
-            list.addPoint(new Point(xPos, yPos));
-            list.addPoint(new Point(xPos + SIZE, yPos));
-            list.addPoint(new Point(xPos + SIZE, yPos + SIZE));
-            list.addPoint(new Point(xPos, yPos + SIZE));
+            list.addPoint(new Point(r.x, r.y));
+            list.addPoint(new Point(r.x + r.width, r.y));
+            list.addPoint(new Point(r.x + r.width, r.y + r.height));
+            list.addPoint(new Point(r.x, r.y + r.height));
             return list;
         }
-    }
-    
-    /**
-     * Tells the figure to use the explicitely size set and not to get the size
-     * from the parent (for example when a connection is dragged outside the 
-     * workbench's size).
-     * 
-     * @see #releaseSizeFreeze()
-     */
-    public void freezeSize() {
-        m_freeze = true;
-    }
-    
-    /**
-     * Tells the figure to retrieve the size from the parent again instead of 
-     * using the explicitely set size.
-     *@see #freezeSize() 
-     */
-    public void releaseSizeFreeze() {
-        m_freeze = false;
-        repaint();
     }
     
 
@@ -139,6 +92,6 @@ public class WorkflowOutPortFigure extends AbstractWorkflowPortFigure {
     @Override
     public Locator getLocator() {
         return new WorkflowPortLocator(getType(), getPortIndex(),
-                true, getNrPorts());
+                false, getNrPorts());
     }
 }

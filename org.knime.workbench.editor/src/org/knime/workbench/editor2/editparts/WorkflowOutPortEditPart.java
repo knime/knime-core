@@ -21,23 +21,19 @@ package org.knime.workbench.editor2.editparts;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.draw2d.FreeformListener;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.GraphicalEditPart;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowOutPort;
-import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.figures.WorkflowOutPortFigure;
+import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
  * Edit part for the {@link WorkflowOutPort}.
@@ -47,8 +43,7 @@ import org.knime.workbench.editor2.figures.WorkflowOutPortFigure;
  * 
  * @author Fabian Dill, University of Konstanz
  */
-public class WorkflowOutPortEditPart extends AbstractPortEditPart 
-    implements ControlListener {
+public class WorkflowOutPortEditPart extends AbstractPortEditPart {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             WorkflowOutPortEditPart.class);
@@ -93,7 +88,7 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart
         }
         // if the referring WorkflowManager is the "root" workflow manager of 
         // the open editor then the parent is a WorkflowRootEditPart
-        return ((WorkflowRootEditPart)getParent()).getWorkflowManager();
+        return ((WorkflowPortBar)getParent().getModel()).getWorkflowManager();
     }
     
     /**
@@ -105,7 +100,6 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart
     @Override
     public void activate() {
         super.activate();
-        getRoot().getViewer().getControl().addControlListener(this);
     }
 
     /**
@@ -125,20 +119,6 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart
     protected IFigure createFigure() {
         LOGGER.debug("create figure. Parent's figure: " 
                 + ((GraphicalEditPart)getParent()).getFigure());
-        ((WorkflowFigure)((GraphicalEditPart)getParent()).getFigure())
-            .addFreeformListener(new FreeformListener() {
-
-                public void notifyFreeformExtentChanged() {
-                    LOGGER.debug("freeform extend changed: " + 
-                            ((GraphicalEditPart)getParent()).getFigure()
-                            .getBounds());
-//                    ((WorkflowOutPortFigure)getFigure()).setParentSize(
-//                            ((GraphicalEditPart)getParent()).getFigure()
-//                            .getBounds());
-//                    ((WorkflowOutPortFigure)getFigure()).releaseSizeFreeze();
-                }
-                
-            });
         return new WorkflowOutPortFigure(getType(),
                 getManager().getNrOutPorts(), getIndex(), 
                 getManager().getName());
@@ -187,30 +167,6 @@ public class WorkflowOutPortEditPart extends AbstractPortEditPart
         LOGGER.debug("zoom changed: " + zoom);
         LOGGER.debug(getFigure().getBounds());
         super.zoomChanged(zoom);
-    }
-        
-    /**
-     * 
-     * {@inheritDoc}
-     */
-    public void controlMoved(final ControlEvent e) {
-    }
-
-
-    /**
-     * 
-     * {@inheritDoc}
-     */
-    public void controlResized(final ControlEvent e) {
-        Display.getCurrent().syncExec(new Runnable() {
-            public void run() {
-                ((WorkflowOutPortFigure)getFigure()).setParentSize(
-                        new Rectangle(0, 0,
-                                getRoot().getViewer().getControl().getSize().x, 
-                                getRoot().getViewer().getControl()
-                                .getSize().y));  
-            }
-        });
     }
 
 }

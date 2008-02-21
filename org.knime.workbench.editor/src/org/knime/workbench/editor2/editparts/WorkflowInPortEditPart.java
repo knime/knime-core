@@ -37,6 +37,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowContextMenuProvider;
 import org.knime.workbench.editor2.figures.NewToolTipFigure;
 import org.knime.workbench.editor2.figures.WorkflowInPortFigure;
+import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
  * Edit part representing a {@link WorkflowInPort}.
@@ -94,7 +95,7 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
         }
         // if the referring WorkflowManager is the "root" workflow manager of 
         // the open editor then the parent is a WorkflowRootEditPart
-        return ((WorkflowRootEditPart)getParent()).getWorkflowManager();
+        return ((WorkflowPortBar)getParent().getModel()).getWorkflowManager();
     }
 
     /**

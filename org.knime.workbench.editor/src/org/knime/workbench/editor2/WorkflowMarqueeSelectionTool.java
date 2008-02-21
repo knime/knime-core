@@ -39,6 +39,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Display;
+import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -213,7 +214,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
                     || child.getTargetEditPart(MARQUEE_REQUEST) != child
                     || !isFigureVisible(figure) || !figure.isShowing())
                 continue;
-            if (!(child instanceof NodeContainerEditPart || child instanceof ConnectionContainerEditPart)) {
+            if (!(child instanceof NodeContainerEditPart
+                    || child instanceof ConnectionContainerEditPart 
+                    || child instanceof AbstractWorkflowPortBarEditPart)) {
                 continue;
             }
 
@@ -392,7 +395,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         alreadySelectedEditParts = new ArrayList();
         alreadySelectedEditParts.addAll(getCurrentViewer()
                 .getSelectedEditParts());
-        //System.out.println("already selected set");
+        // System.out.println("already selected set");
         return true;
     }
 
@@ -422,7 +425,8 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         for (Object o : c1) {
             // only node and connection container parts are relevant
             if (o instanceof NodeContainerEditPart
-                    || o instanceof ConnectionContainerEditPart) {
+                    || o instanceof ConnectionContainerEditPart
+                    || o instanceof AbstractWorkflowPortBarEditPart) {
                 // now check if o is also in c2
                 boolean found = false;
                 for (Object o2 : c2) {
@@ -463,8 +467,8 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             } catch (Exception e) {
                 e.printStackTrace();
             }
-//            System.out.println("Already selected:");
-//            printCollection(alreadySelectedEditParts);
+            // System.out.println("Already selected:");
+            // printCollection(alreadySelectedEditParts);
             calculateNewSelection(selectedEditParts = new ArrayList(),
                     deselectedEditParts = new ArrayList());
             // System.out.println("Current selection");

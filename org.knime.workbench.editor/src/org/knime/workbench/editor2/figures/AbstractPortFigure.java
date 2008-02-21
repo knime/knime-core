@@ -61,6 +61,9 @@ public abstract class AbstractPortFigure extends Shape {
             final int nrOfPorts) {
         m_portType = type;
         m_nrOfPorts = nrOfPorts;
+        setFill(true);
+        setOutline(true);
+        setOpaque(true);
     }
 
     /**

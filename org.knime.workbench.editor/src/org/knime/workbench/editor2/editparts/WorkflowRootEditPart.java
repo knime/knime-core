@@ -51,6 +51,7 @@ import org.knime.workbench.editor2.editparts.snap.SnapToPortGeometry;
 import org.knime.workbench.editor2.figures.ProgressToolTipHelper;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.figures.WorkflowLayout;
+import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
  * Root controller for the <code>WorkflowManager</code> model object. Consider
@@ -68,6 +69,9 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
             NodeLogger.getLogger(WorkflowRootEditPart.class);
 
     private ProgressToolTipHelper m_toolTipHelper;
+    
+    private WorkflowPortBar m_inBar;
+    private WorkflowPortBar m_outBar;
 
     /**
      * @return The <code>WorkflowManager</code> that is used as model for this
@@ -103,14 +107,27 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
 
         // TODO: don't create new objects!
         // create mapping from port id to workflow port proxy
-        for (int i = 0; i < wfm.getNrWorkflowIncomingPorts(); i++) {
-            modelChildren.add(wfm.getInPort(i));
+//        for (int i = 0; i < wfm.getNrWorkflowIncomingPorts(); i++) {
+//            modelChildren.add(wfm.getInPort(i));
+//        }
+//        for (int i = 0; i < wfm.getNrWorkflowOutgoingPorts(); i++) {
+//            modelChildren.add(wfm.getOutPort(i));
+//        }
+        if (wfm.getNrWorkflowIncomingPorts() > 0) {
+            if (m_inBar == null) {
+                m_inBar = new WorkflowPortBar(wfm, true);
+            }
+            modelChildren.add(m_inBar);
         }
-        for (int i = 0; i < wfm.getNrWorkflowOutgoingPorts(); i++) {
-            modelChildren.add(wfm.getOutPort(i));
+        if (wfm.getNrWorkflowOutgoingPorts() > 0) {
+            if (m_outBar == null) {
+                m_outBar = new WorkflowPortBar(wfm, false);
+            }
+            modelChildren.add(m_outBar);
         }
         return modelChildren;
     }
+
 
     /**
      * {@inheritDoc}
@@ -164,7 +181,10 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     public void activate() {
         super.activate();
         LOGGER.debug("WorkflowRootEditPart activated. Figure: " + getFigure());
-
+        for (Object o : getFigure().getChildren()) {
+            LOGGER.debug("child: " + o + " bounds " + ((IFigure)o).getBounds());
+            
+        }
         // register as listener on model object
         getWorkflowManager().addListener(this);
 

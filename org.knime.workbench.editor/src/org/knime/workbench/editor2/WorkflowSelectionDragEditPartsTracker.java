@@ -35,13 +35,14 @@ import org.eclipse.gef.commands.CompoundCommand;
 import org.eclipse.gef.commands.UnexecutableCommand;
 import org.eclipse.gef.tools.DragEditPartsTracker;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
+import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * Adjusts the default <code>DragEditPartsTracker</code> to create commands
  * that also move bendpoints.
- *
+ * 
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker {
@@ -49,7 +50,7 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
     /**
      * Constructs a new WorkflowSelectionDragEditPartsTracker with the given
      * source edit part.
-     *
+     * 
      * @param sourceEditPart the source edit part
      */
     public WorkflowSelectionDragEditPartsTracker(final EditPart sourceEditPart) {
@@ -63,10 +64,10 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
      * request type to either {@link org.eclipse.gef.RequestConstants#REQ_MOVE}
      * or {@link org.eclipse.gef.RequestConstants#REQ_ORPHAN}, depending on the
      * result of {@link #isMove()}.
-     *
+     * 
      * Aditionally the method creats a command to adapt connections where both
      * node container are include in the drag operation.
-     *
+     * 
      * @see org.eclipse.gef.tools.AbstractTool#getCommand()
      */
     @Override
@@ -95,7 +96,8 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
         }
 
         // now add the commands for the node-embraced connections
-        ConnectionContainerEditPart[] connectionsToAdapt = getEmbracedConnections(getOperationSet());
+        ConnectionContainerEditPart[] connectionsToAdapt =
+                getEmbracedConnections(getOperationSet());
         for (ConnectionContainerEditPart connectionPart : connectionsToAdapt) {
 
             command.add(connectionPart.getBendpointAdaptionCommand(request));
@@ -122,28 +124,35 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
             final List<EditPart> parts) {
 
         // result list
-        List<ConnectionContainerEditPart> result = new ArrayList<ConnectionContainerEditPart>();
+        List<ConnectionContainerEditPart> result =
+                new ArrayList<ConnectionContainerEditPart>();
 
         for (EditPart part : parts) {
-            if (part instanceof NodeContainerEditPart) {
-                NodeContainerEditPart containerPart = (NodeContainerEditPart)part;
+            if (part instanceof NodeContainerEditPart 
+                    || part instanceof AbstractWorkflowPortBarEditPart) {
+                EditPart containerPart =
+                        (EditPart)part;
 
-                ConnectionContainerEditPart[] outPortConnectionParts = getOutportConnections(containerPart);
+                ConnectionContainerEditPart[] outPortConnectionParts =
+                        getOutportConnections(containerPart);
 
                 // if one of the connections in-port-node is included in the
                 // selected list, the connections bendpoints must be adapted
-                for (ConnectionContainerEditPart connectionPart : outPortConnectionParts) {
+                for (ConnectionContainerEditPart connectionPart 
+                            : outPortConnectionParts) {
 
                     // get the in-port-node part of the connection and check
                     AbstractPortEditPart inPortPart = null;
                     if (connectionPart.getTarget() != null
                             && ((AbstractPortEditPart)connectionPart
                                     .getTarget()).isInPort()) {
-                        inPortPart = (AbstractPortEditPart)connectionPart
-                                .getTarget();
-                    } else if (connectionPart.getSource() != null){
-                        inPortPart = (AbstractPortEditPart)connectionPart
-                                .getSource();
+                        inPortPart =
+                                (AbstractPortEditPart)connectionPart
+                                        .getTarget();
+                    } else if (connectionPart.getSource() != null) {
+                        inPortPart =
+                                (AbstractPortEditPart)connectionPart
+                                        .getSource();
                     }
 
                     if (inPortPart != null
@@ -158,15 +167,16 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
     }
 
     private ConnectionContainerEditPart[] getOutportConnections(
-            final NodeContainerEditPart containerPart) {
+            final EditPart containerPart) {
 
         // result list
-        List<ConnectionContainerEditPart> result = new ArrayList<ConnectionContainerEditPart>();
+        List<ConnectionContainerEditPart> result =
+                new ArrayList<ConnectionContainerEditPart>();
         List<EditPart> children = containerPart.getChildren();
 
         for (EditPart part : children) {
-            if (part instanceof AbstractPortEditPart
-                    && !((AbstractPortEditPart)part).isInPort()) {
+            if (part instanceof AbstractPortEditPart) {
+//                    && !((AbstractPortEditPart)part).isInPort()) {
                 AbstractPortEditPart outPortPart = (AbstractPortEditPart)part;
 
                 // append all connection edit parts

@@ -51,8 +51,9 @@ import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.WorkflowInPortBarEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
-import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
+import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
  * Provider for the Workflow editor's context menus.
@@ -160,15 +161,16 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         if (parts.size() == 1) {
             EditPart p = (EditPart)parts.get(0);
             LOGGER.debug("selected edit part: " + p);
-            if (p instanceof WorkflowRootEditPart) {
-                WorkflowRootEditPart root = (WorkflowRootEditPart)p;
+            if (p instanceof WorkflowInPortBarEditPart) {
+                WorkflowInPortBarEditPart root = (WorkflowInPortBarEditPart)p;
                 manager.add(new Separator("outPortViews"));
                 for (Object o : p.getChildren()) {
                     EditPart child = (EditPart)o;
                     if (child instanceof WorkflowInPortEditPart
                             && ((WorkflowInPortEditPart)child).isSelected()) {
                         action = new OpenWorkflowPortViewAction(
-                                root.getNodeContainer(),
+                                ((WorkflowPortBar)root.getModel())
+                                    .getWorkflowManager(),
                                 ((WorkflowInPortEditPart)child).getIndex());
                         manager.appendToGroup("outPortViews", action);
                         ((WorkflowInPortEditPart)child).setSelected(false);

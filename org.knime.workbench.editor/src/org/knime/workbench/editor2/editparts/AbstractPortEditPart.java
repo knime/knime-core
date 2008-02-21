@@ -51,6 +51,7 @@ import org.knime.workbench.editor2.editparts.anchor.OutPortConnectionAnchor;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
 import org.knime.workbench.editor2.figures.NewToolTipFigure;
+import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
  * Abstract base class for the edit parts that control the ports. This editpart
@@ -123,6 +124,10 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      * @return the container
      */
     protected NodeContainer getNodeContainer() {
+        if (getParent().getModel() instanceof WorkflowPortBar) {
+            return ((WorkflowPortBar)getParent().getModel())
+                .getWorkflowManager();
+        }
         return (NodeContainer) getParent().getModel();
     }
 

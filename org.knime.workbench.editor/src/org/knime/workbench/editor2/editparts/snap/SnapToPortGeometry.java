@@ -48,11 +48,11 @@ import org.eclipse.gef.requests.GroupRequest;
 import org.knime.core.node.PortType;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
+import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowInPortEditPart;
-import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
 /**
  * A temporary helper used to perform snapping to existing elements. This helper
@@ -420,9 +420,9 @@ public class SnapToPortGeometry extends SnapToHelper {
                         }
                     }
                 }
-                if (part instanceof WorkflowRootEditPart) {
-                    WorkflowRootEditPart containerEditPart
-                        = (WorkflowRootEditPart)part;
+                if (part instanceof AbstractWorkflowPortBarEditPart) {
+                    AbstractWorkflowPortBarEditPart containerEditPart
+                        = (AbstractWorkflowPortBarEditPart)part;
 
                     // get the port parts
                     for (Object childPart : containerEditPart.getChildren()) {

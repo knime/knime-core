@@ -87,7 +87,8 @@ public class ModellingNodeExtraInfo implements UIInformation {
     /**
      * {@inheritDoc}
      */
-    public void load(final NodeSettingsRO conf) throws InvalidSettingsException {
+    public void load(final NodeSettingsRO conf) 
+        throws InvalidSettingsException {
         m_bounds = conf.getIntArray(KEY_BOUNDS);
     }
 
