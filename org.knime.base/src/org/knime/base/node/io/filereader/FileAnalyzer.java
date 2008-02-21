@@ -796,7 +796,6 @@ public final class FileAnalyzer {
         }
         int linesRead = 0;
         int colIdx = -1;
-        boolean wasCanceled = false;
 
         String missValuePattern = userSettings.getGlobalMissingValuePattern();
         if (missValuePattern == null) {
@@ -806,7 +805,6 @@ public final class FileAnalyzer {
 
             if (cutItShort(exec)) {
                 result.setAnalyzeUsedAllRows(false);
-                wasCanceled = true;
                 break;
             }
 
@@ -912,33 +910,35 @@ public final class FileAnalyzer {
         }
         tokenizer.closeSourceStream();
 
-        if (!wasCanceled) {
-            // if there is still a type set to null we got only missing values
-            // in that column: warn user (unless he already chose to skip
-            // column)
-            String cols = "";
-            int cnt = 0;
-            for (int t = 0; t < types.length; t++) {
-                if (types[t] == null) {
-                    types[t] = StringCell.TYPE;
-                    if ((userColProps == null) || (userColProps.size() <= t)
-                            || (userColProps.get(t) == null)
-                            || (!userColProps.get(t).getSkipThisColumn())) {
-                        cnt++;
+        // if there is still a type set to null we got only missing values
+        // in that column: warn user (unless he already chose to skip
+        // column)
+        String cols = "";
+        int cnt = 0;
+        for (int t = 0; t < types.length; t++) {
+            if (types[t] == null) {
+                types[t] = StringCell.TYPE;
+                if ((cnt < 21)
+                        && ((userColProps == null)
+                                || (userColProps.size() <= t)
+                                || (userColProps.get(t) == null)
+                                || (!userColProps.get(t).getSkipThisColumn()))
+                                ) {
+                    if (cnt < 20) {
                         cols += "#" + t + ", ";
-                        if (cnt > 20) {
-                            cols += "...and more..., ";
-                            break;
-                        }
+                        cnt++;
+                    } else if (cnt == 20) {
+                        cols += "...and more..., ";
+                        cnt++;
                     }
                 }
             }
-            if (cols.length() > 0) {
-                LOGGER.warn("Didn't get any value for column(s) with index "
-                        + cols.substring(0, cols.length() - 2) // cut off the
-                                                                // comma
-                        + ". Please verify column type(s).");
-            }
+        }
+        if (cols.length() > 0) {
+            LOGGER.warn("Didn't get any value for column(s) with index "
+                    + cols.substring(0, cols.length() - 2) // cut off the
+                    // comma
+                    + ". Please verify column type(s).");
         }
         return types;
     }
