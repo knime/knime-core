@@ -272,6 +272,9 @@ public final class Node {
         }
         loadInternals(loader.getNodeInternDirectory(), exec);
         m_isCurrentlySaved = true;
+        if (m_message != null) {
+            notifyMessageListeners(m_message);
+        }
     }
 
     /**
@@ -502,17 +505,6 @@ public final class Node {
         // TODO: NEWWFM State Event
 //        notifyStateListeners(new NodeStateChangedEvent(
 //                NodeStateChangedEvent.Type.START_EXECUTE));
-        //
-        // CHECK PRECONDITIONS
-        //
-        // if not configured
-        if (!m_model.isConfigured()) {
-            m_logger.assertLog(false, "Node is not configured!");
-            // TODO : NEWWFM state event
-//            notifyStateListeners(new NodeStateChangedEvent(
-//                    NodeStateChangedEvent.Type.END_EXECUTE));
-            return false;
-        }
 
         // 
         // EXECUTE the underlying node's model
@@ -540,7 +532,7 @@ public final class Node {
         // check for compatible input PortObjects
         for (int i = 0; i < inData.length; i++) {
             PortType thisType = m_model.getInPortType(i);
-            if (!(thisType.getPortObjectClass().isAssignableFrom(
+            if (!(thisType.getPortObjectClass().isInstance(
                     inData[i].getClass()))) {
                 m_logger.error("Connection Error: Mismatch"
                         + " of input port types (port " + i + ").");
@@ -598,15 +590,15 @@ public final class Node {
             }
         }
 
+        boolean continuesLoop = 
+            m_model.getScopeContextStackContainer().getLoopStatus() != null;
         // check for compatible output PortObjects
         for (int i = 0; i < newOutData.length; i++) {
             PortType thisType = m_model.getOutPortType(i);
-            assert (newOutData[i] != null)
-                || (m_model.getScopeContextStackContainer()
-                        .getLoopStatus() != null)
-                : "Null output from non-loopending node";
+            assert newOutData[i] != null || continuesLoop
+                : "Null output from non-loopterminate node";
             if ((newOutData[i] != null) && !thisType.getPortObjectClass()
-                    .isAssignableFrom(newOutData[i].getClass())) {
+                    .isInstance(newOutData[i])) {
                 m_logger.error("Connection Error: Mismatch" +
                         " of output port types (port " + i + ").");
                 m_logger.error("  (Wanted: "
@@ -643,7 +635,10 @@ public final class Node {
             } else {
                 // TODO save them, don't simply hand them over!
                 m_outPorts[p].setPortObject(newOutData[p], this);
-                m_outPorts[p].setPortObjectSpec(newOutData[p].getSpec());
+                if (newOutData[p] != null) {
+                    assert !continuesLoop;
+                    m_outPorts[p].setPortObjectSpec(newOutData[p].getSpec());
+                }
             }
             m_outPorts[p].setHiLiteHandler(m_model.getOutHiLiteHandler(p));
             m_outPorts[p].setScopeContextStackContainer(
@@ -1250,7 +1245,6 @@ public final class Node {
 
     void saveInternals(final File internDir, final ExecutionMonitor exec)
         throws CanceledExecutionException {
-        m_logger.assertLog(m_model.isExecuted(), "Can't save internals, not executed");
             if (internDir.exists()) {
                 FileUtil.deleteRecursively(internDir);
             }
