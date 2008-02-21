@@ -65,9 +65,6 @@ public abstract class GenericNodeModel {
     /** Keeps a list of registered views. */
     private final CopyOnWriteArrayList<GenericNodeView<?>> m_views;
 
-    /** Stores the result of the last call of <code>#configure()</code>. */
-    private boolean m_configured;
-
     /** Flag for the hasContent state. */
     private boolean m_hasContent;
 
@@ -116,8 +113,6 @@ public abstract class GenericNodeModel {
             m_outPortTypes[i] = outPortTypes[i];
         }
 
-        // model is not configured and not executed
-        m_configured = false;
         m_hasContent = false;
 
         // set initial array of HiLiteHandlers
@@ -251,17 +246,6 @@ public abstract class GenericNodeModel {
      */
     final PortType getOutPortType(final int index) {
         return m_outPortTypes[index];
-    }
-
-    /**
-     * Returns <code>true</code> if the model has been configured, i.e. all
-     * user settings set.
-     *
-     * @return <code>true</code> if the model has been configured, otherwise
-     *         <code>false</code>.
-     */
-    final boolean isConfigured() {
-        return m_configured;
     }
 
     /**
@@ -442,23 +426,9 @@ public abstract class GenericNodeModel {
      * @param hasContent Flag if this node is configured be executed or not.
      */
     final void setHasContent(final boolean hasContent) {
-        assert !(hasContent && !m_configured);
         if (hasContent != hasContent()) {
             m_hasContent = hasContent;
             // and inform all views about the new model
-            stateChanged();
-        }
-    }
-
-    /**
-     * Sets the isConfigured flag and fires a state change event.
-     * @param isConfigured Flag if this node is configured or not.
-     */
-    final void setConfigured(final boolean isConfigured) {
-        assert !(m_hasContent && !isConfigured);
-        if (isConfigured != isConfigured()) {
-            // set the state flag to "configured"
-            m_configured = isConfigured;
             stateChanged();
         }
     }
@@ -527,7 +497,6 @@ public abstract class GenericNodeModel {
         } finally {
             // set state to not executed and not configured
             m_hasContent = false;
-            m_configured = false;
             // reset these property handlers
             resetHiLiteHandlers();
             // and notify all views
@@ -743,28 +712,18 @@ public abstract class GenericNodeModel {
                 }
             }
         }
-        try {
-            // CALL CONFIGURE
-            newOutSpecs = configure(copyInSpecs);
-            // if successful (without exception) set configured flag
-            m_configured = true;
-            // check if null
-            if (newOutSpecs == null) {
-                newOutSpecs = new PortObjectSpec[getNrOutPorts()];
-            }
-            // check output object spec length
-            if (newOutSpecs.length != getNrOutPorts()) {
-                m_logger.error("Output spec-array length invalid: "
-                        + newOutSpecs.length + " <> " + getNrOutPorts());
-                newOutSpecs = new PortObjectSpec[getNrOutPorts()];
-            }
-        } catch (InvalidSettingsException ise) {
-            m_configured = false;
-            throw ise;
+        // CALL CONFIGURE
+        newOutSpecs = configure(copyInSpecs);
+        if (newOutSpecs == null) {
+            newOutSpecs = new PortObjectSpec[getNrOutPorts()];
         }
-        // return the resulting ObjectSpecs from the configure call
+        // check output object spec length
+        if (newOutSpecs.length != getNrOutPorts()) {
+            m_logger.error("Output spec-array length invalid: "
+                    + newOutSpecs.length + " <> " + getNrOutPorts());
+            newOutSpecs = new PortObjectSpec[getNrOutPorts()];
+        }
         return newOutSpecs;
-
     }
 
     /**

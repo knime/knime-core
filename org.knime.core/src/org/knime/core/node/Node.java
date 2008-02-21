@@ -249,7 +249,6 @@ public final class Node {
 
     void load(final NodePersistor loader, final ExecutionMonitor exec)
         throws CanceledExecutionException {
-        m_model.setConfigured(loader.isConfigured());
         if (m_model.isAutoExecutable()) {
             // will be executed by workflow manager
             m_model.setHasContent(false);
@@ -930,6 +929,7 @@ public final class Node {
      * @return flag indicating success of configure
      */
     public boolean configure(final PortObjectSpec[] inSpecs) {
+        boolean success = false;
         synchronized (m_configureLock) {
             // reset message object
             m_message = null;
@@ -938,7 +938,6 @@ public final class Node {
             // need to init here as there may be an exception being thrown and
             // then we copy the null elements of this array to their destination
             PortObjectSpec[] newOutSpec = new PortObjectSpec[getNrOutPorts()];
-            // configure
             try {
                 // check the inspecs against null
                 for (int i = 0; i < inSpecs.length; i++) {
@@ -952,23 +951,11 @@ public final class Node {
 //                                + "are configured and/or executed.");
                     }
                 }
-    
+                
                 // call configure model to create output table specs
-                PortObjectSpec[] tempOutSpec = m_model.configureModel(inSpecs);
-                // set newly created array of specs, if returned array is null
-                if (tempOutSpec == null) {
-                    tempOutSpec = newOutSpec;
-                }
-                if (tempOutSpec.length != getNrOutPorts()) {
-                    m_logger.coding("configure() method returns " 
-                            + "array of wrong size (expected " 
-                            + getNrOutPorts() + ", got "
-                            + tempOutSpec.length +  ")");
-                    throw new IndexOutOfBoundsException("Unable to configure "
-                            + "due to coding problem in NodeModel.configure()");
-                }
-                newOutSpec = tempOutSpec; 
-                // notify state listeners before the new specs are propagated
+                // guaranteed to return non-null, correct-length array
+                newOutSpec = m_model.configureModel(inSpecs);
+                success = true;
             } catch (InvalidSettingsException ise) {
                     m_logger.warn("Configure failed: " + ise.getMessage());
                 localMessage =
@@ -997,11 +984,11 @@ public final class Node {
                 }
             }
         }
-        if (m_model.isConfigured()) {
+        if (success) {
             m_logger.info("Configure succeeded. (" + this.getName() + ")");
-    }
-        return m_model.isConfigured();
         }
+        return success;
+    }
 
     /**
      * @return The number of available views.
