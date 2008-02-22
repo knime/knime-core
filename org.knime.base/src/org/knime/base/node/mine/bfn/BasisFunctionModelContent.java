@@ -61,15 +61,21 @@ public final class BasisFunctionModelContent extends ModelContent {
     }
     
     /**
+     * Creates a new basis function model object.
+     */
+    public BasisFunctionModelContent() {
+        super("basisfunction_model");
+    }
+    
+    /**
      * Save the given rule model and model spec into this model content object.
-     * @param name the name of this model content
      * @param bfs the rules to save
      * @param spec the model spec to save
      */
-    public BasisFunctionModelContent(final String name,
+    public BasisFunctionModelContent(
             final Map<DataCell, List<BasisFunctionLearnerRow>> bfs,
             final DataTableSpec spec) {
-        super(name);
+        this();
         ModelContentWO ruleSpec = super.addModelContent("rules");
         for (DataCell key : bfs.keySet()) {
             List<BasisFunctionLearnerRow> list = bfs.get(key);

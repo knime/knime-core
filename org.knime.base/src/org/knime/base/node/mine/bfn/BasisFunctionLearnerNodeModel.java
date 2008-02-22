@@ -357,7 +357,7 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
         // return rules[0] and rule_model[1]
         return new PortObject[]{exec.createBufferedDataTable(
                 table, exec), new BasisFunctionModelContent(
-                      "basisfunction_model", m_bfs, table.getDataTableSpec())};
+                      m_bfs, table.getDataTableSpec())};
     }
 
     /**
