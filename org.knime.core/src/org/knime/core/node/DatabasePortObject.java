@@ -52,12 +52,8 @@ public class DatabasePortObject implements PortObject {
      * {@inheritDoc}
      */
     public DatabasePortObjectSpec getSpec() {
-        if (m_data == null) {
-            return new DatabasePortObjectSpec(null, m_conn);
-        } else {
-            return new DatabasePortObjectSpec(
+        return new DatabasePortObjectSpec(
                     m_data.getDataTableSpec(), m_conn);
-        }
     }
 
     private final DataTable m_data;
