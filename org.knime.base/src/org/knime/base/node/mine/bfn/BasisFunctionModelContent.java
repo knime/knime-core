@@ -48,6 +48,9 @@ final class BasisFunctionModelContent extends ModelContent {
     static final PortType TYPE = new PortType(DataTableSpec.class, 
             BasisFunctionModelContent.class);
     
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public DataTableSpec getSpec() {
         try {
