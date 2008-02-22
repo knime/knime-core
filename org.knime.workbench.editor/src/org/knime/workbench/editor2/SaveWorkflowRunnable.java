@@ -45,10 +45,10 @@ import org.knime.core.node.NodeLogger;
  *
  * @author Christoph Sieb, University of Konstanz
  */
-class SaveWorflowRunnable extends PersistWorflowRunnable {
+class SaveWorkflowRunnable extends PersistWorflowRunnable {
 
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(SaveWorflowRunnable.class);
+            .getLogger(SaveWorkflowRunnable.class);
 
     private WorkflowEditor m_editor;
 
@@ -70,7 +70,7 @@ class SaveWorflowRunnable extends PersistWorflowRunnable {
      * @param monitor
      *            the progress monitor to report the progress to
      */
-    public SaveWorflowRunnable(final WorkflowEditor editor,
+    public SaveWorkflowRunnable(final WorkflowEditor editor,
             final File workflowFile, final StringBuffer exceptionMessage,
             final IProgressMonitor monitor) {
         m_editor = editor;

@@ -1050,8 +1050,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             // except when cancalation occured
             IWorkbench wb = PlatformUI.getWorkbench();
             IProgressService ps = wb.getProgressService();
-            SaveWorflowRunnable saveWorflowRunnable =
-                    new SaveWorflowRunnable(this, file, exceptionMessage,
+            SaveWorkflowRunnable saveWorflowRunnable =
+                    new SaveWorkflowRunnable(this, file, exceptionMessage,
                             monitor);
             ps.run(true, false, saveWorflowRunnable);
             // after saving the workflow, check for the import marker
