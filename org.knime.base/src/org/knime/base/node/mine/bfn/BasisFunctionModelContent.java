@@ -42,10 +42,10 @@ import org.knime.core.node.PortType;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class BasisFunctionModelContent extends ModelContent {
+public final class BasisFunctionModelContent extends ModelContent {
 
     /** The <code>PortType</code> for basisfunction models. */
-    static final PortType TYPE = new PortType(DataTableSpec.class, 
+    public static final PortType TYPE = new PortType(DataTableSpec.class, 
             BasisFunctionModelContent.class);
     
     /**
