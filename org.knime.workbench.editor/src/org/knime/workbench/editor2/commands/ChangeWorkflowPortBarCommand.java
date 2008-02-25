@@ -23,8 +23,10 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.commands.Command;
+import org.knime.core.node.NodeLogger;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
@@ -52,21 +54,26 @@ public class ChangeWorkflowPortBarCommand extends Command {
             final AbstractWorkflowPortBarEditPart portBar,
             final Rectangle newBounds) {
         // right info type
-        WorkflowPortBar barModel = (WorkflowPortBar)portBar.getModel();
-        m_extraInfo = (ModellingNodeExtraInfo) barModel.getUIInfo();
-        if (m_extraInfo == null) {
-            m_extraInfo = new ModellingNodeExtraInfo();
-            m_extraInfo.setBounds(new int[] {
-                    newBounds.x, newBounds.y, newBounds.width, newBounds.height
-            });
-        }
-        m_oldBounds = new Rectangle(m_extraInfo.getBounds()[0], 
-                m_extraInfo.getBounds()[1], 
-                m_extraInfo.getBounds()[2],
-                m_extraInfo.getBounds()[3]);
+        m_oldBounds = new Rectangle(portBar.getFigure().getBounds());
         m_newBounds = newBounds;
         m_bar = portBar;
 
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean canExecute() {
+        Dimension min = m_bar.getFigure().getMinimumSize();
+        NodeLogger.getLogger(ChangeWorkflowPortBarCommand.class).debug(
+                "min size: " + min);
+        if (m_newBounds.width < min.width 
+                || m_newBounds.height < min.height) {
+            return false;
+        }
+        return super.canExecute();
     }
 
     /**
@@ -76,13 +83,17 @@ public class ChangeWorkflowPortBarCommand extends Command {
      */
     @Override
     public void execute() {
+        WorkflowPortBar barModel = (WorkflowPortBar)m_bar.getModel();
+        m_extraInfo = (ModellingNodeExtraInfo) barModel.getUIInfo();
+        if (m_extraInfo == null) {
+            m_extraInfo = new ModellingNodeExtraInfo();
+        }
         m_extraInfo.setBounds(new int[] {
                 m_newBounds.x,
                 m_newBounds.y,
                 m_newBounds.width,
                 m_newBounds.height});
         // must set explicitly so that event is fired by container
-        WorkflowPortBar barModel = (WorkflowPortBar)m_bar.getModel();
         barModel.setUIInfo(m_extraInfo);
         m_bar.getFigure().setBounds(m_newBounds);
         m_bar.getFigure().getLayoutManager().layout(m_bar.getFigure());
