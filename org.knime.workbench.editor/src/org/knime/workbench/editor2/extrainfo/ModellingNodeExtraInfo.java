@@ -155,4 +155,13 @@ public class ModellingNodeExtraInfo implements UIInformation {
         newObject.m_bounds = this.m_bounds.clone();
         return newObject;
     }
+    
+    @Override
+    public String toString() {
+        if (m_bounds == null) {
+            return "not set";
+        }
+        return "x " + m_bounds[0] + " y " + m_bounds[1] 
+                    + " width " + m_bounds[2] + " height "  + m_bounds[3]; 
+    }
 }
