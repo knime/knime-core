@@ -1041,13 +1041,12 @@ public final class WorkflowManager extends NodeContainer {
      */
     void doBeforeExecution(final NodeContainer nc) {
         synchronized (m_dirtyWorkflow) {
-            if (nc instanceof WorkflowManager) {
+            if (!nc.getID().equals(this.getID())) {
                 LOGGER.info(nc.getNameWithID() + " doBeforeExecute (WFM)");
             } else {
                 LOGGER.info(nc.getNameWithID() + " doBeforeExecute (NC)");
             }
-            switch (getState()) {
-            case QUEUED:  // if the WorkflowManager itself was queued:
+            if (!nc.getID().equals(this.getID())) {
                 // some nodes IN this WFM are executing
                 setNewState(State.EXECUTING); 
                 // disable outports (to avoid access to PortObject when
@@ -1056,8 +1055,6 @@ public final class WorkflowManager extends NodeContainer {
                 for (WorkflowOutPort port : m_outPorts) {
                     port.showPortObject(false);
                 }
-            default:
-                checkForNodeStateChanges();
             }
         }
     }
@@ -1067,7 +1064,8 @@ public final class WorkflowManager extends NodeContainer {
      * successfully.   
      */
     private boolean allInternalNodesFinished() {
-        assert getState().equals(NodeContainer.State.EXECUTING);
+        // TODO would be nice if we could in fact assert this!
+//        assert getState().equals(NodeContainer.State.EXECUTING);
         for (NodeContainer nc : m_nodes.values()) {
             if (nc.getState().executionInProgress()) {
                 return false;
@@ -1084,7 +1082,7 @@ public final class WorkflowManager extends NodeContainer {
     void doAfterExecution(final NodeContainer nc, final boolean success) {
         synchronized (m_dirtyWorkflow) {
             String st = success ? " - success" : " - failure";
-            if (nc instanceof WorkflowManager) {
+            if (!nc.getID().equals(this.getID())) {
                 LOGGER.info(nc.getNameWithID() + " doAfterExecute (WFM)" + st);
             } else {
                 LOGGER.info(nc.getNameWithID() + " doAfterExecute (NC)" + st);
@@ -1140,8 +1138,8 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 }
             }
-            switch (getState()) {
-            case EXECUTING:
+            if (nc.getID().equals(this.getID())) {
+                // our own WFM is called after all nodes are finished
                 if (allInternalNodesFinished()) {
                     LOGGER.info("MetaNode " + this.getID() + " doAfterExecute");
                     // this ought to be an atomic operation:
@@ -1154,28 +1152,31 @@ public final class WorkflowManager extends NodeContainer {
                         port.showPortObject(true);
                     }
                     // and finally run after execution stuff for this as node
-                    if (getParent() != null) {
+                    if ((getNrOutPorts() > 0) && (getParent() != null)) {
                         getParent().doAfterExecution(this, true);
                     }
+                    return;
                 }
-            default:
             }
             if (canConfigureSuccessors) {
                 // standard behaviour - configure successors since this node
                 // is done (either executed or failed) and has new specs (maybe)
                 // Do not reconfigure this node if it failed - we will delete
                 // any warnings/errors otherwise!
-                if (nc instanceof SingleNodeContainer) {
-                    configure(nc.getID(), false);
-                } else {
+                if (nc.getID().equals(this.getID())) {
                     assert nc instanceof WorkflowManager;
                     getParent().configure(nc.getID(), false);
+                } else {
+                    // may be SingleNodeContainer or WFM contained within this
+                    // one but then it can be treated like a SNC
+                    configure(nc.getID(), false);
                 }
             }
-            if (nc instanceof SingleNodeContainer) {
+            if (!nc.getID().equals(this.getID())) {
+                // only if an internal node finished:
                 checkForQueuableNodes();
-                checkForNodeStateChanges();
             }
+            checkForNodeStateChanges();
         }
     }
 
@@ -1621,19 +1622,9 @@ public final class WorkflowManager extends NodeContainer {
             NodeContainer.State newState = State.IDLE;
             if (nrNodesInState[State.EXECUTED.ordinal()] == nrNodes) {
                 // WFM is executed only if all nodes are executed and
-                // all ports (input and output) are populated.
-                boolean allPortObjectsExist = true;
-                for (int i = 0; i < getNrOutPorts(); i++) {
-                    if (getOutPort(i).getPortObject() == null) {
-                        allPortObjectsExist = false;
-                    }
-                }
-                for (int i = 0; i < getNrInPorts(); i++) {
-                    if (getWorkflowIncomingPort(i).getPortObject() == null) {
-                        allPortObjectsExist = false;
-                    }
-                }
-                if (allPortObjectsExist) {
+                // all output ports are connected.
+                if (m_connectionsByDest.get(this.getID()).size()
+                       >= getNrOutPorts()) {
                     doAfterExecution(this, true);  // WFM "successfully" done.
                     return;
                 }
