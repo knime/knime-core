@@ -109,7 +109,9 @@ public final class WorkflowManager extends NodeContainer {
 
     /** ports of this Metanode (both arrays can have 0 length!). */
     private final WorkflowInPort[] m_inPorts;
+    private UIInformation m_inPortsBarUIInfo;
     private final WorkflowOutPort[] m_outPorts;
+    private UIInformation m_outPortsBarUIInfo;
     
     // Misc members:
     
@@ -2273,5 +2275,37 @@ public final class WorkflowManager extends NodeContainer {
     
     public NodeInPort getWorkflowOutgoingPort(final int i) {
         return m_outPorts[i].getSimulatedInPort();
+    }
+    
+    /** Set UI information for workflow's input ports 
+     * (typically aligned as a bar).
+     * @param inPortsBarUIInfo The new UI info.
+     */
+    public void setInPortsBarUIInfo(final UIInformation inPortsBarUIInfo) {
+        m_inPortsBarUIInfo = inPortsBarUIInfo;
+    }
+    
+    /** Set UI information for workflow's output ports 
+     * (typically aligned as a bar).
+     * @param outPortsBarUIInfo The new UI info.
+     */
+    public void setOutPortsBarUIInfo(final UIInformation outPortsBarUIInfo) {
+        m_outPortsBarUIInfo = outPortsBarUIInfo;
+    }
+    
+    /** Get UI information for workflow input ports.
+     * @return the ui info or null if not set.
+     * @see #setInPortsBarUIInfo(UIInformation)
+     */
+    public UIInformation getInPortsBarUIInfo() {
+        return m_inPortsBarUIInfo;
+    }
+    
+    /** Get UI information for workflow output ports.
+     * @return the ui info or null if not set.
+     * @see #setOutPortsBarUIInfo(UIInformation)
+     */
+    public UIInformation getOutPortsBarUIInfo() {
+        return m_outPortsBarUIInfo;
     }
 }
