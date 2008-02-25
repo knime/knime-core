@@ -807,6 +807,44 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     /**
+     * Reset the mark when nodes have been set to be executed. Skip
+     * nodes which are already queued or executing.
+     * 
+     * @param snc
+     */
+    private void disableNodeForExecution(final NodeID id) {
+        NodeContainer nc = m_nodes.get(id);
+        if (nc != null) {
+            switch (nc.getState()) {
+            case IDLE:
+            case CONFIGURED:
+                // nothing needs to be done - also with the successors!
+                return;
+            case MARKEDFOREXEC:
+            case UNCONFIGURED_MARKEDFOREXEC:
+                nc.markForExecution(false);
+            default:
+                // ignore all other states (but touch successors)
+            }
+            for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
+                NodeID succId = cc.getDest();
+                if (succId.equals(this.getID())) {
+                    // unmark successors of this metanode
+                    getParent().disableNodeForExecution(this.getID());
+                } else {
+                    // handle normal node
+                    disableNodeForExecution(succId);
+                }
+            }
+        } else { // WFM
+            this.markForExecution(false);
+            // unmark successors of this metanode
+            getParent().disableNodeForExecution(this.getID());
+        }
+    }
+    
+    
+    /**
      * Reset all nodes in this workflow. Make sure the reset is propagated
      * in the right order, that is, only actively reset the "left most"
      * nodes in the workflow or the ones connected to meta node input
@@ -1012,9 +1050,6 @@ public final class WorkflowManager extends NodeContainer {
                 for (WorkflowOutPort port : m_outPorts) {
                     port.hidePortObject(false);
                 }
-                if (allInternalNodesFinished()) {
-                    doAfterExecution(this);
-                }
             default:
                 checkForNodeStateChanges();
             }
@@ -1038,13 +1073,20 @@ public final class WorkflowManager extends NodeContainer {
     /** cleanup a node after execution.
      *
      * @param nc NodeContainer which just finished execution
+     * @param success indicates if execution of node was successful
      */
-    void doAfterExecution(final NodeContainer nc) {
+    void doAfterExecution(final NodeContainer nc, final boolean success) {
         synchronized (m_dirtyWorkflow) {
+            String st = success ? " - success" : " - failure";
             if (nc instanceof WorkflowManager) {
-                LOGGER.info(nc.getNameWithID() + " doAfterExecute (WFM)");
+                LOGGER.info(nc.getNameWithID() + " doAfterExecute (WFM)" + st);
             } else {
-                LOGGER.info(nc.getNameWithID() + " doAfterExecute (NC)");
+                LOGGER.info(nc.getNameWithID() + " doAfterExecute (NC)" + st);
+            }
+            if (!success) {
+                // execution failed - clean up successors' execution-marks
+                disableNodeForExecution(nc.getID());
+                return;
             }
             boolean canConfigureSuccessors = true;
             if (nc instanceof SingleNodeContainer) {
@@ -1107,7 +1149,7 @@ public final class WorkflowManager extends NodeContainer {
                     }
                     // and finally run after execution stuff for this as node
                     if (getParent() != null) {
-                        getParent().doAfterExecution(this);
+                        getParent().doAfterExecution(this, true);
                     }
                 }
             default:
@@ -1119,10 +1161,10 @@ public final class WorkflowManager extends NodeContainer {
                 // any warnings/errors otherwise!
                 configure(nc.getID(), false);
             }
-        }
-        if (nc instanceof SingleNodeContainer) {
-            checkForQueuableNodes();
-            checkForNodeStateChanges();
+            if (nc instanceof SingleNodeContainer) {
+                checkForQueuableNodes();
+                checkForNodeStateChanges();
+            }
         }
     }
 
@@ -1548,6 +1590,7 @@ public final class WorkflowManager extends NodeContainer {
      */
     public void cancelExecution(final NodeContainer nc) {
         assert nc != null;
+        disableNodeForExecution(nc.getID());
         nc.cancelExecution();
     }
 
@@ -1580,7 +1623,7 @@ public final class WorkflowManager extends NodeContainer {
                     }
                 }
                 if (allPortObjectsExist) {
-                    doAfterExecution(this);
+                    doAfterExecution(this, true);  // WFM "successfully" done.
                     return;
                 }
             } else if (nrNodesInState[State.CONFIGURED.ordinal()] == nrNodes) {
@@ -1679,24 +1722,24 @@ public final class WorkflowManager extends NodeContainer {
      * also configure it's successors.
      *
      * @param id of node to configure
-     * @param configureMyself
+     * @param configureMyself true if the node itself is to be configured
      */
     private void configure(final NodeID nodeId, final boolean configureMyself) {
         ArrayList<NodeID> nodes = getBreathFirstListOfNodeAndSuccessors(nodeId);
         if (!configureMyself) {
             nodes.remove(nodeId);
         }
-        boolean wfmIsPartOfList = false;
+        boolean wfmIsPartOfList = nodes.contains(this.getID());
+        // looks like we are trying to configure ourselves as well:
+        // Don't configure WFM itself but make sure the nodes connected
+        // to this WFM are configured when we are done here...
+        if (wfmIsPartOfList) {
+            nodes.remove(this.getID());
+        }
+        // now iterate over the remaining nodes
         for (NodeID currNode : nodes) {
             NodeContainer nc = m_nodes.get(currNode);
-            if (nc == null) {
-                synchronized (m_dirtyWorkflow) {
-                    // looks like we are trying to configure ourselves - nothing
-                    // to do - wrapping ports already do the trick.
-                    // this WFM itself is configured from the outside!
-                }
-                wfmIsPartOfList = true;
-            }
+            assert nc != null;
             synchronized (m_dirtyWorkflow) {
                 PortObjectSpec[] inSpecs =
                     new PortObjectSpec[nc.getNrInPorts()];
@@ -1735,6 +1778,7 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
         if (wfmIsPartOfList) {
+            checkForNodeStateChanges();
             getParent().configure(this.getID(), false);
         }
     }
