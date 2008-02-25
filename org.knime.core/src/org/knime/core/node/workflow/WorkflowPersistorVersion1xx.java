@@ -599,7 +599,9 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             UIInformation inPortsBarUIInfo = null;
             try {
                 outPorts = loadOutPortsSetting(m_workflowSett);
-                uiInfoClassName = loadInPortsBarUIInfoClassName(outPorts);
+                if (outPorts != null) {
+                    uiInfoClassName = loadInPortsBarUIInfoClassName(outPorts);
+                }
             } catch (InvalidSettingsException e) {
                 String error =
                         "Unable to load class name for inport bar's "
@@ -649,7 +651,9 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             UIInformation outPortsBarUIInfo = null;
             try {
                 inPorts = loadInPortsSetting(m_workflowSett);
-                uiInfoClassName = loadOutPortsBarUIInfoClassName(inPorts);
+                if (inPorts != null) {
+                    uiInfoClassName = loadOutPortsBarUIInfoClassName(inPorts);
+                }
             } catch (InvalidSettingsException e) {
                 String error =
                     "Unable to load class name for outport bar's "
