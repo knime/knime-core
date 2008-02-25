@@ -597,6 +597,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             }
             NodeSettingsRO outPorts = null;
             UIInformation inPortsBarUIInfo = null;
+            uiInfoClassName = null;
             try {
                 outPorts = loadOutPortsSetting(m_workflowSett);
                 if (outPorts != null) {
@@ -649,6 +650,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             NodeSettingsRO inPorts = null;
             m_inPortsBarUIInfo = inPortsBarUIInfo;
             UIInformation outPortsBarUIInfo = null;
+            uiInfoClassName = null;
             try {
                 inPorts = loadInPortsSetting(m_workflowSett);
                 if (inPorts != null) {
