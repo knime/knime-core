@@ -191,6 +191,8 @@ public final class WorkflowManager extends NodeContainer {
         System.arraycopy(ins, 0, m_inPorts, 0, ins.length);
         WorkflowOutPort[] outs = persistor.getOutPorts();
         m_outPorts = new WorkflowOutPort[outs.length];
+        m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
+        m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
         System.arraycopy(outs, 0, m_outPorts, 0, outs.length);
         // add set for this (meta-) node's in- and output connections
         m_connectionsByDest.put(getID(), new HashSet<ConnectionContainer>());

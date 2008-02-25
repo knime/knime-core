@@ -123,6 +123,34 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         return result;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    protected String loadInPortsBarUIInfoClassName(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return loadUIInfoClassName(settings);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected void loadInPortsBarUIInfo(final UIInformation uiInfo,
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        loadUIInfoSettings(uiInfo, settings);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected String loadOutPortsBarUIInfoClassName(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return loadUIInfoClassName(settings);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected void loadOutPortsBarUIInfo(final UIInformation uiInfo,
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        loadUIInfoSettings(uiInfo, settings);
+    }
+    
     protected NodeSettingsRO loadOutPortsSetting(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         if (settings.containsKey("meta_out_ports")) {
@@ -205,12 +233,24 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
         int inCount = wm.getNrInPorts();
         NodeSettingsWO inPortsSetts = saveInPortsSetting(settings, inCount);
+        if (inPortsSetts != null) {
+            saveInportsBarUIInfoClassName(
+                    inPortsSetts, wm.getInPortsBarUIInfo());
+            saveInportsBarUIInfoSettings(
+                    inPortsSetts, wm.getInPortsBarUIInfo());
+        }
         for (int i = 0; i < inCount; i++) {
             NodeSettingsWO singlePort = saveInPortSetting(inPortsSetts, i);
             saveInPort(singlePort, wm, i);
         }
         int outCount = wm.getNrOutPorts();
         NodeSettingsWO outPortsSetts = saveOutPortsSetting(settings, outCount);
+        if (outPortsSetts != null) {
+            saveInportsBarUIInfoClassName(
+                    outPortsSetts, wm.getOutPortsBarUIInfo());
+            saveInportsBarUIInfoSettings(
+                    outPortsSetts, wm.getOutPortsBarUIInfo());
+        }
         for (int i = 0; i < outCount; i++) {
             NodeSettingsWO singlePort = saveOutPortSetting(outPortsSetts, i);
             saveOutPort(singlePort, wm, i);
@@ -309,6 +349,16 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         return settings.addNodeSettings("inport_" + portIndex);
     }
     
+    protected void saveInportsBarUIInfoClassName(final NodeSettingsWO settings,
+            final UIInformation info) {
+        saveUIInfoClassName(settings, info);
+    }
+    
+    protected void saveInportsBarUIInfoSettings(final NodeSettingsWO settings,
+            final UIInformation uiInfo) {
+        saveUIInfoSettings(settings, uiInfo);
+    }
+    
     protected void saveInPort(NodeSettingsWO settings, 
             WorkflowManager wm, final int portIndex) {
         WorkflowInPort inport = wm.getInPort(portIndex);
@@ -324,6 +374,16 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             return settings.addNodeSettings("meta_out_ports");
         }
         return null;
+    }
+    
+    protected void saveOutportsBarUIInfoClassName(final NodeSettingsWO settings,
+            final UIInformation info) {
+        saveUIInfoClassName(settings, info);
+    }
+    
+    protected void saveOutportsBarUIInfoSettings(final NodeSettingsWO settings,
+            final UIInformation uiInfo) {
+        saveUIInfoSettings(settings, uiInfo);
     }
     
     protected NodeSettingsWO saveOutPortSetting(

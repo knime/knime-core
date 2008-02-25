@@ -64,6 +64,17 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     
     WorkflowInPort[] getInPorts();
     
+    
+    /** Get UI information for workflow input ports.
+     * @return the ui info or null if not set.
+     */
+    public UIInformation getInPortsBarUIInfo();
+    
+    /** Get UI information for workflow output ports.
+     * @return the ui info or null if not set.
+     */
+    public UIInformation getOutPortsBarUIInfo();
+    
     WorkflowOutPort[] getOutPorts();
     
     static class ConnectionContainerTemplate {

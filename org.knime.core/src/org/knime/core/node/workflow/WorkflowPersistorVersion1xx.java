@@ -65,6 +65,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     
     private WorkflowInPort[] m_inPorts;
     private WorkflowOutPort[] m_outPorts;
+    private UIInformation m_inPortsBarUIInfo;
+    private UIInformation m_outPortsBarUIInfo;
     
     private String m_name;
     
@@ -358,6 +360,16 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
     
     /** {@inheritDoc} */
+    public UIInformation getInPortsBarUIInfo() {
+        return m_inPortsBarUIInfo;
+    }
+    
+    /** {@inheritDoc} */
+    public UIInformation getOutPortsBarUIInfo() {
+        return m_outPortsBarUIInfo;
+    }
+    
+    /** {@inheritDoc} */
     public boolean needsResetAfterLoad() {
         return m_needsResetAfterLoad;
     }
@@ -583,6 +595,102 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     }
                 }
             }
+            UIInformation inPortsBarUIInfo = null;
+            try {
+                uiInfoClassName = loadInPortsBarUIInfoClassName(nodeSetting);
+            } catch (InvalidSettingsException e) {
+                String error =
+                        "Unable to load class name for inport bar's "
+                                + "UI information to node with ID suffix "
+                                + nodeIDSuffix
+                                + ", no UI information available: "
+                                + e.getMessage();
+                LOGGER.debug(error, e);
+                loadResult.addError(error);
+                uiInfoClassName = null;
+            }
+            if (uiInfoClassName != null) {
+                inPortsBarUIInfo = loadUIInfoInstance(uiInfoClassName);
+                try {
+                    // avoid NoClassDefFoundErrors by using magic class loader
+                    inPortsBarUIInfo = (UIInformation)(GlobalClassCreator
+                            .createClass(uiInfoClassName).newInstance());
+                } catch (Exception e) {
+                    String error =
+                            "Unable to load inport bar's UI information "
+                                    + "class \"" + uiInfoClassName
+                                    + "\" to node with " + "ID suffix "
+                                    + nodeIDSuffix
+                                    + ", no UI information available: "
+                                    + e.getMessage();
+                    LOGGER.debug(error, e);
+                    loadResult.addError(error);
+                    inPortsBarUIInfo = null;
+                }
+                if (inPortsBarUIInfo != null) {
+                    try {
+                        loadInPortsBarUIInfo(inPortsBarUIInfo, nodeSetting);
+                    } catch (InvalidSettingsException e) {
+                        String error =
+                                "Unable to load inport bar's UI information to "
+                                        + "node with ID suffix " + nodeIDSuffix
+                                        + ", no UI information available: "
+                                        + e.getMessage();
+                        LOGGER.debug(error, e);
+                        loadResult.addError(error);
+                        inPortsBarUIInfo = null;
+                    }
+                }
+            }
+            m_inPortsBarUIInfo = inPortsBarUIInfo;
+            UIInformation outPortsBarUIInfo = null;
+            try {
+                uiInfoClassName = loadOutPortsBarUIInfoClassName(nodeSetting);
+            } catch (InvalidSettingsException e) {
+                String error =
+                    "Unable to load class name for outport bar's "
+                    + "UI information to node with ID suffix "
+                    + nodeIDSuffix
+                    + ", no UI information available: "
+                    + e.getMessage();
+                LOGGER.debug(error, e);
+                loadResult.addError(error);
+                uiInfoClassName = null;
+            }
+            if (uiInfoClassName != null) {
+                outPortsBarUIInfo = loadUIInfoInstance(uiInfoClassName);
+                try {
+                    // avoid NoClassDefFoundErrors by using magic class loader
+                    outPortsBarUIInfo = (UIInformation)(GlobalClassCreator
+                            .createClass(uiInfoClassName).newInstance());
+                } catch (Exception e) {
+                    String error =
+                        "Unable to load outport bar's UI information "
+                        + "class \"" + uiInfoClassName
+                        + "\" to node with " + "ID suffix "
+                        + nodeIDSuffix
+                        + ", no UI information available: "
+                        + e.getMessage();
+                    LOGGER.debug(error, e);
+                    loadResult.addError(error);
+                    outPortsBarUIInfo = null;
+                }
+                if (outPortsBarUIInfo != null) {
+                    try {
+                        loadOutPortsBarUIInfo(outPortsBarUIInfo, nodeSetting);
+                    } catch (InvalidSettingsException e) {
+                        String error =
+                            "Unable to load outport bar's UI information to "
+                            + "node with ID suffix " + nodeIDSuffix
+                            + ", no UI information available: "
+                            + e.getMessage();
+                        LOGGER.debug(error, e);
+                        loadResult.addError(error);
+                        outPortsBarUIInfo = null;
+                    }
+                }
+            }
+            m_outPortsBarUIInfo = outPortsBarUIInfo;
             File nodeFile;
             try {
                 nodeFile = loadNodeFile(nodeSetting, m_workflowDir);
@@ -707,7 +815,24 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         uiInfo.load(settings);
     }
 
-
+    protected String loadInPortsBarUIInfoClassName(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return null;
+    }
+    
+    protected void loadInPortsBarUIInfo(final UIInformation uiInfo,
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+    }
+    
+    protected String loadOutPortsBarUIInfoClassName(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return null;
+    }
+    
+    protected void loadOutPortsBarUIInfo(final UIInformation uiInfo,
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+    }
+    
     protected File loadNodeFile(final NodeSettingsRO settings,
             final File workflowDir) throws InvalidSettingsException {
         String fileString = settings.getString("node_settings_file");
