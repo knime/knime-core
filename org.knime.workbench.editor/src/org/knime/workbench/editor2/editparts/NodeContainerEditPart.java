@@ -29,6 +29,9 @@ import java.util.List;
 import java.util.Vector;
 
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.MouseEvent;
+import org.eclipse.draw2d.MouseMotionListener;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPart;
@@ -222,8 +225,36 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     protected IFigure createFigure() {
 
         // create the visuals for the node container.
-        NodeContainerFigure nodeFigure =
+        final NodeContainerFigure nodeFigure =
                 new NodeContainerFigure(new ProgressFigure());
+        nodeFigure.addMouseMotionListener(new MouseMotionListener() {
+
+            public void mouseDragged(MouseEvent me) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            public void mouseEntered(MouseEvent me) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            public void mouseExited(MouseEvent me) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            public void mouseHover(MouseEvent me) {
+                nodeFigure.setToolTip(new Label(
+                        "current state: " + getNodeContainer().getState()));
+            }
+
+            public void mouseMoved(MouseEvent me) {
+                
+                
+            }
+            
+        });
 
         // init the user specified node name
         nodeFigure.setCustomName(getCustomName());
