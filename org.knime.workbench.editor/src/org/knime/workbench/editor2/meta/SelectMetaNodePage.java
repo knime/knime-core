@@ -25,7 +25,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.Label;
 
 
 /**
@@ -65,6 +65,7 @@ public class SelectMetaNodePage extends WizardPage {
      */
     public SelectMetaNodePage() {
         super(TITLE);
+        setTitle(TITLE);
         setDescription(DESCRIPTION);
     }
 
@@ -72,13 +73,14 @@ public class SelectMetaNodePage extends WizardPage {
      * {@inheritDoc}
      */
     public void createControl(final Composite parent) {
-        Composite composite = new Composite(parent, SWT.NONE);
+        Composite composite = new Composite(parent, SWT.FILL);
         composite.setLayout(new GridLayout(2, false));
-        Text label = new Text(composite, SWT.READ_ONLY);
+        Label label = new Label(composite, SWT.READ_ONLY);
         label.setText("Select a predefined MetaNode");
 
-        m_comboBox = new Combo(composite, SWT.RIGHT);
+        m_comboBox = new Combo(composite, SWT.RIGHT | SWT.READ_ONLY);
         m_comboBox.setItems(metaNodes);
+        m_comboBox.select(5);
         m_comboBox.addSelectionListener(new SelectionListener() {
 
             public void widgetDefaultSelected(final SelectionEvent e) {
