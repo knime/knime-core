@@ -28,7 +28,6 @@ import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartFactory;
 import org.eclipse.gef.GraphicalViewer;
 import org.knime.core.node.NodeInPort;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeOutPort;
 import org.knime.core.node.NodePort;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -129,12 +128,8 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
         } else if (model instanceof WorkflowPortBar) {
             WorkflowPortBar bar = (WorkflowPortBar)model;
             if (bar.isInPortBar()) {
-                NodeLogger.getLogger(WorkflowEditPartFactory.class).info(
-                        "returning WorkflowInPortBar edit part");
                 part = new WorkflowInPortBarEditPart();
             } else {
-                NodeLogger.getLogger(WorkflowEditPartFactory.class).info(
-                        "returning WorkflowOutPortBar edit part");
                 part = new WorkflowOutPortBarEditPart();
             }
         } else if (model instanceof SingleNodeContainer) {
