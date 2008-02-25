@@ -111,6 +111,13 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
         return null;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    protected NodeSettingsRO loadInPortsSettingsEnum(NodeSettingsRO settings) 
+        throws InvalidSettingsException {
+        return settings.getNodeSettings("port_enum");
+    }
 
     protected WorkflowInPort loadInPort(NodeSettingsRO settings) 
             throws InvalidSettingsException {
@@ -159,6 +166,13 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         return null;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    protected NodeSettingsRO loadOutPortsSettingsEnum(NodeSettingsRO settings) 
+        throws InvalidSettingsException {
+        return settings.getNodeSettings("port_enum");
+    }
+    
     protected WorkflowOutPort loadOutPort(NodeSettingsRO settings)
             throws InvalidSettingsException {
         int index = settings.getInt("index");
@@ -172,11 +186,15 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
 
     protected void saveUIInfoClassName(final NodeSettingsWO settings,
             final UIInformation info) {
-        settings.addString(CFG_UIINFO_CLASS, info.getClass().getName());
+        settings.addString(CFG_UIINFO_CLASS, info != null 
+                ? info.getClass().getName() : null);
     }
     
     protected void saveUIInfoSettings(final NodeSettingsWO settings,
             final UIInformation uiInfo) {
+        if (uiInfo == null) {
+            return;
+        }
         // nest into separate sub config
         NodeSettingsWO subConfig = 
             settings.addNodeSettings(CFG_UIINFO_SUB_CONFIG);
@@ -232,27 +250,33 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             connectionNumber += 1;
         }
         int inCount = wm.getNrInPorts();
-        NodeSettingsWO inPortsSetts = saveInPortsSetting(settings, inCount);
+        NodeSettingsWO inPortsSetts = inCount > 0 
+            ? saveInPortsSetting(settings) : null;
+        NodeSettingsWO inPortsSettsEnum = null;
         if (inPortsSetts != null) {
             saveInportsBarUIInfoClassName(
                     inPortsSetts, wm.getInPortsBarUIInfo());
             saveInportsBarUIInfoSettings(
                     inPortsSetts, wm.getInPortsBarUIInfo());
+            inPortsSettsEnum = saveInPortsEnumSetting(inPortsSetts);
         }
         for (int i = 0; i < inCount; i++) {
-            NodeSettingsWO singlePort = saveInPortSetting(inPortsSetts, i);
+            NodeSettingsWO singlePort = saveInPortSetting(inPortsSettsEnum, i);
             saveInPort(singlePort, wm, i);
         }
         int outCount = wm.getNrOutPorts();
-        NodeSettingsWO outPortsSetts = saveOutPortsSetting(settings, outCount);
+        NodeSettingsWO outPortsSetts = outCount > 0 
+            ? saveOutPortsSetting(settings) : null;
+        NodeSettingsWO outPortsSettsEnum = null;
         if (outPortsSetts != null) {
-            saveInportsBarUIInfoClassName(
+            saveOutportsBarUIInfoClassName(
                     outPortsSetts, wm.getOutPortsBarUIInfo());
-            saveInportsBarUIInfoSettings(
+            saveOutportsBarUIInfoSettings(
                     outPortsSetts, wm.getOutPortsBarUIInfo());
+            outPortsSettsEnum = saveOutPortsEnumSetting(outPortsSetts);
         }
         for (int i = 0; i < outCount; i++) {
-            NodeSettingsWO singlePort = saveOutPortSetting(outPortsSetts, i);
+            NodeSettingsWO singlePort = saveOutPortSetting(outPortsSettsEnum, i);
             saveOutPort(singlePort, wm, i);
         }
         String fileName = WORKFLOW_FILE;
@@ -336,14 +360,15 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         settings.addBoolean("node_is_meta", nc instanceof WorkflowManager);
     }
     
-    protected NodeSettingsWO saveInPortsSetting(
-            final NodeSettingsWO settings, final int inportCount) {
-        if (inportCount > 0) {
-            return settings.addNodeSettings("meta_in_ports");
-        }
-        return null;
+    protected NodeSettingsWO saveInPortsSetting(final NodeSettingsWO settings) {
+        return settings.addNodeSettings("meta_in_ports");
     }
 
+    protected NodeSettingsWO saveInPortsEnumSetting(
+            final NodeSettingsWO settings) {
+        return settings.addNodeSettings("port_enum");
+    }
+    
     protected NodeSettingsWO saveInPortSetting(
             final NodeSettingsWO settings, final int portIndex) {
         return settings.addNodeSettings("inport_" + portIndex);
@@ -369,11 +394,13 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     }
     
     protected NodeSettingsWO saveOutPortsSetting(
-            final NodeSettingsWO settings, final int outportCount) {
-        if (outportCount > 0) {
-            return settings.addNodeSettings("meta_out_ports");
-        }
-        return null;
+            final NodeSettingsWO settings) {
+        return settings.addNodeSettings("meta_out_ports");
+    }
+    
+    protected NodeSettingsWO saveOutPortsEnumSetting(
+            final NodeSettingsWO settings) {
+        return settings.addNodeSettings("port_enum");
     }
     
     protected void saveOutportsBarUIInfoClassName(final NodeSettingsWO settings,
