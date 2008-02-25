@@ -98,6 +98,8 @@ import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowException;
@@ -135,7 +137,7 @@ import org.knime.workbench.ui.wizards.imports.WizardProjectsImportPage;
  */
 public class WorkflowEditor extends GraphicalEditor implements
         CommandStackListener, ISelectionListener, WorkflowListener,
-        IResourceChangeListener {
+        IResourceChangeListener, NodeStateChangeListener {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(WorkflowEditor.class);
@@ -530,6 +532,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_manager.removeListener(this);
         getSite().getWorkbenchWindow().getSelectionService()
                 .removeSelectionListener(this);
+        
+        m_manager.removeNodeStateChangeListener(this);
 
         // remove resource listener..
         if (m_fileResource != null) {
@@ -838,6 +842,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
 
             m_manager.addListener(this);
+            m_manager.addNodeStateChangeListener(this);
         } catch (InterruptedException ie) {
             LOGGER.fatal("Workflow loading thread interrupted", ie);
         } catch (InvocationTargetException e) {
@@ -1669,5 +1674,13 @@ public class WorkflowEditor extends GraphicalEditor implements
 
     public WorkflowSelectionTool getSelectionTool() {
         return m_selectionTool;
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void stateChanged(NodeStateEvent state) {
+        markDirty();
     }
 }
