@@ -502,9 +502,17 @@ public final class WorkflowManager extends NodeContainer {
         }
         // if so desired...
         if (configure) {
-            // ...make sure the destination node is configured again (and all of
-            // its successors if needed):
-            configure(dest, true);
+            if (!dest.equals(this.getID())) {
+                assert m_nodes.containsKey(dest);
+                // ...make sure the destination node is configured again (and
+                // all of its successors if needed):
+                configure(dest, true);
+            } else {
+                assert !m_nodes.containsKey(dest);
+                // if the destination was the WFM itself, only configure its
+                // successors one layer up!
+                getParent().configure(dest, false);
+            }
         }
         // and finally notify listeners
         notifyWorkflowListeners(new WorkflowEvent(
@@ -1048,7 +1056,7 @@ public final class WorkflowManager extends NodeContainer {
                 // any inside Node.execute has written them but the State flag
                 // of the WFM has not yet been updated
                 for (WorkflowOutPort port : m_outPorts) {
-                    port.hidePortObject(false);
+                    port.showPortObject(false);
                 }
             default:
                 checkForNodeStateChanges();
@@ -1145,7 +1153,7 @@ public final class WorkflowManager extends NodeContainer {
                     // PortObject when any inside Node.execute has written them
                     // but the State flag of the WFM has not yet been updated
                     for (WorkflowOutPort port : m_outPorts) {
-                        port.hidePortObject(true);
+                        port.showPortObject(true);
                     }
                     // and finally run after execution stuff for this as node
                     if (getParent() != null) {
@@ -1159,7 +1167,12 @@ public final class WorkflowManager extends NodeContainer {
                 // is done (either executed or failed) and has new specs (maybe)
                 // Do not reconfigure this node if it failed - we will delete
                 // any warnings/errors otherwise!
-                configure(nc.getID(), false);
+                if (nc instanceof SingleNodeContainer) {
+                    configure(nc.getID(), false);
+                } else {
+                    assert nc instanceof WorkflowManager;
+                    getParent().configure(nc.getID(), false);
+                }
             }
             if (nc instanceof SingleNodeContainer) {
                 checkForQueuableNodes();

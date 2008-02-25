@@ -50,7 +50,7 @@ public class NodeOutPort extends NodePort {
      * the PortObjects after a Node.execute() until the state of the
      * SNC/WFM has been adjusted to "EXECUTED".
      */
-    private boolean m_hidePortObject = true;
+    private boolean m_showPortObject = true;
 
     /**
      * The table spec for this port.
@@ -136,7 +136,7 @@ public class NodeOutPort extends NodePort {
         // the following test allows SingleNodeContainers/WFMs to hide
         // the PortObjects after a Node.execute() until the state of the
         // SNC/WFM has been adjusted to "EXECUTED"
-        return isPortObjectHidden() ? m_portObject : null;
+        return isPortObjectVisible() ? m_portObject : null;
     }
     
     /**
@@ -146,15 +146,15 @@ public class NodeOutPort extends NodePort {
      * 
      * @param flag true if content is to be seen
      */
-    public void hidePortObject(final boolean flag) {
-        m_hidePortObject = flag;
+    public void showPortObject(final boolean flag) {
+        m_showPortObject = flag;
     }
     
     /**
      * @return true if content is to be seen
      */
-    public boolean isPortObjectHidden() {
-        return m_hidePortObject;
+    public boolean isPortObjectVisible() {
+        return m_showPortObject;
     }
 
     /**

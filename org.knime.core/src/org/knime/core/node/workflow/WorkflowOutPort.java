@@ -106,7 +106,7 @@ public class WorkflowOutPort extends NodeOutPort {
         // the following test allows SingleNodeContainers/WFMs to hide
         // the PortObjects after a Node.execute() until the state of the
         // SNC/WFM has been adjusted to "EXECUTED"
-        return isPortObjectHidden() ? m_underlyingPort.getPortObject() : null;
+        return isPortObjectVisible() ? m_underlyingPort.getPortObject() : null;
     }
     
     /**

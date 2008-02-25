@@ -399,7 +399,7 @@ public final class SingleNodeContainer extends NodeContainer
                 // Node.execute has written them but the State flag of the
                 // NodeContainer has not yet been updated
                 for (int i = 0; i < m_node.getNrOutPorts(); i++) {
-                    m_node.getOutPort(i).hidePortObject(false);
+                    m_node.getOutPort(i).showPortObject(false);
                 }
                 // clear loop status
                 m_node.clearLoopStatus();
@@ -423,7 +423,7 @@ public final class SingleNodeContainer extends NodeContainer
                     // enable outports (see above, avoid problems with
                     // ports having content and State not yet reflecting this.
                     for (int i = 0; i < m_node.getNrOutPorts(); i++) {
-                        m_node.getOutPort(i).hidePortObject(true);
+                        m_node.getOutPort(i).showPortObject(true);
                     }
                     setNewState(State.EXECUTED);
                 } else {
