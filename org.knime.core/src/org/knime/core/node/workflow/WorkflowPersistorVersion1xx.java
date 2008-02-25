@@ -595,9 +595,11 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     }
                 }
             }
+            NodeSettingsRO outPorts = null;
             UIInformation inPortsBarUIInfo = null;
             try {
-                uiInfoClassName = loadInPortsBarUIInfoClassName(nodeSetting);
+                outPorts = loadOutPortsSetting(m_workflowSett);
+                uiInfoClassName = loadInPortsBarUIInfoClassName(outPorts);
             } catch (InvalidSettingsException e) {
                 String error =
                         "Unable to load class name for inport bar's "
@@ -629,7 +631,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 }
                 if (inPortsBarUIInfo != null) {
                     try {
-                        loadInPortsBarUIInfo(inPortsBarUIInfo, nodeSetting);
+                        loadInPortsBarUIInfo(inPortsBarUIInfo, outPorts);
                     } catch (InvalidSettingsException e) {
                         String error =
                                 "Unable to load inport bar's UI information to "
@@ -642,10 +644,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     }
                 }
             }
+            NodeSettingsRO inPorts = null;
             m_inPortsBarUIInfo = inPortsBarUIInfo;
             UIInformation outPortsBarUIInfo = null;
             try {
-                uiInfoClassName = loadOutPortsBarUIInfoClassName(nodeSetting);
+                inPorts = loadInPortsSetting(m_workflowSett);
+                uiInfoClassName = loadOutPortsBarUIInfoClassName(inPorts);
             } catch (InvalidSettingsException e) {
                 String error =
                     "Unable to load class name for outport bar's "
@@ -677,7 +681,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 }
                 if (outPortsBarUIInfo != null) {
                     try {
-                        loadOutPortsBarUIInfo(outPortsBarUIInfo, nodeSetting);
+                        loadOutPortsBarUIInfo(outPortsBarUIInfo, inPorts);
                     } catch (InvalidSettingsException e) {
                         String error =
                             "Unable to load outport bar's UI information to "
