@@ -32,7 +32,6 @@ import org.eclipse.draw2d.geometry.Rectangle;
  */
 public class WorkflowInPortBarFigure extends AbstractWorkflowPortBarFigure {
     
-    private Rectangle m_bounds;    
     
     /**
      * {@inheritDoc}
@@ -40,11 +39,12 @@ public class WorkflowInPortBarFigure extends AbstractWorkflowPortBarFigure {
     @Override
     public void paint(Graphics graphics) {
         Rectangle parent = getParent().getBounds().getCopy();
-        if (m_bounds == null) {    
-            m_bounds = new Rectangle(OFFSET, OFFSET, 
+        if (!isInitialized()) {    
+            Rectangle newBounds = new Rectangle(OFFSET, OFFSET, 
                     WIDTH + AbstractPortFigure.WF_PORT_SIZE, 
                     parent.height - (2 * OFFSET));
-            setBounds(m_bounds);
+            setBounds(newBounds);
+            setInitialized(true);
         }
         super.paint(graphics);
     }

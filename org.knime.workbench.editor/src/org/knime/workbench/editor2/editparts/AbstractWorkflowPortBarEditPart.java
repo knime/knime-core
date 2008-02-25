@@ -49,9 +49,11 @@ public abstract class AbstractWorkflowPortBarEditPart
     protected void refreshVisuals() {
         ModellingNodeExtraInfo uiInfo = ((WorkflowPortBar)getModel())
             .getUIInfo();
-        if (uiInfo != null) {
+        if (uiInfo != null && uiInfo.isFilledProperly()
+                && !((AbstractWorkflowPortBarFigure)getFigure())
+                .isInitialized()) {
             int[] bounds = uiInfo.getBounds();
-            ((AbstractWorkflowPortBarFigure)getFigure()).setUIInfo(
+            ((AbstractWorkflowPortBarFigure)getFigure()).setBounds(
                     new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]));
         }
         super.refreshVisuals();

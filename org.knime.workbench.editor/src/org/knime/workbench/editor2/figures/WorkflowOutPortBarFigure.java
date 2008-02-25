@@ -35,7 +35,6 @@ public class WorkflowOutPortBarFigure extends AbstractWorkflowPortBarFigure {
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            WorkflowOutPortBarFigure.class);
 
-    private Rectangle m_bounds;
     
     /**
      * 
@@ -44,14 +43,16 @@ public class WorkflowOutPortBarFigure extends AbstractWorkflowPortBarFigure {
     @Override
     public void paint(final Graphics graphics) {
         Rectangle parent = getParent().getBounds().getCopy();
-        if (getUIInfo() == null) {
-            m_bounds = new Rectangle(
+        // TODO: do we need the ui info or is it enough to ask for a 
+        // flag initialized?
+        if (!isInitialized()) {
+            Rectangle newBounds = new Rectangle(
                     parent.width - WIDTH 
                         - AbstractPortFigure.WF_PORT_SIZE - OFFSET, 
                     OFFSET, WIDTH + AbstractPortFigure.WF_PORT_SIZE, 
                     parent.height - (2 * OFFSET));
-            setUIInfo(m_bounds);
-            setBounds(m_bounds);
+            setInitialized(true);
+            setBounds(newBounds);
         }
         super.paint(graphics);
     }

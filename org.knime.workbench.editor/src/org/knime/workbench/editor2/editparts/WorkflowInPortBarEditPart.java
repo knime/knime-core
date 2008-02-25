@@ -27,8 +27,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.NodePort;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import org.knime.workbench.editor2.figures.WorkflowInPortBarFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
@@ -59,6 +61,16 @@ public class WorkflowInPortBarEditPart extends AbstractWorkflowPortBarEditPart {
     @Override
     protected IFigure createFigure() {
         WorkflowInPortBarFigure fig = new WorkflowInPortBarFigure();
+        ModellingNodeExtraInfo uiInfo = ((WorkflowPortBar)getModel())
+            .getUIInfo();
+        if (uiInfo != null && uiInfo.isFilledProperly()) {
+            int[] bounds = uiInfo.getBounds();
+            Rectangle newBounds = new Rectangle(
+                    bounds[0], bounds[1], bounds[2], bounds[3]);
+            fig.setBounds(newBounds);
+            // TODO: do we need this? or is it enought o set the bounds?
+            fig.setInitialized(true);
+        }
         return fig;
     }
 

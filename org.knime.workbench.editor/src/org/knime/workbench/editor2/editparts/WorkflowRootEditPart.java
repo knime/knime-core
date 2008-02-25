@@ -48,6 +48,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapToPortGeometry;
+import org.knime.workbench.editor2.extrainfo.ModellingNodeExtraInfo;
 import org.knime.workbench.editor2.figures.ProgressToolTipHelper;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.figures.WorkflowLayout;
@@ -102,26 +103,27 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         List modelChildren = new ArrayList();
         WorkflowManager wfm = getWorkflowManager();
         modelChildren.addAll(wfm.getNodeContainers());
-        // create my own gui port objects to determine whether
-        // they are normal ports or workflow ports
-
-        // TODO: don't create new objects!
-        // create mapping from port id to workflow port proxy
-//        for (int i = 0; i < wfm.getNrWorkflowIncomingPorts(); i++) {
-//            modelChildren.add(wfm.getInPort(i));
-//        }
-//        for (int i = 0; i < wfm.getNrWorkflowOutgoingPorts(); i++) {
-//            modelChildren.add(wfm.getOutPort(i));
-//        }
         if (wfm.getNrWorkflowIncomingPorts() > 0) {
             if (m_inBar == null) {
                 m_inBar = new WorkflowPortBar(wfm, true);
+                ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)
+                wfm.getInPortsBarUIInfo();
+                if (uiInfo != null && uiInfo.isFilledProperly()) {
+                    m_inBar.setUIInfo((ModellingNodeExtraInfo)
+                            wfm.getInPortsBarUIInfo());
+                }
             }
             modelChildren.add(m_inBar);
         }
         if (wfm.getNrWorkflowOutgoingPorts() > 0) {
             if (m_outBar == null) {
                 m_outBar = new WorkflowPortBar(wfm, false);
+                ModellingNodeExtraInfo uiInfo = (ModellingNodeExtraInfo)
+                wfm.getOutPortsBarUIInfo();
+                if (uiInfo != null && uiInfo.isFilledProperly()) {
+                    m_outBar.setUIInfo((ModellingNodeExtraInfo)
+                            wfm.getOutPortsBarUIInfo());
+                }                
             }
             modelChildren.add(m_outBar);
         }
