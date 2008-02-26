@@ -1125,7 +1125,7 @@ public final class WorkflowManager extends NodeContainer {
                         ((SingleNodeContainer)origin).enableReQueuing();
                         // (5) configure the nodes from start to rest (it's not
                         //     so important if we configure more than the body)
-                        configure(sc.getOriginatingNode(), false);
+                        configure(sc.getOriginatingNode(), true);
                         // (6) enable the body to be queued again.
                         for (NodeID id : loopBodyNodes) {
                             m_nodes.get(id).markForExecution(true);
