@@ -100,17 +100,15 @@ public class AddMetaNodeWizard extends Wizard {
      */
     @Override
     public boolean performFinish() {
-        if (m_selectPage.getSelectedMetaNode() == null
-                || m_selectPage.getSelectedMetaNode().equals(
-                        SelectMetaNodePage.CUSTOM)) {
+        if (m_addPage.isPageComplete()) {
             performCustomizedFinish();
+            return true;
         } else {
             return performPredefinedFinish();
         }
-        return true;
     }
 
-    private boolean performPredefinedFinish() {
+    protected boolean performPredefinedFinish() {
         String metaNodeType = m_selectPage.getSelectedMetaNode();
         if (metaNodeType.equals(SelectMetaNodePage.ZERO_ONE)) {
             // create 0:1 meta node

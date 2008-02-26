@@ -56,6 +56,7 @@ public class AddMetaNodePage extends WizardPage {
     
     private String m_template;
     
+    private boolean m_wasVisible = false;
 
     /**
      * Creates the page and sets title and description.
@@ -93,6 +94,7 @@ public class AddMetaNodePage extends WizardPage {
     public void setVisible(boolean visible) {
         super.setVisible(visible);
         if (visible) {
+            m_wasVisible = true;
             populateFieldsFromTemplate();
         }
     }
@@ -179,6 +181,9 @@ public class AddMetaNodePage extends WizardPage {
      */
     @Override
     public boolean isPageComplete() {
+        if (!m_wasVisible) {
+            return false;
+        }
         if (m_inPortList.size() == 0 && m_outPortList.size() == 0) {
             return false;
         }
