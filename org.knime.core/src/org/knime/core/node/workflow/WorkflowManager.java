@@ -809,7 +809,8 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         }
-        checkForQueuableNodes();
+        checkForNodeStateChanges();
+        checkForQueuableNodesEverywhere();
     }
 
     /**
@@ -914,7 +915,7 @@ public final class WorkflowManager extends NodeContainer {
         enableQueuingOfPredecessors(id);
         nc.markForExecution(true);
         // this could change some of the queuable states, so check:
-        checkForQueuableNodes();
+        checkForQueuableNodesEverywhere();
     }
 
     /** Recursively iterates the predecessors and marks them for execution.
@@ -1178,9 +1179,8 @@ public final class WorkflowManager extends NodeContainer {
             }
             if (!nc.getID().equals(this.getID())) {
                 // only if an internal node finished:
-                checkForQueuableNodes();
+                checkForQueuableNodesEverywhere();
             }
-            checkForNodeStateChanges();
         }
     }
 
@@ -1188,7 +1188,8 @@ public final class WorkflowManager extends NodeContainer {
     @Override
     void resetNode() {
         resetAll();
-        checkForNodeStateChanges();
+        // configure will be run later to fine-tune this if needed:
+        setNewState(State.CONFIGURED);
     }
 
     /* ------------- node commands -------------- */
@@ -1572,30 +1573,45 @@ public final class WorkflowManager extends NodeContainer {
      */
     private final Object m_currentlychecking = new Object();
 
-    private void checkForQueuableNodes() {
+    private void checkForQueuableNodesEverywhere() {
+        WorkflowManager wfm = this;
+        while ((wfm.getNrInPorts() != 0) || (wfm.getNrOutPorts() != 0)) {
+            // some connection to containing WFM exists
+            wfm = getParent();
+        }
+        wfm.checkForQueuableNodesInWFMonly();
+    }
+
+    private void checkForQueuableNodesInWFMonly() {
         boolean remainingNodes;
         do {
             remainingNodes = false;
             for (NodeContainer ncIt : m_nodes.values()) {
-                synchronized (m_dirtyWorkflow) {
-                    if (ncIt.getState().equals(
-                            NodeContainer.State.MARKEDFOREXEC)) {
-                        final PortObject[] inData =
-                        new PortObject[ncIt.getNrInPorts()];
-                        assembleInputData(ncIt.getID(), inData);
-                        boolean dataAvailable = true;
-                        for (int i = 0; i < inData.length; i++) {
-                            if (inData[i] == null) {
-                                dataAvailable = false;
+                if (ncIt instanceof SingleNodeContainer) {
+                    synchronized (m_dirtyWorkflow) {
+                        if (ncIt.getState().equals(
+                                NodeContainer.State.MARKEDFOREXEC)) {
+                            final PortObject[] inData =
+                            new PortObject[ncIt.getNrInPorts()];
+                            assembleInputData(ncIt.getID(), inData);
+                            boolean dataAvailable = true;
+                            for (int i = 0; i < inData.length; i++) {
+                                if (inData[i] == null) {
+                                    dataAvailable = false;
+                                }
+                            }
+                            // Check if all data is available. Important, QUEUED
+                            // does not mean the node is already executing!
+                            if (dataAvailable) {
+                                ncIt.queueNode(inData);
+                                remainingNodes = true;
                             }
                         }
-                        // Check if all data is available. Important, QUEUED
-                        // does not mean the node is already executing!
-                        if (dataAvailable) {
-                            ncIt.queueNode(inData);
-                            remainingNodes = true;
-                        }
                     }
+                } else if (ncIt instanceof WorkflowManager) {
+                    ((WorkflowManager)ncIt).checkForQueuableNodesInWFMonly();
+                } else {
+                    assert false;
                 }
             }
         } while (remainingNodes);
@@ -1628,16 +1644,31 @@ public final class WorkflowManager extends NodeContainer {
             NodeContainer.State newState = State.IDLE;
             if (nrNodesInState[State.EXECUTED.ordinal()] == nrNodes) {
                 // WFM is executed only if all nodes are executed and
-                // all output ports are connected.
+                // all output ports are connected and contain their
+                // portobjects.
+                boolean allPopulated = false;
                 if (m_connectionsByDest.get(this.getID()).size()
-                       >= getNrOutPorts()) {
+                        == getNrOutPorts()) {
+                    allPopulated = true;
+                    for (int i = 0; i < getNrOutPorts(); i++) {
+                        if (getOutPort(i).getPortObject() == null) {
+                            allPopulated = false;
+                        }
+                    }
+                }
+                if (allPopulated) {
                     doAfterExecution(this, true);  // WFM "successfully" done.
                     return;
                 }
-            } else if (nrNodesInState[State.CONFIGURED.ordinal()] == nrNodes) {
+            }
+            if (nrNodesInState[State.CONFIGURED.ordinal()] == nrNodes) {
                 newState = State.CONFIGURED;
             } else if (nrNodesInState[State.EXECUTING.ordinal()] >= 1) {
                 newState = State.EXECUTING;
+            } else if (nrNodesInState[State.EXECUTED.ordinal()]
+                       + nrNodesInState[State.CONFIGURED.ordinal()]
+                       == nrNodes) {
+                newState = State.CONFIGURED;
             }
             this.setNewState(newState);
         }
@@ -1778,7 +1809,8 @@ public final class WorkflowManager extends NodeContainer {
                     // configure node itself
                     boolean outputSpecsChanged = nc.configureNode(inSpecs);
                     if (!outputSpecsChanged) {
-                        // remove real only successors from list (ha, ha) 
+                        // remove really only successors from list
+                        // TODO how do we do that???
                     }
                     break;
                 default:
@@ -1787,7 +1819,9 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         }
+        // make sure internal status changes are properly reflected
         checkForNodeStateChanges();
+        // configure this WFM in its parent only if desired (and part of list)
         if (wfmIsPartOfList && configureWFMsuccessors) {
             getParent().configure(this.getID(), false, configureWFMsuccessors);
         }
