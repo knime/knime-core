@@ -180,14 +180,20 @@ public abstract class GenericNodeDialogPane {
      */
     final void internalLoadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
-        NodeSettingsRO modelSettings;
-        MemoryPolicy memoryPolicy;
+        NodeSettingsRO modelSettings = null;
+        MemoryPolicy memoryPolicy = null;
         try {
             SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
             modelSettings = l.getModelSettings();
             memoryPolicy = l.getMemoryPolicy();
         } catch (InvalidSettingsException e) {
+            // silently ignored here, variables get assigned default values
+            // if they are null
+        }
+        if (modelSettings == null) {
             modelSettings = new NodeSettings("empty");
+        }
+        if (memoryPolicy == null) {
             memoryPolicy = MemoryPolicy.CacheSmallInMemory;
         }
         try {
