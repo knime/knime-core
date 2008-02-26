@@ -864,24 +864,26 @@ public final class WorkflowManager extends NodeContainer {
     
             // find all nodes that are directly connected to this meta nodes
             // input ports
-            Set<ConnectionContainer> cons = m_connectionsByDest.get(getID());
+            Set<ConnectionContainer> cons = m_connectionsBySource.get(getID());
     
             for (ConnectionContainer c : cons) {
                 NodeID id = c.getDest();
                 NodeContainer nc = m_nodes.get(id);
-                if (nc != null) {
+                if (c.getType().equals(ConnectionType.WFMIN)) {
+                    // avoid WFMTHROUGH connections
                     sourceNodes.add(nc);
                 }
             }
-            // look for nodes with no predecessor
-            for (NodeContainer nc : m_nodes.values()) {
-                if (nc.getNrInPorts() == 0) {
-                    sourceNodes.add(nc);
+            // look for nodes with no predecessor (or at least no in-conns)
+            for (NodeID nid : m_nodes.keySet()) {
+                if (m_connectionsBySource.get(nid).size() == 0) {
+                    sourceNodes.add(m_nodes.get(nid));
                 }
             }
             // and finally reset those nodes (all of their successors will be
             // reset automatically)
             for (NodeContainer nc : sourceNodes) {
+                assert !this.getID().equals(nc.getID());
                 switch (nc.getState()) {
                 case EXECUTED:
                     // TODO clean this up - resetNode() reconfigures for every node!
@@ -894,8 +896,6 @@ public final class WorkflowManager extends NodeContainer {
                 default: // nothing to do with "yellow" nodes
                 }
             }
-            // finally adjust state of WFM
-            setNewState(State.CONFIGURED);
         }
     }
 
@@ -1094,6 +1094,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             boolean canConfigureSuccessors = true;
             if (nc instanceof SingleNodeContainer) {
+                // process loop context - only for "real" nodes:
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
                 Node node = snc.getNode();
                 if (node.getLoopStatus() != null) {
@@ -1184,6 +1185,7 @@ public final class WorkflowManager extends NodeContainer {
     @Override
     void resetNode() {
         resetAll();
+        checkForNodeStateChanges();
     }
 
     /* ------------- node commands -------------- */
@@ -1273,7 +1275,8 @@ public final class WorkflowManager extends NodeContainer {
         Set<ConnectionContainer> succs = m_connectionsBySource.get(id);
         for (ConnectionContainer conn : succs) {
             NodeID currID = conn.getDest();
-            if (!currID.equals(this.getID())) {
+            if (!conn.getType().isLeavingWorkflow()) {
+                assert m_nodes.get(currID) != null;
                 // normal connection to another node within this workflow
                 // first check if it is already reset
                 NodeContainer nc = m_nodes.get(currID);
@@ -1295,9 +1298,9 @@ public final class WorkflowManager extends NodeContainer {
                             + "successor in resetSuccessors.");
                 }
             } else {
+                assert m_nodes.get(currID) == null;
+                assert this.getID().equals(currID);
                 // connection goes to a meta outport!
-                assert conn.getType()
-                    == ConnectionContainer.ConnectionType.WFMOUT;
                 // Note: this also resets node which are connected to OTHER
                 // outports of this metanode!
                 getParent().resetSuccessors(this.getID());
@@ -1516,7 +1519,7 @@ public final class WorkflowManager extends NodeContainer {
     private void completeSet(HashSet<NodeID> nodes, final NodeID id) {
         nodes.add(id);
         for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
-            if (cc.getType().equals(ConnectionType.STD)) {
+            if (!cc.getType().isLeavingWorkflow()) {
                 completeSet(nodes, cc.getDest());
             }
         }
@@ -1779,8 +1782,8 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         }
+        checkForNodeStateChanges();
         if (wfmIsPartOfList) {
-            checkForNodeStateChanges();
             getParent().configure(this.getID(), false);
         }
     }

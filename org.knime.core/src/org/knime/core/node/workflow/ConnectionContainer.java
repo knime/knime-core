@@ -37,7 +37,18 @@ public class ConnectionContainer {
     private final int m_destPort;
     private UIInformation m_uiInfo;
     
-    enum ConnectionType { STD, WFMIN, WFMOUT, WFMTHROUGH};
+    enum ConnectionType { STD, WFMIN, WFMOUT, WFMTHROUGH;
+        /**
+         * @return Whether this type is leaving a workflow (through or out)
+         */
+        public boolean isLeavingWorkflow() {
+            switch (this) {
+                case WFMOUT:
+                case WFMTHROUGH: return true;
+                default: return false;
+            }
+        }
+    };
     private final ConnectionType m_type;
     
     /** Creates new connection.
