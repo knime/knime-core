@@ -256,7 +256,7 @@ public final class WorkflowManager extends NodeContainer {
                new Node((GenericNodeFactory<GenericNodeModel>)factory), newID);
             addNodeContainer(container);
         }
-        configure(newID, true);
+        configure(newID, true, true);
         LOGGER.info("Added new node " + newID);
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED,
@@ -504,12 +504,12 @@ public final class WorkflowManager extends NodeContainer {
                 assert m_nodes.containsKey(dest);
                 // ...make sure the destination node is configured again (and
                 // all of its successors if needed):
-                configure(dest, true);
+                configure(dest, true, true);
             } else {
                 assert !m_nodes.containsKey(dest);
                 // if the destination was the WFM itself, only configure its
                 // successors one layer up!
-                getParent().configure(dest, false);
+                getParent().configure(dest, false, true);
             }
         }
         // and finally notify listeners
@@ -765,7 +765,7 @@ public final class WorkflowManager extends NodeContainer {
         // TODO propagate reset to parent (what if "this" is sub flow)
         resetAndConfigureNode(id);
         nc.loadSettings(settings);
-        configure(id, true);
+        configure(id, true, true);
     }
 
     /**
@@ -963,25 +963,28 @@ public final class WorkflowManager extends NodeContainer {
         for (int i = 0; i < prevSpecs.length; i++) {
             prevSpecs[i] = getOutPort(i).getPortObjectSpec();
         }
-        // make sure we reflect any state changes inside this workflow also
-        // in our own state:
-        checkForNodeStateChanges();
-        
-        // TODO think very hard what a WFM as NC could do here???
-
+        // configure all nodes inside this WFM (this is configure called
+        // on the WFM acting as a NodeContainer inside a workflow!)
+        configure(this.getID(), false, false);
         // compare old and new specs
+        boolean specsChanged = false;
         for (int i = 0; i < prevSpecs.length; i++) {
             PortObjectSpec newSpec =
                     getOutPort(i).getPortObjectSpec();
             if (newSpec != null) {
                 if (!newSpec.equals(prevSpecs[i])) {
-                    return true;
+                    specsChanged = true;
+                    break;
                 }
             } else if (prevSpecs[i] != null) {
-                return true; // newSpec is null!
+                specsChanged = true;
+                break;
             }
         }
-        return false; // all specs stayed the same!
+        // make sure we reflect any state changes inside this workflow also
+        // in our own state:
+        checkForNodeStateChanges();
+        return specsChanged;
     }
 
     /** {@inheritDoc}
@@ -1125,7 +1128,7 @@ public final class WorkflowManager extends NodeContainer {
                         ((SingleNodeContainer)origin).enableReQueuing();
                         // (5) configure the nodes from start to rest (it's not
                         //     so important if we configure more than the body)
-                        configure(sc.getOriginatingNode(), true);
+                        configure(sc.getOriginatingNode(), true, true);
                         // (6) enable the body to be queued again.
                         for (NodeID id : loopBodyNodes) {
                             m_nodes.get(id).markForExecution(true);
@@ -1166,11 +1169,11 @@ public final class WorkflowManager extends NodeContainer {
                 // any warnings/errors otherwise!
                 if (nc.getID().equals(this.getID())) {
                     assert nc instanceof WorkflowManager;
-                    getParent().configure(nc.getID(), false);
+                    getParent().configure(nc.getID(), false, true);
                 } else {
                     // may be SingleNodeContainer or WFM contained within this
                     // one but then it can be treated like a SNC
-                    configure(nc.getID(), false);
+                    configure(nc.getID(), false, true);
                 }
             }
             if (!nc.getID().equals(this.getID())) {
@@ -1259,7 +1262,7 @@ public final class WorkflowManager extends NodeContainer {
             // and then reset node itself
             m_nodes.get(id).resetNode();
             // and launch configure starting with this node
-            configure(id, true);
+            configure(id, true, true);
         default: // ignore all other states (IDLE, CONFIGURED...)
         }
         checkForNodeStateChanges();
@@ -1728,8 +1731,10 @@ public final class WorkflowManager extends NodeContainer {
      *
      * @param id of node to configure
      * @param configureMyself true if the node itself is to be configured
+     * @param configureWFMsuccessors true if conf outside of WFM requests
      */
-    private void configure(final NodeID nodeId, final boolean configureMyself) {
+    private void configure(final NodeID nodeId, final boolean configureMyself,
+            final boolean configureWFMsuccessors) {
         ArrayList<NodeID> nodes = getBreathFirstListOfNodeAndSuccessors(nodeId);
         if (!configureMyself) {
             nodes.remove(nodeId);
@@ -1783,8 +1788,8 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
         checkForNodeStateChanges();
-        if (wfmIsPartOfList) {
-            getParent().configure(this.getID(), false);
+        if (wfmIsPartOfList && configureWFMsuccessors) {
+            getParent().configure(this.getID(), false, configureWFMsuccessors);
         }
     }
 
@@ -2204,7 +2209,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         for (NodeID id : needConfigurationNodes) {
             // TODO Bernd: can you check what you intend to do here?
-            configure(id, true);
+            configure(id, true, true);
         }
     }
 
