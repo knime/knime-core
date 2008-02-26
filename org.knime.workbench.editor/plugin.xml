@@ -163,8 +163,8 @@
                tooltip="Reset selected nodes"/>
          <action
                class="org.knime.workbench.editor2.actions.AddMetaNodeAction"
-               disabledIcon="icons/meta.png"
-               icon="icons/meta.png"
+               disabledIcon="icons/meta/meta.png"
+               icon="icons/meta/meta.png"
                id="org.knime.workbench.editor.meta"
                label="Add Meta Node"
                menubarPath="org.knime.workbench.editor.menu/group1"

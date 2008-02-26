@@ -34,6 +34,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Text;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.NodeLogger;
 
 /**
  * The single page of the {@link AddMetaNodeWizard}.
@@ -51,8 +53,9 @@ public class AddMetaNodePage extends WizardPage {
     private List m_outPorts;
     private final java.util.List<Port>m_inPortList = new ArrayList<Port>();
     private final java.util.List<Port>m_outPortList = new ArrayList<Port>();
-
-    private boolean m_isComplete;
+    
+    private String m_template;
+    
 
     /**
      * Creates the page and sets title and description.
@@ -75,8 +78,76 @@ public class AddMetaNodePage extends WizardPage {
         createTopPart(composite);
         createCenterPart(composite);
         setControl(composite);
+        populateFieldsFromTemplate();
     }
 
+    /**
+     * 
+     * @param template the selected meta node template from previous page
+     */
+    void setTemplate(final String template) {
+        m_template = template;
+    }
+    
+    @Override
+    public void setVisible(boolean visible) {
+        super.setVisible(visible);
+        if (visible) {
+            populateFieldsFromTemplate();
+        }
+    }
+    
+    
+    private void populateFieldsFromTemplate() {
+        NodeLogger.getLogger(AddMetaNodePage.class).debug(
+                "trying to populate fields from template " + m_template);
+        if (m_template == null) {
+            return;
+        }
+        // clear all fields
+        m_inPortList.clear();
+        m_inPorts.removeAll();
+        m_outPortList.clear();
+        m_outPorts.removeAll();
+
+        int nrInPorts = 0;
+        int nrOutPorts = 0;
+        if (m_template.equals(SelectMetaNodePage.ZERO_ONE)) {
+            nrInPorts = 0;
+            nrOutPorts = 1;
+        } else if (m_template.equals(SelectMetaNodePage.ONE_ONE)) {
+            nrInPorts = 1;
+            nrOutPorts = 1;
+        } else if (m_template.equals(SelectMetaNodePage.ONE_TWO)) {
+            nrInPorts = 1;
+            nrOutPorts = 2;
+        } else if (m_template.equals(SelectMetaNodePage.TWO_ONE)) {
+            nrInPorts = 2;
+            nrOutPorts = 1;
+        } else if (m_template.equals(SelectMetaNodePage.TWO_TWO)) {
+            nrInPorts = 2;
+            nrOutPorts = 2;
+        }
+        // add the ports to the lists
+        for (int i = 0; i < nrInPorts; i++) {
+            Port inPort = new Port(BufferedDataTable.TYPE, "in_" + i);
+            m_inPortList.add(inPort);
+            m_inPorts.add(inPort.toString());
+        }
+        for (int i = 0; i < nrOutPorts; i++) {
+            Port outPort = new Port(BufferedDataTable.TYPE, "out_" + i);
+            m_outPortList.add(outPort);
+            m_outPorts.add(outPort.toString());
+        }
+        // set the name
+        if (!m_template.equals(SelectMetaNodePage.CUSTOM)) {
+            m_name.setText("Meta " + nrInPorts + " : " + nrOutPorts);
+        } else {
+            m_name.setText("Customized MetaNode");
+        }
+        updateStatus();
+    }
+    
     /**
      *
      * @return list of entered out ports
@@ -108,21 +179,18 @@ public class AddMetaNodePage extends WizardPage {
      */
     @Override
     public boolean isPageComplete() {
-        return m_isComplete;
+        if (m_inPortList.size() == 0 && m_outPortList.size() == 0) {
+            return false;
+        }
+        if (m_template == null || m_template.equals(
+                SelectMetaNodePage.CUSTOM)) {
+            return false;
+        }
+        return true;
     }
 
     private void updateStatus() {
-        m_isComplete = true;
-        // node name no longer mandatory
-        /*
-        if (m_name.getText() == null || m_name.getText().isEmpty()) {
-            m_isComplete = false;
-        }
-        */
-        if (m_inPortList.size() == 0 && m_outPortList.size() == 0) {
-            m_isComplete = false;
-        }
-        setPageComplete(m_isComplete);
+        setPageComplete(isPageComplete());
     }
 
     private void createCenterPart(final Composite parent) {

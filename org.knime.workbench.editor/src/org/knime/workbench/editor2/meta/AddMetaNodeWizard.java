@@ -57,8 +57,14 @@ public class AddMetaNodeWizard extends Wizard {
      * @param wfEditor the underlying workflow editor
      */
     public AddMetaNodeWizard(final WorkflowEditor wfEditor) {
+        super();
         m_wfEditor = wfEditor;
+        // TODO: remove as soon as there is some help available
+        // would be  great to have some description of how to create meta nodes,
+        // what to do with meta nodes and how to deploy them
+        setHelpAvailable(false);
     }
+   
 
     /**
      *
@@ -69,13 +75,14 @@ public class AddMetaNodeWizard extends Wizard {
         // add the one and only page to enter the in- and out ports
         setWindowTitle("Add Meta Node Wizard");
         setDefaultPageImageDescriptor(ImageDescriptor.createFromImage(
-                ImageRepository.getImage("icons/meta_node_wizard2.png")));
+                ImageRepository.getImage("icons/meta/meta_node_wizard2.png")));
         m_selectPage = new SelectMetaNodePage();
         m_addPage = new AddMetaNodePage();
         addPage(m_selectPage);
         addPage(m_addPage);
     }
 
+    
 
     /**
      *
@@ -83,10 +90,7 @@ public class AddMetaNodeWizard extends Wizard {
      */
     @Override
     public boolean canFinish() {
-        return m_addPage.isPageComplete()
-        || (m_selectPage.getSelectedMetaNode() != null
-                && !m_selectPage.getSelectedMetaNode().equals(
-                        SelectMetaNodePage.CUSTOM));
+        return m_addPage.isPageComplete() || m_selectPage.isPageComplete();
     }
 
 

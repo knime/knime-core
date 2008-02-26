@@ -20,12 +20,12 @@ package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorActionDelegate;
 import org.eclipse.ui.IEditorPart;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.meta.AddMetaNodeWizard;
+import org.knime.workbench.editor2.meta.MetaNodeWizardDialog;
 
 /**
  *
@@ -57,8 +57,8 @@ public class AddMetaNodeAction implements IEditorActionDelegate {
     public void run(final IAction action) {
         Display display = Display.getCurrent();
         m_wizard = new AddMetaNodeWizard(m_editor);
-        WizardDialog dialog = new WizardDialog(display.getActiveShell(),
-                m_wizard);
+        MetaNodeWizardDialog dialog = new MetaNodeWizardDialog(
+                display.getActiveShell(), m_wizard);
         dialog.create();
         dialog.open();
     }

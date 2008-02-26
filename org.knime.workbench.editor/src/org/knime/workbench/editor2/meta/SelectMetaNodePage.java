@@ -18,14 +18,19 @@
  */
 package org.knime.workbench.editor2.meta;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
+import org.knime.workbench.editor2.ImageRepository;
 
 
 /**
@@ -34,12 +39,12 @@ import org.eclipse.swt.widgets.Label;
  */
 public class SelectMetaNodePage extends WizardPage {
 
-    private static final String TITLE = "Select predefined MetaNode";
+    private static final String TITLE = "Select MetaNode Template";
     private static final String DESCRIPTION = "If you want to create a MetaNode"
         + " with a usual number of data in and out ports, select one; \n"
         + "otherwise click next to define a custom MetaNode";
 
-    private Combo m_comboBox;
+//    private Combo m_comboBox;
 
     static final String ZERO_ONE = "0:1";
     static final String ONE_ONE = "1:1";
@@ -47,16 +52,23 @@ public class SelectMetaNodePage extends WizardPage {
     static final String TWO_ONE = "2:1";
     static final String TWO_TWO = "2:2";
     static final String CUSTOM = "custom";
+    
+    private Button m_btnZeroOne;
+    private Button m_btnOneOne;
+    private Button m_btnOneTwo;
+    private Button m_btnTwoOne;
+    private Button m_btnTwoTwo;
+    private Button m_btnCustom;
+    
+    private final Map<Button, Image> m_activeIconMap 
+        = new HashMap<Button, Image>();
 
-    private static final String[] metaNodes = new String[] {
-        ZERO_ONE,
-        ONE_ONE,
-        ONE_TWO,
-        TWO_ONE,
-        TWO_TWO,
-        CUSTOM
-    };
+    private final Map<Button, Image> m_inactiveIconMap 
+        = new HashMap<Button, Image>();
 
+    
+    private Button m_selectedButton;
+    
     private String m_selectedMetaNode;
 
 
@@ -72,42 +84,163 @@ public class SelectMetaNodePage extends WizardPage {
     /**
      * {@inheritDoc}
      */
-    public void createControl(final Composite parent) {
-        Composite composite = new Composite(parent, SWT.FILL);
-        composite.setLayout(new GridLayout(2, false));
-        Label label = new Label(composite, SWT.READ_ONLY);
-        label.setText("Select a predefined MetaNode");
-
-        m_comboBox = new Combo(composite, SWT.RIGHT | SWT.READ_ONLY);
-        m_comboBox.setItems(metaNodes);
-        m_comboBox.select(5);
-        m_comboBox.addSelectionListener(new SelectionListener() {
+    public void createControl(final Composite parent) { 
+        Composite overall = new Composite(parent, SWT.NONE);
+        overall.setLayout(new GridLayout(1, true));
+        
+        Composite buttonGrid = new Composite(overall, SWT.NONE);
+        buttonGrid.setLayout(new GridLayout(3, true));
+        GridData gridData = new GridData(GridData.FILL_BOTH);
+        gridData.horizontalAlignment = GridData.CENTER;
+        gridData.verticalAlignment = GridData.CENTER;
+        gridData.grabExcessHorizontalSpace = true;
+        gridData.grabExcessVerticalSpace = true;
+        overall.setLayoutData(gridData);
+        buttonGrid.setLayoutData(gridData);
+        m_btnZeroOne = new Button(buttonGrid, SWT.TOGGLE);
+        m_btnZeroOne.setImage(ImageRepository.getImage(
+                "/icons/meta/meta_0_1_inactive.png"));
+        m_inactiveIconMap.put(m_btnZeroOne, ImageRepository.getImage(
+            "/icons/meta/meta_0_1_inactive.png"));
+        m_activeIconMap.put(m_btnZeroOne, ImageRepository.getImage(
+            "/icons/meta/meta_0_1.png"));   
+        m_btnZeroOne.addSelectionListener(new SelectionListener() {
 
             public void widgetDefaultSelected(final SelectionEvent e) {
                 widgetSelected(e);
             }
 
             public void widgetSelected(final SelectionEvent e) {
-                int selectedIdx = m_comboBox.getSelectionIndex();
-                if (selectedIdx < 0) {
-                    m_selectedMetaNode = null;
-                    setPageComplete(false);
-                } else {
-                    m_selectedMetaNode = metaNodes[selectedIdx];
-                    setPageComplete(true);
-                }
+                m_selectedMetaNode = ZERO_ONE;
+                changeSelection((Button)e.getSource());
+                setPageComplete(true);
             }
+            
         });
-        setControl(composite);
-    }
+        m_btnOneOne = new Button(buttonGrid, SWT.TOGGLE);
+        m_btnOneOne.setImage(ImageRepository.getImage(
+                "/icons/meta/meta_1_1_inactive.png"));
+        m_inactiveIconMap.put(m_btnOneOne, ImageRepository.getImage(
+                "/icons/meta/meta_1_1_inactive.png"));
+        m_activeIconMap.put(m_btnOneOne, ImageRepository.getImage(
+                "/icons/meta/meta_1_1.png"));
+        m_btnOneOne.addSelectionListener(new SelectionListener() {
 
+            public void widgetDefaultSelected(final SelectionEvent e) {
+                widgetSelected(e);
+            }
+
+            public void widgetSelected(final SelectionEvent e) {
+                m_selectedMetaNode = ONE_ONE;
+                changeSelection((Button)e.getSource());
+                setPageComplete(true);
+            }
+            
+        });
+        m_btnOneTwo = new Button(buttonGrid, SWT.TOGGLE);
+        m_btnOneTwo.setImage(ImageRepository.getImage(
+                "/icons/meta/meta_1_2_inactive.png"));
+        m_inactiveIconMap.put(m_btnOneTwo, ImageRepository.getImage(
+                "/icons/meta/meta_1_2_inactive.png"));
+        m_activeIconMap.put(m_btnOneTwo,
+                ImageRepository.getImage("/icons/meta/meta_1_2.png"));
+        m_btnOneTwo.addSelectionListener(new SelectionListener() {
+
+            public void widgetDefaultSelected(final SelectionEvent e) {
+//                widgetSelected(e);
+            }
+
+            public void widgetSelected(final SelectionEvent e) {
+                m_selectedMetaNode = ONE_TWO;
+                changeSelection((Button)e.getSource());
+                setPageComplete(true);
+            }
+            
+        });
+        m_btnTwoOne = new Button(buttonGrid, SWT.TOGGLE);
+        m_btnTwoOne.setImage(ImageRepository.getImage(
+                "/icons/meta/meta_2_1_inactive.png"));
+                
+        m_activeIconMap.put(m_btnTwoOne, ImageRepository.getImage(
+                "/icons/meta/meta_2_1.png"));
+        m_inactiveIconMap.put(m_btnTwoOne, ImageRepository.getImage(
+                "/icons/meta/meta_2_1_inactive.png"));
+        m_btnTwoOne.addSelectionListener(new SelectionListener() {
+
+            public void widgetDefaultSelected(final SelectionEvent e) {
+//                widgetSelected(e);
+            }
+
+            public void widgetSelected(final SelectionEvent e) {
+                m_selectedMetaNode = TWO_ONE;
+                changeSelection((Button)e.getSource());
+                setPageComplete(true);
+            }
+            
+        });
+        m_btnTwoTwo = new Button(buttonGrid, SWT.TOGGLE);
+        m_btnTwoTwo.setImage(ImageRepository.getImage(
+                "/icons/meta/meta_2_2_inactive.png"));
+        m_activeIconMap.put(m_btnTwoTwo, ImageRepository.getImage(
+                "/icons/meta/meta_2_2.png"));                
+        m_inactiveIconMap.put(m_btnTwoTwo, ImageRepository.getImage(
+                "/icons/meta/meta_2_2_inactive.png"));
+        m_btnTwoTwo.addSelectionListener(new SelectionListener() {
+
+            public void widgetDefaultSelected(final SelectionEvent e) {
+//                widgetSelected(e);
+            }
+
+            public void widgetSelected(final SelectionEvent e) {
+                changeSelection((Button)e.getSource());
+                m_selectedMetaNode = TWO_TWO;
+                ((AddMetaNodePage)getNextPage()).setTemplate(
+                        m_selectedMetaNode);
+                setPageComplete(true);
+            }
+            
+        });
+        m_btnCustom = new Button(buttonGrid, SWT.TOGGLE);
+        m_btnCustom.setImage(ImageRepository.getImage(
+                "/icons/meta/custom_meta_inactive.png"));
+        m_activeIconMap.put(m_btnCustom, ImageRepository.getImage(
+                "/icons/meta/custom_meta.png"));
+        m_inactiveIconMap.put(m_btnCustom, ImageRepository.getImage(
+                "/icons/meta/custom_meta_inactive.png"));
+        m_btnCustom.addSelectionListener(new SelectionListener() {
+
+            public void widgetDefaultSelected(final SelectionEvent e) {
+//                widgetSelected(e);
+            }
+
+            public void widgetSelected(final SelectionEvent e) {
+                m_selectedMetaNode = CUSTOM;
+                changeSelection((Button)e.getSource());
+                setPageComplete(false);
+            }
+            
+        });          
+        setControl(overall);
+    }
+    
+    private void changeSelection(final Button newSelection) {
+        if (m_selectedButton != null) {
+            m_selectedButton.setSelection(false);
+            m_selectedButton.setImage(m_inactiveIconMap.get(m_selectedButton));
+        }
+        newSelection.setSelection(true);
+        newSelection.setImage(m_activeIconMap.get(newSelection));
+        m_selectedButton = newSelection;
+        ((AddMetaNodePage)getNextPage()).setTemplate(m_selectedMetaNode);
+    }
+    
     /**
      *
      * {@inheritDoc}
      */
     @Override
     public boolean isPageComplete() {
-        return m_selectedMetaNode != null;
+        return m_selectedMetaNode != null && m_selectedMetaNode != CUSTOM;
     }
 
 
@@ -117,7 +250,7 @@ public class SelectMetaNodePage extends WizardPage {
      */
     @Override
     public boolean canFlipToNextPage() {
-        return m_selectedMetaNode == null || m_selectedMetaNode.equals(CUSTOM);
+        return m_selectedMetaNode != null; 
     }
 
     String getSelectedMetaNode() {
