@@ -318,6 +318,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             }
             if (objectClass != null) {
                 object = loadBufferedDataTable(portDir, exec, loadID, tblRep);
+                ((BufferedDataTable)object).setOwnerRecursively(node);
                 spec = ((BufferedDataTable)object).getDataTableSpec();
             } else if (specClass != null) {
                 spec = BufferedDataTable.loadSpec(portDir);
@@ -373,6 +374,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     // we leave the code here for future versions..
                     object = 
                         loadBufferedDataTable(objectDir, exec, loadID, tblRep);
+                    ((BufferedDataTable)object).setOwnerRecursively(node);
                 } else if (ModelContent.class.isAssignableFrom(cl)) {
                     object = loadModelContent(objectDir, exec, 
                             (Class<? extends ModelContent>)cl);
