@@ -161,9 +161,9 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
         if (m_settings.method() == SamplingNodeSettings.Methods.Absolute) {
             if (rand != null) {
                 if (m_settings.stratifiedSampling()) {
-                    rowFilter =
-                            new StratifiedSamplingRowFilter(in, m_settings
-                                    .classColumn(), m_settings.count(), exec);
+                    rowFilter = new StratifiedSamplingRowFilter(in,
+                            m_settings.classColumn(), m_settings.count(),
+                            rand, exec);
                 } else {
                     rowFilter =
                             Sampler.createSampleFilter(in, m_settings.count(),
@@ -175,9 +175,9 @@ public abstract class AbstractSamplingNodeModel extends NodeModel {
         } else if (m_settings.method() == SamplingNodeSettings.Methods.Relative) {
             if (rand != null) {
                 if (m_settings.stratifiedSampling()) {
-                    rowFilter =
-                            new StratifiedSamplingRowFilter(in, m_settings
-                                    .classColumn(), m_settings.fraction(), exec);
+                    rowFilter = new StratifiedSamplingRowFilter(in,
+                            m_settings.classColumn(), m_settings.fraction(),
+                            rand, exec);
                 } else {
                     rowFilter =
                             Sampler.createSampleFilter(in, m_settings
