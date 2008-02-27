@@ -1,4 +1,4 @@
-/* 
+/*
  * -------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    11.10.2006 (Tobias Koetter): created
  */
@@ -37,9 +37,9 @@ public class BinningUtilTest extends TestCase {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(BinningUtilTest.class);
     /**
-     * Test method for {@link 
+     * Test method for {@link
      * org.knime.base.node.viz.histogram.util.BinningUtil
-     * #createBinInterval(double, double, int, boolean) 
+     * #createBinInterval(double, double, int, boolean)
      * org.knime.core.data.DataColumnSpec)}.
      */
     public void testCreateBinInterval() {
@@ -48,37 +48,37 @@ public class BinningUtilTest extends TestCase {
         int noOfBars = 0;
         double expected = 0;
         boolean isInteger = true;
-        double interval = BinningUtil.createBinInterval(maxVal, minVal, 
+        double interval = BinningUtil.createBinInterval(maxVal, minVal,
                 noOfBars, isInteger);
         assertEquals(interval, expected);
-        
+
         isInteger = false;
-        interval = BinningUtil.createBinInterval(maxVal, minVal, 
+        interval = BinningUtil.createBinInterval(maxVal, minVal,
                 noOfBars, isInteger);
         assertEquals(interval, expected);
-        
+
         maxVal = 10;
         minVal = 0;
         noOfBars = 10;
         expected = 2;
         isInteger = true;
-        interval = BinningUtil.createBinInterval(maxVal, minVal, 
+        interval = BinningUtil.createBinInterval(maxVal, minVal,
                 noOfBars, isInteger);
         assertEquals(interval, expected);
-        
+
         isInteger = false;
         expected = 1;
-        interval = BinningUtil.createBinInterval(maxVal, minVal, 
+        interval = BinningUtil.createBinInterval(maxVal, minVal,
                 noOfBars, isInteger);
         assertEquals(interval, expected);
-        
-        
-        assertTrue("Interval: " + interval + " >= Expected: " + expected, 
+
+
+        assertTrue("Interval: " + interval + " >= Expected: " + expected,
                 interval >= expected);
     }
 
     /**
-     * Test method for {@link 
+     * Test method for {@link
      * org.knime.base.node.viz.histogram.util.BinningUtil
      * #createBinStart(double, double)}.
      */
@@ -86,62 +86,62 @@ public class BinningUtilTest extends TestCase {
         double minVal = 0;
         double interval = 0;
         double expected = 0;
-        double start = BinningUtil.createBinStart(minVal, interval);
+        double start = BinningUtil.createBinStart(minVal, interval, false);
         assertEquals(start, expected);
-        
+
         minVal = 1;
         interval = 1;
         expected = 0;
-        start = BinningUtil.createBinStart(minVal, interval);
+        start = BinningUtil.createBinStart(minVal, interval, false);
         assertEquals(start, expected);
-        
+
         minVal = 2;
         interval = 1;
         expected = 2;
-        start = BinningUtil.createBinStart(minVal, interval);
+        start = BinningUtil.createBinStart(minVal, interval, false);
         assertEquals(start, expected);
-        
+
         minVal = -0.20000000018;
         interval = 2;
-        start = BinningUtil.createBinStart(minVal, interval);
+        start = BinningUtil.createBinStart(minVal, interval, false);
         assertTrue(start <= minVal);
-        
+
         minVal = 0.20000000018;
         interval = 2;
-        start = BinningUtil.createBinStart(minVal, interval);
+        start = BinningUtil.createBinStart(minVal, interval, false);
         assertTrue(start <= minVal);
 
         minVal = 200000018;
         interval = 2;
-        start = BinningUtil.createBinStart(minVal, interval);
+        start = BinningUtil.createBinStart(minVal, interval, false);
         assertTrue(start <= minVal);
 
         minVal = -200000018;
         interval = 2;
-        start = BinningUtil.createBinStart(minVal, interval);
+        start = BinningUtil.createBinStart(minVal, interval, false);
         assertTrue(start <= minVal);
-        
+
         minVal = 200000018;
         interval = 333333;
-        start = BinningUtil.createBinStart(minVal, interval);
+        start = BinningUtil.createBinStart(minVal, interval, false);
         assertTrue(start <= minVal);
 
         minVal = -200000018;
         interval = 333333;
-        start = BinningUtil.createBinStart(minVal, interval);
+        start = BinningUtil.createBinStart(minVal, interval, false);
         assertTrue(start <= minVal);
 
         minVal = 15;
         interval = 2;
-        start = BinningUtil.createBinStart(minVal, interval);
+        start = BinningUtil.createBinStart(minVal, interval, false);
         assertTrue(start <= minVal);
 
         minVal = -15;
         interval = 2;
-        start = BinningUtil.createBinStart(minVal, interval);
+        start = BinningUtil.createBinStart(minVal, interval, false);
         assertTrue(start <= minVal);
     }
-    
+
     /**
      * Test method {@link BinningUtil#smallValueRounder(double, int, boolean)}.
      */
@@ -149,56 +149,56 @@ public class BinningUtilTest extends TestCase {
         double val = -0.200000018;
         double result = BinningUtil.smallValueRounder(val, 2, false, false);
         assertTrue(result < val);
-        
+
         val = -0.200000018;
         result = BinningUtil.smallValueRounder(val, 2, false, true);
         assertTrue(result > val);
-        
+
         val = 0.200000018;
         result = BinningUtil.smallValueRounder(val, 2, false, true);
         assertTrue(result > val);
-        
+
         val = 0.200000018;
         result = BinningUtil.smallValueRounder(val, 2, false, false);
         assertTrue(result < val);
     }
 
     /**
-     * Test method for {@link 
+     * Test method for {@link
      * org.knime.base.node.viz.histogram.util.BinningUtil
      * #myRoundedBorders(double, double, int)}.
      */
     public void testMyRoundedBorders() {
-        
-        int noOfDigits = 2;
+
+        final int noOfDigits = 2;
         try {
             BinningUtil.myRoundedBorders(0.0, 0, noOfDigits);
             fail("Zero or negative increment shouldn't be allowed");
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             //thats fine
         }
         try {
             BinningUtil.myRoundedBorders(0.0, -1, noOfDigits);
             fail("Zero or negative increment shouldn't be allowed");
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             //thats fine
         }
         double baseVal = 0;
         double increment = 0.1;
         double value = baseVal + increment;
-        double roundedVal = 
+        double roundedVal =
             BinningUtil.myRoundedBorders(value, increment, noOfDigits);
         assertTrue(roundedVal >= value);
-        
+
         baseVal = -0.200000018;
         testIncrement(10, baseVal, noOfDigits);
-        
+
         baseVal = 0.200000018;
         testIncrement(10, baseVal, noOfDigits);
-        
+
         baseVal = 2000;
         testIncrement(10, baseVal, noOfDigits);
-        
+
         baseVal = 2000;
 
         increment = 10;
@@ -215,7 +215,7 @@ public class BinningUtilTest extends TestCase {
         for(int i = 0; i < noOfIncrements; i++) {
             increment = 1 / Math.pow(10, i);
             value = baseVal + increment;
-            roundedVal = 
+            roundedVal =
                 BinningUtil.myRoundedBorders(value, increment, noOfDigits);
             LOGGER.debug("Increment: " + increment);
             if (value < 0) {
@@ -227,8 +227,8 @@ public class BinningUtilTest extends TestCase {
     }
 
     /**
-     * Test the 
-     * {@link BinningUtil#createBinInterval(double, double, int, boolean)} 
+     * Test the
+     * {@link BinningUtil#createBinInterval(double, double, int, boolean)}
      * method.
      */
     public void testIntegerInterval() {
@@ -238,7 +238,7 @@ public class BinningUtilTest extends TestCase {
         assertTrue(interval == 2);
         interval = BinningUtil.createBinInterval(3, 1, 2, true);
         assertTrue(interval == 2);
-        
+
         interval = BinningUtil.createBinInterval(-1, -3, 3, true);
         assertTrue(interval == 1);
         interval = BinningUtil.createBinInterval(1, -1, 3, true);
