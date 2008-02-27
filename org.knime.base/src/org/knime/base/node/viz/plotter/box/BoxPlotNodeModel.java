@@ -29,9 +29,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.knime.base.data.sort.SortedTable;
 import org.knime.base.node.util.DataArray;
@@ -59,6 +61,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.Config;
 import org.knime.core.node.property.hilite.DefaultHiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -107,8 +110,8 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     private static final String CFG_ROW = "row";
     
     private Map<DataColumnSpec, double[]>m_statistics;
-    private Map<String, Map<Double, RowKey>>m_mildOutliers;
-    private Map<String, Map<Double, RowKey>>m_extremeOutliers;
+    private Map<String, Map<Double, Set<RowKey>>>m_mildOutliers;
+    private Map<String, Map<Double, Set<RowKey>>>m_extremeOutliers;
     
     private DataArray m_array;
     
@@ -168,9 +171,9 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
         BufferedDataTable table = inData[0];
         m_statistics = new LinkedHashMap<DataColumnSpec, double[]>();
         m_mildOutliers 
-            = new LinkedHashMap<String, Map<Double, RowKey>>();
+            = new LinkedHashMap<String, Map<Double, Set<RowKey>>>();
         m_extremeOutliers 
-            = new LinkedHashMap<String, Map<Double, RowKey>>();
+            = new LinkedHashMap<String, Map<Double, Set<RowKey>>>();
         int colIdx = 0;
         List<DataColumnSpec> outputColSpecs = new ArrayList<DataColumnSpec>();
         double subProgress = 1.0 / getNumNumericColumns(
@@ -231,8 +234,8 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                     float medianPos = nrOfRows * 0.5f;
                     float lowerQuartilePos = nrOfRows * 0.25f;
                     float upperQuartilePos = nrOfRows * 0.75f;
-                    if (currCountingRow == Math.ceil(lowerQuartilePos)) {
-                        if (lowerQuartilePos % 1 == 0) {
+                    if (currCountingRow == Math.floor(lowerQuartilePos) + 1) {
+                        if (lowerQuartilePos % 1 != 0) {
                             // get the row's value
                             statistic[LOWER_QUARTILE] = ((DoubleValue)row
                                     .getCell(colIdx)).getDoubleValue();
@@ -244,8 +247,8 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                             statistic[LOWER_QUARTILE] = (value + lastValue) / 2;
                         }
                     }
-                    if (currCountingRow == Math.ceil(medianPos)) {
-                        if (medianPos % 1 == 0) {
+                    if (currCountingRow == Math.floor(medianPos) + 1) {
+                        if (medianPos % 1 != 0) {
                             // get the row's value
                             statistic[MEDIAN] = ((DoubleValue)row
                                     .getCell(colIdx)).getDoubleValue();
@@ -257,8 +260,8 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                             statistic[MEDIAN] = (value + lastValue) / 2;
                         }                            
                     }
-                    if (currCountingRow == Math.ceil(upperQuartilePos)) {
-                        if (upperQuartilePos % 1 == 0) {
+                    if (currCountingRow == Math.floor(upperQuartilePos) + 1) {
+                        if (upperQuartilePos % 1 != 0) {
                             // get the row's value
                             statistic[UPPER_QUARTILE] = ((DoubleValue)row
                                     .getCell(colIdx)).getDoubleValue();
@@ -277,9 +280,10 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                 }
                 double iqr = statistic[UPPER_QUARTILE] 
                                        - statistic[LOWER_QUARTILE];
-                Map<Double, RowKey> mild = new LinkedHashMap<Double, RowKey>();
-                Map<Double, RowKey>extreme 
-                    = new LinkedHashMap<Double, RowKey>();
+                Map<Double, Set<RowKey>> mild 
+                    = new LinkedHashMap<Double, Set<RowKey>>();
+                Map<Double, Set<RowKey>>extreme 
+                    = new LinkedHashMap<Double, Set<RowKey>>();
                 // per default the whiskers are at min and max
                 double[] whiskers = new double[]{
                         statistic[MIN],
@@ -362,7 +366,8 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
      */
     public void detectOutliers(final DataTable table, 
             final double iqr, final double[] q, 
-            final Map<Double, RowKey>mild, final Map<Double, RowKey>extreme, 
+            final Map<Double, Set<RowKey>>mild, 
+            final Map<Double, Set<RowKey>>extreme, 
             final double[] whiskers,
             final int colIdx) {
         boolean searchLowerWhisker = true;
@@ -377,20 +382,40 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             if (value < q[0] - (1.5 * iqr)) {
                 // mild
                 if (value > q[0] - (3.0 * iqr)) {
-                    mild.put(value, row.getKey());
+                    Set<RowKey>keys = mild.get(value); 
+                    if (keys == null) {
+                        keys = new HashSet<RowKey>();
+                    }
+                    keys.add(row.getKey());
+                    mild.put(value, keys);
                 } else {
                     // extreme
-                    extreme.put(value, row.getKey());
+                    Set<RowKey>keys = mild.get(value); 
+                    if (keys == null) {
+                        keys = new HashSet<RowKey>();
+                    }
+                    keys.add(row.getKey());                    
+                    extreme.put(value, keys);
                 }
             } else if (value > q[1] + (1.5 * iqr)) {
                 // upper outlier
                 searchUpperWhisker = false;
                 if (value < q[1] + (3.0 * iqr)) {
                     // mild 
-                    mild.put(value, row.getKey());
+                    Set<RowKey>keys = mild.get(value); 
+                    if (keys == null) {
+                        keys = new HashSet<RowKey>();
+                    }
+                    keys.add(row.getKey());
+                    mild.put(value, keys);
                 } else {
                     // extreme
-                    extreme.put(value, row.getKey());
+                    Set<RowKey>keys = mild.get(value); 
+                    if (keys == null) {
+                        keys = new HashSet<RowKey>();
+                    }
+                    keys.add(row.getKey());
+                    extreme.put(value, keys);
                 }
             } else if (searchLowerWhisker) {
                 whiskers[0] = value;
@@ -412,14 +437,14 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
     /**
      * {@inheritDoc}
      */
-    public Map<String, Map<Double, RowKey>> getMildOutliers() {
+    public Map<String, Map<Double, Set<RowKey>>> getMildOutliers() {
         return m_mildOutliers;
     }
     
     /**
      * {@inheritDoc}
      */
-    public Map<String, Map<Double, RowKey>> getExtremeOutliers() {
+    public Map<String, Map<Double, Set<RowKey>>> getExtremeOutliers() {
         return m_extremeOutliers;
     }
     
@@ -472,9 +497,10 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             FileInputStream fis = new FileInputStream(f);
             NodeSettingsRO settings = NodeSettings.loadFromXML(fis);
             m_statistics = new LinkedHashMap<DataColumnSpec, double[]>();
-            m_mildOutliers = new LinkedHashMap<String, Map<Double, RowKey>>();
+            m_mildOutliers = new LinkedHashMap<String, Map<Double, 
+                Set<RowKey>>>();
             m_extremeOutliers 
-                = new LinkedHashMap<String, Map<Double, RowKey>>();
+                = new LinkedHashMap<String, Map<Double, Set<RowKey>>>();
             int nrOfCols = settings.getInt(CFG_NR_COLS);
             for (int i = 0; i < nrOfCols; i++) {
                 NodeSettings subSetting = (NodeSettings)settings
@@ -483,27 +509,7 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
                 double[] stats = settings.getDoubleArray(CFG_STATS 
                         + spec.getName());
                 m_statistics.put(spec, stats);
-                double[] mild = settings.getDoubleArray(CFG_MILD 
-                        + spec.getName());
-                DataCell[] mildKeys = settings.getDataCellArray(
-                        CFG_MILD + CFG_ROW + spec.getName());
-                Map<Double, RowKey> mildOutliers 
-                    = new LinkedHashMap<Double, RowKey>();
-                for (int j = 0; j < mild.length; j++) {
-                    mildOutliers.put(mild[j], new RowKey(mildKeys[j]));
-                }
-                m_mildOutliers.put(spec.getName(), mildOutliers);
-                // extreme 
-                Map<Double, RowKey> extremeOutliers 
-                = new LinkedHashMap<Double, RowKey>();
-                double[] extreme = settings.getDoubleArray(CFG_EXTREME 
-                        + spec.getName());
-                DataCell[] extremeKeys = settings.getDataCellArray(
-                        CFG_EXTREME + CFG_ROW + spec.getName());
-                for (int j = 0; j < extreme.length; j++) {
-                    extremeOutliers.put(extreme[j], new RowKey(extremeKeys[j]));
-                }
-                m_extremeOutliers.put(spec.getName(), extremeOutliers);
+                loadOutliers(settings, spec);
             }
             File data = new File(nodeInternDir, ARRAY_FILE);
             ContainerTable table = DataContainer.readFromZip(data);
@@ -514,6 +520,77 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
         }
     }
     
+    private void loadOutliers(final NodeSettingsRO columnSubConfig, 
+            final DataColumnSpec spec) throws InvalidSettingsException {
+        // try if the settings are new 
+        if (columnSubConfig.getDataCellArray(
+                CFG_MILD + CFG_ROW + spec.getName()) == null) {
+            loadOutliersNew(columnSubConfig, spec);
+            return;
+        }
+        double[] mild = columnSubConfig.getDoubleArray(CFG_MILD 
+                + spec.getName());
+        DataCell[] mildKeys = columnSubConfig.getDataCellArray(
+                CFG_MILD + CFG_ROW + spec.getName());
+        Map<Double, Set<RowKey>> mildOutliers 
+            = new LinkedHashMap<Double, Set<RowKey>>();
+        for (int j = 0; j < mild.length; j++) {
+            Set<RowKey> keys = new HashSet<RowKey>();
+            keys.add(new RowKey(mildKeys[j]));
+            mildOutliers.put(mild[j], keys);
+        }
+        m_mildOutliers.put(spec.getName(), mildOutliers);
+        // extreme 
+        Map<Double, Set<RowKey>> extremeOutliers 
+            = new LinkedHashMap<Double, Set<RowKey>>();
+        double[] extreme = columnSubConfig.getDoubleArray(CFG_EXTREME 
+                + spec.getName());
+        DataCell[] extremeKeys = columnSubConfig.getDataCellArray(
+                CFG_EXTREME + CFG_ROW + spec.getName());
+        for (int j = 0; j < extreme.length; j++) {
+            Set<RowKey>keys = new HashSet<RowKey>();
+            keys.add(new RowKey(extremeKeys[j]));
+            extremeOutliers.put(extreme[j], keys);
+        }
+        m_extremeOutliers.put(spec.getName(), extremeOutliers); 
+    }
+    
+    private void loadOutliersNew(final NodeSettingsRO columnSubConfig, 
+            final DataColumnSpec spec) throws InvalidSettingsException {
+        double[] mild = columnSubConfig.getDoubleArray(CFG_MILD 
+                + spec.getName());
+        Config mildOutlierSubConfig = columnSubConfig.getConfig(
+                CFG_MILD + CFG_ROW + spec.getName());        
+        Map<Double, Set<RowKey>> mildOutliers 
+            = new LinkedHashMap<Double, Set<RowKey>>();
+        for (int j = 0; j < mild.length; j++) {
+            DataCell[] mildKeys = mildOutlierSubConfig.getDataCellArray(
+                    CFG_MILD + CFG_ROW + spec.getName() + j);
+            Set<RowKey> keys = new HashSet<RowKey>();
+            for (int rk = 0; rk < mildKeys.length; rk++) {
+                keys.add(new RowKey(mildKeys[rk]));    
+            }
+            mildOutliers.put(mild[j], keys);
+        }
+        m_mildOutliers.put(spec.getName(), mildOutliers);
+        // extreme 
+        Map<Double, Set<RowKey>> extremeOutliers 
+            = new LinkedHashMap<Double, Set<RowKey>>();
+        double[] extreme = columnSubConfig.getDoubleArray(CFG_EXTREME 
+                + spec.getName());
+        Config extrOutlierSubConfig = columnSubConfig.getConfig(
+                CFG_EXTREME + CFG_ROW + spec.getName());
+        for (int j = 0; j < extreme.length; j++) {
+            DataCell[] extremeKeys = extrOutlierSubConfig.getDataCellArray(
+                    CFG_EXTREME + CFG_ROW + spec.getName() + j);
+            Set<RowKey>keys = new HashSet<RowKey>();
+            for (int rk = 0; rk < extremeKeys.length; rk++) {
+                keys.add(new RowKey(extremeKeys[rk]));
+            }
+            extremeOutliers.put(extreme[j], keys);
+        }
+        m_extremeOutliers.put(spec.getName(), extremeOutliers);          
+    }
 
     /**
      * {@inheritDoc}
@@ -536,32 +613,48 @@ public class BoxPlotNodeModel extends NodeModel implements BoxPlotDataProvider {
             String cfgName = entry.getKey().getName();
             settings.addDoubleArray(CFG_STATS + cfgName, entry.getValue());
             // mild outliers
-            Map<Double, RowKey>mildOutliers =  m_mildOutliers.get(cfgName);
+            Map<Double, Set<RowKey>>mildOutliers =  m_mildOutliers.get(cfgName);
             double[] mild = new double[mildOutliers.size()];
-            DataCell[] mildKeys = new DataCell[mildOutliers.size()];
+            Config mildKeysSubConfig = settings.addConfig(CFG_MILD + CFG_ROW 
+                    + cfgName);
             int j = 0;
-            for (Map.Entry<Double, RowKey> mildEntry : mildOutliers
+            for (Map.Entry<Double, Set<RowKey>> mildEntry : mildOutliers
                     .entrySet()) {
                 mild[j] = mildEntry.getKey();
-                mildKeys[j] = mildEntry.getValue().getId();
+                DataCell[] keys = new DataCell[mildEntry.getValue().size()];
+                int rk = 0;
+                for (RowKey key : mildEntry.getValue()) {
+                    keys[rk] = key.getId();
+                    rk++;
+                }
+                mildKeysSubConfig.addDataCellArray(CFG_MILD + CFG_ROW 
+                    + cfgName + j, keys);
                 j++;
             }
             settings.addDoubleArray(CFG_MILD + cfgName, mild);
-            settings.addDataCellArray(CFG_MILD + CFG_ROW + cfgName, mildKeys);
-            Map<Double, RowKey>extremeOutliers =  m_extremeOutliers
+//            settings.addDataCellArray(CFG_MILD + CFG_ROW + cfgName, mildKeys);
+            Map<Double, Set<RowKey>>extremeOutliers =  m_extremeOutliers
                 .get(cfgName);
             double[] extreme = new double[extremeOutliers.size()];
-            DataCell[] extremeKeys = new DataCell[extremeOutliers.size()];
             int ext = 0;
-            for (Map.Entry<Double, RowKey> extrEntry : extremeOutliers
+            Config extKeysSubConfig = settings.addConfig(CFG_EXTREME + CFG_ROW 
+                    + cfgName);
+            for (Map.Entry<Double, Set<RowKey>> extrEntry : extremeOutliers
                     .entrySet()) {
                 extreme[ext] = extrEntry.getKey();
-                extremeKeys[ext] = extrEntry.getValue().getId();
+                DataCell[] keys = new DataCell[extrEntry.getValue().size()];
+                int rk = 0;
+                for (RowKey key : extrEntry.getValue()) {
+                    keys[rk] = key.getId();
+                    rk++;
+                }
+                extKeysSubConfig.addDataCellArray(
+                        CFG_EXTREME + CFG_ROW + cfgName + ext, keys);
                 ext++;
             }
             settings.addDoubleArray(CFG_EXTREME + cfgName, extreme);
-            settings.addDataCellArray(CFG_EXTREME + CFG_ROW + cfgName, 
-                    extremeKeys);
+//            settings.addDataCellArray(CFG_EXTREME + CFG_ROW + cfgName, 
+//                    extremeKeys);
         }
         File f = new File(nodeInternDir, FILE_NAME);
         FileOutputStream fos = new FileOutputStream(f);

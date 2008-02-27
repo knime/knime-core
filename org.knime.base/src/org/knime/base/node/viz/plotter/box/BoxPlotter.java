@@ -308,40 +308,44 @@ public class BoxPlotter extends BasicPlotter {
             int x = box.getX();
             String colName = box.getColumnName();
             // the mild outliers
-            Map<Double, RowKey> mildOutliers 
+            Map<Double, Set<RowKey>> mildOutliers 
                 = ((BoxPlotDataProvider)getDataProvider()).getMildOutliers()
                 .get(colName);
-            for (Map.Entry<Double, RowKey> entry : mildOutliers.entrySet()) {
+            for (Map.Entry<Double, Set<RowKey>> entry : mildOutliers.entrySet()) {
                 double value = entry.getKey();
-                RowKey key = entry.getValue();
-                int y = (int)getScreenYCoordinate(
-                        yCoordinate.calculateMappedValue(new DoubleCell(value),
-                                height, true)) - (OFFSET / 2);
-                DotInfo dot = new DotInfo(x, y, key, 
-                        delegateIsHiLit(key.getId()), ColorAttr.DEFAULT, 0, 
-                        0);
-                dot.setXDomainValue(new StringCell(colName));
-                dot.setYDomainValue(new DoubleCell(value));
-                dot.setShape(ShapeFactory.getShape(ShapeFactory.CIRCLE));
-                dotList.add(dot);
+                for (RowKey key : entry.getValue()) {
+                    int y = (int)getScreenYCoordinate(
+                            yCoordinate.calculateMappedValue(
+                                    new DoubleCell(value),
+                                    height, true)) - (OFFSET / 2);
+                    DotInfo dot = new DotInfo(x, y, key, 
+                            delegateIsHiLit(key.getId()), ColorAttr.DEFAULT, 0, 
+                            0);
+                    dot.setXDomainValue(new StringCell(colName));
+                    dot.setYDomainValue(new DoubleCell(value));
+                    dot.setShape(ShapeFactory.getShape(ShapeFactory.CIRCLE));
+                    dotList.add(dot);
+                }
             }
             // the extreme outliers
-            Map<Double, RowKey> extremeOutliers 
+            Map<Double, Set<RowKey>> extremeOutliers 
                 = ((BoxPlotDataProvider)getDataProvider()).getExtremeOutliers()
                 .get(colName);
-            for (Map.Entry<Double, RowKey> entry : extremeOutliers.entrySet()) {
+            for (Map.Entry<Double, Set<RowKey>> entry : extremeOutliers.entrySet()) {
                 double value = entry.getKey();
-                RowKey key = entry.getValue();
-                int y = (int)getScreenYCoordinate(
-                        yCoordinate.calculateMappedValue(new DoubleCell(value),
-                                height, true)) - (OFFSET / 2);
-                DotInfo dot = new DotInfo(x, y, key, 
-                        delegateIsHiLit(key.getId()), ColorAttr.DEFAULT, 0, 
-                        0);
-                dot.setShape(ShapeFactory.getShape(ShapeFactory.CROSS));
-                dot.setXDomainValue(new StringCell(colName));
-                dot.setYDomainValue(new DoubleCell(value));
-                dotList.add(dot);
+                for (RowKey key : entry.getValue()) {
+                    int y = (int)getScreenYCoordinate(
+                            yCoordinate.calculateMappedValue(
+                                    new DoubleCell(value),
+                                    height, true)) - (OFFSET / 2);
+                    DotInfo dot = new DotInfo(x, y, key, 
+                            delegateIsHiLit(key.getId()), ColorAttr.DEFAULT, 0, 
+                            0);
+                    dot.setShape(ShapeFactory.getShape(ShapeFactory.CROSS));
+                    dot.setXDomainValue(new StringCell(colName));
+                    dot.setYDomainValue(new DoubleCell(value));
+                    dotList.add(dot);
+                }
             }
             return dotList;
     }
