@@ -302,7 +302,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         }
         if (HistogramLayout.SIDE_BY_SIDE.equals(
                 vizModel.getHistogramLayout())
-                || vizModel.containsNotPresentableBin()) {
+                && vizModel.containsNotPresentableBin()) {
             //set the bin with to the maximum bin if the layout
             //is side-by-side or the bin is not presentable with
             //the current width
@@ -581,7 +581,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             vizModel.updateHiliteInfo(delegateGetHiLitKeys(), true);
             if (HistogramLayout.SIDE_BY_SIDE.equals(
                     vizModel.getHistogramLayout())
-                    || (vizModel.getAggrColumns() != null
+                    && (vizModel.getAggrColumns() != null
                             && vizModel.getAggrColumns().size() > 1)) {
                 vizModel.setBinWidth(vizModel.getMaxBinWidth());
             }
@@ -873,15 +873,16 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         if (vizModel.setHistogramLayout(layout)) {
 //          if the layout has changed we have to update the y coordinates
             setYCoordinates();
-            if (HistogramLayout.SIDE_BY_SIDE.equals(layout)
-                    || (vizModel.getAggrColumns() != null
-                            && vizModel.getAggrColumns().size() > 1)) {
-                //save the current bin width to restore it after changing the
+            if (HistogramLayout.SIDE_BY_SIDE.equals(layout)) {
+              //save the current bin width to restore it after changing the
                 //layout again
                 m_lastStackedBinWidth = vizModel.getBinWidth();
-                //... and set the bin width to the maximum bin
-                //with by changing to the side by side layout
-                vizModel.setBinWidth(vizModel.getMaxBinWidth());
+                if (vizModel.getAggrColumns() != null
+                            && vizModel.getAggrColumns().size() > 1) {
+                    //... and set the bin width to the maximum bin
+                    //with by changing to the side by side layout
+                    vizModel.setBinWidth(vizModel.getMaxBinWidth());
+                }
             } else if (HistogramLayout.STACKED.equals(layout)) {
                 //set the previous used bin width
                 vizModel.setBinWidth(m_lastStackedBinWidth);
@@ -908,7 +909,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             setYCoordinates();
             if (HistogramLayout.SIDE_BY_SIDE.equals(
                     vizModel.getHistogramLayout())
-                    || vizModel.containsNotPresentableBin()) {
+                    && vizModel.containsNotPresentableBin()
+                    && (vizModel.getAggrColumns() != null
+                            && vizModel.getAggrColumns().size() > 1)) {
                 vizModel.setBinWidth(vizModel.getMaxBinWidth());
             }
             return true;
@@ -934,7 +937,9 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
             setYCoordinates();
             if (HistogramLayout.SIDE_BY_SIDE.equals(
                     vizModel.getHistogramLayout())
-                    || vizModel.containsNotPresentableBin()) {
+                    && vizModel.containsNotPresentableBin()
+                    && (vizModel.getAggrColumns() != null
+                            && vizModel.getAggrColumns().size() > 1)) {
                 vizModel.setBinWidth(vizModel.getMaxBinWidth());
             }
             return true;

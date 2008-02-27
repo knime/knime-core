@@ -30,7 +30,8 @@
 		<p>All automatically created bins, with exception to the first one, are
 		left open intervals (a,b] where a is excluded and b is included in 
 		the interval. To cover all values the first interval is a closed 
-		interval [a,b] where a and b are included.</p>
+		interval [a,b] where a and b are included. In order to provide nicer bin 
+        intervals the left border is set to 0 if possible.</p>
 		<p><b>Please note: This node caches all data in the main memory to 
 		provide interactive functions. If you plan to visualize extremely large 
 		datasets the non interactive "Histogram" node may be better suited.</b>
