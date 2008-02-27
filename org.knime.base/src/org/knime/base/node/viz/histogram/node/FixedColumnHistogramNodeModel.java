@@ -34,6 +34,7 @@ import org.knime.base.node.viz.histogram.HistogramLayout;
 import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
 import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -131,7 +132,9 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
         LOGGER.debug("Entering createHistogramModel(exec, table) "
                 + "of class FixedColumnHistogramNodeModel.");
         final Collection<ColorColumn> aggrColumns = getAggrColumns();
-        final int noOfBins = m_noOfBins.getIntValue();
+        final int noOfBins =
+            BinningUtil.calculateIntegerMaxNoOfBins(m_noOfBins.getIntValue(),
+                    getXColSpec());
         m_model =
             new FixedHistogramDataModel(getXColSpec(), aggrColumns, noOfBins);
         if (noOfRows < 1) {

@@ -44,12 +44,11 @@ import org.knime.base.node.viz.aggregation.HiliteShapeCalculator;
 import org.knime.base.node.viz.aggregation.util.GUIUtils;
 import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
 import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
 import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.IntValue;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
 
@@ -396,7 +395,7 @@ public abstract class AbstractHistogramVizModel {
 
     /**
      * @return all available element colors. This is the color the user has
-     * set for one attribute in the ColorManager node.
+     * set for one attribute in the Color Manager node.
      */
     public SortedSet<Color> getRowColors() {
         return m_rowColors;
@@ -556,31 +555,15 @@ public abstract class AbstractHistogramVizModel {
         }
         //handle integer values special
         final DataColumnSpec xColSpec = getXColumnSpec();
-        if (xColSpec != null) {
-            final boolean isInteger =
-                xColSpec.getType().isCompatible(IntValue.class);
-            if (isInteger) {
-                final DataColumnDomain domain = xColSpec.getDomain();
-                if (domain != null) {
-                    final IntCell lowerBound =
-                        (IntCell)domain.getLowerBound();
-                    final IntCell upperBound =
-                        (IntCell)domain.getUpperBound();
-                    final int range =
-                        upperBound.getIntValue() - lowerBound.getIntValue()
-                        + 1;
-                    if (maxNoOfBins > range) {
-                        maxNoOfBins = range;
-                    }
-                }
-            }
-        }
+        maxNoOfBins =
+            BinningUtil.calculateIntegerMaxNoOfBins(maxNoOfBins, xColSpec);
         // avoid rounding errors and display at least one bar
         if (maxNoOfBins < 1) {
             maxNoOfBins = 1;
         }
         m_maxNoOfBins = maxNoOfBins;
     }
+
 
     /**
      * @return the number of bins which are displayed.

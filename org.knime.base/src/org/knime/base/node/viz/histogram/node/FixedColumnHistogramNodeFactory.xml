@@ -24,7 +24,8 @@
         <p>All automatically created bins, except the first one, are
         left open intervals (a,b] where a is excluded and b is included in 
         the interval. To cover all values the first interval is a closed 
-        interval [a,b] where a and b are included.</p>
+        interval [a,b] where a and b are included. In order to provide nicer bin 
+        intervals the left border is set to 0 if possible.</p>
         <p>This view is particularly well suited for extremely large datasets.
         For more interaction and hiliting support use the 
         "Interactive Histogram" node.</p>
