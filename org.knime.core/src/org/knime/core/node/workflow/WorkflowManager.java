@@ -1724,10 +1724,20 @@ public final class WorkflowManager extends NodeContainer {
     private void configureNodeAndSuccessors(final NodeID nodeId,
             final boolean configureMyself,
             final boolean configureWFMsuccessors) {
+        // create list of properly ordered nodes (each one appears only once!)
         ArrayList<NodeID> nodes = getBreathFirstListOfNodeAndSuccessors(nodeId);
+        // remember which ones we did configure to avoid useless configurations
+        // (this list does not contain nodes where configure() didn't change
+        // the specs.
+        HashSet<NodeID> freshlyConfiguredNodes = new HashSet<NodeID>();
+        // if not so desired, don't configure origin
         if (!configureMyself) {
+            // don't configure origin...
             nodes.remove(nodeId);
+            // ...but pretend we did configure it
+            freshlyConfiguredNodes.add(nodeId);
         }
+        // don't configure "containing" WFM like a regular node
         boolean wfmIsPartOfList = nodes.contains(this.getID());
         // looks like we are trying to configure ourselves as well:
         // Don't configure WFM itself but make sure the nodes connected
@@ -1737,6 +1747,15 @@ public final class WorkflowManager extends NodeContainer {
         }
         // now iterate over the remaining nodes
         for (NodeID currNode : nodes) {
+            boolean needsConfiguration = currNode.equals(nodeId);
+            for (ConnectionContainer cc : m_connectionsByDest.get(currNode)) {
+                if (freshlyConfiguredNodes.contains(cc.getSource())) {
+                    needsConfiguration = true;
+                }
+            }
+            if (!needsConfiguration) {
+                continue;
+            }
             NodeContainer nc = m_nodes.get(currNode);
             assert nc != null;
             synchronized (m_dirtyWorkflow) {
@@ -1766,8 +1785,10 @@ public final class WorkflowManager extends NodeContainer {
                 case CONFIGURED:
                 case MARKEDFOREXEC:
                     // create new ScopeContextStack if this is a "real" node
+                    ScopeObjectStack oldSOS = null;
                     if (nc instanceof SingleNodeContainer) {
                         SingleNodeContainer snc = (SingleNodeContainer)nc;
+                        oldSOS = snc.getScopeObjectStack();
                         ScopeObjectStack[] scscs =
                             new ScopeObjectStack[snc.getNrInPorts()];
                         assembleSCStackContainer(currNode, scscs);
@@ -1778,9 +1799,16 @@ public final class WorkflowManager extends NodeContainer {
                     // configure node itself
                     boolean outputSpecsChanged
                               = nc.configureAsNodeContainer(inSpecs);
-                    if (!outputSpecsChanged) {
-                        // remove really only successors from list
-                        // TODO how do we do that???
+                    boolean stackChanged = false;
+                    if (nc instanceof SingleNodeContainer) {
+                        SingleNodeContainer snc = (SingleNodeContainer)nc;
+                        // TODO: once SOS.equals() actually works...
+                        stackChanged = !snc.getScopeObjectStack().isEmpty()
+                          || !oldSOS.isEmpty();
+//                            stackChanged = snc.getScopeObjectStack().equals(old_sos);
+                    }
+                    if (outputSpecsChanged || stackChanged) {
+                        freshlyConfiguredNodes.add(nc.getID());
                     }
                     break;
                 default:

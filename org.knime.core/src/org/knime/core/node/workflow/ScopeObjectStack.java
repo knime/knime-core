@@ -193,6 +193,13 @@ public final class ScopeObjectStack {
         m_stack.add(item);
     }
     
+    /**
+     * @return true if stack is empty
+     */
+    boolean isEmpty() {
+        return m_stack.isEmpty();
+    }
+    
     /** holds matching ScopeContext after execute if loop needs to be
      * execute again. */ 
     private ScopeContext m_requestToContinueLoop;
