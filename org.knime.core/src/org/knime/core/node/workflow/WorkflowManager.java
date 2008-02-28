@@ -1327,8 +1327,9 @@ public final class WorkflowManager extends NodeContainer {
     public boolean executeAllAndWaitUntilDone() {
         final Object mySemaphore = new Object();
         synchronized (mySemaphore) {
-            this.addListener(new WorkflowListener() {
-                public void workflowChanged(final WorkflowEvent event) {
+            this.addNodeStateChangeListener(new NodeStateChangeListener() {
+                /** {@inheritDoc} */
+                public void stateChanged(NodeStateEvent state) {
                     synchronized (mySemaphore) {
                         mySemaphore.notifyAll();
                     }
