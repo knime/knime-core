@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   19.07.2005 (ohl): created
  */
@@ -44,7 +44,7 @@ import org.knime.core.node.NodeSettingsWO;
  * compared to a given range. Matches and rows inside the range can either be
  * included or excluded. RegExpr match can be done case sensitive or
  * insensitive.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class ColValRowFilter extends RowFilter {
@@ -64,7 +64,7 @@ public class ColValRowFilter extends RowFilter {
     private static final String CFG_LOWERBOUND = "ColValRowFilterLowerBound";
 
     private static final String CFG_FILTERMISSING = "ColValFilterMissValues";
-    
+
     private boolean m_include;
 
     private int m_colIndex;
@@ -89,7 +89,7 @@ public class ColValRowFilter extends RowFilter {
     private DataCell m_upperBound;
 
     private DataValueComparator m_dcComp;
-    
+
     /*
      * variables for missing value filtering
      */
@@ -98,7 +98,7 @@ public class ColValRowFilter extends RowFilter {
     /**
      * Creates a new filter which matches the string representation of the
      * specified column against a given regular expression.
-     * 
+     *
      * @param regExpr a valid regular expression; causes an exception to fly if
      *            its not a valid reg expr
      * @param colName the name of the column to test in the row
@@ -124,11 +124,7 @@ public class ColValRowFilter extends RowFilter {
         m_caseSensitive = caseSensitive;
 
         try {
-            if (caseSensitive) {
-                m_pattern = Pattern.compile(regExpr);
-            } else {
-                m_pattern = Pattern.compile(regExpr, Pattern.CASE_INSENSITIVE);
-            }
+            m_pattern = compileRegExpr(regExpr, caseSensitive);
         } catch (PatternSyntaxException pse) {
             throw new IllegalArgumentException("Error in regular expression ('"
                     + pse.getMessage() + "')");
@@ -141,9 +137,29 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
+     * We need to compile the pattern in two places (in the constructor and in
+     * loadSettings). Both places call this method.
+     *
+     * @param regExpr the pattern to compile.
+     * @param caseSensitive if true, matching is case sensitive
+     * @return the RegExprMachine compiled from the reg expr passed
+     * @throws PatternSyntaxException if the pattern is invalid
+     */
+    private Pattern compileRegExpr(final String regExpr,
+            final boolean caseSensitive) throws PatternSyntaxException {
+        // support \n in the data and weird international characters.
+        int flags = Pattern.DOTALL | Pattern.UNICODE_CASE | Pattern.MULTILINE;
+        if (!caseSensitive) {
+            flags |= Pattern.CASE_INSENSITIVE;
+        }
+        return Pattern.compile(regExpr, flags);
+
+    }
+
+    /**
      * Creates a new filter that tests the value of the specified cell against
      * the specified range.
-     * 
+     *
      * @param comp the comparator that will be used to compare the column's cell
      *            with the bounds of the range.
      * @param lowerBound if the comparator doesn't return a negative number when
@@ -193,7 +209,7 @@ public class ColValRowFilter extends RowFilter {
 
     /**
      * Creates a new filter that filters missing values of the specified column.
-     * 
+     *
      * @param colName the name of the column to test the values of
      * @param include if true, rows with a missing value in the specified column
      *            are included, otherwise excluded
@@ -204,7 +220,7 @@ public class ColValRowFilter extends RowFilter {
         m_colIndex = -1;
         m_filterMissingValues = true;
     }
-    
+
     /**
      * Default contructor. Don't use without loading settings before.
      */
@@ -225,7 +241,7 @@ public class ColValRowFilter extends RowFilter {
      * are set. This MUST be called after settings have been loaded from a
      * config object and upper/lower bounds were set. It is always save to set a
      * comparator. Its only used if at least one bound is set.
-     * 
+     *
      * @param dcComp the comparator used to compare the column's value with the
      *            upper and lower range
      */
@@ -256,7 +272,7 @@ public class ColValRowFilter extends RowFilter {
     public boolean getFilterMissingValues() {
         return m_filterMissingValues;
     }
-    
+
     /**
      * @return true if the range of the column is tested
      */
@@ -339,7 +355,7 @@ public class ColValRowFilter extends RowFilter {
          * if this goes off you probably didn't set a comparator after loading a
          * range from a config object. Which is not good.
          */
-        assert (((m_lowerBound == null) && (m_upperBound == null)) 
+        assert (((m_lowerBound == null) && (m_upperBound == null))
                 || m_dcComp != null);
 
         DataCell theCell = row.getCell(m_colIndex);
@@ -374,7 +390,7 @@ public class ColValRowFilter extends RowFilter {
 
     /**
      * A comparator MUST be set if a range is specified in the config object!!
-     * 
+     *
      * @see RowFilter
      *      #loadSettingsFrom(NodeSettingsRO)
      */
@@ -395,12 +411,7 @@ public class ColValRowFilter extends RowFilter {
         String regExpr = cfg.getString(CFG_PATTERN, null);
         if (regExpr != null) {
             try {
-                if (m_caseSensitive) {
-                    m_pattern = Pattern.compile(regExpr);
-                } else {
-                    m_pattern = Pattern.compile(regExpr,
-                            Pattern.CASE_INSENSITIVE);
-                }
+                m_pattern = compileRegExpr(regExpr, m_caseSensitive);
             } catch (PatternSyntaxException pse) {
                 throw new InvalidSettingsException("Column value filter: "
                         + "NodeSettings object contains invalid reg expr.");
@@ -411,7 +422,7 @@ public class ColValRowFilter extends RowFilter {
 
         m_lowerBound = cfg.getDataCell(CFG_LOWERBOUND, null);
         m_upperBound = cfg.getDataCell(CFG_UPPERBOUND, null);
-        
+
         // we introduce this feature with ver1.2, have a default for compatib.
         m_filterMissingValues = cfg.getBoolean(CFG_FILTERMISSING, false);
 
@@ -460,7 +471,7 @@ public class ColValRowFilter extends RowFilter {
     /**
      * The column value filter grabs the comparator from the table spec (if
      * available) and checks settings against the latest spec.
-     * 
+     *
      * @see RowFilter
      *      #configure(org.knime.core.data.DataTableSpec)
      */

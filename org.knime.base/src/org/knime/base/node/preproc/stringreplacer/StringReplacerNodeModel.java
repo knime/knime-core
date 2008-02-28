@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   18.06.2007 (thor): created
  */
@@ -49,7 +49,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * This is the model for the string replacer node that does the work.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class StringReplacerNodeModel extends NodeModel {
@@ -65,7 +65,7 @@ public class StringReplacerNodeModel extends NodeModel {
 
     /**
      * Creates the column rearranger that computes the new cells.
-     * 
+     *
      * @param spec the spec of the input table
      * @param p the pattern that should be used for finding matches
      * @return a column rearranger
@@ -136,12 +136,12 @@ public class StringReplacerNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         exec.setMessage("Replacing");
         String regex = WildcardMatcher.wildcardToRegex(m_settings.pattern());
-        Pattern p;
+        // support for \n and international characters
+        int flags = Pattern.DOTALL | Pattern.UNICODE_CASE | Pattern.MULTILINE;
         if (!m_settings.caseSensitive()) {
-            p = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-        } else {
-            p = Pattern.compile(regex);
+            flags |= Pattern.CASE_INSENSITIVE;
         }
+        Pattern p = Pattern.compile(regex, flags);
 
         ColumnRearranger crea =
                 createRearranger(inData[0].getDataTableSpec(), p);
@@ -149,6 +149,7 @@ public class StringReplacerNodeModel extends NodeModel {
         return new BufferedDataTable[]{exec.createColumnRearrangeTable(
                 inData[0], crea, exec)};
     }
+
 
     /**
      * {@inheritDoc}
@@ -219,7 +220,7 @@ public class StringReplacerNodeModel extends NodeModel {
         if (s.replacement() == null) {
             throw new InvalidSettingsException("No replacement string given");
         }
-        
+
         if (s.replaceAllOccurrences() && s.pattern().contains("*")) {
             throw new InvalidSettingsException(
                     "'*' is not allowed when all occurrences of the "
