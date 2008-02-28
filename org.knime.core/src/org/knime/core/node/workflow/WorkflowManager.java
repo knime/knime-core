@@ -1130,12 +1130,17 @@ public final class WorkflowManager extends NodeContainer {
                         // (5) configure the nodes from start to rest (it's not
                         //     so important if we configure more than the body)
                         configure(sc.getOriginatingNode(), true, true);
-                        // (6) enable the body to be queued again.
-                        for (NodeID id : loopBodyNodes) {
-                            m_nodes.get(id).markForExecution(true);
+                        // the current node may have thrown an exception inside
+                        // configure, so we have to check here if the node
+                        // is really configured before...
+                        if (nc.getState() == State.CONFIGURED) {
+                            // (6) ... we enable the body to be queued again.
+                            for (NodeID id : loopBodyNodes) {
+                                m_nodes.get(id).markForExecution(true);
+                            }
+                            // and finally (7) mark end of loop for re-execution
+                            nc.markForExecution(true);
                         }
-                        // and finally (6) mark end of loop for re-execution
-                        nc.markForExecution(true);
                         // make sure we do not accidentially configure the
                         // remainder of this node since we are not yet done
                         // with the loop
