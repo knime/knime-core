@@ -20,12 +20,17 @@ package org.knime.workbench.editor2.meta;
 
 import java.util.ArrayList;
 
+import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -35,7 +40,11 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Text;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.DatabasePortObject;
+import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeLogger;
+import org.knime.workbench.editor2.ImageRepository;
+import org.knime.workbench.editor2.figures.AbstractPortFigure;
 
 /**
  * The single page of the {@link AddMetaNodeWizard}.
@@ -48,6 +57,7 @@ public class AddMetaNodePage extends WizardPage {
     private static final String DESCRIPTION = "Define the number and type of "
         + "the desired in and out ports.";
 
+    private Composite m_previewPanel;
     private Text m_name;
     private List m_inPorts;
     private List m_outPorts;
@@ -78,8 +88,95 @@ public class AddMetaNodePage extends WizardPage {
         composite.setLayoutData(gridData);
         createTopPart(composite);
         createCenterPart(composite);
+        m_previewPanel = new Composite(composite, SWT.FILL | SWT.BORDER);
+        m_previewPanel.setLayoutData(new GridData(
+                GridData.HORIZONTAL_ALIGN_CENTER 
+                | GridData.VERTICAL_ALIGN_CENTER));
+        m_previewPanel.setLayout(new FillLayout());
+        m_previewPanel.addPaintListener(new PaintListener() {
+            private static final int IMAGE_HEIGHT = 30;
+            private static final int IMAGE_WIDTH = 30;
+            private static final int PORT_BAR_HEIGHT = 40;
+            private static final int PORT_SIZE 
+                = AbstractPortFigure.NODE_PORT_SIZE;
+            
+            private int m_top;
+            
+            public void paintControl(final PaintEvent e) {
+                NodeLogger.getLogger(AddMetaNodePage.class).debug(
+                        "painting:" + e.width + " " + e.height 
+                        + " " + e.x + " " + e.y);
+                GC gc = e.gc;                
+                m_top = (e.height / 2) - (IMAGE_HEIGHT / 2) - (PORT_SIZE / 2);
+                drawInPorts(e);
+                drawOutPorts(e);
+                gc.drawImage(ImageRepository.getImage(
+                "/icons/meta/meta_custom_preview.png"), 
+                    (e.width / 2) - (IMAGE_WIDTH / 2), 
+                    (e.height / 2) - (IMAGE_HEIGHT / 2));
+            }
+            
+            private void drawInPorts(final PaintEvent e) {
+                GC gc = e.gc;
+                int offset = (PORT_BAR_HEIGHT + PORT_SIZE) 
+                / (m_inPortList.size() + 1);
+                int left = (e.width / 2) - (IMAGE_WIDTH / 2);
+                int i = 0;
+                for (Port inPort : m_inPortList) {
+                    int y = m_top + (((i + 1) * offset) - (PORT_SIZE));
+                    if (inPort.getType().equals(BufferedDataTable.TYPE)) {
+                        gc.drawPolygon(new int[] {
+                                left - PORT_SIZE, y,
+                                left, y + (PORT_SIZE / 2),
+                                left - PORT_SIZE, y + PORT_SIZE});
+                    } else if (inPort.getType().equals(ModelPortObject.TYPE)) {
+                        gc.setBackground(ColorConstants.blue);
+                        gc.fillRectangle(
+                                left - PORT_SIZE, 
+                                y,
+                                PORT_SIZE, PORT_SIZE);
+                    } else if (inPort.getType().equals(
+                            DatabasePortObject.TYPE)) {
+                        gc.setBackground(ColorConstants.red);
+                        gc.fillRectangle(
+                                left - PORT_SIZE, 
+                                y,
+                                PORT_SIZE, PORT_SIZE);                        
+                    }
+                    i++;
+                }
+            }
+            
+            private void drawOutPorts(final PaintEvent e) {
+                int right = (e.width / 2) + (IMAGE_WIDTH / 2) + 2;
+                GC gc = e.gc;
+                int offset = (PORT_BAR_HEIGHT + PORT_SIZE) 
+                    / (m_outPortList.size() + 1);
+                int i = 0;
+                for (Port inPort : m_outPortList) {
+                    int y = m_top + (((i + 1) * offset) - (PORT_SIZE));
+                    if (inPort.getType().equals(BufferedDataTable.TYPE)) {
+                        gc.drawPolygon(new int[] {
+                                right, y,
+                                right + PORT_SIZE, y + (PORT_SIZE / 2),
+                                right, y + PORT_SIZE});
+                    } else if (inPort.getType().equals(ModelPortObject.TYPE)) {
+                        gc.setBackground(ColorConstants.blue);
+                        gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
+                    } else if (inPort.getType().equals(
+                            DatabasePortObject.TYPE)) {
+                        gc.setBackground(ColorConstants.red);
+                        gc.fillRectangle(right, y, PORT_SIZE, PORT_SIZE);
+                    }
+                    i++;
+                }                
+            }
+            
+        });
         setControl(composite);
         populateFieldsFromTemplate();
+        m_previewPanel.layout();
+        m_previewPanel.redraw();
     }
 
     /**
@@ -97,6 +194,7 @@ public class AddMetaNodePage extends WizardPage {
             m_wasVisible = true;
             populateFieldsFromTemplate();
         }
+        m_previewPanel.redraw();
     }
     
     
@@ -195,6 +293,7 @@ public class AddMetaNodePage extends WizardPage {
     }
 
     private void updateStatus() {
+        m_previewPanel.redraw();
         setPageComplete(isPageComplete());
     }
 
