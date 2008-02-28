@@ -195,26 +195,26 @@ public final class SingleNodeContainer extends NodeContainer
             switch (getState()) {
             case IDLE:
                 if (m_node.configure(inObjectSpecs)) {
-                    setNewState(State.CONFIGURED);
+                    setState(State.CONFIGURED);
                 } else {
-                    setNewState(State.IDLE);
+                    setState(State.IDLE);
                 }
                 break;
             case UNCONFIGURED_MARKEDFOREXEC:
                 if (m_node.configure(inObjectSpecs)) {
-                    setNewState(State.MARKEDFOREXEC);
+                    setState(State.MARKEDFOREXEC);
                 } else {
-                    setNewState(State.UNCONFIGURED_MARKEDFOREXEC);
+                    setState(State.UNCONFIGURED_MARKEDFOREXEC);
                 }
                 break;
             case CONFIGURED:
                 // m_node.reset();
                 boolean success = m_node.configure(inObjectSpecs);
                 if (success) {
-                    setNewState(State.CONFIGURED);
+                    setState(State.CONFIGURED);
                 } else {
                     // m_node.reset();
-                    setNewState(State.IDLE);
+                    setState(State.IDLE);
                 }
                 break;
             case MARKEDFOREXEC:
@@ -223,10 +223,10 @@ public final class SingleNodeContainer extends NodeContainer
                 // m_node.reset();
                 success = m_node.configure(inObjectSpecs);
                 if (success) {
-                    setNewState(State.MARKEDFOREXEC);
+                    setState(State.MARKEDFOREXEC);
                 } else {
                     // m_node.reset();
-                    setNewState(State.UNCONFIGURED_MARKEDFOREXEC);
+                    setState(State.UNCONFIGURED_MARKEDFOREXEC);
                 }
                 break;
             default:
@@ -257,13 +257,13 @@ public final class SingleNodeContainer extends NodeContainer
             case EXECUTED:
                 m_node.reset();
                 // After reset we need explicit configure!
-                setNewState(State.IDLE);
+                setState(State.IDLE);
                 return;
             case MARKEDFOREXEC:
-                setNewState(State.CONFIGURED);
+                setState(State.CONFIGURED);
                 return;
             case UNCONFIGURED_MARKEDFOREXEC:
-                setNewState(State.IDLE);
+                setState(State.IDLE);
                 return;
             default:
                 throw new IllegalStateException("Illegal state " + getState()
@@ -279,10 +279,10 @@ public final class SingleNodeContainer extends NodeContainer
             if (flag) {  // we want to mark the node for execution!
                 switch (getState()) {
                 case CONFIGURED:
-                    setNewState(State.MARKEDFOREXEC);
+                    setState(State.MARKEDFOREXEC);
                     return;
                 case IDLE:
-                    setNewState(State.UNCONFIGURED_MARKEDFOREXEC);
+                    setState(State.UNCONFIGURED_MARKEDFOREXEC);
                     return;
                 default:
                     throw new IllegalStateException("Illegal state "
@@ -292,10 +292,10 @@ public final class SingleNodeContainer extends NodeContainer
             } else {  // we want to remove the mark for execution
                 switch (getState()) {
                 case MARKEDFOREXEC:
-                    setNewState(State.CONFIGURED);
+                    setState(State.CONFIGURED);
                     return;
                 case UNCONFIGURED_MARKEDFOREXEC:
-                    setNewState(State.IDLE);
+                    setState(State.IDLE);
                     return;
                 default:
                     throw new IllegalStateException("Illegal state "
@@ -316,7 +316,7 @@ public final class SingleNodeContainer extends NodeContainer
             switch (getState()) {
             case EXECUTED:
                 m_node.cleanOutPorts();
-                setNewState(State.MARKEDFOREXEC);
+                setState(State.MARKEDFOREXEC);
                 return;
             default:
                 throw new IllegalStateException("Illegal state " + getState()
@@ -337,7 +337,7 @@ public final class SingleNodeContainer extends NodeContainer
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case MARKEDFOREXEC:
-                setNewState(State.QUEUED);
+                setState(State.QUEUED);
                 ExecutionContext execCon = createExecutionContext();
                 m_executionID
                        = findJobExecutor().submitJob(new JobRunnable(execCon) {
@@ -362,7 +362,7 @@ public final class SingleNodeContainer extends NodeContainer
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case MARKEDFOREXEC:
-                setNewState(State.CONFIGURED);
+                setState(State.CONFIGURED);
                 break;
             case QUEUED:
             case EXECUTING:
@@ -404,7 +404,7 @@ public final class SingleNodeContainer extends NodeContainer
                 // clear loop status
                 m_node.clearLoopStatus();
                 // change state to avoid more than one executor
-                setNewState(State.EXECUTING);
+                setState(State.EXECUTING);
                 break;
             default:
                 throw new IllegalStateException("Illegal state " + getState()
@@ -425,16 +425,16 @@ public final class SingleNodeContainer extends NodeContainer
                     for (int i = 0; i < m_node.getNrOutPorts(); i++) {
                         m_node.getOutPort(i).showPortObject(true);
                     }
-                    setNewState(State.EXECUTED);
+                    setState(State.EXECUTED);
                 } else {
                     // loop not yet done - "stay" configured until done.
-                    setNewState(State.CONFIGURED);
+                    setState(State.CONFIGURED);
                 }
             } else {
                 m_node.reset();
                 m_node.clearLoopStatus();
                 // reconfigure node will be done in WFM, not here!
-                setNewState(State.IDLE);
+                setState(State.IDLE);
             }
         }
         // the following triggers check-for-queueable-nodes, among others
@@ -467,7 +467,7 @@ public final class SingleNodeContainer extends NodeContainer
         }
         SingleNodeContainerPersistor persistor = 
             (SingleNodeContainerPersistor)nodePersistor;
-        setNewState(persistor.getMetaPersistor().getState());
+        setState(persistor.getMetaPersistor().getState());
         setScopeObjectStack(new ScopeObjectStack(getID()));
     }
 

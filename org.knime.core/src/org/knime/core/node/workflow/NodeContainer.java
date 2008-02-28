@@ -32,6 +32,7 @@ import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialog;
 import org.knime.core.node.NodeInPort;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeOutPort;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -49,6 +50,10 @@ import org.knime.core.node.GenericNodeFactory.NodeType;
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
 public abstract class NodeContainer {
+
+    /** my logger. */
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(NodeContainer.class);
 
     /** possible status values of a NodeContainer. */
     public static enum State {
@@ -350,7 +355,7 @@ public abstract class NodeContainer {
      *
      * @param state the new state
      */
-    protected void setNewState(final State state) {
+    protected void setState(final State state) {
         boolean changesMade = false;
         synchronized (m_dirtyNode) {
             if (m_state != state) {
@@ -362,6 +367,7 @@ public abstract class NodeContainer {
             // notify state listeners
             notifyStateChangeListeners(new NodeStateEvent(getID(), m_state));
         }
+        LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
     }
 
     /* ---------- State changing actions ------------ */

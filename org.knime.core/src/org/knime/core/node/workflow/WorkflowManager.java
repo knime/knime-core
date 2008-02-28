@@ -799,7 +799,7 @@ public final class WorkflowManager extends NodeContainer {
      * 
      * @param flag indicate if we want to set or reset the flag
      */
-    public void prepareForExecutionAll(final boolean flag) {
+    private void markForExecutionAllNodes(final boolean flag) {
         synchronized (m_dirtyWorkflow) {
             for (NodeContainer nc : m_nodes.values()) {
                 switch (nc.getState()) {
@@ -815,8 +815,6 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         }
-        checkForNodeStateChanges();
-        checkForQueuableNodesEverywhere();
     }
 
     /**
@@ -918,7 +916,7 @@ public final class WorkflowManager extends NodeContainer {
             throw new IllegalStateException("Can't execute " + getNodeString(nc)
                     + ", not in configured state, but " + nc.getState());
         }
-        enableQueuingOfPredecessors(id);
+        markForExecutionOfPredecessors(id);
         nc.markForExecutionAsNodeContainer(true);
         // this could change some of the queuable states, so check:
         checkForQueuableNodesEverywhere();
@@ -927,7 +925,7 @@ public final class WorkflowManager extends NodeContainer {
     /** Recursively iterates the predecessors and marks them for execution.
      * @param id The node whose predecessors are to marked for execution.
      */
-    private void enableQueuingOfPredecessors(final NodeID id) {
+    private void markForExecutionOfPredecessors(final NodeID id) {
         Set<ConnectionContainer> predConn = m_connectionsByDest.get(id);
         for (ConnectionContainer c : predConn) {
             NodeID predID = c.getSource();
@@ -936,13 +934,13 @@ public final class WorkflowManager extends NodeContainer {
                 assert c.getType().equals(
                         ConnectionContainer.ConnectionType.WFMIN);
                 assert predID.equals(getID());
-                getParent().enableQueuingOfPredecessors(getID());
+                getParent().markForExecutionOfPredecessors(getID());
             } else {
                 switch (predNC.getState()) {
                 case IDLE: throw new IllegalStateException("Can't execute \""
                         + predNC.getNameWithID() + "\", state is IDLE");
                 case CONFIGURED:
-                    enableQueuingOfPredecessors(predID);
+                    markForExecutionOfPredecessors(predID);
                     predNC.markForExecutionAsNodeContainer(true);
                     break;
                 default: // already run or to be run
@@ -1007,11 +1005,13 @@ public final class WorkflowManager extends NodeContainer {
                 throw new IllegalStateException(
                      "Workflow is already completely executed.");
             case CONFIGURED:
-                prepareForExecutionAll(true);
-                setNewState(State.MARKEDFOREXEC);
+                markForExecutionAllNodes(true);
+                setState(State.MARKEDFOREXEC);
+                break;
             case IDLE:
-                prepareForExecutionAll(true);
-                setNewState(State.UNCONFIGURED_MARKEDFOREXEC);
+                markForExecutionAllNodes(true);
+                setState(State.UNCONFIGURED_MARKEDFOREXEC);
+                break;
             default:
                 throw new IllegalStateException("Wrong WFM state "
                         + getState() + " in markForExecution(true)");
@@ -1019,11 +1019,13 @@ public final class WorkflowManager extends NodeContainer {
         } else {
             switch (getState()) {
             case MARKEDFOREXEC:
-                prepareForExecutionAll(false);
-                setNewState(State.CONFIGURED);
+                markForExecutionAllNodes(false);
+                setState(State.CONFIGURED);
+                break;
             case UNCONFIGURED_MARKEDFOREXEC:
-                prepareForExecutionAll(false);
-                setNewState(State.IDLE);
+                markForExecutionAllNodes(false);
+                setState(State.IDLE);
+                break;
             default:
                 throw new IllegalStateException("Wrong WFM state "
                         + getState() + " in markForExecution(false)");
@@ -1036,7 +1038,7 @@ public final class WorkflowManager extends NodeContainer {
     void queueAsNodeContainer(final PortObject[] inData) {
         switch (getState()) {
         case MARKEDFOREXEC:
-            setNewState(State.QUEUED);
+            setState(State.QUEUED);
             break;
         default: throw new IllegalStateException(
                 "State change to " + State.QUEUED + " not allowed, currently "
@@ -1054,7 +1056,7 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (m_dirtyWorkflow) {
             LOGGER.info(nc.getNameWithID() + " doBeforeExecute (NC)");
             // some nodes IN this WFM are executing
-            setNewState(State.EXECUTING); // state of WFM, not nc!
+            setState(State.EXECUTING); // state of WFM, not nc!
         }
     }
 
@@ -1142,7 +1144,7 @@ public final class WorkflowManager extends NodeContainer {
     void resetAsNodeContainer() {
         resetAll();
         // configure will be run later to fine-tune this if needed:
-        setNewState(State.CONFIGURED);
+        setState(State.CONFIGURED);
     }
 
     /* ------------- node commands -------------- */
@@ -1300,21 +1302,6 @@ public final class WorkflowManager extends NodeContainer {
             }
         }
         return true;
-    }
-
-    /** Execute one individual node (all predecessors must be executed
-     * already!). This only queues the node for execution, others may be
-     * executed before this one.
-     *
-     * @param nodeID id of node.
-     */
-    public void executeNode(final NodeID nodeID) {
-        assert m_nodes.get(nodeID) != null;
-        synchronized (m_dirtyWorkflow) {
-            if (canExecuteNode(nodeID)) {
-                m_nodes.get(nodeID).markForExecutionAsNodeContainer(true);
-            }
-        }
     }
 
     /** {@inheritDoc} */
@@ -1640,7 +1627,7 @@ public final class WorkflowManager extends NodeContainer {
                        == nrNodes) {
                 newState = State.CONFIGURED;
             }
-            this.setNewState(newState);
+            this.setState(newState);
         }
     }
 

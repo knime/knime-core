@@ -318,7 +318,7 @@ public final class BatchExecutor {
                 } 
             });
             if (wfm.getParent().canExecuteNode(wfm.getID())) {
-                wfm.getParent().executeNode(wfm.getID());
+                wfm.getParent().executeUpToHere(wfm.getID());
             } else {
                 throw new RuntimeException("Can't execute flow.");
             }
