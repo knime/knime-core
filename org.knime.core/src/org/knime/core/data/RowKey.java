@@ -33,64 +33,63 @@ import java.io.Serializable;
 import org.knime.core.data.def.StringCell;
 
 /**
- * Key for a specific row which holds an identifier of type {@link DataCell}.
+ * Key for a specific row which holds an identifier of type {@link String}.
  * 
  * @see DataRow
- * 
  * @author Michael Berthold, University of Konstanz
  */
 public final class RowKey implements Serializable {
 
     /** Private member holding non-null row id. */
-    private final DataCell m_id;
+    private final String m_id;
 
     /**
-     * Creates a row key based on a {@link DataCell}.
-     * 
+     * Creates a row key based on a {@link DataCell}. It uses the cell's 
+     * toString() representation as underlying string.
      * @param id identifier for a {@link DataRow}
      * @throws NullPointerException if argument is <code>null</code>
+     * @deprecated The underlying structure of a row key is a plain string
+     * as of KNIME 2.0. Please only use the {@link #RowKey(String)} constructor.
      */
+    @Deprecated
     public RowKey(final DataCell id) {
-        if (id == null) {
-            throw new NullPointerException("Can't create RowKey with null id.");
-        }
-        m_id = id;
+        this (id.toString());
     }
     
     /**
      * Creates a row key based on a {@link String}. 
      * 
-     * @param id identifier for a {@link DataRow}
+     * @param id identifier for this key
      * @throws NullPointerException if argument is <code>null</code>
      */
     public RowKey(final String id) {
-        this(new StringCell(id));
+        if (id == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
+        m_id = id;
     }
 
     /**
      * Returns the row key as {@link DataCell}.
-     * 
      * @return an non-null, ID for a row
      */
+    @Deprecated
     public DataCell getId() {
+        return new StringCell(m_id);
+    }
+    
+    /** @return Underlying string of this row key. */
+    public String getString() {
         return m_id;
     }
 
-    /**
-     * Returns the string representation of this row id.
-     * 
-     * @see DataCell#toString()
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString() {
-        return m_id.toString();
+        return getString();
     }
 
-    /**
-     * Compares two row keys by their {@link DataCell}.
-     * 
-     * @see DataCell#equals(Object)
-     */
+    /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
         if (obj == this) {
