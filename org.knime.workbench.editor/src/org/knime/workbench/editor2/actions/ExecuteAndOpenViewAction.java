@@ -109,23 +109,18 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
     protected boolean calculateEnabled() {
         NodeContainerEditPart[] parts = getSelectedNodeParts();
 
+        // TODO: we have to check if at least one node of the selection
+        // has nrOfViews > 0 && if at least one node is configured
+        
         // only if just one node part is selected
         if (parts.length != 1) {
             return false;
         }
 
         // check if there is at least one view
-        boolean enabled = parts[0].getNodeContainer().getNrViews() > 0;
-
-        // // the node must not be an interruptible node
-        // enabled &= !parts[0].getNodeContainer().isInterruptible();
-
-        // check if the node is executable
-        enabled &=
-                getManager()
-                        .canExecuteNode(parts[0].getNodeContainer().getID());
-
-        return enabled;
+        return parts[0].getNodeContainer().getState().equals(
+                NodeContainer.State.CONFIGURED)
+                && parts[0].getNodeContainer().getNrViews() > 0;
     }
 
     /**
