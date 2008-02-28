@@ -47,10 +47,10 @@ public abstract class AbstractPortFigure extends Shape {
     private final PortType m_portType;
     
     /** Size constant for the workflow ports. */
-    protected static final int WF_PORT_SIZE = 20;
+    public static final int WF_PORT_SIZE = 20;
     
     /** Size constant for node ports. */
-    protected static final int NODE_PORT_SIZE = 9;
+    public static final int NODE_PORT_SIZE = 9;
 
     /**
      *
