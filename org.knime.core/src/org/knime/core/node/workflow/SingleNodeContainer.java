@@ -594,7 +594,7 @@ public final class SingleNodeContainer extends NodeContainer
     /** {@inheritDoc} */
     @Override
     public URL getIcon() {
-        return null;
+        return m_node.getFactory().getIcon();
     }
 
     /**
