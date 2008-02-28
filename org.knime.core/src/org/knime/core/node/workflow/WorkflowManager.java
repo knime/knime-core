@@ -1329,7 +1329,9 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (mySemaphore) {
             this.addListener(new WorkflowListener() {
                 public void workflowChanged(final WorkflowEvent event) {
-                    mySemaphore.notifyAll();
+                    synchronized (mySemaphore) {
+                        mySemaphore.notifyAll();
+                    }
                 }
             });
             markForExecutionAllNodes(true);
