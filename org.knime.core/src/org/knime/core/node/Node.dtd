@@ -49,7 +49,7 @@
 <!ELEMENT br EMPTY >
 <!ATTLIST a href CDATA #REQUIRED>
 
-<!ELEMENT ports (dataIn*, dataOut*, (predParamIn | modelIn)*, (predParamOut | modelOut)*) >
+<!ELEMENT ports (dataIn*, dataOut*, modelIn*, modelOut*) >
 <!ELEMENT dataIn (#PCDATA | br | b | i | u | tt | ul | ol)* >
 <!ATTLIST dataIn index CDATA #REQUIRED>
 <!ATTLIST dataIn name CDATA #REQUIRED>
