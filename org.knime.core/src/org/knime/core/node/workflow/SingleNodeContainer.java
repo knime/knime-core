@@ -183,7 +183,7 @@ public final class SingleNodeContainer extends NodeContainer
      * @throws IllegalStateException in case of illegal entry state.
      */
     @Override
-    boolean configureNode(final PortObjectSpec[] inObjectSpecs) {
+    boolean configureAsNodeContainer(final PortObjectSpec[] inObjectSpecs) {
         synchronized (m_dirtyNode) {
             // remember old specs
             PortObjectSpec[] prevSpecs =
@@ -251,7 +251,7 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    void resetNode() {
+    void resetAsNodeContainer() {
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case EXECUTED:
@@ -274,7 +274,7 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    void markForExecution(final boolean flag) {
+    void markForExecutionAsNodeContainer(final boolean flag) {
         synchronized (m_dirtyNode) {
             if (flag) {  // we want to mark the node for execution!
                 switch (getState()) {
@@ -333,7 +333,7 @@ public final class SingleNodeContainer extends NodeContainer
      * @throws IllegalStateException in case of illegal entry state.
      */
     @Override
-    void queueNode(final PortObject[] inData) {
+    void queueAsNodeContainer(final PortObject[] inData) {
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case MARKEDFOREXEC:
@@ -358,7 +358,7 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    void cancelExecution() {
+    void cancelExecutionAsNodeContainer() {
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case MARKEDFOREXEC:
@@ -438,7 +438,7 @@ public final class SingleNodeContainer extends NodeContainer
             }
         }
         // the following triggers check-for-queueable-nodes, among others
-        getParent().doAfterExecution(SingleNodeContainer.this, success);
+        getParent().doAfterExecution(SingleNodeContainer.this);
     }
 
 

@@ -373,7 +373,7 @@ public abstract class NodeContainer {
      *   that successors should probably be configured as well)
      * @throws IllegalStateException in case of illegal entry state.
      */
-    abstract boolean configureNode(final PortObjectSpec[] specs)
+    abstract boolean configureAsNodeContainer(final PortObjectSpec[] specs)
     throws IllegalStateException;
 
     /** Enable (or disable) queuing of underlying node for execution. This
@@ -384,7 +384,7 @@ public abstract class NodeContainer {
      * @param flag determines if node is marked or unmarked for execution
      * @throws IllegalStateException in case of illegal entry state.
      */
-    abstract void markForExecution(final boolean flag)
+    abstract void markForExecutionAsNodeContainer(final boolean flag)
     throws IllegalStateException;
 
     /** Cancel execution of a marked, queued, or executing node. (Tolerate
@@ -392,7 +392,7 @@ public abstract class NodeContainer {
      * 
      * @throws IllegalStateException
      */
-    abstract void cancelExecution()
+    abstract void cancelExecutionAsNodeContainer()
     throws IllegalStateException;
 
     /** Actually queue the node for execution together with ingoing data.
@@ -401,13 +401,13 @@ public abstract class NodeContainer {
      * @param inData ingoing objects.
      * @throws IllegalStateException in case of illegal entry state.
      */
-    abstract void queueNode(final PortObject[] inData)
+    abstract void queueAsNodeContainer(final PortObject[] inData)
     throws IllegalStateException;
 
     /** Reset underlying node and update state accordingly.
      * @throws IllegalStateException in case of illegal entry state.
      */
-    abstract void resetNode()
+    abstract void resetAsNodeContainer()
     throws IllegalStateException;
 
     /* ------------ dialog -------------- */
