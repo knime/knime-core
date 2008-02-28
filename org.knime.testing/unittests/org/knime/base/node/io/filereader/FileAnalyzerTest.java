@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   27.04.2005 (ohl): created
  */
@@ -36,7 +36,7 @@ import junit.framework.TestCase;
 import org.knime.base.node.io.filetokenizer.Quote;
 
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class FileAnalyzerTest extends TestCase {
@@ -71,7 +71,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "foo,poo,moo,zoo\n" + "oof,oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             assertTrue(analSettings.getFileHasColumnHeaders());
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 4);
@@ -82,7 +82,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "oof,oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             assertTrue(analSettings.getFileHasColumnHeaders());
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 4);
@@ -93,7 +93,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "oof,oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 4);
             assertFalse(analSettings.getFileHasColumnHeaders());
@@ -104,7 +104,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "oof,oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 4);
             assertFalse(analSettings.getFileHasColumnHeaders());
@@ -115,7 +115,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "oof,oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 4);
             assertFalse(analSettings.getFileHasColumnHeaders());
@@ -126,7 +126,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "oof,oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 4);
             assertFalse(analSettings.getFileHasColumnHeaders());
@@ -137,7 +137,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "oof,oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 4);
             assertFalse(analSettings.getFileHasColumnHeaders());
@@ -148,7 +148,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "oof,oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 4);
             assertFalse(analSettings.getFileHasColumnHeaders());
@@ -162,7 +162,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "foo,poo,moo,zoo\n" + "oof,oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 4);
             assertFalse(analSettings.getFileHasColumnHeaders());
@@ -191,7 +191,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "\"foo\",poo,\"moo\",zoo\n" + "oof,'oo p',oom,' ooz '");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             assertTrue(analSettings.getFileHasColumnHeaders());
             assertEquals(analSettings.getNumberOfColumns(), 4);
             Vector<Quote> quotes = analSettings.getAllQuotes();
@@ -214,7 +214,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "\"foo\",poo,\"moo\",zoo\n" + "oo'f,o'op,o'om,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             assertTrue(analSettings.getFileHasColumnHeaders());
             assertEquals(analSettings.getNumberOfColumns(), 4);
             quotes = analSettings.getAllQuotes();
@@ -231,7 +231,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "fo\"o,poo,moo,zoo\n" + "oo'f,o'op,o'om,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             assertEquals(analSettings.getNumberOfColumns(), 4);
             assertEquals(analSettings.getAllQuotes().size(), 0);
 
@@ -242,7 +242,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "\"foo\",\"po\\\"o\",moo,zoo\n" + "oo'f,o'op,o'om,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             assertEquals(analSettings.getNumberOfColumns(), 4);
             // we must support the double quotes with the escape char
             quotes = analSettings.getAllQuotes();
@@ -279,7 +279,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "row2,oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 3);
             assertTrue(analSettings.getFileHasRowHeaders());
@@ -292,7 +292,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "row4,oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 3);
             assertTrue(analSettings.getFileHasRowHeaders());
@@ -305,7 +305,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "row3,oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 4);
             assertFalse(analSettings.getFileHasRowHeaders());
@@ -320,7 +320,7 @@ public class FileAnalyzerTest extends TestCase {
                     + "oop,oom,ooz");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             // just to be on the safe side
             assertEquals(analSettings.getNumberOfColumns(), 4);
             assertFalse(analSettings.getFileHasRowHeaders());
@@ -366,7 +366,7 @@ public class FileAnalyzerTest extends TestCase {
             + " 0.3582891972 0.0754810199 0.5458314320 -0.7536574253");
             settings = new FileReaderNodeSettings();
             settings.setDataFileLocationAndUpdateTableName(url);
-            analSettings = FileAnalyzer.analyze(settings);
+            analSettings = FileAnalyzer.analyze(settings, null);
             assertNotNull(analSettings);
         } catch (IOException ioe) {
             // if this goes off the temp file couldn't be created.
@@ -374,11 +374,11 @@ public class FileAnalyzerTest extends TestCase {
         }
 
     }
-    
+
     /**
      * Creates a temp file, writes the string into it and closes it again. It
      * will return an URL to that file then.
-     * 
+     *
      * @param contents the string written into the newly created temp file.
      * @return url to the created file
      * @throws IOException If the file be instantiated or written.

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   17.05.2006 (Fabian Dill): created
  */
@@ -26,12 +26,16 @@ package org.knime.testing.core;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TimerTask;
 
 import junit.framework.TestCase;
 
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.DefaultNodeProgressMonitor;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
@@ -44,7 +48,7 @@ import org.knime.core.util.KNIMETimer;
 // Solve the question about model and data in/out
 
 /**
- * 
+ *
  */
 public class KnimeTestCase extends TestCase {
 
@@ -81,22 +85,22 @@ public class KnimeTestCase extends TestCase {
     private TestingConfig m_testConfig;
 
     /**
-     * 
+     *
      * @param workflowFile
      */
-    public KnimeTestCase(File workflowFile) {
+    public KnimeTestCase(final File workflowFile) {
         m_knimeWorkFlow = workflowFile;
         this.setName(workflowFile.getParent());
     }
 
     /**
      * Starts the workflow with the given settings file.
-     * 
+     *
      * @throws WorkflowException
      * @throws IOException
      * @throws CanceledExecutionException
      * @throws InvalidSettingsException
-     * 
+     *
      * @see junit.framework.TestCase#setUp()
      */
     @Override
@@ -128,7 +132,7 @@ public class KnimeTestCase extends TestCase {
 
         }
 
-        logger.debug("Workflow location: " + m_knimeWorkFlow.getParent() 
+        logger.debug("Workflow location: " + m_knimeWorkFlow.getParent()
                 + " -------------------------");
 
         // start here the workflow
@@ -137,24 +141,26 @@ public class KnimeTestCase extends TestCase {
             // this way autoexecuted nodes are captured, too.
             File statusFile =
                 new File(m_knimeWorkFlow.getParentFile(), STATUS_FILE);
-            m_testConfig.readNodeStatusFile(statusFile, m_manager);
-            
+            m_testConfig.readNodeStatusFile(statusFile);
+
             logger.debug("Loading workflow ----------------------------"
                     + "--------------");
-            m_manager =
-                    new WorkflowManager(m_knimeWorkFlow,
-                            new DefaultNodeProgressMonitor());
+
+            //TODO: we may need to provide the workflow dir - not the file
+
+            m_manager = WorkflowManager.load(m_knimeWorkFlow,
+                    new ExecutionMonitor());
             logger.debug("Workflow loaded ----------------------------"
                     + "--------------");
-            
+
             // construct a list of options (i.e. settings to change in the flow)
             File optionsFile =
                     new File(m_knimeWorkFlow.getParentFile(), OPTIONS_FILE);
             m_testConfig.applySettings(optionsFile, m_manager);
 
-        } catch (WorkflowException ex) {
+        } catch (IOException ex) {
             String msg = ex.getMessage();
-            logger.error("Error during workflow loading:"
+            logger.error("I/O Error during workflow loading:"
                     + (msg == null ? "<no details>" : msg));
             wrapUp();
             fail();
@@ -168,7 +174,7 @@ public class KnimeTestCase extends TestCase {
             String msg = t.getMessage();
             logger.error("Caught a throwable during test setup: "
                     + t.getClass().getSimpleName() + ", msg: "
-                    + (msg == null ? "<no details>" : msg));
+                    + (msg == null ? "<no details>" : msg), t);
             wrapUp();
             fail();
         }
@@ -179,25 +185,41 @@ public class KnimeTestCase extends TestCase {
      */
     @Override
     public void runTest() {
+        final Set<GenericNodeView<? extends GenericNodeModel>> allViews =
+            new HashSet<GenericNodeView<? extends GenericNodeModel>>();
+
         // Collection<NodeView> views = new ArrayList<NodeView>();
-        for (NodeContainer nodeCont : m_manager.getNodes()) {
-            for (int i = 0; i < nodeCont.getNumViews(); i++) {
+        for (NodeContainer nodeCont : m_manager.getNodeContainers()) {
+            for (int i = 0; i < nodeCont.getNrViews(); i++) {
                 logger.debug("opening view nr. " + i + " for node "
                         + nodeCont.getName());
-                nodeCont.showView(i);
+                GenericNodeView<? extends GenericNodeModel> view =
+                    nodeCont.getView(i);
+                // store the view in order to close is after the test finishes
+                allViews.add(view);
+                // open it now.
+                view.createFrame();
             }
         }
 
         TimerTask timeout = new TimerTask() {
             @Override
             public void run() {
-                m_manager.cancelExecution();
+                // TODO: do we get a cancelExecution() for all nodes?!?
+                for (NodeContainer nc : m_manager.getNodeContainers()) {
+                    m_manager.cancelExecution(nc);
+                }
                 logger.error("Workflow canceled after " + TIMEOUT + " seconds");
             }
         };
         try {
             KNIMETimer.getInstance().schedule(timeout, TIMEOUT * 1000);
-            m_manager.executeAll(true);
+
+            // execute all nodes.
+            logger.info("Executing workflow ----------------------");
+
+            m_manager.executeAllAndWaitUntilDone();
+
             timeout.cancel();
 
             // evaluate the results
@@ -216,7 +238,7 @@ public class KnimeTestCase extends TestCase {
             /*
              * the above checks only write errors into the log file - thus the
              * next step decides whether the test fails or succeeds:
-             * 
+             *
              * 3) make sure all expected/required messages appeared and no
              * unexpected error message showed up. (We do that always - thus we
              * let it fall through finally.)
@@ -224,14 +246,15 @@ public class KnimeTestCase extends TestCase {
 
         } catch (Throwable t) {
             String msg = t.getMessage();
-            logger.error("Caught a throwable during workflow loading:"
+            logger.error("Caught a " + t.getClass().getSimpleName()
+                    + " during workflow loading:"
                     + (msg == null ? "<no details>" : msg));
         } finally {
             timeout.cancel();
 
             // always close these views.
-            for (NodeContainer nodecont : m_manager.getNodes()) {
-                nodecont.closeAllViews();
+            for (GenericNodeView<? extends GenericNodeModel> v : allViews) {
+                v.closeView();
             }
 
             wrapUp();

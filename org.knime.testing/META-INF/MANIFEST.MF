@@ -18,5 +18,6 @@ Export-Package: org.knime.testing,
  org.knime.testing.algorithms,
  org.knime.testing.core,
  org.knime.testing.guiTests,
- org.knime.testing.node.differNode
+ org.knime.testing.node.differNode,
+ org.knime.testing.stacktracedumper
 

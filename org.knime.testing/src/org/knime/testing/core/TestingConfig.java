@@ -7,7 +7,7 @@
  * Chair for Bioinformatics and Information Mining
  * Prof. Dr. Michael R. Berthold
  * and KNIME GmbH, Konstanz, Germany
- * 
+ *
  * You may not modify, publish, transmit, transfer or sell, reproduce,
  * create derivative works from, distribute, perform, display, or in
  * any way exploit any of the content, in whole or in part, except as
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   21.12.2006 (ohl): created
  */
@@ -53,9 +53,11 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.NodeStatus;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.NodeContainer.State;
 
 /**
  * Holds the config of a test case. That is, the settings that should be applied
@@ -64,7 +66,7 @@ import org.knime.core.node.workflow.WorkflowManager;
  * listens to all messages logged by the test case. It provides methods to check
  * the workflow against these settings and to decide whether it was run
  * successfully or not.
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public class TestingConfig extends AppenderSkeleton {
@@ -96,11 +98,14 @@ public class TestingConfig extends AppenderSkeleton {
 
     private Collection<String> m_requiredDebugs;
 
-    private Set<Integer> m_requiredUnexecutedNodes;
+    // node IDs are strings like "0:1:4"
+    private Set<String> m_requiredUnexecutedNodes;
 
-    private Map<Integer, String> m_warningStatus;
+    // maps node IDs (strings like "0:1:4") to messages
+    private Map<String, String> m_warningStatus;
 
-    private Map<Integer, String> m_errorStatus;
+    // maps node IDs (strings like "0:1:4") to messages
+    private Map<String, String> m_errorStatus;
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(TestingConfig.class);
@@ -113,7 +118,7 @@ public class TestingConfig extends AppenderSkeleton {
 
     /**
      * Constructor. Adds itself as appender to the root logger.
-     * 
+     *
      * @param maxLines the last maxLines messages will be stored.
      */
     public TestingConfig(final int maxLines) {
@@ -122,9 +127,9 @@ public class TestingConfig extends AppenderSkeleton {
         m_requiredWarnings = new LinkedList<String>();
         m_requiredInfos = new LinkedList<String>();
         m_requiredDebugs = new LinkedList<String>();
-        m_requiredUnexecutedNodes = new HashSet<Integer>();
-        m_errorStatus = new HashMap<Integer, String>();
-        m_warningStatus = new HashMap<Integer, String>();
+        m_requiredUnexecutedNodes = new HashSet<String>();
+        m_errorStatus = new HashMap<String, String>();
+        m_warningStatus = new HashMap<String, String>();
         m_owners = null;
 
         m_maxlines = maxLines;
@@ -141,7 +146,7 @@ public class TestingConfig extends AppenderSkeleton {
 
     /**
      * Reads the owners of the test from the specified owner file.
-     * 
+     *
      * @param ownerFile the file containing the owners of the test case. Each
      *            line of the file must contain one email address.
      * @return the number of owners read (lines in the file)
@@ -166,7 +171,7 @@ public class TestingConfig extends AppenderSkeleton {
 
     /**
      * Returns the comma separated list of owners.
-     * 
+     *
      * @return the comma separated list of owners of this test case, or null if
      *         no owner is set.
      */
@@ -266,7 +271,7 @@ public class TestingConfig extends AppenderSkeleton {
 
     /**
      * does not require layout.
-     * 
+     *
      * @see org.apache.log4j.AppenderSkeleton#requiresLayout()
      */
     @Override
@@ -279,7 +284,7 @@ public class TestingConfig extends AppenderSkeleton {
      * in each value with the location of the options file and applies the
      * changes to the workflow settings. If the options file doesn't exist it
      * does nothing.
-     * 
+     *
      * @param optionsFile the file containing the lines with the settings to
      *            apply
      * @param wfm the workflow manager holding the workflow
@@ -301,7 +306,7 @@ public class TestingConfig extends AppenderSkeleton {
 
         LOGGER.debug("Applying new settings to workflow ----------------"
                 + "------------------");
-        
+
         String location = optionsFile.getParent();
         if (location == null) {
             throw new FileNotFoundException(
@@ -356,18 +361,25 @@ public class TestingConfig extends AppenderSkeleton {
 
         for (Option o : options) {
             int[] idPath = o.m_nodeIDs;
-            NodeContainer cont = wfm.getNodeContainerById(idPath[0]);
+            NodeID subID = new NodeID(wfm.getID(), idPath[0]);
+            NodeContainer cont = wfm.getNodeContainer(subID);
+            WorkflowManager subWM = wfm;
             for (int i = 1; i < idPath.length; i++) {
-                cont =
-                        cont.getEmbeddedWorkflowManager().getNodeContainerById(
-                                idPath[i]);
+                if (cont instanceof WorkflowManager) {
+                    subWM = (WorkflowManager)cont;
+                    subID = new NodeID(subID, idPath[i]);
+                    cont = subWM.getNodeContainer(subID);
+                } else {
+                    cont = null;
+                    break;
+                }
             }
             if (cont == null) {
                 LOGGER.error("Can't modify settings: No node with id "
                         + Arrays.toString(idPath) + " found.");
             } else {
                 NodeSettings settings = new NodeSettings("something");
-                cont.saveSettings(settings);
+                subWM.saveNodeSettings(cont.getID(), settings);
                 NodeSettings model = settings.getNodeSettings(Node.CFG_MODEL);
                 String[] splitName = o.m_name.split("/");
                 String optName = splitName[splitName.length - 1];
@@ -405,7 +417,7 @@ public class TestingConfig extends AppenderSkeleton {
                     throw new IllegalArgumentException("Unknown option type '"
                             + o.m_type + "'");
                 }
-                cont.loadSettings(settings);
+                subWM.loadNodeSettings(cont.getID(), settings);
 
                 LOGGER.info("Applied settings change: " + o);
             }
@@ -424,7 +436,7 @@ public class TestingConfig extends AppenderSkeleton {
 
         /**
          * Create new <code>Option</code>.
-         * 
+         *
          * @param nodeIDs node IDs, mostly one element, more for nested flows
          * @param name name
          * @param value value
@@ -464,18 +476,16 @@ public class TestingConfig extends AppenderSkeleton {
     /**
      * Reads in the file that contains the nodes that should show a certain
      * status after execution.
-     * 
+     *
      * @param statusFile the file containing the lines defining the node status
      *            after execution. If it doesn't exist, the method returns
      *            without error or without doing anything.
-     * @param wfm manager holding the flow whose nodes are specified in the file
      * @throws FileNotFoundException if the file opening fails
      * @throws IOException if the file reading fails
      * @throws InvalidSettingsException if the settings in the file are
      *             incorrect
      */
-    public void readNodeStatusFile(final File statusFile,
-            final WorkflowManager wfm) throws FileNotFoundException,
+    public void readNodeStatusFile(final File statusFile) throws FileNotFoundException,
             IOException, InvalidSettingsException {
 
         if (!statusFile.exists()) {
@@ -495,7 +505,7 @@ public class TestingConfig extends AppenderSkeleton {
                     || (line.toUpperCase().startsWith("DEBUG"))) {
                 parseMessageLine(line);
             } else {
-                parseNodeStatusLine(line, wfm);
+                parseNodeStatusLine(line);
             }
 
         }
@@ -507,7 +517,7 @@ public class TestingConfig extends AppenderSkeleton {
     /**
      * Parses one line from the status file assuming it specifies a required
      * error/warning/info or debug message.
-     * 
+     *
      * @param line the line to be parsed
      */
     private void parseMessageLine(final String line)
@@ -548,7 +558,7 @@ public class TestingConfig extends AppenderSkeleton {
      * message. That is the part behind the first colon, dismissing the date,
      * time, level, and class info. It is important to extract the message that
      * was sent to the logger from the line.
-     * 
+     *
      * @param line to extract the message from
      * @return the interesting message part of the specified line, or null, if
      *         the line has an unexpected format.
@@ -566,7 +576,7 @@ public class TestingConfig extends AppenderSkeleton {
      * Tests if the passed msg from the logger is a required message, i.e. was
      * specified in the node status file. It also remembers that this message
      * appeared (for the checkMessages method at the end).
-     * 
+     *
      * @param msg the message passed to the logger
      * @param msgLevel msg level
      * @return true, if the msg is a required message
@@ -603,13 +613,11 @@ public class TestingConfig extends AppenderSkeleton {
     /**
      * Parses and applies one line from the status file that contains the
      * post-execute status of a node.
-     * 
+     *
      * @param line the line specifying the status of the node.
-     * @param wfm the flow the line refers to. NodeID are checked against this.
      * @throws InvalidSettingsException if the line is invalid
      */
-    private void parseNodeStatusLine(final String line,
-            final WorkflowManager wfm) throws InvalidSettingsException {
+    private void parseNodeStatusLine(final String line) throws InvalidSettingsException {
 
         String[] splits = line.split(",", 2);
         if (splits.length < 2) {
@@ -617,14 +625,9 @@ public class TestingConfig extends AppenderSkeleton {
                     + "(specify node id and status):" + line);
         }
 
-        // try parsing the node id
-        Integer nodeID = null;
-        try {
-            nodeID = Integer.parseInt(splits[0]);
-        } catch (NumberFormatException nfe) {
-            throw new InvalidSettingsException(
-                    "Invalid line in status file (invalid node ID): " + line);
-        }
+        // TODO: This is the simple node ID - we cut off the wfm's prefix when
+        // we analyze the result...
+        String nodeID = splits[0];
 
         String msg = null;
 
@@ -645,7 +648,7 @@ public class TestingConfig extends AppenderSkeleton {
                                     + "(invalid err status msg): " + line);
                 }
 
-                /* if a node is supposed to have an error status then it is 
+                /* if a node is supposed to have an error status then it is
                  * supposed to fail during execution. Add the failure messages
                  * to the required messages, add the node id to the not-executed
                  * ids.
@@ -712,36 +715,40 @@ public class TestingConfig extends AppenderSkeleton {
      * defines nodes that are not supposed to execute, it makes sure these are
      * not executed. If the check fails, it logs an error message and tells the
      * JUnit framework.
-     * 
+     *
      * @param manager the workflow manager holding the workflow to check.
      */
     public void checkNodeExecution(final WorkflowManager manager) {
-        Collection<NodeContainer> nodes = manager.getNodes();
+        Collection<NodeContainer> nodes = manager.getNodeContainers();
 
         for (NodeContainer node : nodes) {
 
-            NodeStatus status = node.getStatus();
+            State status = node.getState();
 
-            if (!node.isExecuted()
-                    && !m_requiredUnexecutedNodes.contains(node.getID())) {
+            if (!status.equals(State.EXECUTED)
+                    && !m_requiredUnexecutedNodes.contains(
+                            node.getID().toString())) {
 
                 // not executed but supposed to be
 
                 String msg =
                         "Node " + node.getNameWithID() + " is not executed.";
                 if (status != null) {
-                    msg += " (status message: " + status.getMessage() + ")";
+                    msg += " (node's status message: "
+                        + node.getNodeMessage().getMessageType() + ": "
+                        + node.getNodeMessage().getMessage() + ")";
                 }
                 // make sure to log an error - during wrapUp the test fails then
                 LOGGER.error(msg);
-            } else if (node.isExecuted()
-                    && m_requiredUnexecutedNodes.contains(node.getID())) {
+            } else if (status.equals(State.EXECUTED)
+                    && m_requiredUnexecutedNodes.contains(
+                            node.getID().toString())) {
 
                 // executed but shouldn't be
 
                 String msg =
                         "Node " + node.getNameWithID()
-                                + " is executed eventhough it shouldn't. "
+                                + " is executed eventhough it shouldn't "
                                 + "(as specified in the node status file)";
                 // make sure to log an error - during wrapUp the test fails then
                 LOGGER.error(msg);
@@ -750,7 +757,7 @@ public class TestingConfig extends AppenderSkeleton {
                 // executed state as expected
 
                 LOGGER.debug("Node '" + node.getNameWithID() + "' is"
-                        + (node.isExecuted() ? " " : " not ")
+                        + (status.equals(State.EXECUTED) ? " " : " not ")
                         + "executed - which is good.");
             }
 
@@ -761,19 +768,21 @@ public class TestingConfig extends AppenderSkeleton {
      * makes sure all nodes have a node status corresponding to the node status
      * file. If a node has an unexpected status or not the expected one, an
      * error is logged and the test fails.
-     * 
+     * Sure!
+     *
      * @param wfm the manager holding the flow to check.
      */
     public void checkNodeStatus(final WorkflowManager wfm) {
-        Collection<NodeContainer> nodes = wfm.getNodes();
+        Collection<NodeContainer> nodes = wfm.getNodeContainers();
+        String idPrefix = wfm.getID().toString() + ":";
 
         for (NodeContainer node : nodes) {
 
-            NodeStatus status = node.getStatus();
+            NodeMessage status = node.getNodeMessage();
+            if (status != null
+                    && status.getMessageType().equals(NodeMessage.Type.ERROR)) {
 
-            if (status instanceof NodeStatus.Error) {
-
-                String expMsg = m_errorStatus.get(node.getID());
+                String expMsg = m_errorStatus.get(shortID(node, idPrefix));
                 if (expMsg == null) {
                     // node was not expected to finish with an error status
                     String msg =
@@ -804,9 +813,10 @@ public class TestingConfig extends AppenderSkeleton {
                     }
                 }
 
-            } else if (status instanceof NodeStatus.Warning) {
+            } else if (status != null
+                    && status.getMessageType().equals(NodeMessage.Type.WARNING)) {
 
-                String expMsg = m_warningStatus.get(node.getID());
+                String expMsg = m_warningStatus.get(shortID(node, idPrefix));
                 if (expMsg == null) {
                     // node was not expected to finish with a warning status
                     String msg =
@@ -840,7 +850,7 @@ public class TestingConfig extends AppenderSkeleton {
             } else {
                 // no or unknown status
 
-                String expMsg = m_warningStatus.get(node.getID());
+                String expMsg = m_warningStatus.get(shortID(node, idPrefix));
                 if (expMsg != null) {
                     String msg =
                             "Node '"
@@ -853,7 +863,7 @@ public class TestingConfig extends AppenderSkeleton {
                     LOGGER.error(msg);
                 }
 
-                expMsg = m_errorStatus.get(node.getID());
+                expMsg = m_errorStatus.get(node.getID().toString());
                 if (expMsg != null) {
                     String msg =
                             "Node '" + node.getNameWithID()
@@ -869,6 +879,23 @@ public class TestingConfig extends AppenderSkeleton {
 
         }
 
+    }
+
+    /**
+     * Cuts off the prefix from the node container's ID.
+     *
+     * @param nc the node to create the short ID for
+     * @param prefix the prefix cut off the node's ID
+     * @return the node's ID w/o prefix or the full ID if the ID was not
+     *         prefixed with the prefix
+     */
+    private String shortID(final NodeContainer nc, final String prefix) {
+        String nodeID = nc.getID().toString();
+        if (nodeID.startsWith(prefix)) {
+            return nodeID.substring(prefix.length());
+        } else {
+            return nodeID;
+        }
     }
 
     /**

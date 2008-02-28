@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   23.05.2006 (Pluto): created // aka Fabian Dill!
  *   02.08.2007 (ohl): not a JUnit test anymore
@@ -34,10 +34,10 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class KnimeTestRegistry {
@@ -54,7 +54,7 @@ public class KnimeTestRegistry {
 
     /**
      * Constructor. Isn't it?
-     * 
+     *
      * @param testNamePattern the pattern test names are matched against
      *            (regular expression). If null (or empty) all tests are run.
      */
@@ -92,17 +92,17 @@ public class KnimeTestRegistry {
     /**
      * Searches in the directory and subdirectories for workflow.knime files and
      * adds them to m_registry
-     * 
+     *
      * @param dir - the basedir for the search
      */
-    private void searchDirectory(File dir) {
+    private void searchDirectory(final File dir) {
 
         if (m_pattern == null) {
             // null pattern matches nothing!
             return;
         }
 
-        File workflowFile = new File(dir, WorkflowManager.WORKFLOW_FILE);
+        File workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
 
         if (workflowFile.exists()) {
             String name = dir.getName();
