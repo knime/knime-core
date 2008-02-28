@@ -28,7 +28,6 @@ import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.PortType;
 
 /**
@@ -68,35 +67,20 @@ public class NodePortLocator extends PortLocator {
     public void relocate(final IFigure fig) {
         Rectangle parentBounds = m_parent.getContentFigure().getBounds()
                 .getCopy();
-
         int portHeight = (parentBounds.height - 10)
                 / (getNrPorts());
         int portWidth = parentBounds.width / 2;
-
         int x = 0;
         int y = 0;
         if (isInPort()) {
-
             x = parentBounds.getLeft().x - 1;
-
-            int position = 0;
-            if (getType().equals(ModelPortObject.TYPE)) {
-                position = getPortIndex();
-            } else {
-                // data port
-                position = getPortIndex();
-            }
-
+            int position = getPortIndex();
             y = parentBounds.getTopLeft().y  + 5 + (position * portHeight);
-
         } else {
-
             x = parentBounds.getCenter().x + 4;
-
             y = parentBounds.getTopRight().y + 5
                 + (getPortIndex() * portHeight);
         }
-
         Rectangle portBounds = new Rectangle(new Point(x, y), new Dimension(
                 portWidth, portHeight));
 
