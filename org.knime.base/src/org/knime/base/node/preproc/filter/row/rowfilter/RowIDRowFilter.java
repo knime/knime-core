@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.06.2005 (ohl): created
  */
@@ -39,7 +39,7 @@ import org.knime.core.node.NodeSettingsWO;
  * A {@link RowFilter} that matches the row ID against a regular expression. It
  * allows for including or excluding matching rows, supports case sensitivity,
  * and supports entire row ID matches vs. starts with.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class RowIDRowFilter extends RowFilter {
@@ -63,7 +63,7 @@ public class RowIDRowFilter extends RowFilter {
     /**
      * Creates a new RowFilter that matches the row ID against a regular
      * expression.
-     * 
+     *
      * @param regExpr the regular expression
      * @param include flag inverting the match if set <code>false</code>
      * @param caseSensitive case ignoring match if set <code>false</code>
@@ -79,16 +79,29 @@ public class RowIDRowFilter extends RowFilter {
         m_caseSensitive = caseSensitive;
 
         try {
-            if (caseSensitive) {
-                m_pattern = Pattern.compile(regExpr);
-            } else {
-                m_pattern = Pattern.compile(regExpr, Pattern.CASE_INSENSITIVE);
-            }
+            m_pattern = compilePattern(regExpr, caseSensitive);
         } catch (PatternSyntaxException pse) {
             throw new IllegalArgumentException("Error in regular expression ('"
                     + pse.getMessage() + "')");
         }
 
+    }
+
+    /**
+     * The regular expression is compiled in two places: in the constructor and
+     * in loadSettings. Both places call this method.
+     *
+     * @param regExpr the expression to compile
+     * @param caseSensitive if true the match is case sensitive
+     * @return the compiled pattern
+     */
+    private Pattern compilePattern(final String regExpr,
+            final boolean caseSensitive) {
+        int flags = Pattern.DOTALL | Pattern.MULTILINE | Pattern.UNICODE_CASE;
+        if (!caseSensitive) {
+            flags |= Pattern.CASE_INSENSITIVE;
+        }
+        return Pattern.compile(regExpr, flags);
     }
 
     /**
@@ -164,11 +177,7 @@ public class RowIDRowFilter extends RowFilter {
         String regExpr = cfg.getString(CFG_PATTERN);
 
         try {
-            if (m_caseSensitive) {
-                m_pattern = Pattern.compile(regExpr);
-            } else {
-                m_pattern = Pattern.compile(regExpr, Pattern.CASE_INSENSITIVE);
-            }
+            m_pattern = compilePattern(regExpr, m_caseSensitive);
         } catch (PatternSyntaxException pse) {
             throw new InvalidSettingsException("Error in regular expression"
                     + " (" + regExpr + ") read from config object: '"
