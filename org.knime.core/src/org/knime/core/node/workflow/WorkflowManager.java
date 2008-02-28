@@ -1313,7 +1313,36 @@ public final class WorkflowManager extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     void cancelExecutionAsNodeContainer() {
-        assert false;
+        for (NodeContainer nc : m_nodes.values()) {
+            // TODO may need to be sorted last-first.
+            nc.cancelExecutionAsNodeContainer();
+        }
+    }
+    
+   /**
+    * Convenience method: execute all and wait for execution to be done.
+    * 
+    * @return true if execution was successful
+    */
+    public boolean executeAllAndWaitUntilDone() {
+        final Object mySemaphore = new Object();
+        synchronized (mySemaphore) {
+            this.addListener(new WorkflowListener() {
+                public void workflowChanged(final WorkflowEvent event) {
+                    mySemaphore.notifyAll();
+                }
+            });
+            markForExecutionAllNodes(true);
+            while (getState().executionInProgress()) {
+                try {
+                    mySemaphore.wait();
+                } catch (InterruptedException ie) {
+                    cancelExecutionAsNodeContainer();
+                    return false;
+                }
+            }
+        }
+        return this.getState().equals(State.EXECUTED);
     }
 
     /////////////////////////////////////////////////////////
