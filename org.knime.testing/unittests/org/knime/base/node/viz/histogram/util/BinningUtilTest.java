@@ -86,59 +86,59 @@ public class BinningUtilTest extends TestCase {
         double minVal = 0;
         double interval = 0;
         double expected = 0;
-        double start = BinningUtil.createBinStart(minVal, interval, false);
+        double start = BinningUtil.createBinStart(minVal, interval);
         assertEquals(start, expected);
 
         minVal = 1;
         interval = 1;
         expected = 0;
-        start = BinningUtil.createBinStart(minVal, interval, false);
+        start = BinningUtil.createBinStart(minVal, interval);
         assertEquals(start, expected);
 
         minVal = 2;
         interval = 1;
         expected = 2;
-        start = BinningUtil.createBinStart(minVal, interval, false);
+        start = BinningUtil.createBinStart(minVal, interval);
         assertEquals(start, expected);
 
         minVal = -0.20000000018;
         interval = 2;
-        start = BinningUtil.createBinStart(minVal, interval, false);
+        start = BinningUtil.createBinStart(minVal, interval);
         assertTrue(start <= minVal);
 
         minVal = 0.20000000018;
         interval = 2;
-        start = BinningUtil.createBinStart(minVal, interval, false);
+        start = BinningUtil.createBinStart(minVal, interval);
         assertTrue(start <= minVal);
 
         minVal = 200000018;
         interval = 2;
-        start = BinningUtil.createBinStart(minVal, interval, false);
+        start = BinningUtil.createBinStart(minVal, interval);
         assertTrue(start <= minVal);
 
         minVal = -200000018;
         interval = 2;
-        start = BinningUtil.createBinStart(minVal, interval, false);
+        start = BinningUtil.createBinStart(minVal, interval);
         assertTrue(start <= minVal);
 
         minVal = 200000018;
         interval = 333333;
-        start = BinningUtil.createBinStart(minVal, interval, false);
+        start = BinningUtil.createBinStart(minVal, interval);
         assertTrue(start <= minVal);
 
         minVal = -200000018;
         interval = 333333;
-        start = BinningUtil.createBinStart(minVal, interval, false);
+        start = BinningUtil.createBinStart(minVal, interval);
         assertTrue(start <= minVal);
 
         minVal = 15;
         interval = 2;
-        start = BinningUtil.createBinStart(minVal, interval, false);
+        start = BinningUtil.createBinStart(minVal, interval);
         assertTrue(start <= minVal);
 
         minVal = -15;
         interval = 2;
-        start = BinningUtil.createBinStart(minVal, interval, false);
+        start = BinningUtil.createBinStart(minVal, interval);
         assertTrue(start <= minVal);
     }
 
