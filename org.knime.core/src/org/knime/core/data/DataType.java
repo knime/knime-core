@@ -326,8 +326,9 @@ public final class DataType {
      * 
      * <p>
      * If both types have no common data values, the resulting 
-     * <code>DataType</code> has no preferred value class, an empty list 
-     * of compatible value classes, and the cell class is <code>null</code>.   
+     * <code>DataType</code> has no preferred value class; its list of 
+     * compatible value classes will only contain (the class representation of)
+     * {@link DataValue}, and the cell class is <code>null</code>.   
      * 
      * @param type1 type 1
      * @param type2 type 2
