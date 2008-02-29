@@ -134,6 +134,27 @@ public final class ColorHandler implements PropertyHandler {
         return m_model.toString();
     }
     
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || !(obj instanceof ColorHandler)) {
+            return false;
+        }
+        return m_model.equals(((ColorHandler)obj).m_model);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_model.hashCode();
+    }
  
     /**
      * Interface allowing requests for {@link ColorAttr} by {@link DataCell}.

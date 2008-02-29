@@ -86,7 +86,7 @@ public final class ColorModelRange implements ColorModel {
     /**
      * Returns a ColorAttr for the given DataCell value, or
      * <code>ColorAttr.DEFAULT</code> if not set. The colors red, green, and
-     * blue are merged in the same ratio from the orginal spread of the lower
+     * blue are merged in the same ratio from the original spread of the lower
      * and upper bounds.
      * 
      * @param dc A DataCell value to get color for.
@@ -209,4 +209,31 @@ public final class ColorModelRange implements ColorModel {
         return "DoubleRange ColorModel (min=<" + min + ">,max=<" + max + ">)";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || !(obj instanceof ColorModelRange)) {
+            return false;
+        }
+        ColorModelRange cmodel = (ColorModelRange) obj;
+        // Double.compare() also handles NaN appropriately 
+        return Double.compare(m_maxValue, cmodel.m_maxValue) == 0
+            && Double.compare(m_minValue, cmodel.m_minValue) == 0
+            && Double.compare(m_range, cmodel.m_range) == 0
+            && m_maxColor.equals(cmodel.m_maxColor)
+            && m_minColor.equals(cmodel.m_minColor); 
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_minColor.hashCode() ^ m_maxColor.hashCode();
+    }
 }

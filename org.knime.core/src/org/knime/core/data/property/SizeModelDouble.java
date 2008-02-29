@@ -150,9 +150,13 @@ public class SizeModelDouble implements SizeModel {
      * 
      * @param min minimum of domain
      * @param max maximum of domain
+     * @throws IllegalArgumentException If min &lt; max
      */
     public SizeModelDouble(final double min, final double max) {
-        assert min < max;
+        if (min < max) {
+            throw new IllegalArgumentException(
+                    "min must not be smaller than max: " + min + " < " + max);
+        }
         m_min = min;
         m_max = max;
         m_factor = 2;
@@ -262,7 +266,7 @@ public class SizeModelDouble implements SizeModel {
      * 
      * @return the scaling factor
      */
-    public double getFactor(){
+    public double getFactor() {
         return m_factor;
     }
     
@@ -318,6 +322,34 @@ public class SizeModelDouble implements SizeModel {
         NumberFormat nf = NumberFormat.getInstance();
         return "DoubleRange SizeModel (factor=" + nf.format(m_factor) 
             + ", method=" + m_mapping.name() + ")";
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || !(obj instanceof SizeModelDouble)) {
+            return false;
+        }
+        SizeModelDouble model = (SizeModelDouble) obj;
+        return m_mapping.equals(model.m_mapping)
+            && Double.compare(m_factor, model.m_factor) == 0
+            && Double.compare(m_min, model.m_min) == 0
+            && Double.compare(m_max, model.m_max) == 0;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        // copied from java.lang.Double
+        long bits = Double.doubleToLongBits(m_factor);
+        return (int)(bits ^ (bits >>> 32));
     }
 
 }

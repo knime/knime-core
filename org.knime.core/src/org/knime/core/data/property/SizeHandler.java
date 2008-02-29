@@ -138,6 +138,28 @@ public final class SizeHandler implements PropertyHandler {
     }
     
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || !(obj instanceof SizeHandler)) {
+            return false;
+        }
+        return m_model.equals(((SizeHandler)obj).m_model);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_model.hashCode();
+    }
+    
+    /**
      * Internal <code>SizeModel</code> used to request sizes by 
      * <code>DataCell</code> attribute value.
      */

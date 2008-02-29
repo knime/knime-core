@@ -151,4 +151,27 @@ public final class ColorModelNominal implements ColorModel, Iterable<DataCell> {
         return "Nominal ColorModel";
     }
     
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || !(obj instanceof ColorModelNominal)) {
+            return false;
+        }
+        ColorModelNominal cmodel = (ColorModelNominal) obj;
+        return m_map.equals(cmodel.m_map);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_map.hashCode();
+    }
+    
 }   

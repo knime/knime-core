@@ -37,7 +37,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.property.ColorAttr;
@@ -251,12 +250,6 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     private final int m_sizeHandlerColIndex;
 
     /**
-     * An unmodifiable List to create an iterator from. Therefore, remove
-     * operations are not allowed on an iterator object.
-     */
-    private final List<DataColumnSpec> m_columnSpecList;
-
-    /**
      * Creates an empty <code>DataTableSpec</code> with no columns defined and
      * <i>default</i> as name.
      */
@@ -343,10 +336,6 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         m_sizeHandlerColIndex = searchSizeHandler();
         m_colorHandlerColIndex = searchColorHandler();
         m_shapeHandlerColIndex = searchShapeHandler();
-
-        // create an unmodifiable list to create iterators from
-        m_columnSpecList =
-                Collections.unmodifiableList(Arrays.asList(m_columnSpecs));
     }
 
     /**
@@ -437,20 +426,6 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     }
 
     /**
-     * Returns <code>true</code> if <code>o</code> is a
-     * <code>DataTableSpec</code> equal to this, that is <code>o == this</code>.
-     * @param o the other <code>Object</code> to compare this with
-     * @return <code>true</code> if the two objects have the same reference,
-     *         otherwise <code>false</code>
-     * @see Object#equals(Object)
-     * @see #equalStructure(DataTableSpec)
-     */
-    @Override
-    public boolean equals(final Object o) {
-        return (this == o);
-    }
-
-    /**
      * Returns <code>true</code> if <code>spec</code> has the same column
      * names and types. Two specs are equal if they have the same number of 
      * columns and the column specs of the same columns are equal (that implies 
@@ -488,29 +463,33 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
        
 
     /**
-     * Checks if both {@link DataTableSpec}s are equal; in contrast to
-     * {@link #equals(Object)} the domain and properties of the columns must 
-     * be equal as well. Two specs are equal if their {@link DataColumnSpec}s 
-     * are equal according to the 
-     * {@link DataColumnSpec#equalsWithDomain(DataColumnSpec)} method.
-     * This implies that both specs have to have the same number of columns and
-     * the order of the columns has to be the same.
+     * Checks if both {@link DataTableSpec}s are equal. In particular it checks
+     * the name, indices of property handlers, and the equality of the contained
+     * column specs according to the {@link DataColumnSpec#equals(Object)} 
+     * method. This implies that both specs have to have the same number of 
+     * columns and the order of the columns has to be the same.
      * 
-     * @param spec the <code>DataTableSpec</code> to compare this with
-     * @return <code>true</code> if the two specs have equal structure, domain,
-     *         and properties, otherwise <code>false</code>
-     *         
-     * @see #equals(Object)
+     * @param obj the <code>DataTableSpec</code> to compare this with
+     * @return <code>true</code> if the two specs are equal
+     * 
      * @see #equalStructure(DataTableSpec)
-     * @deprecated use {@link #equalStructure(DataTableSpec)} and check if 
-     *             domain and properties matches by yourself
+     * @see DataColumnSpec#equals(Object)
      */
-    @Deprecated
-    public boolean equalsWithDomain(final DataTableSpec spec) {
-        if (spec == this) {
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
             return true;
         }
-        if (spec == null) {
+        if (obj == null || !(obj instanceof DataTableSpec)) {
+            return false;
+        }
+        DataTableSpec spec = (DataTableSpec) obj;
+        if (!m_name.equals(spec.m_name)) {
+            return false;
+        }
+        if (m_shapeHandlerColIndex != spec.m_shapeHandlerColIndex
+                || m_colorHandlerColIndex != spec.m_colorHandlerColIndex
+                || m_sizeHandlerColIndex != spec.m_sizeHandlerColIndex) {
             return false;
         }
         final int colCount = this.getNumColumns();
@@ -522,11 +501,10 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         for (int i = 0; i < colCount; i++) {
             DataColumnSpec thisColumn = getColumnSpec(i);
             DataColumnSpec otherColumn = spec.getColumnSpec(i);
-            if (!thisColumn.equalsWithDomain(otherColumn)) {
+            if (!thisColumn.equals(otherColumn)) {
                 return false;
             }
         }
-        // both are identical
         return true;
     }
     
@@ -691,11 +669,13 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * Returns an iterator for the contained {@link DataColumnSpec} elements.
      * The iterator does not support the remove method (table specs are
      * immutable).
-     * 
+     * @return iterator of the underlying list of <code>DataColumnSpec</code>s
      * @see java.lang.Iterable#iterator()
      */
     public Iterator<DataColumnSpec> iterator() {
-        return m_columnSpecList.iterator();
+        // both method do not copy the data but only keep a reference.
+        return Collections.unmodifiableList(
+                Arrays.asList(m_columnSpecs)).iterator();
     }
 
     /**

@@ -115,14 +115,36 @@ public final class ShapeHandler implements PropertyHandler {
     }
     
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null || !(obj instanceof ShapeHandler)) {
+            return false;
+        }
+        return m_model.equals(((ShapeHandler)obj).m_model);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return m_model.hashCode();
+    }
+    
+    /**
      * Internal <code>ShapeModel</code> used to request <code>Shape</code> 
-     * objects by <code>DataCell</code> attribut value.
+     * objects by <code>DataCell</code> attribute value.
      */
     interface ShapeModel {
         /**
          * Returns a <code>Shape</code> object for a given 
          * <code>DataCell</code>.
-         * @param dc The attribut value to get size for.
+         * @param dc The attribute value to get size for.
          * @return A <code>double</code> between 0 and 1.
          */
         Shape getShape(DataCell dc);
