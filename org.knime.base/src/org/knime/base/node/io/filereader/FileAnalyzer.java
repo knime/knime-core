@@ -26,6 +26,10 @@ package org.knime.base.node.io.filereader;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import org.knime.base.node.io.filetokenizer.Comment;
@@ -660,8 +664,11 @@ public final class FileAnalyzer {
 
         assert colNames.length == colTypes.length;
 
+        // keep the actually used col names in a set for fast look up
+        Set<String> resultNames = new HashSet<String>();
+
         // extract user preset column names to make uniquifying faster/easier
-        String[] userNames = new String[colNames.length];
+        Map<Integer, String> userNames = new HashMap<Integer, String>();
         for (int c = 0; c < colNames.length; c++) {
             if (c >= userProps.size()) {
                 break;
@@ -670,7 +677,7 @@ public final class FileAnalyzer {
             if ((cProp != null) && !cProp.getSkipThisColumn()) {
                 DataColumnSpec cSpec = cProp.getColumnSpec();
                 if (cSpec != null) {
-                    userNames[c] = cSpec.getName().toString();
+                    userNames.put(c, cSpec.getName());
                 }
             }
         }
@@ -711,48 +718,33 @@ public final class FileAnalyzer {
             }
 
             // make ColName unique
-            boolean unique;
-            int count = 2; // used to count duplicates. Added as postfix to
-            // name
-            String name = colProp.getColumnSpec().getName().toString();
+            int cnt = 2; // used to count duplicates. Postfix to name
+            String name = colProp.getColumnSpec().getName();
+            boolean changed = false;
+            // remove the username for this index to not compare against
+            // itself!
+            String currentUserName = userNames.remove(c);
 
-            do {
-                unique = true;
-                for (int i = 0; i < colNames.length; i++) {
-                    // iterate through all cols to look at user preset names,
-                    // which we don't wanna change.
-                    if (i < c) {
-                        // look at the already existing col names
-                        if (colProps.get(i).getColumnSpec().getName()
-                                .toString().equals(name)) {
-                            unique = false;
-                        }
-                    } else if (i > c) {
-                        // compare it with the preset names
-                        if ((userNames[i] != null)
-                                && (userNames[i].equals(name))) {
-                            unique = false;
-                        }
-                    }
-                    if (!unique) {
-                        name =
-                                colProp.getColumnSpec().getName().toString()
-                                        + "(" + count + ")";
-                        count++;
-                        // start all over, compare the new name with all others
-                        break;
-                    }
-                }
-
-            } while (!unique);
+            while (resultNames.contains(name)
+                        || userNames.containsValue(name)) {
+                name = colProp.getColumnSpec().getName() + "(" + cnt++ + ")";
+                changed = true;
+            }
 
             // set the new name - if we had to change it
-            if (!name.equals(colProp.getColumnSpec().getName().toString())) {
+            if (changed) {
                 colProp.changeColumnName(name);
             }
 
             // added to the result vector
             colProps.add(colProp);
+
+            // add the name to the set of used names
+            resultNames.add(name);
+            // put in again the username for this index
+            if (currentUserName != null) {
+                userNames.put(c, currentUserName);
+            }
         }
 
         return colProps;

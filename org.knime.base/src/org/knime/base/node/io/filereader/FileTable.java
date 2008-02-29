@@ -24,6 +24,7 @@ package org.knime.base.node.io.filereader;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -254,6 +255,9 @@ public class FileTable implements DataTable {
             status.addError("Number of columns must be greater than zero.");
         }
 
+        // hash map for faster column name uniqueness checking
+        HashMap<String, Integer> colNames = new HashMap<String, Integer>();
+
         // we need a column spec for each column - and if set we need types,
         // names, and if possible values are set they must not be null.
         for (int c = 0; c < tableSpec.getNumColumns(); c++) {
@@ -282,17 +286,11 @@ public class FileTable implements DataTable {
                             + "' is not set.");
                 } else {
                     // make sure it's unique
-                    for (int n = 0; n < tableSpec.getNumColumns(); n++) {
-                        if (n == c) {
-                            // if our own column has the same name that's okay
-                            continue;
-                        }
-                        if (tableSpec.getColumnSpec(n).getName().equals(
-                                cName)) {
-                            status.addError("Column with index '" + c
-                                    + "' has the same name assigned as "
-                                    + "column '" + n + "' ('" + cName + "').");
-                        }
+                    Integer sameCol = colNames.put(cName, c);
+                    if (sameCol != null) {
+                        status.addError("Column with index " + c
+                                + " has the same name as column " + sameCol
+                                + " ('" + cName + "').");
                     }
                 }
 

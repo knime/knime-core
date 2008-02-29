@@ -45,6 +45,8 @@ import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -392,6 +394,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         }
     }
 
+    /*
+     * The preview area contains either the preview panel or the analysis panel
+     */
     private JPanel createPreviewArea() {
 
         // the panel for the preview table
@@ -1367,9 +1372,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
             public void run() {
                 // first remove the preview panel
-                m_previewArea.remove(m_previewPanel);
+                m_previewArea.removeAll();
                 // show the analyze button
-                m_previewArea.add(m_analysisPanel);
+                m_previewArea.add(m_analysisPanel, BorderLayout.CENTER);
                 // enable button!!
                 m_analyzeButton.setEnabled(true);
                 m_analyzeCancel.setText("Stop Analysis");
@@ -1389,9 +1394,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
             public void run() {
                 // first remove the analysis panel
-                m_previewArea.remove(m_analysisPanel);
+                m_previewArea.removeAll();
                 // show preview table
-                m_previewArea.add(m_previewPanel);
+                m_previewArea.add(m_previewPanel, BorderLayout.CENTER);
                 getPanel().revalidate();
                 getPanel().repaint();
             }
@@ -1732,6 +1737,8 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         int numCols = result.getNumberOfColumns();
         Vector<ColProperty> colProps = result.getColumnProperties();
+        // set of used names for uniquification
+        Set<String> colNames = new HashSet<String>();
 
         for (int c = 0; c < numCols; c++) {
 
@@ -1754,19 +1761,10 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             // need to make it unique
             int idx = 2; // the index we append to the name to make it unique
             String colName = name;
-            boolean unique;
-            do {
-                unique = true;
-                for (int i = 0; i < c; i++) {
-                    if (colName.equals(colProps.get(i).getColumnSpec()
-                            .getName())) {
-                        unique = false;
-                        colName = name + "(" + idx + ")";
-                        idx++;
-                        break;
-                    }
-                }
-            } while (!unique);
+            while (colNames.contains(colName)) {
+                colName = name + "(" + idx++ + ")";
+            }
+            colNames.add(colName);
 
             // set the new name
             cProp.changeColumnName(colName);
@@ -1848,6 +1846,17 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
     private void recreateColNames(final boolean uniquifyFirstColName) {
         Vector<ColProperty> colProps = m_frSettings.getColumnProperties();
 
+        // set with column names used - for faster uniquification
+        Set<String> colNames = new HashSet<String>();
+        // pre-load it with the user set names (which we are not gonna change)
+        for (int c = 0; c < colProps.size(); c++) {
+            ColProperty cProp = colProps.get(c);
+            if ((cProp != null) && (cProp.getUserSettings())
+                    && (!((c == 0) && uniquifyFirstColName))) {
+                colNames.add(cProp.getColumnSpec().getName());
+            }
+        }
+
         for (int c = 0; c < colProps.size(); c++) {
             ColProperty cProp = colProps.get(c);
             if (cProp == null) {
@@ -1856,6 +1865,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             if ((cProp.getUserSettings())
                     && (!((c == 0) && uniquifyFirstColName))) {
                 // name was set by user - consider it fixed.
+                assert colNames.contains(cProp.getColumnSpec().getName());
                 continue;
             }
             String namePrefix; // the name we add a number to, to uniquify it
@@ -1867,33 +1877,14 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 namePrefix = "Col" + c;
             }
             // make sure the name is unique
-            boolean unique = false;
             String name = namePrefix;
-            int count = 1;
-            while (!unique) {
-                unique = true;
-                for (int comp = 0; comp < colProps.size(); comp++) {
-                    // compare it with all user set columns til the end, because
-                    // we can't change the fixed column names.
-                    if (comp == c) {
-                        // don't compare it with it's old name. Gonna change.
-                        continue;
-                    }
-                    ColProperty compProp = colProps.get(comp);
-                    if ((compProp == null) || (!compProp.getUserSettings())) {
-                        // don't compare to generated headers - gonna change.
-                        continue;
-                    }
-                    String compName = compProp.getColumnSpec().getName();
-                    if (compName.equals(name)) {
-                        unique = false;
-                        count++;
-                        name = namePrefix + "(" + count + ")";
-                        break; // start all over again
-                    }
-                }
+            int count = 2;
+            while (colNames.contains(name)) {
+                name = namePrefix + "(" + count++ + ")";
             }
+
             cProp.changeColumnName(name);
+            colNames.add(name);
         }
         // We've changed the names in the colProperty objects - no need to
         // write back the vector
