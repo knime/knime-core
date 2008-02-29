@@ -396,7 +396,7 @@ public class FileAnalyzerTest extends TestCase {
         out.write(contents);
         out.close();
 
-        return tempFile.toURL();
+        return tempFile.toURI().toURL();
 
     } // initTempFile()
 
