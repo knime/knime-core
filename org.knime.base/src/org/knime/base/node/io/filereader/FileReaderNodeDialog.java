@@ -1633,6 +1633,11 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         if (location == null) {
             return true;
         }
+        if (!location.getProtocol().equals("file")) {
+            // if this is something else than a file, we can't get a size
+            // and we don't know how painful it is to read it:
+            return false;
+        }
         try {
             BufferedFileReader bfr =
                     BufferedFileReader.createNewReader(location);
@@ -1647,8 +1652,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
             }
 
         } catch (IOException ioe) {
-            // something went wrong - don't automatically analyze
-            return false;
+            // something went wrong - automatically analyze to produce an
+            // error message
+            return true;
         }
     }
 
