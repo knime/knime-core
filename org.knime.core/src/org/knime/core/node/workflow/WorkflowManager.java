@@ -1836,7 +1836,7 @@ public final class WorkflowManager extends NodeContainer {
                         SingleNodeContainer snc = (SingleNodeContainer)nc;
                         // TODO: once SOS.equals() actually works...
                         stackChanged = !snc.getScopeObjectStack().isEmpty()
-                          || !oldSOS.isEmpty();
+                          || (oldSOS != null && !oldSOS.isEmpty());
 //                            stackChanged = snc.getScopeObjectStack().equals(old_sos);
                     }
                     if (outputSpecsChanged || stackChanged) {
