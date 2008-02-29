@@ -213,6 +213,7 @@ public class KnimeTestCase extends TestCase {
             }
         };
         try {
+            try {
             KNIMETimer.getInstance().schedule(timeout, TIMEOUT * 1000);
 
             // execute all nodes.
@@ -222,6 +223,14 @@ public class KnimeTestCase extends TestCase {
 
             timeout.cancel();
 
+            } catch (Throwable t) {
+                String msg = t.getMessage();
+                logger.error("Caught a " + t.getClass().getSimpleName()
+                        + " during workflow execution:"
+                        + (msg == null ? "<no details>" : msg), t);
+                throw t;
+            }
+            try {
             // evaluate the results
             logger.info("Analyzing executed workflow ----------------------");
             /*
@@ -243,12 +252,15 @@ public class KnimeTestCase extends TestCase {
              * unexpected error message showed up. (We do that always - thus we
              * let it fall through finally.)
              */
-
+            } catch (Throwable t) {
+                String msg = t.getMessage();
+                logger.error("Caught a " + t.getClass().getSimpleName()
+                        + " during workflow analysis:"
+                        + (msg == null ? "<no details>" : msg), t);
+                throw t;
+            }
         } catch (Throwable t) {
-            String msg = t.getMessage();
-            logger.error("Caught a " + t.getClass().getSimpleName()
-                    + " during workflow loading:"
-                    + (msg == null ? "<no details>" : msg));
+            // message was printed already
         } finally {
             timeout.cancel();
 

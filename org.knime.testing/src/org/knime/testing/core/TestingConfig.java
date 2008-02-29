@@ -733,7 +733,7 @@ public class TestingConfig extends AppenderSkeleton {
 
                 String msg =
                         "Node " + node.getNameWithID() + " is not executed.";
-                if (status != null) {
+                if (node.getNodeMessage() != null) {
                     msg += " (node's status message: "
                         + node.getNodeMessage().getMessageType() + ": "
                         + node.getNodeMessage().getMessage() + ")";

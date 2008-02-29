@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -52,9 +52,9 @@ import org.knime.core.node.NodeLogger;
  * number of stack traces (in percent of all stack traces for this
  * thread/method) in which this sub method occurred above the method. It is not
  * the real CPU time spent.<br />
- * The provided main method pops open a file chooser, analyzes the selected
- * file and write the result to a new file with &quot;.html&quot; appended to
- * the selected file name
+ * The provided main method pops open a file chooser, analyzes the selected file
+ * and write the result to a new file with &quot;.html&quot; appended to the
+ * selected file name
  *
  * @author ohl, University of Konstanz
  */
@@ -252,7 +252,7 @@ public class StackDumpAnalyzer {
     }
 
     /**
-     * Counts the occurrences of one method at a certain stack level. Keeps the
+     * Counts the occurrences of one method in all stack traces. Keeps the
      * counts of all method called by this method (if any). The difference of
      * all counts of all sub methods and the count of this is the self "time" of
      * this method.<br>
@@ -346,7 +346,7 @@ public class StackDumpAnalyzer {
         }
 
         /**
-         * Creates a new stack element for the same caller with a new method ID
+         * Creates a new stack element called by this with a new method ID
          * (typically the className#methodName#lineNumber).
          *
          * @param methodID the method ID for the element to return (a unique ID
@@ -354,8 +354,7 @@ public class StackDumpAnalyzer {
          *            class name plus method name plus the line number of the
          *            caller)
          * @param methodName the name (package+class+method)
-         * @param lineNumber the line number where the caller is calling this
-         *            method
+         * @param lineNumber the line number where this calls the method
          * @return the stack element for the specified method ID
          */
         public StackElementCount getOrCreateSubMethodElement(
@@ -436,24 +435,22 @@ public class StackDumpAnalyzer {
 
             // all following lines contain an empty cell plus called method name
             // plus the percentage of calls to this method
-            boolean firstMethod = true;
+            boolean firstRow = true;
             Set<StackElementCount> sortedMethods =
                     sortByCount(methods.getSubMethods());
             for (StackElementCount method : sortedMethods) {
 
-                if (!firstMethod) {
+                if (!firstRow) {
                     // only the first line has the first cell filled w/ thread
                     w.write("<tr>" + CRLF);
                     w.write("<td></td>" + CRLF);
                 }
-                firstMethod = false;
+                firstRow = false;
                 w.write("<td>" + "<a href=\"#"
                         + System.identityHashCode(method) + "\">"
                         + method.getMethodName() + "</a>" + "</td>" + CRLF);
-                w
-                        .write("<td>"
-                                + ((int)Math.round(method.getCount() * 1000.0
-                                        / count) / 10.0) + "%</td>" + CRLF);
+                w.write("<td>" + ((int)Math.round(method.getCount() * 1000.0
+                        / methods.getCount()) / 10.0) + "%</td>" + CRLF);
                 w.write("</tr>" + CRLF);
             }
 
@@ -496,10 +493,8 @@ public class StackDumpAnalyzer {
             w.write("<tr>" + CRLF);
             w.write("<td>time all by itself</td>" + CRLF);
             w.write("<td> - </td>" + CRLF);
-            w
-                    .write("<td>"
-                            + ((int)Math.round(method.getCount() * 1000.0
-                                    / selfTime) / 10.0) + "%</td>" + CRLF);
+            w.write("<td>" + ((int)Math.round(method.getCount() * 1000.0
+                    / selfTime) / 10.0) + "%</td>" + CRLF);
             w.write("</tr>" + CRLF);
         }
         // now all real sub methods
@@ -526,10 +521,11 @@ public class StackDumpAnalyzer {
     }
 
     /**
-     * Sorts the passed set of elements by their call count. Modifies the passed
-     * set!
+     * Sorts the passed set of elements by their call count.
      *
-     * @param methods the set to sort. Will be modified.
+     * @param methods the set to sort.
+     * @return a new set with the sorted elements of the argument set. The first
+     *         element is the one with the highest count.
      */
     private SortedSet<StackElementCount> sortByCount(
             final Collection<StackElementCount> methods) {
