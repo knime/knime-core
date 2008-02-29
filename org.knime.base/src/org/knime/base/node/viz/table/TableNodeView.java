@@ -396,7 +396,7 @@ public class TableNodeView extends NodeView {
                     FileWriterSettings settings = new FileWriterSettings();
                     settings.setWriteColumnHeader(true);
                     settings.setWriteRowID(true);
-                    settings.setColSeparator(";");
+                    settings.setColSeparator(",");
                     settings.setSeparatorReplacement("");
                     settings.setReplaceSeparatorInStrings(true);
                     settings.setMissValuePattern("");
