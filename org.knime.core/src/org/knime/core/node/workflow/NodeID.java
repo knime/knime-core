@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   14.03.2007 (mb): created
  */
@@ -27,30 +27,30 @@ package org.knime.core.node.workflow;
  * Holds hierarchical ID of a node. The hierarchy models nested meta nodes.
  * All IDs will have one static instance of ROOTID as their top ID in this
  * hierarchy.
- * 
+ *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
  */
 public class NodeID implements Comparable<NodeID> {
     private final NodeID m_prefix;
     private final int m_index;
-    
+
     static final NodeID ROOTID = new NodeID();
-    
+
     /** Creates now NodeID object based on a predefined prefix (usually the
      * ID of the encapsulating project or metanode) and the node's ID itself.
-     * 
+     *
      * @param prefix of ID
      * @param ix itself
      */
-    NodeID(final NodeID prefix, final int ix) {
+    public NodeID(final NodeID prefix, final int ix) {
         assert ix >= 0;
         assert prefix != null;
         m_prefix = prefix;
         m_index = ix;
     }
-    
+
     /** Creates top level NodeID object.
-     * 
+     *
      * @param ix itself
      */
     public NodeID(final int ix) {
@@ -66,7 +66,7 @@ public class NodeID implements Comparable<NodeID> {
         m_index = 0;
     }
 
-    /** 
+    /**
      * @return prefix of this node's ID.
      */
     public NodeID getPrefix() {
@@ -79,9 +79,9 @@ public class NodeID implements Comparable<NodeID> {
     public int getIndex() {
         return m_index;
     }
-    
+
     /** Checks for exact matching prefixes.
-     * 
+     *
      * @param prefix to check
      * @return true if prefix are the same
      */
@@ -90,7 +90,7 @@ public class NodeID implements Comparable<NodeID> {
     }
 
     /** Checks for matching prefix (this node prefix can be longer, though).
-     * 
+     *
      * @param prefix to check
      * @return true if prefix are the same
      */
@@ -103,7 +103,7 @@ public class NodeID implements Comparable<NodeID> {
         }
         return m_prefix.hasPrefix(prefix);
     }
-    
+
     /** Returns on string representation of index.
      * @see java.lang.Object#toString()
      */
@@ -125,7 +125,7 @@ public class NodeID implements Comparable<NodeID> {
         NodeID objID = (NodeID)obj;
         return this.compareTo(objID) == 0;
     }
-    
+
     /**
      * @see java.lang.Object#hashCode()
      */
