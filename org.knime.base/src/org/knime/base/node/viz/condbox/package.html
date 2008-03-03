@@ -1,0 +1,55 @@
+<!--
+====================================================================
+ * This source code, its documentation and all appendant files
+ * are protected by copyright law. All rights reserved.
+ *
+ * Copyright, 2003 - 2008
+ * University of Konstanz, Germany
+ * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+ * and KNIME GmbH, Konstanz, Germany
+ *
+ * You may not modify, publish, transmit, transfer or sell, reproduce,
+ * create derivative works from, distribute, perform, display, or in
+ * any way exploit any of the content, in whole or in part, except as
+ * otherwise expressly permitted in writing by the copyright owner or
+ * as specified in the license file distributed with this product.
+ *
+ * If you have any questions please contact the copyright holder:
+ * website: www.knime.org
+ * email: contact@knime.org
+====================================================================
+-->
+<body>
+Contains all classes that realize a conditional box plot. A box plot displays some robust 
+statistcal parameters for numerical attributes and identifies extreme outliers. 
+A box plot displays the robust statistical parameters: minimum, lower quartile, 
+median, upper quartile and maximum. These parameters called robust, since they 
+are not sensitive to extreme outliers.
+The conditional box plot partitions values of one numeric column according to a nominal
+column and creates box plots for this parts.
+<p>
+A box plot for one numerical attribute is constructed in the following way:
+The box itself goes from the lower quartile (Q1) to the upper quartile (Q3). 
+The median is drawn as a horizontal bar inside the box. The distance between Q1 
+and Q3 is called the interquartile range (IQR).
+<p>
+Above and below the box are the so-called whiskers. They are drawn at the 
+minimum and the maximum value as horizontal bars and are connected with the box 
+with a dotted line. The whiskers never exceed 1.5 * IQR. This means if there 
+are some data points which exceed either Q1 - (1.5 * IQR) or Q3 + (1.5 * IQR) 
+than the whiskers are drawn at exactly these ranges and the data points are 
+drawn seperatly as outliers.
+<p>
+For the outliers the distinction between mild and extreme outliers is made.
+As mild outliers are those datapoints p considered for which holds: <br />
+p &lt; Q1 - (1.5 * IQR) and p &gt; Q1 - (3 * IQR) or <br />
+p &gt; Q3 + (1.5 * IQR) and  p &lt; Q3 + (3 * IQR). <br />
+In other words mild outliers are those data points which lay between 1.5 * IRQ 
+and 3 * IRQ. Extreme outliers are those datapoints p for which holds: <br />
+p &lt; Q1 - (3 * IQR) or p &gt; Q3 + (3 * IQR). <br />
+Thus, three times the box width (IQR) marks the boundary between 
+"mild" and "extreme" outliers. Mild outliers are painted as dots while extreme 
+outliers are displayed as crosses. In order to identify the outliers they can 
+be selected and hilited. This provides a quick overview over extreme 
+charateristics of a dataset.
+</body>
