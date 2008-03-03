@@ -118,6 +118,11 @@ public class KnimeTestRegistry {
         } else {
             dir.listFiles();
             File[] fileList = dir.listFiles(new DirectoryFilter());
+            if (fileList == null) {
+                m_logger.error("I/O error accessing '" + dir
+                        + "'. Does it exist?!?");
+                return;
+            }
             for (int i = 0; i < fileList.length; i++) {
                 searchDirectory(fileList[i]);
             }
