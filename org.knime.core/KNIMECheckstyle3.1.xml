@@ -4,8 +4,7 @@
 -->
 <!--
     Checkstyle-Configuration: UniKN KNIME
-    Description: 
-Checkstyle configuration for KNIME Java source code files. Works with Checkstyle Ver4.0
+    Description: none
 -->
 <!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.2//EN" "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
 <module name="Checker">
@@ -131,6 +130,8 @@ Checkstyle configuration for KNIME Java source code files. Works with Checkstyle
         </module>
     </module>
     <module name="PackageHtml"/>
-    <module name="NewlineAtEndOfFile"/>
+    <module name="NewlineAtEndOfFile">
+        <property name="severity" value="ignore"/>
+    </module>
     <module name="Translation"/>
 </module>
