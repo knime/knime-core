@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   15.03.2007 (berthold): created
  */
@@ -30,31 +30,31 @@ import java.util.Vector;
 
 
 /**
- * Container for the stack that keeps for an individual node the scope 
- * information. 
+ * Container for the stack that keeps for an individual node the scope
+ * information.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class ScopeObjectStack {
 
-    /** Stack of ScopeContext, which is shared among nodes along the 
+    /** Stack of ScopeContext, which is shared among nodes along the
      * workflow. */
     private final Vector<ScopeObject> m_stack;
     /** Owner of ScopeContext object, which are put onto m_stack via this
      * StackWrapper. */
     private final NodeID m_nodeID;
-    
+
     /**
-     * Creates new stack based. If the argument stack is empty, null or 
+     * Creates new stack based. If the argument stack is empty, null or
      * contains only null elements, an empty stack is created. If there is
      * more than one argument stack available, the stacks will be merged.
      * @param id The Node's ID, must not be null.
-     * @param predStacks The stacks from the predecessor nodes, may be null or 
+     * @param predStacks The stacks from the predecessor nodes, may be null or
      * empty.
      * @throws NullPointerException If <code>id</code> is <code>null</code>.
      * @throws IllegalContextStackObjectException If the stacks can't be merged.
      */
     @SuppressWarnings("unchecked")
-    ScopeObjectStack(final NodeID id, 
+    ScopeObjectStack(final NodeID id,
             final ScopeObjectStack... predStacks) {
         if (id == null) {
             throw new NullPointerException("NodeID argument must not be null.");
@@ -62,7 +62,7 @@ public final class ScopeObjectStack {
         if (predStacks == null || predStacks.length == 0) {
             m_stack = new Vector<ScopeObject>();
         } else {
-            List<Vector<ScopeObject>> predecessors = 
+            List<Vector<ScopeObject>> predecessors =
                 new ArrayList<Vector<ScopeObject>>();
             for (int i = 0; i < predStacks.length; i++) {
                 if (predStacks[i] != null) {
@@ -82,8 +82,8 @@ public final class ScopeObjectStack {
         }
         m_nodeID = id;
     }
-    
-    private static Vector<ScopeObject> merge(Vector<ScopeObject>[] sos) {
+
+    private static Vector<ScopeObject> merge(final Vector<ScopeObject>[] sos) {
         Vector<ScopeObject> result = new Vector<ScopeObject>();
         @SuppressWarnings("unchecked") // no generics in array definition
         Iterator<ScopeObject>[] its = new Iterator[sos.length];
@@ -105,15 +105,15 @@ public final class ScopeObjectStack {
                         // nested loops are not possible
                         if (commonScopeO != null && commonScopeO != o) {
                             throw new IllegalContextStackObjectException(
-                                    "Stack can't be merged: Conflicting " 
-                                    + "ScopeContext objects:" + o + " vs. " 
+                                    "Stack can't be merged: Conflicting "
+                                    + "ScopeContext objects:" + o + " vs. "
                                     + commonScopeO);
                         }
-                        commonScopeO = (ScopeObject)o;
+                        commonScopeO = o;
                         nexts[i] = o;
                         hasMoreElements = true;
                         break;
-                    } 
+                    }
                     result.add(o);
                 }
             }
@@ -126,7 +126,7 @@ public final class ScopeObjectStack {
         }
         return result;
     }
-    
+
     /**
      * @return The top-most element on the stack that complies with the given
      * class argument or <code>null</code> if no such element is found.
@@ -143,28 +143,28 @@ public final class ScopeObjectStack {
         }
         return null;
     }
-    
+
     public ScopeVariable peekVariable(final String name) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
             ScopeObject e = m_stack.get(i);
-            if (e instanceof ScopeVariable 
+            if (e instanceof ScopeVariable
                     && ((ScopeVariable)e).getName().equals(name)) {
                 return (ScopeVariable)e;
             }
         }
         return null;
     }
-    
+
 
     /**
      * Removes all elements from the stack whose class is not of the given type.
-     * It also removes the top-most element complying with the given class. 
+     * It also removes the top-most element complying with the given class.
      * If no such element exists, the stack will be empty after this method is
      * called.
      * @param <T> The desired scope context type.
      * @param type The class of that type.
      * @return The first (top-most) element on the stack of class
-     * <code>type</code> or <code>null</code> if no such element is available. 
+     * <code>type</code> or <code>null</code> if no such element is available.
      * @see java.util.Stack#pop()
      */
     public <T extends ScopeContext> T pop(final Class<T> type) {
@@ -184,30 +184,31 @@ public final class ScopeObjectStack {
      * @see java.util.Stack#push(java.lang.Object)
      */
     public void push(final ScopeObject item) {
-        if (item.getOriginatingNode() != null) {
+        if ((item.getOriginatingNode() != null)
+                && (item.getOriginatingNode() != m_nodeID)) {
             throw new IllegalArgumentException(
                     "Can't put a ScopeContext item onto stack, which already "
-                    + "has an owner.");  
+                    + "has a different owner.");
         }
         item.setOriginatingNode(m_nodeID);
         m_stack.add(item);
     }
-    
+
     /**
      * @return true if stack is empty
      */
     boolean isEmpty() {
         return m_stack.isEmpty();
     }
-    
+
     /** holds matching ScopeContext after execute if loop needs to be
-     * execute again. */ 
+     * execute again. */
     private ScopeContext m_requestToContinueLoop;
-    
+
     public void clearLoopStatus() {
         m_requestToContinueLoop = null;
     }
-    
+
     public ScopeContext getLoopStatus() {
         return m_requestToContinueLoop;
     }
@@ -220,7 +221,7 @@ public final class ScopeObjectStack {
     public String toString() {
         return toDeepString();
     }
-    
+
     public String toDeepString() {
         StringBuilder b = new StringBuilder();
         b.append("---");
