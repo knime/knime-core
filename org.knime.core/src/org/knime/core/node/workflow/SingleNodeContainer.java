@@ -438,7 +438,7 @@ public final class SingleNodeContainer extends NodeContainer
             }
         }
         // the following triggers check-for-queueable-nodes, among others
-        getParent().doAfterExecution(SingleNodeContainer.this);
+        getParent().doAfterExecution(SingleNodeContainer.this, success);
     }
 
 

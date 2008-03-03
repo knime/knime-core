@@ -1063,17 +1063,17 @@ public final class WorkflowManager extends NodeContainer {
     /** cleanup a node after execution.
      *
      * @param nc NodeContainer which just finished execution
+     * @param success indicates if node execution was finished successfully
+     *    (note that this does not imply State=EXECUTED e.g. for loop ends)
      */
-    void doAfterExecution(final NodeContainer nc) {
+    void doAfterExecution(final NodeContainer nc, final boolean success) {
         assert !nc.getID().equals(this.getID());
         synchronized (m_dirtyWorkflow) {
-            boolean success = nc.getState().equals(State.EXECUTED);
             String st = success ? " - success" : " - failure";
             LOGGER.info(nc.getNameWithID() + " doAfterExecute" + st);
             if (!success) {
                 // execution failed - clean up successors' execution-marks
                 disableNodeForExecution(nc.getID());
-                return;
             }
             boolean canConfigureSuccessors = true;
             if (nc instanceof SingleNodeContainer) {
