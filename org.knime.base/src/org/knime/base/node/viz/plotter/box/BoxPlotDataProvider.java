@@ -25,6 +25,7 @@
 package org.knime.base.node.viz.plotter.box;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.core.data.DataColumnSpec;
@@ -49,13 +50,13 @@ public interface BoxPlotDataProvider extends DataProvider {
      * < q3 + 3 * iqr and > q3 + 1.5 * iqr.
      * @return a list of mild outliers for each column.
      */
-    public Map<String, Map<Double, RowKey>> getMildOutliers();
+    public Map<String, Map<Double, Set<RowKey>>> getMildOutliers();
     
     /**
      * Extreme outliers are values < q1 - 3 * iqr and > q3 + 3 * iqr.
      * @return a list of extreme outliers for each column.
      */
-    public Map<String, Map<Double, RowKey>> getExtremeOutliers();
+    public Map<String, Map<Double, Set<RowKey>>> getExtremeOutliers();
     
 
 }
