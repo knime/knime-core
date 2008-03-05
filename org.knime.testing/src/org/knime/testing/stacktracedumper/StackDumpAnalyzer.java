@@ -532,7 +532,6 @@ public class StackDumpAnalyzer {
         SortedSet<StackElementCount> sorted =
                 new TreeSet<StackElementCount>(
                         new Comparator<StackElementCount>() {
-                            @Override
                             public int compare(final StackElementCount o1,
                                     final StackElementCount o2) {
                                 if (o1.getCount() == o2.getCount()) {
