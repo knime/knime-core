@@ -32,16 +32,20 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.NumberFormat;
 import java.util.Map;
+import java.util.TimerTask;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.DataContainer.BufferCreator;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.KNIMETimer;
 
 /**
  * Opens (on demand) a zip file from the workspace location and copies the 
@@ -54,6 +58,13 @@ import org.knime.core.util.FileUtil;
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class CopyOnAccessTask {
+    
+    private static final NodeLogger LOGGER = 
+        NodeLogger.getLogger(CopyOnAccessTask.class);
+    
+    /** Delay im ms until copying process is reported to LOGGER, small
+     * files won't report their copying (if faster than this threshold). */
+    private static final long NOTIFICATION_DELAY = 3000;
 
     /** To read from. */
     private final File m_file;
@@ -91,6 +102,20 @@ final class CopyOnAccessTask {
      * @throws IOException If the file can't be accessed. 
      */
     final Buffer createBuffer() throws IOException {
+        // timer task which prints a INFO message that the copying 
+        // is in progress.
+        final TimerTask timerTask = new TimerTask() {
+            /** {@inheritDoc} */
+            @Override
+            public void run() {
+                double sizeInMB = m_file.length() / (double)(1 << 20);
+                String size = NumberFormat.getInstance().format(sizeInMB);
+                LOGGER.info(
+                        "Extracting data file \"" + m_file.getAbsolutePath()
+                        + "\" to temp dir (" + size + "MB)");
+            }
+        };
+        KNIMETimer.getInstance().schedule(timerTask, NOTIFICATION_DELAY);
         ZipInputStream inStream = new ZipInputStream(
                 new BufferedInputStream(new FileInputStream(m_file)));
         ZipEntry entry;
@@ -164,6 +189,7 @@ final class CopyOnAccessTask {
                 binFile, blobDir, spec, metaIn, m_bufferID, m_tableRep);
         metaIn.close();
         metaTempFile.delete();
+        timerTask.cancel();
         return buffer;
     }
     
