@@ -34,8 +34,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.def.DefaultRow;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
@@ -82,17 +80,15 @@ class FileRowIterator extends RowIterator {
     // if that is true we don't return any more rows.
     private boolean m_exceptionThrown;
 
-    // if true we need to replace the char in the double tokens with a '.'
-    private boolean m_customDecimalSeparator;
-
-    private char m_decSeparator;
-
     // the maximum number of rows this iterator will produce
     private final long m_maxNumOfRows;
 
     private boolean m_fileWasNotCompletelyRead;
 
     private final boolean[] m_skipColumns;
+
+    // factory used to create the cells from the string data read in
+    private final DataCellFactory m_cellFactory;
 
     /* the execution context the progress is reported to */
     private ExecutionContext m_exec;
@@ -147,8 +143,10 @@ class FileRowIterator extends RowIterator {
         // set the tokenizer related settings in the tokenizer
         m_tokenizer.setSettings(frSettings);
 
-        m_decSeparator = frSettings.getDecimalSeparator();
-        m_customDecimalSeparator = m_decSeparator != '.';
+        // cell factory used to create the cells of each row
+        m_cellFactory = new DataCellFactory();
+        m_cellFactory.setDecimalSeparator(frSettings.getDecimalSeparator());
+        m_cellFactory.setThousandsSeparator(frSettings.getThousandsSeparator());
 
         m_rowNumber = 1;
         if (m_frSettings.getMaximumNumberOfRowsToRead() < 0) {
@@ -452,96 +450,34 @@ class FileRowIterator extends RowIterator {
         if (createMissingCell) {
             return DataType.getMissingCell();
         }
-        if (type.equals(StringCell.TYPE)) {
-            return new StringCell(data);
-        } else if (type.equals(IntCell.TYPE)) {
-            // for numbers, trim data and accept empty tokens as missing cells
-            String trimmed = data.trim();
-            if (trimmed.isEmpty()) {
-                return DataType.getMissingCell();
-            }
-            try {
-                int val = Integer.parseInt(trimmed);
-                return new IntCell(val);
-            } catch (NumberFormatException nfe) {
-                int col = 0;
-                while (col < row.length && row[col] != null) {
-                    col++;
-                }
-                throw prepareForException("Wrong data format. In line "
-                        + m_tokenizer.getLineNumber() + " (" + rowHeader
-                        + ") read '" + data + "' for an integer (in column #"
-                        + col + " '" + m_tableSpec.getColumnSpec(col).getName()
-                        + "').", m_tokenizer.getLineNumber(), rowHeader, row);
-            }
-        } else if (type.equals(DoubleCell.TYPE)) {
-            // for numbers, trim data and accept empty tokens as missing cells
-            String trimmed = data.trim();
-            if (trimmed.isEmpty()) {
-                return DataType.getMissingCell();
-            }
-            String dblData = trimmed;
-            if (m_customDecimalSeparator) {
-                // we must reject tokens with a '.'.
-                if (trimmed.indexOf('.') >= 0) {
-                    int col = 0;
-                    while (col < row.length && row[col] != null) {
-                        col++;
-                    }
-                    throw prepareForException("Wrong data format. In line "
-                            + m_tokenizer.getLineNumber() + " (" + rowHeader
-                            + ") read '" + data
-                            + "' for a floating point (in column #" + col
-                            + " '" + m_tableSpec.getColumnSpec(col).getName()
-                            + "').", m_tokenizer.getLineNumber(), rowHeader,
-                            row);
-                }
-                dblData = trimmed.replace(m_decSeparator, '.');
-            }
-            try {
-                double val = Double.parseDouble(dblData);
-                return new DoubleCell(val);
-            } catch (NumberFormatException nfe) {
-                int col = 0;
-                while (col < row.length && row[col] != null) {
-                    col++;
-                }
-                throw prepareForException("Wrong data format. In line "
-                        + m_tokenizer.getLineNumber() + " (" + rowHeader
-                        + ") read '" + data
-                        + "' for a floating point (in column #" + col + " '"
-                        + m_tableSpec.getColumnSpec(col).getName() + "').",
-                        m_tokenizer.getLineNumber(), rowHeader, row);
-            }
-        } else if (type.equals(SmilesTypeHelper.INSTANCE.getSmilesType())) {
-            try {
 
-                return SmilesTypeHelper.INSTANCE.newInstance(data);
+        DataCell result = m_cellFactory.createDataCellOfType(type, data);
 
-            } catch (Throwable t) {
-                int col = 0;
-                while (col < row.length && row[col] != null) {
-                    col++;
-                }
-                String msg = "Error during SMILES cell creation: ";
-                if (t.getMessage() != null) {
-                    msg += t.getMessage();
-                } else {
-                    msg += "<no details available>";
-                }
-                msg +=
-                        " (line: " + m_tokenizer.getLineNumber() + "("
-                                + rowHeader + "), column #" + col + " '"
-                                + m_tableSpec.getColumnSpec(col).getName()
-                                + "').";
-                throw prepareForException(msg, m_tokenizer.getLineNumber(),
-                        rowHeader, row);
-            }
-        } else {
-            throw prepareForException("Cannot create DataCell of type "
-                    + type.toString() + ". Looks like an internal error.",
-                    m_tokenizer.getLineNumber(), rowHeader, row);
+        if (result != null) {
+
+            return result;
+
         }
+
+        // something went wrong during cell creation.
+
+        // figure out which column we were trying to read
+        int errCol = 0;
+        while (errCol < row.length && row[errCol] != null) {
+            errCol++;
+        }
+        // create an error message
+        String errorMsg = m_cellFactory.getErrorMessage();
+        errorMsg +=
+                " In line " + m_tokenizer.getLineNumber() + " (" + rowHeader
+                        + ") at column #" + errCol + " ('"
+                        + m_tableSpec.getColumnSpec(errCol).getName() + "').";
+
+        // create a data row showing where things went
+        // wrong, and close the stream
+        throw prepareForException(errorMsg, m_tokenizer.getLineNumber(),
+                rowHeader, row);
+
     } // createNewDataCellOfType(Class,String,boolean)
 
     /*
@@ -717,5 +653,6 @@ class FileRowIterator extends RowIterator {
     public String getZipEntryName() {
         return m_source.getZipEntryName();
     }
+
 
 }

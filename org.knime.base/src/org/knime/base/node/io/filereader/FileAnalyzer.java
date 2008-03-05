@@ -36,6 +36,7 @@ import org.knime.base.node.io.filetokenizer.Comment;
 import org.knime.base.node.io.filetokenizer.Delimiter;
 import org.knime.base.node.io.filetokenizer.FileTokenizer;
 import org.knime.base.node.io.filetokenizer.Quote;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataType;
@@ -128,6 +129,7 @@ public final class FileAnalyzer {
                     .getDataFileLocation());
             result.setTableName(userSettings.getTableName());
             result.setDecimalSeparator(userSettings.getDecimalSeparator());
+            result.setThousandsSeparator(userSettings.getThousandsSeparator());
             result.setUniquifyRowIDs(userSettings.uniquifyRowIDs());
             result.setMaximumNumberOfRowsToRead(userSettings
                     .getMaximumNumberOfRowsToRead());
@@ -789,10 +791,15 @@ public final class FileAnalyzer {
         int linesRead = 0;
         int colIdx = -1;
 
+        DataCellFactory cellFactory = new DataCellFactory();
+        cellFactory.setDecimalSeparator(result.getDecimalSeparator());
+        cellFactory.setThousandsSeparator(result.getThousandsSeparator());
+
         String missValuePattern = userSettings.getGlobalMissingValuePattern();
         if (missValuePattern == null) {
             missValuePattern = "?";
         }
+
         while (true) {
 
             if (cutItShort(exec)) {
@@ -835,53 +842,34 @@ public final class FileAnalyzer {
 
                 // for numbers we trim tokens and allow empty for missValue
                 token = token.trim();
-                if (token.isEmpty() || token.equals(missValuePattern)) {
-                    continue;
-                }
                 if (userTypes[colIdx] == null) {
                     // no user preset type - figure out the right type
                     if (types[colIdx] == null) {
                         // we come across this columns for the first time:
-                        // start with INT type
+                        // start with INT type, the most restrictive type
                         types[colIdx] = IntCell.TYPE;
                     }
+
                     if (types[colIdx].isCompatible(IntValue.class)) {
-                        // first try integer as "most restrictive" type
-                        try {
-                            Integer.parseInt(token);
+                        DataCell dc =
+                                cellFactory.createDataCellOfType(IntCell.TYPE,
+                                        token);
+                        if (dc != null) {
                             continue;
-                        } catch (NumberFormatException nfe) {
-                            // it's not an integer - could be a double
-                            types[colIdx] = DoubleCell.TYPE;
                         }
-                    } // no else, we immediately want to check if it's a
-                    // double
+                        // it's not an integer - could be a double
+                        types[colIdx] = DoubleCell.TYPE;
+                    } // no else, we immediately check if it's a double
+
                     if (types[colIdx].isCompatible(DoubleValue.class)) {
-                        try {
-                            String dblData = token;
-                            if (result.getDecimalSeparator() != '.') {
-                                // we must reject tokens with a '.'.
-                                if (token.indexOf('.') >= 0) {
-                                    throw new NumberFormatException();
-                                }
-                                dblData =
-                                        token.replace(result
-                                                .getDecimalSeparator(), '.');
-                            }
-                            /*
-                             * weird thing: parseDouble accepts strings with
-                             * leading spaces. We don't.
-                             */
-                            if (dblData.indexOf(' ') >= 0) {
-                                throw new NumberFormatException();
-                            }
-                            Double.parseDouble(dblData);
+                        DataCell dc =
+                            cellFactory.createDataCellOfType(DoubleCell.TYPE,
+                                    token);
+                        if (dc != null) {
                             continue;
-                        } catch (NumberFormatException nfe) {
-                            // it's not a double, lets accept everything:
-                            // StringCell
-                            types[colIdx] = StringCell.TYPE;
                         }
+                        // not a double, lets accept everything: StringCell
+                        types[colIdx] = StringCell.TYPE;
                     }
                 }
 
@@ -891,6 +879,7 @@ public final class FileAnalyzer {
                 // file. But if not - what would we do...
                 if (colIdx > 0) {
                     linesRead++; // only count not empty lines
+                    exec.setProgress("Verifying column types");
                 }
                 colIdx = -1;
                 if (linesRead == NUMOFLINES) {

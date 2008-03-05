@@ -70,6 +70,12 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private char m_decimalSeparator;
 
     /*
+     * in tokens read for a double column, this char (if different to \0)
+     * gets removed
+     */
+    private char m_thousandsSeparator;
+
+    /*
      * if set, the reader will eat all surplus empty tokens at the end of a row.
      */
     private boolean m_ignoreEmptyTokensAtEOR;
@@ -141,6 +147,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
     private static final String CFGKEY_DECIMALSEP = "DecimalSeparator";
 
+    private static final String CFGKEY_THOUSANDSEP = "ThrousandsSeparator";
+
     private static final String CFGKEY_HASCOL = "hasColHdr";
 
     private static final String CFGKEY_HASROW = "hasRowHdr";
@@ -191,7 +199,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
     /**
      * Creates a new object holding the same settings values as the one passed
      * in.
-     * 
+     *
      * @param clonee the object to read the settings values from
      */
     public FileReaderSettings(final FileReaderSettings clonee) {
@@ -200,6 +208,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
         m_tableName = clonee.m_tableName;
 
         m_decimalSeparator = clonee.m_decimalSeparator;
+        m_thousandsSeparator = clonee.m_thousandsSeparator;
 
         m_fileHasColumnHeaders = clonee.m_fileHasColumnHeaders;
         m_fileHasRowHeaders = clonee.m_fileHasRowHeaders;
@@ -219,13 +228,14 @@ public class FileReaderSettings extends FileTokenizerSettings {
         m_charsetName = clonee.m_charsetName;
 
     }
-    
+
     // initializes private members. Needs to be called from two constructors.
     private void init() {
         m_dataFileLocation = null;
         m_tableName = null;
 
         m_decimalSeparator = '.';
+        m_thousandsSeparator = '\0';
 
         m_fileHasColumnHeaders = false;
         m_fileHasRowHeaders = false;
@@ -343,9 +353,14 @@ public class FileReaderSettings extends FileTokenizerSettings {
                                 + CFGKEY_ROWDELIMS + "'!");
 
             }
-            // get the decimal separator.
+            // get the decimal and thousands separator.
             // It's optional for backward compatibility and defaults to '.'
             m_decimalSeparator = cfg.getChar(CFGKEY_DECIMALSEP, '.');
+            m_thousandsSeparator = cfg.getChar(CFGKEY_THOUSANDSEP, '\0');
+            if (m_decimalSeparator == m_thousandsSeparator) {
+                throw new InvalidSettingsException("Decimal separator and "
+                        + "thousands separator can't be the same character");
+            }
 
             // ignore empty tokens at end of row?
             // It'S optional and default to false, for backward compatibility.
@@ -405,6 +420,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
         saveMissingPatternsToConfig(cfg.addNodeSettings(CFGKEY_MISSINGS));
         cfg.addString(CFGKEY_GLOBALMISSPATTERN, m_globalMissPattern);
         cfg.addChar(CFGKEY_DECIMALSEP, m_decimalSeparator);
+        cfg.addChar(CFGKEY_THOUSANDSEP, m_thousandsSeparator);
         cfg.addBoolean(CFGKEY_IGNOREATEOR, m_ignoreEmptyTokensAtEOR);
         cfg.addBoolean(CFGKEY_SHORTLINES, m_supportShortLines);
         cfg.addBoolean(CFGKEY_UNIQUIFYID, m_uniquifyRowIDs);
@@ -916,10 +932,40 @@ public class FileReaderSettings extends FileTokenizerSettings {
      * Sets the character that will be considered decimal separator in the data
      * (token) read for double type columns.
      *
-     * @param sep the new decimal character to set for doubles
+     * @param sep the new decimal character to set for doubles. Can't be the
+     *            same character as the thousands separator.
      */
     public void setDecimalSeparator(final char sep) {
+        if (sep == m_thousandsSeparator) {
+            throw new IllegalArgumentException("Can't set the decimal "
+                    + "separator to the same character as the thousands "
+                    + "separator.");
+
+        }
         m_decimalSeparator = sep;
+    }
+
+    /**
+     * @return the thousandsSeparator. If it is '\0' then it is not set.
+     */
+    public char getThousandsSeparator() {
+        return m_thousandsSeparator;
+    }
+
+    /**
+     * @param thousandsSeparator the thousandsSeparator to set. If set to '\0'
+     *            it will not be applied. Can't be the same as the decimal
+     *            separator.
+     */
+    public void setThousandsSeparator(final char thousandsSeparator) {
+        if ((thousandsSeparator != '\0')
+            && (thousandsSeparator == m_decimalSeparator)) {
+            throw new IllegalArgumentException("Can't set the thousands "
+                    + "separator to the same character as the decimal "
+                    + "separator.");
+
+        }
+        m_thousandsSeparator = thousandsSeparator;
     }
 
     /**
@@ -1082,7 +1128,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 } catch (Exception ioe) {
                     status.addError("I/O Error while connecting to '"
                             + m_dataFileLocation.toString() + "'.");
-                } 
+                }
                 if (reader != null) {
                     try {
                         reader.close();
@@ -1191,6 +1237,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
         if (m_decimalSeparator != '.') {
             res.append("Decimal separator char for doubles: '");
             res.append(m_decimalSeparator);
+            res.append("'\n");
+        }
+        if (m_thousandsSeparator != '\0') {
+            res.append("Thousands separator char for doubles: '");
+            res.append(m_thousandsSeparator);
             res.append("'\n");
         }
         res.append("Ignore empty tokens at the end of row: "
