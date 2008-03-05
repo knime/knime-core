@@ -78,7 +78,6 @@ public interface NodePersistor {
     
     boolean needsResetAfterLoad();
     
-    File getNodeDirectory();
     boolean isConfigured();
     boolean isExecuted();
     boolean hasContent();

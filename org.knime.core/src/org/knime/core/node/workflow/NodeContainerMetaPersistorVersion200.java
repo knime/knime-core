@@ -24,6 +24,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.knime.core.node.CanceledExecutionException;
@@ -41,6 +42,12 @@ class NodeContainerMetaPersistorVersion200 extends
         NodeContainerMetaPersistorVersion1xx {
     
     private static final String CFG_STATE = "state";
+    
+    /** @param baseDir The node container directory (only important while load)
+     */
+    NodeContainerMetaPersistorVersion200(final File baseDir) {
+        super(baseDir);
+    }
 
     /** {@inheritDoc} */
     @Override

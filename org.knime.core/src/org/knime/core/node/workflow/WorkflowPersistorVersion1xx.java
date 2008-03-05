@@ -68,8 +68,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     private final HashSet<ConnectionContainerTemplate> m_connectionSet;
     
-    private NodeContainerMetaPersistor m_metaPersistor = 
-        new NodeContainerMetaPersistorVersion1xx();    
+    private NodeContainerMetaPersistor m_metaPersistor;
+    
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
     
     private WorkflowInPort[] m_inPorts;
@@ -395,12 +395,13 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             final ExecutionMonitor exec, final NodeSettingsRO parentSettings) 
     throws InvalidSettingsException, CanceledExecutionException, IOException {
         LoadResult loadResult = new LoadResult();
-        m_metaPersistor = createNodeContainerMetaPersistor();
         if (nodeFile == null || !nodeFile.isFile()) {
             String error = "Can't read workflow file \"" 
                 + nodeFile.getAbsolutePath() + "\"";
             throw new IOException(error);
         }
+        m_metaPersistor = createNodeContainerMetaPersistor(
+                nodeFile.getParentFile());
         InputStream in = new BufferedInputStream(new FileInputStream(nodeFile));
         NodeSettingsRO subWFSettings = NodeSettings.loadFromXML(in);
         LoadResult metaLoadResult = m_metaPersistor.load(subWFSettings);
@@ -955,8 +956,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
 
     protected NodeContainerMetaPersistorVersion1xx
-            createNodeContainerMetaPersistor() {
-        return new NodeContainerMetaPersistorVersion1xx();
+            createNodeContainerMetaPersistor(final File baseDir) {
+        return new NodeContainerMetaPersistorVersion1xx(baseDir);
     }
 
     protected SingleNodeContainerPersistorVersion1xx 

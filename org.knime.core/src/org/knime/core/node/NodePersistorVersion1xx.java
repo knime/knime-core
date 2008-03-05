@@ -436,7 +436,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return m_memoryPolicy;
     }
 
-    /** {@inheritDoc} */
     public File getNodeDirectory() {
         return m_nodeDirectory;
     }

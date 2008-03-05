@@ -139,7 +139,8 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
             throw new InvalidSettingsException(error, e);
         }
         m_node = new Node(nodeFactory);
-        m_metaPersistor = createNodeContainerMetaPersistor();
+        m_metaPersistor = createNodeContainerMetaPersistor(
+                nodeSettingsFile.getParentFile());
         LoadResult metaResult = m_metaPersistor.load(settings);
         result.addError(metaResult);
         m_nodeSettings = settings;
@@ -183,8 +184,8 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     }
     
     protected NodeContainerMetaPersistorVersion1xx 
-        createNodeContainerMetaPersistor() {
-        return new NodeContainerMetaPersistorVersion1xx();
+        createNodeContainerMetaPersistor(final File baseDir) {
+        return new NodeContainerMetaPersistorVersion1xx(baseDir);
     }
     
     protected void loadNodeStateIntoMetaPersistor(

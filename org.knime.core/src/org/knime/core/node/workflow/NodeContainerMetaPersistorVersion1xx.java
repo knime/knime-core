@@ -24,6 +24,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.knime.core.node.CanceledExecutionException;
@@ -51,6 +52,14 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     private UIInformation m_uiInfo;
 
     private State m_state = State.IDLE;
+    
+    private final File m_nodeContainerDirectory;
+    
+    /** @param baseDir The node container directory (only important while load)
+     */
+    NodeContainerMetaPersistorVersion1xx(final File baseDir) {
+        m_nodeContainerDirectory = baseDir;
+    }
 
     /** {@inheritDoc} */
     public String getCustomDescription() {
@@ -81,7 +90,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     public void setNodeIDSuffix(int nodeIDSuffix) {
         m_nodeIDSuffix = nodeIDSuffix;
     }
-
+    
     /** {@inheritDoc} */
     public State getState() {
         return m_state;
@@ -96,6 +105,11 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     void setState(final State state) {
         assert state != null : "State must not be null";
         m_state = state;
+    }
+    
+    /** {@inheritDoc} */
+    public File getNodeContainerDirectory() {
+        return m_nodeContainerDirectory;
     }
 
    /** {@inheritDoc} */

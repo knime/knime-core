@@ -63,9 +63,11 @@ import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
 import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.util.FileUtil;
 
 /**
  * Container holding nodes and connections of a (sub) workflow. In contrast
@@ -117,6 +119,9 @@ public final class WorkflowManager extends NodeContainer {
     
     /** for internal usage, holding output table references. */
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
+    
+    private final List<File> m_deletedNodesFileLocations
+        = new ArrayList<File>();
 
     /** Listeners interested in status changes. */
     private final CopyOnWriteArrayList<WorkflowListener> m_wfmListeners;
@@ -296,22 +301,25 @@ public final class WorkflowManager extends NodeContainer {
                 throw new IllegalStateException("Node can not be removed");
             }
             // remove lists of in- and outgoing connections.
-            while (m_connectionsByDest.get(nodeID).size() > 0) {
+            while (!m_connectionsByDest.get(nodeID).isEmpty()) {
                 ConnectionContainer toDel =
                     m_connectionsByDest.get(nodeID).iterator().next();
                 removeConnection(toDel);
             }
-            assert m_connectionsByDest.get(nodeID).size() == 0;
             m_connectionsByDest.remove(nodeID);
-            while (m_connectionsBySource.get(nodeID).size() > 0) {
+            while (!m_connectionsBySource.get(nodeID).isEmpty()) {
                 ConnectionContainer toDel =
                     m_connectionsBySource.get(nodeID).iterator().next();
                 removeConnection(toDel);
             }
-            assert m_connectionsBySource.get(nodeID).size() == 0;
             m_connectionsBySource.remove(nodeID);
             // and finally remove node itself as well.
-            m_nodes.remove(nodeID);
+            NodeContainer nc = m_nodes.remove(nodeID);
+            nc.cleanup();
+            File ncDir = nc.getNodeContainerDirectory();
+            if (ncDir != null) {
+                m_deletedNodesFileLocations.add(ncDir);
+            }
         }
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED,
@@ -1122,7 +1130,7 @@ public final class WorkflowManager extends NodeContainer {
                             // and finally (7) mark end of loop for re-execution
                             nc.markForExecutionAsNodeContainer(true);
                         }
-                        // make sure we do not accidentially configure the
+                        // make sure we do not accidentally configure the
                         // remainder of this node since we are not yet done
                         // with the loop
                         canConfigureSuccessors = false;
@@ -1845,7 +1853,7 @@ public final class WorkflowManager extends NodeContainer {
                     break;
                 default:
                     throw new IllegalStateException("Wrong state in configure"
-                            + " (" + ncState + "" + nc.getNameWithID() + ")");
+                            + " (" + ncState + " " + nc.getNameWithID() + ")");
                 }
             }
         }
@@ -2064,6 +2072,7 @@ public final class WorkflowManager extends NodeContainer {
      * @param evt event
      */
     private final void notifyWorkflowListeners(final WorkflowEvent evt) {
+        setDirty();
         for (WorkflowListener listener : m_wfmListeners) {
             listener.workflowChanged(evt);
         }
@@ -2281,9 +2290,23 @@ public final class WorkflowManager extends NodeContainer {
             final boolean isSaveData)
         throws IOException, CanceledExecutionException {
         // TODO GUI must only provide directory
-        File workflowFile = directory.getParentFile();
-        new WorkflowPersistorVersion200(null).save(
-                this, workflowFile, exec, isSaveData);
+        synchronized (m_dirtyWorkflow) {
+            File workflowDir = directory.getParentFile();
+            // if it's the location associated with the workflow
+            if (workflowDir.equals(getNodeContainerDirectory())) {
+                for (File deletedNodeDir : m_deletedNodesFileLocations) {
+                    if (!FileUtil.deleteRecursively(deletedNodeDir)) {
+                        LOGGER.warn("Deletion of obsolete node directory \""
+                                + deletedNodeDir.getAbsolutePath() 
+                                + "\" failed");
+                    }
+                }
+            } else { // new location, must not clear deleted nodes dirs
+                FileUtil.deleteRecursively(workflowDir);
+            }
+            new WorkflowPersistorVersion200(null).save(
+                    this, workflowDir, exec, isSaveData);
+        }
     }
 
     //////////////////////////////////////
@@ -2323,7 +2346,10 @@ public final class WorkflowManager extends NodeContainer {
         if (name == null) {
             throw new NullPointerException("Name must not be null.");
         }
-        m_name = name;
+        if (!m_name.equals(name)) {
+            setDirty();
+            m_name = name;
+        }
     }
 
     /** {@inheritDoc} */
@@ -2379,6 +2405,16 @@ public final class WorkflowManager extends NodeContainer {
     public URL getIcon() {
         return null;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    void cleanup() {
+        synchronized (m_dirtyWorkflow) {
+            for (NodeContainer nc : m_nodes.values()) {
+                nc.cleanup();
+            }
+        }
+    }
 
     ///////////////////////////
     // Workflow port handling
@@ -2405,7 +2441,10 @@ public final class WorkflowManager extends NodeContainer {
      * @param inPortsBarUIInfo The new UI info.
      */
     public void setInPortsBarUIInfo(final UIInformation inPortsBarUIInfo) {
-        m_inPortsBarUIInfo = inPortsBarUIInfo;
+        if (ConvenienceMethods.areEqual(m_inPortsBarUIInfo, inPortsBarUIInfo)) {
+            m_inPortsBarUIInfo = inPortsBarUIInfo;
+            setDirty();
+        }
     }
     
     /** Set UI information for workflow's output ports 
@@ -2413,7 +2452,11 @@ public final class WorkflowManager extends NodeContainer {
      * @param outPortsBarUIInfo The new UI info.
      */
     public void setOutPortsBarUIInfo(final UIInformation outPortsBarUIInfo) {
-        m_outPortsBarUIInfo = outPortsBarUIInfo;
+        if (ConvenienceMethods.areEqual(
+                m_outPortsBarUIInfo, outPortsBarUIInfo)) {
+            m_outPortsBarUIInfo = outPortsBarUIInfo;
+            setDirty();
+        }
     }
     
     /** Get UI information for workflow input ports.

@@ -23,6 +23,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.File;
 import java.net.URL;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -41,6 +42,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * Abstract super class for containers holding node or just structural
@@ -90,6 +92,10 @@ public abstract class NodeContainer {
     private String m_customName;
 
     private String m_customDescription;
+    
+    private File m_nodeContainerDirectory;
+    
+    private boolean m_isDirty;
 
     /**
      * semaphore to make sure never try to work on inconsistent internal node
@@ -142,6 +148,8 @@ public abstract class NodeContainer {
         m_customDescription = persistor.getCustomDescription();
         m_customName = persistor.getCustomName();
         m_uiInformation = persistor.getUIInfo();
+        m_nodeContainerDirectory = persistor.getNodeContainerDirectory();
+        assert m_nodeContainerDirectory != null : "NC dir must not be null.";
     }
 
     /**
@@ -294,11 +302,14 @@ public abstract class NodeContainer {
 
    /**
     *
-    * @param nodeUIInfo new user interface information of the node such as
+    * @param uiInformation new user interface information of the node such as
     *   coordinates on workbench and custom name.
     */
-   public void setUIInformation(final UIInformation nodeUIInfo) {
-       m_uiInformation = nodeUIInfo;
+   public void setUIInformation(final UIInformation uiInformation) {
+       // ui info is a property of the outer workflow (it just happened 
+       // to be a field member of this class)
+       // there is no reason on settings the dirty flag when changed.
+       m_uiInformation = uiInformation;
        notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
                m_customName, m_customDescription));
    }
@@ -356,15 +367,18 @@ public abstract class NodeContainer {
      * @param state the new state
      */
     protected void setState(final State state) {
+        if (state == null) {
+            throw new NullPointerException("State must not be null.");
+        }
         boolean changesMade = false;
         synchronized (m_dirtyNode) {
-            if (m_state != state) {
+            if (!m_state.equals(state)) {
                 m_state = state;
                 changesMade = true;
             }
         }
         if (changesMade) {
-            // notify state listeners
+            setDirty();
             notifyStateChangeListeners(new NodeStateEvent(getID(), m_state));
         }
         LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
@@ -542,9 +556,12 @@ public abstract class NodeContainer {
     }
 
     public void setCustomName(final String customName) {
-        m_customName = customName;
-        notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
-                m_customName, m_customDescription));
+        if (!ConvenienceMethods.areEqual(customName, m_customName)) {
+            m_customName = customName;
+            setDirty();
+            notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
+                    m_customName, m_customDescription));
+        }
     }
 
     public String getCustomDescription() {
@@ -552,14 +569,63 @@ public abstract class NodeContainer {
     }
 
     public void setCustomDescription(final String customDescription) {
-        m_customDescription = customDescription;
-        notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
-                m_customName, m_customDescription));
+        if (!ConvenienceMethods.areEqual(
+                customDescription, m_customDescription)) {
+            m_customDescription = customDescription;
+            setDirty();
+            notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
+                    m_customName, m_customDescription));
+        }
+    }
+    
+    /** Method that's called when the node is discarded. The single node 
+     * container overwrites this method and cleans the outport data of the
+     * node (deletes temp files).
+     */ 
+    void cleanup() {
+    }
+    
+    /**
+     * @return the isDirty
+     */
+    protected final boolean isDirty() {
+        return m_isDirty;
+    } 
+    
+    /**
+     * Mark this node container to be changed, that is, it needs to be saved.
+     */
+    protected final void setDirty() {
+        if (!m_isDirty) {
+            LOGGER.info("Setting dirty flag on " + getNameWithID());
+        }
+        m_isDirty = true;
+    }
+    
+    /** Called from persistor when node has been saved. */
+    final void unsetDirty() {
+        m_isDirty = false;
+    }
+    
+    /**
+     * @param directory the nodeContainerDirectory to set
+     */
+    protected final void setNodeContainerDirectory(final File directory) {
+        if (directory == null || !directory.isDirectory()) {
+            throw new IllegalArgumentException("Not a directory: " + directory);
+        }
+        m_nodeContainerDirectory = directory;
+    }
+    
+    /**
+     * @return the nodeContainerDirectory
+     */
+    protected final File getNodeContainerDirectory() {
+        return m_nodeContainerDirectory;
     }
     
     abstract void loadContent(
             final NodeContainerPersistor persistor, final int loadID);
-
-
+    
 
 }

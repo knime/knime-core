@@ -24,7 +24,12 @@
 package org.knime.core.node.workflow;
 
 import java.net.URL;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.GenericNodeDialogPane;
@@ -148,6 +153,13 @@ public final class SingleNodeContainer extends NodeContainer
     @Override
     public int getNrViews() {
         return m_node.getNrViews();
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    void cleanup() {
+        super.cleanup();
+        m_node.cleanup();
     }
 
     /**
@@ -425,7 +437,10 @@ public final class SingleNodeContainer extends NodeContainer
                     for (int i = 0; i < m_node.getNrOutPorts(); i++) {
                         m_node.getOutPort(i).showPortObject(true);
                     }
+                    // output tables are made publicly available (for blobs)
+                    putOutputTablesIntoGlobalRepository(ec);
                     setState(State.EXECUTED);
+
                 } else {
                     // loop not yet done - "stay" configured until done.
                     setState(State.CONFIGURED);
@@ -440,7 +455,34 @@ public final class SingleNodeContainer extends NodeContainer
         // the following triggers check-for-queueable-nodes, among others
         getParent().doAfterExecution(SingleNodeContainer.this, success);
     }
+    
 
+    /**
+     * Enumerates the output tables and puts them into the workflow global
+     * repository of tables. All other (temporary) tables that were created in
+     * the given execution context, will be put in a set of temporary tables in
+     * the node.
+     * 
+     * @param c The execution context containing the (so far) local tables.
+     */
+    private void putOutputTablesIntoGlobalRepository(final ExecutionContext c) {
+        HashMap<Integer, ContainerTable> globalRep = 
+            getParent().getGlobalTableRepository();
+        m_node.putOutputTablesIntoGlobalRepository(globalRep);
+        HashMap<Integer, ContainerTable> localRep =
+                Node.getLocalTableRepositoryFromContext(c);
+        Set<ContainerTable> localTables = new HashSet<ContainerTable>();
+        for (Map.Entry<Integer, ContainerTable> t : localRep.entrySet()) {
+            ContainerTable fromGlob = globalRep.get(t.getKey());
+            if (fromGlob == null) {
+                // not used globally
+                localTables.add(t.getValue());
+            } else {
+                assert fromGlob == t.getValue();
+            }
+        }
+        m_node.addToTemporaryTables(localTables);
+    }
 
     // //////////////////////////////////////
     // Save & Load Settings and Content
@@ -467,7 +509,12 @@ public final class SingleNodeContainer extends NodeContainer
         }
         SingleNodeContainerPersistor persistor = 
             (SingleNodeContainerPersistor)nodePersistor;
-        setState(persistor.getMetaPersistor().getState());
+        State state = persistor.getMetaPersistor().getState();
+        setState(state);
+        if (state.equals(State.EXECUTED)) {
+            m_node.putOutputTablesIntoGlobalRepository(
+                    getParent().getGlobalTableRepository());
+        }
         setScopeObjectStack(new ScopeObjectStack(getID()));
     }
 

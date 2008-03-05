@@ -218,6 +218,10 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     public String save(final WorkflowManager wm, final File workflowDir,
             final ExecutionMonitor execMon, final boolean isSaveData)
             throws IOException, CanceledExecutionException {
+        if (workflowDir.equals(wm.getNodeContainerDirectory()) 
+                && !wm.isDirty()) {
+            return WORKFLOW_FILE;
+        }
         workflowDir.mkdirs();
         if (!workflowDir.isDirectory()) {
             throw new IOException("Unable to create or write directory \": " 
@@ -279,10 +283,15 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             NodeSettingsWO singlePort = saveOutPortSetting(outPortsSettsEnum, i);
             saveOutPort(singlePort, wm, i);
         }
-        String fileName = WORKFLOW_FILE;
-        File workflowFile = new File(workflowDir, fileName);
+        File workflowFile = new File(workflowDir, WORKFLOW_FILE);
         settings.saveToXML(new FileOutputStream(workflowFile));
-        return fileName;
+        if (wm.getNodeContainerDirectory() == null) {
+            wm.setNodeContainerDirectory(workflowDir);
+        }
+        if (workflowDir.equals(wm.getNodeContainerDirectory())) {
+            wm.unsetDirty();
+        }
+        return WORKFLOW_FILE;
     }
     
     protected String getSaveVersionString() {
@@ -320,7 +329,6 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             final ExecutionMonitor exec, final boolean isSaveData)
             throws CanceledExecutionException, IOException {
         saveNodeIDSuffix(settings, container);
-
         int idSuffix = container.getID().getIndex();
         // name of sub-directory container node/sub-workflow settings
         // all chars which are not letter or number are replaced by '_'
