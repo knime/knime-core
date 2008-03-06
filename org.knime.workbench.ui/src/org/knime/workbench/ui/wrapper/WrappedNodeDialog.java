@@ -31,6 +31,8 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -94,8 +96,7 @@ public class WrappedNodeDialog extends Dialog {
     /**
      * Configure shell, create top level menu.
      * 
-     * @see org.eclipse.jface.window.Window
-     *      #configureShell(org.eclipse.swt.widgets.Shell)
+     * {@inheritDoc}
      */
     @Override
     protected void configureShell(final Shell newShell) {
@@ -189,6 +190,18 @@ public class WrappedNodeDialog extends Dialog {
         JPanel p = m_dialogPane.getPanel();
         m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
         m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));
+        
+        m_wrapper.addFocusListener(new FocusAdapter() {
+           
+            /**
+             * 
+             * @param e focus event passed to the underlying AWT component
+             */
+            @Override
+            public void focusGained(final FocusEvent e) {
+                m_wrapper.getAwtPanel().requestFocus();
+            } 
+        });
         
         return area;
     }
@@ -394,7 +407,7 @@ public class WrappedNodeDialog extends Dialog {
      * ("NodeDialogPane") sometimes just won't return any useful preferred sizes
      * this is kinda tricky workaround :-(
      * 
-     * @see org.eclipse.jface.window.Window#getInitialSize()
+     * {@inheritDoc}
      */
     @Override
     protected Point getInitialSize() {
