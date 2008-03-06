@@ -785,7 +785,7 @@ public abstract class Config extends AbstractConfigEntry
     }
 
     /**
-     * Checks if this key for a particluar type is in this Config.
+     * Checks if this key for a particular type is in this Config.
      * 
      * @param key The key.
      * @return <b>true</b> if available, <b>false</b> if key is
@@ -830,14 +830,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A generic int.
      */
     public int getInt(final String key, final int def) {
-        if (!m_map.containsKey(key)) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigIntEntry)) {
             return def;
         }
-        try {
-            return getInt(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
+        return ((ConfigIntEntry)o).getInt();
     }
 
     /**
@@ -870,9 +867,6 @@ public abstract class Config extends AbstractConfigEntry
      * @return An int array.
      */
     public int[] getIntArray(final String key, final int... def) {
-        if (!m_map.containsKey(key)) {
-            return def;
-        }
         try {
             return getIntArray(key);
         } catch (InvalidSettingsException ise) {
@@ -904,14 +898,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A generic double.
      */
     public double getDouble(final String key, final double def) {
-        if (!m_map.containsKey(key)) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigDoubleEntry)) {
             return def;
         }
-        try {
-            return getDouble(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
+        return ((ConfigDoubleEntry)o).getDouble();
     }
 
     /**
@@ -944,9 +935,6 @@ public abstract class Config extends AbstractConfigEntry
      * @return A double array.
      */
     public double[] getDoubleArray(final String key, final double... def) {
-        if (!m_map.containsKey(key)) {
-            return def;
-        }
         try {
             return getDoubleArray(key);
         } catch (InvalidSettingsException ise) {
@@ -962,14 +950,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A generic float.
      */
     public float getFloat(final String key, final float def) {
-        if (!m_map.containsKey(key)) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigFloatEntry)) {
             return def;
         }
-        try {
-            return getFloat(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
+        return ((ConfigFloatEntry)o).getFloat();
     }
 
     /**
@@ -1051,14 +1036,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A generic char.
      */
     public char getChar(final String key, final char def) {
-        if (!m_map.containsKey(key)) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigCharEntry)) {
             return def;
         }
-        try {
-            return getChar(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
+        return ((ConfigCharEntry)o).getChar();
     }
 
     /**
@@ -1091,9 +1073,6 @@ public abstract class Config extends AbstractConfigEntry
      * @return A byte array.
      */
     public byte[] getByteArray(final String key, final byte... def) {
-        if (!m_map.containsKey(key)) {
-            return def;
-        }
         try {
             return getByteArray(key);
         } catch (InvalidSettingsException ise) {
@@ -1147,14 +1126,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A generic byte.
      */
     public byte getByte(final String key, final byte def) {
-        if (!m_map.containsKey(key)) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigByteEntry)) {
             return def;
         }
-        try {
-            return getByte(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
+        return ((ConfigByteEntry)o).getByte();
     }
 
     /**
@@ -1188,9 +1164,6 @@ public abstract class Config extends AbstractConfigEntry
      * @return A short array.
      */
     public short[] getShortArray(final String key, final short... def) {
-        if (!m_map.containsKey(key)) {
-            return def;
-        }
         try {
             return getShortArray(key);
         } catch (InvalidSettingsException ise) {
@@ -1229,9 +1202,6 @@ public abstract class Config extends AbstractConfigEntry
      * @return A long array.
      */
     public long[] getLongArray(final String key, final long... def) {
-        if (!m_map.containsKey(key)) {
-            return def;
-        }
         try {
             return getLongArray(key);
         } catch (InvalidSettingsException ise) {
@@ -1263,14 +1233,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A short value.
      */
     public short getShort(final String key, final short def) {
-        if (!m_map.containsKey(key)) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigShortEntry)) {
             return def;
         }
-        try {
-            return getShort(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
+        return ((ConfigShortEntry)o).getShort();
     }
     
     /**
@@ -1297,14 +1264,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A long value.
      */
     public long getLong(final String key, final long def) {
-        if (!m_map.containsKey(key)) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigLongEntry)) {
             return def;
         }
-        try {
-            return getLong(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
+        return ((ConfigLongEntry)o).getLong();
     }
 
     /**
@@ -1316,9 +1280,6 @@ public abstract class Config extends AbstractConfigEntry
      * @return A char array.
      */
     public char[] getCharArray(final String key, final char... def) {
-        if (!m_map.containsKey(key)) {
-            return def;
-        }
         try {
             return getCharArray(key);
         } catch (InvalidSettingsException ise) {
@@ -1350,14 +1311,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A generic boolean.
      */
     public boolean getBoolean(final String key, final boolean def) {
-        if (!m_map.containsKey(key)) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigBooleanEntry)) {
             return def;
         }
-        try {
-            return getBoolean(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
+        return ((ConfigBooleanEntry)o).getBoolean();
     }
 
     /**
@@ -1390,9 +1348,6 @@ public abstract class Config extends AbstractConfigEntry
      * @return A boolean array.
      */
     public boolean[] getBooleanArray(final String key, final boolean... def) {
-        if (!m_map.containsKey(key)) {
-            return def;
-        }
         try {
             return getBooleanArray(key);
         } catch (InvalidSettingsException ise) {
@@ -1426,14 +1381,11 @@ public abstract class Config extends AbstractConfigEntry
      * @return A String.
      */
     public String getString(final String key, final String def) {
-        if (!m_map.containsKey(key)) {
+        Object o = m_map.get(key);
+        if (o == null || !(o instanceof ConfigStringEntry)) {
             return def;
         }
-        try {
-            return getString(key);
-        } catch (InvalidSettingsException ise) {
-            return def;
-        }
+        return ((ConfigStringEntry)o).getString();
     }
 
     /**
@@ -1466,9 +1418,6 @@ public abstract class Config extends AbstractConfigEntry
      * @return A String array.
      */
     public String[] getStringArray(final String key, final String... def) {
-        if (!m_map.containsKey(key)) {
-            return def;
-        }
         try {
             return getStringArray(key);
         } catch (InvalidSettingsException ise) {
@@ -1502,9 +1451,6 @@ public abstract class Config extends AbstractConfigEntry
      * @return A DataCell object.
      */
     public DataCell getDataCell(final String key, final DataCell def) {
-        if (!m_map.containsKey(key)) {
-            return def;
-        }
         try {
             return getDataCell(key);
         } catch (InvalidSettingsException ise) {
@@ -1521,9 +1467,6 @@ public abstract class Config extends AbstractConfigEntry
      * @return A DataType object or null, or the def value. generic boolean.
      */
     public DataType getDataType(final String key, final DataType def) {
-        if (!m_map.containsKey(key)) {
-            return def;
-        }
         try {
             return getDataType(key);
         } catch (InvalidSettingsException ise) {
@@ -1562,9 +1505,6 @@ public abstract class Config extends AbstractConfigEntry
      */
     public DataCell[] getDataCellArray(final String key, 
             final DataCell... def) {
-        if (!m_map.containsKey(key)) {
-            return def;
-        }
         try {
             return getDataCellArray(key);
         } catch (InvalidSettingsException ise) {
@@ -1603,9 +1543,6 @@ public abstract class Config extends AbstractConfigEntry
      * @return An array of DataType objects.
      */
     public DataType[] getDataTypeArray(final String key, final DataType... v) {
-        if (!m_map.containsKey(key)) {
-            return v;
-        }
         try {
             return getDataTypeArray(key);
         } catch (InvalidSettingsException ise) {
