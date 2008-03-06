@@ -812,6 +812,12 @@ public final class WorkflowManager extends NodeContainer {
             for (NodeContainer nc : m_nodes.values()) {
                 switch (nc.getState()) {
                 case IDLE:
+                    // TODO: we can't do the following since we do not
+                    // clean those up if a predecessors never turns yellow
+                    // even if all his predecessors are EXECUTED.
+                    // (needs cleanup after configure in WFM?)
+                    //nc.markForExecutionAsNodeContainer(true);
+                    break;
                 case CONFIGURED:
                     nc.markForExecutionAsNodeContainer(true);
                     break;
