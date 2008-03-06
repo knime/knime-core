@@ -446,10 +446,12 @@ public final class SingleNodeContainer extends NodeContainer
                     setState(State.CONFIGURED);
                 }
             } else {
-                m_node.reset();
-                m_node.clearLoopStatus();
-                // reconfigure node will be done in WFM, not here!
-                setState(State.IDLE);
+                m_node.reset();  // we need to clean up remaining nonsense...
+                m_node.clearLoopStatus();  // ...and the loop status
+                // but node will not be reconfigured!
+                // (configure does not prepare execute but only tells us what
+                //  output execute() may create hence we do not need it here)
+                setState(State.CONFIGURED);
             }
         }
         // the following triggers check-for-queueable-nodes, among others
