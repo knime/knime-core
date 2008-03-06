@@ -37,7 +37,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
  * A filter selecting rows depending on the content of a column (or cell of the
  * row). The cell content can either be matched against a regular expression or
@@ -46,8 +45,16 @@ import org.knime.core.node.NodeSettingsWO;
  * insensitive.
  *
  * @author Peter Ohl, University of Konstanz
+ * @deprecated This filter contains too much functionality (which can be used
+ *             only one at a time anyway). We have split it into three filter
+ *             classes: {@link MissingValueRowFilter},
+ *             {@link StringCompareRowFilter}, {@link RangeRowFilter}.<br>
+ *             This filter is used by the previous row filter node
+ *             implementation. If you want to remove it, you must move the old
+ *             code in the deprecated package.
  */
-public class ColValRowFilter extends RowFilter {
+@Deprecated
+public class ColValFilterOldObsolete extends RowFilter {
 
     private static final String CFG_COLNAME = "ColValRowFilterColName";
 
@@ -111,7 +118,7 @@ public class ColValRowFilter extends RowFilter {
      * @throws IllegalArgumentException if the pattern passed as regular
      *             expression is not a valid regExpr
      */
-    public ColValRowFilter(final String regExpr, final String colName,
+    public ColValFilterOldObsolete(final String regExpr, final String colName,
             final boolean include, final boolean caseSensitive,
             final boolean startsWith) {
         // clear all variables
@@ -172,7 +179,7 @@ public class ColValRowFilter extends RowFilter {
      * @param include determines whether to include or exclude rows with a value
      *            inside the range
      */
-    public ColValRowFilter(final DataValueComparator comp,
+    public ColValFilterOldObsolete(final DataValueComparator comp,
             final DataCell lowerBound, final DataCell upperBound,
             final String colName, final boolean include) {
         // clear all variables
@@ -214,7 +221,8 @@ public class ColValRowFilter extends RowFilter {
      * @param include if true, rows with a missing value in the specified column
      *            are included, otherwise excluded
      */
-    public ColValRowFilter(final String colName, final boolean include) {
+    public ColValFilterOldObsolete(final String colName,
+            final boolean include) {
         m_include = include;
         m_colName = colName;
         m_colIndex = -1;
@@ -222,9 +230,9 @@ public class ColValRowFilter extends RowFilter {
     }
 
     /**
-     * Default contructor. Don't use without loading settings before.
+     * Default constructor. Don't use without loading settings before.
      */
-    public ColValRowFilter() {
+    ColValFilterOldObsolete() {
         m_include = false;
         m_colIndex = -1;
         m_colName = null;
@@ -390,9 +398,7 @@ public class ColValRowFilter extends RowFilter {
 
     /**
      * A comparator MUST be set if a range is specified in the config object!!
-     *
-     * @see RowFilter
-     *      #loadSettingsFrom(NodeSettingsRO)
+     * {@inheritDoc}
      */
     @Override
     public void loadSettingsFrom(final NodeSettingsRO cfg)
@@ -472,8 +478,7 @@ public class ColValRowFilter extends RowFilter {
      * The column value filter grabs the comparator from the table spec (if
      * available) and checks settings against the latest spec.
      *
-     * @see RowFilter
-     *      #configure(org.knime.core.data.DataTableSpec)
+     * {@inheritDoc}
      */
     @Override
     public DataTableSpec configure(final DataTableSpec inSpec)
@@ -499,24 +504,16 @@ public class ColValRowFilter extends RowFilter {
             if (!colType.isASuperTypeOf(m_lowerBound.getType())) {
                 throw new InvalidSettingsException("Column value filter: "
                         + "Specified lower bound of range doesn't fit "
-                        + "column type. (Col#:"
-                        + m_colIndex
-                        + ",ColType:"
-                        + colType
-                        + ",RangeType:"
-                        + m_lowerBound.getType());
+                        + "column type. (Col#:" + m_colIndex + ",ColType:"
+                        + colType + ",RangeType:" + m_lowerBound.getType());
             }
         }
         if (m_upperBound != null) {
             if (!colType.isASuperTypeOf(m_upperBound.getType())) {
                 throw new InvalidSettingsException("Column value filter: "
                         + "Specified upper bound of range doesn't fit "
-                        + "column type. (Col#:"
-                        + m_colIndex
-                        + ",ColType:"
-                        + colType
-                        + ",RangeType:"
-                        + m_upperBound.getType());
+                        + "column type. (Col#:" + m_colIndex + ",ColType:"
+                        + colType + ",RangeType:" + m_upperBound.getType());
             }
         }
 
@@ -538,11 +535,11 @@ public class ColValRowFilter extends RowFilter {
         }
         if (rangeSet()) {
             result += " values from '";
-            result += (m_lowerBound == null) ? "<open>" : m_lowerBound
-                    .toString();
+            result +=
+                    (m_lowerBound == null) ? "<open>" : m_lowerBound.toString();
             result += "' to '";
-            result += (m_upperBound == null) ? "<open>" : m_upperBound
-                    .toString();
+            result +=
+                    (m_upperBound == null) ? "<open>" : m_upperBound.toString();
             result += "'";
             if (m_dcComp == null) {
                 result += " NO COMPARATOR SET!!!";

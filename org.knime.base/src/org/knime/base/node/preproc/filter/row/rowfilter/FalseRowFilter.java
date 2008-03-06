@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   04.07.2005 (ohl): created
  */
@@ -31,9 +31,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * Row filter that doesn't match any row. Not really usefull - but used if the
- * user absolutly wants it.
- * 
+ * Row filter that doesn't match any row. Not really useful.
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class FalseRowFilter extends RowFilter {
