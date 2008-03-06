@@ -327,7 +327,6 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
         m_hasWildCards.setToolTipText("insert '?' or '*' to match any one "
                 + "character or any sequence (including none) of characters.");
         m_isRegExpr.addItemListener(new ItemListener() {
-            @Override
             public void itemStateChanged(final ItemEvent e) {
                 wildRegExprChanged(e);
                 // also trigger regular expression recompile
@@ -335,7 +334,6 @@ public class ColumnRowFilterPanel extends RowFilterPanel {
             }
         });
         m_hasWildCards.addItemListener(new ItemListener() {
-            @Override
             public void itemStateChanged(final ItemEvent e) {
                 wildRegExprChanged(e);
                 // also trigger regular expression recompile
