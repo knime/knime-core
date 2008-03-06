@@ -24,28 +24,23 @@
  */
 package org.knime.base.node.io.database;
 
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.GenericNodeFactory;
 import org.knime.core.node.GenericNodeView;
-import org.knime.core.node.PortType;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBConnectionNodeFactory 
-        extends GenericNodeFactory<DBConnectionNodeModel> {
+public class DBColumnFilterNodeFactory 
+        extends GenericNodeFactory<DBColumnFilterNodeModel> {
     
     /**
      * {@inheritDoc}
      */
     @Override
-    public DBConnectionNodeModel createNodeModel() {
-        return new DBConnectionNodeModel(
-                new PortType[]{DatabasePortObject.TYPE}, 
-                new PortType[]{BufferedDataTable.TYPE});
+    public DBColumnFilterNodeModel createNodeModel() {
+        return new DBColumnFilterNodeModel();
     }
 
     /**
@@ -60,9 +55,9 @@ public class DBConnectionNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public GenericNodeView<DBConnectionNodeModel> createNodeView(
+    public GenericNodeView<DBColumnFilterNodeModel> createNodeView(
             final int viewIndex,
-            final DBConnectionNodeModel nodeModel) {
+            final DBColumnFilterNodeModel nodeModel) {
         return null;
     }
 
@@ -71,7 +66,7 @@ public class DBConnectionNodeFactory
      */
     @Override
     public boolean hasDialog() {
-        return false;
+        return true;
     }
 
     /**
@@ -79,6 +74,6 @@ public class DBConnectionNodeFactory
      */
     @Override
     public GenericNodeDialogPane createNodeDialogPane() {
-        return null;
+        return new DBColumnFilterNodeDialogPane();
     }
 }

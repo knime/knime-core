@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2007
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -20,64 +20,63 @@
  * --------------------------------------------------------------------- *
  * 
  * History
- *   21.09.2007 (gabriel): created
+ *   27.02.2008 (gabriel): created
  */
 package org.knime.base.node.io.database;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentMultiLineString;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.PortObjectSpec;
 
 /**
  * 
+ * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
+public class DBReaderConnectionDialogPane extends DBReaderDialogPane {
     
-    private final DBConnectionDialogPanel m_panel =
+    private final DBConnectionDialogPanel m_panel = 
         new DBConnectionDialogPanel();
-    
+
     /**
-     * Create query dialog with text box to enter table name.
+     * Creates a new reader dialog pane with table options used the create
+     * SQL output connection.
      */
-    public DBQueryNodeDialogPane() {
-        super.addDialogComponent(new DialogComponentMultiLineString(
-                createQueryModel(), "SQL query"));
+    public DBReaderConnectionDialogPane() {
+        super();
         super.addTab("Table Options", m_panel);
-        
-    }
-    
-    /**
-     * Create model to enter SQL statement on input database view.
-     * @return a new model to enter SQL statement
-     */
-    static final SettingsModelString createQueryModel() {
-        return new SettingsModelString("SQL_query", "SELECT * FROM "
-                + DBQueryNodeModel.TABLE_PLACE_HOLDER);
     }
     
     /**
      * {@inheritDoc}
      */
     @Override
-    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        super.loadAdditionalSettingsFrom(settings, specs);
-        m_panel.loadSettingsFrom(settings, specs);
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
+            final PortObjectSpec[] specs) throws NotConfigurableException {
+        super.loadSettingsFrom(settings, specs);
+        List<DataTableSpec> specList = new ArrayList<DataTableSpec>();
+        for (PortObjectSpec spec : specs) {
+            if (spec instanceof DataTableSpec) {
+                specList.add((DataTableSpec) spec);
+            }
+        }
+        m_panel.loadSettingsFrom(settings, 
+                specList.toArray(new DataTableSpec[specList.size()]));
     }
     
     /**
      * {@inheritDoc}
      */
     @Override
-    public void saveAdditionalSettingsTo(final NodeSettingsWO settings)
+    protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        super.saveAdditionalSettingsTo(settings);
+        super.saveSettingsTo(settings);
         m_panel.saveSettingsTo(settings);
     }
 }

@@ -25,59 +25,63 @@
 package org.knime.base.node.io.database;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.DatabasePortObjectSpec;
+import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentMultiLineString;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
+public class DBColumnFilterNodeDialogPane extends GenericNodeDialogPane {
     
-    private final DBConnectionDialogPanel m_panel =
+    private final DialogComponentColumnFilter m_panel;
+    
+    private final DBConnectionDialogPanel m_tableOptions =
         new DBConnectionDialogPanel();
     
     /**
      * Create query dialog with text box to enter table name.
      */
-    public DBQueryNodeDialogPane() {
-        super.addDialogComponent(new DialogComponentMultiLineString(
-                createQueryModel(), "SQL query"));
-        super.addTab("Table Options", m_panel);
+    public DBColumnFilterNodeDialogPane() {
+        m_panel = new DialogComponentColumnFilter(createColumnFilterModel(), 0);
+        super.addTab("Column Filter", m_panel.getComponentPanel());
+        super.addTab("Table Options", m_tableOptions);
         
     }
     
     /**
-     * Create model to enter SQL statement on input database view.
-     * @return a new model to enter SQL statement
+     * {@inheritDoc}
      */
-    static final SettingsModelString createQueryModel() {
-        return new SettingsModelString("SQL_query", "SELECT * FROM "
-                + DBQueryNodeModel.TABLE_PLACE_HOLDER);
+    @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
+            final PortObjectSpec[] specs) throws NotConfigurableException {
+        DataTableSpec spec = 
+            ((DatabasePortObjectSpec) specs[0]).getDataTableSpec();
+        m_panel.loadSettingsFrom(settings, new DataTableSpec[]{spec});
+        m_tableOptions.loadSettingsFrom(settings, new DataTableSpec[]{spec});
+    }
+    
+    /**
+     * @return new settings model for column filter
+     */
+    static final SettingsModelFilterString createColumnFilterModel() {
+        return new SettingsModelFilterString("column_filter");
     }
     
     /**
      * {@inheritDoc}
      */
     @Override
-    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        super.loadAdditionalSettingsFrom(settings, specs);
-        m_panel.loadSettingsFrom(settings, specs);
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void saveAdditionalSettingsTo(final NodeSettingsWO settings)
+    protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        super.saveAdditionalSettingsTo(settings);
         m_panel.saveSettingsTo(settings);
+        m_tableOptions.saveSettingsTo(settings);
     }
 }

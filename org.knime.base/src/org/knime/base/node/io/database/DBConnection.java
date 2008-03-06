@@ -27,7 +27,6 @@ package org.knime.base.node.io.database;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -68,6 +67,19 @@ public class DBConnection {
         }
         // create database name from driver class
         m_dbName = DBDriverLoader.getURLForDriver(m_driver);
+    }
+    
+    /**
+     * Creates a new <code>DBConnection</code> based on the given connection
+     * object.
+     * @param conn connection used to copy settings from
+     */
+    public DBConnection(final DBConnection conn) {
+        this();
+        m_driver = conn.m_driver;
+        m_dbName = conn.m_dbName;
+        m_user   = conn.m_user;
+        m_pass   = conn.m_pass;
     }
     
     /**
@@ -174,29 +186,25 @@ public class DBConnection {
     }
     
     /**
-     * Execute statement on current connection settings which are used to
-     * open the database connection.
-     * @param statement used to execute
-     * @return an exception or <code>null</code> if statement was executed 
-     *         successfully
+     * Execute statement on current database connection.
+     * @param statement to be executed
+     * @throws Exception if the statement could not be executed
      */
-    public Exception execute(final String statement) {
+    public void execute(final String statement) throws Exception {
         Connection conn = null;
+        Statement stmt = null;
         try {
             conn = createConnection();
-            Statement stmt = conn.createStatement();
+            stmt = conn.createStatement();
             stmt.execute(statement);
-        } catch (Exception e) {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException sqle) {
-                    return sqle;
-                }
+        } finally {
+            if (stmt != null) {
+                stmt.close();
             }
-            return e;
+            if (conn != null) {
+                conn.close();
+            }
         }
-        return null;
     }
     
     /**

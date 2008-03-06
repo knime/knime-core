@@ -45,6 +45,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
+import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -52,22 +53,19 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBQueryNodeModel extends GenericNodeModel {
+class DBColumnFilterNodeModel extends GenericNodeModel {
     
-    /** Place holder for the database input view. */
-    static final String TABLE_PLACE_HOLDER = "#table#";
-    
-    /** Config ID for temporary table. */  
+    /** Config ID for temporary table. */
     static final String CFG_TABLE_ID = "tableID.xml";
-    
-    private final SettingsModelString m_query = 
-        DBQueryNodeDialogPane.createQueryModel();
     
     private final SettingsModelString m_tableOption =
         DBConnectionDialogPanel.createTableModel();
 
     private final SettingsModelIntegerBounded m_cachedRows =
         DBConnectionDialogPanel.createCachedRowsModel();
+    
+    private final SettingsModelFilterString m_filter
+         = DBColumnFilterNodeDialogPane.createColumnFilterModel();
     
     private DBQueryConnection m_conn;
 
@@ -76,7 +74,7 @@ class DBQueryNodeModel extends GenericNodeModel {
     /**
      * Creates a new database reader.
      */
-    DBQueryNodeModel() {
+    DBColumnFilterNodeModel() {
         super(new PortType[]{DatabasePortObject.TYPE}, 
                 new PortType[]{DatabasePortObject.TYPE});
         m_tableId = "table_" + System.identityHashCode(this);
@@ -87,9 +85,9 @@ class DBQueryNodeModel extends GenericNodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_query.saveSettingsTo(settings);
         m_tableOption.saveSettingsTo(settings);
         m_cachedRows.saveSettingsTo(settings);
+        m_filter.saveSettingsTo(settings);
     }
 
     /**
@@ -98,15 +96,9 @@ class DBQueryNodeModel extends GenericNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString query = 
-            m_query.createCloneWithValidatedValue(settings);
-        String queryString = query.getStringValue();
-        if (queryString != null && !queryString.contains(TABLE_PLACE_HOLDER)) {
-            throw new InvalidSettingsException(
-                    "Database view place holder should not be replaced.");
-        }
         m_tableOption.validateSettings(settings);
         m_cachedRows.validateSettings(settings);
+        m_filter.validateSettings(settings);
     }
 
     /**
@@ -115,9 +107,9 @@ class DBQueryNodeModel extends GenericNodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_query.loadSettingsFrom(settings);
         m_tableOption.loadSettingsFrom(settings);
         m_cachedRows.loadSettingsFrom(settings);
+        m_filter.loadSettingsFrom(settings);
     }
 
     /**
@@ -130,7 +122,7 @@ class DBQueryNodeModel extends GenericNodeModel {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         m_conn = new DBQueryConnection();
         m_conn.loadValidatedConnection(dbObj.getConnectionModel());
-        String newQuery = replaceViewPlaceHolder(m_conn.getQuery());
+        String newQuery = createFilterQuery(m_conn.getQuery());
         if (DBTableOptions.CREATE_TABLE.getActionCommand().equals(
                 m_tableOption.getStringValue())) {
             m_conn.execute("CREATE TABLE " + m_tableId + " AS " + newQuery);
@@ -197,7 +189,7 @@ class DBQueryNodeModel extends GenericNodeModel {
         m_conn = new DBQueryConnection();
         m_conn.loadValidatedConnection(spec.getConnectionModel());
         // replace view place holder
-        String newQuery = replaceViewPlaceHolder(m_conn.getQuery());
+        String newQuery = createFilterQuery(m_conn.getQuery());
         DBQueryConnection conn = new DBQueryConnection(m_conn, newQuery);
         // try to create database connection
         DataTableSpec outSpec = null;
@@ -214,9 +206,16 @@ class DBQueryNodeModel extends GenericNodeModel {
         return new PortObjectSpec[]{dbSpec};
     }
     
-    private String replaceViewPlaceHolder(final String query) {
-        return m_query.getStringValue().replaceAll(
-                    TABLE_PLACE_HOLDER, "(" + query + ") AS " + m_tableId);
+    private String createFilterQuery(final String query) {
+        StringBuilder buf = new StringBuilder();
+        for (String s : m_filter.getIncludeList()) {
+            if (buf.length() > 0) {
+                buf.append(",");
+            }
+            buf.append(s);
+        }
+        return "SELECT " + buf.toString() + " FROM (" + query + ") AS " 
+                + m_tableId; 
     }
         
 }

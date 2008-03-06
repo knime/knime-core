@@ -54,12 +54,16 @@ class DBConnectionNodeModel extends GenericNodeModel {
     
     private DataTableSpec m_lastSpec = null;
     
+    /** Config key to write last processed spec. */
+    static final String CFG_SPEC_XML = "spec.xml";
+    
     /**
      * Creates a new database connection reader.
+     * @param inPorts array of in-port types
+     * @param outPorts array of out-port types
      */
-    DBConnectionNodeModel() {
-        super(new PortType[]{DatabasePortObject.TYPE}, 
-                new PortType[]{BufferedDataTable.TYPE});
+    DBConnectionNodeModel(final PortType[] inPorts, final PortType[] outPorts) {
+        super(inPorts, outPorts);
     }
 
     /**
@@ -73,8 +77,7 @@ class DBConnectionNodeModel extends GenericNodeModel {
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         DBQueryConnection conn = new DBQueryConnection();
         conn.loadValidatedConnection(dbObj.getConnectionModel());
-        DBReaderConnection load = new DBReaderConnection(conn, 
-                conn.getQuery());
+        DBReaderConnection load = new DBReaderConnection(conn, conn.getQuery());
         m_lastSpec = load.getDataTableSpec();
         exec.setProgress("Reading data from database...");
         return new BufferedDataTable[]{
@@ -95,20 +98,18 @@ class DBConnectionNodeModel extends GenericNodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-        File specFile = null;
-        specFile = new File(nodeInternDir, "spec.xml");
+        File specFile = new File(nodeInternDir, CFG_SPEC_XML);
         if (!specFile.exists()) {
-            IOException ioe = new IOException("Spec file (\"" 
+            throw new IOException("Spec file (\"" 
                     + specFile.getAbsolutePath() + "\") does not exist "
                     + "(node may have been saved by an older version!)");
-            throw ioe;
         }
         NodeSettingsRO specSett = 
             NodeSettings.loadFromXML(new FileInputStream(specFile));
         try {
             m_lastSpec = DataTableSpec.load(specSett);
         } catch (InvalidSettingsException ise) {
-            IOException ioe = new IOException("Could not read output spec.");
+            IOException ioe = new IOException("Could not read last spec.");
             ioe.initCause(ise);
             throw ioe;
         }
@@ -120,10 +121,11 @@ class DBConnectionNodeModel extends GenericNodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException {
-        assert (m_lastSpec != null) : "Spec must not be null!";
-        NodeSettings specSett = new NodeSettings("spec.xml");
-        m_lastSpec.save(specSett);
-        File specFile = new File(nodeInternDir, "spec.xml");
+        NodeSettings specSett = new NodeSettings(CFG_SPEC_XML);
+        if (m_lastSpec != null) {
+            m_lastSpec.save(specSett);
+        }
+        File specFile = new File(nodeInternDir, CFG_SPEC_XML);
         specSett.saveToXML(new FileOutputStream(specFile));
     }
  

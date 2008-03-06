@@ -72,12 +72,13 @@ class DBConnectionWriterNodeModel extends GenericNodeModel {
         // suppress exception thrown when table does not exist in database
         DBQueryConnection conn = new DBQueryConnection();
         conn.loadValidatedConnection(dbObj.getConnectionModel());
-        conn.execute("DROP TABLE " + tableName);
-        Exception e = conn.execute(
-            "CREATE TABLE " + tableName + " AS (" + conn.getQuery() + ")");
-        if (e != null) {
-            throw e;
+        try {
+            conn.execute("DROP TABLE " + tableName);
+        } catch (Exception e) {
+            // ignored, table might not exist anymore
         }
+        conn.execute("CREATE TABLE " + tableName 
+                + " AS (" + conn.getQuery() + ")");
         return new BufferedDataTable[0];
     }
 

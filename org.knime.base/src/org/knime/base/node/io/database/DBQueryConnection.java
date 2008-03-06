@@ -42,6 +42,24 @@ public class DBQueryConnection extends DBConnection {
     private String m_query = null;
     
     /**
+     * Create a new connection with an empty query object.
+     */
+    public DBQueryConnection() {
+        super();
+    }
+    
+    /**
+     * Creates a new connection based in the given connection and the query
+     * string.
+     * @param conn connection to copy
+     * @param query the SQL query
+     */
+    public DBQueryConnection(final DBQueryConnection conn, final String query) {
+        super(conn);
+        m_query = query;
+    }
+    
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -72,14 +90,6 @@ public class DBQueryConnection extends DBConnection {
     public void saveConnection(final ConfigWO settings) {
         settings.addString(CFG_STATEMENT, m_query);
         super.saveConnection(settings);
-    }
-    
-    /**
-     * Set new SQL statement. 
-     * @param query new SQL statement
-     */
-    public void setQuery(final String query) {
-        m_query = query;
     }
     
     /**

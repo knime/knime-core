@@ -165,7 +165,14 @@ public class DBDialogPane extends JPanel {
                 m_passwordChanged = true;
             }
         });
-
+        m_pass.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(final FocusEvent fe) {
+                if (!m_passwordChanged) {
+                    m_pass.setText("");
+                }
+            } 
+        });
         passPanel.add(m_pass);
         super.add(passPanel);
     }

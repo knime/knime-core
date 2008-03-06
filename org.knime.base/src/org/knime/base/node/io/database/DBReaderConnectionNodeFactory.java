@@ -73,6 +73,6 @@ public class DBReaderConnectionNodeFactory
      */
     @Override
     public GenericNodeDialogPane createNodeDialogPane() {
-        return new DBReaderDialogPane();
+        return new DBReaderConnectionDialogPane();
     }
 }
