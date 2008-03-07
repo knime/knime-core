@@ -1613,7 +1613,11 @@ public final class WorkflowManager extends NodeContainer {
     public void cancelExecution(final NodeContainer nc) {
         assert nc != null;
         disableNodeForExecution(nc.getID());
-        nc.cancelExecutionAsNodeContainer();
+        synchronized (m_dirtyWorkflow) {
+            if (nc.getState().executionInProgress()) {
+                nc.cancelExecutionAsNodeContainer();
+            }
+        }
     }
 
     /**
