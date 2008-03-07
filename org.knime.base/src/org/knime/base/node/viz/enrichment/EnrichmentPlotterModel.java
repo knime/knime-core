@@ -247,6 +247,7 @@ public class EnrichmentPlotterModel extends NodeModel {
         for (int i = 0; i < m_settings.getCurveCount(); i++) {
             final ExecutionMonitor sexec =
                     exec.createSubProgress(1.0 / m_settings.getCurveCount());
+            exec.setMessage("Generating curve " + (i + 1));
 
             final Curve c = m_settings.getCurve(i);
             final Helper[] curve = new Helper[inData[0].getRowCount()];
