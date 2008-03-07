@@ -347,7 +347,7 @@ public final class WorkflowManager extends NodeContainer {
             LOGGER.info("Added new subworkflow " + newID);
         }
         notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED,
-                        newID, null, null));
+                        newID, null, wfm));
         return wfm;
     }
     
@@ -362,7 +362,10 @@ public final class WorkflowManager extends NodeContainer {
             throw new RuntimeException(
                     "Invalid or duplicate ID \"" + newID + "\"");
         }
-        return new WorkflowManager(this, newID, persistor);
+        WorkflowManager wfm = new WorkflowManager(this, newID, persistor);
+        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED,
+                newID, null, wfm));
+        return wfm;
     }
     
     ////////////////////////////////////////////
@@ -703,7 +706,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED,
-                        null, null, cc));
+                        null, cc, null));
     }
 
     /////////////////////////////////
@@ -1615,7 +1618,7 @@ public final class WorkflowManager extends NodeContainer {
         disableNodeForExecution(nc.getID());
         synchronized (m_dirtyWorkflow) {
             if (nc.getState().executionInProgress()) {
-                nc.cancelExecutionAsNodeContainer();
+        nc.cancelExecutionAsNodeContainer();
             }
         }
     }
