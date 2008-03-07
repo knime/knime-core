@@ -39,6 +39,7 @@ import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.SimpleJobExecutor;
 import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.KNIMETimer;
@@ -218,6 +219,13 @@ public class KnimeTestCase extends TestCase {
 
             // execute all nodes.
             logger.info("Executing workflow ----------------------");
+
+            // TODO: Temporarily using the simple executor!
+            logger.info("******************************");
+            logger.info("* Using the simple executor! *");
+            logger.info("******************************");
+            m_manager.setJobExecutor(new SimpleJobExecutor());
+
 
             m_manager.executeAllAndWaitUntilDone();
 
