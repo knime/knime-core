@@ -829,6 +829,7 @@ public final class WorkflowManager extends NodeContainer {
                 }
             }
         }
+        checkForQueuableNodesInWFMonly();
     }
 
     /**
@@ -1350,6 +1351,7 @@ public final class WorkflowManager extends NodeContainer {
                 }
             });
             markForExecutionAllNodes(true);
+            checkForQueuableNodesEverywhere();
             while (getState().executionInProgress()) {
                 try {
                     mySemaphore.wait();
