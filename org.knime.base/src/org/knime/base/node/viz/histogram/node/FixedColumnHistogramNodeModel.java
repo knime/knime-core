@@ -24,18 +24,6 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import java.awt.Color;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Collection;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
-import org.knime.base.node.viz.histogram.util.BinningUtil;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -51,7 +39,21 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.FixedHistogramVizModel;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+
+import java.awt.Color;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Collection;
 
 
 /**
@@ -76,7 +78,6 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
      * The constructor.
      */
     protected FixedColumnHistogramNodeModel() {
-        super(1, 0); // one input, no outputs
         //set the all rows select box to true as default value since that's the
         //reason why we have two implementations and this one is the one which
         //should handle a large amount of data.
@@ -193,7 +194,7 @@ public class FixedColumnHistogramNodeModel extends AbstractHistogramNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
         throws InvalidSettingsException {
         final DataTableSpec[] specs = super.configure(inSpecs);
         //enable/disable the number of bins spinner depending on the selected

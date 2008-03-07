@@ -46,11 +46,17 @@
 		    Defines the number of rows to be displayed in the histogram.
 		    This option is disabled if the 'Display all rows' option is selected.
 	    </option>
-	    <option name="X column: ">
+	    <option name="Binning column: ">
 	     	This is the column to be shown on the x axis of the histogram view.
 	     	For numerical values the number of bars can be adjusted later 
 	     	in the 'Bar settings' section of view properties.
    	    </option>
+   	    <option name="Aggregation column">
+            This is the column to be used as the bar value and displayed on the
+            y axis. Only numerical values with a valid domain are allowed. 
+            The aggregation method can be adjusted later in the 
+            'Aggregation setting' section of view properties .
+        </option>
 	</fullDescription>
 	
 	<ports>

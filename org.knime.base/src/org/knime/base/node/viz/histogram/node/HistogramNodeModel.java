@@ -24,17 +24,6 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
-import java.awt.Color;
-import java.io.File;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;
-import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
-import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
-import org.knime.base.node.viz.histogram.util.BinningUtil;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -45,6 +34,19 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.PortObjectSpec;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramDataModel;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveHistogramVizModel;
+import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+
+import java.awt.Color;
+import java.io.File;
 
 
 /**
@@ -63,7 +65,6 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
      * The constructor.
      */
     protected HistogramNodeModel() {
-        super(1, 0); // one input, no outputs
         //if we set the node to autoExecutable = true the execute method
         //gets also called when the workspace is reloaded from file
         setAutoExecutable(true);
@@ -114,12 +115,12 @@ public class HistogramNodeModel extends AbstractHistogramNodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
     throws InvalidSettingsException {
         try {
             return super.configure(inSpecs);
         } catch (final Exception e) {
-            final DataTableSpec spec = inSpecs[0];
+            final DataTableSpec spec = (DataTableSpec)inSpecs[0];
             if (spec == null) {
                 throw new IllegalArgumentException(
                         "No table specification found");

@@ -25,6 +25,38 @@
 
 package org.knime.base.node.viz.histogram.node;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.StringValue;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortType;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.ColumnFilter;
+
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
+import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
+
 import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,39 +69,11 @@ import java.util.List;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
-import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTable;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.StringValue;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettings;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.config.ConfigRO;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
-import org.knime.core.node.util.ColumnFilter;
-
 /**
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public abstract class AbstractHistogramNodeModel extends NodeModel {
+public abstract class AbstractHistogramNodeModel extends GenericNodeModel {
     private static final NodeLogger LOGGER = NodeLogger
         .getLogger(AbstractHistogramNodeModel.class);
     /**Default number of rows to use.*/
@@ -108,13 +112,9 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
         new SettingsModelColorNameColumns(CFGKEY_AGGR_COLNAME, null);
 
     /**Constructor for class AbstractHistogramNodeModel.
-     *
-     * @param nrDataIns Number of data inputs.
-     * @param nrDataOuts Number of data outputs.
      */
-    public AbstractHistogramNodeModel(final int nrDataIns,
-            final int nrDataOuts) {
-        super(nrDataIns, nrDataOuts);
+    public AbstractHistogramNodeModel() {
+        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[0]);
         m_allRows.addChangeListener(new ChangeListener() {
             public void stateChanged(final ChangeEvent e) {
                 m_noOfRows.setEnabled(!m_allRows.getBooleanValue());
@@ -310,13 +310,13 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
     throws InvalidSettingsException {
         if (inSpecs == null || inSpecs[0] == null) {
             throw new InvalidSettingsException(
                     "No input specification available.");
         }
-        final DataTableSpec tableSpec = inSpecs[0];
+        final DataTableSpec tableSpec = (DataTableSpec)inSpecs[0];
         if (tableSpec == null || tableSpec.getNumColumns() < 1) {
             throw new InvalidSettingsException(
                     "Input table should have at least 1 column.");
@@ -409,7 +409,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         LOGGER.debug("Entering execute(inData, exec) of class "
                 + "FixedColumnHistogramNodeModel.");
@@ -417,8 +417,8 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             throw new Exception("No data table available!");
         }
         // create the data object
-        final BufferedDataTable table = inData[0];
-        m_tableSpec = inData[0].getDataTableSpec();
+        final BufferedDataTable table = (BufferedDataTable)inData[0];
+        m_tableSpec = table.getDataTableSpec();
         if (m_tableSpec == null) {
             throw new NullPointerException(
                     "Table specification must not be null");
