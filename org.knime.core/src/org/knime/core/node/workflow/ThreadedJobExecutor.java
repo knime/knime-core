@@ -137,9 +137,13 @@ public class ThreadedJobExecutor implements JobExecutor {
             }
         }
         // otherwise try to find out if one of the workers is working on this ID
-        for (Worker w : m_worker) {
-            if (w.m_myRunnable.getJobID().equals(id)) {
-                w.m_myRunnable.triggerCancel();
+        for (int i = 0; i < m_worker.length; i++) {
+            if (m_worker[i] != null) {
+                if (m_worker[i].hasJob()) {
+                    if (m_worker[i].m_myRunnable.getJobID().equals(id)) {
+                        m_worker[i].m_myRunnable.triggerCancel();
+                    }
+                }
             }
         }
     }
