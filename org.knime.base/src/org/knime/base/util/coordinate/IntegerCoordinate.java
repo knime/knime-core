@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   21.07.2006 (koetter): created
  */
@@ -39,11 +39,10 @@ import org.knime.core.data.IntValue;
 
 
 /**
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 class IntegerCoordinate extends NumericCoordinate {
-    private static final int DEFAULT_TICK_DIST = 30;
 
     /** The minimum value covered by this coordinate object. */
     private int m_minDomainValue;
@@ -68,14 +67,14 @@ class IntegerCoordinate extends NumericCoordinate {
 
     /**
      * Constructor for class IntegerCoordinate.
-     * 
+     *
      * @param dataColumnSpec the column specification
      */
     protected IntegerCoordinate(final DataColumnSpec dataColumnSpec) {
         super(dataColumnSpec);
         // column specification is check for null in the super constructor
         // check and set the domain range
-        DataColumnDomain domain = getDataColumnSpec().getDomain();
+        final DataColumnDomain domain = getDataColumnSpec().getDomain();
         if (domain == null) {
             // if there is no domain a coordinate makes no sense
             throw new IllegalArgumentException(
@@ -87,15 +86,16 @@ class IntegerCoordinate extends NumericCoordinate {
             throw new IllegalArgumentException("Data type should be of type "
                     + IntValue.class.getName() + ".");
         }
-        Set<DataCell> valuesSet = domain.getValues();
+        final Set<DataCell> valuesSet = domain.getValues();
         if (valuesSet != null && valuesSet.size() > 0) {
-            List<DataCell> values = new ArrayList<DataCell>(valuesSet.size());
-            for (DataCell cell : valuesSet) {
+            final List<DataCell> values =
+                new ArrayList<DataCell>(valuesSet.size());
+            for (final DataCell cell : valuesSet) {
                 if (cell.getType().isCompatible(DoubleValue.class)) {
                     values.add(cell);
                 }
             }
-            DataValueComparator cellComparator = colType.getComparator();
+            final DataValueComparator cellComparator = colType.getComparator();
             Collections.sort(values, cellComparator);
             m_values = values;
             m_minDomainValue = (int)((DoubleValue)m_values.get(0))
@@ -105,7 +105,7 @@ class IntegerCoordinate extends NumericCoordinate {
 
         } else {
             m_values = null;
-            DataCell lowerBound = domain.getLowerBound();
+            final DataCell lowerBound = domain.getLowerBound();
             if (lowerBound == null) {
                 // if there is no lower bound a coordinate makes no sense
                 throw new IllegalArgumentException(
@@ -116,7 +116,7 @@ class IntegerCoordinate extends NumericCoordinate {
                         .getDoubleValue();
             }
 
-            DataCell upperBound = domain.getUpperBound();
+            final DataCell upperBound = domain.getUpperBound();
             if (upperBound == null) {
                 // if there is no upper bound a coordinate makes no sense
                 throw new IllegalArgumentException(
@@ -141,24 +141,24 @@ class IntegerCoordinate extends NumericCoordinate {
         if (m_domainRange == 0.0) {
             // just one mapping is created in the middle of the available
             // absolute length
-            double mappingValue = Math.round(absolutLength / 2);
+            final double mappingValue = Math.round(absolutLength / 2);
             mapping = new IntegerCoordinateMapping[1];
             mapping[0] = new IntegerCoordinateMapping(
-                    Integer.toString(m_minDomainValue), m_minDomainValue, 
+                    Integer.toString(m_minDomainValue), m_minDomainValue,
                     mappingValue);
             return mapping;
         }
 
         // the height per 1 value in pixel
-        
+
         final double heightPerVal = absolutLength / m_domainRange;
         if (m_values != null && m_values.size() > 0) {
             // the user has predefined values which he want to have displayed
             mapping = new CoordinateMapping[m_values.size()];
             for (int i = 0, length = m_values.size(); i < length; i++) {
-                int value = (int)((DoubleValue)m_values.get(i))
+                final int value = (int)((DoubleValue)m_values.get(i))
                         .getDoubleValue();
-                double position = calculatePosition(heightPerVal, value,
+                final double position = calculatePosition(heightPerVal, value,
                         m_baseVal);
                 mapping[i] = new IntegerCoordinateMapping(Integer
                         .toString(value), value, position);
@@ -166,10 +166,10 @@ class IntegerCoordinate extends NumericCoordinate {
 
         } else {
             int noOfTicks = (int)Math.ceil(absolutLength
-                    / IntegerCoordinate.DEFAULT_TICK_DIST);
+                    / DoubleCoordinate.DEFAULT_ABSOLUTE_TICK_DIST);
             double range = Math.ceil((double)m_domainRange / noOfTicks);
             range = roundRange(range);
-            
+
             while ((m_minDomainValue + noOfTicks * range) < m_maxDomainValue) {
                 // this should never happen
                 noOfTicks++;
@@ -182,7 +182,7 @@ class IntegerCoordinate extends NumericCoordinate {
             int value = m_minDomainValue;
             mapping = new IntegerCoordinateMapping[noOfTicks + 1];
             for (int i = 0, length = mapping.length; i < length; i++) {
-                double position = calculatePosition(heightPerVal, value,
+                final double position = calculatePosition(heightPerVal, value,
                         m_baseVal);
                 mapping[i] = new IntegerCoordinateMapping(Integer
                         .toString(value), value, position);
@@ -236,9 +236,10 @@ class IntegerCoordinate extends NumericCoordinate {
             throw new IllegalArgumentException("Value cell not compatible.");
         }
         // the height per 1 value in pixel
-        double heightPerVal = absolutLength / m_domainRange;
-        int value = (int)((DoubleValue)domainValueCell).getDoubleValue();
-        double position = calculatePosition(heightPerVal, value, m_baseVal);
+        final double heightPerVal = absolutLength / m_domainRange;
+        final int value = (int)((DoubleValue)domainValueCell).getDoubleValue();
+        final double position =
+            calculatePosition(heightPerVal, value, m_baseVal);
         return position;
     }
 
@@ -317,7 +318,7 @@ class IntegerCoordinate extends NumericCoordinate {
      * @return the range which is covered by this coordinate
      */
     private int createDomainRange(final int minValue, final int maxValue) {
-        int range = Math.abs(maxValue - minValue);
+        final int range = Math.abs(maxValue - minValue);
         return range;
     }
 
