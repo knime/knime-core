@@ -83,7 +83,8 @@ public abstract class GenericNodeModel {
     /**
      * Creates a new model with the given number (and types!) of input and
      * output types.
-     *
+     * @param inPortTypes an array of non-null in-port types
+     * @param outPortTypes an array of non-null out-port types
      * @throws NegativeArraySizeException If the number of in- or outputs is
      *             smaller than zero.
      */
@@ -335,7 +336,7 @@ public abstract class GenericNodeModel {
      * @throws IllegalStateException If the number of <code>DataTable</code>
      *             objects returned by the derived <code>NodeModel</code> does
      *             not match the number of outputs. Or if any of them is null.
-     * @see #execute(BufferedDataTable[],ExecutionContext)
+     * @see #execute(PortObject[],ExecutionContext)
      */
     protected final PortObject[] executeModel(
             final PortObject[] data, final ExecutionContext exec)
@@ -536,8 +537,8 @@ public abstract class GenericNodeModel {
      * views about changes of the settings or during execution, if you want the
      * views to show the progress, and if they can display models half way
      * through the execution. In the view
-     * <code>GenericNodeView#updateModel(Object)</code> is called and needs to be
-     * overridden.
+     * <code>GenericNodeView#updateModel(Object)</code> is called and needs to
+     * be overridden.
      *
      * @param arg The argument you want to pass.
      */
@@ -571,12 +572,12 @@ public abstract class GenericNodeModel {
     /**
      * Sets a new <code>HiLiteHandler</code> for the given input.
      *
-     * @param hdl The new <code>HiLiteHandler</code>.
      * @param in The input index.
+     * @param hdl The new <code>HiLiteHandler</code>.
      *
      * @see #setInHiLiteHandler(int, HiLiteHandler)
      */
-    final void setInHiLiteHandler(final HiLiteHandler hdl, final int in) {
+    final void setNewInHiLiteHandler(final int in, final HiLiteHandler hdl) {
         m_inHiLiteHdls[in] = hdl;
         setInHiLiteHandler(in, hdl);
         stateChanged();
