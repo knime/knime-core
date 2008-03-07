@@ -25,17 +25,6 @@
 
 package org.knime.base.node.viz.pie.node;
 
-import java.awt.Color;
-import java.io.File;
-import java.io.IOException;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.pie.datamodel.PieVizModel;
-import org.knime.base.node.viz.pie.util.PieColumnFilter;
-import org.knime.base.node.viz.pie.util.TooManySectionsException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -46,23 +35,40 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
+import org.knime.core.node.PortType;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.ColumnFilter;
 import org.knime.core.node.util.DataValueColumnFilter;
 
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.pie.datamodel.PieVizModel;
+import org.knime.base.node.viz.pie.util.PieColumnFilter;
+import org.knime.base.node.viz.pie.util.TooManySectionsException;
+
+import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 /**
  * The abstract pie chart implementation of the{@link NodeModel} class.
  * @author Tobias Koetter, University of Konstanz
  * @param <D> the {@link PieVizModel} implementation
  */
-public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
+public abstract class PieNodeModel<D extends PieVizModel>
+extends GenericNodeModel {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(PieNodeModel.class);
@@ -110,7 +116,7 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
     /**Constructor for class PieNodeModel.
      */
     public PieNodeModel() {
-        super(1, 0);
+        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[0]);
         m_noOfRows = new SettingsModelIntegerBounded(CFGKEY_NO_OF_ROWS,
                         DEFAULT_NO_OF_ROWS, 0, Integer.MAX_VALUE);
         m_allRows = new SettingsModelBoolean(CFGKEY_ALL_ROWS, false);
@@ -207,9 +213,9 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        final DataTableSpec spec = inSpecs[0];
+        final DataTableSpec spec = (DataTableSpec)inSpecs[0];
         if (spec == null) {
             throw new IllegalArgumentException(
                     "Table specification must not be null");
@@ -240,9 +246,9 @@ public abstract class PieNodeModel<D extends PieVizModel> extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected BufferedDataTable[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
-        final BufferedDataTable dataTable = inData[0];
+        final BufferedDataTable dataTable = (BufferedDataTable)inData[0];
         if (dataTable == null) {
             throw new IllegalArgumentException("No data found");
         }

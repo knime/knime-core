@@ -37,6 +37,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.PortObjectSpec;
 
 
 
@@ -79,13 +80,13 @@ extends PieNodeModel<InteractivePieVizModel> {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
     throws InvalidSettingsException {
         try {
             return super.configure(inSpecs);
         } catch (final InvalidSettingsException e) {
             //try to set some default values
-            final DataTableSpec spec = inSpecs[0];
+            final DataTableSpec spec = (DataTableSpec)inSpecs[0];
             if (spec == null) {
                 throw new IllegalArgumentException(
                 "No table specification found");

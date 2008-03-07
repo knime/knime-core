@@ -26,9 +26,6 @@ package org.knime.base.node.viz.pie.node.interactive;
 
 import org.knime.base.node.viz.pie.datamodel.interactive.InteractivePieVizModel;
 import org.knime.base.node.viz.pie.node.PieNodeFactory;
-import org.knime.base.node.viz.pie.node.PieNodeModel;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 
 /**
@@ -36,22 +33,22 @@ import org.knime.core.node.NodeView;
  * @author Tobias Koetter, University of Konstanz
  */
 public class InteractivePieNodeFactory
-    extends PieNodeFactory<InteractivePieVizModel> {
+    extends PieNodeFactory<InteractivePieVizModel, InteractivePieNodeModel,
+    InteractivePieNodeView> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public PieNodeModel<InteractivePieVizModel> createNodeModel() {
+    public InteractivePieNodeModel createNodeModel() {
         return new InteractivePieNodeModel();
     }
 
-
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public InteractivePieNodeView createNodeView(
+            final int viewIndex, final InteractivePieNodeModel nodeModel) {
         assert viewIndex == 0;
         return new InteractivePieNodeView(nodeModel);
     }
