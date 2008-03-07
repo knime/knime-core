@@ -38,6 +38,7 @@ import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeInPort;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeOutPort;
 import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeSettingsRO;
@@ -56,6 +57,10 @@ import org.w3c.dom.Element;
 public final class SingleNodeContainer extends NodeContainer
     implements NodeMessageListener, NodeProgressListener {
 
+    /** my logger. */
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(SingleNodeContainer.class);
+    
     /** underlying node. */
     private final Node m_node;
 
@@ -384,7 +389,7 @@ public final class SingleNodeContainer extends NodeContainer
                 // Too late - do nothing.
                 break;
             default:
-                throw new IllegalStateException("Illegal state " + getState()
+                LOGGER.warn("Strange state " + getState()
                         + " encountered in cancelExecution().");
             }
         }
