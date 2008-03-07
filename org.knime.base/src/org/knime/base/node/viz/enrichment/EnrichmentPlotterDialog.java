@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2007
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,9 +17,9 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
-package org.knime.base.node.viz.enrich;
+package org.knime.base.node.viz.enrichment;
 
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -42,7 +42,9 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
 
+import org.knime.base.node.viz.enrichment.EnrichmentPlotterSettings.PlotMode;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -54,13 +56,13 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 /**
  * This is the dialog for the enrichment plotter in which the two columns for
  * the curves are selected.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class EnrichmentPlotterDialog extends NodeDialogPane {
     /**
      * The model for the list with the curves.
-     * 
+     *
      * @author Thorsten Meinl, University of Konstanz
      */
     private class MyListModel extends AbstractListModel {
@@ -129,17 +131,22 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
 
     @SuppressWarnings("unchecked")
     private final ColumnSelectionComboxBox m_hitColumn =
-            new ColumnSelectionComboxBox((Border)null, DoubleValue.class);
+            new ColumnSelectionComboxBox((Border)null, DataValue.class);
 
     private final JCheckBox m_sortDescending = new JCheckBox("Sort descending");
 
     private final JRadioButton m_plotSum =
             new JRadioButton("Plot sum of hit values");
 
-    private final JRadioButton m_plotHits = new JRadioButton("Hit threshold");
+    private final JRadioButton m_plotHits = new JRadioButton("Plot hits ");
+
+    private final JRadioButton m_plotClusters =
+            new JRadioButton("Plot discovered clusters");
 
     private final JFormattedTextField m_hitThreshold =
             new JFormattedTextField(new DecimalFormat("###0.0##"));
+
+    private final JLabel m_hitClusterLabel = new JLabel("Activity column");
 
     /**
      * Creates a dialog for the enrichment plotter settings.
@@ -148,13 +155,55 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
-        c.insets = new Insets(2, 2, 2, 2);
+        c.insets = new Insets(2, 2, 0, 2);
         c.gridx = 0;
         c.gridy = 0;
-        p.add(new JLabel("Sort column"), c);
 
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(m_plotHits);
+        bg.add(m_plotSum);
+        bg.add(m_plotClusters);
+        c.gridwidth = 2;
+        c.anchor = GridBagConstraints.WEST;
+
+        p.add(m_plotSum, c);
+
+        c.gridy++;
+        c.insets = new Insets(0, 2, 0, 2);
+        p.add(m_plotHits, c);
+
+        c.gridy++;
+        JPanel p2 = new JPanel();
+        m_hitThreshold.setColumns(3);
+        p2.add(new JLabel("    Hit threshold"));
+        p2.add(m_hitThreshold);
+        p.add(p2, c);
+
+        c.gridy++;
+        c.insets = new Insets(0, 0, 10, 0);
+        p.add(m_plotClusters, c);
+        c.insets = new Insets(2, 2, 2, 2);
+
+        ActionListener al = new ActionListener() {
+            public void actionPerformed(final ActionEvent e) {
+                m_hitThreshold.setEnabled(m_plotHits.isSelected());
+                if (m_plotClusters.isSelected()) {
+                    m_hitClusterLabel.setText("Cluster column");
+                } else {
+                    m_hitClusterLabel.setText("Activity column");
+                }
+            }
+        };
+        m_plotSum.addActionListener(al);
+        m_plotHits.addActionListener(al);
+        m_plotClusters.addActionListener(al);
+
+        c.gridy++;
+        c.gridwidth = 1;
+        c.anchor = GridBagConstraints.CENTER;
+        p.add(new JLabel("Sort column"), c);
         c.gridx = 1;
-        p.add(new JLabel("Hit column"), c);
+        p.add(m_hitClusterLabel, c);
 
         c.gridy++;
         c.gridx = 0;
@@ -169,7 +218,7 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
 
         c.gridy++;
         c.gridx = 0;
-        JButton b = new JButton("Add curve");
+        JButton b = new JButton("  Add curve  ");
         b.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_listModel.addCurve();
@@ -186,40 +235,16 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
         });
         p.add(b, c);
 
-
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = 2;
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 1;
+        c.weighty = 1;
         m_curves.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         p.add(new JScrollPane(m_curves), c);
 
-        
-        ButtonGroup bg = new ButtonGroup();
-        bg.add(m_plotHits);
-        bg.add(m_plotSum);
-        c.gridy++;
-        c.gridx = 0;
-        c.gridwidth = 2;
 
-        JPanel p2 = new JPanel();
-        p2.add(m_plotSum);
-        p2.add(m_plotHits);
-        p2.add(m_hitThreshold);
-        m_hitThreshold.setColumns(3);
-        p.add(p2, c);
-        
-        m_plotHits.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                m_hitThreshold.setEnabled(m_plotHits.isSelected());
-            }
-        });
-        m_plotSum.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
-                m_hitThreshold.setEnabled(m_plotHits.isSelected());
-            }
-        });
-
-        
         addTab("Curves to plot", p);
     }
 
@@ -230,17 +255,18 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         m_settings = new EnrichmentPlotterSettings();
-        try {
-            m_settings.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException ex) {
-            // LOGGER.error("Cannot read settings, using defaults", ex);
-        }
+        m_settings.loadSettingsForDialog(settings);
 
         m_sortColumn.update(specs[0], null);
         m_hitColumn.update(specs[0], null);
         m_listModel.refresh();
-        m_plotHits.setSelected(!m_settings.sumHitValues());
-        m_plotSum.setSelected(m_settings.sumHitValues());
+        m_plotHits.setSelected(m_settings.plotMode().equals(PlotMode.PlotHits));
+        m_plotSum.setSelected(m_settings.plotMode().equals(PlotMode.PlotSum));
+        m_plotClusters.setSelected(m_settings.plotMode().equals(
+                PlotMode.PlotClusters));
+        m_hitThreshold.setEnabled(m_settings.plotMode().equals(
+                PlotMode.PlotHits));
+
         m_hitThreshold.setText(Double.toString(m_settings.hitThreshold()));
     }
 
@@ -250,9 +276,15 @@ public class EnrichmentPlotterDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        m_settings.sumHitValues(m_plotSum.isSelected());
+        if (m_plotHits.isSelected()) {
+            m_settings.plotMode(PlotMode.PlotHits);
+        } else if (m_plotSum.isSelected()) {
+            m_settings.plotMode(PlotMode.PlotSum);
+        } else {
+            m_settings.plotMode(PlotMode.PlotClusters);
+        }
         m_settings.hitThreshold(((Number)m_hitThreshold.getValue())
                 .doubleValue());
-        m_settings.saveSettingsTo(settings);
+        m_settings.saveSettings(settings);
     }
 }

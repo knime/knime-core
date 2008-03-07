@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2007
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,9 +17,9 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
-package org.knime.base.node.viz.enrich;
+package org.knime.base.node.viz.enrichment;
 
 import java.util.ArrayList;
 
@@ -29,14 +29,14 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * This class holds the settings for the enrichment plotter node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class EnrichmentPlotterSettings {
     /**
      * A simple container that holds the necessary information for specifying a
      * curve that should be plotted.
-     * 
+     *
      * @author Thorsten Meinl, University of Konstanz
      */
     public static class Curve {
@@ -54,7 +54,7 @@ public class EnrichmentPlotterSettings {
 
         /**
          * Creates a new Curve object.
-         * 
+         *
          * @param sortColumn the column by which the table should be sorted
          * @param hitColumn the column with the hit values
          * @param sortDescending <code>true</code> if the
@@ -104,9 +104,9 @@ public class EnrichmentPlotterSettings {
         }
 
         /**
-         * @return the hitColumn
+         * @return the column containing the activity or cluster values
          */
-        public String getHitColumn() {
+        public String getActivityColumn() {
             return m_hitColumn;
         }
 
@@ -127,24 +127,38 @@ public class EnrichmentPlotterSettings {
         }
     }
 
+    /**
+     * Enum for the three different plot modes.
+     *
+     * @author Thorsten Meinl, University of Konstanz
+     */
+    public static enum PlotMode {
+        /** Plot the sum of values in the activity column. */
+        PlotSum,
+        /** Plot the sum of hits in the activity column. */
+        PlotHits,
+        /** Plot the number of discovered clusters in the cluster column. */
+        PlotClusters
+    }
+
     private final ArrayList<Curve> m_curves = new ArrayList<Curve>();
 
-    private boolean m_sumHitValues;
+    private PlotMode m_plotMode = PlotMode.PlotHits;
 
-    private double m_hitThreshold;
+    private double m_hitThreshold = 5.5;
 
     /**
      * Adds a new curve to the settings.
-     * 
+     *
      * @param sortColumn the column by which the table should be sorted
-     * @param hitColumn the column with the hit values
+     * @param activityColumn the column with the activity or cluster values
      * @param sortDescending <code>true</code> if the <code>sortColumn</code>
      *            should be sorted descending, <code>false</code> if it should
      *            be sorted ascending
      */
-    public void addCurve(final String sortColumn, final String hitColumn,
+    public void addCurve(final String sortColumn, final String activityColumn,
             final boolean sortDescending) {
-        Curve c = new Curve(sortColumn, hitColumn, sortDescending);
+        Curve c = new Curve(sortColumn, activityColumn, sortDescending);
         if (!m_curves.contains(c)) {
             m_curves.add(c);
         }
@@ -152,7 +166,7 @@ public class EnrichmentPlotterSettings {
 
     /**
      * Returns the curve settings for the given index.
-     * 
+     *
      * @param index an index
      * @return the curve settings at the index
      */
@@ -162,7 +176,7 @@ public class EnrichmentPlotterSettings {
 
     /**
      * Returns the number of curves that should be plotted.
-     * 
+     *
      * @return the number of curves
      */
     public int getCurveCount() {
@@ -171,7 +185,7 @@ public class EnrichmentPlotterSettings {
 
     /**
      * Removes the given curve from the settings.
-     * 
+     *
      * @param curve a curve
      * @return <code>true</code> if the curve was removed, <code>false</code>
      *         otherwise (likely because the curve does not exist)
@@ -182,76 +196,98 @@ public class EnrichmentPlotterSettings {
 
     /**
      * Saves this object's settings to the given node settings.
-     * 
+     *
      * @param settings the node settings
      */
-    public void saveSettingsTo(final NodeSettingsWO settings) {
+    public void saveSettings(final NodeSettingsWO settings) {
         settings.addInt("curveCount", m_curves.size());
 
         int i = 1;
         for (Curve c : m_curves) {
             settings.addString("curve_" + i + "_sort", c.getSortColumn());
-            settings.addString("curve_" + i + "_hit", c.getHitColumn());
+            settings.addString("curve_" + i + "_act", c.getActivityColumn());
             settings.addBoolean("curve_" + i + "_descending", c
                     .isSortDescending());
             i++;
         }
 
-        settings.addBoolean("sumHitValues", m_sumHitValues);
+        settings.addString("plotMode", m_plotMode.name());
         settings.addDouble("hitThreshold", m_hitThreshold);
     }
 
     /**
      * Loads the settings from the given node settings object.
-     * 
+     *
      * @param settings the node settings
      * @throws InvalidSettingsException if the settings are invalid
      */
-    public void loadSettingsFrom(final NodeSettingsRO settings)
+    public void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_curves.clear();
         int curveCount = settings.getInt("curveCount");
 
         for (int i = 1; i <= curveCount; i++) {
             String sort = settings.getString("curve_" + i + "_sort");
-            String hit = settings.getString("curve_" + i + "_hit");
+            String hit = settings.getString("curve_" + i + "_act");
             boolean sortDescending =
                     settings.getBoolean("curve_" + i + "_descending");
             m_curves.add(new Curve(sort, hit, sortDescending));
         }
 
-        m_sumHitValues = settings.getBoolean("sumHitValues");
-        m_hitThreshold = settings.getDouble("hitThreshold", 5);
+        m_hitThreshold = settings.getDouble("hitThreshold");
+        m_plotMode = PlotMode.valueOf(settings.getString("plotMode"));
     }
 
     /**
-     * Returns if the sum of hit values should be plotted on the y-axis instead
-     * of the number of hits.
-     * 
-     * @return <code>true</code> if the hit value sum should be plotted,
-     *         <code>false</code> if only the hit count should be plotted
+     * Loads the settings from the given node settings object.
+     *
+     * @param settings the node settings
      */
-    public boolean sumHitValues() {
-        return m_sumHitValues;
+    public void loadSettingsForDialog(final NodeSettingsRO settings) {
+        m_curves.clear();
+        int curveCount = settings.getInt("curveCount", 0);
+
+        for (int i = 1; i <= curveCount; i++) {
+            try {
+                String sort = settings.getString("curve_" + i + "_sort");
+                String hit = settings.getString("curve_" + i + "_act");
+                boolean sortDescending =
+                        settings.getBoolean("curve_" + i + "_descending");
+                m_curves.add(new Curve(sort, hit, sortDescending));
+            } catch (InvalidSettingsException ex) {
+                // ignore it
+            }
+        }
+
+        m_hitThreshold = settings.getDouble("hitThreshold", 5.5);
+        m_plotMode =
+                PlotMode.valueOf(settings.getString("plotMode",
+                        PlotMode.PlotHits.name()));
     }
 
     /**
-     * Sets if the sum of hits values should be plotted instead of the number of
-     * hits on the y-axis.
-     * 
-     * @param b <code>true</code> if the hit value sum should be plotted,
-     *            <code>false</code> if only the hit count should be plotted
-     * 
+     * Returns the desired plot mode.
+     *
+     * @return the plot mode
      */
-    public void sumHitValues(final boolean b) {
-        m_sumHitValues = b;
+    public PlotMode plotMode() {
+        return m_plotMode;
+    }
+
+    /**
+     * Sets the desired plot mode.
+     *
+     * @param mode the plot mode
+     */
+    public void plotMode(final PlotMode mode) {
+        m_plotMode = mode;
     }
 
     /**
      * Returns the threshold above and including which a data point is
-     * considered a hit. This settings is only used if {@link #sumHitValues()}
-     * is <code>false</code>.
-     * 
+     * considered a hit. This settings is only relevant if {@link #plotMode()}
+     * is {@link PlotMode#PlotHits}.
+     *
      * @return the hit threshold
      */
     public double hitThreshold() {
@@ -259,10 +295,10 @@ public class EnrichmentPlotterSettings {
     }
 
     /**
-     * Sets the threshold above and including which a data point is
-     * considered a hit. This settings is only used if {@link #sumHitValues()}
-     * is <code>false</code>.
-     * 
+     * Sets the threshold above and including which a data point is considered a
+     * hit. This settings is only relevant if {@link #plotMode()} is
+     * {@link PlotMode#PlotHits}.
+     *
      * @param thres the hit threshold
      */
     public void hitThreshold(final double thres) {

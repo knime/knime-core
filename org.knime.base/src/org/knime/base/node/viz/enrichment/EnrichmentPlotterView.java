@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2007
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -19,7 +19,7 @@
  * email: contact@knime.org
  * ------------------------------------------------------------------- * 
  */
-package org.knime.base.node.viz.enrich;
+package org.knime.base.node.viz.enrichment;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -33,7 +33,7 @@ import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.basic.BasicDrawingPane;
 import org.knime.base.node.viz.plotter.basic.BasicPlotterImpl;
 import org.knime.core.node.NodeView;
-import org.knime.base.node.viz.enrich.EnrichmentPlotterModel.EnrichmentPlot;
+import org.knime.base.node.viz.enrichment.EnrichmentPlotterModel.EnrichmentPlot;
 
 /**
  * This is the view for the enrichment plotter node that shows all specified

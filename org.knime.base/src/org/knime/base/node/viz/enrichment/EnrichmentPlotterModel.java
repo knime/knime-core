@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2008
+ * Copyright, 2003 - 2007
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -17,10 +17,12 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
-package org.knime.base.node.viz.enrich;
+package org.knime.base.node.viz.enrichment;
 
+import java.awt.HeadlessException;
+import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -30,10 +32,13 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import org.knime.base.node.viz.enrichment.EnrichmentPlotterSettings.Curve;
+import org.knime.base.node.viz.enrichment.EnrichmentPlotterSettings.PlotMode;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -52,30 +57,60 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.base.node.viz.enrich.EnrichmentPlotterSettings.Curve;
 
 /**
  * This class is the model for the enrichment plotter node. It does the
- * precalculation for the view, i.e. it sorts the the data according to the
+ * pre-calculation for the view, i.e. it sorts the the data according to the
  * selected columns and computes the y-values for the enrichment curves.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class EnrichmentPlotterModel extends NodeModel {
     private List<EnrichmentPlot> m_curves = new ArrayList<EnrichmentPlot>();
 
-    private static final DataTableSpec OUT_SPEC;
+    private static final DataTableSpec AREA_OUT_SPEC;
+
+    private static final DataTableSpec DISCRATE_OUT_SPEC;
+
+    private static final double[] DISCRATE_POINTS =
+            {0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50,
+                    60, 80, 100};
+
+    // maximum x-resolution for the graphs
+    private static final int MAX_RESOLUTION;
 
     static {
         DataColumnSpec dcs =
                 new DataColumnSpecCreator("Area", DoubleCell.TYPE).createSpec();
-        OUT_SPEC = new DataTableSpec(dcs);
+        AREA_OUT_SPEC = new DataTableSpec(dcs);
+
+        DataColumnSpec[] cs = new DataColumnSpec[DISCRATE_POINTS.length];
+        for (int i = 0; i < cs.length; i++) {
+            cs[i] =
+                    new DataColumnSpecCreator("Discovery rate at "
+                            + DISCRATE_POINTS[i] + "%", DoubleCell.TYPE)
+                            .createSpec();
+        }
+
+        DISCRATE_OUT_SPEC = new DataTableSpec(cs);
+
+        int res;
+        try {
+            res =
+                    (int)(Toolkit.getDefaultToolkit().getScreenSize()
+                            .getWidth() * 3);
+        } catch (HeadlessException ex) {
+            res = 4000;
+        }
+        MAX_RESOLUTION = res;
     }
 
     private static class Helper implements Comparable<Helper> {
-        final double a, b;
+        final double a;
 
-        Helper(final double aa, final double bb) {
+        final DataCell b;
+
+        Helper(final double aa, final DataCell bb) {
             this.a = aa;
             this.b = bb;
         }
@@ -90,10 +125,11 @@ public class EnrichmentPlotterModel extends NodeModel {
 
     /**
      * Small container class for a single enrichment curve.
-     * 
+     *
      * @author Thorsten Meinl, University of Konstanz
      */
     static class EnrichmentPlot implements Serializable {
+        private static final long serialVersionUID = 3967048973324638794L;
         private final String m_name;
 
         private final double m_area;
@@ -102,7 +138,7 @@ public class EnrichmentPlotterModel extends NodeModel {
 
         /**
          * Creates a new enrich curve container.
-         * 
+         *
          * @param name the curve's name
          * @param x the curve's x-values
          * @param y the curve's y-values
@@ -118,7 +154,7 @@ public class EnrichmentPlotterModel extends NodeModel {
 
         /**
          * Returns the curve's name.
-         * 
+         *
          * @return the curve's name.
          */
         public String getName() {
@@ -127,7 +163,7 @@ public class EnrichmentPlotterModel extends NodeModel {
 
         /**
          * Returns the curve's area.
-         * 
+         *
          * @return the curve's area.
          */
         public final double getArea() {
@@ -136,7 +172,7 @@ public class EnrichmentPlotterModel extends NodeModel {
 
         /**
          * Returns the curve's x-values.
-         * 
+         *
          * @return the curve's x-values.
          */
         public final double[] getX() {
@@ -145,7 +181,7 @@ public class EnrichmentPlotterModel extends NodeModel {
 
         /**
          * Returns the curve's y-values.
-         * 
+         *
          * @return the curve's y-values.
          */
         public final double[] getY() {
@@ -160,7 +196,7 @@ public class EnrichmentPlotterModel extends NodeModel {
      * Creates a new model for the enrichment plotter node.
      */
     public EnrichmentPlotterModel() {
-        super(1, 1);
+        super(1, 2);
     }
 
     /**
@@ -179,13 +215,21 @@ public class EnrichmentPlotterModel extends NodeModel {
                 throw new InvalidSettingsException("Sort column '"
                         + c.getSortColumn() + " ' does not exist");
             }
-            if (inSpecs[0].findColumnIndex(c.getHitColumn()) == -1) {
-                throw new InvalidSettingsException("Hit column '"
-                        + c.getHitColumn() + " ' does not exist");
+
+            if (inSpecs[0].findColumnIndex(c.getActivityColumn()) == -1) {
+                throw new InvalidSettingsException("Activity/cluster column '"
+                        + c.getActivityColumn() + " ' does not exist");
+            }
+
+            if ((m_settings.plotMode() != PlotMode.PlotClusters)
+                    && !inSpecs[0].getColumnSpec(c.getActivityColumn())
+                            .getType().isCompatible(DoubleValue.class)) {
+                throw new InvalidSettingsException(
+                        "Activity column is not numeric");
             }
         }
 
-        return new DataTableSpec[]{OUT_SPEC};
+        return new DataTableSpec[]{AREA_OUT_SPEC, DISCRATE_OUT_SPEC};
     }
 
     /**
@@ -194,43 +238,41 @@ public class EnrichmentPlotterModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        final double maxProgress =
-                m_settings.getCurveCount() * inData[0].getRowCount();
-        BufferedDataContainer outCont = exec.createDataContainer(OUT_SPEC);
+        final double rowCount = inData[0].getRowCount();
+        final BufferedDataContainer areaOutCont =
+                exec.createDataContainer(AREA_OUT_SPEC);
+        final BufferedDataContainer discrateOutCont =
+                exec.createDataContainer(DISCRATE_OUT_SPEC);
 
         for (int i = 0; i < m_settings.getCurveCount(); i++) {
-            exec.checkCanceled();
-            int localProgress = i * inData[0].getRowCount();
-            exec.setProgress(localProgress / maxProgress);
-            Curve c = m_settings.getCurve(i);
+            final ExecutionMonitor sexec =
+                    exec.createSubProgress(1.0 / m_settings.getCurveCount());
+
+            final Curve c = m_settings.getCurve(i);
             final Helper[] curve = new Helper[inData[0].getRowCount()];
 
-            int sortIndex =
+            final int sortIndex =
                     inData[0].getDataTableSpec().findColumnIndex(
                             c.getSortColumn());
-            int hitIndex =
+            final int actIndex =
                     inData[0].getDataTableSpec().findColumnIndex(
-                            c.getHitColumn());
+                            c.getActivityColumn());
 
             int k = 0, maxK = 0;
             for (DataRow row : inData[0]) {
                 DataCell c1 = row.getCell(sortIndex);
-                DataCell c2 = row.getCell(hitIndex);
+                DataCell c2 = row.getCell(actIndex);
 
-                if (k++ % 1000 == 0) {
-                    exec.checkCanceled();
-                    exec.setProgress((localProgress + k) / maxProgress);
+                if (k++ % 100 == 0) {
+                    sexec.checkCanceled();
+                    sexec.setProgress(k / rowCount);
                 }
 
                 if (c1.isMissing()) {
                     continue;
-                } else if (c2.isMissing()) {
-                    curve[maxK] =
-                            new Helper(((DoubleValue)c1).getDoubleValue(), 0);
                 } else {
                     curve[maxK] =
-                            new Helper(((DoubleValue)c1).getDoubleValue(),
-                                    ((DoubleValue)c2).getDoubleValue());
+                            new Helper(((DoubleValue)c1).getDoubleValue(), c2);
                 }
                 maxK++;
             }
@@ -244,46 +286,76 @@ public class EnrichmentPlotterModel extends NodeModel {
                 }
             }
 
-            final int size = Math.min(4000, maxK);
-            final double downSample = maxK / (double)size;
-            double[] xValues = new double[size + 1];
-            double[] yValues = new double[size + 1];
-            int lastK = 0;
-            double y = 0, area = 0;
+            // this is for down-sampling so that the view is faster;
+            // plotting >100,000 points takes quite a long time
+            final int size = Math.min(MAX_RESOLUTION, maxK);
+            final double downSampleRate = maxK / (double)size;
+
+            final double[] xValues = new double[size + 1];
+            final double[] yValues = new double[size + 1];
             xValues[0] = 0;
             yValues[0] = 0;
+
+            int lastK = 0;
+            double y = 0, area = 0;
+            int nextHitRatePoint = 0;
+            final double[] hitRateValues = new double[DISCRATE_POINTS.length];
+            final HashSet<DataCell> clusters = new HashSet<DataCell>();
+
             for (k = 1; k <= maxK; k++) {
-                Helper h = curve[k - 1];
-                if (m_settings.sumHitValues()) {
-                    y += h.b;
-                } else {
-                    y += (h.b >= m_settings.hitThreshold()) ? 1 : 0;
+                final Helper h = curve[k - 1];
+                if (m_settings.plotMode() == PlotMode.PlotSum) {
+                    y += ((DoubleValue)h.b).getDoubleValue();
+                } else if (m_settings.plotMode() == PlotMode.PlotHits) {
+                    y +=
+                            (((DoubleValue)h.b).getDoubleValue() >= m_settings
+                                    .hitThreshold()) ? 1 : 0;
+                } else if (!h.b.isMissing()) {
+                    y += clusters.add(h.b) ? 1 : 0;
                 }
                 area += y / maxK;
 
-                if ((int)(k / downSample) >= lastK + 1) {
+                if ((int)(k / downSampleRate) >= lastK + 1) {
                     lastK++;
                     xValues[lastK] = k;
                     yValues[lastK] = y;
+                }
+
+                if ((nextHitRatePoint < DISCRATE_POINTS.length)
+                        && (k == (int)Math.floor(maxK
+                                * DISCRATE_POINTS[nextHitRatePoint] / 100))) {
+                    hitRateValues[nextHitRatePoint] = y;
+                    nextHitRatePoint++;
                 }
             }
             xValues[xValues.length - 1] = maxK;
             yValues[yValues.length - 1] = y;
             area /= y;
+
             m_curves.add(new EnrichmentPlot(c.getSortColumn() + " vs "
-                    + c.getHitColumn(), xValues, yValues, area));
-            outCont.addRowToTable(new DefaultRow(new RowKey(c.toString()),
+                    + c.getActivityColumn(), xValues, yValues, area));
+            areaOutCont.addRowToTable(new DefaultRow(new RowKey(c.toString()),
                     new DoubleCell(area)));
+
+            for (int j = 0; j < hitRateValues.length; j++) {
+                hitRateValues[j] /= y;
+            }
+
+            discrateOutCont.addRowToTable(new DefaultRow(
+                    new RowKey(c.toString()), hitRateValues));
         }
 
-        outCont.close();
-        return new BufferedDataTable[]{outCont.getTable()};
+        areaOutCont.close();
+        discrateOutCont.close();
+        return new BufferedDataTable[]{areaOutCont.getTable(),
+                discrateOutCont.getTable()};
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("unchecked")
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
@@ -310,7 +382,7 @@ public class EnrichmentPlotterModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_settings.loadSettingsFrom(settings);
+        m_settings.loadSettings(settings);
     }
 
     /**
@@ -341,7 +413,7 @@ public class EnrichmentPlotterModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_settings.saveSettingsTo(settings);
+        m_settings.saveSettings(settings);
     }
 
     /**
@@ -351,20 +423,21 @@ public class EnrichmentPlotterModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         EnrichmentPlotterSettings s = new EnrichmentPlotterSettings();
-        s.loadSettingsFrom(settings);
+        s.loadSettings(settings);
         for (int i = 0; i < s.getCurveCount(); i++) {
-            if (s.getCurve(i).getHitColumn().equals(
+            if (s.getCurve(i).getActivityColumn().equals(
                     s.getCurve(i).getSortColumn())) {
-                throw new InvalidSettingsException("Hit and sort column are "
-                        + "identical: " + s.getCurve(i).getHitColumn());
+                throw new InvalidSettingsException("Activity and sort column "
+                        + " are identical: "
+                        + s.getCurve(i).getActivityColumn());
             }
         }
     }
 
     /**
-     * Returns a list with all precalculated curves that should be shown in the
+     * Returns a list with all pre-calculated curves that should be shown in the
      * view.
-     * 
+     *
      * @return a list with enrichment curves
      */
     List<EnrichmentPlot> getCurves() {
