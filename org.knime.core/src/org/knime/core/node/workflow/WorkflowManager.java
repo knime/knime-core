@@ -1073,7 +1073,11 @@ public final class WorkflowManager extends NodeContainer {
         assert !nc.getID().equals(this.getID());
         synchronized (m_dirtyWorkflow) {
             LOGGER.info(nc.getNameWithID() + " doBeforeExecute (NC)");
-            // some nodes IN this WFM are executing
+            // allow SNC to update states etc
+            if (nc instanceof SingleNodeContainer) {
+                ((SingleNodeContainer)nc).preExecuteNode();
+            }
+            // some nodes IN this WFM are executing - also update WFM state
             setState(State.EXECUTING); // state of WFM, not nc!
         }
     }
@@ -1089,6 +1093,10 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (m_dirtyWorkflow) {
             String st = success ? " - success" : " - failure";
             LOGGER.info(nc.getNameWithID() + " doAfterExecute" + st);
+            // allow SNC to update states etc
+            if (nc instanceof SingleNodeContainer) {
+                ((SingleNodeContainer)nc).postExecuteNode(success);
+            }
             if (!success) {
                 // execution failed - clean up successors' execution-marks
                 disableNodeForExecution(nc.getID());

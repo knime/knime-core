@@ -400,15 +400,13 @@ public final class SingleNodeContainer extends NodeContainer
     //  internal state change actions
     //////////////////////////////////////
 
-    /**
-     * Execute underlying Node and update state accordingly.
-     *
-     * @param inTables input parameters
-     * @throws IllegalStateException in case of illegal entry state.
+    /** This should be used to change the nodes states correctly (and likely
+     * needs to be synchronized with other changes visible to successors of
+     * this node as well!) BEFORE the actual execution.
+     * The main reason is that the actual execution should be performed
+     * unsychronized!
      */
-    private void executeNode(final PortObject[] inObjects,
-            final ExecutionContext ec) {
-        getParent().doBeforeExecution(SingleNodeContainer.this);
+    void preExecuteNode() {
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case QUEUED:
@@ -428,12 +426,17 @@ public final class SingleNodeContainer extends NodeContainer
                         + " encountered in executeNode(), node: " + getID());
             }
         }
-        // TODO: the progress monitor should not be accessible from the
-        // public world.
-        ec.getProgressMonitor().reset();
-        // execute node outside any synchronization!
-        boolean success = m_node.execute(inObjects, ec);
-        // clean up stuff and especially state changes synchronized again
+    }
+
+    /** This should be used to change the nodes states correctly (and likely
+     * needs to be synchronized with other changes visible to successors of
+     * this node as well!) AFTER the actual execution.
+     * The main reason is that the actual execution should be performed
+     * unsychronized!
+     * 
+     * @param success indicates if execution was successful
+     */
+    void postExecuteNode(final boolean success) {
         synchronized (m_dirtyNode) {
             if (success) {
                 if (m_node.getLoopStatus() == null) {
@@ -442,8 +445,6 @@ public final class SingleNodeContainer extends NodeContainer
                     for (int i = 0; i < m_node.getNrOutPorts(); i++) {
                         m_node.getOutPort(i).showPortObject(true);
                     }
-                    // output tables are made publicly available (for blobs)
-                    putOutputTablesIntoGlobalRepository(ec);
                     setState(State.EXECUTED);
 
                 } else {
@@ -459,7 +460,31 @@ public final class SingleNodeContainer extends NodeContainer
                 setState(State.CONFIGURED);
             }
         }
-        // the following triggers check-for-queueable-nodes, among others
+    }
+
+    /**
+     * Execute underlying Node asynchronisly. Make sure to give Workflow-
+     * Manager a chance to call pre- and postExecuteNode() appropriately
+     * and synchronize those parts (since they changes states!).
+     *
+     * @param inTables input parameters
+     * @throws IllegalStateException in case of illegal entry state.
+     */
+    private void executeNode(final PortObject[] inObjects,
+            final ExecutionContext ec) {
+        // this will allow the parent to call state changes etc properly
+        // synchronized. The main execution is done asynchronsly.
+        getParent().doBeforeExecution(SingleNodeContainer.this);
+        // TODO: the progress monitor should not be accessible from the
+        // public world.
+        ec.getProgressMonitor().reset();
+        // execute node outside any synchronization!
+        boolean success = m_node.execute(inObjects, ec);
+        if (success) {  // TODO Bernd - can this remain unsynchronized??
+            // output tables are made publicly available (for blobs)
+            // putOutputTablesIntoGlobalRepository(ec);
+        }
+        // clean up stuff and especially change states synchronized again
         getParent().doAfterExecution(SingleNodeContainer.this, success);
     }
     
