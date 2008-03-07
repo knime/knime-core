@@ -208,5 +208,16 @@
             id="org.knime.workbench.ui.wizards.imports.WorkflowImportWizard"
             name="Import Knime Workflow"/>
    </extension>
+   <extension
+         point="org.eclipse.ui.decorators">
+      <decorator
+            class="org.knime.workbench.ui.navigator.KnimeProjectLabelDecorator"
+            id="org.knime.workbench.ui.decorator"
+            label="label"
+            location="BOTTOM_RIGHT"
+            objectClass="org.eclipse.core.resources.IProject"
+            state="true">
+      </decorator>
+   </extension>
 
 </plugin>

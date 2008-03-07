@@ -818,6 +818,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                     new LoadWorkflowRunnable(this, file);
             ps.busyCursorWhile(loadWorflowRunnable);
 
+            m_manager.setName(m_fileResource.getProject().getName());
+
             // check if the editor should be disposed
             if (m_manager == null) {
                 if (m_loadingCanceled) {

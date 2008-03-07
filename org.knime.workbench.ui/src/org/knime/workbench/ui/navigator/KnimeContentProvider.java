@@ -40,4 +40,10 @@ public class KnimeContentProvider extends WorkbenchContentProvider {
         // level
         return false;
     }
+    
+    @Override
+    public Object[] getChildren(Object element) {
+        // TODO: return the nodes and meta nodes etc.
+        return super.getChildren(element);
+    }
 }

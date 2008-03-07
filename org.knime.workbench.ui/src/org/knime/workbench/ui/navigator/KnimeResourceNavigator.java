@@ -28,9 +28,11 @@ import java.util.Iterator;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
@@ -40,6 +42,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.OpenEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.actions.CloseResourceAction;
 import org.eclipse.ui.actions.CloseUnrelatedProjectsAction;
 import org.eclipse.ui.actions.OpenFileAction;
@@ -48,6 +51,12 @@ import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.views.framelist.GoIntoAction;
 import org.eclipse.ui.views.navigator.ResourceNavigator;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeStateChangeListener;
+import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.WorkflowEvent;
+import org.knime.core.node.workflow.WorkflowListener;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * This class is a filtered view on a knime project which hides utitility files
@@ -57,7 +66,7 @@ import org.knime.core.node.NodeLogger;
  * @author Christoph Sieb, University of Konstanz
  */
 public class KnimeResourceNavigator extends ResourceNavigator implements
-        IResourceChangeListener {
+        IResourceChangeListener, NodeStateChangeListener {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(KnimeResourceNavigator.class);
 
@@ -78,7 +87,47 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
                 IResourceChangeEvent.POST_CHANGE);
 
+        
+        WorkflowManager.ROOT.addListener(new WorkflowListener() {
+
+            public void workflowChanged(final WorkflowEvent event) {
+                LOGGER.debug("ROOT's workflow has changed " + event.getType());
+                if (event.getType().equals(WorkflowEvent.Type.NODE_ADDED)) {
+                    ((NodeContainer)event.getNewValue())
+                        .addNodeStateChangeListener(
+                                KnimeResourceNavigator.this);
+                }
+            }
+            
+        });
+        
+        // to be sure register to all existing projects (in case they are added 
+        // before this constructor is called) 
+        for (NodeContainer nc : WorkflowManager.ROOT.getNodeContainers()) {
+                // register here to this nc and listen to changes
+                // on change -> update labels
+                // TODO: remove the listener?
+                nc.addNodeStateChangeListener(this);
+        }
+        
     }
+    
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void stateChanged(final NodeStateEvent state) {
+        LOGGER.debug("state changed to " + state.getState());
+        Display.getDefault().asyncExec(new Runnable() {
+
+            public void run() {
+                getTreeViewer().refresh();
+            }
+        });
+    }
+    
+    
 
     /**
      * Adds the filters to the viewer.
@@ -126,8 +175,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
                 // get the workflow file of the project
                 // must be "workflow.knime"
-                IProject project = (IProject)element;
-
+                final IProject project = (IProject)element;
+                LOGGER.debug("opening: " + project.getName());
+                
                 IFile workflowFile = project.getFile("workflow.knime");
 
                 if (workflowFile.exists()) {
@@ -201,6 +251,11 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         // not openable.
         menu.insertBefore(id, new Separator());
         menu.insertBefore(id, new OpenKnimeProjectAction(this));
+
+        // TODO: insert actions for
+        // - execute
+        // - cancel
+        
         menu.insertBefore(id, new Separator());
 
         // another bad workaround to replace the first "New" menu manager
@@ -235,5 +290,12 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
     public void resourceChanged(IResourceChangeEvent event) {
         // do nothing
+        try {            
+            LOGGER.debug("refreshing " + event.getResource().getName());
+            event.getResource().refreshLocal(IResource.DEPTH_INFINITE, null);
+        } catch (CoreException ce) {
+            // TODO: what to do?
+            LOGGER.error("exception during resource change event", ce);
+        }
     }
 }
