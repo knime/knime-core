@@ -31,8 +31,6 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -191,17 +189,19 @@ public class WrappedNodeDialog extends Dialog {
         m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
         m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));
         
+        /*
         m_wrapper.addFocusListener(new FocusAdapter() {
            
             /**
              * 
              * @param e focus event passed to the underlying AWT component
-             */
+             *
             @Override
             public void focusGained(final FocusEvent e) {
                 m_wrapper.getAwtPanel().requestFocus();
             } 
         });
+        */
         
         return area;
     }
