@@ -122,7 +122,12 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         Display.getDefault().asyncExec(new Runnable() {
 
             public void run() {
-                getTreeViewer().refresh();
+                // TODO: find Project
+                String name =  WorkflowManager.ROOT.getNodeContainer(
+                        state.getSource()).getName();
+                IResource rsrc = ResourcesPlugin.getWorkspace()
+                    .getRoot().findMember(name);
+                getTreeViewer().update(rsrc, null);
             }
         });
     }
