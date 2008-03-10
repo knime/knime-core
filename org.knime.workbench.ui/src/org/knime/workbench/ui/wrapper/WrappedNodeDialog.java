@@ -31,6 +31,8 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -49,6 +51,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -189,19 +192,25 @@ public class WrappedNodeDialog extends Dialog {
         m_wrapper = new Panel2CompositeWrapper(m_container, p, SWT.EMBEDDED);
         m_wrapper.setLayoutData(new GridData(GridData.FILL_BOTH));
         
-        /*
+        
         m_wrapper.addFocusListener(new FocusAdapter() {
            
             /**
              * 
              * @param e focus event passed to the underlying AWT component
-             *
+             */
             @Override
             public void focusGained(final FocusEvent e) {
-                m_wrapper.getAwtPanel().requestFocus();
+                ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+
+                    public void run() {
+                        m_wrapper.getAwtPanel().requestFocus();
+                    }
+                    
+                });
             } 
         });
-        */
+        
         
         return area;
     }
