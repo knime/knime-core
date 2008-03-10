@@ -480,9 +480,9 @@ public final class SingleNodeContainer extends NodeContainer
         ec.getProgressMonitor().reset();
         // execute node outside any synchronization!
         boolean success = m_node.execute(inObjects, ec);
-        if (success) {  // TODO Bernd - can this remain unsynchronized??
+        if (success) {
             // output tables are made publicly available (for blobs)
-            // putOutputTablesIntoGlobalRepository(ec);
+            putOutputTablesIntoGlobalRepository(ec);
         }
         // clean up stuff and especially change states synchronized again
         getParent().doAfterExecution(SingleNodeContainer.this, success);
