@@ -542,7 +542,7 @@ public final class SingleNodeContainer extends NodeContainer
         SingleNodeContainerPersistor persistor = 
             (SingleNodeContainerPersistor)nodePersistor;
         State state = persistor.getMetaPersistor().getState();
-        setState(state);
+        setState(state, false);
         if (state.equals(State.EXECUTED)) {
             m_node.putOutputTablesIntoGlobalRepository(
                     getParent().getGlobalTableRepository());

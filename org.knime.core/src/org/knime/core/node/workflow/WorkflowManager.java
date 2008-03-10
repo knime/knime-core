@@ -263,6 +263,7 @@ public final class WorkflowManager extends NodeContainer {
         }
         configureNodeAndSuccessors(newID, true, true);
         LOGGER.info("Added new node " + newID);
+        setDirty();
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED,
                 newID, null, null));
@@ -321,6 +322,7 @@ public final class WorkflowManager extends NodeContainer {
                 m_deletedNodesFileLocations.add(ncDir);
             }
         }
+        setDirty();
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED,
                 getID(), nodeID, null));
@@ -346,6 +348,7 @@ public final class WorkflowManager extends NodeContainer {
             addNodeContainer(wfm);
             LOGGER.info("Added new subworkflow " + newID);
         }
+        setDirty();
         notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED,
                         newID, null, wfm));
         return wfm;
@@ -431,6 +434,9 @@ public final class WorkflowManager extends NodeContainer {
     public ConnectionContainer addConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort) {
+        // must not set it in the private method (see below), as the private
+        // one is also called from the load routine
+        setDirty();
         return addConnection(source, sourcePort, dest, destPort, true);
     }
 
@@ -627,7 +633,6 @@ public final class WorkflowManager extends NodeContainer {
               || destState.equals(NodeContainer.State.EXECUTED))) {
               return false;
           }
-        // that's it, folks.
         return true;
     }
 
@@ -704,6 +709,7 @@ public final class WorkflowManager extends NodeContainer {
             // otherwise just reset successor, rest will be handled by WFM
             resetAndConfigureNode(cc.getDest());
         }
+        setDirty();
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED,
                         null, cc, null));
@@ -2095,7 +2101,6 @@ public final class WorkflowManager extends NodeContainer {
      * @param evt event
      */
     private final void notifyWorkflowListeners(final WorkflowEvent evt) {
-        setDirty();
         for (WorkflowListener listener : m_wfmListeners) {
             listener.workflowChanged(evt);
         }
