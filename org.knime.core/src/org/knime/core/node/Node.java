@@ -246,6 +246,9 @@ public final class Node {
         }
         m_message = loader.getNodeMessage();
         m_outDataPortsMemoryPolicy = loader.getMemoryPolicy();
+        if (m_outDataPortsMemoryPolicy == null) {
+            m_outDataPortsMemoryPolicy = MemoryPolicy.CacheSmallInMemory;
+        }
         try {
             m_model.loadSettingsFrom(loader.getNodeModelSettings());
         } catch (Exception e) {
@@ -281,9 +284,8 @@ public final class Node {
             m_logger.error("Loading model settings failed", t);
         }
         if (getNrOutPorts() > 0) {
-            m_outDataPortsMemoryPolicy =
-                    l.getMemoryPolicy() == null ? MemoryPolicy.CacheSmallInMemory
-                            : l.getMemoryPolicy();
+            // ensured to return non-null value
+            m_outDataPortsMemoryPolicy = l.getMemoryPolicy();
         }
     }
 
@@ -323,15 +325,6 @@ public final class Node {
      */
     public NodeType getType() {
         return m_factory.getType();
-    }
-
-    /**
-     * Get the currently active memory policy.
-     * 
-     * @return Current memory policy.
-     */
-    MemoryPolicy getMemoryPolicy() {
-        return m_outDataPortsMemoryPolicy;
     }
 
     /**
@@ -447,7 +440,7 @@ public final class Node {
      * 
      * @return The memory policy to use.
      */
-    MemoryPolicy getOutDataMemoryPolicy() {
+    final MemoryPolicy getOutDataMemoryPolicy() {
         return m_outDataPortsMemoryPolicy;
     }
 
@@ -1202,7 +1195,7 @@ public final class Node {
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
         SettingsLoaderAndWriter l = new SettingsLoaderAndWriter();
-        l.setMemoryPolicy(m_outDataPortsMemoryPolicy); // may set null value!
+        l.setMemoryPolicy(m_outDataPortsMemoryPolicy);
         final NodeSettings model = new NodeSettings("field_ignored");
         try {
             m_model.saveSettingsTo(model);
@@ -1468,7 +1461,7 @@ public final class Node {
          */
         static final String CFG_MISC_SETTINGS = "internal_node_subsettings";
 
-        private MemoryPolicy m_memoryPolicy;
+        private MemoryPolicy m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
 
         private NodeSettings m_modelSettings;
 
@@ -1482,7 +1475,10 @@ public final class Node {
         /**
          * @param memoryPolicy the memoryPolicy to set
          */
-        void setMemoryPolicy(final MemoryPolicy memoryPolicy) {
+        final void setMemoryPolicy(final MemoryPolicy memoryPolicy) {
+            if (memoryPolicy == null) {
+                throw new NullPointerException("Memory Policy can't be null");
+            }
             m_memoryPolicy = memoryPolicy;
         }
 
@@ -1527,7 +1523,7 @@ public final class Node {
                 }
                 result.m_memoryPolicy = p;
             } else {
-                result.m_memoryPolicy = null;
+                result.m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
             }
             result.m_modelSettings =
                     (NodeSettings)settings.getNodeSettings(CFG_MODEL);

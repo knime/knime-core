@@ -226,7 +226,7 @@ public abstract class GenericNodeDialogPane {
         } catch (Throwable e) {
             m_logger.error("Failed to save dialog settings", e);
         }
-        MemoryPolicy memPolicy = null;
+        MemoryPolicy memPolicy = MemoryPolicy.CacheSmallInMemory;
         if (m_miscTab != null) {
             memPolicy = m_miscTab.getStatus();
         }
