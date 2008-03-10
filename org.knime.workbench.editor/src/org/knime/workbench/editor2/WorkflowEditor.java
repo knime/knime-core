@@ -1096,14 +1096,21 @@ public class WorkflowEditor extends GraphicalEditor implements
                     + exceptionMessage.toString());
         }
 
-        try {
+        Display.getDefault().asyncExec(new Runnable() {
 
-            m_fileResource.getProject().refreshLocal(IResource.DEPTH_INFINITE,
-                    monitor);
+            public void run() {
+                try {
+                m_fileResource.getProject().refreshLocal(
+                        IResource.DEPTH_INFINITE,
+                        monitor);
+                } catch (CoreException ce) {
+                    throw new OperationCanceledException(
+                            "Workflow was not saved: "
+                            + ce.toString()); 
+                }
+            }                
+        });
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
         // mark all sub editors as saved
         for (IEditorPart subEditor : getSubEditors()) {
