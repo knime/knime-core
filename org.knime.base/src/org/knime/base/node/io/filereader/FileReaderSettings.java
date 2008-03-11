@@ -235,7 +235,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
         m_tableName = null;
 
         m_decimalSeparator = '.';
-        m_thousandsSeparator = '\0';
+
+        // TODO: change it back
+        //m_thousandsSeparator = '\0';
+
+        m_thousandsSeparator = ' ';
 
         m_fileHasColumnHeaders = false;
         m_fileHasRowHeaders = false;
@@ -356,7 +360,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
             // get the decimal and thousands separator.
             // It's optional for backward compatibility and defaults to '.'
             m_decimalSeparator = cfg.getChar(CFGKEY_DECIMALSEP, '.');
-            m_thousandsSeparator = cfg.getChar(CFGKEY_THOUSANDSEP, '\0');
+
+            // TODO: Change it back
+            // m_thousandsSeparator = cfg.getChar(CFGKEY_THOUSANDSEP, '\0');
+
+            m_thousandsSeparator = cfg.getChar(CFGKEY_THOUSANDSEP, ' ');
             if (m_decimalSeparator == m_thousandsSeparator) {
                 throw new InvalidSettingsException("Decimal separator and "
                         + "thousands separator can't be the same character");
