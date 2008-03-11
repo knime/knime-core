@@ -213,7 +213,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
             c = (ConnectionContainer) event.getNewValue();
         } else if (event.getType().equals(
                     WorkflowEvent.Type.CONNECTION_REMOVED)) {
-            c = (ConnectionContainer) event.getNewValue();
+            c = (ConnectionContainer) event.getOldValue();
         }
 
         // if we have a connection to refresh...
