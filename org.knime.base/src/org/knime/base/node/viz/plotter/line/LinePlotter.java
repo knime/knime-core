@@ -115,9 +115,11 @@ public class LinePlotter extends ScatterPlotter {
                          */
                         public void stateChanged(final ChangeEvent e) {
                             if (getDataProvider() != null 
-                                && getDataProvider().getDataArray(0) != null) {
+                                && getDataProvider().getDataArray(
+                                        getDataArrayIdx()) != null) {
                                 DataTableSpec spec = getDataProvider()
-                                    .getDataArray(0).getDataTableSpec();
+                                    .getDataArray(getDataArrayIdx())
+                                    .getDataTableSpec();
                                 m_columnNames = columnFilter
                                     .getIncludedColumnSet();
                                 m_columns2Draw.clear();
@@ -235,9 +237,9 @@ public class LinePlotter extends ScatterPlotter {
     @Override
     public void updatePaintModel() {
         if (getDataProvider() != null
-                && getDataProvider().getDataArray(0) != null) {
+                && getDataProvider().getDataArray(getDataArrayIdx()) != null) {
             // draw the points and add the lines
-            DataArray array = getDataProvider().getDataArray(0);
+            DataArray array = getDataProvider().getDataArray(getDataArrayIdx());
             if (m_columnNames == null) {
                 initColumnNames(array);
             }
@@ -246,7 +248,8 @@ public class LinePlotter extends ScatterPlotter {
                 m_colorMapping = new LinkedHashMap<String, Color>();
                 float segment = 360f / (float)m_columns2Draw.size();
                 int colNr = 0;
-                for (DataColumnSpec colSpec : getDataProvider().getDataArray(0)
+                for (DataColumnSpec colSpec : getDataProvider().getDataArray(
+                        getDataArrayIdx())
                         .getDataTableSpec()) {
                     if (colSpec.getType().isCompatible(DoubleValue.class)) {
                         float h = (colNr * segment) / 360f;
@@ -306,8 +309,8 @@ public class LinePlotter extends ScatterPlotter {
             return;
         }
         if (getDataProvider() != null
-                && getDataProvider().getDataArray(0) != null) {
-            DataArray array = getDataProvider().getDataArray(0);
+                && getDataProvider().getDataArray(getDataArrayIdx()) != null) {
+            DataArray array = getDataProvider().getDataArray(getDataArrayIdx());
             int nrOfRows = array.size();
             
             // set the empty dots to delete the old ones 
