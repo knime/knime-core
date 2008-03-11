@@ -111,11 +111,11 @@ public class BoxPlotter extends BasicPlotter {
                 }
             });
         if (getDataProvider() != null 
-                && getDataProvider().getDataArray(0) != null
-                && getDataProvider().getDataArray(0)
+                && getDataProvider().getDataArray(getDataArrayIdx()) != null
+                && getDataProvider().getDataArray(getDataArrayIdx())
                 .getDataTableSpec() != null) {
             ((BoxPlotterProperties)getProperties()).getColumnFilter().update(
-                getDataProvider().getDataArray(0).getDataTableSpec(),
+                getDataProvider().getDataArray(getDataArrayIdx()).getDataTableSpec(),
                 true, m_selectedColumns);
         }
     }
@@ -145,8 +145,8 @@ public class BoxPlotter extends BasicPlotter {
         }
         Map<DataColumnSpec, double[]> statistics = ((BoxPlotDataProvider)
                 getDataProvider()).getStatistics();
-        DataTableSpec tableSpec = getDataProvider().getDataArray(0)
-            .getDataTableSpec();
+        DataTableSpec tableSpec = getDataProvider().getDataArray(
+                getDataArrayIdx()).getDataTableSpec();
         if (m_selectedColumns == null) {
             m_selectedColumns = new LinkedHashSet<String>();
             for (DataColumnSpec colName : tableSpec) {
@@ -196,8 +196,8 @@ public class BoxPlotter extends BasicPlotter {
             createNominalYCoordinate(new LinkedHashSet<DataCell>());
         }
         ((BoxPlotterProperties)getProperties()).getColumnFilter().update(
-                getDataProvider().getDataArray(0).getDataTableSpec(),
-                false, m_selectedColumns);
+                getDataProvider().getDataArray(getDataArrayIdx())
+                    .getDataTableSpec(), false, m_selectedColumns);
         updateSize();
     }
 

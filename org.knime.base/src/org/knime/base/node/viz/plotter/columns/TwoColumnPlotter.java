@@ -301,9 +301,9 @@ public abstract class TwoColumnPlotter extends BasicPlotter {
     public void setDataProvider(final DataProvider provider) {
         super.setDataProvider(provider);
         if (getDataProvider() != null 
-                && getDataProvider().getDataArray(0) != null) {
-            setSelectableColumns(getDataProvider().getDataArray(0)
-                    .getDataTableSpec());
+                && getDataProvider().getDataArray(getDataArrayIdx()) != null) {
+            setSelectableColumns(getDataProvider().getDataArray(
+                    getDataArrayIdx()).getDataTableSpec());
         }
     }
         

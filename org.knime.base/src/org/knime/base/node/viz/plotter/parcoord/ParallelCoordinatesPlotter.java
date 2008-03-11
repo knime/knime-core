@@ -455,8 +455,8 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     @Override
     public synchronized void updatePaintModel() {
         if (getDataProvider() != null 
-                && getDataProvider().getDataArray(0) != null) {
-            DataArray array = getDataProvider().getDataArray(0);
+                && getDataProvider().getDataArray(getDataArrayIdx()) != null) {
+            DataArray array = getDataProvider().getDataArray(getDataArrayIdx());
             Set<DataCell>columns = new LinkedHashSet<DataCell>();
             m_axes = new LinkedList<ParallelAxis>();
             if (m_columnNames == null) {
@@ -519,11 +519,11 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
      */
     private synchronized List<LineInfo> calculateLines() {
         if (getDataProvider() == null 
-                || getDataProvider().getDataArray(0) == null
+                || getDataProvider().getDataArray(getDataArrayIdx()) == null
                 || m_axes == null) {
             return new ArrayList<LineInfo>();
         }
-        DataArray array = getDataProvider().getDataArray(0);
+        DataArray array = getDataProvider().getDataArray(getDataArrayIdx());
 //        LOGGER.debug("calculate points: " + m_axes);
         List<LineInfo> lines = new ArrayList<LineInfo>(array.size());
         row: for (DataRow row : array) {

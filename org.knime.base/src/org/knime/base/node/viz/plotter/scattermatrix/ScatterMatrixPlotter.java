@@ -194,11 +194,11 @@ public class ScatterMatrixPlotter extends ScatterPlotter {
 
         // get the number of columns c
         if (getDataProvider() == null
-                || getDataProvider().getDataArray(0) == null) {
+                || getDataProvider().getDataArray(getDataArrayIdx()) == null) {
             return;
         }
         
-        DataArray data = getDataProvider().getDataArray(0);
+        DataArray data = getDataProvider().getDataArray(getDataArrayIdx());
         // get the first columns
         if (m_selectedColumns == null) {
             m_selectedColumns = new LinkedHashSet<String>();
