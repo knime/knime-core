@@ -73,6 +73,9 @@ public class DeleteConnectionCommand extends Command {
 //                (ConnectableEditPart)m_connection.getTarget().getParent();
         // does the workflow status allow deletion of the selected node
         // only if the workflow is not executing
+        if (m_connection == null || m_connection.getModel() == null) {
+            return false;
+        }
         boolean workflowAllowsDeletion =
                 m_manager.canRemoveConnection((ConnectionContainer)
                         m_connection.getModel());
