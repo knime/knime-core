@@ -23,8 +23,11 @@
  */
 package org.knime.workbench.ui.navigator;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
@@ -40,7 +43,19 @@ public class KnimeProjectLabelDecorator implements ILabelDecorator {
 
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            KnimeProjectLabelDecorator.class);
+    
+    private static final Image m_projectExecuting = KNIMEUIPlugin.getDefault()
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executing2.png");
+    private static final Image m_projectExecuted = KNIMEUIPlugin.getDefault()
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executed2.png");
+    private static final Image m_projectConfigured = KNIMEUIPlugin.getDefault()
+        .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_configured.png");
+    private static final Image m_node = KNIMEUIPlugin.getDefault().getImage(
+            KNIMEUIPlugin.PLUGIN_ID, "icons/node.png"); 
 
+    private static final Map<String, NodeContainer>m_projects 
+        = new HashMap<String, NodeContainer>();
+    
     public void addListener(ILabelProviderListener listener) {
     }
 
@@ -58,33 +73,39 @@ public class KnimeProjectLabelDecorator implements ILabelDecorator {
         Image img = image;
         if (element instanceof IProject) {
             IProject project = (IProject)element;
-            for (NodeContainer nc : WorkflowManager.ROOT.getNodeContainers()) {
-                if (nc.getName().equals(project.getName())) {
-                    if (nc.getState().equals(NodeContainer.State.EXECUTED)) {
-                        img = KNIMEUIPlugin.getDefault().getImage(
-                                KNIMEUIPlugin.PLUGIN_ID, 
-                        "icons/project_executed2.png");
-                    } else if (nc.getState().equals(
-                            NodeContainer.State.EXECUTING)) {
-                        img = KNIMEUIPlugin.getDefault().getImage(
-                                KNIMEUIPlugin.PLUGIN_ID, 
-                        "icons/project_executing2.png");                        
-                    } else if (nc.getState().equals(
-                            NodeContainer.State.CONFIGURED)) {
-                        img = KNIMEUIPlugin.getDefault().getImage(
-                                KNIMEUIPlugin.PLUGIN_ID, 
-                        "icons/project_configured.png"); 
+            NodeContainer projectNode = m_projects.get(project.getName());
+            if (projectNode == null) {
+                for (NodeContainer nc : WorkflowManager.ROOT
+                            .getNodeContainerBreadthFirstSearch()) {
+                    System.out.println(nc.getName() + " vs. " + project.getName());
+                    if (nc.getName().equals(project.getName())) {
+                        projectNode = nc;
+                        m_projects.put(project.getName(), projectNode); 
+                        break;
                     }
                 }
             }
+            if (projectNode == null) {
+                return img;
+            }
+            if (projectNode.getState().equals(NodeContainer.State.EXECUTED)) {
+                img = m_projectExecuted;
+            } else if (projectNode.getState().equals(
+                    NodeContainer.State.EXECUTING)) {
+                img = m_projectExecuting;                        
+            } else if (projectNode.getState().equals(
+                    NodeContainer.State.CONFIGURED)) {
+                img = m_projectConfigured;
+            }
+        } else if (element instanceof IFolder) {
+            // then its a node
+            // TODO: also show status of the node?
+            img = m_node;
         }
         return img;
     }
 
     public String decorateText(String text, Object element) {
-        if (element instanceof IResource && element instanceof IProject) {
-            // TODO: mark dirty -> check editor?
-        }
         return text;
     }
     
