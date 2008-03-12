@@ -31,6 +31,8 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
+import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.resources.IResourceDeltaVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.action.ActionContributionItem;
@@ -79,13 +81,13 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
 
     public KnimeResourceNavigator() {
-        super();
+        super(); 
 
         LOGGER.debug("Knime resource navigator created");
         // register listener to check wether prjects have been added
         // or renamed
-        ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
-                IResourceChangeEvent.POST_CHANGE);
+//        ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
+//                IResourceChangeEvent.POST_CHANGE);
 
         
         WorkflowManager.ROOT.addListener(new WorkflowListener() {
@@ -109,7 +111,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 // TODO: remove the listener?
                 nc.addNodeStateChangeListener(this);
         }
-        
     }
     
     
@@ -123,11 +124,15 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
             public void run() {
                 // TODO: find Project
-                String name =  WorkflowManager.ROOT.getNodeContainer(
-                        state.getSource()).getName();
-                IResource rsrc = ResourcesPlugin.getWorkspace()
-                    .getRoot().findMember(name);
-                getTreeViewer().update(rsrc, null);
+                try {
+                    String name =  WorkflowManager.ROOT.getNodeContainer(
+                            state.getSource()).getName();
+                    IResource rsrc = ResourcesPlugin.getWorkspace()
+                        .getRoot().findMember(name);
+                    getTreeViewer().update(rsrc, null);
+                    } catch (IllegalArgumentException iae) {
+                        // node couldn't be found -> so we don't make a refresh
+                    }
             }
         });
     }
@@ -294,6 +299,18 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      * {@inheritDoc}
      */
     public void resourceChanged(IResourceChangeEvent event) {
+            try {
+                if (event == null || event.getDelta() == null) {
+                    return;
+                }
+                event.getDelta().accept(new ResourceVisitor());
+            } catch (CoreException e) {
+                // should never happen, I think...
+                e.printStackTrace();
+            }
+
+        
+        /*
         // do nothing
         try {            
             LOGGER.debug("refreshing " + event.getResource().getName());
@@ -302,5 +319,77 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             // TODO: what to do?
             LOGGER.error("exception during resource change event", ce);
         }
+        */
+    }
+    
+    private class ResourceVisitor implements IResourceDeltaVisitor {
+    private String getTypeString(final IResourceDelta delta) {
+        StringBuffer buffer = new StringBuffer();
+
+        if ((delta.getKind() & IResourceDelta.ADDED) != 0) {
+            buffer.append("ADDED|");
+        }
+        if ((delta.getKind() & IResourceDelta.ADDED_PHANTOM) != 0) {
+            buffer.append("ADDED_PHANTOM|");
+        }
+        if ((delta.getKind() & IResourceDelta.ALL_WITH_PHANTOMS) != 0) {
+            buffer.append("ALL_WITH_PHANTOMS|");
+        }
+        if ((delta.getKind() & IResourceDelta.CHANGED) != 0) {
+            buffer.append("CHANGED|");
+        }
+        if ((delta.getKind() & IResourceDelta.CONTENT) != 0) {
+            buffer.append("CONTENT|");
+        }
+        if ((delta.getFlags() & IResourceDelta.DESCRIPTION) != 0) {
+            buffer.append("DESCRIPTION|");
+        }
+        if ((delta.getKind() & IResourceDelta.ENCODING) != 0) {
+            buffer.append("ENCODING|");
+        }
+        if ((delta.getKind() & IResourceDelta.MARKERS) != 0) {
+            buffer.append("MARKERS|");
+        }
+        if ((delta.getFlags() & IResourceDelta.MOVED_FROM) != 0) {
+            buffer.append("MOVED_FROM|");
+        }
+        if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
+            buffer.append("MOVED_TO|");
+        }
+        if ((delta.getKind() & IResourceDelta.NO_CHANGE) != 0) {
+            buffer.append("NO_CHANGE|");
+        }
+        if ((delta.getKind() & IResourceDelta.OPEN) != 0) {
+            buffer.append("OPEN|");
+        }
+        if ((delta.getKind() & IResourceDelta.REMOVED) != 0) {
+            buffer.append("REMOVED|");
+        }
+        if ((delta.getKind() & IResourceDelta.REMOVED_PHANTOM) != 0) {
+            buffer.append("REMOVED_PHANTOM|");
+        }
+        if ((delta.getKind() & IResourceDelta.REPLACED) != 0) {
+            buffer.append("REPLACED|");
+        }
+        if ((delta.getKind() & IResourceDelta.SYNC) != 0) {
+            buffer.append("SYNC|");
+        }
+        if ((delta.getKind() & IResourceDelta.TYPE) != 0) {
+            buffer.append("TYPE|");
+        }
+        return buffer.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public boolean visit(final IResourceDelta delta) throws CoreException {
+
+        LOGGER.debug("resource changed: " + getTypeString(delta));
+        if ((delta.getKind() & IResourceDelta.ADDED) != 0) {
+            LOGGER.debug("refreshing: " + delta.getResource());
+        }
+        return true;
+    }
     }
 }
