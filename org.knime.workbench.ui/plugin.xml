@@ -215,7 +215,7 @@
             id="org.knime.workbench.ui.decorator"
             label="label"
             location="BOTTOM_RIGHT"
-            objectClass="org.eclipse.core.resources.IProject"
+            objectClass="org.eclipse.core.resources.IResource"
             state="true">
       </decorator>
    </extension>
