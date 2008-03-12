@@ -26,6 +26,7 @@ package org.knime.workbench.ui.navigator;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.views.navigator.ResourcePatternFilter;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -48,23 +49,18 @@ public class KnimeResourcePatternFilter extends ResourcePatternFilter {
 
                 IProject project = (IProject)resource;
 
-                // check if a workflow file is contained
-                IResource[] children;
                 try {
-                    // refresh to get all children
                     project.refreshLocal(IResource.DEPTH_INFINITE, null);
-                    children = project.members();
                 } catch (Exception e) {
                     // if crashes for some reason do not display it
                     return false;
                 }
                
-                for (IResource currentResource : children) {
-                    if (currentResource.getName().equals(
-                            WorkflowPersistor.WORKFLOW_FILE)) {
-                        return true;
-                    }
-                }
+                return project.exists(new Path("/" 
+                        + WorkflowPersistor.WORKFLOW_FILE));
+
+            } else if (resource.getType() == IResource.FOLDER) {
+                return true; 
             }
         }
 
