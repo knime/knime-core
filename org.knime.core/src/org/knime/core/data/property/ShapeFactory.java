@@ -62,7 +62,7 @@ public final class ShapeFactory {
     /** Name of and key for the asterisk. */
     public static final String ASTERISK = "Asterisk";
     /** Name of and key for the "X". */
-    public static final String X_SHAPE = "X Shape";
+    public static final String X_SHAPE = "X-Shape";
     /** Name of and key for the horizontal line. */
     public static final String HORIZONTAL_LINE = "Horizontal Line";
     /** Name of and key for the vertical line. */
