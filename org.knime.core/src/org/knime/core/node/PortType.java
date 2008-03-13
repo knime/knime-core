@@ -50,6 +50,16 @@ public final class PortType {
         return m_objectClass;
     }
     
+    /** Determines if the argument type is a sub type of this type.
+     * @param subType The type to check
+     * @return If this type is a super type.
+     * @throws NullPointerException if the argument is null
+     */
+    public boolean isSuperTypeOf(final PortType subType) {
+        return m_objectClass.isAssignableFrom(subType.m_objectClass)
+            && m_specClass.isAssignableFrom(subType.m_specClass);
+    }
+    
     /** Returns string comprising spec and object class.
      * {@inheritDoc} */
     @Override
