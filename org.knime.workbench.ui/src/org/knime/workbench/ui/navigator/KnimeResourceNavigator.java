@@ -44,12 +44,15 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.OpenEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.CloseResourceAction;
 import org.eclipse.ui.actions.CloseUnrelatedProjectsAction;
 import org.eclipse.ui.actions.OpenFileAction;
 import org.eclipse.ui.actions.OpenInNewWindowAction;
-import org.eclipse.ui.internal.Workbench;
 import org.eclipse.ui.views.framelist.GoIntoAction;
 import org.eclipse.ui.views.navigator.ResourceNavigator;
 import org.knime.core.node.NodeLogger;
@@ -138,6 +141,31 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     }
     
     
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected TreeViewer createViewer(final Composite parent) {
+        TreeViewer viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL
+                | SWT.V_SCROLL) {
+            @Override
+            protected void handleDoubleSelect(final SelectionEvent event) {
+                // we have to consume this event in order to avoid 
+                // expansion/collaps of the double clicked project
+                // strangly enough it opens anyway and the collopased or 
+                // expanded state remains
+            }
+        };
+        viewer.setUseHashlookup(true);
+        initContentProvider(viewer);
+        initLabelProvider(viewer);
+        initFilters(viewer);
+        initListeners(viewer);
+
+        return viewer;
+    }
+    
+    
 
     /**
      * Adds the filters to the viewer.
@@ -147,7 +175,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
     @Override
     protected void initFilters(final TreeViewer viewer) {
-
         super.initFilters(viewer);
         // viewer.resetFilters();
         viewer.addFilter(new KnimeResourcePatternFilter());
@@ -190,8 +217,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 
                 IFile workflowFile = project.getFile("workflow.knime");
 
+                
                 if (workflowFile.exists()) {
-
                     StructuredSelection selection2 =
                             new StructuredSelection(workflowFile);
                     if (m_openFileAction == null) {
@@ -235,8 +262,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                 } else if (aItem.getAction() instanceof OpenInNewWindowAction) {
 
                     menu.remove(aItem);
-                } else if (aItem.getAction() instanceof 
-                        CloseUnrelatedProjectsAction) {
+                } else if (aItem.getAction() 
+                        instanceof CloseUnrelatedProjectsAction) {
                     menu.remove(aItem);
                 }
 
@@ -246,12 +273,13 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         // remove the default import export actions to store the own one
         // that invokes the knime export wizard directly
         menu.remove("import");
-        menu.insertBefore("export", new ImportKnimeWorkflowAction(Workbench
-                .getInstance().getActiveWorkbenchWindow()));
+        menu.insertBefore("export", new ImportKnimeWorkflowAction(
+                PlatformUI.getWorkbench().getActiveWorkbenchWindow()));
 
         menu.remove("export");
         menu.insertAfter(ImportKnimeWorkflowAction.ID,
-                new ExportKnimeWorkflowAction(Workbench.getInstance()));
+                new ExportKnimeWorkflowAction(
+                        PlatformUI.getWorkbench().getActiveWorkbenchWindow()));
 
         // TODO: this is hardcoded the copy item. should be retreived more
         // dynamically
@@ -276,7 +304,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         for (IContributionItem item : items) {
             menu.remove(item);
         }
-        menu.add(new NewKnimeWorkflowAction(Workbench.getInstance()
+        menu.add(new NewKnimeWorkflowAction(PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow()));
         for (int i = 1; i < items.length; i++) {
             menu.add(items[i]);
@@ -291,14 +319,14 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      * @since 2.0
      */
     @Override
-    protected void initContentProvider(TreeViewer viewer) {
+    protected void initContentProvider(final TreeViewer viewer) {
         viewer.setContentProvider(new KnimeContentProvider());
     }
 
     /**
      * {@inheritDoc}
      */
-    public void resourceChanged(IResourceChangeEvent event) {
+    public void resourceChanged(final IResourceChangeEvent event) {
             try {
                 if (event == null || event.getDelta() == null) {
                     return;
