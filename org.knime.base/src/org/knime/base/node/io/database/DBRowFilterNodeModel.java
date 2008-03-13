@@ -24,27 +24,32 @@
  */
 package org.knime.base.node.io.database;
 
+import org.knime.core.node.DatabasePortObjectSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBQueryNodeModel extends DBNodeModel {
+class DBRowFilterNodeModel extends DBNodeModel {
     
-    /** Place holder for the database input view. */
-    static final String TABLE_PLACE_HOLDER = "#table#";
-    
-   private final SettingsModelString m_query = 
-        DBQueryNodeDialogPane.createQueryModel();
+    private final SettingsModelString m_column =
+            DBRowFilterNodeDialogPane.createColumnModel();
+
+    private final SettingsModelString m_operator =
+            DBRowFilterNodeDialogPane.createOperatorModel();
+
+    private final SettingsModelString m_value =
+            DBRowFilterNodeDialogPane.createValueModel();
     
     /**
      * Creates a new database reader.
      */
-    DBQueryNodeModel() {
+    DBRowFilterNodeModel() {
 
     }
 
@@ -53,7 +58,9 @@ class DBQueryNodeModel extends DBNodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_query.saveSettingsTo(settings);
+        m_column.saveSettingsTo(settings);
+        m_operator.saveSettingsTo(settings);
+        m_value.saveSettingsTo(settings);
     }
 
     /**
@@ -62,13 +69,9 @@ class DBQueryNodeModel extends DBNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelString query = 
-            m_query.createCloneWithValidatedValue(settings);
-        String queryString = query.getStringValue();
-        if (queryString != null && !queryString.contains(TABLE_PLACE_HOLDER)) {
-            throw new InvalidSettingsException(
-                    "Database view place holder should not be replaced.");
-        }
+        m_column.validateSettings(settings);
+        m_operator.validateSettings(settings);
+        m_value.validateSettings(settings);
     }
 
     /**
@@ -77,7 +80,23 @@ class DBQueryNodeModel extends DBNodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_query.loadSettingsFrom(settings);
+        m_column.loadSettingsFrom(settings);
+        m_operator.loadSettingsFrom(settings);
+        m_value.loadSettingsFrom(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
+            throws InvalidSettingsException {
+        DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
+        if (!spec.getDataTableSpec().containsName(m_column.getStringValue())) {
+            throw new InvalidSettingsException("Can't filter according to "
+                    + "selected column \"" + m_column.getStringValue() + "\"");
+        }
+        return super.configure(inSpecs);
     }
     
     /**
@@ -85,8 +104,11 @@ class DBQueryNodeModel extends DBNodeModel {
      */
     @Override
     protected String createQuery(final String query, final String tableId) {
-        return m_query.getStringValue().replaceAll(
-                    TABLE_PLACE_HOLDER, "(" + query + ") AS " + tableId);
+        String buf = m_column.getStringValue()
+            + " " + m_operator.getStringValue()
+            + " " + m_value.getStringValue();
+        return "SELECT * FROM (" + query + ") AS " + tableId 
+            + " WHERE " + buf; 
     }
         
 }

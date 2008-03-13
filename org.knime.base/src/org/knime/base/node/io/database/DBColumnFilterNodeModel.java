@@ -24,60 +24,26 @@
  */
 package org.knime.base.node.io.database;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-import org.knime.base.node.io.database.DBConnectionDialogPanel.DBTableOptions;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.DatabasePortObject;
 import org.knime.core.node.DatabasePortObjectSpec;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
-import org.knime.core.node.PortType;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBColumnFilterNodeModel extends GenericNodeModel {
-    
-    /** Config ID for temporary table. */
-    static final String CFG_TABLE_ID = "tableID.xml";
-    
-    private final SettingsModelString m_tableOption =
-        DBConnectionDialogPanel.createTableModel();
-
-    private final SettingsModelIntegerBounded m_cachedRows =
-        DBConnectionDialogPanel.createCachedRowsModel();
+class DBColumnFilterNodeModel extends DBNodeModel {
     
     private final SettingsModelFilterString m_filter
          = DBColumnFilterNodeDialogPane.createColumnFilterModel();
-    
-    private DBQueryConnection m_conn;
-
-    private String m_tableId;
     
     /**
      * Creates a new database reader.
      */
     DBColumnFilterNodeModel() {
-        super(new PortType[]{DatabasePortObject.TYPE}, 
-                new PortType[]{DatabasePortObject.TYPE});
-        m_tableId = "table_" + System.identityHashCode(this);
     }
 
     /**
@@ -85,8 +51,6 @@ class DBColumnFilterNodeModel extends GenericNodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_tableOption.saveSettingsTo(settings);
-        m_cachedRows.saveSettingsTo(settings);
         m_filter.saveSettingsTo(settings);
     }
 
@@ -96,8 +60,6 @@ class DBColumnFilterNodeModel extends GenericNodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_tableOption.validateSettings(settings);
-        m_cachedRows.validateSettings(settings);
         m_filter.validateSettings(settings);
     }
 
@@ -107,76 +69,7 @@ class DBColumnFilterNodeModel extends GenericNodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_tableOption.loadSettingsFrom(settings);
-        m_cachedRows.loadSettingsFrom(settings);
         m_filter.loadSettingsFrom(settings);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec) 
-            throws CanceledExecutionException, Exception {
-        DatabasePortObject dbObj = (DatabasePortObject) inData[0];
-        m_conn = new DBQueryConnection();
-        m_conn.loadValidatedConnection(dbObj.getConnectionModel());
-        String newQuery = createFilterQuery(m_conn.getQuery());
-        if (DBTableOptions.CREATE_TABLE.getActionCommand().equals(
-                m_tableOption.getStringValue())) {
-            m_conn.execute("CREATE TABLE " + m_tableId + " AS " + newQuery);
-            m_conn = new DBQueryConnection(m_conn, 
-                    "SELECT * FROM " + m_tableId);
-        } else {
-            m_conn = new DBQueryConnection(m_conn, newQuery);
-        }
-        DBReaderConnection load = 
-            new DBReaderConnection(m_conn, newQuery,
-                    m_cachedRows.getIntValue());
-        BufferedDataTable data = exec.createBufferedDataTable(load, exec);
-        DatabasePortObject outObj = new DatabasePortObject(data,
-                m_conn.createConnectionModel());
-        return new PortObject[]{outObj};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
-        if (m_conn != null) {
-            try {
-                m_conn.execute("DROP TABLE " + m_tableId);
-            } catch (Exception e) {
-                super.setWarningMessage("Can't drop table \"" 
-                        + m_tableId + "\": " + e.getMessage());
-            }
-            m_conn = null;
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException {
-        NodeSettingsRO sett = NodeSettings.loadFromXML(new FileInputStream(
-                new File(nodeInternDir, CFG_TABLE_ID)));
-        m_tableId = sett.getString(CFG_TABLE_ID, m_tableId);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException {
-        NodeSettings sett = new NodeSettings(CFG_TABLE_ID);
-        sett.addString(CFG_TABLE_ID, m_tableId);
-        sett.saveToXML(new FileOutputStream(
-                new File(nodeInternDir, CFG_TABLE_ID)));
     }
 
     /**
@@ -186,27 +79,24 @@ class DBColumnFilterNodeModel extends GenericNodeModel {
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
-        m_conn = new DBQueryConnection();
-        m_conn.loadValidatedConnection(spec.getConnectionModel());
-        // replace view place holder
-        String newQuery = createFilterQuery(m_conn.getQuery());
-        DBQueryConnection conn = new DBQueryConnection(m_conn, newQuery);
-        // try to create database connection
-        DataTableSpec outSpec = null;
-        try {
-            conn.createConnection();
-            DBReaderConnection reader = 
-                new DBReaderConnection(conn, newQuery);
-            outSpec = reader.getDataTableSpec();
-        } catch (Exception e) {
-            throw new InvalidSettingsException(e.getMessage());
+        StringBuilder buf = new StringBuilder();
+        for (String column : m_filter.getIncludeList()) {
+            if (!spec.getDataTableSpec().containsName(column)) {
+                buf.append("\"" + column + "\" ");
+            }
         }
-        DatabasePortObjectSpec dbSpec = new DatabasePortObjectSpec(
-                outSpec, conn.createConnectionModel());
-        return new PortObjectSpec[]{dbSpec};
+        if (buf.length() > 0) {
+            throw new InvalidSettingsException("Not all columns available in "
+                    + "input spec: " + buf.toString());
+        }
+        return super.configure(inSpecs);
     }
     
-    private String createFilterQuery(final String query) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected String createQuery(final String query, final String tableId) {
         StringBuilder buf = new StringBuilder();
         for (String s : m_filter.getIncludeList()) {
             if (buf.length() > 0) {
@@ -215,7 +105,7 @@ class DBColumnFilterNodeModel extends GenericNodeModel {
             buf.append(s);
         }
         return "SELECT " + buf.toString() + " FROM (" + query + ") AS " 
-                + m_tableId; 
+                + tableId; 
     }
         
 }

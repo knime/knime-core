@@ -12,7 +12,7 @@
         <intro>
             This node allows columns to be filtered from the input database 
             table while the SQL result will only contain the 
-            remaining columns are passed to the output table. Within 
+            remaining columns. Within 
             the dialog, columns can be moved between the Include and Exclude 
             list.
         </intro>
