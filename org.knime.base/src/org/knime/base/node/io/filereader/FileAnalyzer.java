@@ -36,6 +36,7 @@ import org.knime.base.node.io.filetokenizer.Comment;
 import org.knime.base.node.io.filetokenizer.Delimiter;
 import org.knime.base.node.io.filetokenizer.FileTokenizer;
 import org.knime.base.node.io.filetokenizer.Quote;
+import org.knime.base.node.util.BufferedFileReader;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;

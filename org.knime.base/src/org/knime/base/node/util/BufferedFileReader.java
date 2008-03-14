@@ -21,7 +21,7 @@
  * History
  *   Mar 27, 2007 (ohl): created
  */
-package org.knime.base.node.io.filereader;
+package org.knime.base.node.util;
 
 import java.io.BufferedReader;
 import java.io.File;

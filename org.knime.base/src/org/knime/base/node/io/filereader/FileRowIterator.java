@@ -27,6 +27,7 @@ import java.util.NoSuchElementException;
 
 import org.knime.base.node.io.filetokenizer.FileTokenizer;
 import org.knime.base.node.io.filetokenizer.FileTokenizerException;
+import org.knime.base.node.util.BufferedFileReader;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
