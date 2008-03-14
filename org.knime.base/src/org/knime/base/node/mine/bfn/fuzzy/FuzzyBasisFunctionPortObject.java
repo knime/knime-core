@@ -131,7 +131,10 @@ public final class FuzzyBasisFunctionPortObject
                 BasisFunctionModelContent.load(dir, new FuzzyCreator()));
     }
     
-    private static class FuzzyCreator implements Creator {
+    /**
+     * Used to create fuzzy predictor rows.
+     */
+    public static class FuzzyCreator implements Creator {
         /**
          * {@inheritDoc}
          */

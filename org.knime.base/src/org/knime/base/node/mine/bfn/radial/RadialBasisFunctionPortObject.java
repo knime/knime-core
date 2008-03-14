@@ -131,7 +131,10 @@ public final class RadialBasisFunctionPortObject
         return new RadialBasisFunctionPortObject(content);
     }
     
-    private static class RadialCreator implements Creator {
+    /**
+     * Used to create PNN predictor rows.
+     */
+    public static class RadialCreator implements Creator {
         /**
          * {@inheritDoc}
          */

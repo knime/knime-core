@@ -376,7 +376,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * @param dataColumns used for training only
      * @param targetColumns names of target columns
      */
-    public final void explain(final BufferedDataTable data,
+    public void explain(final BufferedDataTable data,
             final String[] dataColumns, final String[] targetColumns) {
         DataTableSpec spec = data.getDataTableSpec();
         // overall rows to explain
@@ -522,7 +522,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * 
      * @see #getNumBasisFunctions(DataCell)
      */
-    public final int getNumBasisFunctions() {
+    public int getNumBasisFunctions() {
         int n = 0;
         for (DataCell c : m_bfs.keySet()) {
             List<BasisFunctionLearnerRow> l = m_bfs.get(c);
@@ -549,7 +549,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * 
      * @see #getNumBasisFunctions()
      */
-    final int getNumBasisFunctions(final DataCell classInfo) {
+    int getNumBasisFunctions(final DataCell classInfo) {
         if (classInfo == null) {
             throw new NullPointerException();
         }
@@ -580,14 +580,14 @@ public final class BasisFunctionLearnerTable implements DataTable {
      * 
      * @return the key to list of basis functions' map
      */
-    final Map<DataCell, List<BasisFunctionLearnerRow>> getBasisFunctions() {
+    public Map<DataCell, List<BasisFunctionLearnerRow>> getBasisFunctions() {
         return m_bfs;
     }
 
     /**
      * @return an array holding the number of basis functions for each class
      */
-    final int[] getClassDistribution() {
+    int[] getClassDistribution() {
         int[] ret = new int[m_bfs.size()];
         int idx = 0;
         for (Iterator<DataCell> it = m_bfs.keySet().iterator(); it.hasNext();) {
@@ -601,7 +601,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
     /**
      * @return a new iterator to get all basis functions from this model
      */
-    public final BasisFunctionIterator getBasisFunctionIterator() {
+    public BasisFunctionIterator getBasisFunctionIterator() {
         return new BasisFunctionIterator(this);
     }
 

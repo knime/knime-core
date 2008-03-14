@@ -72,7 +72,7 @@ public class FuzzyBasisFunctionPredictorRow extends BasisFunctionPredictorRow {
      * @param pp Content to read rule from.
      * @throws InvalidSettingsException If the content is invalid.
      */
-    FuzzyBasisFunctionPredictorRow(final ModelContentRO pp)
+    public FuzzyBasisFunctionPredictorRow(final ModelContentRO pp)
             throws InvalidSettingsException {
         super(pp);
         m_norm = pp.getInt(Norm.NORM_KEY);
