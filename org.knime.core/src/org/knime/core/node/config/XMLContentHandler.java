@@ -122,7 +122,7 @@ class XMLContentHandler extends DefaultHandler {
                 + "\n" + "xml: URI=" + m_fileName + "\n" + "dtd: URI="
                 + systemId;
     }
-    
+
 
     /**
      * {@inheritDoc}
@@ -147,7 +147,7 @@ class XMLContentHandler extends DefaultHandler {
             String type = attributes.getValue("type");
             String value = attributes.getValue("value");
 
-            //value = unescape(value);
+            value = unescape(value);
 
             ConfigEntries configEntryType;
             // transform runtime IllegalArgumentException into a IOException
@@ -220,7 +220,7 @@ class XMLContentHandler extends DefaultHandler {
                     a.addAttribute("", "", "isnull", "CDATA", "true");
                     value = "";
                 }
-                //value = escape(value);
+                value = escape(value);
                 a.addAttribute("", "", "value", "CDATA", value);
                 handler.startElement("", "", "entry", a);
                 handler.endElement("", "", "entry");
@@ -229,53 +229,67 @@ class XMLContentHandler extends DefaultHandler {
         handler.endElement("", "", ConfigEntries.config.name());
     }
 
-//    /**
-//     * Escapes all forbidden XML characters to that we can save them
-//     * nevertheless. They are escaped as %00 to %31.
-//     *
-//     * @param s the string to escape
-//     * @return the escaped string
-//     */
-//    final static String escape(final String s) {
-//        if (s == null) {
-//            return null;
-//        }
-//        char[] c = s.toCharArray();
-//        StringBuilder buf = new StringBuilder();
-//        for (int i = 0; i < c.length; i++) {
-//            if ((c[i] < 32) || (c[i] == '%')) {
-//                buf.append('%');
-//                if (c[i] < 10) {
-//                    buf.append('0');
-//                }
-//                buf.append(Integer.toString(c[i]));
-//            } else {
-//                buf.append(c[i]);
-//            }
-//        }
-//
-//        return buf.toString();
-//    }
-//
-//    /**
-//     * Unescapes all forbidden XML characters that were previous escaped by
-//     * {@link #escape(String)}.
-//     *
-//     * @param s the escaped string
-//     * @return the unescaped string
-//     */
-//    final static String unescape(final String s) {
-//        char[] c = s.toCharArray();
-//        StringBuilder buf = new StringBuilder();
-//        for (int i = 0; i < c.length; i++) {
-//            if (c[i] == '%') {
-//                buf.append((char) ((c[i + 1] - '0') * 10 + (c[i + 2] - '0')));
-//                i += 2;
-//            } else {
-//                buf.append(c[i]);
-//            }
-//        }
-//
-//        return buf.toString();
-//    }
+    /**
+     * Escapes all forbidden XML characters so that we can save them
+     * nevertheless. They are escaped as &quot;&amp;#dd;&quot;, with dd being
+     * their decimal ASCII code.
+     *
+     * @param s the string to escape
+     * @return the escaped string
+     */
+    static final String escape(final String s) {
+        if (s == null) {
+            return null;
+        }
+        char[] c = s.toCharArray();
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < c.length; i++) {
+            if ((c[i] < 32)
+                    || ((i < c.length - 1)
+                            && (c[i] == '&') && c[i + 1] == '#')) {
+                //  if c contains '&#' we encode the '&'
+                buf.append("&#");
+                if (c[i] < 10) {
+                    buf.append('0');
+                }
+                buf.append(Integer.toString(c[i]));
+                buf.append(';');
+            } else {
+                buf.append(c[i]);
+            }
+        }
+
+        return buf.toString();
+    }
+
+    /**
+     * Unescapes all forbidden XML characters that were previous escaped by
+     * {@link #escape(String)}. Must pay attention to handle not escaped strings
+     * for backward compatibility (it will not correctly handle them, they still
+     * are unescaped, but it must not fail on those strings).
+     *
+     * @param s the escaped string
+     * @return the unescaped string
+     */
+    static final String unescape(final String s) {
+        if (s == null) {
+            return null;
+        }
+        char[] c = s.toCharArray();
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < c.length; i++) {
+            if ((c[i] == '&') && (i < c.length - 4)
+                    && c[i + 1] == '#'
+                    && Character.isDigit(c[i + 2])
+                    && Character.isDigit(c[i + 3])
+                    && c[i + 4] == ';') {
+                buf.append((char)((c[i + 2] - '0') * 10 + (c[i + 3] - '0')));
+                i += 4;
+            } else {
+                buf.append(c[i]);
+            }
+        }
+
+        return buf.toString();
+    }
 }
