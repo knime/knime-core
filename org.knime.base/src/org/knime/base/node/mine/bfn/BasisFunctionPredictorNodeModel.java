@@ -81,8 +81,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
         colreg.append(new BasisFunctionPredictorCellFactory(
                 dataSpec, modelSpec, pred.getBasisFunctions(), 
                 m_applyColumn, m_dontKnow, normalizeClassification()));
-        
-        return new BufferedDataTable[]{exec.createColumnRearrangeTable(
+       return new BufferedDataTable[]{exec.createColumnRearrangeTable(
                 data, colreg, exec)};
     }
     
@@ -137,25 +136,19 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
                         + cspec.getName() + "' not in data spec.");
             }
         }
-        DataTableSpec outSpec = createSpec(dataSpec, modelSpec).createSpec();
-        return new DataTableSpec[]{outSpec};
-    }
-    
-    private ColumnRearranger createSpec(
-            final DataTableSpec dataSpec, final DataTableSpec modelSpec) {
         m_applyColumn = DataTableSpec.getUniqueColumnName(
                 dataSpec, m_applyColumn);
         ColumnRearranger colreg = new ColumnRearranger(dataSpec);
         colreg.append(new BasisFunctionPredictorCellFactory(
                 modelSpec, m_applyColumn));
-        return colreg;
+        return new DataTableSpec[]{colreg.createSpec()};
     }
     
     /**
-     * Resets the translator.
+     * {@inheritDoc}
      */
     @Override
-    public final void reset() {
+    public void reset() {
 
     }
 
@@ -201,8 +194,8 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
         // prediction column name
         String s = null;
         try {
-            s = settings
-                    .getString(BasisFunctionPredictorNodeDialog.APPLY_COLUMN);
+            s = settings.getString(
+                    BasisFunctionPredictorNodeDialog.APPLY_COLUMN);
         } catch (InvalidSettingsException ise) {
             sb.append(ise.getMessage() + "\n");
         }
