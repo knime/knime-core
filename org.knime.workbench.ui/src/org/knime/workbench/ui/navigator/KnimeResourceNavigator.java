@@ -161,7 +161,7 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         initLabelProvider(viewer);
         initFilters(viewer);
         initListeners(viewer);
-
+        viewer.getControl().setDragDetect(false);
         return viewer;
     }
     
