@@ -45,7 +45,7 @@ import org.knime.core.node.config.Config;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class ModelContent extends Config 
+public final class ModelContent extends Config 
     implements ModelContentRO, ModelContentWO {
 
     /** Throws <code>IllegalStateException</code> as this method is not
