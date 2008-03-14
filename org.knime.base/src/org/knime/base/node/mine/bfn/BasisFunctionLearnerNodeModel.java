@@ -33,16 +33,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.knime.base.node.mine.bfn.BasisFunctionLearnerTable.MissingValueReplacementFunction;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -125,21 +122,17 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
     /** Contains model info after training. */
     private ModelContent m_modelInfo;
 
-    private DataColumnSpec[] m_modelSpec;
-
-    private final Map<DataCell, List<BasisFunctionLearnerRow>> m_bfs;
-
     /** Translates hilite events between model and training data. */
     private final HiLiteTranslator m_translator;
 
     /**
      * Creates a new model with one data in and out port, and model out-port.
+     * @param model the port type of the generated basisfunction model
      */
-    protected BasisFunctionLearnerNodeModel() {
+    protected BasisFunctionLearnerNodeModel(final PortType model) {
         super(new PortType[]{BufferedDataTable.TYPE},  
               new PortType[]{BufferedDataTable.TYPE, 
-                BasisFunctionModelContent.TYPE});
-        m_bfs = new LinkedHashMap<DataCell, List<BasisFunctionLearnerRow>>();
+                model});
         m_translator = new HiLiteTranslator(new DefaultHiLiteHandler());
     }
 
@@ -151,8 +144,6 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
     @Override
     protected void reset() {
         m_modelInfo = null;
-        m_modelSpec = null;
-        m_bfs.clear();
     }
 
     /**
@@ -270,6 +261,14 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
      * @return the type of the learned model cells
      */
     public abstract DataType getModelType();
+    
+    /**
+     * Creates a new basisfunction port object given the model content.
+     * @param content basisfunction rules and spec
+     * @return a new basisfunction port object
+     */
+    public abstract BasisFunctionPortObject createPortObject(
+        final BasisFunctionModelContent content);
 
     /**
      * Starts the learning algorithm in the learner.
@@ -337,18 +336,17 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
                 BasisFunctionLearnerTable.MISSINGS[m_missing],
                 m_shrinkAfterCommit, m_maxCoverage, m_maxEpochs, exec);
         DataTableSpec modelSpec = table.getDataTableSpec();
-        m_modelSpec = new DataColumnSpec[modelSpec.getNumColumns()];
-        for (int i = 0; i < m_modelSpec.length; i++) {
+        DataColumnSpec[] modelSpecs = 
+            new DataColumnSpec[modelSpec.getNumColumns()];
+        for (int i = 0; i < modelSpecs.length; i++) {
             DataColumnSpecCreator creator = 
                 new DataColumnSpecCreator(modelSpec.getColumnSpec(i));
             creator.removeAllHandlers();
-            m_modelSpec[i] = creator.createSpec();
+            modelSpecs[i] = creator.createSpec();
         }
 
         // set translator mapping
         m_translator.setMapper(table.getHiLiteMapper());
-
-        m_bfs.putAll(table.getBasisFunctions());
 
         ModelContent modelInfo = new ModelContent(MODEL_INFO);
         table.saveInfos(modelInfo);
@@ -356,8 +354,8 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
 
         // return rules[0] and rule_model[1]
         return new PortObject[]{exec.createBufferedDataTable(
-                table, exec), new BasisFunctionModelContent(
-                      m_bfs, table.getDataTableSpec())};
+                table, exec), createPortObject(new BasisFunctionModelContent(
+                        table.getDataTableSpec(), table.getBasisFunctions()))};
     }
 
     /**
@@ -398,16 +396,7 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
             msg.append("Target columns not found in settings.\n");
         }
         // get data columns
-        String[] dataColumns = null;
-        try {
-            dataColumns = settings.getStringArray(DATA_COLUMNS);
-        } catch (InvalidSettingsException ise) {
-            // suppress since before 1.2.0 all numeric data columns were used
-            // msg.append("Data columns not found in settings.\n");
-        }
-//        if (dataColumns == null || dataColumns.length == 0) {
-//            msg.append("No data column specified.\n");
-//        }
+        String[] dataColumns = settings.getStringArray(DATA_COLUMNS);
         if (dataColumns != null && targetColumns != null) {
             Set<String> hash = new HashSet<String>(Arrays.asList(dataColumns));
             for (String target : targetColumns) {

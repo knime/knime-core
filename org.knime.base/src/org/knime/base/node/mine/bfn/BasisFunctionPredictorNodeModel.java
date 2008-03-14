@@ -34,7 +34,6 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.PortObject;
@@ -60,10 +59,10 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     /**
      * Creates a new basisfunction predictor model with two inputs, the first
      * one which contains the data and the second with the model.
+     * @param model type of the basisfunction model at the in-port
      */
-    protected BasisFunctionPredictorNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE, 
-                BasisFunctionModelContent.TYPE},
+    protected BasisFunctionPredictorNodeModel(final PortType model) {
+        super(new PortType[]{BufferedDataTable.TYPE, model},
               new PortType[]{BufferedDataTable.TYPE});
     }
 
@@ -74,29 +73,18 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     public BufferedDataTable[] execute(final PortObject[] portObj,
             final ExecutionContext exec) 
             throws CanceledExecutionException, InvalidSettingsException {
-        BasisFunctionModelContent pred = (BasisFunctionModelContent) portObj[1];
-        final DataTableSpec modelSpec = pred.loadSpec();
+        BasisFunctionPortObject pred = (BasisFunctionPortObject) portObj[1];
+        final DataTableSpec modelSpec = pred.getSpec();
         final BufferedDataTable data = (BufferedDataTable) portObj[0];
         final DataTableSpec dataSpec = data.getDataTableSpec();
         final ColumnRearranger colreg = new ColumnRearranger(dataSpec);
         colreg.append(new BasisFunctionPredictorCellFactory(
-                dataSpec, modelSpec, pred.loadBasisFunctions(this), 
+                dataSpec, modelSpec, pred.getBasisFunctions(), 
                 m_applyColumn, m_dontKnow, normalizeClassification()));
         
         return new BufferedDataTable[]{exec.createColumnRearrangeTable(
                 data, colreg, exec)};
     }
-
-    /**
-     * Return specific predictor row for the given <code>ModelContent</code>.
-     * 
-     * @param pp the content the read the predictive row from
-     * @return a new predictor row
-     * @throws InvalidSettingsException if the rule can be read from model
-     *             content
-     */
-    public abstract BasisFunctionPredictorRow createPredictorRow(
-            ModelContentRO pp) throws InvalidSettingsException;
     
     /**
      * @return <code>true</code> if normalization is required for output

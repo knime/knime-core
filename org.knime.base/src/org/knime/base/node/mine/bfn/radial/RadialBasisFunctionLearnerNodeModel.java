@@ -22,6 +22,8 @@
 package org.knime.base.node.mine.bfn.radial;
 
 import org.knime.base.node.mine.bfn.BasisFunctionLearnerNodeModel;
+import org.knime.base.node.mine.bfn.BasisFunctionModelContent;
+import org.knime.base.node.mine.bfn.BasisFunctionPortObject;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
@@ -60,7 +62,7 @@ public class RadialBasisFunctionLearnerNodeModel
 
     /** Inits a new RadialBasisFunctionFactory with one in- and one output. */
     public RadialBasisFunctionLearnerNodeModel() {
-        super();
+        super(RadialBasisFunctionPortObject.TYPE);
     }
 
     /**
@@ -150,5 +152,14 @@ public class RadialBasisFunctionLearnerNodeModel
      */
     public double getThetaPlus() {
         return m_thetaPlus;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public BasisFunctionPortObject createPortObject(
+            final BasisFunctionModelContent content) {
+        return new RadialBasisFunctionPortObject(content);
     }
 }

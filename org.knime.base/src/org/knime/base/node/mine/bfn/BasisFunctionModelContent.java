@@ -24,10 +24,14 @@
  */
 package org.knime.base.node.mine.bfn;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -36,60 +40,116 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
-import org.knime.core.node.PortType;
 
 /**
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class BasisFunctionModelContent extends ModelContent {
-
-    /** The <code>PortType</code> for basisfunction models. */
-    public static final PortType TYPE = new PortType(DataTableSpec.class, 
-            BasisFunctionModelContent.class);
+public final class BasisFunctionModelContent {
+    
+    private static final String CFG_KEY = "basisfunction_model.xml.gz";
+    
+    private final DataTableSpec m_spec;
+    
+    private final Map<DataCell, List<BasisFunctionPredictorRow>> m_bfs;
     
     /**
-     * {@inheritDoc}
+     * @return model spec
      */
-    @Override
     public DataTableSpec getSpec() {
-        try {
-            return loadSpec();
-        } catch (InvalidSettingsException ise) {
-            return null;
-        }
+        return m_spec;
+    }
+    
+    /**
+     * @return basisfunctions rules by class
+     */
+    public Map<DataCell, List<BasisFunctionPredictorRow>> getBasisFunctions() {
+        return m_bfs;
     }
     
     /**
      * Creates a new basis function model object.
+     * @param bfs basisfunction rules by class
+     * @param spec model spec
      */
-    public BasisFunctionModelContent() {
-        super("basisfunction_model");
+    public BasisFunctionModelContent(
+            final Map<DataCell, List<BasisFunctionPredictorRow>> bfs,
+            final DataTableSpec spec) {
+        m_bfs = bfs;
+        m_spec = spec;
     }
     
+    /**
+     * Creates a new basis function model object.
+     * @param bfs basisfunction rules by class
+     * @param spec model spec
+     */
+    public BasisFunctionModelContent(
+            final DataTableSpec spec,
+            final Map<DataCell, List<BasisFunctionLearnerRow>> bfs) {
+        m_bfs = new LinkedHashMap<DataCell, List<BasisFunctionPredictorRow>>();
+        for (DataCell key : bfs.keySet()) {
+            List<BasisFunctionPredictorRow> rows = 
+                new ArrayList<BasisFunctionPredictorRow>();
+            m_bfs.put(key, rows);
+            for (BasisFunctionLearnerRow bf : bfs.get(key)) {
+                rows.add(bf.getPredictorRow());
+            }
+        }
+        m_spec = spec;
+    }
+
+    /**
+     * Saves rules and spec to the given file directory.
+     * @param directory file directory
+     * @throws IOException if the file could not be written
+     */
+    public void save(final File directory) throws IOException {
+        ModelContent modelContent = new ModelContent(CFG_KEY);
+        save(modelContent);
+        File file = new File(directory, CFG_KEY);
+        modelContent.saveToXML(new FileOutputStream(file));
+    }
+
+    /**
+     * Loads a this basisfunction content from the given file directory.
+     * @param directory file directory
+     * @param cr used to instantiate basisfunction predictor rows
+     * @return a new basisfunction content object
+     * @throws IOException if the content can't be read from the given directory
+     */
+    public static BasisFunctionModelContent load(final File directory,
+            final BasisFunctionPortObject.Creator cr)
+            throws IOException {
+        File file = new File(directory, CFG_KEY);
+        ModelContentRO modelContent = ModelContent.loadFromXML(
+                new FileInputStream(file));
+        try {
+            return load(modelContent, cr);
+        } catch (InvalidSettingsException ise) {
+            throw new IOException(ise);
+        }
+    }
+
     /**
      * Save the given rule model and model spec into this model content object.
      * @param bfs the rules to save
      * @param spec the model spec to save
      */
-    public BasisFunctionModelContent(
-            final Map<DataCell, List<BasisFunctionLearnerRow>> bfs,
-            final DataTableSpec spec) {
-        this();
-        ModelContentWO ruleSpec = super.addModelContent("rules");
-        for (DataCell key : bfs.keySet()) {
-            List<BasisFunctionLearnerRow> list = bfs.get(key);
-            for (BasisFunctionLearnerRow bf : list) {
-                BasisFunctionPredictorRow predBf = bf.getPredictorRow();
-                ModelContentWO bfParam = ruleSpec.addModelContent(bf.getKey()
-                        .getId().toString());
-                predBf.save(bfParam);
+    private void save(final ModelContentWO modelCont) {
+        // save rules
+        ModelContentWO ruleSpec = modelCont.addModelContent("rules");
+        for (DataCell key : m_bfs.keySet()) {
+            for (BasisFunctionPredictorRow bf : m_bfs.get(key)) {
+                ModelContentWO bfParam = ruleSpec.addModelContent(
+                        bf.getId().toString());
+                bf.save(bfParam);
             }
         }
-        // add used columns
-        ModelContentWO modelSpec = super.addModelContent("model_spec");
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            DataColumnSpec cspec = spec.getColumnSpec(i);
+        // save spec
+        ModelContentWO modelSpec = modelCont.addModelContent("model_spec");
+        for (int i = 0; i < m_spec.getNumColumns(); i++) {
+            DataColumnSpec cspec = m_spec.getColumnSpec(i);
             cspec.save(modelSpec.addConfig(cspec.getName()));
         }
     }
@@ -101,36 +161,33 @@ public final class BasisFunctionModelContent extends ModelContent {
      * @return a list of basisfunction rules
      * @throws InvalidSettingsException if the model contains invalid settings
      */
-    public List<BasisFunctionPredictorRow> loadBasisFunctions(
-            final BasisFunctionPredictorNodeModel model) 
+    private static BasisFunctionModelContent load(
+            final ModelContentRO modelCont, 
+            final BasisFunctionPortObject.Creator cr) 
             throws InvalidSettingsException {
-        List<BasisFunctionPredictorRow> rows = 
-            new ArrayList<BasisFunctionPredictorRow>();
-        ModelContentRO ruleModel = super.getModelContent("rules");
+        Map<DataCell, List<BasisFunctionPredictorRow>> bfs = 
+            new LinkedHashMap<DataCell, List<BasisFunctionPredictorRow>>();
+        // load rules
+        ModelContentRO ruleModel = modelCont.getModelContent("rules");
         for (String key : ruleModel.keySet()) {
             ModelContentRO bfParam = ruleModel.getModelContent(key);
-            BasisFunctionPredictorRow bf = model.createPredictorRow(bfParam);
+            BasisFunctionPredictorRow bf = cr.createPredictorRow(bfParam);
+            List<BasisFunctionPredictorRow> rows = bfs.get(bf.getClassLabel());
+            if (rows == null) {
+                rows = new ArrayList<BasisFunctionPredictorRow>();
+                bfs.put(bf.getClassLabel(), rows);
+            }
             rows.add(bf);
         }
-        return rows;
-    }
-    
-    /**
-     * Loads the model spec from this model content.
-     * @return a new data table spec as model spec
-     * @throws InvalidSettingsException if the spec could not be loaded
-     */
-    public DataTableSpec loadSpec() throws InvalidSettingsException {
-        // load model info
-        ModelContentRO modelInfo = super.getModelContent("model_spec");
-        Set<String> keySet = modelInfo.keySet();
-        DataColumnSpec[] modelSpec = new DataColumnSpec[keySet.size()];
-        int idx = 0;
-        for (String key : keySet) {
-            modelSpec[idx] = DataColumnSpec.load(modelInfo.getConfig(key));
-            idx++;
+        // load spec
+        ModelContentRO modelInfo = modelCont.getModelContent("model_spec");
+        String[] keySet = modelInfo.keySet().toArray(new String[0]);
+        DataColumnSpec[] modelSpec = new DataColumnSpec[keySet.length];
+        for (int i = 0; i < keySet.length; i++) {
+            modelSpec[i] = DataColumnSpec.load(modelInfo.getConfig(keySet[i]));
         }
-        return new DataTableSpec(modelSpec);
+        DataTableSpec spec = new DataTableSpec(modelSpec);
+        return new BasisFunctionModelContent(bfs, spec);
     }
     
 }

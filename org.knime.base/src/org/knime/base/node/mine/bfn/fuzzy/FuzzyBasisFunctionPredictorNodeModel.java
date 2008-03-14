@@ -22,9 +22,6 @@
 package org.knime.base.node.mine.bfn.fuzzy;
 
 import org.knime.base.node.mine.bfn.BasisFunctionPredictorNodeModel;
-import org.knime.base.node.mine.bfn.BasisFunctionPredictorRow;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContentRO;
 
 /**
  * The fuzzy basis function predictor model performing a prediction on the data
@@ -36,14 +33,12 @@ import org.knime.core.node.ModelContentRO;
  */
 public class FuzzyBasisFunctionPredictorNodeModel extends
         BasisFunctionPredictorNodeModel {
-
+    
     /**
-     * {@inheritDoc}
+     * 
      */
-    @Override
-    public BasisFunctionPredictorRow createPredictorRow(
-            final ModelContentRO pp) throws InvalidSettingsException {
-        return new FuzzyBasisFunctionPredictorRow(pp);
+    public FuzzyBasisFunctionPredictorNodeModel() {
+        super(FuzzyBasisFunctionPortObject.TYPE);
     }
     
     /**

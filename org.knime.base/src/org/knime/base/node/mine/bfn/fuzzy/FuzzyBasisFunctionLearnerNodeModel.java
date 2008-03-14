@@ -23,6 +23,7 @@ package org.knime.base.node.mine.bfn.fuzzy;
 
 import org.knime.base.node.mine.bfn.BasisFunctionFactory;
 import org.knime.base.node.mine.bfn.BasisFunctionLearnerNodeModel;
+import org.knime.base.node.mine.bfn.BasisFunctionModelContent;
 import org.knime.base.node.mine.bfn.fuzzy.norm.Norm;
 import org.knime.base.node.mine.bfn.fuzzy.shrink.Shrink;
 import org.knime.core.data.DataTableSpec;
@@ -58,7 +59,7 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
 
     /** Inits a new model for fuzzy basisfunctions. */
     public FuzzyBasisFunctionLearnerNodeModel() {
-        super();
+        super(FuzzyBasisFunctionPortObject.TYPE);
     }
 
     /**
@@ -174,5 +175,14 @@ public class FuzzyBasisFunctionLearnerNodeModel extends
      */
     public final int getNorm() {
         return m_norm;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public FuzzyBasisFunctionPortObject createPortObject(
+            final BasisFunctionModelContent content) {
+        return new FuzzyBasisFunctionPortObject(content);
     }
 }

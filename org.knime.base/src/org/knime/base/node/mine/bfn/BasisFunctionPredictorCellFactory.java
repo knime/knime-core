@@ -47,7 +47,7 @@ import org.knime.core.node.ExecutionMonitor;
  */
 public class BasisFunctionPredictorCellFactory implements CellFactory {
     
-    private final List<BasisFunctionPredictorRow> m_model;
+    private final Map<DataCell, List<BasisFunctionPredictorRow>> m_model;
     
     private final int[] m_filteredColumns;
     
@@ -109,7 +109,7 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      */
     public BasisFunctionPredictorCellFactory(final DataTableSpec dataSpec, 
             final DataTableSpec modelSpecs,
-            final List<BasisFunctionPredictorRow> model,
+            final Map<DataCell, List<BasisFunctionPredictorRow>> model,
             final String newTargetName,
             final double dontKnowClass,
             final boolean normClass) {
@@ -143,21 +143,21 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      * @return mapping class label to array of assigned class degrees
      */
     protected DataCell[] predict(final DataRow row,
-            final List<BasisFunctionPredictorRow> model) {
+            final Map<DataCell, List<BasisFunctionPredictorRow>> model) {
         // maps class to activation
         Map<DataCell, Double> map = new LinkedHashMap<DataCell, Double>();
         // overall basisfunctions in the model
-        for (Iterator<BasisFunctionPredictorRow> it = model.iterator(); 
-                it.hasNext();) {
-            BasisFunctionPredictorRow bf = it.next();
-            DataCell classInfo = bf.getClassLabel();
-            double act;
-            if (map.containsKey(classInfo)) {
-                act = bf.compose(row, map.get(classInfo));
-            } else {
-                act = bf.compose(row, 0.0);
+        for (DataCell key : model.keySet()) {
+            for (BasisFunctionPredictorRow bf : model.get(key)) {
+                DataCell classInfo = bf.getClassLabel();
+                double act;
+                if (map.containsKey(classInfo)) {
+                    act = bf.compose(row, map.get(classInfo));
+                } else {
+                    act = bf.compose(row, 0.0);
+                }
+                map.put(classInfo, act);
             }
-            map.put(classInfo, act);
         }
         
         // hash column specs
@@ -226,6 +226,6 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
     public void setProgress(final int curRowNr, final int rowCount, 
             final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress((double) curRowNr / rowCount,
-                "Predicting row \"" + lastKey.getId() + "\"");
+                "Predicting row \"" + lastKey.getString() + "\"");
     }
 }
