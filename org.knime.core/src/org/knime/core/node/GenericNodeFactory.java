@@ -102,22 +102,16 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
     private final String m_shortDescription;
 
     /* port names */
-    private List<String> m_inDataPorts;
-
-    private List<String> m_outDataPorts;
-
-    private List<String> m_modelIns;
-
-    private List<String> m_modelOuts;
+    private final List<String> m_inDataPorts = new ArrayList<String>(4);
+    private final List<String> m_outDataPorts = new ArrayList<String>(4);
+    private final List<String> m_modelIns = new ArrayList<String>(4);
+    private final List<String> m_modelOuts = new ArrayList<String>(4);
 
     /* port descriptions */
-    private List<String> m_inDataPortsDesc;
-
-    private List<String> m_outDataPortsDesc;
-
-    private List<String> m_modelInsDesc;
-
-    private List<String> m_modelOutsDesc;
+    private final List<String> m_inDataPortsDesc = new ArrayList<String>(4);
+    private final List<String> m_outDataPortsDesc = new ArrayList<String>(4);
+    private final List<String> m_modelInsDesc = new ArrayList<String>(4);
+    private final List<String> m_modelOutsDesc = new ArrayList<String>(4);
 
     private List<Element> m_views;
 
@@ -139,12 +133,12 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
 
     static {
         try {
-            String imagePath =
-                    GenericNodeFactory.class.getPackage().getName().replace('.', '/')
-                            + "/default.png";
+            String imagePath = 
+                GenericNodeFactory.class.getPackage().getName().replace(
+                        '.', '/') + "/default.png";
 
-            URL iconURL =
-                    GenericNodeFactory.class.getClassLoader().getResource(imagePath);
+            URL iconURL = GenericNodeFactory.class.getClassLoader().getResource(
+                    imagePath);
 
             defaultIcon = iconURL;
         } catch (Exception ioe) {
@@ -153,7 +147,7 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
     }
 
     /**
-     * Instantiates the parser and the transformer for processing the xmll node
+     * Instantiates the parser and the transformer for processing the xml node
      * description. Prints log message if that fails.
      */
     private static void instantiateParser() {
@@ -456,20 +450,8 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
                 continue;
             }
             if (port.getNodeName().equals("dataIn")) {
-                if (m_inDataPorts == null) {
-                    m_inDataPorts = new ArrayList<String>(4);
-                }
-                if (m_inDataPortsDesc == null) {
-                    m_inDataPortsDesc = new ArrayList<String>(4);
-                }
                 addToPort(m_inDataPorts, m_inDataPortsDesc, port);
             } else if (port.getNodeName().equals("dataOut")) {
-                if (m_outDataPorts == null) {
-                    m_outDataPorts = new ArrayList<String>(4);
-                }
-                if (m_outDataPortsDesc == null) {
-                    m_outDataPortsDesc = new ArrayList<String>(4);
-                }
                 addToPort(m_outDataPorts, m_outDataPortsDesc, port);
             } else if (port.getNodeName().equals("predParamIn")
                     || port.getNodeName().equals("modelIn")) {
@@ -477,25 +459,12 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
                     m_logger.coding("Do not use <predParamIn> any more, use "
                             + "<modelIn> instead");
                 }
-
-                if (m_modelIns == null) {
-                    m_modelIns = new ArrayList<String>(4);
-                }
-                if (m_modelInsDesc == null) {
-                    m_modelInsDesc = new ArrayList<String>(4);
-                }
                 addToPort(m_modelIns, m_modelInsDesc, port);
             } else if (port.getNodeName().equals("predParamOut")
                     || port.getNodeName().equals("modelOut")) {
                 if (port.getNodeName().equals("predParamOut")) {
                     m_logger.coding("Do not use <predParamOut> any more, use "
                             + "<modelOut> instead");
-                }
-                if (m_modelOuts == null) {
-                    m_modelOuts = new ArrayList<String>(4);
-                }
-                if (m_modelOutsDesc == null) {
-                    m_modelOutsDesc = new ArrayList<String>(4);
                 }
                 addToPort(m_modelOuts, m_modelOutsDesc, port);
             }
@@ -614,13 +583,17 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
      * @param index the index of the input port, starting at 0
      * @return an input port description
      */
-    public String getInportDataName(final int index) {
-        if ((m_inDataPorts == null) || (index >= m_inDataPorts.size())
-                || (m_inDataPorts.get(index) == null)) {
-            return "";
-        } else {
-            return m_inDataPorts.get(index);
+    public String getInportName(final int index) {
+        if (index >= 0 && index < m_inDataPorts.size()) {
+            String name = m_inDataPorts.get(index);
+            return (name == null ? "" : name);
         }
+        int modelIndex = index - m_inDataPorts.size();
+        if (modelIndex >= 0 && modelIndex < m_modelIns.size()) {
+            String name = m_modelIns.get(modelIndex);
+            return (name == null ? "" : name);
+        }
+        return "";
     }
 
     /**
@@ -629,43 +602,17 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
      * @param index the index of the output port, starting at 0
      * @return an output port description
      */
-    public String getOutportDataName(final int index) {
-        if ((m_outDataPorts == null) || (index >= m_outDataPorts.size())
-                || (m_outDataPorts.get(index) == null)) {
-            return "";
-        } else {
-            return m_outDataPorts.get(index);
+    public String getOutportName(final int index) {
+        if (index >= 0 && index < m_outDataPorts.size()) {
+            String name = m_outDataPorts.get(index);
+            return (name == null ? "" : name);
         }
-    }
-
-    /**
-     * Returns a name for an predictor parameter input port.
-     *
-     * @param index the index of the input port, starting at 0
-     * @return an predictor parameter input port description
-     */
-    public String getInportModelName(final int index) {
-        if ((m_modelIns == null) || (index >= m_modelIns.size())
-                || (m_modelIns.get(index) == null)) {
-            return "";
-        } else {
-            return m_modelIns.get(index);
+        int modelIndex = index - m_outDataPorts.size();
+        if (modelIndex >= 0 && modelIndex < m_modelOuts.size()) {
+            String name = m_modelOuts.get(modelIndex);
+            return (name == null ? "" : name);
         }
-    }
-
-    /**
-     * Returns a name for an predictor parameter output port.
-     *
-     * @param index the index of the output port, starting at 0
-     * @return an predictor parameter output port description
-     */
-    public String getOutportModelName(final int index) {
-        if ((m_modelOuts == null) || (index >= m_modelOuts.size())
-                || (m_modelOuts.get(index) == null)) {
-            return "";
-        } else {
-            return m_modelOuts.get(index);
-        }
+        return "";
     }
 
     /**
@@ -674,13 +621,17 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
      * @param index the index of the input port, starting at 0
      * @return an input port description
      */
-    public final String getInportDataDescription(final int index) {
-        if ((m_inDataPortsDesc == null) || (index >= m_inDataPortsDesc.size())
-                || (m_inDataPortsDesc.get(index) == null)) {
-            return "No description available";
-        } else {
-            return m_inDataPortsDesc.get(index);
+    public final String getInportDescription(final int index) {
+        if (index >= 0 && index < m_inDataPortsDesc.size()) {
+            String name = m_inDataPortsDesc.get(index);
+            return (name == null ? "No description available" : name);
         }
+        int modelIndex = index - m_inDataPortsDesc.size();
+        if (modelIndex >= 0 && modelIndex < m_modelInsDesc.size()) {
+            String name = m_modelInsDesc.get(modelIndex);
+            return (name == null ? "No description available" : name);
+        }
+        return "No description available";
     }
 
     /**
@@ -689,43 +640,17 @@ public abstract class GenericNodeFactory<T extends GenericNodeModel> {
      * @param index the index of the output port, starting at 0
      * @return an output port description
      */
-    public final String getOutportDataDescription(final int index) {
-        if ((m_outDataPortsDesc == null) || (index >= m_outDataPortsDesc.size())
-                || (m_outDataPortsDesc.get(index) == null)) {
-            return "No description available";
-        } else {
-            return m_outDataPortsDesc.get(index);
+    public final String getOutportDescription(final int index) {
+        if (index >= 0 && index < m_outDataPortsDesc.size()) {
+            String name = m_outDataPortsDesc.get(index);
+            return (name == null ? "No description available" : name);
         }
-    }
-
-    /**
-     * Returns a description for an predictor parameter input port.
-     *
-     * @param index the index of the input port, starting at 0
-     * @return an predictor parameter input port description
-     */
-    public final String getInportModelDescription(final int index) {
-        if ((m_modelInsDesc == null) || (index >= m_modelInsDesc.size())
-                || (m_modelInsDesc.get(index) == null)) {
-            return "No description available";
-        } else {
-            return m_modelInsDesc.get(index);
+        int modelIndex = index - m_outDataPortsDesc.size();
+        if (modelIndex >= 0 && modelIndex < m_modelOutsDesc.size()) {
+            String name = m_modelOutsDesc.get(modelIndex);
+            return (name == null ? "No description available" : name);
         }
-    }
-
-    /**
-     * Returns a description for an predictor parameter output port.
-     *
-     * @param index the index of the output port, starting at 0
-     * @return an predictor parameter output port description
-     */
-    public final String getOutportModelDescription(final int index) {
-        if ((m_modelOutsDesc == null) || (index >= m_modelOutsDesc.size())
-                || (m_modelOutsDesc.get(index) == null)) {
-            return "No description available";
-        } else {
-            return m_modelOutsDesc.get(index);
-        }
+        return "No description available";
     }
 
     /**

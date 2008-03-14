@@ -196,7 +196,7 @@ public final class Node {
         m_inPorts = new NodeInPort[m_model.getNrInPorts()];
         for (int i = 0; i < m_inPorts.length; i++) {
             m_inPorts[i] = new NodeInPort(i, m_model.getInPortType(i));
-            m_inPorts[i].setPortName(m_factory.getInportDataName(i));
+            m_inPorts[i].setPortName(m_factory.getInportName(i));
         }
 
         // init output ports
@@ -205,7 +205,7 @@ public final class Node {
         m_outDataPortsMemoryPolicy = MemoryPolicy.CacheSmallInMemory;
         for (int i = 0; i < m_outPorts.length; i++) {
             m_outPorts[i] = new NodeOutPort(i, m_model.getOutPortType(i));
-            m_outPorts[i].setPortName(m_factory.getOutportDataName(i));
+            m_outPorts[i].setPortName(m_factory.getOutportName(i));
             m_outPorts[i].setPortObjectSpec(null);
             m_outPorts[i].setPortObject(null, this);
             m_outPorts[i].setHiLiteHandler(m_model.getOutHiLiteHandler(i));
