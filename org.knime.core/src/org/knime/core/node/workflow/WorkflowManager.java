@@ -297,6 +297,10 @@ public final class WorkflowManager extends NodeContainer {
      */
     public void removeNode(final NodeID nodeID) {
         synchronized (m_dirtyWorkflow) {
+            // if node does not exist, simply return
+            if (m_nodes.get(nodeID) == null) {
+                return;
+            }
             // check to make sure we can safely remove this node
             if (!canRemoveNode(nodeID)) {
                 throw new IllegalStateException("Node can not be removed");
@@ -642,6 +646,19 @@ public final class WorkflowManager extends NodeContainer {
      */
     public void removeConnection(final ConnectionContainer cc) {
         synchronized (m_dirtyWorkflow) {
+            // make sure connection exists
+            if ((!m_connectionsByDest.get(cc.getDest()).contains(cc))) {
+                if ((!m_connectionsBySource.get(cc.getSource()).contains(cc))) {
+                    // if connection doesn't exist anywhere, we are fine
+                    return;
+                } else {
+                    // this should never happen - only one direction exists
+                    assert false;
+                    throw new IllegalArgumentException(
+                    "Can not remove partially existing connection!");
+                }
+            }
+            // now check if other reasons forbit to delete this connection:
             if (!canRemoveConnection(cc)) {
                 throw new IllegalArgumentException(
                         "Can not remove connection!");
