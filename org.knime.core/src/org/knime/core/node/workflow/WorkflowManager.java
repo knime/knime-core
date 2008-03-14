@@ -612,7 +612,14 @@ public final class WorkflowManager extends NodeContainer {
      * @return true if connection cc is removable.
      */
     public boolean canRemoveConnection(final ConnectionContainer cc) {
-        // make sure connection exists
+        // make sure both nodes (well, their connection lists) exist
+        if (m_connectionsByDest.get(cc.getDest()) == null) {
+            return false;
+        }
+        if (m_connectionsBySource.get(cc.getSource()) == null) {
+            return false;
+        }
+        // make sure connection between those two nodes exists
         if (!m_connectionsByDest.get(cc.getDest()).contains(cc)) {
             return false;
         }
@@ -646,6 +653,13 @@ public final class WorkflowManager extends NodeContainer {
      */
     public void removeConnection(final ConnectionContainer cc) {
         synchronized (m_dirtyWorkflow) {
+            // make sure both nodes (well, their connection lists) exist
+            if (m_connectionsByDest.get(cc.getDest()) == null) {
+                return;
+            }
+            if (m_connectionsBySource.get(cc.getSource()) == null) {
+                return;
+            }
             // make sure connection exists
             if ((!m_connectionsByDest.get(cc.getDest()).contains(cc))) {
                 if ((!m_connectionsBySource.get(cc.getSource()).contains(cc))) {
