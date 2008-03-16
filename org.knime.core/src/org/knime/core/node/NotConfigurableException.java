@@ -43,7 +43,8 @@ public class NotConfigurableException extends Exception {
      *      dialog cannot be opened
      * @param cause The reason why the configuration failed.
      */
-    NotConfigurableException(final String message, final Throwable cause) {
+    public NotConfigurableException(final String message, 
+            final Throwable cause) {
         super(message, cause);
     }
 }
