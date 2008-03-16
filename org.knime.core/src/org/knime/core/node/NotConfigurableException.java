@@ -31,11 +31,19 @@ package org.knime.core.node;
 public class NotConfigurableException extends Exception {
     /**
      * Creates a new NotConfigurableException.
-     * 
-     * @param message a meaningfull message why the configuration dialog
+     * @param message a meaningful message why the configuration dialog
      * cannot be opened
      */
     public NotConfigurableException(final String message) {
         super(message);
+    }
+    
+    /** Creates a new NotConfigurableException with a given cause.
+     * @param message a meaningful message why the configuration 
+     *      dialog cannot be opened
+     * @param cause The reason why the configuration failed.
+     */
+    NotConfigurableException(final String message, final Throwable cause) {
+        super(message, cause);
     }
 }
