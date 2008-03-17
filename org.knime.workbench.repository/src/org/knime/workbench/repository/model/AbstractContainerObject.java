@@ -25,6 +25,7 @@
 package org.knime.workbench.repository.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -37,6 +38,13 @@ import java.util.List;
  */
 public abstract class AbstractContainerObject extends AbstractRepositoryObject
         implements IContainerObject {
+    
+    private boolean m_sortChildren = true;
+    
+    public void setSortChildren(final boolean sort) {
+        m_sortChildren = sort;
+    }
+    
     /**
      * The list of categories and nodes.
      */
@@ -75,11 +83,18 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         if (child == this) {
             throw new IllegalArgumentException("Can't add 'this' as a child");
         }
-
         m_children.add(child);
 
         child.setParent(this);
 
+    }
+    
+    public void removeAllChildren() {
+        m_children.clear();
+    }
+    
+    public void addAllChildren(Collection<? extends AbstractRepositoryObject> children) {
+        m_children.addAll(children);
     }
 
     /**
@@ -92,8 +107,9 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     public IRepositoryObject[] getChildren() {
 
         // Collections.sort(m_children, m_comparator);
-        m_children = sortChildren(m_children);
-
+        if (m_sortChildren) {
+            m_children = sortChildren(m_children);
+        }
         return m_children.toArray(new IRepositoryObject[m_children.size()]);
     }
 

@@ -33,6 +33,7 @@ import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
+import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
@@ -140,6 +141,7 @@ public class NodeTemplateDropTargetListener2 implements
                                 (GenericNodeFactory<? extends GenericNodeModel>)
                                     factory.getNewObject(),
                                 getDropLocation(event)));
+                NodeUsageRegistry.addNode(template);
             }
         }
     }

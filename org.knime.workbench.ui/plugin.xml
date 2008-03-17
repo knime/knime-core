@@ -219,5 +219,57 @@
             state="true">
       </decorator>
    </extension>
+   
+   <extension
+          point="org.eclipse.ui.views">
+       <view
+             allowMultiple="false"
+             category="org.knime.workbench.ui.category"
+             class="org.knime.workbench.ui.favorites.FavoritesView"
+             icon="icons/fav/fav_view.png"
+             id="org.knime.workbench.ui.favorites"
+             name="Favorite Nodes">
+       </view>
+    </extension>
+    <extension
+          point="org.eclipse.ui.viewActions">
+       <viewContribution
+             id="org.knime.workbench.ui.favorites.actions"
+             targetID="org.knime.workbench.ui.favorites">
+          <action
+                class="org.knime.workbench.ui.favorites.actions.RemoveFavoriteActionDelegate"
+                disabledIcon="icons/fav/remove_fav_disabled.png"
+                hoverIcon="icons/fav/remove_fav.png"
+                icon="icons/fav/remove_fav.png"
+                id="org.knime.workbench.ui.favorites.remove"
+                label="Remove selected"
+                state="false"
+                style="push"
+                toolbarPath="Normal/additions"
+                tooltip="Removes the selected favorite node">
+          </action>
+          <action
+                class="org.knime.workbench.ui.favorites.actions.ExpandAllActionDelegate"
+                disabledIcon="icons/fav/fav_expand.png"
+                hoverIcon="icons/fav/fav_expand.png"
+                icon="icons/fav/fav_expand.png"
+                id="org.knime.workbench.ui.favorites.expand"
+                label="Expand All"
+                toolbarPath="Normal/additions"
+                tooltip="Expands all tree items">
+          </action>
+          <action
+                class="org.knime.workbench.ui.favorites.actions.CollapseAllActionDelegate"
+                disabledIcon="icons/fav/fav_collapse.png"
+                hoverIcon="icons/fav/fav_collapse.png"
+                icon="icons/fav/fav_collapse.png"
+                id="org.knime.workbench.ui.favorites.collapse"
+                label="Collapse All"
+                toolbarPath="Normal/additions"
+                tooltip="Collapses all tree items">
+          </action>
+       </viewContribution>
+    </extension>
+   
 
 </plugin>

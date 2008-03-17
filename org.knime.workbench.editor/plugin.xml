@@ -312,5 +312,5 @@
 			<instanceof value="org.eclipse.core.resources.IResource"/>
       </enablement>
    </extension>
-
+    
 </plugin>
