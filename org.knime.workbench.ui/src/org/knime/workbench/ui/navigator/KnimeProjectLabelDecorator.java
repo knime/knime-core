@@ -77,7 +77,6 @@ public class KnimeProjectLabelDecorator implements ILabelDecorator {
             if (projectNode == null) {
                 for (NodeContainer nc : WorkflowManager.ROOT
                             .getNodeContainerBreadthFirstSearch()) {
-                    System.out.println(nc.getName() + " vs. " + project.getName());
                     if (nc.getName().equals(project.getName())) {
                         projectNode = nc;
                         m_projects.put(project.getName(), projectNode); 
