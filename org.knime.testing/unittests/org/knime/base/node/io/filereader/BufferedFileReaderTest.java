@@ -17,11 +17,13 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 25, 2007 (ohl): created
  */
 package org.knime.base.node.io.filereader;
+
+import org.knime.base.node.util.BufferedFileReader;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -31,7 +33,7 @@ import java.io.StringReader;
 import junit.framework.TestCase;
 
 /**
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public class BufferedFileReaderTest extends TestCase {
@@ -43,7 +45,7 @@ public class BufferedFileReaderTest extends TestCase {
     /**
      * tests if the read method of the BufferedFileReader works the same as the
      * one of the BufferedReader.
-     * 
+     *
      * @throws IOException if an I/O error occurred.
      */
     public void testRead() throws IOException {
@@ -76,7 +78,7 @@ public class BufferedFileReaderTest extends TestCase {
         try {
             reader.read();
             fail(); // reading after close should throw an exception
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             // nice catch
         }
 
@@ -85,7 +87,7 @@ public class BufferedFileReaderTest extends TestCase {
     /**
      * tests if the readLine method of the BufferedFileReader works the same as
      * the one of the BufferedReader.
-     * 
+     *
      * @throws IOException if an I/O error occurred.
      */
     public void testReadLine() throws IOException {
@@ -118,7 +120,7 @@ public class BufferedFileReaderTest extends TestCase {
         try {
             reader.readLine();
             fail(); // reading after close should throw an exception
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             // nice catch
         }
 
@@ -127,14 +129,14 @@ public class BufferedFileReaderTest extends TestCase {
     /**
      * tests if the read(char[]) method of the BufferedFileReader works the same
      * as the one of the BufferedReader.
-     * 
+     *
      * @throws IOException if an I/O error occurred.
      */
     public void testReadArray() throws IOException {
 
         // check the zero character reading
         initReaders("foo");
-        int r = reader.read(new char[7], 3, 0);
+        final int r = reader.read(new char[7], 3, 0);
         assertEquals(r, 0);
 
         // this does a one character to "length" character reading:
@@ -168,7 +170,7 @@ public class BufferedFileReaderTest extends TestCase {
         try {
             reader.read(new char[17]);
             fail(); // reading after close should throw an exception
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             // nice catch
         }
 
@@ -176,7 +178,7 @@ public class BufferedFileReaderTest extends TestCase {
 
     /**
      * Tests if the reader always returns the entire current line.
-     * 
+     *
      * @throws IOException if it does.
      */
     public void testGetCurrentLine() throws IOException {
@@ -230,7 +232,7 @@ public class BufferedFileReaderTest extends TestCase {
 
         initReaders("aa\nb\nc\n"); // aa LF b LF c LF
         assertEquals(reader.getCurrentLine(), "");
-        assertEquals(reader.getCurrentLineNumber(), 0);        
+        assertEquals(reader.getCurrentLineNumber(), 0);
         assertEquals(reader.read(), 'a');
         assertEquals(reader.getCurrentLine(), "aa");
         assertEquals(reader.getCurrentLineNumber(), 1);
@@ -338,13 +340,13 @@ public class BufferedFileReaderTest extends TestCase {
         try {
             reader.getCurrentLine();
             fail(); // reading after close should throw an exception
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             // nice catch
         }
         try {
             reader.getCurrentLineNumber();
             fail(); // reading after close should throw an exception
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             // nice catch
         }
 
@@ -357,12 +359,12 @@ public class BufferedFileReaderTest extends TestCase {
      */
     public void testSkip() throws IOException {
 
-        
+
         skipEqualTest("");
         skipEqualTest("\n");
         skipEqualTest("\n\r");
 
-        
+
         skipEqualTest("a\nb\nc\n"); // a LF b LF c LF
         skipEqualTest("aa\nb\nc\n"); // aa LF b LF c LF
         skipEqualTest("\nb\nc\n"); // empty line at the beginning
@@ -404,18 +406,18 @@ public class BufferedFileReaderTest extends TestCase {
         assertEquals(reader.getCurrentLine(), "ef");
         assertEquals(reader.getCurrentLineNumber(), 3);
 
-        
-        
-        
+
+
+
         reader.close();
         try {
             reader.skip(17);
             fail(); // reading after close should throw an exception
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             // nice catch
         }
 
-    
+
     }
 
     /*
@@ -484,7 +486,7 @@ public class BufferedFileReaderTest extends TestCase {
         } while (r != -1);
 
         // do the same thing with offset and len
-        int off = 3;
+        final int off = 3;
         initReaders(s);
 
         rr = new char[s.length() + off];
@@ -507,38 +509,38 @@ public class BufferedFileReaderTest extends TestCase {
             skipEqualTest(s, i);
         }
     }
-    
+
     /*
      * initializes the readers with the string, reads one byte, skips n bytes
      * and reads one character. Tests if the characters returned by the two
      * readers are equal.
      */
     private void skipEqualTest(final String s, final int n) throws IOException {
-        
+
         initReaders(s);
 
         // skip n bytes
         assertEquals(reader.skip(n), correct.skip(n));
-        
+
         // read one more byte
         assertEquals(reader.read(), correct.read());
 
-        
+
         initReaders(s);
 
         // read one byte
         assertEquals(reader.read(), correct.read());
-        
+
         // skip n bytes
         assertEquals(reader.skip(n), correct.skip(n));
-        
+
         // read one more byte
         assertEquals(reader.read(), correct.read());
     }
 
     /**
      * Places the specified content into the two global readers.
-     * 
+     *
      * @param content the string to place into the two global readers.
      */
     private void initReaders(final String content) {
