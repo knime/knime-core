@@ -40,10 +40,8 @@
     		</ul>
     		</p>
     		<p>
-	    		<b>All aggregation methods ignore missing values.</b>
-    		</p>
-    		<p>
-            If the aggregation method 'Mode' is selected, a maximum number 
+            If the aggregation method 'Mode' or 'Unique concatenate' 
+            is selected, a maximum number 
             of different values can be defined to be stored in memory. 
             If the actual number of values exceeds this limit, 
             the calculation for this group is skipped, a missing value is set 

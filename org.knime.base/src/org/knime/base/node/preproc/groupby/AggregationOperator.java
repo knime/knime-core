@@ -68,7 +68,7 @@ public abstract class AggregationOperator {
      * @param cell the {@link DataCell} to consider during computing
      */
     public void compute(final DataCell cell) {
-        if (m_skipped || cell.isMissing()) {
+        if (m_skipped) {
             return;
         }
         m_skipped = computeInternal(cell);
@@ -76,9 +76,7 @@ public abstract class AggregationOperator {
 
     /**
      * @param cell the {@link DataCell} to consider during computing the cell
-     * can't be <code>null</code> or missing. If the method handles missing
-     * cells it needs to override the {@link #compute(DataCell)} method
-     * account
+     * can't be <code>null</code>.
      * @return <code>true</code> if this column should be skipped in further
      * calculations
      */

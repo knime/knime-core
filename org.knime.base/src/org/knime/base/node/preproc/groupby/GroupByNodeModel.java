@@ -211,10 +211,10 @@ public class GroupByNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_groupByCols.validateSettings(settings);
-        final List<String> includeList =
+        final List<String> groupByCols =
             ((SettingsModelFilterString)m_groupByCols.
                     createCloneWithValidatedValue(settings)).getIncludeList();
-        if (includeList == null || includeList.size() < 1) {
+        if (groupByCols == null || groupByCols.size() < 1) {
             throw new InvalidSettingsException("No grouping column included");
         }
         m_numericColMethod.validateSettings(settings);
@@ -287,16 +287,16 @@ public class GroupByNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        final List<String> inclList = m_groupByCols.getIncludeList();
+        final List<String> groupByCols = m_groupByCols.getIncludeList();
         final DataTableSpec origSpec = inSpecs[0];
         try {
-            GroupByTable.checkIncludeList(origSpec, inclList);
+            GroupByTable.checkIncludeList(origSpec, groupByCols);
         } catch (final IllegalArgumentException e) {
             throw new InvalidSettingsException(
                     "Please define the group by column(s)");
         }
         if (origSpec.getNumColumns() > 1
-                && inclList.size() == origSpec.getNumColumns()) {
+                && groupByCols.size() == origSpec.getNumColumns()) {
             setWarningMessage("All columns selected as group by column");
         }
         if (origSpec.getNumColumns() < 1) {
@@ -308,7 +308,7 @@ public class GroupByNodeModel extends NodeModel {
         final AggregationMethod nominalMethod =
             AggregationMethod.getMethod4SettingsModel(m_nominalColMethod);
         final DataTableSpec spec = GroupByTable.createGroupByTableSpec(
-                origSpec, inclList, numericMethod, nominalMethod,
+                origSpec, groupByCols, numericMethod, nominalMethod,
                 m_moveGroupCols2Front.getBooleanValue(),
                 m_keepColumnName.getBooleanValue());
         return new DataTableSpec[] {spec};
@@ -327,7 +327,7 @@ public class GroupByNodeModel extends NodeModel {
         if (table.getRowCount() < 1) {
             setWarningMessage("Empty input table found");
         }
-        final List<String> includeList = m_groupByCols.getIncludeList();
+        final List<String> groupByCols = m_groupByCols.getIncludeList();
         final AggregationMethod numericMethod =
             AggregationMethod.getMethod4SettingsModel(m_numericColMethod);
         final AggregationMethod noneNumericMethod =
@@ -337,7 +337,7 @@ public class GroupByNodeModel extends NodeModel {
         final boolean enableHilite = m_enableHilite.getBooleanValue();
         final boolean move2Front = m_moveGroupCols2Front.getBooleanValue();
         final boolean keepColName = m_keepColumnName.getBooleanValue();
-        final GroupByTable resultTable = new GroupByTable(table, includeList,
+        final GroupByTable resultTable = new GroupByTable(table, groupByCols,
                 numericMethod, noneNumericMethod, maxUniqueVals, sortInMemory,
                 enableHilite, move2Front, keepColName, exec);
         if (m_enableHilite.getBooleanValue()) {

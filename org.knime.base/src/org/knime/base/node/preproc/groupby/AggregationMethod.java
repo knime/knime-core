@@ -55,31 +55,31 @@ public enum AggregationMethod {
 
 //The numerical methods
     /**Minimum.*/
-    MIN("Minimum", true, "Min({1})", DoubleCell.TYPE, false),
+    MIN("Minimum", true, "Min({1})", null, false, true),
     /**Maximum.*/
-    MAX("Maximum", true, "Max({1})", DoubleCell.TYPE, false),
+    MAX("Maximum", true, "Max({1})", null, false, true),
     /**Average.*/
-    MEAN("Mean", true, "Mean({1})", DoubleCell.TYPE, false),
+    MEAN("Mean", true, "Mean({1})", DoubleCell.TYPE, false, false),
     /**Sum.*/
-    SUM("Sum", true, "Sum({1})", DoubleCell.TYPE, false),
+    SUM("Sum", true, "Sum({1})", DoubleCell.TYPE, false, false),
     /**Variance.*/
-    VARIANCE("Variance", true, "Variance({1})", DoubleCell.TYPE, false),
+    VARIANCE("Variance", true, "Variance({1})", DoubleCell.TYPE, false, false),
 
 //The none numerical methods
     /**Takes the first cell per group.*/
-    FIRST("First", false, "First({1})", null, false),
+    FIRST("First", false, "First({1})", null, false, true),
     /**Takes the last cell per group.*/
-    LAST("Last", false, "Last({1})", null, false),
+    LAST("Last", false, "Last({1})", null, false, true),
     /**Takes the value which occurs most.*/
-    MODE("Mode", false, "Mode({1})", null, true),
+    MODE("Mode", false, "Mode({1})", null, true, true),
     /**Takes the value which occurs most.*/
     CONCATENATE("Concatenate", false, "Concatenate({1})", StringCell.TYPE,
-            false),
+            false, false),
     /**Takes the value which occurs most.*/
     UNIQUE_CONCATENATE("Unique concatenate", false, "Unique concatenate({1})",
-            StringCell.TYPE, true),
+            StringCell.TYPE, true, false),
     /**Counts the number of group members.*/
-    COUNT("Count", false, "Count({1})", IntCell.TYPE, false);
+    COUNT("Count", false, "Count({1})", IntCell.TYPE, false, false);
 
     /**The column name place holder.*/
     private static final String PLACE_HOLDER = "{1}";
@@ -89,7 +89,7 @@ public enum AggregationMethod {
 
     private final class MinOperator extends AggregationOperator {
 
-        private double m_minVal = Double.NaN;
+        private DataCell m_minVal = null;
 
         /**Constructor for class MinOperator.
          * @param maxUniqueValues the maximum number of unique values
@@ -103,9 +103,13 @@ public enum AggregationMethod {
          */
         @Override
         protected boolean computeInternal(final DataCell cell) {
-            final double d = ((DoubleValue)cell).getDoubleValue();
-            if (Double.isNaN(m_minVal) || d < m_minVal) {
-                m_minVal = d;
+            if (cell.isMissing()) {
+                return false;
+            }
+            if (m_minVal == null
+                    || cell.getType().getComparator().compare(cell, m_minVal)
+                        < 0) {
+                m_minVal = cell;
             }
             return false;
         }
@@ -115,10 +119,10 @@ public enum AggregationMethod {
          */
         @Override
         protected DataCell getResultInternal() {
-            if (Double.isNaN(m_minVal)) {
+            if (m_minVal == null) {
                 return DataType.getMissingCell();
             }
-            return new DoubleCell(m_minVal);
+            return m_minVal;
         }
 
         /**
@@ -126,13 +130,13 @@ public enum AggregationMethod {
          */
         @Override
         protected void resetInternal() {
-            m_minVal = Double.NaN;
+            m_minVal = null;
         }
     }
 
     private final class MaxOperator extends AggregationOperator {
 
-        private double m_maxVal = Double.NaN;
+        private DataCell m_maxVal = null;
 
         /**Constructor for class MinOperator.
          * @param maxUniqueValues the maximum number of unique values
@@ -146,9 +150,13 @@ public enum AggregationMethod {
          */
         @Override
         protected boolean computeInternal(final DataCell cell) {
-            final double d = ((DoubleValue)cell).getDoubleValue();
-            if (Double.isNaN(m_maxVal) || d > m_maxVal) {
-                m_maxVal = d;
+            if (cell.isMissing()) {
+                return false;
+            }
+            if (m_maxVal == null
+                    || cell.getType().getComparator().compare(cell, m_maxVal)
+                    > 0) {
+                m_maxVal = cell;
             }
             return false;
         }
@@ -158,10 +166,10 @@ public enum AggregationMethod {
          */
         @Override
         protected DataCell getResultInternal() {
-            if (Double.isNaN(m_maxVal)) {
+            if (m_maxVal == null) {
                 return DataType.getMissingCell();
             }
-            return new DoubleCell(m_maxVal);
+            return m_maxVal;
         }
 
         /**
@@ -169,7 +177,7 @@ public enum AggregationMethod {
          */
         @Override
         protected void resetInternal() {
-            m_maxVal = Double.NaN;
+            m_maxVal = null;
         }
     }
 
@@ -190,6 +198,9 @@ public enum AggregationMethod {
          */
         @Override
         protected boolean computeInternal(final DataCell cell) {
+            if (cell.isMissing()) {
+                return false;
+            }
             final double d = ((DoubleValue)cell).getDoubleValue();
             m_sum += d;
             m_count++;
@@ -233,6 +244,9 @@ public enum AggregationMethod {
          */
         @Override
         protected boolean computeInternal(final DataCell cell) {
+            if (cell.isMissing()) {
+                return false;
+            }
             m_valid = true;
             final double d = ((DoubleValue)cell).getDoubleValue();
             m_sum += d;
@@ -278,6 +292,9 @@ public enum AggregationMethod {
          */
         @Override
         protected boolean computeInternal(final DataCell cell) {
+            if (cell.isMissing()) {
+                return false;
+            }
             final double d = ((DoubleValue)cell).getDoubleValue();
             m_validCount++;
             m_sum += d;
@@ -290,8 +307,11 @@ public enum AggregationMethod {
          */
         @Override
         protected DataCell getResultInternal() {
-            if (m_validCount <= 1) {
+            if (m_validCount <= 0) {
                 return DataType.getMissingCell();
+            }
+            if (m_validCount == 1) {
+                return new DoubleCell(0);
             }
             double variance = (m_sumSquare - ((m_sum * m_sum)
                     / m_validCount)) / (m_validCount - 1);
@@ -451,7 +471,7 @@ public enum AggregationMethod {
             int max = Integer.MIN_VALUE;
             DataCell result = null;
             for (final Entry<DataCell, MutableInteger> entry : entries) {
-                if (result == null || entry.getValue().intValue() > max) {
+                if (entry.getValue().intValue() > max) {
                     max = entry.getValue().intValue();
                     result = entry.getKey();
                 }
@@ -486,6 +506,9 @@ public enum AggregationMethod {
          */
         @Override
         protected boolean computeInternal(final DataCell cell) {
+            if (cell.isMissing()) {
+                return false;
+            }
             if (m_first) {
                 m_first = false;
             } else {
@@ -539,6 +562,9 @@ public enum AggregationMethod {
          */
         @Override
         protected boolean computeInternal(final DataCell cell) {
+            if (cell.isMissing()) {
+                return false;
+            }
             final String val = cell.toString();
             if (m_vals.contains(val)) {
                 return false;
@@ -630,18 +656,18 @@ public enum AggregationMethod {
      * <code>null</code> if the type stays the same
      * @param usesLimit <code>true</code> if the method checks the number of
      * unique values limit.
+     * @param keepColSpec <code>true</code> if the original column specification
+     * should be kept if possible
      */
     private AggregationMethod(final String label, final boolean numerical,
             final String columnNamePattern, final DataType type,
-            final boolean usesLimit) {
+            final boolean usesLimit, final boolean keepColSpec) {
         m_label = label;
         m_numerical = numerical;
         m_columnNamePattern = columnNamePattern;
         m_dataType = type;
         m_usesLimit = usesLimit;
-        //if no data type is defined the original column spec should be
-        //preserved
-        m_keepColSpec = (m_dataType == null);
+        m_keepColSpec = keepColSpec;
     }
 
 
@@ -675,8 +701,8 @@ public enum AggregationMethod {
             case LAST:      return new LastOperator(maxUniqueValues);
             case MODE:      return new ModeOperator(maxUniqueValues);
             case CONCATENATE: return new ConcatenateOperator(maxUniqueValues);
-            case UNIQUE_CONCATENATE:
-                return new UniqueConcatenateOperator(maxUniqueValues);
+            case UNIQUE_CONCATENATE: return new UniqueConcatenateOperator(
+                    maxUniqueValues);
             case COUNT:     return new CountOperator(maxUniqueValues);
         }
         throw new IllegalStateException("No operator found");
@@ -705,16 +731,17 @@ public enum AggregationMethod {
             throw new NullPointerException(
                     "Original column spec must not be null");
         }
-        final DataType type;
-        if (m_dataType == null) {
-            type = origSpec.getType();
-        } else {
-            type = m_dataType;
-        }
         final DataColumnSpecCreator specCreator;
-        if (m_keepColSpec) {
+        if (m_keepColSpec && (m_dataType == null
+                || origSpec.getType().equals(m_dataType))) {
              specCreator = new DataColumnSpecCreator(origSpec);
         } else {
+            final DataType type;
+            if (m_dataType == null) {
+                type = origSpec.getType();
+            } else {
+                type = m_dataType;
+            }
             specCreator = new DataColumnSpecCreator(origSpec.getName(), type);
         }
 

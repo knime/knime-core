@@ -93,7 +93,7 @@ public class GroupByTable {
 
     /**Constructor for class GroupByTable.
      * @param dataTable the table to aggregate
-     * @param inclList the name of all columns to group by
+     * @param groupByCols the name of all columns to group by
      * @param numericColMethod aggregation method for numerical columns
      * @param noneNumericColMethod aggregation method for none
      * numerical columns
@@ -110,7 +110,7 @@ public class GroupByTable {
      * @throws CanceledExecutionException if the user has canceled the execution
      */
     public GroupByTable(final BufferedDataTable dataTable,
-            final List<String> inclList,
+            final List<String> groupByCols,
             final AggregationMethod numericColMethod,
             final AggregationMethod noneNumericColMethod,
             final int maxUniqueValues, final boolean sortInMemory,
@@ -121,7 +121,7 @@ public class GroupByTable {
         if (dataTable == null) {
             throw new NullPointerException("DataTable must not be null");
         }
-        checkIncludeList(dataTable.getDataTableSpec(), inclList);
+        checkIncludeList(dataTable.getDataTableSpec(), groupByCols);
         if (numericColMethod == null) {
             throw new NullPointerException("Numeric method must not be null");
         }
@@ -146,7 +146,7 @@ public class GroupByTable {
             m_hiliteMapping = null;
         }
 
-        m_inclList = inclList;
+        m_inclList = groupByCols;
         m_numericColMethod = numericColMethod;
         m_noneNumericColMethod = noneNumericColMethod;
         m_maxUniqueVals = maxUniqueValues;
