@@ -227,17 +227,21 @@ public final class FavoriteNodesManager {
     
     private void loadFavoriteNodes(final XMLMemento favoriteNodes) {
         IMemento favNodes = favoriteNodes.getChild(TAG_PERSONAL_FAVS);
-        for (IMemento favNode : favNodes.getChildren(TAG_FAVORITE)) {
-            String id = favNode.getString(TAG_NODE_ID);
-            LOGGER.debug("trying to load: " + id);
-            NodeTemplate node = (NodeTemplate)RepositoryManager.INSTANCE
-                .getRoot().clone().getChildByID(id, true);
-            addFavoriteNode(node);
+        if (RepositoryManager.INSTANCE.isRootAvailable()) {
+            RepositoryManager.INSTANCE.getRoot();
+            for (IMemento favNode : favNodes.getChildren(TAG_FAVORITE)) {
+                String id = favNode.getString(TAG_NODE_ID);
+                LOGGER.debug("trying to load: " + id);
+                NodeTemplate node = (NodeTemplate)RepositoryManager.INSTANCE
+                    .getRoot().getChildByID(id, true);
+                addFavoriteNode(node);
+            }
+            IMemento freqNodes = favoriteNodes.getChild(TAG_MOST_FREQUENT);
+            NodeUsageRegistry.loadFrequentNodes(freqNodes);
+            IMemento lastNodes = favoriteNodes.getChild(TAG_LAST_USED);
+            NodeUsageRegistry.loadLastUsedNodes(lastNodes);
+            updateNodes();
+            RepositoryManager.INSTANCE.releaseRoot();
         }
-        IMemento freqNodes = favoriteNodes.getChild(TAG_MOST_FREQUENT);
-        NodeUsageRegistry.loadFrequentNodes(freqNodes);
-        IMemento lastNodes = favoriteNodes.getChild(TAG_LAST_USED);
-        NodeUsageRegistry.loadLastUsedNodes(lastNodes);
-        updateNodes();
     }
 }
