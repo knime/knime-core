@@ -45,6 +45,10 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         m_sortChildren = sort;
     }
     
+    protected boolean sortChildren() {
+        return m_sortChildren;
+    }
+    
     /**
      * The list of categories and nodes.
      */
@@ -104,7 +108,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      * @return The children (category and nodes of current level)
      * @see org.knime.workbench.repository.model.IContainerObject# getChildren()
      */
-    public IRepositoryObject[] getChildren() {
+    public synchronized IRepositoryObject[] getChildren() {
 
         // Collections.sort(m_children, m_comparator);
         if (m_sortChildren) {
@@ -329,7 +333,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     /**
      * {@inheritDoc}
      */
-    public IRepositoryObject getChildByID(final String id, final boolean rec) {
+    public synchronized IRepositoryObject getChildByID(final String id, final boolean rec) {
         // The slash and the empty string represent 'this'
         if ("/".equals(id) || "".equals(id.trim())) {
             return this;

@@ -29,6 +29,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IViewActionDelegate;
 import org.eclipse.ui.IViewPart;
 import org.knime.workbench.repository.model.NodeTemplate;
+import org.knime.workbench.ui.favorites.FavoriteNodesManager;
 import org.knime.workbench.ui.favorites.FavoritesView;
 
 /**
@@ -61,7 +62,7 @@ public class RemoveFavoriteActionDelegate implements IViewActionDelegate {
                 .getFirstElement();
             if (node.getParent() != null && node.getParent().getID() != null
                     && node.getParent().getID().equals(
-                            FavoritesView.FAV_CAT_ID)) {
+                            FavoriteNodesManager.FAV_CAT_ID)) {
                 m_node = (NodeTemplate)((IStructuredSelection)selection)
                 .getFirstElement();
                 action.setEnabled(true);

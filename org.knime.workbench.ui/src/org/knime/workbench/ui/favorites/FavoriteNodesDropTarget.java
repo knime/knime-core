@@ -71,7 +71,7 @@ public class FavoriteNodesDropTarget extends DropTargetAdapter {
         event.detail = DND.DROP_NONE;
         if (event.item != null & event.item instanceof TreeItem) {
             TreeItem treeItem = (TreeItem)event.item;
-            if (treeItem.getText().equals(FavoritesView.FAV_TITLE)) {
+            if (treeItem.getText().equals(FavoriteNodesManager.FAV_TITLE)) {
                 event.detail = DND.DROP_COPY;
             }
         }

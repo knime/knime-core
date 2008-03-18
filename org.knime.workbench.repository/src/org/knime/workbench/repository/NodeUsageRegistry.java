@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.ui.IMemento;
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
@@ -163,6 +164,21 @@ public final class NodeUsageRegistry {
         return LAST_USED;
     }
     
+    public static void clearHistory() {
+        clearFrequencyHistory();
+        clearLastUsedHistory();
+        notifyListener();
+    }
+    
+    private static void clearFrequencyHistory() {
+        cachedFrequent = null;
+        FREQUENCIES.clear();
+    }
+    
+    private static void clearLastUsedHistory() {
+        LAST_USED.clear();
+    }
+    
     private static class NodeTemplateFrequency 
         implements Comparable<NodeTemplateFrequency> {
         
@@ -231,6 +247,45 @@ public final class NodeUsageRegistry {
         }
     }
     
+    private static final String TAG_NODE_ID = "nodeid";
+    private static final String TAG_FAVORITE = "favorite";
+    private static final String TAG_FREQUENCY = "frequency";
+    
+    public static void saveFrequentNodes(final IMemento freqNodes) {
+        for (NodeTemplateFrequency nodeFreq : FREQUENCIES) {
+            IMemento item = freqNodes.createChild(TAG_FAVORITE);
+            item.putString(TAG_NODE_ID, nodeFreq.getNode().getID());
+            item.putInteger(TAG_FREQUENCY, nodeFreq.m_frequency);
+        }
+    }
+
+    public static void saveLastUsedNodes(final IMemento lastUsedNodes) {
+        for (NodeTemplate node : LAST_USED) {
+            IMemento item = lastUsedNodes.createChild(TAG_FAVORITE);
+            item.putString(TAG_NODE_ID, node.getID());
+        }
+    }
+    
+    public static void loadFrequentNodes(final IMemento freqNodes) {
+        for (IMemento freqNode : freqNodes.getChildren(TAG_FAVORITE)) {
+            String id = freqNode.getString(TAG_NODE_ID);
+            int frequency = freqNode.getInteger(TAG_FREQUENCY);
+            NodeTemplate node = (NodeTemplate)RepositoryManager.INSTANCE
+                .getRoot().clone().getChildByID(id, true);
+            NodeTemplateFrequency nodeFreq = new NodeTemplateFrequency(node);
+            nodeFreq.m_frequency = frequency;
+            FREQUENCIES.add(nodeFreq);
+        }
+    }
+    
+    public static void loadLastUsedNodes(final IMemento lastUsedNodes) {
+        for (IMemento lastNode : lastUsedNodes.getChildren(TAG_FAVORITE)) {
+            String id = lastNode.getString(TAG_NODE_ID);
+            NodeTemplate node = (NodeTemplate)RepositoryManager.INSTANCE
+                .getRoot().clone().getChildByID(id, true);
+            LAST_USED.add(node);
+        }
+    }
     
     
 }

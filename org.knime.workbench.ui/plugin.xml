@@ -249,6 +249,14 @@
                 tooltip="Removes the selected favorite node">
           </action>
           <action
+                class="org.knime.workbench.ui.favorites.actions.ClearHistoryActionDelegate"
+                icon="icons/fav/clear_history.png"
+                id="org.knime.workbench.ui.favorites.clear"
+                label="Clear History"
+                toolbarPath="Normal/additions"
+                tooltip="Clear history (frequent and last used nodes)">
+          </action>
+          <action
                 class="org.knime.workbench.ui.favorites.actions.ExpandAllActionDelegate"
                 disabledIcon="icons/fav/fav_expand.png"
                 hoverIcon="icons/fav/fav_expand.png"

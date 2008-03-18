@@ -33,7 +33,7 @@ import java.util.List;
  * 
  * @author Florian Georg, University of Konstanz
  */
-public class Root extends AbstractContainerObject {
+public class Root extends AbstractContainerObject implements Cloneable {
     
     /**
      * Constructor for a root.
@@ -113,5 +113,15 @@ public class Root extends AbstractContainerObject {
         appendProblemCategories(problemCategories);
         
         return problemCategories;
+    }
+    
+    public Root clone() {
+        Root clone = new Root();
+        for (IRepositoryObject o : getChildren()) {
+            clone.addChild((AbstractRepositoryObject)o);
+        }
+        clone.appendProblemCategories(getProblemCategories());
+        clone.setSortChildren(sortChildren());
+        return clone;
     }
 }

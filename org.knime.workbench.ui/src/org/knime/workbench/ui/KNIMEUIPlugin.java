@@ -33,6 +33,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.workbench.ui.favorites.FavoriteNodesManager;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -107,6 +108,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
 //        }
 
     }
+    
 
     /**
      * This method is called when the plug-in is stopped.
@@ -117,6 +119,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
      */
     @Override
     public void stop(final BundleContext context) throws Exception {
+        FavoriteNodesManager.getInstance().saveFavoriteNodes();
         super.stop(context);
         plugin = null;
         m_resourceBundle = null;

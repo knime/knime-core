@@ -29,17 +29,14 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
 import org.knime.workbench.repository.NodeUsageListener;
 import org.knime.workbench.repository.NodeUsageRegistry;
-import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.NodeTemplate;
-import org.knime.workbench.repository.model.Root;
 import org.knime.workbench.repository.view.RepositoryContentProvider;
 import org.knime.workbench.repository.view.RepositoryLabelProvider;
-import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * 
@@ -48,26 +45,6 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 public class FavoritesView extends ViewPart implements NodeUsageListener {
     
     private TreeViewer m_viewer;
-    
-    private Root m_root;
-    private Category m_favNodes;
-    private Category m_freqNodes;
-    private Category m_lastNodes;
-    
-    private static final Image FAV_ICON = KNIMEUIPlugin.getDefault().getImage(
-            KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_fav.png");
-    private static final Image FREQ_ICON = KNIMEUIPlugin.getDefault().getImage(
-            KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_freq.png");
-    private static final Image LAST_ICON = KNIMEUIPlugin.getDefault().getImage(
-            KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_last.png");
-    
-    /** ID of the personal favorites category. */
-    public static final String FAV_CAT_ID = "fav";
-    /**  
-     * Title of the personal favorites category
-     * (used by {@link FavoriteNodesDropTarget}).
-     */
-    static final String FAV_TITLE = "Personal favorite nodes";
     
     
     /**
@@ -90,38 +67,20 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
         // no sorting
         m_viewer.setComparator(null);
         
-        createTreeModel();
+        // lazy initialization of the manager 
+        Display.getDefault().syncExec(new Runnable() {
+
+            public void run() {                
+                m_viewer.setInput(FavoriteNodesManager.getInstance()
+                           .createTreeModel());
+            }
+            
+        });
+        
         NodeUsageRegistry.addNodeUsageListener(this);
     }
 
     
-    private void createTreeModel() {
-        m_root = new Root();
-        m_root.setSortChildren(false);
-        m_favNodes = new Category(FAV_CAT_ID);
-        m_favNodes.setName(FAV_TITLE);
-        m_favNodes.setIcon(FAV_ICON);
-        m_favNodes.setAfterID("");
-        m_favNodes.setSortChildren(true);
-        m_root.addChild(m_favNodes);
-        
-        m_freqNodes = new Category("freq");
-        m_freqNodes.setName("Most frequently used nodes");
-        m_freqNodes.setIcon(FREQ_ICON);
-        m_freqNodes.setAfterID("fav");
-        m_freqNodes.setSortChildren(false);
-        m_root.addChild(m_freqNodes);
-        
-        m_lastNodes = new Category("last");
-        m_lastNodes.setName("Last used nodes");
-        m_lastNodes.setIcon(LAST_ICON);
-        m_lastNodes.setAfterID("freq");
-        m_lastNodes.setSortChildren(false);
-        m_root.addChild(m_lastNodes);
-        
-        
-        m_viewer.setInput(m_root);
-    }
 
     /**
      * {@inheritDoc}
@@ -143,7 +102,7 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
      * @param template adds this node template to the favorites
      */
     void addNodeTemplate(final NodeTemplate template) {
-        m_favNodes.addChild(template);
+        FavoriteNodesManager.getInstance().addFavoriteNode(template);
         m_viewer.refresh();
         m_viewer.expandToLevel(template, TreeViewer.ALL_LEVELS);
     }
@@ -154,12 +113,7 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
      * {@inheritDoc}
      */
     public void nodeAdded() {
-        // update last used
-        m_lastNodes.removeAllChildren();
-        m_lastNodes.addAllChildren(NodeUsageRegistry.getLastUsedNodes());
-        // update most frequent
-        m_freqNodes.removeAllChildren();
-        m_freqNodes.addAllChildren(NodeUsageRegistry.getMostFrequentNodes());
+        FavoriteNodesManager.getInstance().updateNodes();
         m_viewer.refresh();
     }
 
@@ -170,7 +124,7 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
      * @param node node to be removed from the personal favorite nodes 
      */
     public void removeFavorite(final NodeTemplate node) {
-        m_favNodes.removeChild(node);
+        FavoriteNodesManager.getInstance().removeFavoriteNode(node);
         m_viewer.refresh();
     }
 
