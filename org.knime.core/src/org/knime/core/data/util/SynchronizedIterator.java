@@ -19,7 +19,7 @@
  * ---------------------------------------------------------------------
  * 
  */
-package org.knime.base.util;
+package org.knime.core.data.util;
 
 import java.util.Iterator;
 
