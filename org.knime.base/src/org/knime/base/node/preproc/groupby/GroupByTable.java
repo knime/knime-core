@@ -3,7 +3,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2007
+ * Copyright, 2003 - 2008
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -25,22 +25,10 @@
 
 package org.knime.base.node.preproc.groupby;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.knime.base.data.sort.SortedTable;
-import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.StringCell;
@@ -49,6 +37,18 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
+
+import org.knime.base.data.sort.SortedTable;
+import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -82,6 +82,8 @@ public class GroupByTable {
 
     private final boolean m_moveGroupCols2Front;
 
+    private final boolean m_keepColName;
+
     private final Map<DataCell, Set<DataCell>> m_hiliteMapping;
 
     private final BufferedDataTable m_resultTable;
@@ -91,7 +93,7 @@ public class GroupByTable {
 
     /**Constructor for class GroupByTable.
      * @param dataTable the table to aggregate
-     * @param inclList the name of all columns to group by
+     * @param groupByCols the name of all columns to group by
      * @param numericColMethod aggregation method for numerical columns
      * @param noneNumericColMethod aggregation method for none
      * numerical columns
@@ -102,22 +104,24 @@ public class GroupByTable {
      * maintained to enable hiliting
      * @param moveGroupCols2Front <code>true</code> if the group by columns
      * should be moved to the front of the result table
+     * @param keepColName <code>true</code> if the original column name should
+     * be kept
      * @param exec the <code>ExecutionContext</code>
      * @throws CanceledExecutionException if the user has canceled the execution
      */
     public GroupByTable(final BufferedDataTable dataTable,
-            final List<String> inclList,
+            final List<String> groupByCols,
             final AggregationMethod numericColMethod,
             final AggregationMethod noneNumericColMethod,
             final int maxUniqueValues, final boolean sortInMemory,
             final boolean enableHilite, final boolean moveGroupCols2Front,
-            final ExecutionContext exec)
+            final boolean keepColName, final ExecutionContext exec)
     throws CanceledExecutionException {
         LOGGER.debug("Entering GroupByTable() of class GroupByTable.");
         if (dataTable == null) {
             throw new NullPointerException("DataTable must not be null");
         }
-        checkIncludeList(dataTable.getDataTableSpec(), inclList);
+        checkIncludeList(dataTable.getDataTableSpec(), groupByCols);
         if (numericColMethod == null) {
             throw new NullPointerException("Numeric method must not be null");
         }
@@ -142,11 +146,12 @@ public class GroupByTable {
             m_hiliteMapping = null;
         }
 
-        m_inclList = inclList;
+        m_inclList = groupByCols;
         m_numericColMethod = numericColMethod;
         m_noneNumericColMethod = noneNumericColMethod;
         m_maxUniqueVals = maxUniqueValues;
         m_moveGroupCols2Front = moveGroupCols2Front;
+        m_keepColName = keepColName;
         exec.setMessage("Sorting input table...");
         ExecutionContext subExec = exec.createSubExecutionContext(0.5);
         final SortedTable sortedTable =
@@ -186,7 +191,7 @@ public class GroupByTable {
         final DataTableSpec origSpec = table.getDataTableSpec();
         final DataTableSpec resultSpec = createGroupByTableSpec(
                 origSpec, m_inclList, m_numericColMethod,
-                m_noneNumericColMethod, m_moveGroupCols2Front);
+                m_noneNumericColMethod, m_moveGroupCols2Front, m_keepColName);
         assert (origSpec.getNumColumns() == resultSpec.getNumColumns())
             : "The number of columns must be the same";
         final BufferedDataContainer dc = exec.createDataContainer(resultSpec);
@@ -488,13 +493,15 @@ public class GroupByTable {
      * method
      * @param moveGroupCols2Front <code>true</code> if the group by columns
      * should be moved to the front of the result table
+     * @param keepColName <code>true</code> if the original colum names should
+     * be kept
      * @return the result {@link DataTableSpec}
      */
-    public static DataTableSpec createGroupByTableSpec(
+    static final DataTableSpec createGroupByTableSpec(
             final DataTableSpec spec, final List<String> inclList,
             final AggregationMethod numericalColMethod,
             final AggregationMethod nominalColMethod,
-            final boolean moveGroupCols2Front) {
+            final boolean moveGroupCols2Front, final boolean keepColName) {
         LOGGER.debug("Entering createGroupByTableSpec() "
                 + "of class GroupByTable.");
         if (spec == null) {
@@ -512,42 +519,35 @@ public class GroupByTable {
             throw new IllegalArgumentException(
                     "Invalid none numerical aggregation method");
         }
-        final String[] names = new String[spec.getNumColumns()];
-        final DataType[] types = new DataType[spec.getNumColumns()];
+        final DataColumnSpec[] colSpecs =
+            new DataColumnSpec[spec.getNumColumns()];
         int otherIdx = 0;
         for (int i = 0, length = spec.getNumColumns(); i < length; i++) {
-            final DataColumnSpec colSpec = spec.getColumnSpec(i);
-            final String origName = colSpec.getName();
-            final DataType origType = colSpec.getType();
-            final String newName;
-            final DataType newType;
+            final DataColumnSpec origSpec = spec.getColumnSpec(i);
             final int idx;
-            final int groupIdx = inclList.indexOf(origName);
+            final int groupIdx = inclList.indexOf(origSpec.getName());
+            final DataColumnSpec newSpec;
             if (groupIdx >= 0) {
-                newName = origName;
-                newType = origType;
                 if (moveGroupCols2Front) {
                     idx = groupIdx;
                 } else {
                     idx = i;
                 }
+                newSpec = origSpec;
             } else {
-                final AggregationMethod method = getAggregationMethod(colSpec,
+                final AggregationMethod method = getAggregationMethod(origSpec,
                         numericalColMethod, nominalColMethod);
-                final String aggrColName = method.getColumnName(origName);
-                newName = DataTableSpec.getUniqueColumnName(spec, aggrColName);
-                newType = method.getColumnType(origType);
+                newSpec = method.createColumnSpec(origSpec, keepColName);
                 if (moveGroupCols2Front) {
                     idx = inclList.size() + otherIdx++;
                 } else {
                     idx = i;
                 }
             }
-            names[idx] = newName;
-            types[idx] = newType;
+            colSpecs[idx] = newSpec;
         }
         LOGGER.debug("Exiting createGroupByTableSpec() of class GroupByTable.");
-        return new DataTableSpec(names, types);
+        return new DataTableSpec(colSpecs);
     }
 
     /**

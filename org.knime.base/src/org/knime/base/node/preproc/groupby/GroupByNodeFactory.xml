@@ -25,6 +25,9 @@
     			<li>Mode: Takes the value with the most occurrences per
     			 group. If multiple values match this criterion 
     			 the first occurrence is written to the output table.</li>
+    			 <li>Concatenate: Concatenates the values per group.</li>
+    			 <li>Unique concatenate:Concatenates each value only once 
+    			 per group.</li>
     			<li>Count: Counts members per group.</li>
     		</ul>
 			Additional aggregation methods only available for numerical columns:
@@ -37,10 +40,8 @@
     		</ul>
     		</p>
     		<p>
-	    		<b>All aggregation methods ignore missing values.</b>
-    		</p>
-    		<p>
-            If the aggregation method 'Mode' is selected, a maximum number 
+            If the aggregation method 'Mode' or 'Unique concatenate' 
+            is selected, a maximum number 
             of different values can be defined to be stored in memory. 
             If the actual number of values exceeds this limit, 
             the calculation for this group is skipped, a missing value is set 
