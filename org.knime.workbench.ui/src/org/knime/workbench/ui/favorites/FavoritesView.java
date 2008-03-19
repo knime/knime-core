@@ -108,15 +108,6 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
     }
 
 
-    /**
-     * 
-     * {@inheritDoc}
-     */
-    public void nodeAdded() {
-        FavoriteNodesManager.getInstance().updateNodes();
-        m_viewer.refresh();
-    }
-
 
     /**
      * Removes the given node from the personal favorites and refreshes the 
@@ -141,6 +132,38 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
      */
     public void collapseAll() {
         m_viewer.collapseAll();
+    }
+
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void nodeAdded() {
+        FavoriteNodesManager.getInstance().updateNodes();
+        m_viewer.refresh();
+    }
+
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void frequentHistoryChanged() {
+        FavoriteNodesManager.getInstance().updateFrequentUsedNodes();
+        m_viewer.refresh();
+    }
+
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void usedHistoryChanged() {
+        FavoriteNodesManager.getInstance().updateLastUsedNodes();
+        // TODO: if the manager would know the view,
+        // or the view would have access to the categories
+        // we could refresh more specifically this categroy
+        m_viewer.refresh();
     }
 
 }

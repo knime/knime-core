@@ -55,6 +55,8 @@ public final class NodeUsageRegistry {
 
     private NodeUsageRegistry() { }
     
+    
+    
     /**
      * 
      * @param listener adds the listener (if not already registered), which gets
@@ -82,13 +84,28 @@ public final class NodeUsageRegistry {
         }
     }
     
+    private static void notifyLastHistoryListener() {
+        for (NodeUsageListener listener : LISTENERS) {
+            listener.usedHistoryChanged();
+        }        
+    }
+    
+    private static void notifyFrequencyHistoryListener() {
+        for (NodeUsageListener listener : LISTENERS) {
+            listener.frequentHistoryChanged();
+        }        
+    }
+
+    
     /**
      * 
      * @param newMaxSize the new max size for the most frequent 
      *  nodes
      */
     public static void setMaxFrequentSize(final int newMaxSize) {
+        cachedFrequent = null;
         maxMostFrequent = newMaxSize;
+        notifyFrequencyHistoryListener();
     }
 
     /**
@@ -97,7 +114,16 @@ public final class NodeUsageRegistry {
      *  nodes
      */
     public static void setMaxLastUsedSize(final int newMaxSize) {
-        maxLastUsed = newMaxSize;
+        synchronized (LAST_USED) {
+            maxLastUsed = newMaxSize;
+            List<NodeTemplate>temp = new ArrayList<NodeTemplate>(); 
+            for (int i = 0; i < Math.min(LAST_USED.size(), maxLastUsed); i++) {
+                temp.add(LAST_USED.get(i));
+            }
+            LAST_USED.clear();
+            LAST_USED.addAll(temp);
+        }
+        notifyLastHistoryListener();
     }
     
     

@@ -34,5 +34,17 @@ public interface NodeUsageListener {
      * may have changed.
      */
     public void nodeAdded();
+    
+    /**
+     * A more specific notification that the last used nodes history has 
+     * changed.
+     */
+    public void usedHistoryChanged();
+
+    /**
+     * A more specific notification that the most frequent nodes history has 
+     * changed.
+     */
+    public void frequentHistoryChanged();
 
 }

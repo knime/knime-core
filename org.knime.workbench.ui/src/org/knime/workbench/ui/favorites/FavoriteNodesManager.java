@@ -60,10 +60,12 @@ public final class FavoriteNodesManager {
     
     private static final Image FAV_ICON = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_fav.png");
+    // icons swapped on purpose
     private static final Image FREQ_ICON = KNIMEUIPlugin.getDefault().getImage(
-            KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_freq.png");
-    private static final Image LAST_ICON = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_last.png");
+    // icons swapped on purpose
+    private static final Image LAST_ICON = KNIMEUIPlugin.getDefault().getImage(
+            KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_freq.png");
     
     // loading and saving
     private static final String TAG_FAVORITES = "favoritenodes";
@@ -152,9 +154,23 @@ public final class FavoriteNodesManager {
      * from the {@link NodeUsageRegistry}.
      */
     public void updateNodes() {
+        updateLastUsedNodes();
+        updateFrequentUsedNodes();
+    }
+    
+    /**
+     * Updates last used nodes.
+     */
+    public void updateLastUsedNodes() {        
         // update last used
         m_lastNodes.removeAllChildren();
         m_lastNodes.addAllChildren(NodeUsageRegistry.getLastUsedNodes());
+    }
+    
+    /**
+     * Updates most frequently used nodes.
+     */
+    public void updateFrequentUsedNodes() {
         // update most frequent
         m_freqNodes.removeAllChildren();
         m_freqNodes.addAllChildren(NodeUsageRegistry.getMostFrequentNodes());

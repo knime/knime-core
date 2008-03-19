@@ -72,4 +72,9 @@ public class PreferenceConstants {
 
     /** Choice: log >= error events. */
     public static final String P_LOGLEVEL_ERROR = LEVEL.ERROR.toString();
+    
+    public static final String P_FAV_FREQUENCY_HISTORY_SIZE 
+        = "knime.favorites.frequency";
+    
+    public static final String P_FAV_LAST_USED_SIZE = "knime.favorites.lastused";
 }
