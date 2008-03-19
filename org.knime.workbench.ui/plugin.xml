@@ -264,9 +264,7 @@
           </action>
           <action
                 class="org.knime.workbench.ui.favorites.actions.ExpandAllActionDelegate"
-                disabledIcon="icons/fav/fav_expand.png"
-                hoverIcon="icons/fav/fav_expand.png"
-                icon="icons/fav/fav_expand.png"
+                icon="icons/fav/expandall.png"
                 id="org.knime.workbench.ui.favorites.expand"
                 label="Expand All"
                 toolbarPath="Normal/additions"
@@ -274,9 +272,7 @@
           </action>
           <action
                 class="org.knime.workbench.ui.favorites.actions.CollapseAllActionDelegate"
-                disabledIcon="icons/fav/fav_collapse.png"
-                hoverIcon="icons/fav/fav_collapse.png"
-                icon="icons/fav/fav_collapse.png"
+                icon="icons/fav/collapseall.png"
                 id="org.knime.workbench.ui.favorites.collapse"
                 label="Collapse All"
                 toolbarPath="Normal/additions"
