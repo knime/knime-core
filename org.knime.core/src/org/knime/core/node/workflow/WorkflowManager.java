@@ -1171,8 +1171,11 @@ public final class WorkflowManager extends NodeContainer {
                         ((SingleNodeContainer)origin).enableReQueuing();
                         // (5) configure the nodes from start to rest (it's not
                         //     so important if we configure more than the body)
+                        //     do NOT configure start of loop because otherwise
+                        //     we will re-create the ScopeContextStack and
+                        //     remove the loop-object as well!
                         configureNodeAndSuccessors(sc.getOriginatingNode(),
-                                true, true);
+                                false, true);
                         // the current node may have thrown an exception inside
                         // configure, so we have to check here if the node
                         // is really configured before...
