@@ -507,9 +507,21 @@ class Buffer {
             } else {
                 continue; // ordinary cell (e.g. double cell)
             }
-            final ContainerTable ownerTable = ad != null 
-                ? m_globalRepository.get(ad.getBufferID()) : null;
-            if (ownerTable == null) {
+            final Buffer ownerBuffer;
+            if (ad != null) {
+                // has blob been added to this buffer in a preceding row?
+                // (and this is not an ordinary buffer (but a BufferedDataCont.)
+                if (ad.getBufferID() == getBufferID() && getBufferID() != -1) {
+                    ownerBuffer = this;
+                } else {
+                    // table that's been created somewhere in the workflow
+                    ContainerTable t = m_globalRepository.get(ad.getBufferID());
+                    ownerBuffer = t != null ? t.getBuffer() : null;
+                }
+            } else {
+                ownerBuffer = null;
+            }
+            if (ownerBuffer == null) {
                 // need to set ownership if this blob was not assigned yet
                 // or has been assigned to an unlinked (i.e. local) buffer
                 boolean isCompress = ad != null ? ad.isUseCompression()
@@ -551,8 +563,7 @@ class Buffer {
                     wc = (BlobWrapperDataCell)cell;
                 } else {
                     mustChangeRow = true;
-                    wc = new BlobWrapperDataCell(
-                            ownerTable.getBuffer(), ad, cl);
+                    wc = new BlobWrapperDataCell(ownerBuffer, ad, cl);
                 }
             } 
             if (mustChangeRow) {
