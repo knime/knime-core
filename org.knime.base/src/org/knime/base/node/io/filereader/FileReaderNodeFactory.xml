@@ -12,14 +12,11 @@
 		This node can be used to read data from an ASCII file or URL location.
 		It can be configured to read in various formats.<br />
 		When you open the node's configuration dialog and provide a filename, 
-		it will try to guess
-		the reader's settings by analyzing the beginning of the file.
+		it tries to guess
+		the reader's settings by analyzing the content of the file.
 		Check the results of these settings in the preview table. If the 
 		data shown is not correct or an error is reported, you can adjust the
 		settings manually (see below).<br />
-		When the node is executed it reads in the entire file and caches it in a
-		temporary file for faster access by the connected successor nodes. It 
-		also stores all possible values it came across for each column.
 		<p />
 		If a big file is selected (or the analysis of the file takes longer) the
 		dialog shows a &quot;Start Analysis&quot; button. The analysis is then
@@ -65,11 +62,12 @@
 	    	will indicate the start of a comment (ended by a new line).
 			</option>
 	    <option name="Advanced...">Opens a new dialog with advanced settings.
-	    	There is more advanced support for quotes, support for different
-	    	decimal separators in floating point numbers, for ignoring whitespaces,
-	    	for allowing rows with too few data items, for making row IDs
-	    	unique (not recommented for huge files), and for limiting the number
-	    	of rows read in.	    
+	    	There is support for quotes, different decimal separators in 
+	    	floating point numbers, and character encoding. Also, for 
+	    	ignoring whitespaces, for allowing rows with too few data items, 
+	    	for making row IDs unique (not recommended for huge files), 
+	    	for missing value pattern,
+	    	and for limiting the number	of rows read in.	    
 			</option>
 	    <option name="Click on the table header">If the column header in the 
 	    	preview table is clicked, a new dialog 

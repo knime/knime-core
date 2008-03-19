@@ -136,8 +136,8 @@ public final class FileAnalyzer {
                     .getMaximumNumberOfRowsToRead());
             result.setCharsetName(userSettings.getCharsetName());
             result.setAnalyzeUsedAllRows(true);
-            result.setGlobalMissingValuePattern(userSettings
-                    .getGlobalMissingValuePattern());
+            result.setMissValuePatternStrCols(userSettings
+                    .getMissValuePatternStrCols());
 
             ExecutionMonitor subExec = execMon.createSubProgress(COMMENT_SUB);
             if (!userSettings.isCommentUserSet()) {
@@ -339,8 +339,16 @@ public final class FileAnalyzer {
 
         // first detect the type of each column
         ExecutionMonitor subExec = exec.createSubProgress(TYPES_SUB);
-        DataType[] columnTypes =
-                createColumnTypes(userSettings, result, subExec);
+        ColProperty[] colProps =
+            createColumnTypes(userSettings, result, subExec);
+        // extract the column types and column missing values from the result
+        // of the above method call
+        DataType[] columnTypes = new DataType[colProps.length];
+        String[] missValues = new String[colProps.length];
+        for (int c = 0; c < colProps.length; c++) {
+            columnTypes[c] = colProps[c].getColumnSpec().getType();
+            missValues[c] = colProps[c].getMissingValuePattern();
+        }
         subExec.setProgress(1.0);
 
         // number of columns must be set accordingly (including skipped cols)
@@ -377,10 +385,6 @@ public final class FileAnalyzer {
         }
         tokenizer.closeSourceStream();
 
-        String missValuePattern = userSettings.getGlobalMissingValuePattern();
-        if (missValuePattern == null) {
-            missValuePattern = "?";
-        }
         Vector<ColProperty> userColProps = userSettings.getColumnProperties();
         if (userColProps == null) {
             // that saves us quite some checking later
@@ -402,13 +406,17 @@ public final class FileAnalyzer {
                 System.arraycopy(columnHeaders, 0, colNames, 1,
                         colNames.length - 1);
                 return createColProps(colNames, userColProps, columnTypes,
-                        missValuePattern, exec);
+                        missValues, exec);
             }
 
             // another indication for a column_headers_must_have is when the
             // first line contains tokens that are not type compliant with all
             // other lines (e.g. all items in the column are integers except in
             // the first line).
+            DataCellFactory cellFactory = new DataCellFactory();
+            cellFactory.setDecimalSeparator(result.getDecimalSeparator());
+            cellFactory.setThousandsSeparator(result.getThousandsSeparator());
+
             for (int c = 0; c < columnHeaders.length; c++) {
                 checkInterrupt(exec);
 
@@ -416,41 +424,20 @@ public final class FileAnalyzer {
                     // the first line ended early - could be anything...
                     continue;
                 }
-                String trimmed = columnHeaders[c].trim();
-                if (trimmed.isEmpty() || trimmed.equals(missValuePattern)) {
+                cellFactory.setMissingValuePattern(missValues[c]);
+
+                DataCell dc = cellFactory.createDataCellOfType(
+                        columnTypes[c], columnHeaders[c]);
+
+                if (dc != null) {
+                    // this column header could be data - try the others...
                     continue;
                 }
-                if (columnTypes[c].equals(IntCell.TYPE)) {
-                    try {
-                        Integer.parseInt(trimmed);
-                        // that column header has data format - may be it IS
-                        // data...
-                        continue;
-                    } catch (NumberFormatException nfe) {
-                        // fall through
-                    }
-                } else if (columnTypes[c].equals(DoubleCell.TYPE)) {
-                    try {
-                        Double.parseDouble(trimmed);
-                        // that column header has data format - may be it IS
-                        // data...
-                        continue;
-                    } catch (NumberFormatException nfe) {
-                        // fall through
-                    }
-                } else if (columnTypes[c].equals(StringCell.TYPE)) {
-                    // we can always convert to string...
-                    continue;
-                } else {
-                    assert false;
-                    // internal error - who the hell created that type???
-                    break;
-                }
-                // we didn't hit a 'continue' meaning the parsing failed, so we
-                // must use those headers.
+
+                // header is not data: must be column header
                 result.setFileHasColumnHeaders(true);
                 return createColProps(columnHeaders, userColProps, columnTypes,
-                        missValuePattern, exec);
+                        missValues, exec);
             }
             // and now, see if the headers to be are nicely formatted - that is
             // all have the same prefix and a growing index.
@@ -458,14 +445,14 @@ public final class FileAnalyzer {
                     && consecutiveHeaders(columnHeaders, exec)) {
                 result.setFileHasColumnHeaders(true);
                 return createColProps(columnHeaders, userColProps, columnTypes,
-                        missValuePattern, exec);
+                        missValues, exec);
             }
             // otherwise we assume the first line doesn't contain headers.
             // pass an array with null strings and it will create headers for us
             result.setFileHasColumnHeaders(false);
             String[] nulls = new String[columnHeaders.length]; // null array
             return createColProps(nulls, userColProps, columnTypes,
-                    missValuePattern, exec);
+                    missValues, exec);
         } else {
             // user set fileHasColHeaders - see if it's true or false
             result.setFileHasColumnHeaders(userSettings
@@ -481,16 +468,16 @@ public final class FileAnalyzer {
                     System.arraycopy(columnHeaders, 0, colNames, 1,
                             colNames.length - 1);
                     return createColProps(colNames, userColProps, columnTypes,
-                            missValuePattern, exec);
+                            missValues, exec);
                 } else {
                     return createColProps(columnHeaders, userColProps,
-                            columnTypes, missValuePattern, exec);
+                            columnTypes, missValues, exec);
                 }
             } else {
                 // don't read col headers - create null array to generate names
                 String[] colNames = new String[columnHeaders.length];
                 return createColProps(colNames, userColProps, columnTypes,
-                        missValuePattern, exec);
+                        missValues, exec);
             }
         }
     }
@@ -662,10 +649,11 @@ public final class FileAnalyzer {
      */
     private static Vector<ColProperty> createColProps(final String[] colNames,
             final Vector<ColProperty> userProps, final DataType[] colTypes,
-            final String missValuePattern, final ExecutionMonitor exec)
+            final String[] missValuePattern, final ExecutionMonitor exec)
             throws InterruptedExecutionException {
 
         assert colNames.length == colTypes.length;
+        assert colNames.length == missValuePattern.length;
 
         // keep the actually used col names in a set for fast look up
         Set<String> resultNames = new HashSet<String>();
@@ -711,7 +699,7 @@ public final class FileAnalyzer {
                         new DataColumnSpecCreator(name, colTypes[c]);
                 colProp.setColumnSpec(dcsc.createSpec());
                 // set the missing value pattern
-                colProp.setMissingValuePattern(missValuePattern);
+                colProp.setMissingValuePattern(missValuePattern[c]);
                 // With IntValues we give the user the choice of reading nominal
                 // values (in the domain dialog). Default is: don't
                 if (colTypes[c].equals(IntCell.TYPE)) {
@@ -754,7 +742,7 @@ public final class FileAnalyzer {
 
     }
 
-    private static DataType[] createColumnTypes(
+    private static ColProperty[] createColumnTypes(
             final FileReaderNodeSettings userSettings,
             final FileReaderNodeSettings result, final ExecutionMonitor exec)
             throws IOException, InterruptedExecutionException {
@@ -783,6 +771,9 @@ public final class FileAnalyzer {
             }
         }
         DataType[] types = new DataType[result.getNumberOfColumns()];
+        // if we find a number that can't be parsed,
+        // we set it as missing value pattern
+        String[] missValPattern = new String[result.getNumberOfColumns()];
         for (int t = 0; t < types.length; t++) {
             // set user type - if set.
             if (userTypes[t] != null) {
@@ -795,11 +786,6 @@ public final class FileAnalyzer {
         DataCellFactory cellFactory = new DataCellFactory();
         cellFactory.setDecimalSeparator(result.getDecimalSeparator());
         cellFactory.setThousandsSeparator(result.getThousandsSeparator());
-
-        String missValuePattern = userSettings.getGlobalMissingValuePattern();
-        if (missValuePattern == null) {
-            missValuePattern = "?";
-        }
 
         while (true) {
 
@@ -841,6 +827,8 @@ public final class FileAnalyzer {
                     continue;
                 }
 
+                cellFactory.setMissingValuePattern(missValPattern[colIdx]);
+
                 // for numbers we trim tokens and allow empty for missValue
                 token = token.trim();
                 if (userTypes[colIdx] == null) {
@@ -858,7 +846,21 @@ public final class FileAnalyzer {
                         if (dc != null) {
                             continue;
                         }
-                        // it's not an integer - could be a double
+                        // not an integer - could it be the missing value?
+                        if (missValPattern[colIdx] == null) {
+                            // we accept one token that can't be
+                            // parsed per column - but we don't use doubles as
+                            // missing value! Would be odd.
+                            dc =
+                                    cellFactory.createDataCellOfType(
+                                            DoubleCell.TYPE, token);
+                            if (dc == null) {
+                                missValPattern[colIdx] = token;
+                                continue;
+                            }
+                        }
+                        // not an integer, not the missing value
+                        // - could be a double
                         types[colIdx] = DoubleCell.TYPE;
                     } // no else, we immediately check if it's a double
 
@@ -869,7 +871,15 @@ public final class FileAnalyzer {
                         if (dc != null) {
                             continue;
                         }
-                        // not a double, lets accept everything: StringCell
+                        // not a double - missing value maybe?
+                        if (missValPattern[colIdx] == null) {
+                            // we accept one token that can't be parsed
+                            // per column as missing value pattern
+                            missValPattern[colIdx] = token;
+                            continue;
+                        }
+                        // not a double, not a missing value,
+                        // lets accept everything: StringCell
                         types[colIdx] = StringCell.TYPE;
                     }
                 }
@@ -922,7 +932,47 @@ public final class FileAnalyzer {
                     // comma
                     + ". Please verify column type(s).");
         }
-        return types;
+        if (linesRead < 2) {
+            /*
+             * if we read only one line, all tokens that couldn't be parsed are
+             * missing values now, and their column's type is integer! Fix that
+             * by changing all integer columns with missing values to string
+             * types (that does it, because we don't accept doubles as missing
+             * values).
+             */
+            for (int i = 0; i < types.length; i++) {
+                if (types[i].equals(IntCell.TYPE)
+                        && (missValPattern[i] != null)) {
+                    // columns with user set types don't have missing values
+                    types[i] = StringCell.TYPE;
+                    missValPattern[i] = null;
+                }
+            }
+
+        }
+
+        // pack column types and column missing values in one object
+        ColProperty[] colPropResult = new ColProperty[types.length];
+        for (int c = 0; c < colPropResult.length; c++) {
+            ColProperty cp = new ColProperty();
+            DataColumnSpecCreator dcsc =
+                    new DataColumnSpecCreator("Foo", types[c]);
+            cp.setColumnSpec(dcsc.createSpec());
+            if (types[c].equals(StringCell.TYPE)) {
+                // for string columns we don't have a missing value.
+                // use the global one, if set, otherwise '?'
+                if (result.getMissValuePatternStrCols() != null) {
+                    cp.setMissingValuePattern(result.getMissValuePatternStrCols());
+                } else {
+                    cp.setMissingValuePattern("?");
+                }
+            } else {
+                // for int or double, use the one we figured out (or none)
+                cp.setMissingValuePattern(missValPattern[c]);
+            }
+            colPropResult[c] = cp;
+        }
+        return colPropResult;
     }
 
     /**

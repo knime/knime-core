@@ -87,10 +87,10 @@ public class FileReaderSettings extends FileTokenizerSettings {
     private boolean m_supportShortLines;
 
     /*
-     * if not null, used as missing value pattern for all columns that don't
-     * have their own missing value pattern set.
+     * if not null, used as missing value pattern for all string columns that
+     * don't have their own missing value pattern set.
      */
-    private String m_globalMissPattern;
+    private String m_globalMissPatternStrCols;
 
     /*
      * if set, the first row in the file will be considered column names - and
@@ -223,7 +223,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
         m_rowDelimiters = new HashSet<String>(clonee.m_rowDelimiters);
         m_missingPatterns = new Vector<String>(clonee.m_missingPatterns);
-        m_globalMissPattern = clonee.m_globalMissPattern;
+        m_globalMissPatternStrCols = clonee.m_globalMissPatternStrCols;
         m_columnNumberDeterminingLine = clonee.m_columnNumberDeterminingLine;
 
         m_charsetName = clonee.m_charsetName;
@@ -251,7 +251,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
         m_rowDelimiters = new HashSet<String>();
         m_missingPatterns = new Vector<String>();
-        m_globalMissPattern = null; // no global missing value pattern
+        m_globalMissPatternStrCols = null; // no global missing value pattern
         m_columnNumberDeterminingLine = -1;
 
         m_charsetName = null; // uses the default char set name
@@ -344,7 +344,8 @@ public class FileReaderSettings extends FileTokenizerSettings {
                 readMissingPatternsFromConfig(missPattConf);
             }
 
-            m_globalMissPattern = cfg.getString(CFGKEY_GLOBALMISSPATTERN, null);
+            m_globalMissPatternStrCols =
+                    cfg.getString(CFGKEY_GLOBALMISSPATTERN, null);
             NodeSettingsRO rowDelimConf = null;
             try {
                 rowDelimConf = cfg.getNodeSettings(CFGKEY_ROWDELIMS);
@@ -422,7 +423,7 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
         saveRowDelimitersToConfig(cfg.addNodeSettings(CFGKEY_ROWDELIMS));
         saveMissingPatternsToConfig(cfg.addNodeSettings(CFGKEY_MISSINGS));
-        cfg.addString(CFGKEY_GLOBALMISSPATTERN, m_globalMissPattern);
+        cfg.addString(CFGKEY_GLOBALMISSPATTERN, m_globalMissPatternStrCols);
         cfg.addChar(CFGKEY_DECIMALSEP, m_decimalSeparator);
         cfg.addChar(CFGKEY_THOUSANDSEP, m_thousandsSeparator);
         cfg.addBoolean(CFGKEY_IGNOREATEOR, m_ignoreEmptyTokensAtEOR);
@@ -1010,26 +1011,26 @@ public class FileReaderSettings extends FileTokenizerSettings {
 
     /**
      * Sets a new pattern which is translated into a missing value if read from
-     * the data file. Is is used only for colums that don't have their own
-     * missing value pattern set.
+     * the data file in a string column. Is is used only for columns that don't
+     * have their own missing value pattern set (and that are of type string).
      *
-     * @param pattern the new pattern to recognize missing values. Set to
-     *            <code>null</code> to clear it.
+     * @param pattern the new pattern to recognize missing values in string
+     *            columns. Set to <code>null</code> to clear it.
      */
-    public void setGlobalMissingValuePattern(final String pattern) {
-        m_globalMissPattern = pattern;
+    public void setMissValuePatternStrCols(final String pattern) {
+        m_globalMissPatternStrCols = pattern;
     }
 
     /**
      * Returns the pattern that, if read in, will be translated into a missing
-     * value. It is overridden by the column specific missing value pattern. If
-     * it is not defined, null is returned.
+     * value (in string columns only). It is overridden by the column specific
+     * missing value pattern. If it is not defined, null is returned.
      *
-     * @return the pattern for missing values, for all columns. Or null if not
-     *         defined.
+     * @return the pattern for missing values, for all string columns. Or null
+     *         if not defined.
      */
-    public String getGlobalMissingValuePattern() {
-        return m_globalMissPattern;
+    public String getMissValuePatternStrCols() {
+        return m_globalMissPatternStrCols;
     }
 
     /**
@@ -1273,11 +1274,11 @@ public class FileReaderSettings extends FileTokenizerSettings {
             }
         }
         res.append("\n");
-        res.append("Global missing value pattern: ");
-        if (m_globalMissPattern == null) {
+        res.append("Global missing value pattern (string cols): ");
+        if (m_globalMissPatternStrCols == null) {
             res.append("<not defined>");
         } else {
-            res.append(m_globalMissPattern);
+            res.append(m_globalMissPatternStrCols);
         }
         res.append("\n");
         return res.toString();
