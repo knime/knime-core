@@ -540,6 +540,11 @@ public class WorkflowEditor extends GraphicalEditor implements
             m_fileResource.getWorkspace().removeResourceChangeListener(this);
         }
 
+        // TODO: we only have to do it on the parent
+        if (m_parentEditor == null) {
+            WorkflowManager.ROOT.removeNode(m_manager.getID());
+        }
+
         getCommandStack().removeCommandStackListener(this);
 
         super.dispose();
