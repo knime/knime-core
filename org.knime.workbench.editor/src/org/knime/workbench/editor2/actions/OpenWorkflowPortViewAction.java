@@ -22,8 +22,8 @@ package org.knime.workbench.editor2.actions;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeOutPort;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.WorkflowInPort;
 
 /**

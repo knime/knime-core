@@ -29,10 +29,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.draw2d.IFigure;
-import org.knime.core.node.NodeOutPort;
 import org.knime.core.node.PortType;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.workbench.editor2.figures.NodeOutPortFigure;
 
 /**

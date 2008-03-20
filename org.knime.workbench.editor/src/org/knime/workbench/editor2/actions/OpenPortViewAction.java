@@ -29,8 +29,8 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ModelPortObject;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodePort;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodePort;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
