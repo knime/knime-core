@@ -65,7 +65,8 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
      * 
      */
     public BasisFunctionPredictorCellFactory(
-            final DataTableSpec modelSpecs, final String newTargetName) {
+            final DataTableSpec modelSpecs,
+            final String newTargetName) {
         m_model = null;
         m_filteredColumns = null;
         m_dontKnowClass = Double.NaN;
@@ -74,7 +75,8 @@ public class BasisFunctionPredictorCellFactory implements CellFactory {
     }
     
     private static DataColumnSpec[] createSpec(
-            final DataTableSpec modelSpecs, final String newTargetName) {
+            final DataTableSpec modelSpecs, 
+            final String newTargetName) {
         int modelClassIdx = modelSpecs.getNumColumns() - 5;
         Set<DataCell> possClasses = 
             modelSpecs.getColumnSpec(modelClassIdx).getDomain().getValues();

@@ -110,13 +110,30 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     @Override
     public DataTableSpec[] configure(final PortObjectSpec[] portObjSpec)
             throws InvalidSettingsException {
+        // get data spec
+        final DataTableSpec dataSpec = (DataTableSpec) portObjSpec[0];
         // get model spec
-        DataTableSpec modelSpec = (DataTableSpec) portObjSpec[1];
+        final DataTableSpec modelSpec = (DataTableSpec) portObjSpec[1];
+        final ColumnRearranger colreg = createRearranger(dataSpec, modelSpec);
+        colreg.append(new BasisFunctionPredictorCellFactory(
+                modelSpec, m_applyColumn));
+        return new DataTableSpec[]{colreg.createSpec()};
+    }
+    
+    /**
+     * Creates a column rearranger based on the data spec. The new apply column
+     * is appended.
+     * @param dataSpec data spec
+     * @param modelSpec model spec
+     * @return column rearranger from data spec
+     * @throws InvalidSettingsException if the settings are not valid against
+     *      data and/or model spec
+     */
+    public final ColumnRearranger createRearranger(final DataTableSpec dataSpec,
+            final DataTableSpec modelSpec) throws InvalidSettingsException {
         if (modelSpec.getNumColumns() == 0) {
             throw new InvalidSettingsException("Model spec is empty.");
         }
-        // get data spec
-        final DataTableSpec dataSpec = (DataTableSpec) portObjSpec[0];
         // data model columns need to be in the data
         for (int i = 0; i < modelSpec.getNumColumns() - 5; i++) {
             DataColumnSpec cspec = modelSpec.getColumnSpec(i);
@@ -138,10 +155,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
         }
         m_applyColumn = DataTableSpec.getUniqueColumnName(
                 dataSpec, m_applyColumn);
-        ColumnRearranger colreg = new ColumnRearranger(dataSpec);
-        colreg.append(new BasisFunctionPredictorCellFactory(
-                modelSpec, m_applyColumn));
-        return new DataTableSpec[]{colreg.createSpec()};
+        return new ColumnRearranger(dataSpec);
     }
     
     /**

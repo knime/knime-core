@@ -58,7 +58,8 @@ public abstract class BasisFunctionFactory {
     static final String CFG_MODEL_SPEC = "model_spec";
     
     /** Name of the basisfunction class column. */
-    public static final String CLASS_COLUMN = "Class";
+    public static final DataColumnSpec CLASS_COLUMN = 
+        new DataColumnSpecCreator("Class", StringCell.TYPE).createSpec();
     
     private static final DataColumnSpec WEIGHT_COLUMN = 
         new DataColumnSpecCreator("Weight", IntCell.TYPE).createSpec();
@@ -181,7 +182,7 @@ public abstract class BasisFunctionFactory {
                 targetStrings[i] = new StringCell(targetColumns[i]);
             }
             DataColumnSpecCreator cSpec = new DataColumnSpecCreator(
-                    CLASS_COLUMN, StringCell.TYPE);
+                    CLASS_COLUMN);
             cSpec.setDomain(new DataColumnDomainCreator(
                     targetStrings).createDomain());
             list.add(cSpec.createSpec());
