@@ -161,10 +161,13 @@ final class ModelContentOutPortView extends NodeOutPortView {
         if (predParams == null) {
             m_tree.setModel(new DefaultTreeModel(NO_TEXT));
         } else {
-            //String text = predParams.toString();
             ModelContentRO cont = 
                 ((ModelContentWrapper) predParams).getModelContent();
-            m_tree.setModel(new DefaultTreeModel(cont));
+            if (cont == null) {
+                m_tree.setModel(new DefaultTreeModel(NO_TEXT));
+            } else {
+                m_tree.setModel(new DefaultTreeModel(cont));
+            }
         }
         super.updatePortView();
     }
