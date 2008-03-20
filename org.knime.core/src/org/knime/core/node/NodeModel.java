@@ -127,15 +127,6 @@ public abstract class NodeModel extends GenericNodeModel {
         for (int i = 0; i < m_nrDataInPorts; i++) {
             inTableSpecs[i] = (DataTableSpec)(inSpecs[i]);
         }
-        for (int i = m_nrDataInPorts;
-        i < m_nrDataInPorts + m_nrModelInPorts; i++) {
-            int mdlIndex = i - m_nrDataInPorts;
-            if (inSpecs[i] instanceof ModelContentWrapper) {
-                ModelContentWrapper mlw = (ModelContentWrapper)inSpecs[i];
-                ModelContentRO mdl = mlw.m_hiddenModel;
-                loadModelContent(mdlIndex, mdl);
-            }
-        }
         // call old-style configure
         DataTableSpec[] outTableSpecs = configure(inTableSpecs);
         // copy output specs and put dummy model-out specs in result array
