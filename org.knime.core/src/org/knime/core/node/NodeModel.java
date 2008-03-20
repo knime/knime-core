@@ -103,13 +103,15 @@ public abstract class NodeModel extends GenericNodeModel {
         m_nrDataOutPorts = nrDataOuts;
         m_nrModelInPorts = nrModelIns;
         m_nrModelOutPorts = nrModelOuts;
+        // init wrapper for model content for all out-ports
+        m_localOutModels = new ModelContentWrapper[nrModelOuts];
+        for (int i = 0; i < m_localOutModels.length; i++) {
+            m_localOutModels[i] = new ModelContentWrapper(null);
+        }
     }
 
     /**
-     *
-     * @param inSpecs
-     * @return
-     * @throws InvalidSettingsException
+     * @see #configure(PortObjectSpec[])
      */
     protected abstract DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException;
@@ -122,10 +124,16 @@ public abstract class NodeModel extends GenericNodeModel {
     throws InvalidSettingsException {
         // convert all PortObjectSpecs corresponding to data ports to
         // DataTableSpecs
-        DataTableSpec[] inTableSpecs =
-             new DataTableSpec[m_nrDataInPorts];
+        DataTableSpec[] inTableSpecs = new DataTableSpec[m_nrDataInPorts];
         for (int i = 0; i < m_nrDataInPorts; i++) {
-            inTableSpecs[i] = (DataTableSpec)(inSpecs[i]);
+            inTableSpecs[i] = (DataTableSpec) inSpecs[i];
+        }
+        for (int i = m_nrDataInPorts;
+                i < m_nrDataInPorts + m_nrModelInPorts; i++) {
+            assert (inSpecs[i] instanceof ModelContentWrapper);
+            ModelContentWrapper mlw = (ModelContentWrapper)inSpecs[i];
+            ModelContentRO mdl = mlw.m_hiddenModel;
+            loadModelContent(i - m_nrDataInPorts, mdl);
         }
         // call old-style configure
         DataTableSpec[] outTableSpecs = configure(inTableSpecs);
@@ -135,24 +143,20 @@ public abstract class NodeModel extends GenericNodeModel {
         for (int i = 0; outTableSpecs != null && i < m_nrDataOutPorts; i++) {
             returnObjectSpecs[i] = outTableSpecs[i];
         }
-        m_localOutModels = new ModelContentWrapper[m_nrModelOutPorts];
         for (int i = m_nrDataOutPorts;
-             i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
-            ModelContent thisMdl = new ModelContent("ModelContent");
-//            saveModelContent(i - m_nrDataOutPorts, thisMdl);
-            m_localOutModels[i - m_nrDataOutPorts] =
-                new ModelContentWrapper(thisMdl);
-            returnObjectSpecs[i] = new ModelContentWrapper(thisMdl);
+                i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
+            m_localOutModels[i - m_nrDataOutPorts].m_hiddenModel = null;
+            returnObjectSpecs[i] = m_localOutModels[i - m_nrDataOutPorts];
         }
         return returnObjectSpecs;
     }
-
+    
     /////////////////////////////////////
     // The following is a hack to allow usage of ModelContent object already
     // during configure! (old v1.x model ports!)
     //
     // hide model content in a modern style PortObjectSpec
-    final static class ModelContentWrapper
+    static final class ModelContentWrapper
             implements ModelPortObjectSpec, ModelPortObject {
         private ModelContent m_hiddenModel;
         ModelContentWrapper(final ModelContent mdl) {
@@ -165,8 +169,17 @@ public abstract class NodeModel extends GenericNodeModel {
             return this;
         }
         
-        static PortObjectSerializer<ModelContentWrapper> getPortObjectSerializer() {
+        /**
+         * 
+         * @return
+         */
+        static final PortObjectSerializer<ModelContentWrapper> 
+            getPortObjectSerializer() {
             return new PortObjectSerializer<ModelContentWrapper>() {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
                 protected ModelContentWrapper loadPortObject(
                         final File directory, final ExecutionMonitor c)
                         throws IOException, CanceledExecutionException {
@@ -174,7 +187,10 @@ public abstract class NodeModel extends GenericNodeModel {
                     cnt.load(directory, c);
                     return new ModelContentWrapper(cnt);
                 }
-
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
                 protected void savePortObject(final ModelContentWrapper o,
                         final File directory, final ExecutionMonitor c)
                         throws IOException, CanceledExecutionException {
@@ -183,26 +199,27 @@ public abstract class NodeModel extends GenericNodeModel {
             };
         }
         
-        static PortObjectSpecSerializer<ModelContentWrapper> getPortObjectSpecSerializer() {
+        /**
+         * 
+         * @return
+         */
+        static PortObjectSpecSerializer<ModelContentWrapper> 
+            getPortObjectSpecSerializer() {
             return new PortObjectSpecSerializer<ModelContentWrapper>() {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
                 protected ModelContentWrapper loadPortObjectSpec(
-                        final File directory) throws IOException{
-                    ModelContent cnt = new ModelContent();
-                    try {
-                        cnt.load(directory, new ExecutionMonitor());
-                    } catch (CanceledExecutionException e) {
-                        throw new IllegalStateException("Canceled");
-                    }
-                    return new ModelContentWrapper(cnt);
+                        final File directory) throws IOException {
+                    return new ModelContentWrapper(null);
                 }
-                
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
                 protected void savePortObjectSpec(final ModelContentWrapper o,
                         final File directory) throws IOException {
-                    try {
-                        o.m_hiddenModel.save(directory, new ExecutionMonitor());
-                    } catch (CanceledExecutionException e) {
-                        throw new IllegalStateException("Canceled");
-                    }
                 }
             };
         }
@@ -210,11 +227,14 @@ public abstract class NodeModel extends GenericNodeModel {
     //
     // allow to replace model content generated during execute in the modern
     // style PortObjectSpec (Schweinerei! changes spec under the model's ass)
-    private ModelContentWrapper[] m_localOutModels;
+    private final ModelContentWrapper[] m_localOutModels;
     //
     // end of evil hack.
     ///////////////////////////////////////////
 
+    /**
+     * @see #execute(PortObject[], ExecutionContext)
+     */
     protected abstract BufferedDataTable[] execute(
             final BufferedDataTable[] inData, final ExecutionContext exec)
             throws Exception;
@@ -231,12 +251,11 @@ public abstract class NodeModel extends GenericNodeModel {
         }
         // load remaining Model Objects into old style NodeModel
         for (int i = m_nrDataInPorts;
-             i < m_nrDataInPorts + m_nrModelInPorts; i++) {
-            int mdlIndex = i - m_nrDataInPorts;
+                 i < m_nrDataInPorts + m_nrModelInPorts; i++) {
             assert (inData[i] instanceof ModelContentWrapper);
-            ModelContentRO mdl =
-                ((ModelContentWrapper) inData[i]).getModelContent();
-            loadModelContent(mdlIndex, mdl);
+            ModelContentRO mdl = 
+                ((ModelContentWrapper) inData[i]).m_hiddenModel;
+            loadModelContent(i - m_nrDataInPorts, mdl);
         }
         // finally call old style execute
         BufferedDataTable[] outTables = execute(inTables, exec);
@@ -247,7 +266,7 @@ public abstract class NodeModel extends GenericNodeModel {
             returnObjects[i] = outTables[i];
         }
         for (int i = m_nrDataOutPorts;
-             i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
+                 i < m_nrDataOutPorts + m_nrModelOutPorts; i++) {
             int mdlIndex = i - m_nrDataOutPorts;
             ModelContent thisMdl = new ModelContent("ModelContent");
             saveModelContent(mdlIndex, thisMdl);
