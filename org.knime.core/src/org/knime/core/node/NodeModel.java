@@ -75,7 +75,7 @@ public abstract class NodeModel extends GenericNodeModel {
      * <code>PortType</code> only used for old {@link NodeModel}s with
      * model ports.
      */
-    static final PortType OLDSTYLEMODELPORTTYPE = new PortType(
+    public static final PortType OLDSTYLEMODELPORTTYPE = new PortType(
             ModelContentWrapper.class, ModelContentWrapper.class);
 
     /**
@@ -156,13 +156,17 @@ public abstract class NodeModel extends GenericNodeModel {
     // during configure! (old v1.x model ports!)
     //
     // hide model content in a modern style PortObjectSpec
+<<<<<<< .mine
+    public final static class ModelContentWrapper
+=======
     static final class ModelContentWrapper
+>>>>>>> .r15282
             implements ModelPortObjectSpec, ModelPortObject {
         private ModelContent m_hiddenModel;
         ModelContentWrapper(final ModelContent mdl) {
             m_hiddenModel = mdl;
         }
-        final ModelContentRO getModelContent() {
+        public final ModelContentRO getModelContent() {
             return m_hiddenModel;
         }
         public ModelContentWrapper getSpec() {
