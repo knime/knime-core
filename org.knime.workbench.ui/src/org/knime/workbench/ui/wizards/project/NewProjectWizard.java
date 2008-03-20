@@ -175,8 +175,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                         TreeViewer viewer =
                                 ((KnimeResourceNavigator)viewPart).getViewer();
                         viewer.refresh();
-                        viewer.expandToLevel(2);
-
+//                        viewer.expandToLevel(2);
                     }
                 }
             }
@@ -240,7 +239,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         });
 
         // just to make sure: refresh the new project
-        project.getProject().refreshLocal(IResource.DEPTH_INFINITE, monitor);
+//        project.getProject().refreshLocal(IResource.DEPTH_ONE, monitor);
     }
 
     private void throwCoreException(final String message) throws CoreException {
