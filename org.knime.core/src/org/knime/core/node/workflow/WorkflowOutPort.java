@@ -23,8 +23,6 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.NodeInPort;
-import org.knime.core.node.NodeOutPort;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.PortType;
@@ -34,7 +32,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * 
  * @author mb, University of Konstanz
  */
-public class WorkflowOutPort extends NodeOutPort {
+public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
     
     /** if connected, reference the outport this node is connected to.
      */
@@ -42,6 +40,12 @@ public class WorkflowOutPort extends NodeOutPort {
     
     private final NodeInPort m_simulatedInPort;
     
+    /** the following flag allows SingleNodeContainers/WFMs to hide
+     * the PortObjects after a Node.execute() until the state of the
+     * SNC/WFM has been adjusted to "EXECUTED".
+     */
+    private boolean m_showPortObject = true;
+
     /**
      * Creates a new output port with a fixed and ID (should unique to all other
      * output ports of this node) for the given node.
@@ -62,6 +66,24 @@ public class WorkflowOutPort extends NodeOutPort {
     }
 
     /**
+     * Disable/Enable port content - used to make sure port stays in sync
+     * with EXECUTED-flag and does not provide content to the outside while
+     * the node is officially not (yet) executed.
+     * 
+     * @param flag true if content is to be seen
+     */
+    public void showPortObject(final boolean flag) {
+        m_showPortObject = flag;
+    }
+    
+    /**
+     * @return true if content is to be seen
+     */
+    public boolean isPortObjectVisible() {
+        return m_showPortObject;
+    }
+
+    /**
      * @param obj
      * @return
      * @see java.lang.Object#equals(java.lang.Object)
@@ -75,7 +97,7 @@ public class WorkflowOutPort extends NodeOutPort {
 
     /**
      * @return
-     * @see org.knime.core.node.NodeOutPort#getHiLiteHandler()
+     * @see org.knime.core.node.workflow.NodeOutPort#getHiLiteHandler()
      */
     public HiLiteHandler getHiLiteHandler() {
         if (m_underlyingPort == null) {
@@ -87,7 +109,6 @@ public class WorkflowOutPort extends NodeOutPort {
     /**
      * {@inheritDoc}
      */
-    @Override
     public ScopeObjectStack getScopeContextStackContainer() {
         if (m_underlyingPort == null) {
             return null;
@@ -97,7 +118,7 @@ public class WorkflowOutPort extends NodeOutPort {
 
     /**
      * @return
-     * @see org.knime.core.node.NodeOutPort#getPortObject()
+     * @see org.knime.core.node.workflow.NodeOutPort#getPortObject()
      */
     public PortObject getPortObject() {
         if (m_underlyingPort == null) {
@@ -111,7 +132,7 @@ public class WorkflowOutPort extends NodeOutPort {
     
     /**
      * @return
-     * @see org.knime.core.node.NodeOutPort#getPortObjectSpec()
+     * @see org.knime.core.node.workflow.NodeOutPort#getPortObjectSpec()
      */
     public PortObjectSpec getPortObjectSpec() {
         if (m_underlyingPort == null) {
@@ -133,7 +154,7 @@ public class WorkflowOutPort extends NodeOutPort {
 
     /**
      * @param name
-     * @see org.knime.core.node.NodeOutPort#openPortView(java.lang.String)
+     * @see org.knime.core.node.workflow.NodeOutPort#openPortView(java.lang.String)
      */
     public void openPortView(String name) {
         if (m_underlyingPort == null) {

@@ -22,10 +22,14 @@
  * History
  *   14.02.2008 (gabriel): created
  */
-package org.knime.core.node;
+package org.knime.core.node.workflow;
 
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.DatabasePortObject;
+import org.knime.core.node.DatabasePortObjectSpec;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
 
 /**
  * Database out port overrides the data put port view to visualize the

@@ -23,8 +23,6 @@
  */
 package org.knime.core.node.workflow;
 
-import org.knime.core.node.NodeInPort;
-import org.knime.core.node.NodeOutPort;
 import org.knime.core.node.PortType;
 
 /**

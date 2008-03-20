@@ -138,7 +138,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         for (int i = 0; i < node.getNrOutPorts(); i++) {
             ExecutionMonitor execPort = execMon
                     .createSubProgress(1.0 / node.getNrOutPorts());
-            PortType type = node.getOutPort(i).getPortType();
+            PortType type = node.getOutputType(i);
             boolean isDataPort = BufferedDataTable.class.isAssignableFrom(type
                     .getPortObjectClass());
             if (m_isConfigured) {
@@ -252,7 +252,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             final NodeSettingsRO settings, final int loadID, final int index)
             throws InvalidSettingsException, CanceledExecutionException,
             IOException {
-        PortType type = node.getOutPort(index).getPortType();
+        PortType type = node.getOutputType(index);
         boolean isDataPort = BufferedDataTable.class.isAssignableFrom(type
                 .getPortObjectClass());
         if (!isDataPort) {
@@ -485,7 +485,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     private static int countDataOutPorts(final Node node) {
         int dataPortsCount = 0;
         for (int i = 0; i < node.getNrOutPorts(); i++) {
-            PortType type = node.getOutPort(i).getPortType();
+            PortType type = node.getOutputType(i);
             if (BufferedDataTable.class.isAssignableFrom(
                     type.getPortObjectClass())) {
                 dataPortsCount += 1;

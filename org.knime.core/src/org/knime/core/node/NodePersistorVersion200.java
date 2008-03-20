@@ -110,9 +110,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             NodeSettingsWO singlePortSetting =
                     portSettings.addNodeSettings(portName);
             singlePortSetting.addInt("index", i);
-            NodeOutPort port = node.getOutPort(i);
-            PortObjectSpec spec = port.getPortObjectSpec();
-            PortObject object = port.getPortObject();
+            PortObjectSpec spec = node.getOutputSpec(i);
+            PortObject object = node.getOutputObject(i);
             String portDirName;
             if (spec != null || object != null) {
                 portDirName = portName;
@@ -139,15 +138,14 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             final NodeSettingsWO settings, final ExecutionMonitor exec, 
             final int portIdx, final boolean saveData) 
             throws IOException, CanceledExecutionException {
-        NodeOutPort port = node.getOutPort(portIdx);
-        PortObjectSpec spec = port.getPortObjectSpec();
+        PortObjectSpec spec = node.getOutputSpec(portIdx);
         settings.addString("port_spec_class", 
                 spec != null ? spec.getClass().getName() : null);
-        PortObject object = port.getPortObject();
+        PortObject object = node.getOutputObject(portIdx);
         boolean isSaveObject = saveData && object != null;
         settings.addString("port_object_class", isSaveObject ? object
                 .getClass().getName() : null);
-        if (port.getPortType().equals(BufferedDataTable.TYPE)) {
+        if (node.getOutputType(portIdx).equals(BufferedDataTable.TYPE)) {
             assert object == null 
                 || object instanceof BufferedDataTable 
                 : "Expected BufferedDataTable, got " 
@@ -297,13 +295,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             final int portIdx, final int loadID,
             final HashMap<Integer, ContainerTable> tblRep) throws IOException, 
             InvalidSettingsException, CanceledExecutionException {
-        NodeOutPort port = node.getOutPort(portIdx);
         String specClass = settings.getString("port_spec_class");
         String objectClass = settings.getString("port_object_class");
-        PortType designatedType = node.getOutPort(portIdx).getPortType();
+        PortType designatedType = node.getOutputType(portIdx);
         PortObjectSpec spec = null;
         PortObject object = null;
-        if (port.getPortType().equals(BufferedDataTable.TYPE)) {
+        if (node.getOutputType(portIdx).equals(BufferedDataTable.TYPE)) {
             if (specClass != null && !specClass.equals(BufferedDataTable.TYPE.
                     getPortObjectSpecClass().getName())) {
                 throw new IOException("Actual spec class \"" + specClass

@@ -22,7 +22,9 @@
  * History
  *   02.05.2006(sieb, ohl): reviewed 
  */
-package org.knime.core.node;
+package org.knime.core.node.workflow;
+
+import org.knime.core.node.PortType;
 
 
 /**
@@ -35,54 +37,22 @@ package org.knime.core.node;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public abstract class NodePort {
-
-    /** This ports ID assigned from the underlying node. */
-    private final int m_portID;
-    
-    /** The type of this port. */
-    private final PortType m_portType;
-
-    /** The port name which can be used for displaying purposes. */
-    private String m_portName;
-
-    /**
-     * Creates a new node port with an ID assigned from the underlying node. The
-     * default port name is "Port [portID]" and can be changed via
-     * <code>#setPortName(String)</code>.
-     * 
-     * @param portID the port's id, greater or equal zero
-     * 
-     * @see #setPortName(String)
-     */
-    NodePort(final int portID, final PortType pType) {
-        assert (portID >= 0);
-        assert (pType != null);
-        m_portID = portID;
-        m_portType = pType;
-        setPortName(null);
-    }
+public interface NodePort {
 
     /**
      * @return The port id.
      */
-    public final int getPortID() {
-        return m_portID;
-    }
+    public int getPortID();
     
     /**
      * @return The port type. 
      */
-    public final PortType getPortType() {
-        return m_portType;
-    }
+    public PortType getPortType();
 
     /**
      * @return The port name.
      */
-    public final String getPortName() {
-        return m_portName;
-    }
+    public String getPortName();
 
     /**
      * Sets a new name for this port. If null or an empty string is passed, the
@@ -91,16 +61,6 @@ public abstract class NodePort {
      * @param portName The new name for this port. If null is passed, the
      *            default name will be generated.
      */
-    public final void setPortName(final String portName) {
-        if (portName == null || portName.trim().length() == 0) {
-            if (this instanceof NodeInPort) {
-                m_portName = "Inport " + m_portID;
-            } else {
-                m_portName = "Outport " + m_portID;
-            }
-        } else {
-            m_portName = portName.trim();
-        }
-    }
+    public void setPortName(final String portName);
 
 }

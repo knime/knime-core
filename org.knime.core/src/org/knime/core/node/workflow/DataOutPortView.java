@@ -22,7 +22,7 @@
  *   03.08.2005 (ohl): created
  *   08.05.2006(sieb, ohl): reviewed 
  */
-package org.knime.core.node;
+package org.knime.core.node.workflow;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
@@ -48,6 +48,11 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorHandler;
 import org.knime.core.data.property.ShapeHandler;
 import org.knime.core.data.property.SizeHandler;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.PortObject;
+import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.tableview.TableView;
 
 /**

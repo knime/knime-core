@@ -22,7 +22,9 @@
  * History
  *   17.01.2006(sieb, ohl): reviewed 
  */
-package org.knime.core.node;
+package org.knime.core.node.workflow;
+
+import org.knime.core.node.PortType;
 
 /**
  * Implements a node's input port. Internally it keeps a reference to its
@@ -33,15 +35,15 @@ package org.knime.core.node;
  * 
  * @see NodeOutPort
  */
-public class NodeInPort extends NodePort {
+public class NodeInPort extends NodePortAdaptor implements NodePort {
 
     /**
      * Creates a new input port with ID and type assigned from the node.
      * 
      * @param portId the ID of this port.
      */
-    public NodeInPort(final int portId, final PortType pType) {
-        super(portId, pType);
+    public NodeInPort(final int portId, final PortType type) {
+        super(portId, type);
     }
 
 }

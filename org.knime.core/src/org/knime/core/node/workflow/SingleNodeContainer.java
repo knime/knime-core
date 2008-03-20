@@ -37,9 +37,7 @@ import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.GenericNodeView;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
-import org.knime.core.node.NodeInPort;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeOutPort;
 import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -114,26 +112,55 @@ public final class SingleNodeContainer extends NodeContainer
 
     /** {@inheritDoc} */
     @Override
-    public int getNrInPorts() {
-        return m_node.getNrInPorts();
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public int getNrOutPorts() {
         return m_node.getNrOutPorts();
     }
 
     /** {@inheritDoc} */
     @Override
-    public NodeOutPort getOutPort(final int i) {
-        return m_node.getOutPort(i);
+    public int getNrInPorts() {
+        return m_node.getNrInPorts();
+    }
+    
+    private NodeContainerOutPort[] m_outputPorts = null;
+    /**
+     * Returns the output port for the given <code>portID</code>. This port
+     * is essentially a container for the underlying Node and the index and
+     * will retrieve all interesting data from the Node.
+     * 
+     * @param index The output port's ID.
+     * @return Output port with the specified ID.
+     * @throws IndexOutOfBoundsException If the index is out of range.
+     */
+    @Override
+    public NodeOutPort getOutPort(final int index) {
+        if (m_outputPorts == null) {
+            m_outputPorts = new NodeContainerOutPort[getNrOutPorts()];
+        }
+        if (m_outputPorts[index] == null) {
+            m_outputPorts[index] = new NodeContainerOutPort(this, index);
+        }
+        return m_outputPorts[index];
     }
 
-    /** {@inheritDoc} */
+    private NodeInPort[] m_inputPorts = null;
+    /**
+     * Return a port, which for the inputs really only holds the type
+     * and some other static information.
+     * 
+     * @param index the index of the input port
+     * @return port
+     */
     @Override
-    public NodeInPort getInPort(final int i) {
-        return m_node.getInPort(i);
+    public NodeInPort getInPort(final int index) {
+        if (m_inputPorts == null) {
+            m_inputPorts = new NodeInPort[getNrInPorts()];
+        }
+        if (m_inputPorts[index] == null) {
+            m_inputPorts[index] 
+                            = new NodeInPort(index, m_node.getInputType(index));
+        }
+        return m_inputPorts[index];
     }
 
     /* ------------------ Views ---------------- */
@@ -410,12 +437,6 @@ public final class SingleNodeContainer extends NodeContainer
         synchronized (m_dirtyNode) {
             switch (getState()) {
             case QUEUED:
-                // disable outports (to avoid access to PortObject when
-                // Node.execute has written them but the State flag of the
-                // NodeContainer has not yet been updated
-                for (int i = 0; i < m_node.getNrOutPorts(); i++) {
-                    m_node.getOutPort(i).showPortObject(false);
-                }
                 // clear loop status
                 m_node.clearLoopStatus();
                 // change state to avoid more than one executor
@@ -440,11 +461,6 @@ public final class SingleNodeContainer extends NodeContainer
         synchronized (m_dirtyNode) {
             if (success) {
                 if (m_node.getLoopStatus() == null) {
-                    // enable outports (see above, avoid problems with
-                    // ports having content and State not yet reflecting this.
-                    for (int i = 0; i < m_node.getNrOutPorts(); i++) {
-                        m_node.getOutPort(i).showPortObject(true);
-                    }
                     setState(State.EXECUTED);
 
                 } else {

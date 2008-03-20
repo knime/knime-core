@@ -38,6 +38,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.node.GenericNodeDialogPane.MiscNodeDialogPane;
 import org.knime.core.node.GenericNodeFactory.NodeType;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
+import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
@@ -51,8 +52,8 @@ import org.w3c.dom.Element;
  * Implementation of a node as basic processing unit within the workflow. A Node
  * object is the place where the data flow starts, ends, or intersects. Thus a
  * Node can be connected with predecessors and successors through its input and
- * output ports, {@link org.knime.core.node.NodeInPort} and
- * {@link org.knime.core.node.NodeOutPort}, respectively. There are data ports
+ * output ports, {@link org.knime.core.node.workflow.NodeInPort} and
+ * {@link org.knime.core.node.workflow.NodeOutPort}, respectively. There are data ports
  * for exchanging data tables, and prediction model ports for transferring
  * computed data models. <br />
  * A node must contain a {@link NodeModel} and may contain {@link NodeView}s
@@ -92,11 +93,23 @@ public final class Node {
     /** Holds the current node message. */
     private NodeMessage m_message;
 
-    /** Keeps fixed array of output ports. */
-    private final NodeOutPort[] m_outPorts;
+    /** Keeps outgoing information (specs, objects, HiLiteHandlers...). */
+    class Output {
+        String name;
+        PortType type;
+        PortObjectSpec spec;
+        PortObject object;
+        HiLiteHandler hiliteHdl;
+        ScopeObjectStack scopeStackContainer;
+    }
+    private final Output[] m_outputs;
 
-    /** Keeps fixed array of output ports. */
-    private final NodeInPort[] m_inPorts;
+    /** Keeps information about incoming connectors (type and name). */
+    class Input {
+        String name;
+        PortType type;
+    }
+    private final Input[] m_inputs;
 
     /**
      * The memory policy for the data outports, i.e. keep in memory or hold on
@@ -193,22 +206,25 @@ public final class Node {
         m_messageListeners = new CopyOnWriteArraySet<NodeMessageListener>();
 
         // init input ports
-        m_inPorts = new NodeInPort[m_model.getNrInPorts()];
-        for (int i = 0; i < m_inPorts.length; i++) {
-            m_inPorts[i] = new NodeInPort(i, m_model.getInPortType(i));
-            m_inPorts[i].setPortName(m_factory.getInportName(i));
+        m_inputs = new Input[m_model.getNrInPorts()];
+        for (int i = 0; i < m_inputs.length; i++) {
+            m_inputs[i] = new Input();
+            m_inputs[i].type = m_model.getInPortType(i);
+            m_inputs[i].name = m_factory.getInportName(i);
         }
 
         // init output ports
-        m_outPorts = new NodeOutPort[m_model.getNrOutPorts()];
+        m_outputs = new Output[m_model.getNrOutPorts()];
         // default option: keep small tables in mem (can be changed in dialog)
         m_outDataPortsMemoryPolicy = MemoryPolicy.CacheSmallInMemory;
-        for (int i = 0; i < m_outPorts.length; i++) {
-            m_outPorts[i] = new NodeOutPort(i, m_model.getOutPortType(i));
-            m_outPorts[i].setPortName(m_factory.getOutportName(i));
-            m_outPorts[i].setPortObjectSpec(null);
-            m_outPorts[i].setPortObject(null, this);
-            m_outPorts[i].setHiLiteHandler(m_model.getOutHiLiteHandler(i));
+        for (int i = 0; i < m_outputs.length; i++) {
+            m_outputs[i] = new Output();
+            m_outputs[i].type = m_model.getOutPortType(i);
+            m_outputs[i].name = m_factory.getOutportName(i);
+            m_outputs[i].spec = null;
+            m_outputs[i].object = null;
+            m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i);
+            m_outputs[i].scopeStackContainer = null;
         }
 
         m_localTempTables = new HashSet<ContainerTable>();
@@ -255,9 +271,8 @@ public final class Node {
             m_logger.error("Loading model settings failed", e);
         }
         for (int i = 0; i < getNrOutPorts(); i++) {
-            NodeOutPort port = getOutPort(i);
-            port.setPortObjectSpec(loader.getPortObjectSpec(i));
-            port.setPortObject(loader.getPortObject(i), /* owner= */this);
+            m_outputs[i].spec = loader.getPortObjectSpec(i);
+            m_outputs[i].object = loader.getPortObject(i);
         }
         loadInternals(loader.getNodeInternDirectory(), exec);
         if (m_message != null) {
@@ -390,47 +405,72 @@ public final class Node {
     }
 
     /**
-     * Returns the output port for the given <code>outPortID</code>. The
-     * first ports are by definition for data the following ports
-     * <code>ModelContent</code>.
+     * Return name of input connector.
      * 
-     * @param outPortID The output port's ID.
-     * @return Output port with the specified ID.
-     * @throws IndexOutOfBoundsException If the index is out of range.
-     */
-    public NodeOutPort getOutPort(final int index) {
-        return m_outPorts[index];
-    }
-
-    /**
-     * 
-     * @param index
-     * @return
-     */
-    public NodeInPort getInPort(final int index) {
-        return m_inPorts[index];
-    }
-
-    /**
-     * Delegation method to the inport. {@link NodePort#getPortName()} method.
-     * 
-     * @param portID The port id of interest
-     * @return The description to that port
+     * @param index of the connector
+     * @return The description
      * @throws IndexOutOfBoundsException If argument is out of range.
      */
-    public String getInportName(final int portID) {
-        return m_inPorts[portID].getPortName();
+    public String getInportName(final int index) {
+        return m_inputs[index].name;
+    }
+    
+    /**
+     * Return type of input connector.
+     * 
+     * @param index of the connector
+     * @return The type
+     * @throws IndexOutOfBoundsException If argument is out of range.
+     */
+    public PortType getInputType(final int index) {
+        return m_inputs[index].type;
     }
 
     /**
-     * Delegation method to the outport. {@link NodePort#getPortName()} method.
+     * Return name of output connector.
      * 
-     * @param portID The port id of interest.
+     * @param index of the connector
      * @return The description to that port.
      * @throws IndexOutOfBoundsException If argument is out of range.
      */
-    public String getOutportName(final int portID) {
-        return m_outPorts[portID].getPortName();
+    public String getOutportName(final int index) {
+        return m_outputs[index].name;
+    }
+
+    /**
+     * Return type of output connector.
+     * 
+     * @param index of the connector
+     * @return The type
+     * @throws IndexOutOfBoundsException If argument is out of range.
+     */
+    public PortType getOutputType(final int index) {
+        return m_outputs[index].type;
+    }
+    
+    public PortObjectSpec getOutputSpec(final int index) {
+        return m_outputs[index].spec;
+    }
+        
+    public PortObject getOutputObject(final int index) {
+        return m_outputs[index].object;
+    }
+    
+    public HiLiteHandler getHiLiteHandler(final int index) {
+        return m_outputs[index].hiliteHdl;
+    }
+    
+    public void setHiLiteHandler(final int index, final HiLiteHandler hdl) {
+        m_outputs[index].hiliteHdl = hdl;
+    }
+    
+    public ScopeObjectStack getScopeObjectStack(final int index) {
+        return m_outputs[index].scopeStackContainer;
+    }
+
+    public void setScopeObjectStack(final int index,
+            final ScopeObjectStack sos) {
+        m_outputs[index].scopeStackContainer = sos;
     }
 
     /**
@@ -611,8 +651,7 @@ public final class Node {
         for (int p = 0; p < getNrOutPorts(); p++) {
             if (newOutData[p] instanceof BufferedDataTable) {
                 BufferedDataTable thisTable = (BufferedDataTable)newOutData[p];
-                DataTableSpec portSpec =
-                        (DataTableSpec)(m_outPorts[p].getPortObjectSpec());
+                DataTableSpec portSpec = (DataTableSpec)(m_outputs[p].spec);
                 DataTableSpec newPortSpec = thisTable.getDataTableSpec();
                 if (portSpec != null) {
                     if (!portSpec.equalStructure(newPortSpec)) {
@@ -622,19 +661,18 @@ public final class Node {
                 }
                 BufferedDataTable t = thisTable;
                 t.setOwnerRecursively(this);
-                m_outPorts[p].setPortObject(t, this);
-                m_outPorts[p].setPortObjectSpec(newPortSpec);
+                m_outputs[p].object = t;
+                m_outputs[p].spec = newPortSpec;
             } else {
                 // TODO save them, don't simply hand them over!
-                m_outPorts[p].setPortObject(newOutData[p], this);
+                m_outputs[p].object = newOutData[p];
                 if (newOutData[p] != null) {
                     assert !continuesLoop;
-                    m_outPorts[p].setPortObjectSpec(newOutData[p].getSpec());
+                    m_outputs[p].spec = newOutData[p].getSpec();
                 }
             }
-            m_outPorts[p].setHiLiteHandler(m_model.getOutHiLiteHandler(p));
-            m_outPorts[p]
-                    .setScopeContextStackContainer(getScopeContextStackContainer());
+            m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p);
+            m_outputs[p].scopeStackContainer = getScopeContextStackContainer();
         }
         m_logger.info("End execute (" + (System.currentTimeMillis() - time)
                 / 100 / 10.0 + " sec)");
@@ -686,28 +724,9 @@ public final class Node {
         m_logger.info("clean output ports.");
         // blow away our data tables in the port
         for (int p = 0; p < getNrOutPorts(); p++) {
-            m_outPorts[p].setPortObjectSpec(null);
-            m_outPorts[p].setPortObject(null, this);
+            m_outputs[p].spec = null;
+            m_outputs[p].object = null;
         }
-    }
-
-    /**
-     * closes, unregisters and disposes all node views and output port views.
-     */
-    public void disposeAllViews() {
-
-        // close and unregister all node views
-        NodeView[] views = m_model.getViews().toArray(new NodeView[0]);
-        for (NodeView view : views) {
-            // unregisters and closes the view
-            view.closeView();
-        }
-
-        // close port views
-        for (int o = 0; o < m_outPorts.length; o++) {
-            m_outPorts[o].disposePortView(this);
-        }
-
     }
 
     /**
@@ -730,8 +749,8 @@ public final class Node {
      */
     public void putOutputTablesIntoGlobalRepository(
             final HashMap<Integer, ContainerTable> rep) {
-        for (NodeOutPort p : m_outPorts) {
-            PortObject portObject = p.getPortObject();
+        for (int i = 0; i < m_outputs.length; i++) {
+            PortObject portObject = m_outputs[i].object;
             if (portObject instanceof BufferedDataTable) {
                 BufferedDataTable t = (BufferedDataTable)portObject;
                 if (t != null) {
@@ -758,8 +777,8 @@ public final class Node {
      * Deletes any temporary resources associated with this node.
      */
     public void cleanup() {
-        for (NodeOutPort p : m_outPorts) {
-            PortObject portObject = p.getPortObject();
+        for (int i = 0; i < m_outputs.length; i++) {
+            PortObject portObject = m_outputs[i].object;
             if (portObject instanceof BufferedDataTable) {
                 BufferedDataTable t = (BufferedDataTable)portObject;
                 if (t != null) {
@@ -914,8 +933,8 @@ public final class Node {
             try {
                 // check the inspecs against null
                 for (int i = 0; i < inSpecs.length; i++) {
-                    if (BufferedDataTable.class.isAssignableFrom(getInPort(i)
-                            .getPortType().getPortObjectClass())
+                    if (BufferedDataTable.class.isAssignableFrom(
+                            m_inputs[i].type.getPortObjectClass())
                             && (inSpecs[i] == null)) {
                         return false;
                         // TODO: did we really need a warning here??
@@ -945,9 +964,9 @@ public final class Node {
                  */
                 for (int p = 0; p < newOutSpec.length; p++) {
                     // update data table spec
-                    m_outPorts[p].setPortObjectSpec(newOutSpec[p]);
-                    m_outPorts[p]
-                            .setScopeContextStackContainer(getScopeContextStackContainer());
+                    m_outputs[p].spec = newOutSpec[p];
+                    m_outputs[p].scopeStackContainer =
+                            getScopeContextStackContainer();
                 }
 
                 processModelWarnings();
@@ -1038,15 +1057,6 @@ public final class Node {
                 new HashSet<GenericNodeView<?>>(m_model.getViews());
         for (GenericNodeView<?> view : views) {
             view.closeView();
-        }
-    }
-
-    /**
-     * Closes all output port views (data and model port views).
-     */
-    public void closeAllPortViews() {
-        for (NodeOutPort port : m_outPorts) {
-            port.disposePortView(this);
         }
     }
 
@@ -1405,7 +1415,7 @@ public final class Node {
     @Override
     public String toString() {
         return "Node @" + hashCode() + " [" + m_name + ";in="
-                + m_model.getNrInPorts() + ";out=" + m_outPorts.length + "]";
+                + m_model.getNrInPorts() + ";out=" + m_outputs.length + "]";
     }
 
     /**
