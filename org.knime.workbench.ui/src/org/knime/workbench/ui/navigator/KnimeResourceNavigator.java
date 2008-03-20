@@ -126,7 +126,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         Display.getDefault().asyncExec(new Runnable() {
 
             public void run() {
-                // TODO: find Project
                 try {
                     String name =  WorkflowManager.ROOT.getNodeContainer(
                             state.getSource()).getName();
@@ -323,6 +322,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         viewer.setContentProvider(new KnimeContentProvider());
     }
 
+    /// NOT REGISTERED!!!
+    
+    
     /**
      * {@inheritDoc}
      */
