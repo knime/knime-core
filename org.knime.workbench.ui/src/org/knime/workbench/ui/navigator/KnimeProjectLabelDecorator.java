@@ -24,14 +24,19 @@
 package org.knime.workbench.ui.navigator;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jface.viewers.ILabelDecorator;
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.graphics.Image;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.WorkflowEvent;
+import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
@@ -44,67 +49,124 @@ public class KnimeProjectLabelDecorator implements ILabelDecorator {
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            KnimeProjectLabelDecorator.class);
     
-    private static final Image m_projectExecuting = KNIMEUIPlugin.getDefault()
+    private static final Image EXECUTING = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executing2.png");
-    private static final Image m_projectExecuted = KNIMEUIPlugin.getDefault()
+    private static final Image EXECUTED = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executed2.png");
-    private static final Image m_projectConfigured = KNIMEUIPlugin.getDefault()
+    private static final Image CONFIGURED = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_configured.png");
-    private static final Image m_node = KNIMEUIPlugin.getDefault().getImage(
+    private static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/node.png"); 
 
-    private static final Map<String, NodeContainer>m_projects 
+    private static final Map<String, NodeContainer>PROJECTS 
         = new HashMap<String, NodeContainer>();
     
-    public void addListener(ILabelProviderListener listener) {
+    private final Set<ILabelProviderListener>m_listeners 
+        = new HashSet<ILabelProviderListener>();
+    
+    /**
+     * Adds a listener to the {@link WorkflowManager#ROOT} and to all already 
+     * opened projects.
+     */
+    public KnimeProjectLabelDecorator() {
+        WorkflowManager.ROOT.addListener(new WorkflowListener() {
+
+            public void workflowChanged(final WorkflowEvent event) {
+                if (event.getType().equals(WorkflowEvent.Type.NODE_ADDED)) {
+                    NodeContainer nc = ((NodeContainer)event.getNewValue());
+                    PROJECTS.put(nc.getName(), nc);
+                } else if (event.getType().equals(
+                        WorkflowEvent.Type.NODE_REMOVED)) {
+                    PROJECTS.remove(event.getOldValue());
+                }
+            }
+            
+        });
+        for (NodeContainer nc 
+                : WorkflowManager.ROOT.getNodeContainerBreadthFirstSearch()) {
+            // bad hack to determine projects...
+            if (nc.getID().toString().lastIndexOf(":") < 2) {
+                PROJECTS.put(nc.getName(), nc);
+            } else {
+                // if we have really a breadth first search then we are finished
+                break;
+            }
+        }
+    }
+    
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void addListener(final ILabelProviderListener listener) {
+        NodeLogger.getLogger(KnimeProjectLabelDecorator.class)
+            .info("listener added " + listener);
+        m_listeners.add(listener);
     }
 
+    /**
+     * 
+     * {@inheritDoc}
+     */
     public void dispose() {
+        EXECUTED.dispose();
+        EXECUTING.dispose();
+        CONFIGURED.dispose();
+        NODE.dispose();
+        PROJECTS.clear();
     }
 
-    public boolean isLabelProperty(Object element, String property) {
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public boolean isLabelProperty(final Object element, 
+            final String property) {
         return false;
     }
 
-    public void removeListener(ILabelProviderListener listener) {
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public void removeListener(final ILabelProviderListener listener) {
+        m_listeners.remove(listener);
     }
 
-    public Image decorateImage(Image image, Object element) {
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public Image decorateImage(final Image image, final Object element) {
         Image img = image;
         if (element instanceof IProject) {
             IProject project = (IProject)element;
-            NodeContainer projectNode = m_projects.get(project.getName());
-            if (projectNode == null) {
-                for (NodeContainer nc : WorkflowManager.ROOT
-                            .getNodeContainerBreadthFirstSearch()) {
-                    if (nc.getName().equals(project.getName())) {
-                        projectNode = nc;
-                        m_projects.put(project.getName(), projectNode); 
-                        break;
-                    }
-                }
-            }
+            NodeContainer projectNode = PROJECTS.get(project.getName());
             if (projectNode == null) {
                 return img;
             }
             if (projectNode.getState().equals(NodeContainer.State.EXECUTED)) {
-                img = m_projectExecuted;
+                img = EXECUTED;
             } else if (projectNode.getState().equals(
                     NodeContainer.State.EXECUTING)) {
-                img = m_projectExecuting;                        
+                img = EXECUTING;                        
             } else if (projectNode.getState().equals(
                     NodeContainer.State.CONFIGURED)) {
-                img = m_projectConfigured;
+                img = CONFIGURED;
             }
         } else if (element instanceof IFolder) {
             // then its a node
-            // TODO: also show status of the node?
-            img = m_node;
+            img = NODE;
         }
         return img;
     }
 
-    public String decorateText(String text, Object element) {
+    /**
+     * 
+     * {@inheritDoc}
+     */
+    public String decorateText(final String text, 
+            final Object element) {
         return text;
     }
     
