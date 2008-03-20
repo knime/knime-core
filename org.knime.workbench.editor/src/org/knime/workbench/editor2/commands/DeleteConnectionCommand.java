@@ -64,15 +64,6 @@ public class DeleteConnectionCommand extends Command {
      */
     @Override
     public boolean canExecute() {
-//        LOGGER.debug("can execute? target "
-//                + m_connection.getTarget());
-//        LOGGER.debug("can execute? source "
-//                + m_connection.getSource());
-        // TODO: also handle WorkflowRootEditParts (in case of MetaNodes)
-//        ConnectableEditPart part =
-//                (ConnectableEditPart)m_connection.getTarget().getParent();
-        // does the workflow status allow deletion of the selected node
-        // only if the workflow is not executing
         if (m_connection == null || m_connection.getModel() == null) {
             return false;
         }
