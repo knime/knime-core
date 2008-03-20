@@ -48,14 +48,14 @@ public class KnimeResourcePatternFilter extends ResourcePatternFilter {
             if (resource.getType() == IResource.PROJECT) {
 
                 IProject project = (IProject)resource;
-
+                /*
                 try {
-                    project.refreshLocal(IResource.DEPTH_INFINITE, null);
+                    project.refreshLocal(IResource.DEPTH_ZERO, null);
                 } catch (Exception e) {
                     // if crashes for some reason do not display it
                     return false;
                 }
-               
+               */
                 return project.exists(new Path("/" 
                         + WorkflowPersistor.WORKFLOW_FILE));
 
