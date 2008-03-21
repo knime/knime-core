@@ -19,7 +19,7 @@
  * ---------------------------------------------------------------------
  * 
  * History
- *   Mar 20, 2008 (mb): created
+ *   Mar 20, 2008 (mb): created from NodeOutPort (now an interface)
  */
 package org.knime.core.node.workflow;
 
@@ -29,7 +29,8 @@ import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.workflow.NodeContainer.State;
 
-/** The implementation of an OutPort of a SingleNodeContainer - e.g. a "real"
+/**
+ * The implementation of an OutPort of a SingleNodeContainer - e.g. a "real"
  * node.
  * 
  * @author M. Berthold, University of Konstanz
@@ -51,8 +52,8 @@ implements NodeOutPort {
      * Creates a new output port with a fixed and ID (should unique to all other
      * output ports of this node) for the given node.
      *
-     * @param node the underlying node.
-     * @param portIndex This port index.
+     * @param snc the underlying SingleNodeContainer.
+     * @param portIndex the (output) port index.
      */
     public NodeContainerOutPort(final SingleNodeContainer snc,
             final int portIndex) {
@@ -64,19 +65,14 @@ implements NodeOutPort {
     }
 
     /**
-     * Returns the <code>DataTableSpec</code> or null if not available.
-     *
-     * @return The <code>DataTableSpec</code> for this port.
+     * {@inheritDoc}
      */
     public PortObjectSpec getPortObjectSpec() {
         return m_snc.getNode().getOutputSpec(getPortIndex());
     }
 
     /**
-     * Returns the DataTable for this port, as set by the node this port is
-     * output for.
-     *
-     * @return PortObject the object for this port. Can be null.
+     * {@inheritDoc}
      */
     public PortObject getPortObject() {
         // the following test allows SingleNodeContainers/WFMs to hide
@@ -87,10 +83,7 @@ implements NodeOutPort {
     }
     
     /**
-     * Returns the hilite handler for this port as set by the node this port is
-     * output for.
-     *
-     * @return The HiLiteHandler for this port or null.
+     * {@inheritDoc}
      */
     public HiLiteHandler getHiLiteHandler() {
         return m_snc.getNode().getHiLiteHandler(getPortIndex());
@@ -108,9 +101,7 @@ implements NodeOutPort {
     }
 
     /**
-     * Returns the scope object stack of the underlying node.
-     *
-     * @return the scope obj stack container
+     * {@inheritDoc}
      */
     public ScopeObjectStack getScopeContextStackContainer() {
         return m_snc.getNode().getScopeObjectStack(getPortIndex());
@@ -153,9 +144,7 @@ implements NodeOutPort {
     }
 
     /**
-     * Opens the port view for this port with the given name.
-     *
-     * @param name The name of the port view.
+     * {@inheritDoc}
      */
     // TODO: return component with convenience method for Frame construction.
     public void openPortView(final String name) {

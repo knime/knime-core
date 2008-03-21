@@ -1641,7 +1641,7 @@ public final class WorkflowManager extends NodeContainer {
                         if (ncIt.getState().equals(
                                 NodeContainer.State.MARKEDFOREXEC)) {
                             final PortObject[] inData =
-                            new PortObject[ncIt.getNrInPorts()];
+                                         new PortObject[ncIt.getNrInPorts()];
                             assembleInputData(ncIt.getID(), inData);
                             boolean dataAvailable = true;
                             for (int i = 0; i < inData.length; i++) {
@@ -1676,7 +1676,7 @@ public final class WorkflowManager extends NodeContainer {
         disableNodeForExecution(nc.getID());
         synchronized (m_dirtyWorkflow) {
             if (nc.getState().executionInProgress()) {
-        nc.cancelExecutionAsNodeContainer();
+                nc.cancelExecutionAsNodeContainer();
             }
         }
     }
