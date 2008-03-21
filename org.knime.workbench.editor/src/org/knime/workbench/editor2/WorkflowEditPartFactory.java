@@ -153,7 +153,7 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
             WorkflowInPort inport = (WorkflowInPort)model;
             part =
                 new WorkflowInPortEditPart(inport.getPortType(),
-                        inport.getPortID());
+                        inport.getPortIndex());
         } else if (model instanceof WorkflowOutPort
                 && context instanceof WorkflowOutPortBarEditPart) {
             // WorkflowOutPort and context WorkflowRootEditPart -> 
@@ -169,16 +169,16 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
             part =
                 new WorkflowOutPortEditPart(
                         outport.getPortType(), 
-                        outport.getPortID());
+                        outport.getPortIndex());
         } else if (model instanceof NodeInPort) {
             // NodeInPort -> NodeInPortEditPart
             NodePort port = (NodeInPort)model;
-            part = new NodeInPortEditPart(port.getPortType(), port.getPortID());
+            part = new NodeInPortEditPart(port.getPortType(), port.getPortIndex());
         } else if (model instanceof NodeOutPort) {
             // NodeOutPort -> NodeOutPortEditPart
             NodePort port = (NodeOutPort)model;
             part = new NodeOutPortEditPart(port.getPortType(), 
-                    port.getPortID());
+                    port.getPortIndex());
         } else if (model instanceof ConnectionContainer) {
             // ConnectionContainer -> ConnectionContainerEditPart
             part = new ConnectionContainerEditPart();
