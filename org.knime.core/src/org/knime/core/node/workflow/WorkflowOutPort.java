@@ -42,12 +42,6 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
     
     private final WorkflowManager m_workflowManager;
     
-    /** the following flag allows SingleNodeContainers/WFMs to hide
-     * the PortObjects after a Node.execute() until the state of the
-     * SNC/WFM has been adjusted to "EXECUTED".
-     */
-    private boolean m_showPortObject = true;
-
     /**
      * Creates a new output port with a fixed type and index (should unique 
      * to all other output ports of this node) for the given node.
@@ -62,11 +56,25 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
         m_simulatedInPort = new NodeInPort(portIndex, pType);
         m_workflowManager = wm;
     }
-    
+
+    /**
+     * Set a new underlying port - used when the connection inside this
+     * workflow to this outgoing port changes. The argument is the new
+     * NodeOutPort connected to the outgoing port of the WFM.
+     * 
+     * @param p new port
+     */
     void setUnderlyingPort(final NodeOutPort p) {
         m_underlyingPort = p;
     }
-    
+
+    /** Return a NodeInPort for the WFM's output ports so that the Outport
+     * of a node within the WFM can connect to it as an "input". Since InPorts
+     * only wrap name/type this is really all it does: it wraps this information
+     * as specified during WFM construction into an InPort.
+     * 
+     * @return fake InPort.
+     */
     NodeInPort getSimulatedInPort() {
         return m_simulatedInPort;
     }
@@ -77,38 +85,7 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
     }
 
     /**
-     * Disable/Enable port content - used to make sure port stays in sync
-     * with EXECUTED-flag and does not provide content to the outside while
-     * the node is officially not (yet) executed.
-     * 
-     * @param flag true if content is to be seen
-     */
-    public void showPortObject(final boolean flag) {
-        m_showPortObject = flag;
-    }
-    
-    /**
-     * @return true if content is to be seen
-     */
-    public boolean isPortObjectVisible() {
-        return m_showPortObject;
-    }
-
-    /**
-     * @param obj
-     * @return
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    public boolean equals(Object obj) {
-        if (m_underlyingPort == null) {
-            return this == obj;
-        }
-        return m_underlyingPort.equals(obj);
-    }
-
-    /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeOutPort#getHiLiteHandler()
+     * {@inheritDoc}
      */
     public HiLiteHandler getHiLiteHandler() {
         if (m_underlyingPort == null) {
@@ -128,8 +105,7 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
     }
 
     /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeOutPort#getPortObject()
+     * {@inheritDoc}
      */
     public PortObject getPortObject() {
         if (m_underlyingPort == null) {
@@ -138,12 +114,14 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
         // the following test allows SingleNodeContainers/WFMs to hide
         // the PortObjects after a Node.execute() until the state of the
         // SNC/WFM has been adjusted to "EXECUTED"
-        return isPortObjectVisible() ? m_underlyingPort.getPortObject() : null;
+        if (m_workflowManager.getState().equals(NodeContainer.State.EXECUTED)) {
+            return m_underlyingPort.getPortObject();
+        }
+        return null;
     }
     
     /**
-     * @return
-     * @see org.knime.core.node.workflow.NodeOutPort#getPortObjectSpec()
+     * {@inheritDoc}
      */
     public PortObjectSpec getPortObjectSpec() {
         if (m_underlyingPort == null) {
@@ -152,10 +130,36 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
         return m_underlyingPort.getPortObjectSpec();
     }
 
+
     /**
-     * @return
-     * @see java.lang.Object#hashCode()
+     * {@inheritDoc}
      */
+    public void openPortView(final String name) {
+        if (m_underlyingPort == null) {
+            return;
+        }
+        m_underlyingPort.openPortView(name);
+    }
+
+    ///////////////////////////
+    // Equals/HashCode/ToString
+    ///////////////////////////
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (m_underlyingPort == null) {
+            return this == obj;
+        }
+        return m_underlyingPort.equals(obj);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int hashCode() {
         if (m_underlyingPort == null) {
             return System.identityHashCode(this);
@@ -164,20 +168,9 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
     }
 
     /**
-     * @param name
-     * @see org.knime.core.node.workflow.NodeOutPort#openPortView(java.lang.String)
+     * {@inheritDoc}
      */
-    public void openPortView(String name) {
-        if (m_underlyingPort == null) {
-            return;
-        }
-        m_underlyingPort.openPortView(name);
-    }
-
-    /**
-     * @return
-     * @see java.lang.Object#toString()
-     */
+    @Override
     public String toString() {
         if (m_underlyingPort == null) {
             return "<<not connected>>";
@@ -185,6 +178,4 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
         return m_underlyingPort.toString();
     }
     
-
-
 }

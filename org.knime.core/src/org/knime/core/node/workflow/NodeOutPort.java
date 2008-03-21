@@ -21,6 +21,7 @@
  *
  * History
  *   04.05.2006(sieb, ohl): reviewed
+ *   21.03.2008(mb): changed to an interface to accomodate wfm 2.0
  */
 package org.knime.core.node.workflow;
 
