@@ -113,7 +113,7 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
         }
         // Note that we can NOT test if the WFM is EXECUTED in order to be sure
         // that we want to return this object (like the SNC does). This can be
-        // call from both: inside the WFM to retrieve data from a WFM-inport
+        // called twofold: inside the WFM to retrieve data from a WFM-inport
         // (then this WFMOutPort is a member of a WFMInPort) and outside the
         // WFM to retrieve data from WFM itself (when the WFM plays like a
         // normal node.)
