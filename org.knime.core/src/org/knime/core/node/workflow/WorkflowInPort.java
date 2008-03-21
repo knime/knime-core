@@ -41,9 +41,10 @@ public final class WorkflowInPort extends NodeInPort {
     /**
      * 
      */
-    WorkflowInPort(final int id, final PortType pType) {
-        super(id, pType);
-        m_underlyingPortWrapper = new WorkflowOutPort(id, pType);
+    WorkflowInPort(final WorkflowManager wm, 
+            final int index, final PortType pType) {
+        super(index, pType);
+        m_underlyingPortWrapper = new WorkflowOutPort(wm, index, pType);
     }
 
     void setUnderlyingPort(final NodeOutPort port) {

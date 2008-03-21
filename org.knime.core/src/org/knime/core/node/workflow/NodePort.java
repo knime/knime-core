@@ -28,21 +28,16 @@ import org.knime.core.node.PortType;
 
 
 /**
- * Abstract node port implementation which keeps a unique id and a port name.
- * The inner classes can be used to distinguish between <code>DataPort</code>
- * and <code>ModelContentPort</code> objects.
+ * Abstract node port implementation which keeps an index and a port name.
  * 
- * @see NodeInPort
- * @see NodeOutPort
- * 
- * @author Thomas Gabriel, University of Konstanz
+ * @author Michael Berthold & B. Wiswedel, University of Konstanz
  */
 public interface NodePort {
 
     /**
-     * @return The port id.
+     * @return The port index.
      */
-    public int getPortID();
+    public int getPortIndex();
     
     /**
      * @return The port type. 

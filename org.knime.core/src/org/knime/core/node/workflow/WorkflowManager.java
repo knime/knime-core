@@ -65,6 +65,7 @@ import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -154,11 +155,11 @@ public final class WorkflowManager extends NodeContainer {
         super(parent, id);
         m_inPorts = new WorkflowInPort[inTypes.length];
         for (int i = 0; i < inTypes.length; i++) {
-            m_inPorts[i] = new WorkflowInPort(i, inTypes[i]);
+            m_inPorts[i] = new WorkflowInPort(this, i, inTypes[i]);
         }
         m_outPorts = new WorkflowOutPort[outTypes.length];
         for (int i = 0; i < outTypes.length; i++) {
-            m_outPorts[i] = new WorkflowOutPort(i, outTypes[i]);
+            m_outPorts[i] = new WorkflowOutPort(this, i, outTypes[i]);
         }
         if (m_inPorts.length == 0 && m_outPorts.length == 0) {
             // this workflow is not connected to parent via any ports
@@ -189,12 +190,23 @@ public final class WorkflowManager extends NodeContainer {
             final WorkflowPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
         m_name = persistor.getName();
-        WorkflowInPort[] ins = persistor.getInPorts();
-        m_inPorts = new WorkflowInPort[ins.length];
-        System.arraycopy(ins, 0, m_inPorts, 0, ins.length);
-        WorkflowOutPort[] outs = persistor.getOutPorts();
-        m_outPorts = new WorkflowOutPort[outs.length];
-        System.arraycopy(outs, 0, m_outPorts, 0, outs.length);
+        WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
+        m_inPorts = new WorkflowInPort[inPortTemplates.length];
+        for (int i = 0; i < inPortTemplates.length; i++) {
+            WorkflowPortTemplate t = inPortTemplates[i];
+            m_inPorts[i] = new WorkflowInPort(
+                    this, t.getPortIndex(), t.getPortType());
+            m_inPorts[i].setPortName(t.getPortName());
+        }
+        WorkflowPortTemplate[] outPortTemplates = 
+            persistor.getOutPortTemplates();
+        m_outPorts = new WorkflowOutPort[outPortTemplates.length];
+        for (int i = 0; i < outPortTemplates.length; i++) {
+            WorkflowPortTemplate t = outPortTemplates[i];
+            m_outPorts[i] = new WorkflowOutPort(
+                    this, t.getPortIndex(), t.getPortType());
+            m_outPorts[i].setPortName(t.getPortName());
+        }
         // add set for this (meta-) node's in- and output connections
         m_connectionsByDest.put(getID(), new HashSet<ConnectionContainer>());
         m_connectionsBySource.put(getID(), new HashSet<ConnectionContainer>());

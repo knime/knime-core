@@ -40,6 +40,8 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
     
     private final NodeInPort m_simulatedInPort;
     
+    private final WorkflowManager m_workflowManager;
+    
     /** the following flag allows SingleNodeContainers/WFMs to hide
      * the PortObjects after a Node.execute() until the state of the
      * SNC/WFM has been adjusted to "EXECUTED".
@@ -47,14 +49,18 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
     private boolean m_showPortObject = true;
 
     /**
-     * Creates a new output port with a fixed and ID (should unique to all other
-     * output ports of this node) for the given node.
+     * Creates a new output port with a fixed type and index (should unique 
+     * to all other output ports of this node) for the given node.
      * 
-     * @param portID This port ID.
+     * @param wm The workflow manger containing this port
+     * @param pType The port's type
+     * @param portIndex This port index
      */
-    WorkflowOutPort(final int portID, final PortType pType) {
-        super(portID, pType);
-        m_simulatedInPort = new NodeInPort(portID, pType);
+    WorkflowOutPort(final WorkflowManager wm, 
+            final int portIndex, final PortType pType) {
+        super(portIndex, pType);
+        m_simulatedInPort = new NodeInPort(portIndex, pType);
+        m_workflowManager = wm;
     }
     
     void setUnderlyingPort(final NodeOutPort p) {
@@ -63,6 +69,11 @@ public class WorkflowOutPort extends NodePortAdaptor implements NodeOutPort  {
     
     NodeInPort getSimulatedInPort() {
         return m_simulatedInPort;
+    }
+    
+    /** @return the workflow manager associated with this port */
+    WorkflowManager getWorkflowManager() {
+        return m_workflowManager;
     }
 
     /**

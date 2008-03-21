@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.node.PortType;
 
 /**
  * 
@@ -62,8 +63,9 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     
     String getName();
     
-    WorkflowInPort[] getInPorts();
+    WorkflowPortTemplate[] getInPortTemplates();
     
+    WorkflowPortTemplate[] getOutPortTemplates();
     
     /** Get UI information for workflow input ports.
      * @return the ui info or null if not set.
@@ -74,8 +76,6 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @return the ui info or null if not set.
      */
     public UIInformation getOutPortsBarUIInfo();
-    
-    WorkflowOutPort[] getOutPorts();
     
     static class ConnectionContainerTemplate {
         private final int m_sourceSuffix;
@@ -127,6 +127,32 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
                 + "( " + getDestPort() + ")]";
         }
 
+    }
+    
+    static final class WorkflowPortTemplate {
+        private final int m_portIndex;
+        private final PortType m_portType;
+        private String m_portName;
+        WorkflowPortTemplate(final int index, final PortType type) {
+            m_portIndex = index;
+            m_portType = type;
+        }
+        /** @return the portIndex */
+        int getPortIndex() {
+            return m_portIndex;
+        }
+        /** @return the portType */
+        PortType getPortType() {
+            return m_portType;
+        }
+        /** @param name the name to set */
+        void setPortName(final String name) {
+            m_portName = name;
+        }
+        /** @return the name */
+        String getPortName() {
+            return m_portName;
+        }
     }
     
     public static final class LoadResult {

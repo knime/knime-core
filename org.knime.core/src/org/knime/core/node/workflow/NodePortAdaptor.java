@@ -31,7 +31,7 @@ import org.knime.core.node.PortType;
  */
 public class NodePortAdaptor implements NodePort {
     /** This ports ID assigned from the underlying node. */
-    private final int m_portID;
+    private final int m_portIndex;
     
     /** The type of this port. */
     private final PortType m_portType;
@@ -51,7 +51,7 @@ public class NodePortAdaptor implements NodePort {
     public NodePortAdaptor(final int portID, final PortType pType) {
         assert (portID >= 0);
         assert (pType != null);
-        m_portID = portID;
+        m_portIndex = portID;
         m_portType = pType;
         setPortName(null);
     }
@@ -59,8 +59,8 @@ public class NodePortAdaptor implements NodePort {
     /**
      * @return The port id.
      */
-    public final int getPortID() {
-        return m_portID;
+    public final int getPortIndex() {
+        return m_portIndex;
     }
     
     /**
@@ -87,9 +87,9 @@ public class NodePortAdaptor implements NodePort {
     public final void setPortName(final String portName) {
         if (portName == null || portName.trim().length() == 0) {
             if (this instanceof NodeInPort) {
-                m_portName = "Inport " + m_portID;
+                m_portName = "Inport " + m_portIndex;
             } else {
-                m_portName = "Outport " + m_portID;
+                m_portName = "Outport " + m_portIndex;
             }
         } else {
             m_portName = portName.trim();

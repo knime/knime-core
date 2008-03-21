@@ -72,8 +72,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
     
-    private WorkflowInPort[] m_inPorts;
-    private WorkflowOutPort[] m_outPorts;
+    private WorkflowPortTemplate[] m_inPortTemplates;
+    private WorkflowPortTemplate[] m_outPortTemplates;
     private UIInformation m_inPortsBarUIInfo;
     private UIInformation m_outPortsBarUIInfo;
     
@@ -359,13 +359,13 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
     
     /** {@inheritDoc} */
-    public WorkflowInPort[] getInPorts() {
-        return m_inPorts;
+    public WorkflowPortTemplate[] getInPortTemplates() {
+        return m_inPortTemplates;
     }
     
     /** {@inheritDoc} */
-    public WorkflowOutPort[] getOutPorts() {
-        return m_outPorts;
+    public WorkflowPortTemplate[] getOutPortTemplates() {
+        return m_outPortTemplates;
     }
     
     /** {@inheritDoc} */
@@ -432,12 +432,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             needsResetAfterLoad();
         }
         int inPortCount = inPortsEnum.keySet().size();
-        m_inPorts = new WorkflowInPort[inPortCount];
+        m_inPortTemplates = new WorkflowPortTemplate[inPortCount];
         for (String key : inPortsEnum.keySet()) {
-            WorkflowInPort p;
+            WorkflowPortTemplate p;
             try {
                 NodeSettingsRO sub = inPortsEnum.getNodeSettings(key);
-                p = loadInPort(sub);
+                p = loadInPortTemplate(sub);
             } catch (InvalidSettingsException e) {
                 String error = "Can't load workflow inport (internal ID \""
                     + key + "\", skipping it: " + e.getMessage();
@@ -446,23 +446,24 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 needsResetAfterLoad();
                 continue;
             }
-            int index = p.getPortID();
+            int index = p.getPortIndex();
             if (index < 0 || index >= inPortCount) {
                 loadResult.addError("Invalid inport index " + index);
                 needsResetAfterLoad();
                 continue;
             }
-            if (m_inPorts[index] != null) {
+            if (m_inPortTemplates[index] != null) {
                 loadResult.addError(
                         "Duplicate inport definition for index: " + index);
             }
-            m_inPorts[index] = p;
+            m_inPortTemplates[index] = p;
         }
-        for (int i = 0; i < m_inPorts.length; i++) {
-            if (m_inPorts[i] == null) {
+        for (int i = 0; i < m_inPortTemplates.length; i++) {
+            if (m_inPortTemplates[i] == null) {
                 loadResult.addError("Assigning fallback port type for "
                         + "missing input port " + i);
-                m_inPorts[i] = new WorkflowInPort(i, FALLBACK_PORTTYPE);
+                m_inPortTemplates[i] = 
+                    new WorkflowPortTemplate(i, FALLBACK_PORTTYPE);
             }
         }
 
@@ -480,12 +481,12 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             needsResetAfterLoad();
         }
         int outPortCount = outPortsEnum.keySet().size();
-        m_outPorts = new WorkflowOutPort[outPortCount];
+        m_outPortTemplates = new WorkflowPortTemplate[outPortCount];
         for (String key : outPortsEnum.keySet()) {
-            WorkflowOutPort p;
+            WorkflowPortTemplate p;
             try {
                 NodeSettingsRO sub = outPortsEnum.getNodeSettings(key);
-                p = loadOutPort(sub);
+                p = loadOutPortTemplate(sub);
             } catch (InvalidSettingsException e) {
                 String error = "Can't load workflow outport (internal ID \""
                     + key + "\", skipping it: " + e.getMessage();
@@ -494,23 +495,24 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 needsResetAfterLoad();
                 continue;
             }
-            int index = p.getPortID();
+            int index = p.getPortIndex();
             if (index < 0 || index >= outPortCount) {
                 loadResult.addError("Invalid inport index " + index);
                 needsResetAfterLoad();
                 continue;
             }
-            if (m_outPorts[index] != null) {
+            if (m_outPortTemplates[index] != null) {
                 loadResult.addError(
                         "Duplicate outport definition for index: " + index);
             }
-            m_outPorts[index] = p;
+            m_outPortTemplates[index] = p;
         }
-        for (int i = 0; i < m_outPorts.length; i++) {
-            if (m_outPorts[i] == null) {
+        for (int i = 0; i < m_outPortTemplates.length; i++) {
+            if (m_outPortTemplates[i] == null) {
                 loadResult.addError("Assigning fallback port type for "
                         + "missing output port " + i);
-                m_outPorts[i] = new WorkflowOutPort(i, FALLBACK_PORTTYPE);
+                m_outPortTemplates[i] = 
+                    new WorkflowPortTemplate(i, FALLBACK_PORTTYPE);
             }
         }
         return loadResult;
@@ -933,7 +935,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return null;
     }
     
-    protected WorkflowInPort loadInPort(NodeSettingsRO settings) 
+    protected WorkflowPortTemplate loadInPortTemplate(NodeSettingsRO settings) 
             throws InvalidSettingsException {
         throw new InvalidSettingsException(
                 "No ports for meta nodes in version 1.x.x");
@@ -949,7 +951,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return null;
     }
     
-    protected WorkflowOutPort loadOutPort(NodeSettingsRO settings)
+    protected WorkflowPortTemplate loadOutPortTemplate(NodeSettingsRO settings)
             throws InvalidSettingsException {
         throw new InvalidSettingsException(
             "No ports for meta nodes in version 1.x.x");

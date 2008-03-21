@@ -119,13 +119,15 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         return settings.getNodeSettings("port_enum");
     }
 
-    protected WorkflowInPort loadInPort(NodeSettingsRO settings) 
-            throws InvalidSettingsException {
+    /** {@inheritDoc} */
+    @Override
+    protected WorkflowPortTemplate loadInPortTemplate(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
         int index = settings.getInt("index");
         String name = settings.getString("name");
         NodeSettingsRO portTypeSettings = settings.getNodeSettings("type");
         PortType type = PortType.load(portTypeSettings);
-        WorkflowInPort result = new WorkflowInPort(index, type);
+        WorkflowPortTemplate result = new WorkflowPortTemplate(index, type);
         result.setPortName(name);
         return result;
     }
@@ -173,13 +175,15 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         return settings.getNodeSettings("port_enum");
     }
     
-    protected WorkflowOutPort loadOutPort(NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    /** {@inheritDoc} */
+    @Override
+    protected WorkflowPortTemplate loadOutPortTemplate(
+            final NodeSettingsRO settings) throws InvalidSettingsException {
         int index = settings.getInt("index");
         String name = settings.getString("name");
         NodeSettingsRO portTypeSettings = settings.getNodeSettings("type");
         PortType type = PortType.load(portTypeSettings);
-        WorkflowOutPort result = new WorkflowOutPort(index, type);
+        WorkflowPortTemplate result = new WorkflowPortTemplate(index, type);
         result.setPortName(name);
         return result;
     }

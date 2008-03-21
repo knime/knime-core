@@ -38,12 +38,12 @@ import org.knime.core.node.PortType;
 public class NodeInPort extends NodePortAdaptor implements NodePort {
 
     /**
-     * Creates a new input port with ID and type assigned from the node.
+     * Creates a new input port with index and type assigned from the node.
      * 
-     * @param portId the ID of this port.
+     * @param portIndex the index of this port.
      */
-    public NodeInPort(final int portId, final PortType type) {
-        super(portId, type);
+    public NodeInPort(final int portIndex, final PortType type) {
+        super(portIndex, type);
     }
 
 }

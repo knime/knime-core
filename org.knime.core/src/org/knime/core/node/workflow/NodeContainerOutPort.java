@@ -52,11 +52,11 @@ implements NodeOutPort {
      * output ports of this node) for the given node.
      *
      * @param node the underlying node.
-     * @param portID This port ID.
+     * @param portIndex This port index.
      */
     public NodeContainerOutPort(final SingleNodeContainer snc,
-            final int portID) {
-        super(portID, snc.getNode().getOutputType(portID));
+            final int portIndex) {
+        super(portIndex, snc.getNode().getOutputType(portIndex));
         m_snc = snc;
         m_portView = null;
         // TODO register this object as listener to spec/object... changes
@@ -69,7 +69,7 @@ implements NodeOutPort {
      * @return The <code>DataTableSpec</code> for this port.
      */
     public PortObjectSpec getPortObjectSpec() {
-        return m_snc.getNode().getOutputSpec(getPortID());
+        return m_snc.getNode().getOutputSpec(getPortIndex());
     }
 
     /**
@@ -83,7 +83,7 @@ implements NodeOutPort {
         // the PortObjects after a Node.execute() until the state of the
         // SNC/WFM has been adjusted to "EXECUTED"
         return m_snc.getState().equals(State.EXECUTED)
-                      ? m_snc.getNode().getOutputObject(getPortID()) : null;
+                      ? m_snc.getNode().getOutputObject(getPortIndex()) : null;
     }
     
     /**
@@ -93,7 +93,7 @@ implements NodeOutPort {
      * @return The HiLiteHandler for this port or null.
      */
     public HiLiteHandler getHiLiteHandler() {
-        return m_snc.getNode().getHiLiteHandler(getPortID());
+        return m_snc.getNode().getHiLiteHandler(getPortIndex());
     }
 
     /**
@@ -104,7 +104,7 @@ implements NodeOutPort {
      * @param hiLiteHdl The new HiLiteHandler for this port.
      */
     void setHiLiteHandler(final HiLiteHandler hiLiteHdl) {
-        m_snc.getNode().setHiLiteHandler(getPortID(), hiLiteHdl);
+        m_snc.getNode().setHiLiteHandler(getPortIndex(), hiLiteHdl);
     }
 
     /**
@@ -113,7 +113,7 @@ implements NodeOutPort {
      * @return the scope obj stack container
      */
     public ScopeObjectStack getScopeContextStackContainer() {
-        return m_snc.getNode().getScopeObjectStack(getPortID());
+        return m_snc.getNode().getScopeObjectStack(getPortIndex());
     }
 
     /**
@@ -121,7 +121,7 @@ implements NodeOutPort {
      * @param sos scope object stack
      */
     void setScopeContextStackContainer(final ScopeObjectStack sos) {
-        m_snc.getNode().setScopeObjectStack(getPortID(), sos);
+        m_snc.getNode().setScopeObjectStack(getPortIndex(), sos);
     }
 
 
