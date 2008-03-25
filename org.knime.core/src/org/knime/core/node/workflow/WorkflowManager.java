@@ -333,7 +333,8 @@ public final class WorkflowManager extends NodeContainer {
             NodeContainer nc = m_nodes.remove(nodeID);
             nc.cleanup();
             File ncDir = nc.getNodeContainerDirectory();
-            if (ncDir != null) {
+            // update list of obsolete node directories for non-root wfm
+            if (this != ROOT && ncDir != null) {
                 m_deletedNodesFileLocations.add(ncDir);
             }
         }
@@ -2362,6 +2363,9 @@ public final class WorkflowManager extends NodeContainer {
     public void save(final File directory, final ExecutionMonitor exec,
             final boolean isSaveData)
         throws IOException, CanceledExecutionException {
+        if (this == ROOT) {
+            throw new IOException("Can't save root workflow");
+        }
         // TODO GUI must only provide directory
         synchronized (m_dirtyWorkflow) {
             File workflowDir = directory.getParentFile();
