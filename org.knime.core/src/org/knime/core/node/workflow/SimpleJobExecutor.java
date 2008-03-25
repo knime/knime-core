@@ -35,7 +35,7 @@ public class SimpleJobExecutor implements JobExecutor {
      */
     public JobID submitJob(final JobRunnable r) {
         r.run();
-        return new JobID();
+        return JobID.createNewID();
     }
     
     public void cancelJob(final JobID id) {

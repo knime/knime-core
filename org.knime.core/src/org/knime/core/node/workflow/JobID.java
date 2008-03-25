@@ -23,16 +23,22 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /** Identifier (and other useful information) for queued or running jobs.
  * 
  * @author B. Wiswedel & M. Berthold, University of Konstanz
  */
 public final class JobID {
-    static int LASTUSEDID = 0;
+    private static final AtomicInteger LASTUSEDID = new AtomicInteger();
     private final int m_id;
     
-    public JobID() {
-        m_id = ++LASTUSEDID;
+    private JobID() {
+        m_id = LASTUSEDID.incrementAndGet();
+    }
+    
+    public static final JobID createNewID() {
+        return new JobID();
     }
     
     @Override

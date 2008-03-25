@@ -149,7 +149,7 @@ public class ThreadedJobExecutor implements JobExecutor {
     }
 
     public synchronized JobID submitJob(JobRunnable r) {
-        JobID id = new JobID();
+        JobID id = JobID.createNewID();
         r.setJobID(id);
         newJobAvailable(r);
         return id;
