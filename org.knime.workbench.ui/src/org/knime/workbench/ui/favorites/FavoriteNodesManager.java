@@ -50,8 +50,7 @@ public final class FavoriteNodesManager {
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             FavoriteNodesManager.class);
     
-    private static final FavoriteNodesManager INSTANCE 
-        = new FavoriteNodesManager();
+    private static FavoriteNodesManager instance;
 
     private Root m_root;
     private Category m_favNodes;
@@ -89,10 +88,14 @@ public final class FavoriteNodesManager {
      * @return singleton instance
      */
     public static final FavoriteNodesManager getInstance() {
-        return INSTANCE;
+        if (instance == null) {
+            instance = new FavoriteNodesManager();
+        }
+        return instance;
     }
     
     private FavoriteNodesManager() {
+        createTreeModel();
     }
     
     /**
@@ -100,7 +103,14 @@ public final class FavoriteNodesManager {
      * @return the tree model with three categories: favorites, most frequent 
      * and last used
      */
-    public Root createTreeModel() {
+    public Root getRoot() {
+        return m_root;
+    }
+    
+    /**
+     * 
+     */
+    private void createTreeModel() {
         m_root = new Root();
         m_root.setSortChildren(false);
         m_favNodes = new Category(FAV_CAT_ID);
@@ -128,8 +138,6 @@ public final class FavoriteNodesManager {
         synchronized (RepositoryManager.INSTANCE.getRoot()) {            
             loadFavorites();
         }
-        
-        return m_root;
     }
     
     

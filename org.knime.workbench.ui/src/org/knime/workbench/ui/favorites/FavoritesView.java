@@ -71,8 +71,7 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
         Display.getDefault().syncExec(new Runnable() {
 
             public void run() {                
-                m_viewer.setInput(FavoriteNodesManager.getInstance()
-                           .createTreeModel());
+                m_viewer.setInput(FavoriteNodesManager.getInstance().getRoot());
             }
             
         });
