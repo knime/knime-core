@@ -30,7 +30,8 @@ import org.knime.core.node.GenericNodeView;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class DBQueryNodeFactory extends GenericNodeFactory<DBQueryNodeModel> {
+public final class DBQueryNodeFactory 
+        extends GenericNodeFactory<DBQueryNodeModel> {
     
     /**
      * {@inheritDoc}

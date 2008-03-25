@@ -52,6 +52,7 @@ final class DBRowFilterNodeDialogPane extends GenericNodeDialogPane {
     private final DBConnectionDialogPanel m_tableOptions =
         new DBConnectionDialogPanel();
 
+    @SuppressWarnings("unchecked")
     private final DialogComponentColumnNameSelection m_column
         = new DialogComponentColumnNameSelection(createColumnModel(),
                 "", 0, DataValue.class);
