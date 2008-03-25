@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   21.08.2005 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -32,7 +30,7 @@ import org.knime.core.node.NodeView;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBWriterNodeFactory extends NodeFactory<DBWriterNodeModel> {
+public final class DBWriterNodeFactory extends NodeFactory<DBWriterNodeModel> {
     /**
      * {@inheritDoc}
      */

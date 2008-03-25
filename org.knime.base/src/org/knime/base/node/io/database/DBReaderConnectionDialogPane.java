@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  * 
- * History
- *   27.02.2008 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -39,7 +37,7 @@ import org.knime.core.node.PortObjectSpec;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBReaderConnectionDialogPane extends DBReaderDialogPane {
+final class DBReaderConnectionDialogPane extends DBReaderDialogPane {
     
     private final DBConnectionDialogPanel m_panel = 
         new DBConnectionDialogPanel();
@@ -48,7 +46,7 @@ public class DBReaderConnectionDialogPane extends DBReaderDialogPane {
      * Creates a new reader dialog pane with table options used the create
      * SQL output connection.
      */
-    public DBReaderConnectionDialogPane() {
+    DBReaderConnectionDialogPane() {
         super();
         super.addTab("Table Options", m_panel);
     }

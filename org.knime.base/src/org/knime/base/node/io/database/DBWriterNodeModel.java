@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   21.08.2005 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -48,7 +46,7 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBWriterNodeModel extends NodeModel {
+final class DBWriterNodeModel extends NodeModel {
 
     /*
      * TODO not yet supported Double.MAX_VALUE, Double.NEGATIVE_INFINITY, and

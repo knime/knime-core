@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   06.07.2006 (gabriel): created
  */
 package org.knime.base.node.io.database;
 

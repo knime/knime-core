@@ -47,7 +47,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBRowFilterNodeDialogPane extends GenericNodeDialogPane {
+final class DBRowFilterNodeDialogPane extends GenericNodeDialogPane {
     
     private final DBConnectionDialogPanel m_tableOptions =
         new DBConnectionDialogPanel();
@@ -67,7 +67,7 @@ public class DBRowFilterNodeDialogPane extends GenericNodeDialogPane {
     /**
      * Create query dialog with text box to enter table name.
      */
-    public DBRowFilterNodeDialogPane() {
+    DBRowFilterNodeDialogPane() {
         Box optionPanel = Box.createVerticalBox();
         JPanel column = m_column.getComponentPanel();
         column.setBorder(BorderFactory.createTitledBorder(" Column "));

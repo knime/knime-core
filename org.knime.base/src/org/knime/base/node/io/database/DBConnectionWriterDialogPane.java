@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   16.11.2005 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -33,7 +31,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBConnectionWriterDialogPane extends DefaultNodeSettingsPane {
+final class DBConnectionWriterDialogPane extends DefaultNodeSettingsPane {
     
     
     /**

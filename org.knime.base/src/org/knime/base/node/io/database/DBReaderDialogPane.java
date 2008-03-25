@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   16.11.2005 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -44,7 +42,7 @@ import org.knime.core.node.PortObjectSpec;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBReaderDialogPane extends GenericNodeDialogPane {
+class DBReaderDialogPane extends GenericNodeDialogPane {
     
     private final DBDialogPane m_loginPane = new DBDialogPane();
   
@@ -53,7 +51,7 @@ public class DBReaderDialogPane extends GenericNodeDialogPane {
     /**
      * Creates new dialog.
      */
-    public DBReaderDialogPane() {
+    DBReaderDialogPane() {
         super();
         m_statmnt.setFont(DBDialogPane.FONT);
         m_statmnt.setText("SELECT * FROM " 

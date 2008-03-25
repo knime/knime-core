@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   21.08.2005 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -33,7 +31,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-class DBQueryNodeModel extends DBNodeModel {
+final class DBQueryNodeModel extends DBNodeModel {
     
     /** Place holder for the database input view. */
     static final String TABLE_PLACE_HOLDER = "#table#";

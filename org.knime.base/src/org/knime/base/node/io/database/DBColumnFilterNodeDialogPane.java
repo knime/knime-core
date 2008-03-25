@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  * 
- * History
- *   21.09.2007 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -39,7 +37,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBColumnFilterNodeDialogPane extends GenericNodeDialogPane {
+final class DBColumnFilterNodeDialogPane extends GenericNodeDialogPane {
     
     private final DialogComponentColumnFilter m_panel;
     
@@ -49,7 +47,7 @@ public class DBColumnFilterNodeDialogPane extends GenericNodeDialogPane {
     /**
      * Create query dialog with text box to enter table name.
      */
-    public DBColumnFilterNodeDialogPane() {
+    DBColumnFilterNodeDialogPane() {
         m_panel = new DialogComponentColumnFilter(createColumnFilterModel(), 0);
         super.addTab("Column Filter", m_panel.getComponentPanel());
         super.addTab("Table Options", m_tableOptions);

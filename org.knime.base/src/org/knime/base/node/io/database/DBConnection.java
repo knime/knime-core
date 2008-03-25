@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  * 
- * History
- *   19.09.2007 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -41,7 +39,7 @@ import org.knime.core.util.KnimeEncryption;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBConnection {
+class DBConnection {
     
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(DBConnection.class);
@@ -56,7 +54,7 @@ public class DBConnection {
 
     /**
      */
-    public DBConnection() {
+    DBConnection() {
         // init default driver with the first from the driver list
         // or use Java JDBC-ODBC as default
         String[] history = DBDialogPane.DRIVER_ORDER.getHistory();
@@ -74,7 +72,7 @@ public class DBConnection {
      * object.
      * @param conn connection used to copy settings from
      */
-    public DBConnection(final DBConnection conn) {
+    DBConnection(final DBConnection conn) {
         this();
         m_driver = conn.m_driver;
         m_dbName = conn.m_dbName;
@@ -87,7 +85,7 @@ public class DBConnection {
      * @return a new database connection object.
      * @throws Exception if an exception is thrown
      */
-    public Connection createConnection() throws Exception {
+    Connection createConnection() throws Exception {
         if (m_dbName == null || m_user == null || m_pass == null) {
             throw new InvalidSettingsException("No settings available "
                     + "to create database connection.");
@@ -113,7 +111,7 @@ public class DBConnection {
      * Load settings.
      * @param settings connection settings
      */
-    public void saveConnection(final ConfigWO settings) {
+    void saveConnection(final ConfigWO settings) {
         settings.addString("driver", m_driver);
         settings.addString("database", m_dbName);
         settings.addString("user", m_user);
@@ -127,7 +125,7 @@ public class DBConnection {
      * @param settings to validate
      * @throws InvalidSettingsException if the settings are not valid
      */
-    public void validateConnection(final ConfigRO settings)
+    void validateConnection(final ConfigRO settings)
             throws InvalidSettingsException {
         loadConnection(settings, false);
     }
@@ -138,7 +136,7 @@ public class DBConnection {
      * @return true, if settings have changed
      * @throws InvalidSettingsException if settings are invalid
      */
-    public boolean loadValidatedConnection(final ConfigRO settings)
+    boolean loadValidatedConnection(final ConfigRO settings)
             throws InvalidSettingsException {
         return loadConnection(settings, true);
     }
@@ -190,7 +188,7 @@ public class DBConnection {
      * @param statement to be executed
      * @throws Exception if the statement could not be executed
      */
-    public void execute(final String statement) throws Exception {
+    void execute(final String statement) throws Exception {
         Connection conn = null;
         Statement stmt = null;
         try {
@@ -212,7 +210,7 @@ public class DBConnection {
      * connection.
      * @return database connection model
      */
-    public ModelContentRO createConnectionModel() {
+    ModelContentRO createConnectionModel() {
         ModelContent cont = new ModelContent("database_connection_model");
         saveConnection(cont);
         return cont;

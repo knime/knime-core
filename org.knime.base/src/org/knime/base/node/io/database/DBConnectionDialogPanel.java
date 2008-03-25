@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  * 
- * History
- *   27.02.2008 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -43,7 +41,7 @@ import org.knime.core.node.util.ButtonGroupEnumInterface;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBConnectionDialogPanel extends JPanel {
+final class DBConnectionDialogPanel extends JPanel {
     
     private final DialogComponentButtonGroup m_group;
     
@@ -102,7 +100,7 @@ public class DBConnectionDialogPanel extends JPanel {
      * Creates a new panel used to select number of rows to cache and the 
      * method to handle the SQL statement.
      */
-    public DBConnectionDialogPanel() {
+    DBConnectionDialogPanel() {
         super(new BorderLayout());
         m_group = new DialogComponentButtonGroup(createTableModel(), null, true,
                 DBTableOptions.values());

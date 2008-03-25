@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  * 
- * History
- *   21.09.2007 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -37,7 +35,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
+final class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
     
     private final DBConnectionDialogPanel m_panel =
         new DBConnectionDialogPanel();
@@ -45,7 +43,7 @@ public class DBQueryNodeDialogPane extends DefaultNodeSettingsPane {
     /**
      * Create query dialog with text box to enter table name.
      */
-    public DBQueryNodeDialogPane() {
+    DBQueryNodeDialogPane() {
         super.addDialogComponent(new DialogComponentMultiLineString(
                 createQueryModel(), "SQL query"));
         super.addTab("Table Options", m_panel);

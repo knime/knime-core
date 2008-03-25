@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   21.08.2005 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -35,7 +33,7 @@ import org.knime.core.node.PortType;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBConnectionNodeFactory 
+public final class DBConnectionNodeFactory 
         extends GenericNodeFactory<DBConnectionNodeModel> {
     
     /**

@@ -55,7 +55,7 @@ import org.knime.core.node.NodeLogger;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public final class DBReaderConnection implements DataTable {
+final class DBReaderConnection implements DataTable {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DBReaderConnection.class);
@@ -75,7 +75,7 @@ public final class DBReaderConnection implements DataTable {
      * @param query SQL query executed to read data
      * @throws Exception If connection could not established.
      */
-    public DBReaderConnection(final DBConnection conn, final String query) 
+    DBReaderConnection(final DBConnection conn, final String query) 
             throws Exception {
         this(conn, query, Integer.MAX_VALUE);
     }
@@ -88,7 +88,7 @@ public final class DBReaderConnection implements DataTable {
      * @param cacheNoRows number of rows cached
      * @throws Exception If connection could not established.
      */
-    public DBReaderConnection(final DBConnection conn, final String query,
+    DBReaderConnection(final DBConnection conn, final String query,
             final int cacheNoRows) 
             throws Exception {
         m_cacheNoRows = cacheNoRows;
@@ -113,7 +113,7 @@ public final class DBReaderConnection implements DataTable {
     /**
      * Closes connection.
      */
-    public void close() {
+    void close() {
         try {
             m_conn.close();
         } catch (SQLException e) {

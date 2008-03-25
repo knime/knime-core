@@ -20,8 +20,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   16.11.2005 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -46,7 +44,7 @@ import org.knime.core.node.NotConfigurableException;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBWriterDialogPane extends NodeDialogPane {
+final class DBWriterDialogPane extends NodeDialogPane {
     
     private final DBDialogPane m_loginPane = new DBDialogPane();
     

@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * -------------------------------------------------------------------
  * 
- * History
- *   16.11.2005 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -61,7 +59,7 @@ import org.knime.core.util.SimpleFileFilter;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBDialogPane extends JPanel {
+final class DBDialogPane extends JPanel {
 
     private static final NodeLogger LOGGER = 
         NodeLogger.getLogger(DBDialogPane.class);

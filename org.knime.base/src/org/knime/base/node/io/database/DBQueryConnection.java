@@ -19,8 +19,6 @@
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
  * 
- * History
- *   13.02.2008 (gabriel): created
  */
 package org.knime.base.node.io.database;
 
@@ -34,7 +32,7 @@ import org.knime.core.node.config.ConfigWO;
  * 
  * @author Thomas Gabriel, University of Konstanz
  */
-public class DBQueryConnection extends DBConnection {
+final class DBQueryConnection extends DBConnection {
     
     /** Place holder <code>&lttable&gt</code>. */
     public static final String TABLE_PLACEHOLDER = "<table>"; 
@@ -44,7 +42,7 @@ public class DBQueryConnection extends DBConnection {
     /**
      * Create a new connection with an empty query object.
      */
-    public DBQueryConnection() {
+    DBQueryConnection() {
         super();
     }
     
@@ -54,7 +52,7 @@ public class DBQueryConnection extends DBConnection {
      * @param conn connection to copy
      * @param query the SQL query
      */
-    public DBQueryConnection(final DBQueryConnection conn, final String query) {
+    DBQueryConnection(final DBQueryConnection conn, final String query) {
         super(conn);
         m_query = query;
     }
@@ -95,7 +93,7 @@ public class DBQueryConnection extends DBConnection {
     /**
      * @return SQL statement 
      */
-    public String getQuery() {
+    String getQuery() {
         return m_query;
     }
     
