@@ -212,7 +212,17 @@ public abstract class NodeModel extends GenericNodeModel {
                 @Override
                 protected ModelContentWrapper loadPortObjectSpec(
                         final File directory) throws IOException {
-                    return new ModelContentWrapper(null);
+                    File nullFile = new File(directory, "null.xml");
+                    if (nullFile.exists()) {
+                        return new ModelContentWrapper(null);
+                    }
+                    ModelContent cnt = new ModelContent();
+                    try {
+                        cnt.load(directory, new ExecutionMonitor());
+                    } catch (CanceledExecutionException cee) {
+                        new ModelContentWrapper(null);
+                    }
+                    return new ModelContentWrapper(cnt);
                 }
                 /**
                  * {@inheritDoc}
@@ -220,6 +230,18 @@ public abstract class NodeModel extends GenericNodeModel {
                 @Override
                 protected void savePortObjectSpec(final ModelContentWrapper o,
                         final File directory) throws IOException {
+                    if (o.m_hiddenModel != null) {
+                        try {
+                            o.m_hiddenModel.save(directory, 
+                                    new ExecutionMonitor());
+                        } catch (CanceledExecutionException cee) {
+                            // can't happen, no access to ExecutionMonitor
+                            assert false;
+                        }
+                    } else {
+                        File nullFile = new File(directory, "null.xml");
+                        nullFile.createNewFile();
+                    }
                 }
             };
         }
