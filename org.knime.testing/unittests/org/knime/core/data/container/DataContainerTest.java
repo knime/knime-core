@@ -28,6 +28,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
 
+import junit.framework.TestCase;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -39,8 +41,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.util.ObjectToDataCellConverter;
-
-import junit.framework.TestCase;
+import org.knime.core.util.DuplicateKeyException;
 
 /**
  * Test case for class <code>DataContainer</code>.
@@ -142,7 +143,7 @@ public class DataContainerTest extends TestCase {
             c.addRowToTable(r1);
             // ... eh eh, you don't do this
             fail();
-        } catch (IllegalArgumentException e) {
+        } catch (DuplicateKeyException e) {
             System.out.println(e.getMessage());
         }
         c.addRowToTable(r3);
@@ -234,38 +235,8 @@ public class DataContainerTest extends TestCase {
         final long seed = System.currentTimeMillis();
         Random rand = new Random(seed);
         for (int i = 0; i < rowCount; i++) {
-            DataCell key = new StringCell("Row " + i);
-            DataCell[] cells = new DataCell[colCount];
-            for (int c = 0; c < colCount; c++) {
-                DataCell cell = null;
-                switch (c % 3) {
-                case 0: 
-                    cell = conv.createDataCell(rand.nextDouble() - 0.5); 
-                    break;
-                case 1:
-                    String s;
-                    if (rand.nextDouble() < 0.1) {
-                        s = new String(
-                                createRandomChars(rand.nextInt(1000000), rand));
-                    } else {
-                        s = "Row" + i + "; Column:" + c;
-                    }
-                    cell = conv.createDataCell(s);
-                    break;
-                case 2: 
-                    // use full range of int
-                    int r = (int)rand.nextLong();
-                    cell = conv.createDataCell(r); 
-                    break;
-                default: throw new InternalError();
-                }
-                cells[c] = cell;
-            }
-            DataRow row = new DefaultRow(key, cells);
+            DataRow row = createRandomRow(i, colCount, rand, conv);
             container.addRowToTable(row);
-            row = null;
-            cells = null;
-            key = null;
         }
         container.close();
         final Throwable[] throwables = new Throwable[1];
@@ -277,35 +248,89 @@ public class DataContainerTest extends TestCase {
                     Random rand1 = new Random(seed);
                     for (RowIterator it = table.iterator(); 
                         it.hasNext(); i++) {
-                        DataCell key = new StringCell("Row " + i);
-                        DataCell[] cells = new DataCell[colCount];
-                        for (int c = 0; c < colCount; c++) {
-                            DataCell cell = null;
-                            switch (c % 3) {
-                            case 0: 
-                                cell = conv.createDataCell(
-                                        rand1.nextDouble() - 0.5); 
-                                break;
-                            case 1:
-                                String s;
-                                if (rand1.nextDouble() < 0.1) {
-                                    s = new String(createRandomChars(
-                                            rand1.nextInt(1000000), rand1));
-                                } else {
-                                    s = "Row" + i + "; Column:" + c;
-                                }
-                                cell = conv.createDataCell(s);
-                                break;
-                            case 2: 
-                                // use full range of int
-                                int r = (int)rand1.nextLong();
-                                cell = conv.createDataCell(r); 
-                                break;
-                            default: throw new InternalError();
-                            }
-                            cells[c] = cell;
-                        }
-                        DataRow row1 = new DefaultRow(key, cells);
+                        DataRow row1 = 
+                            createRandomRow(i, colCount, rand1, conv);
+                        DataRow row2 = it.next();
+                        assertEquals(row1, row2);
+                    }
+                    assertEquals(i, rowCount);
+                } catch (Throwable t) {
+                    throwables[0] = t;
+                }
+            }
+        }; // Runnable 
+        // make two threads read the buffer (file) concurrently.
+        Thread t1 = new Thread(runnable);
+        Thread t2 = new Thread(runnable);
+        t1.start();
+        t2.start();
+        try {
+            // seems that the event dispatch thread must not release the 
+            // reference to the table, otherwise it is (I guess!!) garbage 
+            // collected: You comment these lines and see the error message. 
+            t1.join();
+            t2.join();
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+            fail();
+        }
+        if (throwables[0] != null) {
+            throw new RuntimeException(throwables[0]);
+        }
+    } // testBigFile()
+
+    /** Restoring into main memory. 
+     * @see ContainerTable#restoreIntoMemory()*/
+    public void testRestoreIntoMemory() {
+        // with these setting (50, 100) it will write an 250MB cache file
+        // (the latest data this value was checked: 31. August 2006...)
+        final int colCount = 50;
+        final int rowCount = 100;
+        String[] names = new String[colCount];
+        DataType[] types = new DataType[colCount];
+        for (int c = 0; c < colCount; c++) {
+            names[c] = "Column " + c;
+            switch (c % 3) {
+                case 0: types[c] = DoubleCell.TYPE; break;
+                case 1: types[c] = StringCell.TYPE; break;
+                case 2: types[c] = IntCell.TYPE; break;
+                default: throw new InternalError();
+            }
+        }
+        DataTableSpec spec = new DataTableSpec(names, types);
+        names = null;
+        types = null;
+        DataContainer container = new DataContainer(spec, true, 0);
+        final ObjectToDataCellConverter conv = new ObjectToDataCellConverter();
+        final long seed = System.currentTimeMillis();
+        Random rand = new Random(seed);
+        for (int i = 0; i < rowCount; i++) {
+            DataRow row = createRandomRow(i, colCount, rand, conv);
+            container.addRowToTable(row);
+            row = null;
+        }
+        container.close();
+        assertTrue(container.getBufferedTable().getBuffer().usesOutFile());
+        final Throwable[] throwables = new Throwable[1];
+        final ContainerTable table = container.getBufferedTable();
+        table.restoreIntoMemory();
+        // different iterators restore the content, each of which one row
+        RowIterator[] its = new RowIterator[10];
+        for (int i = 0; i < its.length; i++) {
+            its[i] = table.iterator();
+            for (int count = 0; count < i + 1; count++) {
+                its[i].next();
+            }
+        }
+        Runnable runnable = new Runnable() {
+            public void run() {
+                try {
+                    int i = 0;
+                    Random rand1 = new Random(seed);
+                    for (RowIterator it = table.iterator(); 
+                        it.hasNext(); i++) {
+                        DataRow row1 = 
+                            createRandomRow(i, colCount, rand1, conv);
                         DataRow row2 = it.next();
                         assertEquals(row1, row2);
                     }
@@ -398,6 +423,39 @@ public class DataContainerTest extends TestCase {
             result[i] = (char)rand.nextInt(Character.MAX_VALUE); 
         }
         return result;
+    }
+    
+    private static DataRow createRandomRow(final int index, final int colCount,
+            final Random rand1, final ObjectToDataCellConverter conv) {
+        DataCell key = new StringCell("Row " + index);
+        DataCell[] cells = new DataCell[colCount];
+        for (int c = 0; c < colCount; c++) {
+            DataCell cell = null;
+            switch (c % 3) {
+            case 0: 
+                cell = conv.createDataCell(
+                        rand1.nextDouble() - 0.5); 
+                break;
+            case 1:
+                String s;
+                if (rand1.nextDouble() < 0.1) {
+                    s = new String(createRandomChars(
+                            rand1.nextInt(1000000), rand1));
+                } else {
+                    s = "Row" + index + "; Column:" + c;
+                }
+                cell = conv.createDataCell(s);
+                break;
+            case 2: 
+                // use full range of int
+                int r = (int)rand1.nextLong();
+                cell = conv.createDataCell(r); 
+                break;
+            default: throw new InternalError();
+            }
+            cells[c] = cell;
+        }
+        return new DefaultRow(key, cells);
     }
     
 }
