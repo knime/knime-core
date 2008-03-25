@@ -542,7 +542,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // TODO: we only have to do it on the parent
         if (m_parentEditor == null) {
-            WorkflowManager.ROOT.removeNode(m_manager.getID());
+            WorkflowManager.ROOT.removeProject(m_manager.getID());
         }
 
         getCommandStack().removeCommandStackListener(this);
