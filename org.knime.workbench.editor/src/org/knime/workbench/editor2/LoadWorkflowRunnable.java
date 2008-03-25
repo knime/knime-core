@@ -100,8 +100,9 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
                 Display.getDefault().asyncExec(new Runnable() {
 
                     public void run() {
+                        
                         MessageDialog.openError(
-                                new Shell(Display.getDefault()),
+                                new Shell(Display.getDefault().getActiveShell()),
                                 "Errors during load: ",
                                 result.getErrors());
                     }
