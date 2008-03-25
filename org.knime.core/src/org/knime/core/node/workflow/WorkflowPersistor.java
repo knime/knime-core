@@ -155,13 +155,9 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         }
     }
     
-    public static final class LoadResult {
+    public static class LoadResult {
         
-        private final StringBuilder m_errors;
-        
-        public LoadResult() {
-            m_errors = new StringBuilder();
-        }
+        private final StringBuilder m_errors = new StringBuilder();
         
         public void addError(final String error) {
             m_errors.append(error);
@@ -197,6 +193,26 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
         public String toString() {
             return m_errors.toString();
         }
-        
     }
+    
+    public static final class WorkflowLoadResult extends LoadResult {
+        
+        private WorkflowManager m_workflowManager;
+        
+        /**
+         * @param workflowManager the workflowManager to set
+         */
+        void setWorkflowManager(final WorkflowManager workflowManager) {
+            m_workflowManager = workflowManager;
+        }
+        
+        /**
+         * @return the workflowManager
+         */
+        public WorkflowManager getWorkflowManager() {
+            return m_workflowManager;
+        }
+    }
+    
+    
 }

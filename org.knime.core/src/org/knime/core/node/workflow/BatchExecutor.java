@@ -37,6 +37,7 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.StringFormat;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -233,8 +234,9 @@ public final class BatchExecutor {
                             WorkflowPersistor.WORKFLOW_FILE);
         }
 
-        WorkflowManager wfm = WorkflowManager.load(
+        WorkflowLoadResult loadResult = WorkflowManager.load(
                 workflowFile.getParentFile(), new ExecutionMonitor());
+        WorkflowManager wfm = loadResult.getWorkflowManager();
         if (reset) {
             wfm.resetAll();
         }

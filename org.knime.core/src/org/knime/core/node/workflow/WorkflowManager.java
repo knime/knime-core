@@ -65,6 +65,7 @@ import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.node.workflow.WorkflowPersistor.ConnectionContainerTemplate;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
 import org.knime.core.util.FileUtil;
 
@@ -2158,7 +2159,7 @@ public final class WorkflowManager extends NodeContainer {
     static final String CFG_VERSION = "version";
 
 
-    public static WorkflowManager load(File directory,
+    public static WorkflowLoadResult load(File directory,
             final ExecutionMonitor exec) throws IOException,
             InvalidSettingsException, CanceledExecutionException {
         if (directory == null || exec == null) {
@@ -2217,23 +2218,22 @@ public final class WorkflowManager extends NodeContainer {
         // into this map, the repository is deleted when the loading is done
         int loadID = System.identityHashCode(persistor);
         BufferedDataTable.initRepository(loadID);
-        LoadResult loadResult = 
-            persistor.preLoadNodeContainer(workflowknime, exec, settings);
-        loadResult.addError(persistor.loadNodeContainer(loadID, exec));
-        if (loadResult.hasErrors()) {
-            LOGGER.warn(loadResult.getErrors());
-        }
-        WorkflowManager result;
+        WorkflowLoadResult result = new WorkflowLoadResult();
+        result.addError(persistor.preLoadNodeContainer(
+                workflowknime, exec, settings));
+        result.addError(persistor.loadNodeContainer(loadID, exec));
+        WorkflowManager manager;
         synchronized (ROOT.m_dirtyWorkflow) {
             NodeID newID = ROOT.createUniqueID();
-            result = ROOT.createSubWorkflow(persistor, newID);
-            result.loadContent(persistor, loadID);
-            ROOT.addNodeContainer(result);
+            manager = ROOT.createSubWorkflow(persistor, newID);
+            manager.loadContent(persistor, loadID);
+            ROOT.addNodeContainer(manager);
         }
         BufferedDataTable.clearRepository(loadID);
         LOGGER.debug("Successfully loaded content from \"" 
                 + directory.getAbsolutePath() + "\"  into workflow manager "
-                + "instance " + result.getNameWithID());
+                + "instance " + manager.getNameWithID());
+        result.setWorkflowManager(manager);
         return result;
     }
     

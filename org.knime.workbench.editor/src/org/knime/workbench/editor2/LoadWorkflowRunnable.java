@@ -37,6 +37,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 
 /**
  * A runnable which is used by the {@link WorkflowEditor} to load a workflow
@@ -75,16 +76,18 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             // create progress monitor
             ProgressHandler progressHandler = new ProgressHandler(pm, 101,
                     "Loading workflow...");
-            final DefaultNodeProgressMonitor progressMonitor = new DefaultNodeProgressMonitor();
+            final DefaultNodeProgressMonitor progressMonitor = 
+                new DefaultNodeProgressMonitor();
+            ExecutionMonitor exec = new ExecutionMonitor(progressMonitor);
             progressMonitor.addProgressListener(progressHandler);
 
             checkThread = new CheckThread(pm, progressMonitor, true);
 
             checkThread.start();
 
-            WorkflowManager manager = WorkflowManager.load(m_workflowFile,
-                    new ExecutionMonitor());
-            m_editor.setWorkflowManager(manager);
+            WorkflowLoadResult loadResult = WorkflowManager.load(m_workflowFile,
+                    exec);
+            m_editor.setWorkflowManager(loadResult.getWorkflowManager());
             pm.subTask("Finished.");
             pm.done();
 
@@ -102,9 +105,8 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             LOGGER.error("Could not load workflow from: "
                     + m_workflowFile.getName(), ise);
         } catch (CanceledExecutionException cee) {
-            LOGGER
-                    .info("Canceled loading worflow: "
-                            + m_workflowFile.getName());
+            LOGGER.info("Canceled loading worflow: " 
+                    + m_workflowFile.getName());
             m_editor.setWorkflowManager(null);
             m_editor.setLoadingCanceled(true);
             m_editor.setLoadingCanceledMessage(cee.getMessage());
