@@ -287,10 +287,10 @@ public final class NodeDialog {
         assert (event != null);
         try {
             // validate settings first
-            if (m_wfm.getNodeContainer(m_node).areDialogAndNodeSettingsEqual()) {
+            if (!m_wfm.getNodeContainer(m_node).areDialogAndNodeSettingsEqual()) {
                 // if the node is executed
-                if (m_wfm.getNodeContainer(m_node).getState()
-                        == NodeContainer.State.EXECUTED) {
+                if (m_wfm.getNodeContainer(m_node).getState().equals(
+                        NodeContainer.State.EXECUTED)) {
                     // show option pane with reset warning
                     int r = JOptionPane.showConfirmDialog(m_dialog,
                             "Node is executed. Do you want to reset it\n"
