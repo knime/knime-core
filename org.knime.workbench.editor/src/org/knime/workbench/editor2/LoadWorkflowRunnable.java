@@ -31,6 +31,9 @@ import java.io.IOException;
 import javax.swing.UIManager;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
@@ -57,7 +60,8 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
 
     private File m_workflowFile;
 
-    public LoadWorkflowRunnable(final WorkflowEditor editor, final File workflowFile) {
+    public LoadWorkflowRunnable(final WorkflowEditor editor, 
+            final File workflowFile) {
         m_editor = editor;
         m_workflowFile = workflowFile;
     }
@@ -76,20 +80,34 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
             // create progress monitor
             ProgressHandler progressHandler = new ProgressHandler(pm, 101,
                     "Loading workflow...");
-            final DefaultNodeProgressMonitor progressMonitor = 
-                new DefaultNodeProgressMonitor();
-            ExecutionMonitor exec = new ExecutionMonitor(progressMonitor);
+            final DefaultNodeProgressMonitor progressMonitor 
+                = new DefaultNodeProgressMonitor();
             progressMonitor.addProgressListener(progressHandler);
 
             checkThread = new CheckThread(pm, progressMonitor, true);
 
             checkThread.start();
 
-            WorkflowLoadResult loadResult = WorkflowManager.load(m_workflowFile,
-                    exec);
-            m_editor.setWorkflowManager(loadResult.getWorkflowManager());
+            final WorkflowLoadResult result = WorkflowManager.load(
+                    m_workflowFile, new ExecutionMonitor());
+            
+            m_editor.setWorkflowManager(result.getWorkflowManager());
             pm.subTask("Finished.");
             pm.done();
+            
+            if (result.hasErrors()) {
+                m_editor.markDirty();
+                Display.getDefault().asyncExec(new Runnable() {
+
+                    public void run() {
+                        MessageDialog.openError(
+                                new Shell(Display.getDefault()),
+                                "Errors during load: ",
+                                result.getErrors());
+                    }
+                    
+                });
+            }
 
         } catch (FileNotFoundException fnfe) {
             LOGGER.fatal("File not found", fnfe);
@@ -127,7 +145,8 @@ class LoadWorkflowRunnable extends PersistWorflowRunnable {
 
             if (createEmptyWorkflow) {
                 // && createEmptyWorkflow.intValue() == 0) {
-                m_editor.setWorkflowManager(WorkflowManager.ROOT.createAndAddProject());
+                m_editor.setWorkflowManager(WorkflowManager.ROOT
+                        .createAndAddProject());
                 m_editor.setIsDirty(false);
             }
 
