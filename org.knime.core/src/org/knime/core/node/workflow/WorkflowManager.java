@@ -2356,6 +2356,7 @@ public final class WorkflowManager extends NodeContainer {
             // TODO Bernd: can you check what you intend to do here?
             configureNodeAndSuccessors(id, true, true);
         }
+        checkForNodeStateChanges();
     }
 
     public void save(final File directory, final ExecutionMonitor exec,
