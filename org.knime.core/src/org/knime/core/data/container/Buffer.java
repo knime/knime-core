@@ -39,12 +39,11 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -140,6 +139,9 @@ class Buffer {
     
     /** Config entry whether or not this buffer contains blobs. */
     private static final String CFG_CONTAINS_BLOBS = "container.contains.blobs";
+    
+    /** Config entry whether this buffer resides in memory. */
+    private static final String CFG_IS_IN_MEMORY = "container.inmemory";
     
     /** Config entry: internal buffer ID. */
     private static final String CFG_BUFFER_ID = "container.id";
@@ -319,6 +321,10 @@ class Buffer {
      */
     private final HashSet<WeakReference<FromFileIterator>> m_openIteratorSet;
     
+    /** The iterator that is used to read the content back into memory. 
+     * This instance is used after the workflow is restored from disk. */
+    private FromFileIterator m_backIntoMemoryIterator;
+    
     /**
      * The version of the file we are reading (if initiated with 
      * Buffer(File, boolean). Used to remember when we need to read a file 
@@ -343,7 +349,7 @@ class Buffer {
             final Map<Integer, ContainerTable> localRep) {
         assert (maxRowsInMemory >= 0);
         m_maxRowsInMem = maxRowsInMemory;
-        m_list = new LinkedList<BlobSupportDataRow>();
+        m_list = new ArrayList<BlobSupportDataRow>();
         m_openIteratorSet = new HashSet<WeakReference<FromFileIterator>>();
         m_size = 0;
         m_bufferID = bufferID;
@@ -367,11 +373,16 @@ class Buffer {
     Buffer(final File binFile, final File blobDir, final DataTableSpec spec, 
             final InputStream metaIn, final int bufferID, 
             final Map<Integer, ContainerTable> tblRep) throws IOException {
+        // just check if data is present!
+        if (binFile == null || !binFile.canRead() || !binFile.isFile()) {
+            throw new IOException("Unable to read from file: " + binFile);
+        }
         m_spec = spec;
         m_binFile = binFile;
         m_blobDir = blobDir;
         m_bufferID = bufferID;
         m_globalRepository = tblRep;
+        m_openIteratorSet = new HashSet<WeakReference<FromFileIterator>>();
         if (metaIn == null) {
             throw new IOException("No meta information given (null)");
         }
@@ -391,11 +402,6 @@ class Buffer {
             ioe.initCause(ise);
             throw ioe;
         }
-        // just check if data is present!
-        if (binFile == null || !binFile.canRead() || !binFile.isFile()) {
-            throw new IOException("Unable to read from file: " + binFile);
-        }
-        m_openIteratorSet = new HashSet<WeakReference<FromFileIterator>>();
     }
     
     /** Get the version string to write to the meta file.
@@ -438,7 +444,7 @@ class Buffer {
             BlobSupportDataRow row = saveBlobs(r);
             m_list.add(row);
             incrementSize();
-            // if size is violated
+            // if threshold exceeded, write all rows to disk
             if (m_list.size() > m_maxRowsInMem) {
                 ensureTempFileExists();
                 if (m_outStream == null) {
@@ -446,14 +452,13 @@ class Buffer {
                     m_outStream = initOutFile(new BufferedOutputStream(
                             new FileOutputStream(m_binFile)));
                 }
-                while (!m_list.isEmpty()) {
-                    BlobSupportDataRow firstRow = m_list.remove(0);
-                    writeRow(firstRow, m_outStream); // write it to the file
+                for (BlobSupportDataRow rowInList : m_list) {
+                    writeRow(rowInList, m_outStream);
                 }
+                m_list.clear();
                 // write next rows directly to file  
                 m_maxRowsInMem = 0;
             }
-            assert (m_list.size() <= m_maxRowsInMem);
         } catch (Throwable e) {
             if (!(e instanceof IOException)) {
                 LOGGER.coding("Writing cells to temporary buffer must not "
@@ -664,6 +669,7 @@ class Buffer {
         subSettings.addString(CFG_VERSION, getVersion());
         subSettings.addInt(CFG_SIZE, size());
         subSettings.addBoolean(CFG_CONTAINS_BLOBS, m_containsBlobs);
+        subSettings.addBoolean(CFG_IS_IN_MEMORY, !usesOutFile());
         subSettings.addInt(CFG_BUFFER_ID, m_bufferID);
         // m_shortCutsLookup to string array, saved in config
         String[] cellClasses = new String[shortCutsLookup.length];
@@ -699,6 +705,11 @@ class Buffer {
             m_containsBlobs = false;
             if (m_version >= 4) { // no blobs in version 1.1.x
                 m_containsBlobs = subSettings.getBoolean(CFG_CONTAINS_BLOBS);
+                // flag added for KNIME 2.0
+                // TODO increment version number (goes along with rowkey-string)
+                if (subSettings.getBoolean(CFG_IS_IN_MEMORY, false)) {
+                    restoreIntoMemory();
+                }
                 int bufferID = subSettings.getInt(CFG_BUFFER_ID);
                 assert bufferID == m_bufferID : "Table's buffer id is " 
                     + "different from what has been passed in constructor ("
@@ -756,6 +767,16 @@ class Buffer {
      */
     public int size() {
         return m_size;
+    }
+    
+    /** Restore content of this buffer into main memory (using a collection 
+     * implementation). The restoring will be performed with the next iteration.
+     */
+    final void restoreIntoMemory() {
+        if (usesOutFile()) {
+            m_list = new ArrayList<BlobSupportDataRow>(size());
+            m_backIntoMemoryIterator = new FromFileIterator();
+        }
     }
     
     /** Get reference to the table repository that this buffer was initially
@@ -1468,7 +1489,7 @@ class Buffer {
          * {@inheritDoc}
          */
         @Override
-        public synchronized DataRow next() {
+        public synchronized BlobSupportDataRow next() {
             if (!hasNext()) {
                 throw new NoSuchElementException("Iterator at end");
             }
@@ -1566,19 +1587,23 @@ class Buffer {
     }
     
     /**
-     * Class wrapping the iterator of a java.util.List to a RowIterator.
+     * Iterator to be used when data is contained in m_list. It uses
+     * access by index rather than wrapping an java.util.Iterator
+     * as the list may be simultaneously modified while reading (in case
+     * the content is fetched from disk and restored in memory).
      * This object is used when all rows fit in memory (no file).
      */
     private class FromListIterator extends RowIterator {
         
-        private Iterator<BlobSupportDataRow> m_it = m_list.iterator();
+        // do not use iterator here, see inner class comment
+        private int m_nextIndex = 0;
 
         /**
          * {@inheritDoc}
          */
         @Override
         public boolean hasNext() {
-            return m_it.hasNext();
+            return m_nextIndex < size();
         }
 
         /**
@@ -1586,7 +1611,38 @@ class Buffer {
          */
         @Override
         public DataRow next() {
-            return m_it.next();
+            if (!hasNext()) {
+                throw new NoSuchElementException("No more rows in buffer");
+            }
+            // assignment avoids race condition in following statements
+            // (parallel thread may set m_backIntoMemoryIterator to null)
+            FromFileIterator backIntoMemoryIterator = m_backIntoMemoryIterator;
+            if (m_nextIndex < m_list.size()) { 
+                return m_list.get(m_nextIndex++);
+            }
+            if (backIntoMemoryIterator == null) {
+                throw new InternalError("DataRow list contains fewer elements"
+                        + " than buffer (" + m_list.size() + " vs. " 
+                        + size() + ")");
+            }
+            synchronized (backIntoMemoryIterator) {
+                // intermediate change possible (by other iterator)
+                if (m_nextIndex < m_list.size()) { 
+                    return m_list.get(m_nextIndex++);
+                }
+                BlobSupportDataRow next = m_backIntoMemoryIterator.next();
+                if (next == null) {
+                    throw new InternalError(
+                            "Unable to restore data row from disk");
+                }
+                m_list.add(next);
+                if (++m_nextIndex >= size()) {
+                    assert !m_backIntoMemoryIterator.hasNext() : "File "
+                        + "iterator returns more rows than buffer contains";
+                    m_backIntoMemoryIterator = null;
+                }
+                return next;
+            }
         }
     }
     

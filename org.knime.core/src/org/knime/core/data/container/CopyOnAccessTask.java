@@ -76,7 +76,9 @@ final class CopyOnAccessTask {
     private final Map<Integer, ContainerTable> m_tableRep;
     /** To instantiate the buffer object. */
     private final BufferCreator m_bufferCreator;
-
+    /** Flag to indicate that the buffer needs to restore its content
+     * into memory once it is created. */
+    private boolean m_needsRestoreIntoMemory;
     
     /**
      * Keeps reference, nothing else.
@@ -187,6 +189,9 @@ final class CopyOnAccessTask {
                 new FileInputStream(metaTempFile));
         Buffer buffer = m_bufferCreator.createBuffer(
                 binFile, blobDir, spec, metaIn, m_bufferID, m_tableRep);
+        if (m_needsRestoreIntoMemory) {
+            buffer.restoreIntoMemory();
+        }
         metaIn.close();
         metaTempFile.delete();
         timerTask.cancel();
@@ -205,6 +210,12 @@ final class CopyOnAccessTask {
      */
     int getBufferID() {
         return m_bufferID;
+    }
+    
+    /** Requests the buffer to read its content into memory once it has
+     * been created. */
+    void setRestoreIntoMemory() {
+        m_needsRestoreIntoMemory = true;
     }
     
     /** Get table repository in workflow for blob (de)serialization.

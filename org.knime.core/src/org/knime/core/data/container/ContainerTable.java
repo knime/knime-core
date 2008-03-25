@@ -129,7 +129,18 @@ public class ContainerTable implements DataTable, KnowsRowCountTable {
         }
         return m_readTask.getBufferID();
     }
-
+    
+    /** Instruct the underlying buffer to cache the rows into main 
+     * memory to accelerate future iterations. This method does nothing
+     * if the buffer is reading from memory already.
+     * @see Buffer#restoreIntoMemory() */
+    protected void restoreIntoMemory() {
+        if (m_buffer != null) {
+            m_buffer.restoreIntoMemory();
+        } else {
+            m_readTask.setRestoreIntoMemory();
+        }
+    }
 
     /**
      * Do not call this method! Internal use!
