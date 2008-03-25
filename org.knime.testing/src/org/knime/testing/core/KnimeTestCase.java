@@ -41,6 +41,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowException;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.KNIMETimer;
 
 // TODO: check, that the number of correct results corresponds to the number
@@ -148,8 +149,12 @@ public class KnimeTestCase extends TestCase {
 
             //TODO: we may need to provide the workflow dir - not the file
 
-            m_manager = WorkflowManager.load(m_knimeWorkFlow,
+            WorkflowLoadResult loadRes = WorkflowManager.load(m_knimeWorkFlow,
                     new ExecutionMonitor());
+            if (loadRes.hasErrors()) {
+                logger.error(loadRes.getErrors());
+            }
+            m_manager = loadRes.getWorkflowManager();
             logger.debug("Workflow loaded ----------------------------"
                     + "--------------");
 
