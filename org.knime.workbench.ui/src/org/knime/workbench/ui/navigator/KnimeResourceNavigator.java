@@ -97,6 +97,8 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
 
             public void workflowChanged(final WorkflowEvent event) {
                 LOGGER.debug("ROOT's workflow has changed " + event.getType());
+                LOGGER.debug("new node's state " 
+                        + ((NodeContainer)event.getNewValue()).getState());
                 if (event.getType().equals(WorkflowEvent.Type.NODE_ADDED)) {
                     ((NodeContainer)event.getNewValue())
                         .addNodeStateChangeListener(
@@ -131,7 +133,9 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                             state.getSource()).getName();
                     IResource rsrc = ResourcesPlugin.getWorkspace()
                         .getRoot().findMember(name);
-                    getTreeViewer().update(rsrc, null);
+                    if (rsrc != null) {
+                        getTreeViewer().update(rsrc, null);
+                    }
                     } catch (IllegalArgumentException iae) {
                         // node couldn't be found -> so we don't make a refresh
                     }
