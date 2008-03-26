@@ -26,7 +26,7 @@ import java.io.File;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -132,25 +132,22 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     public final ColumnRearranger createRearranger(final DataTableSpec dataSpec,
             final DataTableSpec modelSpec) throws InvalidSettingsException {
         if (modelSpec.getNumColumns() == 0) {
-            throw new InvalidSettingsException("Model spec is empty.");
+            throw new InvalidSettingsException("Model spec must not be empty.");
         }
-        // data model columns need to be in the data
+        // all model columns need to be in the data spec
         for (int i = 0; i < modelSpec.getNumColumns() - 5; i++) {
             DataColumnSpec cspec = modelSpec.getColumnSpec(i);
             int idx = dataSpec.findColumnIndex(cspec.getName());
             if (idx >= 0) {
                 DataType dataType = dataSpec.getColumnSpec(idx).getType();
-                Class<? extends DataValue> prefValue = 
-                    cspec.getType().getPreferredValueClass();
-                if (!dataType.isCompatible(prefValue)) {
-                    throw new InvalidSettingsException("Model column '"
-                            + cspec.getName() + "' of type '"
-                            + cspec.getType() 
-                            + "' is not a super type of '" + dataType + "'");
+                if (!dataType.isCompatible(DoubleValue.class)) {
+                    throw new InvalidSettingsException("Data column \""
+                        + dataSpec.getColumnSpec(idx).getName() + "\"" 
+                        + " is not compatible with DoubleValue.");
                 }
             } else {
-                throw new InvalidSettingsException("Model column name '"
-                        + cspec.getName() + "' not in data spec.");
+                throw new InvalidSettingsException("Model column \""
+                        + cspec.getName() + "\" not in data spec.");
             }
         }
         m_applyColumn = DataTableSpec.getUniqueColumnName(
