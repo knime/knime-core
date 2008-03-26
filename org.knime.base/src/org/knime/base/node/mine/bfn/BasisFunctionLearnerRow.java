@@ -427,13 +427,15 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
     public abstract void cover(final DataRow row);
 
     /**
-     * Check if two BasisFunctionLearnerRow objects are equal by its centroid.
+     * Check if two BasisFunctionLearnerRow objects are equal if their 
+     * centroids and class labels are equal.
      * 
      * @param o the other object to check
      * @return <b>true</b> if this instance and the given object are instances
-     *         of the same class and the centroid vector is equal
+     *         of the same class and the centroid vector and class label are
+     *         equal
      * 
-     * @see java.lang.Object#equals(Object)
+     * {@inheritDoc}
      */
     @Override
     public boolean equals(final Object o) {
@@ -460,7 +462,8 @@ public abstract class BasisFunctionLearnerRow implements DataRow {
      * Returns a hash code computed by the product of the hash code of
      * anchor and class label.
      * @return A new hash code.
-     * @see java.lang.Object#hashCode()
+     *
+     * {@inheritDoc}
      */
     @Override
     public int hashCode() {

@@ -142,7 +142,7 @@ public final class BasisFunctionLearnerNodeDialogPanel extends JPanel {
         m_maxEpochs.setEnabled(false);
         JPanel epochPanel = new JPanel(new FlowLayout());
         epochPanel.setBorder(BorderFactory.createTitledBorder(
-                " Maximum #Epochs "));
+                " Maximum no. Epochs "));
         epochPanel.add(m_isMaxEpochs);
         epochPanel.add(m_maxEpochs);
         JPanel epochPanel2 = new JPanel(new GridLayout(1, 2));

@@ -66,7 +66,7 @@ public class BasisFunctionLearnerNodeView
     /**
      * Called when the model changed.
      * 
-     * @see org.knime.core.node.NodeView#modelChanged()
+     * {@inheritDoc}
      */
     @Override
     public void modelChanged() {

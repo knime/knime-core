@@ -60,7 +60,7 @@ public class FuzzyBasisFunctionLearnerNodeFactory
 
     /**
      * @return <b>true</b>.
-     * @see org.knime.core.node.NodeFactory#hasDialog()
+     * {@inheritDoc}
      */
     @Override
     public boolean hasDialog() {

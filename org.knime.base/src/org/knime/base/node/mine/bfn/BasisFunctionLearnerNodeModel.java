@@ -320,12 +320,12 @@ public abstract class BasisFunctionLearnerNodeModel extends GenericNodeModel {
                 data, colRe, exec);
 
         // print settings info
-        LOGGER.debug("distance     : " + getDistance());
-        LOGGER.debug("missing      : " + getMissingFct());
-        LOGGER.debug("targets      : " + m_targetColumns);
-        LOGGER.debug("shrink_commit: " + isShrinkAfterCommit());
-        LOGGER.debug("max_coverage : " + isMaxClassCoverage());
-        LOGGER.debug("max #epochs  : " + m_maxEpochs);
+        LOGGER.debug("distance      : " + getDistance());
+        LOGGER.debug("missing       : " + getMissingFct());
+        LOGGER.debug("targets       : " + m_targetColumns);
+        LOGGER.debug("shrink commit : " + isShrinkAfterCommit());
+        LOGGER.debug("max coverage  : " + isMaxClassCoverage());
+        LOGGER.debug("max no. epochs: " + m_maxEpochs);
 
         // create factory
         BasisFunctionFactory factory = getFactory(

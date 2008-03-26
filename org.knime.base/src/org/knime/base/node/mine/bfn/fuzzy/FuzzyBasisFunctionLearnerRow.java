@@ -466,7 +466,7 @@ public class FuzzyBasisFunctionLearnerRow extends BasisFunctionLearnerRow {
      * 
      * @return a String summary of this fuzzy bf
      * 
-     * @see BasisFunctionLearnerRow#toString()
+     * {@inheritDoc}
      */
     @Override
     public String toString() {

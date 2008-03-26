@@ -226,12 +226,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     }
 
     /**
-     * Load internals.
-     * 
-     * @param internDir the intern node directory
-     * @param exec used to report progress or cancel saving
-     * @see org.knime.core.node.NodeModel
-     *      #loadInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     public void loadInternals(final File internDir,
@@ -240,12 +235,7 @@ public abstract class BasisFunctionPredictorNodeModel extends GenericNodeModel {
     }
 
     /**
-     * Save internals.
-     * 
-     * @param internDir the intern node directory
-     * @param exec used to report progress or cancel saving
-     * @see org.knime.core.node.NodeModel
-     *      #saveInternals(java.io.File,ExecutionMonitor)
+     * {@inheritDoc}
      */
     @Override
     public void saveInternals(final File internDir,

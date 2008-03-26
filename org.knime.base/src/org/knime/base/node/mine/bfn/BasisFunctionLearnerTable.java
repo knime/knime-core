@@ -193,8 +193,8 @@ public final class BasisFunctionLearnerTable implements DataTable {
         LOGGER.info("Start Learning... #rules [#epoch]");
         do { // overall input pattern ... while (goon == true)
             exec.checkCanceled();
-            String progMsg = "Learning... #rules=" + getNumBasisFunctions()
-                    + " at #epoch=" + (m_cycles + 1);
+            String progMsg = "Learning... no. rules " + getNumBasisFunctions()
+                    + " at "+ (m_cycles + 1) + ". epoch";
             if (maxNrEpochs > 0 && maxNrEpochs < Integer.MAX_VALUE) {
                 exec.setProgress((m_cycles + 1.0) / maxNrEpochs, progMsg);
             } else {
@@ -216,8 +216,8 @@ public final class BasisFunctionLearnerTable implements DataTable {
                 exec.checkCanceled();
                 // current data row
                 final DataRow oRow = rowIt.next();
-                progMsg = "Learning... #rules=" + getNumBasisFunctions()
-                        + " at #epoch=" + (m_cycles + 1);
+                progMsg = "Learning... no. rules " + getNumBasisFunctions()
+                        + " at " + (m_cycles + 1) + ". epoch";
                 exec.setMessage(progMsg + " \"" + oRow.getKey().getId() + "\"");
                 final BasisFunctionFilterRow row = new BasisFunctionFilterRow(
                         this, oRow, dataColumnsIdx, classColumnsIdx, 
@@ -442,10 +442,10 @@ public final class BasisFunctionLearnerTable implements DataTable {
             removeBasisFunction(remRow);
         }
         // print model info
-        LOGGER.debug("#rules  =" + getNumBasisFunctions());
-        LOGGER.debug("#pruned =" + (oldNumBFs - getNumBasisFunctions()));
-        LOGGER.debug("#cycles =" + cycles);
-        StringBuilder patBuf = new StringBuilder("#pattern=");
+        LOGGER.debug("no. rules : " + getNumBasisFunctions());
+        LOGGER.debug("no. pruned: " + (oldNumBFs - getNumBasisFunctions()));
+        LOGGER.debug("no. cycles: " + cycles);
+        StringBuilder patBuf = new StringBuilder("no. pattern: ");
         for (DataCell classLabel : m_numPatPerClass.keySet()) {
             int value = m_numPatPerClass.get(classLabel)[0];
             patBuf.append(classLabel + "->" + value + " ");
