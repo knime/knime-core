@@ -194,7 +194,7 @@ public final class BasisFunctionLearnerTable implements DataTable {
         do { // overall input pattern ... while (goon == true)
             exec.checkCanceled();
             String progMsg = "Learning... no. rules " + getNumBasisFunctions()
-                    + " at "+ (m_cycles + 1) + ". epoch";
+                    + " at " + (m_cycles + 1) + ". epoch";
             if (maxNrEpochs > 0 && maxNrEpochs < Integer.MAX_VALUE) {
                 exec.setProgress((m_cycles + 1.0) / maxNrEpochs, progMsg);
             } else {
