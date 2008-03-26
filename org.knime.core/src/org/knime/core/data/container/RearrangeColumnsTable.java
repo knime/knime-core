@@ -42,6 +42,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -130,7 +131,8 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
      * @throws IOException If reading the fails.
      * @throws InvalidSettingsException If the settings are invalid.
      */
-    public RearrangeColumnsTable(final File f, final NodeSettingsRO settings,
+    public RearrangeColumnsTable(final ReferencedFile f, 
+            final NodeSettingsRO settings,
             final int loadID, final DataTableSpec spec, final int tableID,
             final HashMap<Integer, ContainerTable> bufferRep) 
         throws IOException, InvalidSettingsException {
@@ -157,10 +159,9 @@ public class RearrangeColumnsTable implements DataTable, KnowsRowCountTable {
                         f, new NoKeyBufferCreator());
                 DataTableSpec appendSpec = m_appendTable.getDataTableSpec();
                 if (appendSpec.getNumColumns() != appendColCount) {
-                    throw new IOException("Inconsistency in data file " 
-                            + f.getAbsolutePath() + ", read " 
-                            + appendSpec.getNumColumns() + " columns, expected "
-                            + appendColCount);
+                    throw new IOException("Inconsistency in data file \"" 
+                            + f + "\", read " + appendSpec.getNumColumns() 
+                            + " columns, expected " + appendColCount);
                 }
                 for (int i = 0; i < appendSpec.getNumColumns(); i++) {
                     appendColSpecs[i] = appendSpec.getColumnSpec(i);

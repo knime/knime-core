@@ -24,9 +24,9 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -45,7 +45,7 @@ public interface NodeContainerPersistor {
     
     boolean needsResetAfterLoad();
     
-    LoadResult preLoadNodeContainer(final File nodeFile, 
+    LoadResult preLoadNodeContainer(final ReferencedFile nodeFile, 
             final ExecutionMonitor exec, final NodeSettingsRO parentSettings) 
         throws InvalidSettingsException, CanceledExecutionException, IOException;
     

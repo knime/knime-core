@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -79,34 +80,36 @@ public class SingleNodeContainerPersistorVersion200 extends
             final NodePersistorVersion1xx nodePersistor) {
     }
     
-    protected String save(final SingleNodeContainer snc, final File nodeDir, 
-            final ExecutionMonitor exec, final boolean isSaveData) 
-                throws CanceledExecutionException, IOException {
-        if (nodeDir.equals(snc.getNodeContainerDirectory()) 
+    protected String save(final SingleNodeContainer snc,
+            final ReferencedFile nodeDirRef, final ExecutionMonitor exec,
+            final boolean isSaveData) throws CanceledExecutionException,
+            IOException {
+        if (nodeDirRef.equals(snc.getNodeContainerDirectory()) 
                 && !snc.isDirty()) {
             return SETTINGS_FILE_NAME;
         }
+        File nodeDir = nodeDirRef.getFile();
         FileUtil.deleteRecursively(nodeDir);
         nodeDir.mkdirs();
         if (!nodeDir.isDirectory()) {
                 throw new IOException("Unable to read or create directory \""
-                        + nodeDir.getAbsolutePath() + "\"");
+                        + nodeDirRef + "\"");
         }
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         saveNodeFactoryClassName(settings, snc);
-        File nodeXMLFile = saveNodeFileName(settings, nodeDir);
+        ReferencedFile nodeXMLFileRef = saveNodeFileName(settings, nodeDirRef);
         NodeContainerMetaPersistorVersion200 metaPersistor =
             createNodeContainerMetaPersistor(null);
         metaPersistor.save(snc, settings, exec, isSaveData);
         NodePersistorVersion200 persistor = createNodePersistor();
-        persistor.save(snc.getNode(), nodeXMLFile, exec, isSaveData 
+        persistor.save(snc.getNode(), nodeXMLFileRef, exec, isSaveData 
                 && snc.getState().equals(NodeContainer.State.EXECUTED));
         File nodeSettingsXMLFile = new File(nodeDir, SETTINGS_FILE_NAME);
         settings.saveToXML(new FileOutputStream(nodeSettingsXMLFile));
         if (snc.getNodeContainerDirectory() == null) {
-            snc.setNodeContainerDirectory(nodeDir);
+            snc.setNodeContainerDirectory(nodeDirRef);
         }
-        if (nodeDir.equals(snc.getNodeContainerDirectory())) {
+        if (nodeDirRef.equals(snc.getNodeContainerDirectory())) {
             snc.unsetDirty();
         }
         return SETTINGS_FILE_NAME;
@@ -118,16 +121,17 @@ public class SingleNodeContainerPersistorVersion200 extends
         settings.addString(KEY_FACTORY_NAME, cl);
     }
     
-    protected File saveNodeFileName(
-            final NodeSettingsWO settings, final File nodeDirectory) {
+    protected ReferencedFile saveNodeFileName(final NodeSettingsWO settings, 
+            final ReferencedFile nodeDirectoryRef) {
         String fileName = NODE_FILE;
         settings.addString("node_file", fileName);
-        return new File(nodeDirectory, fileName);
+        return new ReferencedFile(nodeDirectoryRef, fileName);
     }
     
+    /** {@inheritDoc} */
     @Override
     protected NodeContainerMetaPersistorVersion200 
-            createNodeContainerMetaPersistor(final File baseDir) {
+            createNodeContainerMetaPersistor(final ReferencedFile baseDir) {
         return new NodeContainerMetaPersistorVersion200(baseDir);
     }
 

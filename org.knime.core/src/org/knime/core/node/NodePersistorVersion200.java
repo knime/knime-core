@@ -34,6 +34,7 @@ import java.util.Map;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.internal.SerializerMethodLoader;
 import org.knime.core.node.PortObject.PortObjectSerializer;
 import org.knime.core.node.PortObjectSpec.PortObjectSpecSerializer;
@@ -72,28 +73,34 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
      * @throws IOException If the node file can't be found or read.
      * @throws CanceledExecutionException If the saving has been canceled.
      */
-    public void save(final Node node, final File nodeFile,
+    public void save(final Node node, final ReferencedFile nodeFile,
             final ExecutionMonitor execMon, final boolean isSaveData)
             throws IOException, CanceledExecutionException {
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
-        final File nodeDir = nodeFile.getParentFile();
+        final ReferencedFile nodeDirRef = nodeFile.getParent();
+        if (nodeDirRef == null) {
+            throw new IOException("parent file of file \"" + nodeFile 
+                    + "\" is not represented as object of class "
+                    + ReferencedFile.class.getSimpleName());
+        }
         saveCustomName(node, settings);
         node.saveSettingsTo(settings);
         saveHasContent(node, settings);
         saveNodeMessage(node, settings);
-        File nodeInternDir = getNodeInternDirectory(nodeDir);
+        ReferencedFile nodeInternDirRef = getNodeInternDirectory(nodeDirRef);
+        File nodeInternDir = nodeInternDirRef.getFile();
         if (nodeInternDir.exists()) {
             FileUtil.deleteRecursively(nodeInternDir);
         }
         if (!node.isAutoExecutable() && isSaveData) {
             saveNodeInternDirectory(node, nodeInternDir, settings, execMon);
         }
-        savePorts(node, nodeDir, settings, execMon, isSaveData);
+        savePorts(node, nodeDirRef, settings, execMon, isSaveData);
         settings.saveToXML(new BufferedOutputStream(new FileOutputStream(
-                nodeFile)));
+                nodeFile.getFile())));
     }
 
-    protected void savePorts(final Node node, final File nodeDir,
+    protected void savePorts(final Node node, final ReferencedFile nodeDirRef,
             final NodeSettingsWO settings, final ExecutionMonitor exec,
             final boolean saveData) throws IOException,
             CanceledExecutionException {
@@ -115,7 +122,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             String portDirName;
             if (spec != null || object != null) {
                 portDirName = portName;
-                File portDir = new File(nodeDir, portDirName);
+                ReferencedFile portDirRef = 
+                    new ReferencedFile(nodeDirRef, portDirName);
+                File portDir = portDirRef.getFile();
                 subProgress.setMessage("Cleaning directory "
                         + portDir.getAbsolutePath());
                 FileUtil.deleteRecursively(portDir);
@@ -281,7 +290,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             }
             String portDirN = singlePortSetting.getString("port_dir_location");
             if (portDirN != null) {
-                File portDir = new File(getNodeDirectory(), portDirN);
+                ReferencedFile portDir = 
+                    new ReferencedFile(getNodeDirectory(), portDirN);
                 subProgress.setMessage("Port " + index);
                 loadPort(node, portDir, singlePortSetting, 
                         subProgress, index, loadID, tblRep);
@@ -290,7 +300,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         }
     }
 
-    protected void loadPort(final Node node, final File portDir,
+    protected void loadPort(final Node node, final ReferencedFile portDir,
             final NodeSettingsRO settings, final ExecutionMonitor exec,
             final int portIdx, final int loadID,
             final HashMap<Integer, ContainerTable> tblRep) throws IOException, 
@@ -335,8 +345,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                             + "\" does not a sub-class \""
                             + PortObjectSpec.class.getSimpleName() + "\"");
                 }
-                File specDir = new File(
+                ReferencedFile specDirRef = new ReferencedFile(
                         portDir, settings.getString("port_spec_location"));
+                File specDir = specDirRef.getFile();
                 if (!specDir.isDirectory()) {
                     throw new IOException("Can't read directory "
                             + specDir.getAbsolutePath());
@@ -359,8 +370,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                             + "\" does not a sub-class \""
                             + PortObject.class.getSimpleName() + "\"");
                 }
-                File objectDir = new File(
+                ReferencedFile objectDirRef = new ReferencedFile(
                         portDir, settings.getString("port_object_location"));
+                File objectDir = objectDirRef.getFile();
                 if (!objectDir.isDirectory()) {
                     throw new IOException("Can't read directory "
                             + objectDir.getAbsolutePath());
@@ -369,11 +381,11 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     // can't be true, however as BDT can only be saved
                     // for adequate port types (handled above)
                     // we leave the code here for future versions..
-                    object = 
-                        loadBufferedDataTable(objectDir, exec, loadID, tblRep);
+                    object = loadBufferedDataTable(
+                            objectDirRef, exec, loadID, tblRep);
                     ((BufferedDataTable)object).setOwnerRecursively(node);
                 } else if (ModelContent.class.isAssignableFrom(cl)) {
-                    object = loadModelContent(objectDir, exec, 
+                    object = loadModelContent(objectDirRef, exec, 
                             (Class<? extends ModelContent>)cl);
                 } else {
                     PortObjectSerializer serializer =
@@ -405,7 +417,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         setPortObject(portIdx, object);
     }
 
-    private BufferedDataTable loadBufferedDataTable(final File objectDir,
+    private BufferedDataTable loadBufferedDataTable(
+            final ReferencedFile objectDir,
             final ExecutionMonitor exec, final int loadID,
             final HashMap<Integer, ContainerTable> tblRep)
             throws CanceledExecutionException, IOException,
@@ -414,7 +427,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         null, exec, loadID, tblRep);
     }
 
-    private <T extends ModelContent> T loadModelContent(final File objectDir,
+    private <T extends ModelContent> T loadModelContent(
+            final ReferencedFile objectDir,
             final ExecutionMonitor exec, final Class<T> cl)
     throws CanceledExecutionException, IOException, InvalidSettingsException {
         T newInstance;
@@ -427,7 +441,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             throw new IOException("Unable to call constructor on class \"" 
                     + cl.getSimpleName() + "\"", e);
         }
-        newInstance.load(objectDir, exec);
+        newInstance.load(objectDir.getFile(), exec);
         return newInstance;
     }
     

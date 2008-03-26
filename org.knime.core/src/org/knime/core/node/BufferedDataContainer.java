@@ -24,12 +24,12 @@
  */
 package org.knime.core.node;
 
-import java.io.File;
 import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.Node.MemoryPolicy;
 
 /**
@@ -155,7 +155,7 @@ public class BufferedDataContainer extends DataContainer {
     /**
      * Returns the content of this container in a BufferedDataTable. The result
      * can be returned, e.g. in a NodeModel's execute method.
-     * @see org.knime.core.data.container.DataContainer#getTable()
+     * {@inheritDoc}
      */
     @Override
     public BufferedDataTable getTable() {
@@ -168,21 +168,21 @@ public class BufferedDataContainer extends DataContainer {
     }
     
     /**
-     * Just delegates to {@link 
-     * DataContainer#readFromZipDelayed(File, DataTableSpec, int, Map)} 
+     * Just delegates to {@link DataContainer#readFromZipDelayed(
+     * ReferencedFile, DataTableSpec, int, Map)} 
      * This method is available in this class to enable other classes in this
      * package to use it.
-     * @param zipFile Delegated.
+     * @param zipFileRef Delegated.
      * @param spec Delegated.
      * @param bufID Delegated.
      * @param bufferRep Delegated.
-     * @return {@link 
-     * DataContainer#readFromZipDelayed(File, DataTableSpec, int, Map)}
+     * @return {@link DataContainer#readFromZipDelayed(
+     *      ReferencedFile, DataTableSpec, int, Map)}
      */
     protected static ContainerTable readFromZipDelayed(
-            final File zipFile, final DataTableSpec spec, final int bufID, 
-            final Map<Integer, ContainerTable> bufferRep) {
+            final ReferencedFile zipFileRef, final DataTableSpec spec, 
+            final int bufID, final Map<Integer, ContainerTable> bufferRep) {
         return DataContainer.readFromZipDelayed(
-                zipFile, spec, bufID, bufferRep);
+                zipFileRef, spec, bufID, bufferRep);
     }
 }

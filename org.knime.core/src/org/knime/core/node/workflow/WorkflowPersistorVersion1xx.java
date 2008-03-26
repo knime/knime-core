@@ -33,10 +33,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeMap;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -82,7 +84,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private boolean m_needsResetAfterLoad;
     
     private NodeSettingsRO m_workflowSett;
-    private File m_workflowDir;
+    private ReferencedFile m_workflowDir;
     
     static boolean canReadVersion(final String versionString) {
         boolean result = versionString.equals("0.9.0");
@@ -391,23 +393,28 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
     
     /** {@inheritDoc} */
-    public LoadResult preLoadNodeContainer(final File nodeFile, 
+    public LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef, 
             final ExecutionMonitor exec, final NodeSettingsRO parentSettings) 
     throws InvalidSettingsException, CanceledExecutionException, IOException {
         LoadResult loadResult = new LoadResult();
-        if (nodeFile == null || !nodeFile.isFile()) {
-            String error = "Can't read workflow file \"" 
-                + nodeFile.getAbsolutePath() + "\"";
+        if (nodeFileRef == null || !nodeFileRef.getFile().isFile()) {
+            String error = "Can't read workflow file \"" + nodeFileRef + "\"";
             throw new IOException(error);
         }
-        m_metaPersistor = createNodeContainerMetaPersistor(
-                nodeFile.getParentFile());
+        File nodeFile = nodeFileRef.getFile();
+        ReferencedFile parentRef = nodeFileRef.getParent();
+        if (parentRef == null) {
+            throw new IOException("Parent file of file \"" + nodeFileRef 
+                    + "\" is not represented by " 
+                    + ReferencedFile.class.getSimpleName() + " object");
+        }
+        m_metaPersistor = createNodeContainerMetaPersistor(parentRef);
         InputStream in = new BufferedInputStream(new FileInputStream(nodeFile));
         NodeSettingsRO subWFSettings = NodeSettings.loadFromXML(in);
         LoadResult metaLoadResult = m_metaPersistor.load(subWFSettings);
         loadResult.addError(metaLoadResult);
         m_workflowSett = subWFSettings;
-        m_workflowDir = nodeFile.getParentFile();
+        m_workflowDir = parentRef;
 
         try {
             m_name = loadWorkflowName(m_workflowSett);
@@ -619,7 +626,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     }
                 }
             }
-            File nodeFile;
+            ReferencedFile nodeFile;
             try {
                 nodeFile = loadNodeFile(nodeSetting, m_workflowDir);
             } catch (InvalidSettingsException e) {
@@ -852,17 +859,30 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             final NodeSettingsRO settings) throws InvalidSettingsException {
     }
     
-    protected File loadNodeFile(final NodeSettingsRO settings,
-            final File workflowDir) throws InvalidSettingsException {
+    protected ReferencedFile loadNodeFile(final NodeSettingsRO settings,
+            final ReferencedFile workflowDirRef) throws InvalidSettingsException {
         String fileString = settings.getString("node_settings_file");
         if (fileString == null) {
             throw new InvalidSettingsException("Unable to read settings "
                     + "file for node " + settings.getKey());
         }
-        File result = new File(workflowDir, fileString);
-        if (!result.isFile() || !result.canRead()) {
+        File workflowDir = workflowDirRef.getFile();
+        // fileString is something like "File Reader(#1)/settings.xml", thus
+        // it contains two levels of the hierarchy. We leave it here to the 
+        // java.util.File implementation to resolve these levels
+        File fullFile = new File(workflowDir, fileString);
+        if (!fullFile.isFile() || !fullFile.canRead()) {
             throw new InvalidSettingsException("Unable to read settings "
-                    + "file " + result.getAbsolutePath());
+                    + "file " + fullFile.getAbsolutePath());
+        }
+        Stack<String> children = new Stack<String>();
+        while (!fullFile.getAbsoluteFile().equals(workflowDir)) {
+            children.push(fullFile.getName());
+            fullFile = fullFile.getParentFile();
+        }
+        ReferencedFile result = workflowDirRef;
+        while (!children.empty()) {
+            result = new ReferencedFile(result, children.pop());
         }
         return result;
     }
@@ -958,7 +978,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
 
     protected NodeContainerMetaPersistorVersion1xx
-            createNodeContainerMetaPersistor(final File baseDir) {
+            createNodeContainerMetaPersistor(final ReferencedFile baseDir) {
         return new NodeContainerMetaPersistorVersion1xx(baseDir);
     }
 

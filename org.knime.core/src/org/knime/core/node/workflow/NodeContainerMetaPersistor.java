@@ -24,9 +24,9 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.NodeContainer.State;
@@ -40,7 +40,7 @@ interface NodeContainerMetaPersistor {
     /** Key for this node's user name. */
     static final String KEY_CUSTOM_NAME = "customName";
 
-    File getNodeContainerDirectory();
+    ReferencedFile getNodeContainerDirectory();
     
     int getNodeIDSuffix();
 

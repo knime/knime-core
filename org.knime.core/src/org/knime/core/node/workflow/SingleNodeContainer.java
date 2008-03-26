@@ -542,6 +542,7 @@ public final class SingleNodeContainer extends NodeContainer
             throws InvalidSettingsException {
         synchronized (m_dirtyNode) {
             m_node.loadSettingsFrom(settings);
+            setDirty();
         }
     }
     

@@ -35,6 +35,7 @@ import javax.swing.UIManager;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.GenericNodeDialogPane.MiscNodeDialogPane;
 import org.knime.core.node.GenericNodeFactory.NodeType;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
@@ -274,7 +275,15 @@ public final class Node {
             m_outputs[i].spec = loader.getPortObjectSpec(i);
             m_outputs[i].object = loader.getPortObject(i);
         }
-        loadInternals(loader.getNodeInternDirectory(), exec);
+        ReferencedFile internDirRef = loader.getNodeInternDirectory();
+        if (internDirRef != null) {
+            internDirRef.lock();
+            try {
+                loadInternals(internDirRef.getFile(), exec);
+            } finally {
+                internDirRef.unlock();
+            }
+        }
         if (m_message != null) {
             notifyMessageListeners(m_message);
         }

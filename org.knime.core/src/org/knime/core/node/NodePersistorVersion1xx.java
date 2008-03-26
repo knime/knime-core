@@ -34,6 +34,7 @@ import java.util.zip.GZIPInputStream;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.Node.MemoryPolicy;
 import org.knime.core.node.Node.SettingsLoaderAndWriter;
 import org.knime.core.node.workflow.NodeMessage;
@@ -53,9 +54,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private NodeMessage m_nodeMessage;
 
-    private File m_nodeDirectory;
+    private ReferencedFile m_nodeDirectory;
 
-    private File m_nodeInternDirectory;
+    private ReferencedFile m_nodeInternDirectory;
 
     private NodeSettingsRO m_modelSettings;
 
@@ -116,12 +117,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return null;
     }
     
-    static File getNodeInternDirectory(final File nodeDir) {
-        return new File(nodeDir, INTERN_FILE_DIR);
+    static ReferencedFile getNodeInternDirectory(final ReferencedFile nodeDir) {
+        return new ReferencedFile(nodeDir, INTERN_FILE_DIR);
     }
 
-    protected File loadNodeInternDirectory(final NodeSettingsRO settings, 
-            final File nodeDir) throws InvalidSettingsException {
+    protected ReferencedFile loadNodeInternDirectory(final NodeSettingsRO settings, 
+            final ReferencedFile nodeDir) throws InvalidSettingsException {
         return getNodeInternDirectory(nodeDir);
     }
     
@@ -177,14 +178,16 @@ public class NodePersistorVersion1xx implements NodePersistor {
              * spec was located at a different location.
              */
             String dataConfigFileName = settings.getString(CFG_DATA_FILE);
+            File nodeDir = m_nodeDirectory.getFile();
             // dataConfigFile = data.xml in node dir
-            File dataConfigFile = new File(m_nodeDirectory, dataConfigFileName);
+            File dataConfigFile = new File(nodeDir, dataConfigFileName);
             NodeSettingsRO dataSettings = NodeSettings
                     .loadFromXML(new BufferedInputStream(new FileInputStream(
                             dataConfigFile)));
             String dataPath = dataSettings.getString(CFG_DATA_FILE_DIR);
             // dataDir = /data
-            File dataDir = new File(m_nodeDirectory, dataPath);
+            ReferencedFile dataDirRef = 
+                new ReferencedFile(m_nodeDirectory, dataPath);
             // note: we do not check for existence here - in some cases
             // this directory may not exist (when exported and empty
             // directories are pruned)
@@ -192,9 +195,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
                     .getNodeSettings(CFG_OUTPUT_PREFIX + index);
             String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
             // dir = /data/data_i
-            File dir = new File(dataDir, dataName);
+            ReferencedFile dirRef = new ReferencedFile(dataDirRef, dataName);
             BufferedDataTable t = BufferedDataTable.loadFromFile(
-                    dir, portSettings, execSubData, loadID,
+                    dirRef, portSettings, execSubData, loadID,
                     // we didn't have blobs in 1.1.x
                     new HashMap<Integer, ContainerTable>());
             t.setOwnerRecursively(node);
@@ -203,18 +206,20 @@ public class NodePersistorVersion1xx implements NodePersistor {
             NodeSettingsRO dataSettings = settings
                     .getNodeSettings(CFG_DATA_FILE);
             String dataDirStr = dataSettings.getString(CFG_DATA_FILE_DIR);
-            File dataDir = new File(m_nodeDirectory, dataDirStr);
+            ReferencedFile dataDirRef = 
+                new ReferencedFile(m_nodeDirectory, dataDirStr);
             NodeSettingsRO portSettings = dataSettings
                     .getNodeSettings(CFG_OUTPUT_PREFIX + index);
             String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
-            File dir = new File(dataDir, dataName);
+            ReferencedFile dirRef = new ReferencedFile(dataDirRef, dataName);
+            File dir = dirRef.getFile();
             if (!(dir.isDirectory() && dir.canRead())) {
                 throw new IOException("Can not read directory "
                         + dir.getAbsolutePath());
             }
-            BufferedDataTable t = BufferedDataTable.loadFromFile(dir,
-            /* ignored in 1.2.0+ */
-            null, execMon, loadID, tblRep);
+            BufferedDataTable t = BufferedDataTable.loadFromFile(dirRef,
+                /* ignored in 1.2.0+ */
+                null, execMon, loadID, tblRep);
             t.setOwnerRecursively(node);
             return t;
         }
@@ -228,7 +233,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         int modelIndex = index - countDataOutPorts(node);
         NodeSettingsRO model = settings.getNodeSettings(CFG_MODEL_FILES);
         String modelName = model.getString(CFG_OUTPUT_PREFIX + modelIndex);
-        File targetFile = new File(m_nodeDirectory, modelName);
+        File targetFile = new File(m_nodeDirectory.getFile(), modelName);
     
         // in an earlier version the model settings were written
         // directly (without zipping); now the settings are
@@ -266,7 +271,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
         if (isVersion11x) {
             NodeSettingsRO spec = settings.getNodeSettings(CFG_SPEC_FILES);
             String specName = spec.getString(CFG_OUTPUT_PREFIX + index);
-            File targetFile = new File(m_nodeDirectory, specName);
+            ReferencedFile targetFileRef = 
+                new ReferencedFile(m_nodeDirectory, specName);
+            File targetFile = targetFileRef.getFile(); 
             DataTableSpec outSpec = null;
             if (targetFile.exists()) {
                 NodeSettingsRO settingsSpec = NodeSettings
@@ -279,18 +286,20 @@ public class NodePersistorVersion1xx implements NodePersistor {
             NodeSettingsRO dataSettings = settings
                     .getNodeSettings(CFG_DATA_FILE);
             String dataDirStr = dataSettings.getString(CFG_DATA_FILE_DIR);
-            File dataDir = new File(m_nodeDirectory, dataDirStr);
+            ReferencedFile dataDirRef = 
+                new ReferencedFile(m_nodeDirectory, dataDirStr);
             NodeSettingsRO portSettings = dataSettings
                     .getNodeSettings(CFG_OUTPUT_PREFIX + index);
             String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
-            File dir = new File(dataDir, dataName);
+            ReferencedFile dirRef = new ReferencedFile(dataDirRef, dataName);
+            File dir = dirRef.getFile();
             if (!(dir.isDirectory() && dir.canRead())) {
                 throw new IOException("Can not read directory "
                         + dir.getAbsolutePath());
             }
             DataTableSpec outSpec = null;
             if (portSettings.getBoolean(CFG_HAS_SPEC_FILE, true)) {
-                outSpec = BufferedDataTable.loadSpec(dir);
+                outSpec = BufferedDataTable.loadSpec(dirRef);
                 if (portSettings.containsKey(CFG_HAS_SPEC_FILE)
                         && outSpec == null) {
                     throw new IOException("No spec file available for"
@@ -330,13 +339,19 @@ public class NodePersistorVersion1xx implements NodePersistor {
     }
     
     public LoadResult load(Node node,
-            final File configFile, ExecutionMonitor execMon, int loadID,
+            final ReferencedFile configFileRef, ExecutionMonitor execMon, int loadID,
             HashMap<Integer, ContainerTable> tblRep) 
             throws InvalidSettingsException, IOException, CanceledExecutionException {
         LoadResult result = new LoadResult();
         m_portObjects = new PortObject[node.getNrOutPorts()];
         m_portObjectSpecs = new PortObjectSpec[node.getNrOutPorts()];
-        m_nodeDirectory = configFile.getParentFile();
+        m_nodeDirectory = configFileRef.getParent();
+        if (m_nodeDirectory == null) {
+            throw new IOException("parent of config file \"" + configFileRef
+                    + "\" is not represented as an object of class "
+                    + ReferencedFile.class.getSimpleName());
+        }
+        File configFile = configFileRef.getFile();
         NodeSettingsRO settings;
         if (!configFile.isFile() || !configFile.canRead()) {
             String error = "Unable to load \"" + node.getName() + "\": "
@@ -436,12 +451,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return m_memoryPolicy;
     }
 
-    public File getNodeDirectory() {
+    public ReferencedFile getNodeDirectory() {
         return m_nodeDirectory;
     }
 
     /** {@inheritDoc} */
-    public File getNodeInternDirectory() {
+    public ReferencedFile getNodeInternDirectory() {
         return m_nodeInternDirectory;
     }
 

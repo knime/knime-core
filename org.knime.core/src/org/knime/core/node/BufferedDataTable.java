@@ -43,6 +43,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.JoinedTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 
@@ -377,9 +378,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @throws InvalidSettingsException If the settings in the spec.xml can't
      * be parsed.
      */
-    static DataTableSpec loadSpec(final File dataPortDir) 
+    static DataTableSpec loadSpec(final ReferencedFile dataPortDir) 
         throws IOException, InvalidSettingsException {
-        File specFile = new File(dataPortDir, TABLE_SPEC_FILE);
+        File specFile = new File(dataPortDir.getFile(), TABLE_SPEC_FILE);
         if (specFile.exists()) {
             ConfigRO c = NodeSettings.loadFromXML(new BufferedInputStream(
                     new FileInputStream(specFile)));
@@ -390,7 +391,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
     
     /** Factory method to restore a table that has been written using
      * the save method.
-     * @param dir The directory to load from.
+     * @param dirRef The directory to load from.
      * @param settings The settings to load from.
      * @param exec The exec mon for progress/cancel
      * @param loadID The public loading ID
@@ -400,13 +401,12 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @throws CanceledExecutionException If canceled.
      * @throws InvalidSettingsException If settings are invalid.
      */
-    static BufferedDataTable loadFromFile(final File dir,
+    static BufferedDataTable loadFromFile(final ReferencedFile dirRef,
             final NodeSettingsRO settings, final ExecutionMonitor exec,
             final int loadID, final HashMap<Integer, ContainerTable> bufferRep) 
             throws IOException, CanceledExecutionException,
             InvalidSettingsException {
-        HashMap<Integer, BufferedDataTable> hash =
-            LOADER_HASH.get(loadID);
+        HashMap<Integer, BufferedDataTable> hash = LOADER_HASH.get(loadID);
         if (hash == null) {
             throw new IOException(
                     "There is no table repository with ID " + loadID + "\n"
@@ -414,6 +414,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
                     + Arrays.toString(LOADER_HASH.keySet().toArray())
                     + ")");
         }
+        File dir = dirRef.getFile();
         NodeSettingsRO s;
         // in version 1.1.x and before, the information was stored in 
         // an external data.xml (directly in the node dir)
@@ -429,7 +430,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
         if (dataXML.exists()) { // version 1.2.0 and later
             s = NodeSettings.loadFromXML(
                     new BufferedInputStream(new FileInputStream(dataXML)));
-            spec = loadSpec(dir); 
+            spec = loadSpec(dirRef); 
             isVersion11x = false;
         } else { // version 1.1.x
             s = settings.getNodeSettings(CFG_TABLE_META);
@@ -439,31 +440,31 @@ public final class BufferedDataTable implements DataTable, PortObject {
         int id = s.getInt(CFG_TABLE_ID);
         lastID.set(Math.max(lastID.get(), id + 1));
         String fileName = s.getString(CFG_TABLE_FILE_NAME);
-        File file;
+        ReferencedFile fileRef;
         if (fileName != null) {
-            file = new File(dir, fileName);
+            fileRef = new ReferencedFile(dirRef, fileName);
+            File file = fileRef.getFile();
             if (!file.exists()) {
-                throw new IOException("No such data file: " 
-                        + file.getAbsolutePath());
+                throw new IOException("No such data file: " + fileRef);
             }
             if (!file.isFile() || !file.canRead()) {
-                throw new IOException("Can not read file "
-                        + file.getAbsolutePath());
+                throw new IOException("Can not read file " + fileRef);
             }
         } else {
             // for instance for a column filter node this is null.
-            file = null; 
+            fileRef = null; 
         }
         String tableType = s.getString(CFG_TABLE_TYPE);
         BufferedDataTable t;
         if (tableType.equals(TABLE_TYPE_CONTAINER)) {
             ContainerTable fromContainer;
             if (isVersion11x) {
-                fromContainer = BufferedDataContainer.readFromZip(file); 
+                fromContainer = 
+                    BufferedDataContainer.readFromZip(fileRef.getFile()); 
             } else {
                 fromContainer = 
                     BufferedDataContainer.readFromZipDelayed(
-                            file, spec, id, bufferRep);
+                            fileRef, spec, id, bufferRep);
             }
             t = new BufferedDataTable(fromContainer, id);
         } else if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)
@@ -485,13 +486,14 @@ public final class BufferedDataTable implements DataTable, PortObject {
                     throw new InvalidSettingsException(
                             "Reference dir is \"null\"");
                 }
-                File referenceDir = new File(dir, reference);
-                loadFromFile(referenceDir, s, exec, loadID, bufferRep);
+                ReferencedFile referenceDirRef = 
+                    new ReferencedFile(dirRef, reference);
+                loadFromFile(referenceDirRef, s, exec, loadID, bufferRep);
             }
             if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)) {
                 t = new BufferedDataTable(
                         new RearrangeColumnsTable(
-                                file, s, loadID, spec, id, bufferRep));
+                                fileRef, s, loadID, spec, id, bufferRep));
             } else if (tableType.equals(TABLE_TYPE_JOINED)) {
                 JoinedTable jt = JoinedTable.load(s, spec, loadID);
                 t = new BufferedDataTable(jt);
@@ -501,7 +503,8 @@ public final class BufferedDataTable implements DataTable, PortObject {
             } else {
                 TableSpecReplacerTable replTable;
                 if (isVersion11x) {
-                    replTable = TableSpecReplacerTable.load11x(file, s, loadID);
+                    replTable = TableSpecReplacerTable.load11x(
+                            fileRef.getFile(), s, loadID);
                 } else {
                     replTable = TableSpecReplacerTable.load(s, spec, loadID);
                 }

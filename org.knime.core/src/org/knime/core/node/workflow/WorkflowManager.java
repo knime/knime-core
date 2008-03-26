@@ -42,6 +42,7 @@ import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -120,8 +121,8 @@ public final class WorkflowManager extends NodeContainer {
     /** for internal usage, holding output table references. */
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
     
-    private final List<File> m_deletedNodesFileLocations
-        = new ArrayList<File>();
+    private final List<ReferencedFile> m_deletedNodesFileLocations
+        = new ArrayList<ReferencedFile>();
 
     /** Listeners interested in status changes. */
     private final CopyOnWriteArrayList<WorkflowListener> m_wfmListeners;
@@ -332,7 +333,7 @@ public final class WorkflowManager extends NodeContainer {
             // and finally remove node itself as well.
             NodeContainer nc = m_nodes.remove(nodeID);
             nc.cleanup();
-            File ncDir = nc.getNodeContainerDirectory();
+            ReferencedFile ncDir = nc.getNodeContainerDirectory();
             // update list of obsolete node directories for non-root wfm
             if (this != ROOT && ncDir != null) {
                 m_deletedNodesFileLocations.add(ncDir);
@@ -2171,8 +2172,10 @@ public final class WorkflowManager extends NodeContainer {
         if (!directory.isDirectory() || !directory.canRead()) {
             throw new IOException("Can't read directory " + directory);
         }
-        File workflowknime = 
-            new File(directory, WorkflowPersistor.WORKFLOW_FILE);
+        ReferencedFile workflowDirRef = new ReferencedFile(directory);
+        ReferencedFile workflowknimeRef =
+            new ReferencedFile(workflowDirRef, WorkflowPersistor.WORKFLOW_FILE);
+        File workflowknime = workflowknimeRef.getFile();
         if (!workflowknime.isFile()) {
             throw new IOException("No \"" + WorkflowPersistor.WORKFLOW_FILE 
                     + "\" file in directory \"" + directory.getAbsolutePath()
@@ -2221,7 +2224,7 @@ public final class WorkflowManager extends NodeContainer {
         BufferedDataTable.initRepository(loadID);
         WorkflowLoadResult result = new WorkflowLoadResult();
         result.addError(persistor.preLoadNodeContainer(
-                workflowknime, exec, settings));
+                workflowknimeRef, exec, settings));
         result.addError(persistor.loadNodeContainer(loadID, exec));
         WorkflowManager manager;
         synchronized (ROOT.m_dirtyWorkflow) {
@@ -2354,7 +2357,6 @@ public final class WorkflowManager extends NodeContainer {
             resetAndConfigureNode(id);
         }
         for (NodeID id : needConfigurationNodes) {
-            // TODO Bernd: can you check what you intend to do here?
             configureNodeAndSuccessors(id, true, true);
         }
         checkForNodeStateChanges();
@@ -2368,21 +2370,32 @@ public final class WorkflowManager extends NodeContainer {
         }
         // TODO GUI must only provide directory
         synchronized (m_dirtyWorkflow) {
-            File workflowDir = directory.getParentFile();
-            // if it's the location associated with the workflow
-            if (workflowDir.equals(getNodeContainerDirectory())) {
-                for (File deletedNodeDir : m_deletedNodesFileLocations) {
-                    if (!FileUtil.deleteRecursively(deletedNodeDir)) {
-                        LOGGER.warn("Deletion of obsolete node directory \""
-                                + deletedNodeDir.getAbsolutePath() 
-                                + "\" failed");
-                    }
-                }
-            } else { // new location, must not clear deleted nodes dirs
-                FileUtil.deleteRecursively(workflowDir);
+            ReferencedFile workflowDirRef = 
+                new ReferencedFile(directory.getParentFile());
+            // if it's the location associated with the workflow we will 
+            // use same reference as a lock will be acquired 
+            if (workflowDirRef.equals(getNodeContainerDirectory())) {
+                workflowDirRef = getNodeContainerDirectory();
             }
-            new WorkflowPersistorVersion200(null).save(
-                    this, workflowDir, exec, isSaveData);
+            workflowDirRef.lock();
+            try {
+                if (workflowDirRef.equals(getNodeContainerDirectory())) {
+                    for (ReferencedFile deletedNodeDir 
+                            : m_deletedNodesFileLocations) {
+                        File f = deletedNodeDir.getFile();
+                        if (f.exists() && !FileUtil.deleteRecursively(f)) {
+                            LOGGER.warn("Deletion of obsolete node directory \""
+                                    + f.getAbsolutePath() + "\" failed");
+                        }
+                    }
+                } else { // new location, must not clear deleted nodes dirs
+                    FileUtil.deleteRecursively(workflowDirRef.getFile());
+                }
+                new WorkflowPersistorVersion200(null).save(
+                        this, workflowDirRef, exec, isSaveData);
+            } finally {
+                workflowDirRef.unlock();
+            }
         }
     }
 

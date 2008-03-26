@@ -24,11 +24,11 @@
  */
 package org.knime.core.node;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.Node.MemoryPolicy;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -72,7 +72,7 @@ public interface NodePersistor {
     /** Config key: What memory policy to use for a node outport. */
     static final String CFG_MEMORY_POLICY = "memory_policy";
 
-    LoadResult load(Node node, final File nodeFile, ExecutionMonitor execMon,
+    LoadResult load(Node node, final ReferencedFile nodeFile, ExecutionMonitor execMon,
             int loadID, HashMap<Integer, ContainerTable> tblRep)
             throws IOException, InvalidSettingsException, CanceledExecutionException;
     
@@ -81,7 +81,7 @@ public interface NodePersistor {
     boolean isConfigured();
     boolean isExecuted();
     boolean hasContent();
-    File getNodeInternDirectory();
+    ReferencedFile getNodeInternDirectory();
     MemoryPolicy getMemoryPolicy();
     NodeSettingsRO getNodeModelSettings();
     PortObjectSpec getPortObjectSpec(final int outportIndex);

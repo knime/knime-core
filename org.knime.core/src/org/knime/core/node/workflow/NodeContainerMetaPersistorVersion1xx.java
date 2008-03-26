@@ -24,9 +24,9 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.File;
 import java.io.IOException;
 
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
@@ -53,11 +53,11 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     private State m_state = State.IDLE;
     
-    private final File m_nodeContainerDirectory;
+    private final ReferencedFile m_nodeContainerDirectory;
     
     /** @param baseDir The node container directory (only important while load)
      */
-    NodeContainerMetaPersistorVersion1xx(final File baseDir) {
+    NodeContainerMetaPersistorVersion1xx(final ReferencedFile baseDir) {
         m_nodeContainerDirectory = baseDir;
     }
 
@@ -108,7 +108,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     }
     
     /** {@inheritDoc} */
-    public File getNodeContainerDirectory() {
+    public ReferencedFile getNodeContainerDirectory() {
         return m_nodeContainerDirectory;
     }
 

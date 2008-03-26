@@ -32,6 +32,7 @@ import java.util.HashMap;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeFactory;
@@ -61,7 +62,7 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
     
     private NodeSettingsRO m_nodeSettings;
-    private File m_nodeDir;
+    private ReferencedFile m_nodeDir;
     private boolean m_needsResetAfterLoad;
     
     /** {@inheritDoc} */
@@ -105,23 +106,24 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     }
 
     /** {@inheritDoc} */
-    public LoadResult preLoadNodeContainer(final File nodeSettingsFile, 
+    public LoadResult preLoadNodeContainer(final ReferencedFile nodeSettingsFile,
             final ExecutionMonitor exec, final NodeSettingsRO parentSettings) 
     throws InvalidSettingsException, CanceledExecutionException, IOException {
         LoadResult result = new LoadResult();
+        File settingsFile = nodeSettingsFile.getFile();
         String error;
-        if (!nodeSettingsFile.isFile()) {
+        if (!settingsFile.isFile()) {
             throw new IOException("Can't read node file \"" 
-                    + nodeSettingsFile.getAbsolutePath() + "\"");
+                    + settingsFile.getAbsolutePath() + "\"");
         }
         NodeSettingsRO settings = NodeSettings.loadFromXML(
-                new BufferedInputStream(new FileInputStream(nodeSettingsFile)));
+                new BufferedInputStream(new FileInputStream(settingsFile)));
         String nodeFactoryClassName;
         try {
             nodeFactoryClassName = loadNodeFactoryClassName(
                     parentSettings, settings);
         } catch (InvalidSettingsException e) {
-            if (nodeSettingsFile.getName().equals(
+            if (settingsFile.getName().equals(
                     WorkflowPersistor.WORKFLOW_FILE)) {
                 error = "Can't load meta flows in this version";
             } else {
@@ -140,11 +142,11 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
         }
         m_node = new Node(nodeFactory);
         m_metaPersistor = createNodeContainerMetaPersistor(
-                nodeSettingsFile.getParentFile());
+                nodeSettingsFile.getParent());
         LoadResult metaResult = m_metaPersistor.load(settings);
         result.addError(metaResult);
         m_nodeSettings = settings;
-        m_nodeDir = nodeSettingsFile.getParentFile();
+        m_nodeDir = nodeSettingsFile.getParent();
         return result;
     }
     
@@ -165,7 +167,7 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
             LOGGER.debug(error, e);
             return result;
         }
-        File nodeFile = new File(m_nodeDir, nodeFileName);
+        ReferencedFile nodeFile = new ReferencedFile(m_nodeDir, nodeFileName);
         NodePersistorVersion1xx nodePersistor = createNodePersistor();
         try {
             LoadResult nodeLoadResult = nodePersistor.load(
@@ -184,7 +186,7 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     }
     
     protected NodeContainerMetaPersistorVersion1xx 
-        createNodeContainerMetaPersistor(final File baseDir) {
+        createNodeContainerMetaPersistor(final ReferencedFile baseDir) {
         return new NodeContainerMetaPersistorVersion1xx(baseDir);
     }
     

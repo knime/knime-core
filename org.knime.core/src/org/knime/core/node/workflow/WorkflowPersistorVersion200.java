@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -218,14 +219,15 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                 getGlobalTableRepository());
     }
     
-    /** {@inheritDoc} */
-    public String save(final WorkflowManager wm, final File workflowDir,
-            final ExecutionMonitor execMon, final boolean isSaveData)
-            throws IOException, CanceledExecutionException {
-        if (workflowDir.equals(wm.getNodeContainerDirectory()) 
+    public String save(final WorkflowManager wm,
+            final ReferencedFile workflowDirRef, final ExecutionMonitor execMon,
+            final boolean isSaveData) throws IOException,
+            CanceledExecutionException {
+        if (workflowDirRef.equals(wm.getNodeContainerDirectory()) 
                 && !wm.isDirty()) {
             return WORKFLOW_FILE;
         }
+        File workflowDir = workflowDirRef.getFile();
         workflowDir.mkdirs();
         if (!workflowDir.isDirectory()) {
             throw new IOException("Unable to create or write directory \": " 
@@ -245,7 +247,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             ExecutionMonitor subExec = execMon.createSubProgress(progRatio);
             subExec.setMessage("Saving node: " + nextNode.getNameWithID());
             NodeSettingsWO sub = nodesSettings.addNodeSettings("node_" + id);
-            saveNodeContainer(sub, workflowDir, nextNode, subExec, isSaveData);
+            saveNodeContainer(
+                    sub, workflowDirRef, nextNode, subExec, isSaveData);
             subExec.setProgress(1.0);
         }
 
@@ -290,7 +293,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         File workflowFile = new File(workflowDir, WORKFLOW_FILE);
         settings.saveToXML(new FileOutputStream(workflowFile));
         if (wm.getNodeContainerDirectory() == null) {
-            wm.setNodeContainerDirectory(workflowDir);
+            wm.setNodeContainerDirectory(workflowDirRef);
         }
         if (workflowDir.equals(wm.getNodeContainerDirectory())) {
             wm.unsetDirty();
@@ -329,7 +332,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     }
 
     protected void saveNodeContainer(final NodeSettingsWO settings,
-            final File workflowDir, final NodeContainer container,
+            final ReferencedFile workflowDirRef, final NodeContainer container,
             final ExecutionMonitor exec, final boolean isSaveData)
             throws CanceledExecutionException, IOException {
         saveNodeIDSuffix(settings, container);
@@ -339,17 +342,18 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         String nodeDirID = container.getName().replaceAll("[^a-zA-Z0-9 ]", "_")
                 + " (#" + idSuffix + ")";
 
-        File nodeDirectory = new File(workflowDir, nodeDirID);
+        ReferencedFile nodeDirectoryRef = 
+            new ReferencedFile(workflowDirRef, nodeDirID);
         String fileName; 
         if (container instanceof WorkflowManager) {
             WorkflowPersistorVersion200 p = createWorkflowPersistor();
-            fileName = p.save((WorkflowManager)container, nodeDirectory,
+            fileName = p.save((WorkflowManager)container, nodeDirectoryRef,
                     exec, isSaveData);
         } else {
             SingleNodeContainerPersistorVersion200 p =
                 createSingleNodeContainerPersistor();
             fileName = p.save((SingleNodeContainer)container, 
-                    nodeDirectory, exec, isSaveData);
+                    nodeDirectoryRef, exec, isSaveData);
         }
         saveFileLocation(settings, nodeDirID + "/" + fileName);
         saveIsMeta(settings, container);

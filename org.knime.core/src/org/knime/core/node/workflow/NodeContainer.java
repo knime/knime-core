@@ -23,10 +23,10 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.File;
 import java.net.URL;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.GenericNodeView;
@@ -91,7 +91,7 @@ public abstract class NodeContainer {
 
     private String m_customDescription;
     
-    private File m_nodeContainerDirectory;
+    private ReferencedFile m_nodeContainerDirectory;
     
     private boolean m_isDirty;
 
@@ -606,6 +606,9 @@ public abstract class NodeContainer {
             LOGGER.info("Setting dirty flag on " + getNameWithID());
         }
         m_isDirty = true;
+        if (m_parent != null) {
+            m_parent.setDirty();
+        }
     }
     
     /** Called from persistor when node has been saved. */
@@ -616,8 +619,9 @@ public abstract class NodeContainer {
     /**
      * @param directory the nodeContainerDirectory to set
      */
-    protected final void setNodeContainerDirectory(final File directory) {
-        if (directory == null || !directory.isDirectory()) {
+    protected final void setNodeContainerDirectory(
+            final ReferencedFile directory) {
+        if (directory == null || !directory.getFile().isDirectory()) {
             throw new IllegalArgumentException("Not a directory: " + directory);
         }
         m_nodeContainerDirectory = directory;
@@ -626,7 +630,7 @@ public abstract class NodeContainer {
     /**
      * @return the nodeContainerDirectory
      */
-    protected final File getNodeContainerDirectory() {
+    protected final ReferencedFile getNodeContainerDirectory() {
         return m_nodeContainerDirectory;
     }
     
