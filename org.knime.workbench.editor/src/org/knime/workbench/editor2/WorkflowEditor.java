@@ -1109,9 +1109,11 @@ public class WorkflowEditor extends GraphicalEditor implements
                         IResource.DEPTH_INFINITE,
                         monitor);
                 } catch (CoreException ce) {
-                    throw new OperationCanceledException(
-                            "Workflow was not saved: "
-                            + ce.toString()); 
+                    OperationCanceledException oce 
+                        = new OperationCanceledException(
+                                "Workflow was not saved: " + ce.toString());
+                    oce.initCause(ce);
+                    throw oce;
                 }
             }                
         });
