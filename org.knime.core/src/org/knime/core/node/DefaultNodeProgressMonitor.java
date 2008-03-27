@@ -327,6 +327,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
         for (NodeProgressListener l : m_listeners) {
             try {
                 // we can't provide a useful node id here
+                // TODO replace by null argument (0 is certainly misleading)
                 l.progressChanged(new NodeProgressEvent(new NodeID(0), pe));
             } catch (Throwable t) {
                 LOGGER.error("Exception while notifying listeners", t);
