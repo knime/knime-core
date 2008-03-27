@@ -229,7 +229,7 @@ public final class BinningUtil {
     }
 
     /**
-     * Returns the rounded value. If the value is bigger or equal 1 it returns
+     * Returns the rounded value. If the value is bigger or equal 10 it returns
      * the result of the <code>bigValueRounder(double, boolean)</code>
      * method otherwise it returns the rounded value which contains the
      * given number of decimal places after the last 0.
@@ -247,7 +247,7 @@ public final class BinningUtil {
         // if the value is >= 1 or an integer return an interval without decimal
         // places
         final double absVal = Math.abs(doubleVal);
-        if (absVal >= 1) {
+        if (absVal >= 10) {
             return bigValueRounder(doubleVal, roundUp);
         }
         //it's an integer and less then one
