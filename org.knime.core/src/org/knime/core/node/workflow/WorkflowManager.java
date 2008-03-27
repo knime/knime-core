@@ -1405,17 +1405,17 @@ public final class WorkflowManager extends NodeContainer {
     */
     public boolean executeAllAndWaitUntilDone() {
         final Object mySemaphore = new Object();
-        synchronized (mySemaphore) {
-            this.addNodeStateChangeListener(new NodeStateChangeListener() {
-                /** {@inheritDoc} */
-                public void stateChanged(NodeStateEvent state) {
-                    synchronized (mySemaphore) {
-                        mySemaphore.notifyAll();
-                    }
+        this.addNodeStateChangeListener(new NodeStateChangeListener() {
+            /** {@inheritDoc} */
+            public void stateChanged(NodeStateEvent state) {
+                synchronized (mySemaphore) {
+                    mySemaphore.notifyAll();
                 }
-            });
-            markForExecutionAllNodes(true);
-            checkForQueuableNodesEverywhere();
+            }
+        });
+        markForExecutionAllNodes(true);
+        checkForQueuableNodesEverywhere();
+        synchronized (mySemaphore) {
             while (getState().executionInProgress()) {
                 try {
                     mySemaphore.wait();
