@@ -1407,7 +1407,7 @@ public final class WorkflowManager extends NodeContainer {
         final Object mySemaphore = new Object();
         this.addNodeStateChangeListener(new NodeStateChangeListener() {
             /** {@inheritDoc} */
-            public void stateChanged(NodeStateEvent state) {
+            public void stateChanged(final NodeStateEvent state) {
                 synchronized (mySemaphore) {
                     mySemaphore.notifyAll();
                 }
