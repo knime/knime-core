@@ -139,12 +139,13 @@ public class NodePersistorVersion1xx implements NodePersistor {
         for (int i = 0; i < node.getNrOutPorts(); i++) {
             ExecutionMonitor execPort = execMon
                     .createSubProgress(1.0 / node.getNrOutPorts());
+            execMon.setMessage("Port " + i);
             PortType type = node.getOutputType(i);
             boolean isDataPort = BufferedDataTable.class.isAssignableFrom(type
                     .getPortObjectClass());
             if (m_isConfigured) {
                 PortObjectSpec spec = 
-                    loadPortObjectSpec(node, settings, loadID, i);
+                    loadPortObjectSpec(node, settings, i);
                 setPortObjectSpec(i, spec);
             }
             if (m_isExecuted) {
@@ -153,10 +154,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
                     object = loadBufferedDataTable(
                             node, settings, execPort, loadID, i, tblRep);
                 } else {
-                    object = loadModelContent(node, settings, execMon, i);
+                    object = loadModelContent(node, settings, execPort, i);
                 }
                 setPortObject(i, object);
             }
+            execPort.setProgress(1.0);
         }
     }
     
@@ -254,9 +256,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
     }
 
     private PortObjectSpec loadPortObjectSpec(final Node node,
-            final NodeSettingsRO settings, final int loadID, final int index)
-            throws InvalidSettingsException, CanceledExecutionException,
-            IOException {
+            final NodeSettingsRO settings, final int index)
+            throws InvalidSettingsException, IOException {
         PortType type = node.getOutputType(index);
         boolean isDataPort = BufferedDataTable.class.isAssignableFrom(type
                 .getPortObjectClass());
@@ -339,10 +340,14 @@ public class NodePersistorVersion1xx implements NodePersistor {
     }
     
     public LoadResult load(Node node,
-            final ReferencedFile configFileRef, ExecutionMonitor execMon, int loadID,
+            final ReferencedFile configFileRef, ExecutionMonitor exec, int loadID,
             HashMap<Integer, ContainerTable> tblRep) 
             throws InvalidSettingsException, IOException, CanceledExecutionException {
         LoadResult result = new LoadResult();
+        ExecutionMonitor loadExec = exec.createSubProgress(0.5);
+        loadExec.setMessage("Loading settings");
+        ExecutionMonitor createExec = exec.createSubProgress(0.5);
+        int loadSteps = 1 + node.getNrOutPorts(); // one for the settings
         m_portObjects = new PortObject[node.getNrOutPorts()];
         m_portObjectSpecs = new PortObjectSpec[node.getNrOutPorts()];
         m_nodeDirectory = configFileRef.getParent();
@@ -411,7 +416,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
     
         // load internals
-        if (m_isExecuted) {
+        if (m_hasContent) {
             try {
                 m_nodeInternDirectory = 
                     loadNodeInternDirectory(settings, m_nodeDirectory);
@@ -421,8 +426,11 @@ public class NodePersistorVersion1xx implements NodePersistor {
                 LOGGER.warn(e, ise);
             }
         }
+        loadExec.setProgress(1.0 / loadSteps, "Loading ports");
         try {
-            loadPorts(node, execMon, settings, loadID, tblRep);
+            ExecutionMonitor sub = 
+                loadExec.createSubProgress(1.0 - 1.0 / loadSteps);
+            loadPorts(node, sub, settings, loadID, tblRep);
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException)
                     && !(e instanceof IOException)) {
@@ -434,15 +442,17 @@ public class NodePersistorVersion1xx implements NodePersistor {
             result.addError(err);
             LOGGER.warn(err, e);
             setNeedsResetAfterLoad();
-        } finally {
-            execMon.setProgress(1.0);
         }
+        loadExec.setProgress(1.0, "");
         if (result.hasErrors()) {
             m_nodeMessage = new NodeMessage(Type.ERROR, result.getErrors());
         }
 
-        execMon.setMessage("Loading settings into node instance");
-        node.load(this, execMon.createSilentSubProgress(0.0));
+        exec.setMessage("Loading settings into node instance");
+        node.load(this, createExec);
+        String message = "Loaded node " + node 
+            + (result.hasErrors() ? " with errors" : " without errors");
+        exec.setProgress(1.0, message);
         return result;
     }
 

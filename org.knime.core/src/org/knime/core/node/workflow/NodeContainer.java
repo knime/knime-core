@@ -27,6 +27,8 @@ import java.net.URL;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.GenericNodeDialogPane;
 import org.knime.core.node.GenericNodeModel;
 import org.knime.core.node.GenericNodeView;
@@ -634,8 +636,9 @@ public abstract class NodeContainer {
         return m_nodeContainerDirectory;
     }
     
-    abstract void loadContent(
-            final NodeContainerPersistor persistor, final int loadID);
+    abstract void loadContent(final NodeContainerPersistor persistor, 
+            final int loadID, final ExecutionMonitor exec)
+            throws CanceledExecutionException;
     
 
 }

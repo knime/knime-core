@@ -2172,6 +2172,8 @@ public final class WorkflowManager extends NodeContainer {
         if (!directory.isDirectory() || !directory.canRead()) {
             throw new IOException("Can't read directory " + directory);
         }
+        exec.setMessage("Loading workflow structure from \"" 
+                + directory.getAbsolutePath() + "\"");
         ReferencedFile workflowDirRef = new ReferencedFile(directory);
         ReferencedFile workflowknimeRef =
             new ReferencedFile(workflowDirRef, WorkflowPersistor.WORKFLOW_FILE);
@@ -2224,27 +2226,35 @@ public final class WorkflowManager extends NodeContainer {
         BufferedDataTable.initRepository(loadID);
         WorkflowLoadResult result = new WorkflowLoadResult();
         result.addError(persistor.preLoadNodeContainer(
-                workflowknimeRef, exec, settings));
-        result.addError(persistor.loadNodeContainer(loadID, exec));
+                workflowknimeRef, settings));
+        ExecutionMonitor contentExec = exec.createSubProgress(0.1);
+        ExecutionMonitor loadExec = exec.createSubProgress(0.9);
+        exec.setMessage("Loading workflow content from \"" 
+                + directory.getAbsolutePath() + "\"");
+        result.addError(persistor.loadNodeContainer(loadID, contentExec));
+        contentExec.setProgress(1.0);
         WorkflowManager manager;
+        exec.setMessage("Creating workflow instance");
         synchronized (ROOT.m_dirtyWorkflow) {
             NodeID newID = ROOT.createUniqueID();
             manager = ROOT.createSubWorkflow(persistor, newID);
-            manager.loadContent(persistor, loadID);
+            manager.loadContent(persistor, loadID, loadExec);
             ROOT.addNodeContainer(manager);
         }
         BufferedDataTable.clearRepository(loadID);
+        exec.setProgress(1.0);
+        result.setWorkflowManager(manager);
         LOGGER.debug("Successfully loaded content from \"" 
                 + directory.getAbsolutePath() + "\"  into workflow manager "
                 + "instance " + manager.getNameWithID());
-        result.setWorkflowManager(manager);
         return result;
     }
     
     /** {@inheritDoc} */
     @Override
     void loadContent(final NodeContainerPersistor nodePersistor, 
-            final int loadID) {
+            final int loadID, final ExecutionMonitor exec) 
+        throws CanceledExecutionException {
         if (!(nodePersistor instanceof WorkflowPersistor)) {
             throw new IllegalStateException("Expected " 
                     + WorkflowPersistor.class.getSimpleName() 
@@ -2257,6 +2267,7 @@ public final class WorkflowManager extends NodeContainer {
         Map<NodeID, NodeContainerPersistor> persistorMap = 
             new HashMap<NodeID, NodeContainerPersistor>();
 
+        exec.setMessage("Loading node information");
         for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry
                 : persistor.getNodeLoaderMap().entrySet()) {
             int suffix = nodeEntry.getKey();
@@ -2271,6 +2282,7 @@ public final class WorkflowManager extends NodeContainer {
             addNodeContainer(container);
         }
 
+        exec.setMessage("Loading connection information");
         for (ConnectionContainerTemplate c : persistor.getConnectionSet()) {
             int sourceSuffix = c.getSourceSuffix();
             int destSuffix = c.getDestSuffix();
@@ -2316,14 +2328,22 @@ public final class WorkflowManager extends NodeContainer {
             boolean needsReset = !isFullyConnected(bfsID);
             NodeContainerPersistor containerPersistor = persistorMap.get(bfsID);
             NodeContainer cont = m_nodes.get(bfsID);
+            exec.setMessage("Loading persistor for " + cont.getNameWithID());
+            // two steps below: loadNodeContent and loadContent
+            ExecutionMonitor sub1 = 
+                exec.createSubProgress(1.0 / (2 * m_nodes.size()));
+            ExecutionMonitor sub2 = 
+                exec.createSubProgress(1.0 / (2 * m_nodes.size()));
+            
             try {
-                LoadResult temp = containerPersistor.loadNodeContainer(
-                        loadID, new ExecutionMonitor());
+                LoadResult temp = 
+                    containerPersistor.loadNodeContainer(loadID, sub1);
                 if (temp.hasErrors()) {
                     loadResult.addError("Errors reading node \"" 
                             + cont.getNameWithID() + "\":", temp);
                 }
             } catch (CanceledExecutionException e) {
+                throw e;
             } catch (Exception e) {
                 if (!(e instanceof InvalidSettingsException)
                         && !(e instanceof IOException)) {
@@ -2333,7 +2353,10 @@ public final class WorkflowManager extends NodeContainer {
                 }
                 needsReset = true;
             }
-            cont.loadContent(containerPersistor, loadID);
+            sub1.setProgress(1.0);
+            exec.setMessage("Loading " + cont.getNameWithID());
+            cont.loadContent(containerPersistor, loadID, sub2);
+            sub2.setProgress(1.0);
 
             boolean hasPredecessorFailed = false;
             for (ConnectionContainer cc : m_connectionsByDest.get(bfsID)) {

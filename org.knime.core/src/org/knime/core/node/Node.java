@@ -258,8 +258,8 @@ public final class Node {
             // will be executed by workflow manager
             m_model.setHasContent(false);
         } else {
-            boolean wasExecuted = loader.isExecuted();
-            m_model.setHasContent(wasExecuted);
+            boolean hasContent = loader.hasContent();
+            m_model.setHasContent(hasContent);
         }
         m_message = loader.getNodeMessage();
         m_outDataPortsMemoryPolicy = loader.getMemoryPolicy();
@@ -279,6 +279,7 @@ public final class Node {
         if (internDirRef != null) {
             internDirRef.lock();
             try {
+                exec.setMessage("Loading internals");
                 loadInternals(internDirRef.getFile(), exec);
             } finally {
                 internDirRef.unlock();
@@ -287,6 +288,7 @@ public final class Node {
         if (m_message != null) {
             notifyMessageListeners(m_message);
         }
+        exec.setProgress(1.0);
     }
 
     /**

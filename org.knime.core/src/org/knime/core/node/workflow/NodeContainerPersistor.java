@@ -35,20 +35,22 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
  * 
- * @author wiswedel, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
  */
 public interface NodeContainerPersistor {
 
     NodeContainer getNodeContainer(final WorkflowManager parent, final NodeID id);
 
     NodeContainerMetaPersistor getMetaPersistor();
-    
+
     boolean needsResetAfterLoad();
-    
-    LoadResult preLoadNodeContainer(final ReferencedFile nodeFile, 
-            final ExecutionMonitor exec, final NodeSettingsRO parentSettings) 
-        throws InvalidSettingsException, CanceledExecutionException, IOException;
-    
-    LoadResult loadNodeContainer(final int loadID, final ExecutionMonitor exec) 
-        throws InvalidSettingsException, CanceledExecutionException, IOException;
+
+    LoadResult preLoadNodeContainer(final ReferencedFile nodeFileRef,
+            final NodeSettingsRO parentSettings)
+            throws InvalidSettingsException, CanceledExecutionException,
+            IOException;
+
+    LoadResult loadNodeContainer(final int loadID, final ExecutionMonitor exec)
+            throws InvalidSettingsException, CanceledExecutionException,
+            IOException;
 }

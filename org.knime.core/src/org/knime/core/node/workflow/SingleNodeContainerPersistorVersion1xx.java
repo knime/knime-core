@@ -106,11 +106,11 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
     }
 
     /** {@inheritDoc} */
-    public LoadResult preLoadNodeContainer(final ReferencedFile nodeSettingsFile,
-            final ExecutionMonitor exec, final NodeSettingsRO parentSettings) 
+    public LoadResult preLoadNodeContainer(final ReferencedFile settingsFileRef,
+            final NodeSettingsRO parentSettings) 
     throws InvalidSettingsException, CanceledExecutionException, IOException {
         LoadResult result = new LoadResult();
-        File settingsFile = nodeSettingsFile.getFile();
+        File settingsFile = settingsFileRef.getFile();
         String error;
         if (!settingsFile.isFile()) {
             throw new IOException("Can't read node file \"" 
@@ -142,11 +142,11 @@ class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersi
         }
         m_node = new Node(nodeFactory);
         m_metaPersistor = createNodeContainerMetaPersistor(
-                nodeSettingsFile.getParent());
+                settingsFileRef.getParent());
         LoadResult metaResult = m_metaPersistor.load(settings);
         result.addError(metaResult);
         m_nodeSettings = settings;
-        m_nodeDir = nodeSettingsFile.getParent();
+        m_nodeDir = settingsFileRef.getParent();
         return result;
     }
     
