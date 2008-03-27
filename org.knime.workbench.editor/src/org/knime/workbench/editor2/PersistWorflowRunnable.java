@@ -140,7 +140,7 @@ abstract class PersistWorflowRunnable implements IRunnableWithProgress {
             final NodeProgress pe = evt.getNodeProgress();
             Display.getDefault().asyncExec(new Runnable() {
                 public void run() {
-                    if (pe.getProgress() >= 0) {
+                    if (pe.hasProgress() && pe.getProgress() >= 0) {
                         double progress = pe.getProgress();
                         int worked = (int) (progress * m_totalWork);
                         m_progressMonitor.worked(worked - m_workedSoFar);
