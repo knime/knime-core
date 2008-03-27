@@ -308,6 +308,7 @@ public final class WorkflowManager extends NodeContainer {
      * @param nodeID id of node to be removed
      */
     public void removeNode(final NodeID nodeID) {
+        NodeContainer nc;
         synchronized (m_dirtyWorkflow) {
             // if node does not exist, simply return
             if (m_nodes.get(nodeID) == null) {
@@ -331,7 +332,7 @@ public final class WorkflowManager extends NodeContainer {
             }
             m_connectionsBySource.remove(nodeID);
             // and finally remove node itself as well.
-            NodeContainer nc = m_nodes.remove(nodeID);
+            nc = m_nodes.remove(nodeID);
             nc.cleanup();
             ReferencedFile ncDir = nc.getNodeContainerDirectory();
             // update list of obsolete node directories for non-root wfm
@@ -342,7 +343,7 @@ public final class WorkflowManager extends NodeContainer {
         setDirty();
         notifyWorkflowListeners(
                 new WorkflowEvent(WorkflowEvent.Type.NODE_REMOVED,
-                getID(), nodeID, null));
+                getID(), nc, null));
     }
 
     /** Creates new meta node. We will automatically find the next available

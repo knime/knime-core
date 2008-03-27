@@ -72,19 +72,22 @@ public class KnimeProjectLabelDecorator implements ILabelDecorator {
         WorkflowManager.ROOT.addListener(new WorkflowListener() {
 
             public void workflowChanged(final WorkflowEvent event) {
-                if (event.getType().equals(WorkflowEvent.Type.NODE_ADDED)) {
+                switch (event.getType()) {
+                case NODE_ADDED:
                     NodeContainer nc = ((NodeContainer)event.getNewValue());
                     PROJECTS.put(nc.getName(), nc);
-                } else if (event.getType().equals(
-                        WorkflowEvent.Type.NODE_REMOVED)) {
+                    break;
+                case NODE_REMOVED:
                     PROJECTS.remove(event.getOldValue());
+                    break;
+                default: // no interest in other events here
                 }
             }
             
         });
         for (NodeContainer nc 
                 : WorkflowManager.ROOT.getNodeContainerBreadthFirstSearch()) {
-            // bad hack to determine projects...
+            // TODO: bad hack to determine projects...
             if (nc.getID().toString().lastIndexOf(":") < 2) {
                 PROJECTS.put(nc.getName(), nc);
             } else {
