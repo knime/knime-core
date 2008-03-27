@@ -449,7 +449,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
 
         exec.setMessage("Loading settings into node instance");
-        node.load(this, createExec);
+        result.addError(node.load(this, createExec));
         String message = "Loaded node " + node 
             + (result.hasErrors() ? " with errors" : " without errors");
         exec.setProgress(1.0, message);

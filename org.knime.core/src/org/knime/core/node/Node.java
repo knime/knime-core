@@ -46,6 +46,7 @@ import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
 import org.knime.core.node.workflow.ScopeContext;
 import org.knime.core.node.workflow.ScopeObjectStack;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.util.FileUtil;
 import org.w3c.dom.Element;
 
@@ -252,8 +253,9 @@ public final class Node {
         }
     }
 
-    void load(final NodePersistor loader, final ExecutionMonitor exec)
+    LoadResult load(final NodePersistor loader, final ExecutionMonitor exec)
             throws CanceledExecutionException {
+        LoadResult result = new LoadResult();
         if (m_model.isAutoExecutable()) {
             // will be executed by workflow manager
             m_model.setHasContent(false);
@@ -268,8 +270,20 @@ public final class Node {
         }
         try {
             m_model.loadSettingsFrom(loader.getNodeModelSettings());
-        } catch (Exception e) {
-            m_logger.error("Loading model settings failed", e);
+        } catch (Throwable e) {
+            String error;
+            if (e instanceof InvalidSettingsException) {
+                error = "Loading model settings failed: " + e.getMessage();
+            } else {
+                error = "Caught \"" + e.getClass().getSimpleName() + "\", "
+                    + "Loading model settings failed: " + e.getMessage();
+                if (e instanceof Error) {
+                    m_logger.fatal(error, e);
+                } else {
+                    m_logger.warn(error, e);
+                }
+            }
+            result.addError(error);
         }
         for (int i = 0; i < getNrOutPorts(); i++) {
             m_outputs[i].spec = loader.getPortObjectSpec(i);
@@ -280,7 +294,21 @@ public final class Node {
             internDirRef.lock();
             try {
                 exec.setMessage("Loading internals");
-                loadInternals(internDirRef.getFile(), exec);
+                m_model.loadInternals(internDirRef.getFile(), exec);
+            } catch (Throwable e) {
+                String error;
+                if (e instanceof IOException) {
+                    error = "Loading model internals failed: " + e.getMessage();
+                } else {
+                    error = "Caught \"" + e.getClass().getSimpleName() + "\", "
+                        + "Loading model internals failed: " + e.getMessage();
+                    if (e instanceof Error) {
+                        m_logger.fatal(error, e);
+                    } else {
+                        m_logger.warn(error, e);
+                    }
+                }
+                result.addError(error);
             } finally {
                 internDirRef.unlock();
             }
@@ -289,6 +317,7 @@ public final class Node {
             notifyMessageListeners(m_message);
         }
         exec.setProgress(1.0);
+        return result;
     }
 
     /**
@@ -1276,16 +1305,15 @@ public final class Node {
             } catch (IOException ioe) {
                 m_message =
                         new NodeMessage(NodeMessage.Type.ERROR,
-                                "Unable to load internals: " + ioe.getMessage());
+                            "Unable to load internals: " + ioe.getMessage());
                 m_logger.debug("loadInternals() failed with IOException", ioe);
                 notifyMessageListeners(m_message);
             } catch (CanceledExecutionException e) {
                 throw e;
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 m_logger.coding("loadInternals() "
                         + "should only cause IOException.", e);
-                m_message =
-                        new NodeMessage(NodeMessage.Type.ERROR,
+                m_message = new NodeMessage(NodeMessage.Type.ERROR,
                                 "Unable to load internals: " + e.getMessage());
                 notifyMessageListeners(m_message);
             }
