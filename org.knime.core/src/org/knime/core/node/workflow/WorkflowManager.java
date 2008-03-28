@@ -877,7 +877,7 @@ public final class WorkflowManager extends NodeContainer {
                     // clean those up if a predecessors never turns yellow
                     // even if all his predecessors are EXECUTED.
                     // (needs cleanup after configure in WFM?)
-                    //nc.markForExecutionAsNodeContainer(true);
+//                    nc.markForExecutionAsNodeContainer(true);
                     break;
                 case CONFIGURED:
                     nc.markForExecutionAsNodeContainer(true);
@@ -1638,7 +1638,7 @@ public final class WorkflowManager extends NodeContainer {
         WorkflowManager wfm = this;
         while ((wfm.getNrInPorts() != 0) || (wfm.getNrOutPorts() != 0)) {
             // some connection to containing WFM exists
-            wfm = getParent();
+            wfm = wfm.getParent();
         }
         wfm.checkForQueuableNodesInWFMonly();
     }
