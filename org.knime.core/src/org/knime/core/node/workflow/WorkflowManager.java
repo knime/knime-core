@@ -525,7 +525,14 @@ public final class WorkflowManager extends NodeContainer {
                 // we are feeding data into a subworkflow
                 WorkflowInPort wfmIPort
                         = ((WorkflowManager)destNC).getInPort(destPort);
-                wfmIPort.setUnderlyingPort(sourceNC.getOutPort(sourcePort));
+                NodeOutPort underlyingPort;
+                if (sourceNC != null) {
+                    underlyingPort = sourceNC.getOutPort(sourcePort);
+                } else {
+                    assert source.equals(getID());
+                    underlyingPort = getWorkflowIncomingPort(sourcePort);
+                }
+                wfmIPort.setUnderlyingPort(underlyingPort);
             } else if (dest.equals(getID())) {
                 // we are feeding data out of the subworkflow
                 assert newConnType == ConnectionType.WFMOUT;
@@ -1573,7 +1580,7 @@ public final class WorkflowManager extends NodeContainer {
     }
 
     // complete set of nodes depth-first starting with node id.
-    private void completeSet(HashSet<NodeID> nodes, final NodeID id) {
+    private void completeSet(final HashSet<NodeID> nodes, final NodeID id) {
         nodes.add(id);
         for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
             if (!cc.getType().isLeavingWorkflow()) {
@@ -1582,8 +1589,8 @@ public final class WorkflowManager extends NodeContainer {
         }
     }
     
-    private void expandListBreathFirst(ArrayList<NodeID> bfsSortedNodes,
-            HashSet<NodeID> inclusionList) {
+    private void expandListBreathFirst(final ArrayList<NodeID> bfsSortedNodes,
+            final HashSet<NodeID> inclusionList) {
         // keep adding nodes until we can't find new ones anymore
         for (int i = 0; i < bfsSortedNodes.size(); i++) {
             NodeID currNode = bfsSortedNodes.get(i);
@@ -1603,10 +1610,11 @@ public final class WorkflowManager extends NodeContainer {
                     for (ConnectionContainer cc2
                                    : m_connectionsByDest.get(succNode)) {
                         NodeID pred = cc2.getSource();
-                        if (!(bfsSortedNodes.contains(pred))) {
+                        if (!pred.equals(getID()) 
+                                && !(bfsSortedNodes.contains(pred))) {
                             // check if source is not yet in list
-                            if ((inclusionList == null) ||
-                                    (inclusionList.contains(pred))) {
+                            if ((inclusionList == null) 
+                                    || (inclusionList.contains(pred))) {
                                 // but only if it's in the inclusion list
                                 allContained = false;
                             }
@@ -2239,7 +2247,7 @@ public final class WorkflowManager extends NodeContainer {
         synchronized (ROOT.m_dirtyWorkflow) {
             NodeID newID = ROOT.createUniqueID();
             manager = ROOT.createSubWorkflow(persistor, newID);
-            manager.loadContent(persistor, loadID, loadExec);
+            result.addError(manager.loadContent(persistor, loadID, loadExec));
             ROOT.addNodeContainer(manager);
         }
         BufferedDataTable.clearRepository(loadID);
@@ -2253,7 +2261,7 @@ public final class WorkflowManager extends NodeContainer {
     
     /** {@inheritDoc} */
     @Override
-    void loadContent(final NodeContainerPersistor nodePersistor, 
+    LoadResult loadContent(final NodeContainerPersistor nodePersistor, 
             final int loadID, final ExecutionMonitor exec) 
         throws CanceledExecutionException {
         if (!(nodePersistor instanceof WorkflowPersistor)) {
@@ -2263,6 +2271,7 @@ public final class WorkflowManager extends NodeContainer {
                     + nodePersistor.getClass().getSimpleName());
         }
         WorkflowPersistor persistor = (WorkflowPersistor)nodePersistor;
+        LoadResult loadResult = new LoadResult();
         // id suffix are made unique by using the entries in this map
         Map<Integer, NodeID> translationMap = new HashMap<Integer, NodeID>();
         Map<NodeID, NodeContainerPersistor> persistorMap = 
@@ -2310,7 +2319,9 @@ public final class WorkflowManager extends NodeContainer {
             }
             if (!canAddConnection(
                     source, c.getSourcePort(), dest, c.getDestPort())) {
-                LOGGER.warn("Unable to insert connection \"" + c + "\"");
+                String warn = "Unable to insert connection \"" + c + "\"";
+                LOGGER.warn(warn);
+                loadResult.addError(warn);
                 continue;
             }
             ConnectionContainer cc = addConnection(
@@ -2322,7 +2333,6 @@ public final class WorkflowManager extends NodeContainer {
         m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
         Set<NodeID> failedNodes = new HashSet<NodeID>();
         Set<NodeID> needConfigurationNodes = new HashSet<NodeID>();
-        LoadResult loadResult = new LoadResult();
         for (NodeID bfsID : getBreathFirstListOfNodes()) {
             // failed nodes may not even be in m_nodes - we reset everything
             // which is not fully connected
@@ -2335,14 +2345,10 @@ public final class WorkflowManager extends NodeContainer {
                 exec.createSubProgress(1.0 / (2 * m_nodes.size()));
             ExecutionMonitor sub2 = 
                 exec.createSubProgress(1.0 / (2 * m_nodes.size()));
-            
+            LoadResult subResult = new LoadResult();
             try {
-                LoadResult temp = 
-                    containerPersistor.loadNodeContainer(loadID, sub1);
-                if (temp.hasErrors()) {
-                    loadResult.addError("Errors reading node \"" 
-                            + cont.getNameWithID() + "\":", temp);
-                }
+                subResult.addError(
+                        containerPersistor.loadNodeContainer(loadID, sub1));
             } catch (CanceledExecutionException e) {
                 throw e;
             } catch (Exception e) {
@@ -2356,7 +2362,12 @@ public final class WorkflowManager extends NodeContainer {
             }
             sub1.setProgress(1.0);
             exec.setMessage("Loading " + cont.getNameWithID());
-            cont.loadContent(containerPersistor, loadID, sub2);
+            subResult.addError(cont.loadContent(
+                    containerPersistor, loadID, sub2));
+            if (subResult.hasErrors()) {
+                loadResult.addError("Errors reading node \"" 
+                        + cont.getNameWithID() + "\":", subResult);
+            }
             sub2.setProgress(1.0);
 
             boolean hasPredecessorFailed = false;
@@ -2374,9 +2385,6 @@ public final class WorkflowManager extends NodeContainer {
                 needConfigurationNodes.add(bfsID);
             }
         }
-        if (loadResult.hasErrors()) {
-            LOGGER.warn(loadResult);
-        }
         for (NodeID id : needConfigurationNodes) {
             resetAndConfigureNode(id);
         }
@@ -2384,6 +2392,7 @@ public final class WorkflowManager extends NodeContainer {
             configureNodeAndSuccessors(id, true, true);
         }
         checkForNodeStateChanges();
+        return loadResult;
     }
 
     public void save(final File directory, final ExecutionMonitor exec,

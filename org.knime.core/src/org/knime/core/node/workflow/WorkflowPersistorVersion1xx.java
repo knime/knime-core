@@ -547,6 +547,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             return loadResult;
         }
         exec.setMessage("Loading node information");
+        /* Load nodes */
         for (String nodeKey : nodes.keySet()) {
             NodeSettingsRO nodeSetting;
             try {
@@ -556,6 +557,9 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                     + "id \"" + nodeKey + "\": " + e.getMessage();
                 LOGGER.debug(error, e);
                 loadResult.addError(error);
+                continue;
+            }
+            if (shouldSkipThisNode(nodeSetting)) {
                 continue;
             }
             int nodeIDSuffix;
@@ -803,6 +807,15 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return loadResult;
     }
     
+    /** This is overridden by the meta node loader (1.x.x) and returns
+     * true for the "special" nodes.
+     * @param settings node sub-element
+     * @return true if to skip (though in 99.9% false)
+     */ 
+    protected boolean shouldSkipThisNode(final NodeSettingsRO settings) {
+        return false;
+    }
+    
     protected int loadNodeIDSuffix(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         return settings.getInt(KEY_ID);
@@ -891,7 +904,8 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     
     protected boolean loadIsMetaNode(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        return false;
+        String factory = settings.getString("factory");
+        return factory.startsWith("org.knime.base.node.meta.");
     }
 
     protected NodeSettingsRO loadSettingsForConnections(final NodeSettingsRO set)
@@ -991,7 +1005,7 @@ class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     }
 
     protected WorkflowPersistorVersion1xx createWorkflowPersistor() {
-        return new WorkflowPersistorVersion1xx(
+        return new ObsoleteMetaNodeWorkflowPersistorVersion1xx(
                 getGlobalTableRepository());
     }
     

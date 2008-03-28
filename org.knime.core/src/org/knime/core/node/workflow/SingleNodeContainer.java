@@ -47,6 +47,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.GenericNodeFactory.NodeType;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.w3c.dom.Element;
 
 /**
@@ -550,7 +551,7 @@ public final class SingleNodeContainer extends NodeContainer
     
     /** {@inheritDoc} */
     @Override
-    void loadContent(final NodeContainerPersistor nodePersistor,
+    LoadResult loadContent(final NodeContainerPersistor nodePersistor,
             final int loadID, ExecutionMonitor exec) throws CanceledExecutionException {
         if (!(nodePersistor instanceof SingleNodeContainerPersistor)) {
             throw new IllegalStateException("Expected " 
@@ -567,6 +568,7 @@ public final class SingleNodeContainer extends NodeContainer
                     getParent().getGlobalTableRepository());
         }
         setScopeObjectStack(new ScopeObjectStack(getID()));
+        return new LoadResult();
     }
 
     /** {@inheritDoc} */

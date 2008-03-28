@@ -43,6 +43,7 @@ import org.knime.core.node.PortObject;
 import org.knime.core.node.PortObjectSpec;
 import org.knime.core.node.GenericNodeFactory.NodeType;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
  * Abstract super class for containers holding node or just structural
@@ -636,7 +637,7 @@ public abstract class NodeContainer {
         return m_nodeContainerDirectory;
     }
     
-    abstract void loadContent(final NodeContainerPersistor persistor, 
+    abstract LoadResult loadContent(final NodeContainerPersistor persistor, 
             final int loadID, final ExecutionMonitor exec)
             throws CanceledExecutionException;
     
